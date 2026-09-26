@@ -25,7 +25,29 @@ settings:
   prematch_minutes: 75       # a match is "about to kick off" this long before kickoff
   budget_seconds: 50         # hard stop for one invocation (EventBridge fires every 60 s)
   backfill_per_run: 6        # finished-match details fetched per idle invocation until the ledger is complete
-  player_stats_comps: [538, 536, 535]   # per-player season lists (radar, foreigners): ~29 requests each, daily
+  player_stats_comps: [538, 536, 535, 47, 87]   # per-player season lists (radar, similarity, foreigners): ~29 requests each, daily
+  compare_leagues: [538, 536, 535, 47, 87]      # league comparison (goals/match, age, foreign share, attendance)
+
+# Tifo rating (compute/rating.py). Fitted by tools/calibrate_rating.py on 2010/11-2021/22, scored out of
+# sample on 2022/23-2025/26: Brier 0.560 vs 0.653 for base rates (docs/TIFO-RATING.md).
+rating: {k: 17, home: 40, regress: 0.1, d0: 0.26, ds: 350, newcomer: 1350, base: 1500,
+         brier_test: 0.5599, brier_base_rate: 0.6531, n_test: 831, test_seasons: "2022/23-2025/26"}
+
+# Derby pairs for the memorable-matches archive (FotMob team ids): same-city derbies and the
+# fixtures between the most successful clubs since 2010/11.
+derbies:
+  - [102117, 102122]   # Al Ain - Al Wahda
+  - [102117, 102101]   # Al Ain - Al Jazira
+  - [102101, 102122]   # Al Jazira - Al Wahda (Abu Dhabi)
+  - [102122, 182933]   # Al Wahda - Baniyas (Abu Dhabi)
+  - [102101, 182933]   # Al Jazira - Baniyas (Abu Dhabi)
+  - [102111, 102123]   # Al Wasl - Al Nasr (Dubai)
+  - [102111, 102119]   # Al Wasl - Shabab Al Ahli (Dubai)
+  - [102123, 102119]   # Al Nasr - Shabab Al Ahli (Dubai)
+  - [102117, 102119]   # Al Ain - Shabab Al Ahli
+  - [102124, 102111]   # Sharjah - Al Wasl
+  - [102124, 102117]   # Sharjah - Al Ain
+  - [102124, 149993]   # Sharjah - Khorfakkan (Sharjah emirate)
 
 focus_teams: [5789]          # UAE national team
 focus_comps: [538, 11027]    # every team in these gets a daily team file (squad, fixtures, .ics)
@@ -73,6 +95,7 @@ competitions:
     name_en: Arabian Gulf Cup
     kind: tournament
     scope: gulf
+    host: 7795               # Saudi Arabia (Jeddah): home advantage in the tournament simulator
     verified: "2026-09-26 season 2026, 15 matches (5 played), 2 groups x 4, next 2026-09-27, live today"
   - id: 290
     key: asian-cup
@@ -80,6 +103,7 @@ competitions:
     name_en: AFC Asian Cup
     kind: tournament
     scope: national
+    host: 7795               # Saudi Arabia hosts the 2027 Asian Cup
     verified: "2026-09-26 season 2027, 51 matches (0 played), 6 groups, 2027-01-07..2027-02-05 (many kickoff times TBD)"
   - id: 10609
     key: asian-cup-qualification

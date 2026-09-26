@@ -130,6 +130,45 @@ Resources:
               MaximumEventAgeInSeconds: 60
       Tags: {product: elyoxe-football}
 
+  AnalyticsLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/elyoxe-football-analytics
+      RetentionInDays: 14
+
+  # Heavy computation on its own slow schedule, never inside the live loop: match history backfill,
+  # Tifo rating, 10k-season and tournament simulations, player tables and similarity, archive.
+  Analytics:
+    Type: AWS::Serverless::Function
+    DependsOn: AnalyticsLogs
+    Properties:
+      FunctionName: elyoxe-football-analytics
+      CodeUri: build/lambda/
+      Handler: poller.analytics_handler
+      MemorySize: 512                    # CPU for the simulations; ~0.3 vCPU
+      Timeout: 300
+      ReservedConcurrentExecutions: 1
+      Environment:
+        Variables:
+          BUCKET: !Ref DataBucket
+          ANALYTICS_BUDGET: "280"
+      Policies:
+        - S3CrudPolicy: {BucketName: !Ref DataBucket}
+      EventInvokeConfig:
+        MaximumEventAgeInSeconds: 300
+        MaximumRetryAttempts: 0
+      Events:
+        Every10Minutes:
+          Type: Schedule
+          Properties:
+            Name: elyoxe-football-analytics-10min
+            Schedule: rate(10 minutes)
+            Enabled: true
+            RetryPolicy:
+              MaximumRetryAttempts: 0
+              MaximumEventAgeInSeconds: 300
+      Tags: {product: elyoxe-football}
+
 Outputs:
   Bucket:
     Value: !Ref DataBucket
@@ -139,3 +178,5 @@ Outputs:
     Value: !GetAtt Distribution.DomainName
   FunctionName:
     Value: !Ref Poller
+  AnalyticsFunctionName:
+    Value: !Ref Analytics

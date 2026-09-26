@@ -21,6 +21,7 @@ from datetime import timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import analytics as AN  # noqa: E402
 import config  # noqa: E402
 from compute import ics as ICS, magic as MAGIC, prayer as PRAYER, season as SEASON, weather as WEATHER  # noqa: E402
 from compute.venues import Venues  # noqa: E402
@@ -43,8 +44,13 @@ def _age_min(ts, now):
 
 
 class Poller:
-    def __init__(self, store: Store, clock=time.monotonic, sleep=time.sleep, budget=None, now_fn=now_utc):
-        self.store, self.clock, self.sleep, self.now_fn = store, clock, sleep, now_fn
+    def __init__(self, store: Store, clock=time.monotonic, sleep=time.sleep, budget=None, now_fn=now_utc, role="poller"):
+        """role "poller": the per-minute function (live passes + cadenced chores).
+        role "analytics": the slower function (every 10 min): history, ratings, simulations, player
+        tables and every other heavy computation. It reads the poller's state and never writes it:
+        its own due marks, hashes and health live in state/analytics.json, state/hashes-analytics.json
+        and v1/health-analytics.json, so the two functions cannot overwrite each other."""
+        self.store, self.clock, self.sleep, self.now_fn, self.role = store, clock, sleep, now_fn, role
         self.cfg = config.settings()
         self.budget = budget if budget is not None else self.cfg.get("budget_seconds", 50)
         self.t0 = clock()
@@ -68,14 +74,17 @@ class Poller:
     def has_time(self, need=6):
         return self.left() > need
 
+    def dues(self):
+        return self.an_state.setdefault("due", {}) if self.role == "analytics" else self.st.setdefault("due", {})
+
     def due(self, key, minutes, sub=None):
-        d = self.st.setdefault("due", {})
+        d = self.dues()
         k = f"{key}:{sub}" if sub is not None else key
         return _age_min(d.get(k), self.now()) >= minutes
 
     def mark(self, key, sub=None):
         k = f"{key}:{sub}" if sub is not None else key
-        self.st.setdefault("due", {})[k] = iso(self.now())
+        self.dues()[k] = iso(self.now())
 
     def note(self, msg):
         self.log.append(msg)
@@ -84,6 +93,15 @@ class Poller:
     def tracked(self, m):
         return m.get("comp") in self.comp_ids or NATIONAL in ((m.get("home") or {}).get("id"), (m.get("away") or {}).get("id"))
 
+    def fixtures(self, cid):
+        """The competition's current normalized fixtures (this run's refresh, else the published file)."""
+        if cid not in self.fixture_cache:
+            self.fixture_cache[cid] = (self.store.get_json(f"comp/{cid}/fixtures.json") or {}).get("matches") or []
+        return self.fixture_cache[cid]
+
+    def cc_of(self, cid):
+        return (self.st.get("comp_meta", {}).get(str(cid)) or {}).get("country")
+
     def comp_name_ar(self, cid):
         c = self.comp_by_id.get(cid)
         return c["name_ar"] if c else self.names["competitions"].get(str(cid))
@@ -91,8 +109,11 @@ class Poller:
     # ------------------------------------------------------------------ state
     def load(self):
         self.st = self.store.get_state("poller.json", {}) or {}
-        self.store.hashes.update(self.store.get_state("hashes.json", {}) or {})
-        self.prev_health = self.store.get_json("health.json") or {}
+        self.an_state = self.store.get_state("analytics.json", {}) or {} if self.role == "analytics" else {}
+        self.hashes_name = "hashes-analytics.json" if self.role == "analytics" else "hashes.json"
+        self.health_name = "health-analytics.json" if self.role == "analytics" else "health.json"
+        self.store.hashes.update(self.store.get_state(self.hashes_name, {}) or {})
+        self.prev_health = self.store.get_json(self.health_name) or {}
         stamp = self.st.get("names_stamp")
         if _NAMES["data"] is None or _NAMES["stamp"] != stamp:
             _NAMES["data"] = self.store.get_state("names_ar.json", None) or {"teams": {}, "competitions": {}, "countries": {}}
@@ -103,11 +124,28 @@ class Poller:
         self.up = UaePL(HTTP, self.names)
         self.ledgers = {}
         self.dirty_ledgers = set()
+        self._aux, self._aux_sig = {}, {}
+        for k in ("prev_season", "uaepl_fx", "squads"):      # moved out of poller.json (read every minute)
+            if k in self.st and self.role == "poller":
+                self.aux(k).update(self.st.pop(k))
         self.fixture_cache = {}
 
+    def aux(self, name):
+        """A side state file (state/<name>.json) loaded only by the chores that need it, saved if changed."""
+        if name not in self._aux:
+            self._aux[name] = self.store.get_state(f"{name}.json", {}) or {}
+            self._aux_sig[name] = json.dumps(self._aux[name], sort_keys=True)
+        return self._aux[name]
+
     def save(self):
-        for cid in self.dirty_ledgers:
-            self.store.put_state(f"ledger/{cid}.json", self.ledgers[cid])
+        for name, obj in self._aux.items():
+            if json.dumps(obj, sort_keys=True) != self._aux_sig.get(name):
+                self.store.put_state(f"{name}.json", obj)
+        if self.role == "analytics":
+            self.store.put_state("analytics.json", self.an_state)
+        else:
+            for cid in self.dirty_ledgers:
+                self.store.put_state(f"ledger/{cid}.json", self.ledgers[cid])
         sched = self.st.get("schedule", {})
         cutoff = self.now() - timedelta(days=3)
         for k in [k for k, v in sched.items() if (parse_utc(v.get("ko")) or self.now()) < cutoff]:
@@ -115,8 +153,9 @@ class Poller:
         det = self.st.get("detail_at", {})
         for k in [k for k, v in det.items() if _age_min(v, self.now()) > 60 * 24 * 10]:
             del det[k]
-        self.store.put_state("poller.json", self.st)
-        self.store.put_state("hashes.json", self.store.hashes)
+        if self.role == "poller":
+            self.store.put_state("poller.json", self.st)
+        self.store.put_state(self.hashes_name, self.store.hashes)
         health = dict(self.prev_health.get("items") or {})
         for k, v in self.store.health.items():
             prev = health.get(k) or {}
@@ -126,7 +165,7 @@ class Poller:
                 v["last_ok"] = prev.get("last_ok") if prev.get("ok") is False else prev.get("at") if prev.get("ok") else prev.get("last_ok")
             health[k] = v
         bad = sorted(k for k, v in health.items() if not v.get("ok"))
-        self.store.put_json("health.json", {
+        self.store.put_json(self.health_name, {
             "generated": iso(self.now()), "ok": not bad, "failing": bad, "items": health,
             "last_run": {"mode": self.mode, "seconds": round(self.clock() - self.t0, 1),
                          "requests": HTTP.network_calls - self.requests_before, "by_host": {h: n - self.calls_before.get(h, 0) for h, n in HTTP.calls.items() if n - self.calls_before.get(h, 0)},
@@ -147,6 +186,10 @@ class Poller:
     def enrich(self, m, full=False):
         m = dict(m)
         m["comp_name_ar"] = self.comp_name_ar(m.get("comp"))
+        if m.get("comp") in AN.R.UAE_CLUB_COMPS and m.get("status") == S.SCHEDULED:
+            pr = AN.probs_for(self, m)
+            if pr:
+                m["probs"] = pr
         v = self.venue_for(m)
         if v:
             vv = {k: v[k] for k in ("id", "name_ar", "name_en", "city", "emirate", "lat", "lon", "in_uae")}
@@ -272,6 +315,12 @@ class Poller:
                 self.fetch_detail(m["id"], "prematch")
             if not self.has_time(3):
                 break
+        for cid in {m["comp"] for m in matches if m["status"] in S.LIVE_STATUSES and m["comp"] in self.comp_ids}:
+            if self.has_time(3):
+                try:
+                    AN.live_table(self, cid, [m for m in matches if m["comp"] == cid and m["status"] in S.LIVE_STATUSES])
+                except Exception as e:
+                    self.store.fail(f"live-table:{cid}", e)
         self.st["live_ids"] = sorted(now_live | (prev_live & {str(m["id"]) for m in matches if m["status"] in S.LIVE_STATUSES}))
         self.mark("day_today")
 
@@ -334,7 +383,7 @@ class Poller:
         if st:
             if comp.get("kind") == "league" and comp.get("magic", True):
                 st["magic"] = MAGIC.magic_numbers(st, comp.get("matches_per_team"))
-                prev = self.st.get("prev_season", {}).get(str(cid))
+                prev = self.aux("prev_season").get(str(cid))
                 if prev and not st.get("composite"):
                     played = {r["team"]["id"]: r["played"] or 0 for r in st["groups"][0]["rows"]}
                     ls = SEASON.last_season_same_round(prev["matches"], played)
@@ -346,6 +395,10 @@ class Poller:
                                 health_key=f"file:comp/{cid}/standings")
             if cid in (10197, 10609, 290, 329):
                 self.qualifying_section(comp, st, matches)
+            try:
+                AN.comp_tables(self, cid, st, matches, comp.get("kind"))
+            except Exception as e:
+                self.store.fail(f"tables:{cid}", e)
         if data.get("leaders"):
             self.store.put_json(f"comp/{cid}/stats.json", {**data["leaders"], "generated": iso(now)}, cache="warm",
                                 validate=S.validate_leaders, health_key=f"file:comp/{cid}/stats")
@@ -360,7 +413,7 @@ class Poller:
     def merge_uaepl(self, comp, matches):
         """Add official stadium names and the not-yet-dated rounds from uaepl.ae (cached daily)."""
         cid = comp["id"]
-        cache = self.st.setdefault("uaepl_fx", {})
+        cache = self.aux("uaepl_fx")
         if self.due("uaepl", 1440, cid) and self.has_time(12):
             try:
                 ul = self.up.fixtures(comp)
@@ -399,7 +452,7 @@ class Poller:
             "season": data["competition"].get("season"), "name": data["competition"].get("name"),
             "has_table": bool(data.get("standings")), "matches": len(matches),
             "finished": sum(m["status"] == S.FINISHED for m in matches), "next_kickoff": nxt,
-            "source": source, "updated": iso(now)}
+            "source": source, "updated": iso(now), "country": data["competition"].get("country")}
 
     def qualifying_section(self, comp, st, matches):
         """National-team scenario inputs: the UAE's group table and that group's remaining fixtures."""
@@ -469,7 +522,14 @@ class Poller:
         self.store.put_json(f"team/{tid}.json", {**t, "generated": iso(self.now())}, cache="static",
                             validate=S.validate_team, health_key=f"team:{tid}")
         self.store.ok(f"team:{tid}")
-        self.st.setdefault("squads", {})[str(tid)] = t["squad"]
+        self.aux("squads")[str(tid)] = t["squad"]
+        self.aux("coaches")[str(tid)] = {"coach": t.get("coach"), "history": t.get("coach_history")}
+        self.aux("team_fx")[str(tid)] = [{k: m.get(k) for k in ("id", "comp", "kickoff_utc", "status", "home", "away", "score")}
+                                         for m in t["fixtures"]]
+        loans = [x for x in ((t.get("transfers") or {}).get("out") or []) if x.get("loan")]
+        if loans:
+            self.aux("loans_out")[str(tid)] = loans
+
         self.st.setdefault("teams", {})[str(tid)] = [t["name"], t.get("name_ar")]
         self.write_ics(tid, t["fixtures"], self.st.setdefault("ics_seq", {}))
         self.mark("team", tid)
@@ -503,7 +563,7 @@ class Poller:
                 fx = self.fixture_cache[cid] = (self.store.get_json(f"comp/{cid}/fixtures.json") or {}).get("matches") or []
             have = self.ledger(cid)["matches"]
             for m in sorted(fx, key=lambda m: m.get("kickoff_utc") or "", reverse=True):
-                if m.get("id") and m["status"] == S.FINISHED and str(m["id"]) not in have:
+                if m.get("id") and m["status"] == S.FINISHED and (have.get(str(m["id"])) or {}).get("v", 1) < SEASON.LEDGER_VERSION:
                     if n >= limit or not self.has_time(5):
                         return n
                     self.fetch_detail(m["id"], "backfill")
@@ -522,6 +582,10 @@ class Poller:
         self.store.put_json(f"comp/{cid}/xg.json", {**base, **SEASON.xg_table(L)}, cache="static")
         sh = SEASON.shots(L)
         self.store.put_json(f"comp/{cid}/shots.json", {**base, **sh}, cache="static")
+        try:
+            AN.ledger_extras(self, cid)
+        except Exception as e:
+            self.store.fail(f"ledger-extras:{cid}", e)
         self.mark("agg", cid)
 
     def player_tables(self, cid):
@@ -537,7 +601,12 @@ class Poller:
         table = SEASON.player_table(lists)
         country = (raw.get("details") or {}).get("country")
         self.store.put_json(f"comp/{cid}/players.json", {"comp": cid, "generated": iso(self.now()), **table}, cache="static")
-        squads = [{"national": False, "squad": sq} for tid, sq in self.st.get("squads", {}).items() if int(tid) != NATIONAL]
+        table["_lists"] = {"rating": (lists.get("rating") or {}).get("entries") or []}
+        try:
+            AN.player_extras(self, cid, table, raw)
+        except Exception as e:
+            self.store.fail(f"player-extras:{cid}", e)
+        squads = [{"national": False, "squad": sq} for tid, sq in self.aux("squads").items() if int(tid) != NATIONAL]
         nat = SEASON.nationality_map([self.ledger(cid)["matches"]], squads)
         if country and country != "INT":
             self.store.put_json(f"comp/{cid}/foreigners.json", {"comp": cid, "generated": iso(self.now()),
@@ -564,7 +633,7 @@ class Poller:
             return
         slim = [{"id": m["id"], "kickoff_utc": m["kickoff_utc"], "status": m["status"], "score": m["score"],
                  "home": {"id": m["home"]["id"]}, "away": {"id": m["away"]["id"]}} for m in pdata["matches"]]
-        self.st.setdefault("prev_season", {})[str(cid)] = {"season": prev, "matches": slim}
+        self.aux("prev_season")[str(cid)] = {"season": prev, "matches": slim}
         self.store.ok(f"prev-season:{cid}")
         self.mark("prev", cid)
 
@@ -575,7 +644,7 @@ class Poller:
             return
         pairs = [(a, b) for i, a in enumerate(clubs) for b in clubs[i + 1:]]
         known = {}
-        for m in (self.fixture_cache.get(538) or []) + (self.st.get("prev_season", {}).get("538") or {}).get("matches", []):
+        for m in (self.fixture_cache.get(538) or []) + (self.aux("prev_season").get("538") or {}).get("matches", []):
             if m.get("id"):
                 known.setdefault(tuple(sorted((m["home"]["id"], m["away"]["id"]))), m["id"])
         n = 0
@@ -620,14 +689,16 @@ class Poller:
         """UAE nationals at clubs outside the UAE: national squad + UAE-coded players in other leagues' lineups."""
         uae_clubs = {int(k) for k, v in self.st.get("team_comps", {}).items() if 538 in v or 11027 in v}
         cands = {}
-        for g in self.st.get("squads", {}).get(str(NATIONAL)) or []:
+        for g in self.aux("squads").get(str(NATIONAL)) or []:
             for p in g["players"]:
                 if p.get("club_id") and p["club_id"] not in uae_clubs:
                     cands[str(p["id"])] = p["name"]
         for cid in self.comp_ids - set(config.focus_comps()):
-            L = self.ledgers.get(cid)
-            for e in (L or {}).get("matches", {}).values():
-                for pid, (name, cc, tid) in (e.get("players") or {}).items():
+            if self.st.get("dormant", {}).get(str(cid)) is not False:
+                continue
+            for e in self.ledger(cid)["matches"].values():
+                for pid, pl in (e.get("players") or {}).items():
+                    name, cc, tid = pl[:3]
                     if cc == "UAE" and tid not in uae_clubs and tid != NATIONAL:
                         cands[pid] = name
         known = self.st.setdefault("abroad", {})
@@ -715,7 +786,15 @@ class Poller:
             "focus_teams": config.focus_teams(), "live_now": len(self.st.get("live_ids", [])),
             "files": {"live": "live.json", "day": "day/YYYYMMDD.json (UAE date)", "match": "match/{id}.json",
                       "team": "team/{id}.json, team/{id}.ics", "teams": "teams.json", "health": "health.json",
-                      "national": ["national/5789/qualifying.json", "national/uae-abroad.json"], "h2h": "h2h/index.json"},
+                      "national": ["national/5789/qualifying.json", "national/uae-abroad.json", "national/5789/fifa.json"],
+                      "h2h": "h2h/index.json", "health_analytics": "health-analytics.json",
+                      "ratings": ["ratings/uae-clubs.json", "ratings/team/{id}.json", "ratings/national.json"],
+                      "archive": "archive/index.json", "leagues": "leagues/compare.json", "player": "player/{id}.json",
+                      "comp_extras": ["sim", "scenarios", "live-table", "bump", "tournament-sim", "facts", "watch", "pressure",
+                                      "fatigue", "coaches", "fortress", "clutch", "minute-clock", "lineup-ages", "rotation",
+                                      "team-of-round", "style", "cards", "improved", "young-uae", "similar", "records",
+                                      "alltime", "loans", "referees", "halftime", "goal-bands", "xg", "shots", "players",
+                                      "foreigners", "transfers"]},
         }, cache="hot")
         teams = {k: {"name": v[0], "name_ar": v[1] or self.names["teams"].get(k), "logo": S.LOGO.format(id=k),
                      "comps": self.st.get("team_comps", {}).get(k, [])} for k, v in self.st.get("teams", {}).items()}
@@ -769,9 +848,6 @@ class Poller:
                 break
             if comp.get("kind") == "league" and self.due("prev", 1440, comp["id"]):
                 self.prev_season(comp)
-        for cid in c.get("player_stats_comps", []):
-            if self.has_time(25) and self.due("players", 1440, cid):
-                self.player_tables(cid)
         if self.has_time(8):
             self.backfill(2 if live else c.get("backfill_per_run", 6))
         if not live and self.has_time(8):
@@ -786,6 +862,45 @@ class Poller:
                     (self.st.get("due", {}).get(f"agg:{cid_s}") or "") < changed:
                 self.aggregates(int(cid_s))
 
+    def player_tables_due(self):
+        for cid in self.cfg.get("player_stats_comps", []):
+            if self.has_time(40) and self.due("players", 1440, cid):
+                self.player_tables(cid)
+
+    def analytics_chores(self):
+        steps = [
+            ("history", 0, lambda: AN.history_step(self, limit=12)),
+            ("players", 0, self.player_tables_due),
+            ("ratings", 60, lambda: AN.ratings(self)),
+            ("league_analytics", 60, lambda: AN.league(self)),
+            ("style", 1440, lambda: AN.style(self)),
+            ("national", 1440, lambda: AN.national(self)),
+            ("fifa", 1440, lambda: AN.fifa(self)),
+            ("alltime", 1440, lambda: AN.publish_alltime(self)),
+            ("loans", 60, lambda: AN.loans(self)),
+            ("league_squads", 0, lambda: AN.league_squads_step(self)),
+            ("compare", 1440, lambda: AN.league_compare(self)),
+            ("archive", 0, lambda: AN.archive_step(self)),
+        ]
+        for key, every, fn in steps:
+            if not self.has_time(12):
+                return
+            if key == "history" and AN.history_complete(self) and not self.due("history_recheck", 1440):
+                continue
+            if key in ("ratings", "league_analytics", "archive") and not AN.history_complete(self):
+                continue
+            if every and not self.due(key, every):
+                continue
+            try:
+                fn()
+                if every:
+                    self.mark(key)
+                if key == "history" and AN.history_complete(self):
+                    self.mark("history_recheck")
+            except Exception as e:
+                self.store.fail(f"analytics:{key}", f"{type(e).__name__}: {e}")
+                self.mark(key)
+
     def focus_team_ids(self):
         ids = list(config.focus_teams())
         for k, v in self.st.get("team_comps", {}).items():
@@ -795,6 +910,17 @@ class Poller:
 
     def run(self):
         self.load()
+        if self.role == "analytics":
+            self.mode = "analytics"
+            try:
+                self.analytics_chores()
+            except Exception as e:
+                self.store.fail("analytics", f"{type(e).__name__}: {e}")
+                traceback.print_exc()
+            self.save()
+            return {"mode": self.mode, "written": len(self.store.written), "unchanged": self.store.skipped_same,
+                    "requests": HTTP.network_calls - self.requests_before, "seconds": round(self.clock() - self.t0, 1),
+                    "refused": self.store.refused}
         live_ids = self.live_window()
         self.mode = "live" if live_ids else "idle"
         try:
@@ -826,6 +952,16 @@ class Poller:
                 "refused": self.store.refused}
 
 
+def analytics_handler(event, context):
+    """The slow schedule (every 10 min, own function): heavy computation only, never the live loop."""
+    budget = float(os.environ.get("ANALYTICS_BUDGET", 280))
+    if context is not None and hasattr(context, "get_remaining_time_in_millis"):
+        budget = min(budget, context.get_remaining_time_in_millis() / 1000 - 15)
+    res = Poller(Store(S3Backend(os.environ["BUCKET"])), budget=budget, role="analytics").run()
+    print(json.dumps(res))
+    return res
+
+
 def handler(event, context):
     budget = config.settings().get("budget_seconds", 50)
     if context is not None and hasattr(context, "get_remaining_time_in_millis"):
@@ -842,6 +978,8 @@ if __name__ == "__main__":
     ap.add_argument("--local", help="write to this directory instead of S3")
     ap.add_argument("--bucket", help="S3 bucket (default $BUCKET)")
     ap.add_argument("--budget", type=float, default=None)
+    ap.add_argument("--analytics", action="store_true", help="run the slow analytics role instead of the poller")
     a = ap.parse_args()
     st = Store(LocalBackend(a.local)) if a.local else Store(S3Backend(a.bucket or os.environ["BUCKET"]))
-    print(json.dumps(Poller(st, budget=a.budget).run(), ensure_ascii=False))
+    role = "analytics" if a.analytics else "poller"
+    print(json.dumps(Poller(st, budget=a.budget, role=role).run(), ensure_ascii=False))

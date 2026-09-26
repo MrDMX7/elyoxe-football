@@ -1,0 +1,595 @@
+# UAE league champions since 1973-74 and all-time top scorers. Built by tools/build_alltime.py;
+# facts only, sources and the Wikipedia revision below. Do not edit by hand, rerun the tool.
+source:
+  wikipedia: https://en.wikipedia.org/w/index.php?title=UAE_Pro_League&oldid=1376422886
+  wikipedia_revision: 1376422886
+  champions_cited_source: RSSSF, United Arab Emirates - List of Champions (https://www.rsssf.org/tablesu/uaechamp.html)
+  scorers_cited_source: FootballUAE.net '100s' (archived) as cited by the Wikipedia table
+  cross_check: FotMob leagues?id=538 seasons[].winner, 2010/11 onward
+  facts_only: true
+cross_check_disagreements:
+- '2007-08: Wikipedia Al Shabab vs FotMob Al Shabab (Dubai)'
+titles_by_club:
+  Al Ain: 15
+  Al Wasl: 8
+  Al Ahli: 7
+  Sharjah: 6
+  Al Wahda: 4
+  Al Nasr: 3
+  Al Shabab: 3
+  Al Jazira: 3
+  Shabab Al Ahli: 2
+champions:
+- season: 1973-74
+  champion: Sharjah
+  champion_id: 102124
+  champion_ar: الشارقة
+  runner_up: Al Ahli
+  cancelled: null
+- season: 1974-75
+  champion: Al Ahli
+  champion_id: 102119
+  champion_ar: الأهلي
+  runner_up: Sharjah
+  cancelled: null
+- season: 1975-76
+  champion: Al Ahli
+  champion_id: 102119
+  champion_ar: الأهلي
+  runner_up: Al Ain
+  cancelled: null
+- season: 1976-77
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Sharjah
+  cancelled: null
+- season: 1977-78
+  champion: Al Nasr
+  champion_id: 102123
+  champion_ar: النصر
+  runner_up: Al Ain
+  cancelled: null
+- season: 1978-79
+  champion: Al Nasr
+  champion_id: 102123
+  champion_ar: النصر
+  runner_up: Sharjah
+  cancelled: null
+- season: 1979-80
+  champion: Al Ahli
+  champion_id: 102119
+  champion_ar: الأهلي
+  runner_up: Al Shaab
+  cancelled: null
+- season: 1980-81
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Al Nasr
+  cancelled: null
+- season: 1981-82
+  champion: Al Wasl
+  champion_id: 102111
+  champion_ar: الوصل
+  runner_up: Al Ain
+  cancelled: null
+- season: 1982-83
+  champion: Al Wasl
+  champion_id: 102111
+  champion_ar: الوصل
+  runner_up: Sharjah
+  cancelled: null
+- season: 1983-84
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Al Wasl
+  cancelled: null
+- season: 1984-85
+  champion: Al Wasl
+  champion_id: 102111
+  champion_ar: الوصل
+  runner_up: Al Shaab
+  cancelled: null
+- season: 1985-86
+  champion: Al Nasr
+  champion_id: 102123
+  champion_ar: النصر
+  runner_up: Al Wasl
+  cancelled: null
+- season: 1986-87
+  champion: Sharjah
+  champion_id: 102124
+  champion_ar: الشارقة
+  runner_up: Al Wasl
+  cancelled: null
+- season: 1987-88
+  champion: Al Wasl
+  champion_id: 102111
+  champion_ar: الوصل
+  runner_up: Sharjah
+  cancelled: null
+- season: 1988-89
+  champion: Sharjah
+  champion_id: 102124
+  champion_ar: الشارقة
+  runner_up: Al Wasl
+  cancelled: null
+- season: 1989-90
+  champion: Al Shabab
+  champion_id: 102115
+  champion_ar: الشباب
+  runner_up: Al Wasl
+  cancelled: null
+- season: 1990-91
+  champion: null
+  champion_id: null
+  champion_ar: null
+  runner_up: null
+  cancelled: true
+- season: 1991-92
+  champion: Al Wasl
+  champion_id: 102111
+  champion_ar: الوصل
+  runner_up: Sharjah
+  cancelled: null
+- season: 1992-93
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Al Wasl
+  cancelled: null
+- season: 1993-94
+  champion: Sharjah
+  champion_id: 102124
+  champion_ar: الشارقة
+  runner_up: Al Ain
+  cancelled: null
+- season: 1994-95
+  champion: Al Shabab
+  champion_id: 102115
+  champion_ar: الشباب
+  runner_up: Al Ain
+  cancelled: null
+- season: 1995-96
+  champion: Sharjah
+  champion_id: 102124
+  champion_ar: الشارقة
+  runner_up: Al Wasl
+  cancelled: null
+- season: 1996-97
+  champion: Al Wasl
+  champion_id: 102111
+  champion_ar: الوصل
+  runner_up: Al Nasr
+  cancelled: null
+- season: 1997-98
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Sharjah
+  cancelled: null
+- season: 1998-99
+  champion: Al Wahda
+  champion_id: 102122
+  champion_ar: الوحدة
+  runner_up: Al Ain
+  cancelled: null
+- season: 1999-00
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Al Nasr
+  cancelled: null
+- season: 2000-01
+  champion: Al Wahda
+  champion_id: 102122
+  champion_ar: الوحدة
+  runner_up: Al Ahli
+  cancelled: null
+- season: 2001-02
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Al Jazira
+  cancelled: null
+- season: 2002-03
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Al Wahda
+  cancelled: null
+- season: 2003-04
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Al Shabab
+  cancelled: null
+- season: 2004-05
+  champion: Al Wahda
+  champion_id: 102122
+  champion_ar: الوحدة
+  runner_up: Al Ain
+  cancelled: null
+- season: 2005-06
+  champion: Al Ahli
+  champion_id: 102119
+  champion_ar: الأهلي
+  runner_up: Al Wahda
+  cancelled: null
+  fotmob_winner: Shabab Al-Ahli Dubai FC
+- season: 2006-07
+  champion: Al Wasl
+  champion_id: 102111
+  champion_ar: الوصل
+  runner_up: Al Wahda
+  cancelled: null
+  fotmob_winner: Al-Wasl
+- season: 2007-08
+  champion: Al Shabab
+  champion_id: 102115
+  champion_ar: الشباب
+  runner_up: Al Jazira
+  cancelled: null
+  fotmob_winner: Al Shabab (Dubai)
+- season: 2008-09
+  champion: Al Ahli
+  champion_id: 102119
+  champion_ar: الأهلي
+  runner_up: Al Jazira
+  cancelled: null
+  fotmob_winner: Shabab Al-Ahli Dubai FC
+- season: 2009-10
+  champion: Al Wahda
+  champion_id: 102122
+  champion_ar: الوحدة
+  runner_up: Al Jazira
+  cancelled: null
+  fotmob_winner: Al-Wahda
+- season: 2010-11
+  champion: Al Jazira
+  champion_id: 102101
+  champion_ar: الجزيرة
+  runner_up: Baniyas
+  cancelled: null
+- season: 2011-12
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Al Nasr
+  cancelled: null
+  fotmob_winner: Al-Ain
+- season: 2012-13
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Al Ahli
+  cancelled: null
+  fotmob_winner: Al-Ain
+- season: 2013-14
+  champion: Al Ahli
+  champion_id: 102119
+  champion_ar: الأهلي
+  runner_up: Al Wahda
+  cancelled: null
+  fotmob_winner: Shabab Al-Ahli Dubai FC
+- season: 2014-15
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Al Jazira
+  cancelled: null
+  fotmob_winner: Al-Ain
+- season: 2015-16
+  champion: Al Ahli
+  champion_id: 102119
+  champion_ar: الأهلي
+  runner_up: Al Ain
+  cancelled: null
+  fotmob_winner: Shabab Al-Ahli Dubai FC
+- season: 2016-17
+  champion: Al Jazira
+  champion_id: 102101
+  champion_ar: الجزيرة
+  runner_up: Al Wasl
+  cancelled: null
+  fotmob_winner: Al-Jazira
+- season: 2017-18
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Al Wahda
+  cancelled: null
+  fotmob_winner: Al-Ain
+- season: 2018-19
+  champion: Sharjah
+  champion_id: 102124
+  champion_ar: الشارقة
+  runner_up: Shabab Al Ahli
+  cancelled: null
+  fotmob_winner: Sharjah Cultural Club
+- season: 2019-20
+  champion: null
+  champion_id: null
+  champion_ar: null
+  runner_up: null
+  cancelled: true
+- season: 2020-21
+  champion: Al Jazira
+  champion_id: 102101
+  champion_ar: الجزيرة
+  runner_up: Baniyas
+  cancelled: null
+  fotmob_winner: Al-Jazira
+- season: 2021-22
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Sharjah
+  cancelled: null
+  fotmob_winner: Al-Ain
+- season: 2022-23
+  champion: Shabab Al Ahli
+  champion_id: 102119
+  champion_ar: شباب الأهلي
+  runner_up: Al Ain
+  cancelled: null
+  fotmob_winner: Shabab Al-Ahli Dubai FC
+- season: 2023-24
+  champion: Al Wasl
+  champion_id: 102111
+  champion_ar: الوصل
+  runner_up: Shabab Al Ahli
+  cancelled: null
+  fotmob_winner: Al-Wasl
+- season: 2024-25
+  champion: Shabab Al Ahli
+  champion_id: 102119
+  champion_ar: شباب الأهلي
+  runner_up: Sharjah
+  cancelled: null
+  fotmob_winner: Shabab Al-Ahli Dubai FC
+- season: 2025-26
+  champion: Al Ain
+  champion_id: 102117
+  champion_ar: العين
+  runner_up: Shabab Al Ahli
+  cancelled: null
+  fotmob_winner: Al-Ain
+top_scorers_all_time:
+- rank: 1
+  name: Ali Mabkhout
+  clubs:
+  - Al Jazira
+  - Al Nasr
+  years: 2009–
+  goals: 226
+  apps: 313
+- rank: 2
+  name: Sebastián Tagliabúe
+  clubs:
+  - Al Wahda
+  - Al Nasr
+  - Sharjah
+  years: 2013–2024
+  goals: 184
+  apps: 239
+- rank: 3
+  name: Fahad Khamees
+  clubs:
+  - Al Wasl
+  years: 1980–1997
+  goals: 175
+  apps: null
+- rank: 4
+  name: Fábio Lima
+  clubs:
+  - Al Wasl
+  years: 2014–
+  goals: 170
+  apps: 230
+- rank: 5
+  name: Mohammad Omar
+  clubs:
+  - Al Wasl
+  - Al Ain
+  - Al Jazira
+  - Al Dhafra
+  - Al Nasr
+  - Ajman
+  years: 1992–2011
+  goals: 132
+  apps: null
+- rank: 6
+  name: Adnan Al Talyani
+  clubs:
+  - Al Shaab
+  years: 1980–1999
+  goals: 131
+  apps: null
+- rank: 7
+  name: Abdulaziz Mohamed
+  clubs:
+  - Sharjah
+  years: 1980–2003
+  goals: 128
+  apps: null
+- rank: 8
+  name: Ahmed Abdullah
+  clubs:
+  - Al Ain
+  years: 1978–1995
+  goals: 122
+  apps: null
+- rank: 9
+  name: Youssouf Al-Atiq Hassan
+  clubs:
+  - Al Ahli
+  years: 1988–2002
+  goals: 119
+  apps: null
+- rank: 10
+  name: Faisal Khalil
+  clubs:
+  - Al Ahli
+  - Al Wasl
+  - Al Shaab
+  years: 1999–2013
+  goals: 114
+  apps: 302
+- rank: 11
+  name: Kodjo Fo-Doh Laba
+  clubs:
+  - Al-Ain
+  years: 2019–
+  goals: 113
+  apps: 119
+- rank: 12
+  name: Makhete Diop
+  clubs:
+  - Al Dhafra
+  - Shabab Al Ahli
+  - Sharjah
+  years: 2011–2018, 2021–2023
+  goals: 108
+  apps: 180
+- rank: 13
+  name: Asamoah Gyan
+  clubs:
+  - Al-Ain
+  - Al Ahli
+  years: 2011–2017
+  goals: 101
+  apps: 97
+- rank: 14
+  name: Ismail Matar
+  clubs:
+  - Al Wahda
+  years: 2001–2024
+  goals: 101
+  apps: 418
+- rank: 15
+  name: Anderson Barbosa
+  clubs:
+  - Sharjah
+  - Al Wasl
+  years: 2003–2009
+  goals: 99
+  apps: 128
+- rank: 16
+  name: Caio Canedo
+  clubs:
+  - Al Ain
+  - Al Wasl
+  years: 2014–
+  goals: 99
+  apps: 218
+- rank: 17
+  name: Ahmed Khalil
+  clubs:
+  - Al Ain
+  - Shabab Al Ahli
+  - Al Bataeh
+  years: 2007–
+  goals: 96
+  apps: 273
+- rank: 18
+  name: Ali Thani
+  clubs:
+  - Sharjah
+  years: ''
+  goals: 93
+  apps: null
+- rank: 19
+  name: Aissa Sangour
+  clubs:
+  - Al Shabab
+  years: ''
+  goals: 88
+  apps: null
+- rank: 20
+  name: Zuhair Bakheet
+  clubs:
+  - Al Wasl
+  years: ''
+  goals: 88
+  apps: null
+- rank: 21
+  name: Saeed Al-Kass
+  clubs:
+  - Sharjah
+  - Al Wasl
+  years: ''
+  goals: 87
+  apps: null
+- rank: 22
+  name: Majid Al Owais
+  clubs:
+  - Al Ain
+  years: ''
+  goals: 86
+  apps: null
+- rank: 23
+  name: Mohammed Salem Al-Enazi
+  clubs:
+  - Al Wahda
+  - Al Wasl
+  - Al Jazira||
+  years: '83'
+  goals: 0
+  apps: null
+- rank: 24
+  name: Boris Kabi
+  clubs:
+  - '|'
+  years: '82'
+  goals: 146
+  apps: null
+- rank: 25
+  name: Nasir Khamees
+  clubs:
+  - Al Wasl
+  years: ''
+  goals: 82
+  apps: null
+- rank: 26
+  name: Ibrahim Diaky
+  clubs:
+  - Al Ain
+  - Al Jazira
+  years: ''
+  goals: 80
+  apps: null
+- rank: 27
+  name: Khalid Ismail
+  clubs:
+  - Al Nasr|
+  years: '75'
+  goals: 0
+  apps: null
+- rank: 28
+  name: Omar Khribin
+  clubs:
+  - Al Wahda
+  - Al Dhafra
+  - Shabab Al Ahli|
+  years: '75'
+  goals: 117
+  apps: null
+- rank: 29
+  name: André Senghor
+  clubs:
+  - '|'
+  years: '73'
+  goals: 118
+  apps: null
+- rank: 30
+  name: Caio Lucas
+  clubs:
+  - Al Ain
+  - Sharjah
+  years: ''
+  goals: 73
+  apps: 169
+

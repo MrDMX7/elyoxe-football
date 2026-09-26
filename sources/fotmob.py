@@ -189,6 +189,10 @@ class FotMob(Source):
                 "gf": gf, "ga": ga, "gd": r.get("goalConDiff"), "pts": r.get("pts"),
                 "deduction": r.get("deduction"), "form": form or None,
                 "zone": zone.get(pos), "live": bool(r.get("ongoing")),
+                # the live match FotMob already counted in this row, with the score it counted
+                "ongoing": ({"match": S._int(r["ongoing"].get("id")), "home": S._int(r["ongoing"].get("hId")),
+                             "away": S._int(r["ongoing"].get("aId")), "hs": r["ongoing"].get("hScore"),
+                             "as": r["ongoing"].get("aScore")} if isinstance(r.get("ongoing"), dict) else None),
             })
         return rows
 
@@ -202,11 +206,17 @@ class FotMob(Source):
         groups = []
         if data.get("composite") or data.get("tables"):
             for g in data.get("tables") or []:
-                rows = self._rows((g.get("table") or {}).get("all"), form_map, g.get("legend") or data.get("legend"))
-                groups.append({"id": S._int(g.get("leagueId")), "name": g.get("leagueName"), "rows": rows})
+                tb = g.get("table") or {}
+                rows = self._rows(tb.get("all"), form_map, g.get("legend") or data.get("legend"))
+                groups.append({"id": S._int(g.get("leagueId")), "name": g.get("leagueName"), "rows": rows,
+                               "home_rows": self._rows(tb.get("home"), {}, None) or None,
+                               "away_rows": self._rows(tb.get("away"), {}, None) or None})
         else:
-            rows = self._rows((data.get("table") or {}).get("all"), form_map, data.get("legend"))
-            groups.append({"id": cid, "name": None, "rows": rows})
+            tb = data.get("table") or {}
+            rows = self._rows(tb.get("all"), form_map, data.get("legend"))
+            groups.append({"id": cid, "name": None, "rows": rows,
+                           "home_rows": self._rows(tb.get("home"), {}, None) or None,     # home games only
+                           "away_rows": self._rows(tb.get("away"), {}, None) or None})
         groups = [g for g in groups if g["rows"]]
         if not groups:
             return None
@@ -356,7 +366,11 @@ class FotMob(Source):
                 "xg": _round(s.get("expectedGoals")), "xgot": _round(s.get("expectedGoalsOnTarget")),
                 "x": s.get("x"), "y": s.get("y"), "on_target": s.get("isOnTarget"), "blocked": s.get("isBlocked"),
                 "body": s.get("shotType"), "situation": s.get("situation"), "own_goal": s.get("isOwnGoal"),
-                "inside_box": s.get("isFromInsideBox")})
+                "inside_box": s.get("isFromInsideBox"),
+                # goal-mouth: where the ball crossed the goal line (y across, z height; FotMob units, goal 0-2.44 m high)
+                "goal_y": s.get("goalCrossedY"), "goal_z": s.get("goalCrossedZ"),
+                "on_goal": {"x": (s.get("onGoalShot") or {}).get("x"), "y": (s.get("onGoalShot") or {}).get("y")} if s.get("onGoalShot") else None,
+                "keeper_id": s.get("keeperId"), "saved_off_line": s.get("isSavedOffLine")})
         return out
 
     def _events(self, evs, m):
@@ -427,10 +441,17 @@ class FotMob(Source):
 
     def _player(self, p):
         perf = p.get("performance") or {}
+        vl, hl = p.get("verticalLayout") or {}, p.get("horizontalLayout") or {}
         return {"id": p.get("id"), "name": p.get("name"), "number": p.get("shirtNumber"),
                 "position_id": p.get("positionId") if p.get("positionId") is not None else p.get("usualPlayingPositionId"),
-                "country": p.get("countryCode"), "captain": bool(p.get("isCaptain")),
-                "rating": perf.get("rating")}
+                "role": {0: "GK", 1: "DF", 2: "MF", 3: "FW"}.get(p.get("usualPlayingPositionId")),
+                "country": p.get("countryCode"), "captain": bool(p.get("isCaptain")), "age": p.get("age"),
+                "rating": perf.get("rating"),
+                "minutes_on": next((x.get("time") for x in perf.get("substitutionEvents") or [] if x.get("type") == "subIn"), None),
+                "minutes_off": next((x.get("time") for x in perf.get("substitutionEvents") or [] if x.get("type") == "subOut"), None),
+                # pitch position for a 3D view: 0-1 fractions of the pitch as FotMob draws it
+                "xy": {"x": vl.get("x"), "y": vl.get("y")} if vl else None,
+                "xy_h": {"x": hl.get("x"), "y": hl.get("y")} if hl else None}
 
     def _lineups(self, lu):
         if not lu:
@@ -505,7 +526,9 @@ class FotMob(Source):
                                 "position": p.get("positionIdsDesc"), "country": p.get("ccode") if len(str(p.get("ccode") or "")) == 3 else None,
                                 "club": p.get("cname") if raw.get("squad", {}).get("isNationalTeam") else None,
                                 "club_id": S._int(p.get("ccode")) if raw.get("squad", {}).get("isNationalTeam") else None,
-                                "age": p.get("age"), "goals": p.get("goals"), "assists": p.get("assists"),
+                                "age": p.get("age"), "dob": p.get("dateOfBirth"), "height": p.get("height"),
+                                "market_value_eur": p.get("transferValue"),
+                                "goals": p.get("goals"), "assists": p.get("assists"),
                                 "yellow": p.get("ycards"), "red": p.get("rcards"),
                                 "injury": ({"type": inj.get("name") or inj.get("id"), "expected_return": inj.get("expectedReturn")}
                                            if isinstance(inj, dict) else None)})
@@ -520,6 +543,9 @@ class FotMob(Source):
             fixtures.append(m)
         venue = ((raw.get("overview") or {}).get("venue") or {}).get("widget") or {}
         loc = venue.get("location") or [None, None]
+        coach_history = [{"id": c.get("id"), "name": c.get("name"), "season": c.get("season"), "comp": c.get("leagueId"),
+                          "won": c.get("win"), "drawn": c.get("draw"), "lost": c.get("loss"), "ppg": c.get("pointsPerGame")}
+                         for c in ((raw.get("overview") or {}).get("coachHistory") or [])]
         tdata = (raw.get("transfers") or {}).get("data") or {}
         transfers = {"in": [self._transfer(x) for x in tdata.get("Players in") or []],
                      "out": [self._transfer(x) for x in tdata.get("Players out") or []]} if tdata else None
@@ -529,7 +555,10 @@ class FotMob(Source):
             "primary_comp": S._int(det.get("primaryLeagueId")),
             "venue": {"name": venue.get("name"), "city": venue.get("city"),
                       "lat": _num(loc[0]), "lon": _num(loc[1])} if venue.get("name") else None,
-            "coach": coach, "squad": squad, "fixtures": fixtures, "transfers": transfers, "source": self.name,
+            "fifa_ranking": ({"rank": (det.get("fifaRanking") or {}).get("rank"), "points": (det.get("fifaRanking") or {}).get("points"),
+                              "updated": (det.get("fifaRanking") or {}).get("updated")} if det.get("fifaRanking") else None),
+            "coach": coach, "coach_history": coach_history, "squad": squad, "fixtures": fixtures,
+            "transfers": transfers, "source": self.name,
         }
 
     def _transfer(self, x):

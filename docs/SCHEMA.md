@@ -1,4 +1,6 @@
-# Football data: normalized schema v1
+# Tifo data: normalized schema v1
+
+Tifo is the brand; it will live at `tifo.elyoxe.com`, but DNS is not set up yet. AWS resource names stay `elyoxe-football-*`.
 
 Every file the poller publishes, and every object the adapters in `sources/` return, follows this
 document. The adapters are `fotmob.py` (main), `uaepl.py` (official fallback) and `apifootball.py`
@@ -65,7 +67,8 @@ The CloudFront cache policy honours each object's max-age (MinTTL 1 s). Unchange
 | `national/5789/qualifying.json` | the UAE's group table and that group's remaining fixtures per qualifying competition | with 290, 329, 10197, 10609 |
 | `national/uae-abroad.json` | UAE nationals at clubs outside the UAE, with their main-league season stats | daily |
 | `h2h/{a}-{b}.json`, `h2h/index.json` | full head-to-head list for each pair of current Pro League clubs (`a` < `b`) | weekly per pair |
-| `health.json` | per source and file: ok, error, time, last_ok; last run (mode, seconds, requests, written) | every run |
+| `health.json` | per source and file: ok, error, time, last_ok; last run (mode, seconds, requests, written) | every run (poller) |
+| `health-analytics.json` | the same for the analytics function | every 10 min |
 
 ## Objects
 
@@ -201,6 +204,47 @@ The team fields are `{id, name, name_ar, logo, short_name, country, national, pr
 
 The ledger fills as matches finish. A backfill cursor also fetches up to 6 already-finished matches per idle minute (UAE competitions first) until the current season is complete.
 
+## Tifo analytics (the `elyoxe-football-analytics` function, every 10 min, never in the live loop)
+
+| path | content |
+|---|---|
+| `ratings/uae-clubs.json` | Tifo rating table: `teams: [{team, name_ar, rating, rank, change_5, in_league}]`, params, calibration (Brier). Model in docs/TIFO-RATING.md |
+| `ratings/team/{id}.json` | rating history for charts: `history: [[date, rating_after, match_id], ...]` since 2010/11 |
+| `ratings/national.json` | national-team Elo (martj42 + FotMob): UAE rating, world position, top 60, unmatched names |
+| `comp/538/sim.json` | 10k-season Monte Carlo: `teams: {id: {exp_pts, positions: [P(1st)...], title, ranks_1_2, ranks_3_3, ranks_4_4, relegation}}`, `fixtures_check` |
+| `comp/{id}/scenarios.json` | any group or league with ≤ 8 games left: every W/D/L combination → per team best/worst position and `next_result: {W,D,L: {best, worst}}` |
+| `comp/{id}/live-table.json` | while live (poller, 20 s): the table re-ranked with the newest live scores (`rank_before` = source rank) |
+| `comp/{id}/bump.json` | leagues: `positions: {team: [position after round 1, 2, ...]}` (computed order) |
+| `comp/{id}/tournament-sim.json` | 329, 290: `teams: {id: {group_positions, reach_1/8 ... reach_final, reach_winner}}` |
+| `comp/538/facts.json` | per upcoming match (21 days): items `{team, kind (unbeaten/winning/winless/losing/scoring/clean_sheets/home_unbeaten/away_unbeaten/weekday/h2h), current, record, record_at_stake, text_ar}`. Records are qualified «منذ 2010/2011 (بيانات FotMob)» |
+| `comp/538/watch.json` | watchability per upcoming match: `{score 0-100, closeness, derby, stakes, form}` |
+| `comp/538/pressure.json` | coach-pressure index per team: `{coach, games, ppg, xppg, losing_streak, winless_streak, index}` (formula in compute/clubs.py) |
+| `comp/538/fatigue.json` | per team: `matches_14d, days_since_last, days_to_next, afc_away_trips_30d [{match, venue, city, km}], afc_km_30d` |
+| `comp/538/coaches.json` | per club: current coach + FotMob coachHistory (coach, season, W/D/L, ppg) |
+| `comp/538/fortress.json` | per stadium: home team's league home record since 2010/11, current and longest unbeaten run |
+| `comp/{id}/clutch.json` | points added by goals and assists (winners, equalisers): `players: [{id, team, from_goals, from_assists, total, winners, equalisers}]` |
+| `comp/{id}/minute-clock.json` | goals per minute (index 1-120) league-wide and per team (for/against) |
+| `comp/{id}/lineup-ages.json` | per round: average age of every starting XI, youngest and oldest |
+| `comp/{id}/rotation.json` | starting-XI changes game to game, per team and per coach |
+| `comp/{id}/team-of-round.json` | best XI per round (4-3-3) from FotMob match ratings |
+| `comp/538/style.json` | team style fingerprint (possession, shots, passes, directness, crosses, ppda pressing proxy, territory, box touches, aerials, xG where present) and the nearest European teams (47, 87, 55, 54, 53) |
+| `comp/{id}/cards.json` | Tifo player card: `{overall, parts: {finishing, creating, passing, dribbling, defending, work_rate}}` (keepers: shot_stopping, clean_sheets, distribution ...), 40-99 |
+| `comp/{id}/improved.json` | FotMob season rating vs last season: biggest rises and falls |
+| `comp/538/young-uae.json` | UAE nationals aged ≤ 23 (date of birth), ranked by rating then (G+A)/90 |
+| `comp/538/similar.json` | 8 most similar players (per-90 cosine) for every Pro League player, pool = 538, 536, 535, 47, 87 |
+| `player/{id}.json` | season card for share images: minutes, rating, goals, assists, shots, chances, tackles, card overall, clutch points, dob, nationality, number |
+| `comp/538/records.json` | all-time scorer chase: `{name, goals_all_time, needs_to_equal, needs_to_pass, next_rank_name, goals_this_season}` (as of the Wikipedia revision in `as_of`) |
+| `comp/538/alltime.json` | champions since 1973-74 (with runner-up), titles per club, all-time top 30 scorers: facts from Wikipedia (revision id) citing RSSSF; 2010/11+ cross-checked against FotMob |
+| `comp/538/loans.json` | players the UAE clubs loaned out: current club, main-league stats |
+| `leagues/compare.json` | 538 vs 536, 535, 47, 87: goals per match, home-win and draw %, average squad age, foreign share, attendance (where reported) |
+| `national/5789/fifa.json` | UAE FIFA ranking since 1992: `{date, rank, points, afc_rank, arab_rank}` (FIFA API) + FotMob's current ranking |
+| `archive/index.json`, `archive/{id}.json` | memorable matches with full event data: derbies (competitions.yaml `derbies`), cup finals, Super Cups since 2016/17 |
+
+- **Standings rows:** they also carry `home_rows`/`away_rows` per group (home and away tables) and `ongoing` (the live match FotMob counted, with its score).
+- **Lineup players:** they carry `role` (GK/DF/MF/FW), `age`, `minutes_on/off`, and `xy`/`xy_h` (0–1 pitch fractions as FotMob draws the vertical and horizontal lineups) for a 3D pitch.
+- **Shots:** they carry `goal_y`/`goal_z` (where the ball crossed the goal line), `on_goal {x, y}` and `keeper_id`.
+- **Squad players:** they carry `dob`, `height` and `market_value_eur`.
+
 ## Not available (checked 2026-09-26)
 
 | item | status |
@@ -219,6 +263,12 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | Highlights fallback | FotMob already links the official `@uaeproleague` YouTube video per match (checked through YouTube oEmbed: author "UAE Pro League"). If that ever disappears, the channel's RSS feed (`youtube.com/feeds/videos.xml?channel_id=<id>`, one request, latest 15 videos) matches on titles of the form «ملخص وأهداف مباراة {home_ar} ضد {away_ar} الجولة {round} من دوري ادنوك للمحترفين». This is not implemented, and YouTube is not scraped |
 | World Cup qualifying (AFC) | The 2023/25 cycle (id 10197) is finished, and the next cycle is not published. `qualifying.json` shows the finished group. The Asian Cup 2027 group E (290) and Gulf Cup group B (329) have remaining fixtures |
 | Player names in Arabic | Not in any source |
+| Match events before 2016/17, lineups before 2018/19 | FotMob match details are empty for 2014/15 and earlier and have no lineups for 2016/17. The archive starts at 2016/17 |
+| UAE league results before 2010/11 | No free machine-readable source. Champions since 1973–74 come from Wikipedia/RSSSF (`alltime.json`) |
+| FIFA ranking for 2026 dates | FIFA's API returns empty lists for its newest ids (`FRS_*`). FotMob's current ranking fills in from then on, without AFC/Arab ranks |
+| Attendance | FotMob reports none for UAE matches, so `avg_attendance` is null for 538 |
+| Coach tenure dates | FotMob gives coach history per season, not appointment dates. Pressure uses the current coach's games this season |
+| Distance for AFC away trips | Known only once that match's detail has been fetched (backfill), because the venue comes from the match detail |
 | Kickoff times for later Pro League rounds | FotMob has rounds 1–6 (42 matches). uaepl.ae has all 182 pairings, but rounds 7–26 have no dates yet (`date_tbd`) |
 
 ## Prayer-time method

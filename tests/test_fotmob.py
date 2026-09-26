@@ -60,6 +60,8 @@ def test_match_detail_uae(fx):
     goal = next(e for e in d["events"] if e["type"] == "goal")
     assert goal["assist"]["name"] == "Carlos Alberto"
     assert d["lineups"]["home"]["formation"] == "4-2-3-1" and d["lineups"]["home"]["starters"][0]["country"] == "UAE"
+    gk = d["lineups"]["home"]["starters"][0]
+    assert gk["xy"] and 0 <= gk["xy"]["x"] <= 1 and gk["role"] == "GK" or gk["role"] is None
     assert d["h2h"]["summary"] == {"home_wins": 10, "draws": 5, "away_wins": 3} and len(d["h2h"]["matches"]) == 18
     assert d["venue"]["name"] == "Al Maktoum Stadium"
     assert d["xg"] is None and d["shotmap"] is None       # "ratings" coverage: no xG in the UAE league

@@ -40,7 +40,8 @@ def ledger_entry(d: dict) -> dict:
             elif t == "own_goal" and side:
                 benef = "away" if side == "home" else "home"
             goals.append({"m": e.get("minute"), "add": e.get("added"), "side": benef, "type": t,
-                          "player": (e.get("player") or {}).get("id") if t != "own_goal" else None})
+                          "player": (e.get("player") or {}).get("id") if t != "own_goal" else None,
+                          "assist": (e.get("assist") or {}).get("id")})
             if t == "penalty_goal" and side in pens:
                 pens[side]["scored"] += 1
         elif t == "missed_penalty" and side in pens:
@@ -58,16 +59,45 @@ def ledger_entry(d: dict) -> dict:
     for side in ("home", "away"):
         lu = (d.get("lineups") or {}).get(side) or {}
         tid = hid if side == "home" else aid
+        starters = {p.get("id") for p in lu.get("starters") or []}
         for p in (lu.get("starters") or []) + (lu.get("subs") or []):
-            if p.get("id"):
-                players[str(p["id"])] = [p.get("name"), p.get("country"), tid]
+            if p.get("id"):   # [name, country, team, rating, role, age, starter]
+                players[str(p["id"])] = [p.get("name"), p.get("country"), tid, p.get("rating"), p.get("role"),
+                                         p.get("age"), p.get("id") in starters]
+    stats = {}
+    for g in d.get("stats") or []:
+        for it in g["items"]:
+            h, a = _statnum(it["home"]), _statnum(it["away"])
+            if h is not None and a is not None and it["key"] not in stats:
+                stats[it["key"]] = [h, a]
+    lus = d.get("lineups") or {}
+    coaches = {side: ((lus.get(side) or {}).get("coach")) for side in ("home", "away")}
+    formations = {side: (lus.get(side) or {}).get("formation") for side in ("home", "away")}
     return {
+        "v": LEDGER_VERSION, "stats": stats or None, "coaches": coaches, "formations": formations,
         "id": d["id"], "ko": d.get("kickoff_utc"), "round": d.get("round"), "home": hid, "away": aid,
         "score": d.get("score"), "ht": d.get("halftime_score"), "xg": d.get("xg"), "coverage": d.get("coverage"),
         "referee": ({k: d["referee"].get(k) for k in ("id", "name", "country")} if d.get("referee") else None),
         "referee_stats": (d.get("referee") or {}).get("source_stats"),
         "cards": cards, "pens": pens, "goals": goals, "var": var, "shots": shots, "players": players,
+        "att": d.get("attendance"),
     }
+
+
+LEDGER_VERSION = 2
+
+
+def _statnum(v):
+    """12 -> 12, "1.31" -> 1.31, "356 (85%)" -> 356; anything else None."""
+    if isinstance(v, (int, float)):
+        return v
+    if isinstance(v, str):
+        import re
+        m = re.match(r"\s*(-?\d+(?:\.\d+)?)", v)
+        if m:
+            f = float(m.group(1))
+            return int(f) if f.is_integer() else f
+    return None
 
 
 def _band(minute, added):
@@ -278,7 +308,8 @@ def nationality_map(ledgers: list[dict], squads: list[dict]) -> dict:
     nat = {}
     for L in ledgers:
         for e in L.values():
-            for pid, (name, cc, tid) in (e.get("players") or {}).items():
+            for pid, pl in (e.get("players") or {}).items():
+                name, cc, tid = pl[:3]
                 if cc:
                     nat[pid] = cc
     for sq in squads:

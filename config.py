@@ -55,3 +55,11 @@ def uaepl_teams() -> dict:
 def uaepl_en_names() -> dict:
     """uaepl.ae English club name -> slug."""
     return dict(_load("teams_ar.yaml").get("uaepl_en") or {})
+
+
+def rating_params() -> dict:
+    return dict(_load("competitions.yaml").get("rating") or {})
+
+
+def derbies() -> list[tuple[int, int]]:
+    return [tuple(sorted(map(int, p))) for p in _load("competitions.yaml").get("derbies") or []]

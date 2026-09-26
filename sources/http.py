@@ -38,8 +38,11 @@ class Http:
         return min(int(x) for x in m) if m else 0
 
     def get_bytes(self, url, headers=None, min_ttl=0) -> bytes:
-        hit = self._cache.get(url)
         now = self.clock()
+        if len(self._cache) > 20:   # a warm container lives for hours: drop expired bodies (memory)
+            for k in [k for k, v in self._cache.items() if v[0] <= now]:
+                del self._cache[k]
+        hit = self._cache.get(url)
         if hit and hit[0] > now:
             return hit[1]
         h = {"User-Agent": UA, "Accept": "application/json, text/html;q=0.9, */*;q=0.8",
