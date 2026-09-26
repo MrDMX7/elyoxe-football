@@ -23,20 +23,28 @@
     return Promise.all([index(), get("day/" + uaeToday(dayOff).replace(/-/g, "") + ".json").catch(function(){ return { matches:[] }; }), get("live.json").catch(function(){ return { matches:[] }; })]).then(function(r){
       var idx = r[0], day = r[1], live = r[2], by = {}; (live.matches || []).forEach(function(m){ by[m.id] = m; });
       var ms = (day.matches || []).map(function(m){ return by[m.id] || m; });
-      set("#daytitle", R.esc(R.dayLabel(uaeToday(dayOff), uaeToday(0))));
+      set("#daytitle", R.dayNav(uaeToday(dayOff), uaeToday(0)));
       set("#day", R.dayList(ms, idx, { mine:mine(), empty:"ما في مباريات في هاليوم." }));
-      var lv = (live.matches || []); set("#livecount", lv.length ? '<i class="livedot"></i>' + lv.length + " مباراة مباشرة الحين" : "");
+      var lv = (live.matches || []); set("#livecount", lv.length ? '<i class="cardflip"></i>' + lv.length + " مباراة مباشرة الحين" : "");
+      if (dayOff === 0) stand(R.featured(ms));
       stamp(live.generated || day.generated);
       myCard(idx);
       poll(home, lv.length || ms.some(function(m){ var t = Date.parse(m.kickoff_utc); return m.status === "scheduled" && t - Date.now() < 15 * 60e3 && t > Date.now() - 3 * 3600e3; }) ? 20e3 : 120e3);
     });
   }
+  var ST = null;
+  function stand(m){
+    var box = $("#stand"); if (!box || !m || !window.TifoStand) return;
+    set("#standcap", R.standCap(m)); var k = $("#standkick"); if (k) k.textContent = R.isLive(m) ? "مباشر الحين" : m.status === "finished" ? "انتهت" : "مباراة اليوم";
+    if (!ST) ST = window.TifoStand.mount(box.querySelector("canvas"));
+    ST.set(m);
+  }
   function myCard(idx){
     var el = $("#mine"); if (!el) return; var id = mine();
-    if (!id){ el.innerHTML = '<div class="mine-card"><div class="h">اختار فريقك</div><p class="muted small">تختاره مرة وحدة، ومبارياته تطلع لك أول شي في كل صفحة.</p><p class="small">افتح صفحة أي نادي من الترتيب واضغط «هذا فريقي».</p></div>'; return; }
+    if (!id){ el.innerHTML = '<div class="mine-card"><div class="h">اختار فريقك</div><p class="small" style="margin:0">افتح صفحة ناديك واضغط «هذا فريقي»، ومبارياته تطلع لك أول شي هنا.</p></div>'; return; }
     get("team/" + id + ".json").then(function(t){
       var f = R.teamFixtures(t), n = f.next[0], p = f.past[0];
-      el.innerHTML = '<div class="mine-card"><a class="h" href="/t/' + t.id + '/">' + R.logo(t) + " " + R.tname(t) + ' <span class="muted small">فريقي</span></a>' + (n ? '<div class="small muted">الياية</div>' + R.matchRow(n, { date:true }) : "") + (p ? '<div class="small muted">الأخيرة</div>' + R.matchRow(p, { date:true }) : "") + "</div>";
+      el.innerHTML = '<div class="mine-card"><a class="h" href="/t/' + t.id + '/">' + R.logo(t) + " " + R.tname(t) + " <small>فريقي</small></a>" + (n ? '<div class="lbl">المباراة الياية</div>' + R.matchRow(n, { date:true }) : "") + (p ? '<div class="lbl">آخر نتيجة</div>' + R.matchRow(p, { date:true }) : "") + "</div>";
     }).catch(function(){});
   }
 
@@ -45,7 +53,7 @@
     var cid = +B.dataset.comp;
     return Promise.all([get("comp/" + cid + "/standings.json").catch(function(){ return null; }), get("comp/" + cid + "/fixtures.json").catch(function(){ return null; }), get("comp/" + cid + "/stats.json").catch(function(){ return null; }), get("live.json").catch(function(){ return { matches:[] }; })]).then(function(r){
       var st = r[0], fx = r[1], stats = r[2], live = (r[3].matches || []).filter(function(m){ return m.comp === cid; });
-      if (st){ var lt = R.liveTable(st, live); set("#table", (lt.is_live ? '<p class="note"><i class="livedot"></i>الترتيب اللحظي: لو انتهت المباريات الحين</p>' : "") + R.standings(lt, { mine:mine() })); }
+      if (st){ var lt = R.liveTable(st, live); set("#table", (lt.is_live ? '<p class="note"><i class="cardflip"></i>الترتيب اللحظي: لو انتهت المباريات الحين</p>' : "") + R.standings(lt, { mine:mine() })); }
       if (fx){ var by = {}; live.forEach(function(m){ by[m.id] = m; }); fx.matches = fx.matches.map(function(m){ return by[m.id] || m; }); roundsUI(fx); }
       if (stats){ set("#goals", R.leaders(stats, "goals")); set("#assists", R.leaders(stats, "assists")); }
       stamp((fx && fx.generated) || (st && st.generated));
@@ -75,7 +83,7 @@
   // ---- team
   function team(){
     var btn = $("#mybtn");
-    function paint(){ if (!btn) return; var on = mine() === +ID; btn.textContent = on ? "★ فريقي" : "☆ هذا فريقي"; btn.classList.toggle("ghost", !on); }
+    function paint(){ if (!btn) return; var on = mine() === +ID; btn.textContent = on ? "فريقي ✓" : "هذا فريقي"; btn.classList.toggle("on", on); }
     if (btn){ btn.onclick = function(){ setMine(mine() === +ID ? null : +ID, B.dataset.name); paint(); }; paint(); }
     return get("team/" + ID + ".json").then(function(t){
       var f = R.teamFixtures(t);
