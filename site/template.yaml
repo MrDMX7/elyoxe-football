@@ -89,7 +89,7 @@ Resources:
             TargetOriginId: data
             ViewerProtocolPolicy: redirect-to-https
             Compress: true
-            CachePolicyId: 83da9c7e-98b4-4e11-a168-04f0df8e2c65   # Managed-UseOriginCacheControlHeaders
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6   # Managed-CachingOptimized: no Host header forwarded (the data distribution needs its own Host); origin max-age still honoured
             FunctionAssociations: [{ EventType: viewer-request, FunctionARN: !GetAtt StripV1.FunctionMetadata.FunctionARN }]
         CustomErrorResponses:
           - { ErrorCode: 403, ResponseCode: 404, ResponsePagePath: /404.html, ErrorCachingMinTTL: 60 }
