@@ -55,6 +55,7 @@ class Poller:
         self.venues = Venues()
         self.log = []
         self.requests_before = HTTP.network_calls
+        self.calls_before = dict(HTTP.calls)
 
     # ------------------------------------------------------------------ helpers
     def now(self):
@@ -128,7 +129,7 @@ class Poller:
         self.store.put_json("health.json", {
             "generated": iso(self.now()), "ok": not bad, "failing": bad, "items": health,
             "last_run": {"mode": self.mode, "seconds": round(self.clock() - self.t0, 1),
-                         "requests": HTTP.network_calls - self.requests_before, "by_host": dict(HTTP.calls),
+                         "requests": HTTP.network_calls - self.requests_before, "by_host": {h: n - self.calls_before.get(h, 0) for h, n in HTTP.calls.items() if n - self.calls_before.get(h, 0)},
                          "written": len(self.store.written), "unchanged": self.store.skipped_same,
                          "refused": self.store.refused[:20], "log": self.log[-30:]},
         }, cache="hot")
