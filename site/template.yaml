@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  تيفو site (tifo.elyoxe.com): private S3 bucket for the static pages + one CloudFront distribution.
+  Default behaviour -> the site bucket (index.html rewrite); /v1/* -> the data distribution of stack elyoxe-football
+  (a function strips /v1), so pages and data share one origin (no CORS). No custom domain until the owner approves the preview.
+
+Parameters:
+  DataDomain:
+    Type: String
+    Default: d1n5aqaqkowltp.cloudfront.net
+  Aliases:
+    Type: CommaDelimitedList
+    Default: ""
+  CertArn:
+    Type: String
+    Default: ""
+
+Conditions:
+  HasDomain: !Not [!Equals [!Ref CertArn, ""]]
+
+Resources:
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub elyoxe-tifo-site-${AWS::AccountId}
+      PublicAccessBlockConfiguration: { BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true }
+      OwnershipControls: { Rules: [{ ObjectOwnership: BucketOwnerEnforced }] }
+
+  OAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig: { Name: !Sub "tifo-site-oac-${AWS::StackName}", OriginAccessControlOriginType: s3, SigningBehavior: always, SigningProtocol: sigv4 }
+
+  IndexRewrite:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub "${AWS::StackName}-index"
+      AutoPublish: true
+      FunctionConfig: { Comment: "dir -> dir/index.html", Runtime: cloudfront-js-2.0 }
+      FunctionCode: |
+        function handler(event) {
+          var r = event.request, u = r.uri;
+          if (u.endsWith("/")) r.uri = u + "index.html";
+          else if (u.lastIndexOf(".") < u.lastIndexOf("/")) {
+            return { statusCode: 301, statusDescription: "Moved", headers: { location: { value: u + "/" } } };
+          }
+          return r;
+        }
+
+  StripV1:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub "${AWS::StackName}-v1"
+      AutoPublish: true
+      FunctionConfig: { Comment: "/v1/x -> /x on the data distribution", Runtime: cloudfront-js-2.0 }
+      FunctionCode: |
+        function handler(event) { var r = event.request; r.uri = r.uri.replace(/^\/v1/, ""); return r; }
+
+  Dist:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: tifo site
+        HttpVersion: http2and3
+        PriceClass: PriceClass_All
+        DefaultRootObject: index.html
+        Aliases: !If [HasDomain, !Ref Aliases, !Ref "AWS::NoValue"]
+        ViewerCertificate: !If
+          - HasDomain
+          - { AcmCertificateArn: !Ref CertArn, SslSupportMethod: sni-only, MinimumProtocolVersion: TLSv1.2_2021 }
+          - { CloudFrontDefaultCertificate: true }
+        Origins:
+          - Id: site
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OAC.Id
+            S3OriginConfig: { OriginAccessIdentity: "" }
+          - Id: data
+            DomainName: !Ref DataDomain
+            CustomOriginConfig: { OriginProtocolPolicy: https-only, OriginSSLProtocols: [TLSv1.2] }
+        DefaultCacheBehavior:
+          TargetOriginId: site
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6   # Managed-CachingOptimized (honours origin max-age)
+          FunctionAssociations: [{ EventType: viewer-request, FunctionARN: !GetAtt IndexRewrite.FunctionMetadata.FunctionARN }]
+        CacheBehaviors:
+          - PathPattern: /v1/*
+            TargetOriginId: data
+            ViewerProtocolPolicy: redirect-to-https
+            Compress: true
+            CachePolicyId: 83da9c7e-98b4-4e11-a168-04f0df8e2c65   # Managed-UseOriginCacheControlHeaders
+            FunctionAssociations: [{ EventType: viewer-request, FunctionARN: !GetAtt StripV1.FunctionMetadata.FunctionARN }]
+        CustomErrorResponses:
+          - { ErrorCode: 403, ResponseCode: 404, ResponsePagePath: /404.html, ErrorCachingMinTTL: 60 }
+          - { ErrorCode: 404, ResponseCode: 404, ResponsePagePath: /404.html, ErrorCachingMinTTL: 60 }
+
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: { Service: cloudfront.amazonaws.com }
+            Action: s3:GetObject
+            Resource: !Sub "${SiteBucket.Arn}/*"
+            Condition: { StringEquals: { "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Dist}" } }
+
+Outputs:
+  Bucket: { Value: !Ref SiteBucket }
+  DistributionId: { Value: !Ref Dist }
+  DistributionDomain: { Value: !GetAtt Dist.DomainName }
