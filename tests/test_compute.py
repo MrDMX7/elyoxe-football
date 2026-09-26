@@ -57,7 +57,9 @@ def test_ics_uid_stable_and_sequence_bumps():
     s1 = ics.bump_sequences([m], seq)
     moved = dict(m, kickoff_utc="2026-10-17T15:45:00Z")
     s2 = ics.bump_sequences([moved], seq)
-    assert s1["1"] == 0 and s2["1"] == 1
+    assert s1["1"][0] == 0 and s2["1"][0] == 1
+    again = ics.team_calendar({"id": 1, "name": "A"}, [moved], {}, ics.bump_sequences([moved], seq))
+    assert again == ics.team_calendar({"id": 1, "name": "A"}, [moved], {}, ics.bump_sequences([moved], seq))
     cal = ics.team_calendar({"id": 1, "name": "A", "name_ar": "أ"}, [moved], {538: "دوري"}, s2)
     assert "UID:1@football.elyoxe" in cal and "SEQUENCE:1" in cal and "DTSTART:20261017T154500Z" in cal
     tbd = {"id": None, "ext_id": "uaepl:x", "comp": 538, "kickoff_utc": None, "date_uae": "2026-11-02", "time_tbd": True,

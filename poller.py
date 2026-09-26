@@ -132,7 +132,7 @@ class Poller:
                          "requests": HTTP.network_calls - self.requests_before, "by_host": {h: n - self.calls_before.get(h, 0) for h, n in HTTP.calls.items() if n - self.calls_before.get(h, 0)},
                          "written": len(self.store.written), "unchanged": self.store.skipped_same,
                          "refused": self.store.refused[:20], "log": self.log[-30:]},
-        }, cache="hot")
+        }, cache="hot", heartbeat=True)
 
     # ------------------------------------------------------------------ enrichment
     def venue_for(self, m):
@@ -215,7 +215,7 @@ class Poller:
                     ko and m["status"] == S.FINISHED and now - ko <= timedelta(hours=4)):
                 keep.append(m)
         self.store.put_json("live.json", {"generated": iso(now), "live": sum(m["status"] in S.LIVE_STATUSES for m in keep),
-                                          "matches": keep}, cache="live")
+                                          "matches": keep}, cache="live", heartbeat=True)
 
     def fetch_detail(self, mid, why):
         try:

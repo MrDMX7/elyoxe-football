@@ -39,23 +39,28 @@ def _dt(d: datetime):
 
 
 def bump_sequences(matches, seq_state: dict) -> dict:
-    """seq_state {match_id: [kickoff_utc, seq]} updated in place; returns {match_id: seq}."""
+    """seq_state {match_id: [kickoff_utc, seq, stamp]} updated in place; returns {match_id: [seq, stamp]}.
+    stamp (DTSTAMP) is the time the event last changed, so an unchanged feed is byte-identical and is
+    not re-uploaded."""
     out = {}
+    now = _dt(now_utc())
     for m in matches:
         key = str(m.get("id") or m.get("ext_id"))
         ko = m.get("kickoff_utc") or m.get("date_uae")
+        sig = f"{m.get('status')}|{(m.get('score') or {}).get('home')}-{(m.get('score') or {}).get('away')}"
         prev = seq_state.get(key)
         if prev is None:
-            seq_state[key] = [ko, 0]
-        elif prev[0] != ko:
-            seq_state[key] = [ko, prev[1] + 1]
-        out[key] = seq_state[key][1]
+            seq_state[key] = [ko, 0, now, sig]
+        elif prev[0] != ko:                       # moved: new SEQUENCE
+            seq_state[key] = [ko, prev[1] + 1, now, sig]
+        elif len(prev) < 4 or prev[3] != sig:     # result or status changed: new DTSTAMP only
+            seq_state[key] = [ko, prev[1], now, sig]
+        out[key] = seq_state[key][1:3]
     return out
 
 
 def team_calendar(team: dict, matches: list[dict], comp_names: dict, seqs: dict, venues: dict | None = None) -> str:
     name = team.get("name_ar") or team.get("name")
-    stamp = _dt(now_utc())
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", f"PRODID:{PRODID}", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
              f"X-WR-CALNAME:{_esc('مباريات ' + name)}", "X-WR-TIMEZONE:Asia/Dubai",
              "REFRESH-INTERVAL;VALUE=DURATION:PT6H", "X-PUBLISHED-TTL:PT6H"]
@@ -71,7 +76,8 @@ def team_calendar(team: dict, matches: list[dict], comp_names: dict, seqs: dict,
             summary = f"{h} {m['score']['home']}-{m['score']['away']} {a}"
         comp = comp_names.get(m.get("comp")) or m.get("comp_name") or ""
         desc = comp + (f" · الجولة {m['round']}" if m.get("round") and str(m["round"]).isdigit() else "")
-        lines += ["BEGIN:VEVENT", f"UID:{key}@football.elyoxe", f"DTSTAMP:{stamp}", f"SEQUENCE:{seqs.get(key, 0)}"]
+        seq, stamp = seqs.get(key) or [0, "20260101T000000Z"]
+        lines += ["BEGIN:VEVENT", f"UID:{key}@football.elyoxe", f"DTSTAMP:{stamp}", f"SEQUENCE:{seq}"]
         if ko and not m.get("time_tbd"):
             lines += [f"DTSTART:{_dt(ko)}", f"DTEND:{_dt(ko + DURATION)}"]
         else:

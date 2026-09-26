@@ -107,8 +107,10 @@ class Store:
         self.health[name] = {"ok": False, "at": iso(now_utc()), "error": str(err)[:300], **extra}
 
     # ---- public JSON ----
-    def put_json(self, path, obj, cache="warm", validate=None, health_key=None) -> bool:
-        """Write v1/<path> unless validation fails (keep last good) or content is unchanged."""
+    def put_json(self, path, obj, cache="warm", validate=None, health_key=None, heartbeat=False) -> bool:
+        """Write v1/<path> unless validation fails (keep last good) or content is unchanged.
+        "Unchanged" ignores a top-level `generated` stamp (so `generated` = when the content last
+        changed), except for heartbeat files (live.json, health.json) that must always move."""
         hk = health_key or path
         if validate is not None:
             try:
@@ -118,7 +120,9 @@ class Store:
                 self.fail(hk, f"not written, kept last good: {e}")
                 return False
         body = gz(dumps(obj))
-        h = hashlib.md5(body).hexdigest()
+        basis = body if heartbeat or not isinstance(obj, dict) or "generated" not in obj else \
+            dumps({k: v for k, v in obj.items() if k != "generated"})
+        h = hashlib.md5(basis).hexdigest()
         key = PUBLIC + path
         if self.hashes.get(key) == h + "|" + cache:
             self.skipped_same += 1
