@@ -103,3 +103,18 @@ def test_tournament_bracket_resolves_slots():
     t = res["teams"]
     assert t["1"]["reach_1/2"] == 1.0 and t["3"]["reach_1/2"] == 0.0
     assert sum(t[str(i)]["reach_winner"] for i in (1, 2, 5, 6)) == pytest.approx(1.0)
+
+
+def test_scenarios_skipped_while_competition_is_live(tmp_path):
+    import analytics as AN
+    import poller as P
+    from store import Store, LocalBackend
+    p = P.Poller(Store(LocalBackend(tmp_path)))
+    p.load()
+    p.st["schedule"] = {"1": {"ko": "2026-09-26T18:00:00Z", "comp": 329, "status": "live", "h": 1, "a": 2}}
+    st = {"groups": [{"name": "A", "rows": [{"team": {"id": t}, "pts": 0} for t in (1, 2, 3, 4)]}]}
+    AN.comp_tables(p, 329, st, [{"status": "scheduled", "home": {"id": 1}, "away": {"id": 2}}], "tournament")
+    assert "comp/329/scenarios.json" not in p.store.written
+    p.st["schedule"] = {}
+    AN.comp_tables(p, 329, st, [{"status": "scheduled", "home": {"id": 1}, "away": {"id": 2}}], "tournament")
+    assert "comp/329/scenarios.json" in p.store.written

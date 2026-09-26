@@ -108,7 +108,8 @@ def main():
         w_ = fm_w.get(key)
         if w_:
             c["fotmob_winner"] = w_.get("name")
-            if c["champion_id"] and w_.get("id") and int(w_["id"]) != c["champion_id"]:
+            norm = lambda x: re.sub(r"[^a-z]", "", (x or "").lower().replace("(dubai)", ""))  # noqa: E731
+            if norm(c["champion"]) != norm(w_.get("name")) and c["champion_id"] and w_.get("id") and int(w_["id"]) != c["champion_id"]:
                 notes.append(f"{c['season']}: Wikipedia {c['champion']} vs FotMob {w_.get('name')}")
     scorers = []
     for r in table(scor_sec):
@@ -125,7 +126,11 @@ def main():
                    "wikipedia_revision": rev,
                    "champions_cited_source": "RSSSF, United Arab Emirates - List of Champions (https://www.rsssf.org/tablesu/uaechamp.html)",
                    "scorers_cited_source": "FootballUAE.net '100s' (archived) as cited by the Wikipedia table",
-                   "cross_check": "FotMob leagues?id=538 seasons[].winner, 2010/11 onward", "facts_only": True},
+                   "cross_check": "FotMob leagues?id=538 seasons[].winner, 2010/11 onward", "facts_only": True,
+                   "lineage_note": "champion_id links a historical club to the FotMob id of its successor today: "
+                                   "'Al Ahli' (titles before 2017) -> 102119 Shabab Al Ahli, formed by the 2017 merger of "
+                                   "Al Ahli, Al Shabab and Dubai CSC. It is lineage, not the same club; titles_by_club "
+                                   "keeps the names as Wikipedia lists them."},
         "cross_check_disagreements": notes,
         "titles_by_club": dict(sorted(counts.items(), key=lambda kv: -kv[1])),
         "champions": champs,

@@ -7,8 +7,9 @@ source:
   scorers_cited_source: FootballUAE.net '100s' (archived) as cited by the Wikipedia table
   cross_check: FotMob leagues?id=538 seasons[].winner, 2010/11 onward
   facts_only: true
-cross_check_disagreements:
-- '2007-08: Wikipedia Al Shabab vs FotMob Al Shabab (Dubai)'
+  lineage_note: 'champion_id links a historical club to the FotMob id of its successor today: ''Al Ahli'' (titles before 2017) -> 102119 Shabab Al Ahli, formed by the 2017 merger of Al Ahli, Al Shabab and
+    Dubai CSC. It is lineage, not the same club; titles_by_club keeps the names as Wikipedia lists them.'
+cross_check_disagreements: []
 titles_by_club:
   Al Ain: 15
   Al Wasl: 8

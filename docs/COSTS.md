@@ -25,28 +25,29 @@ S3 to CloudFront transfer is free, and so is Lambda to S3 in the same region.
 | function | memory | invocations/month | billed duration |
 |---|---|---|---|
 | `elyoxe-football-poller`, live minute (3 passes at 0/20/40 s) | 256 MB | ≈15,800 | 41–43 s (sleeps between passes are billed) |
-| `elyoxe-football-poller`, idle minute | 256 MB | ≈27,400 | 6–17 s during the one-off backfill, then a few seconds |
-| `elyoxe-football-analytics` (every 10 min) | 512 MB | 4,320 | first runs ~115 s (history backfill), then 4–15 s |
+| `elyoxe-football-poller`, idle minute | 256 MB | ≈27,400 | 2–3 s steady; 6.3 s on average in the first hours while the ledger backfill runs |
+| `elyoxe-football-analytics` (every 10 min) | 512 MB | 4,320 | first runs 85–115 s (history backfill), then 7–30 s (26.7 s average over the first hour) |
 
-- **Live minutes:** 15,800 is the union of [kickoff − 75 min, kickoff + 150 min] over the 426 tracked matches FotMob lists in the next 30 days. That covers 32 competitions, including five big European leagues, the UEFA club competitions, the Saudi and Qatar leagues and the AFC. It works out to about 37% of all minutes. Removing the European competitions from `competitions.yaml` would roughly halve it.
-- **Peak memory:** 145–174 MB. The cache now evicts expired bodies, so warm containers stop growing.
-- **S3 writes per run:** 16–38 on live runs and about 12 on idle runs. Unchanged content is not re-uploaded: the hash ignores the `generated` stamp.
+- **Measured hour:** 2026-09-26 19:45–20:45 UTC, with the ledger backfill still running. The poller made 62 runs (12 live at 22.8 files written each, 50 idle at 20.9) and wrote 1,320 public files. The analytics function made 4 runs and wrote 376 files. State writes add ≈3 per poller run (`poller.json`, `hashes.json`, ledgers).
+- **Live minutes:** 15,800 is the union of [kickoff − 75 min, kickoff + 150 min] over the 426 tracked matches FotMob lists in the next 30 days. That covers 32 competitions, including five big European leagues, the UEFA club competitions, the Saudi and Qatar leagues and the AFC, and works out to about 37% of all minutes. Removing the European competitions from `competitions.yaml` would roughly halve it.
+- **Peak memory:** poller 145–174 MB, analytics 194 MB. The HTTP cache now evicts expired bodies, so warm containers stop growing.
+- **Unchanged content:** it is not re-uploaded, because the hash ignores the `generated` stamp. After the backfill, idle runs write mostly `health.json`, the day files and the files whose content changed.
 
 ## Monthly estimate, without users
 
 | item | calculation | $/month |
 |---|---|---|
 | Poller, live minutes | 15,800 × 42.5 s × 0.25 GB = 167,900 GB-s | 2.24 |
-| Poller, idle minutes | 27,400 × 6 s × 0.25 GB = 41,100 GB-s | 0.55 |
+| Poller, idle minutes | 27,400 × 4 s × 0.25 GB = 27,400 GB-s | 0.37 |
 | Analytics | 4,320 × 15 s × 0.5 GB = 32,400 GB-s | 0.43 |
 | Lambda requests | 47,520 × $0.20/M | 0.01 |
-| S3 PUTs | ≈700,000 (live 20/run, idle 12/run, analytics 10/run, plus state) | 3.50 |
-| S3 GETs | ≈700,000 (state and fixture reads) | 0.28 |
-| S3 storage | < 1 GB (≈3–10k small objects) | 0.03 |
-| CloudWatch Logs | ≈50 MB | 0.04 |
-| **Total** | | **≈ $7.1** |
+| S3 PUTs | measured 1,700/hour during backfill (≈1.2 M/month); steady state ≈ 15/run → ≈ 0.8 M/month | 4.00–6.20 |
+| S3 GETs | ≈ 15 per poller run + analytics reads ≈ 0.75 M/month | 0.30 |
+| S3 storage | < 1 GB (≈ 5–10k small objects) | 0.03 |
+| CloudWatch Logs | ≈ 60 MB | 0.04 |
+| **Total** | | **≈ $7.5–9.7** |
 
-- **Lambda free tier:** 400,000 GB-s and 1 M requests per month, always free. It is **shared by the whole account** (cards, wa-agent, contact-form, mailbox and others). If those leave it unused, the Lambda lines (≈ $3.2) drop to $0 and the total is ≈ $3.9.
+- **Lambda free tier:** 400,000 GB-s and 1 M requests per month, always free. It is **shared by the whole account** (cards, wa-agent, contact-form, mailbox and others). If those leave it unused, the Lambda lines (≈ $3.0) drop to $0 and the total is ≈ $4.5–6.7.
 - **S3 PUTs are the largest line.** The cheapest lever is to drop `live_pass_seconds` from three passes to two (−⅓ of live writes and compute).
 
 ## CloudFront, with users

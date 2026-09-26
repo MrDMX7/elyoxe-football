@@ -234,8 +234,8 @@ def comp_tables(p, cid, st, matches, kind):
     now = iso(p.now())
     if kind == "league" and st and len(st["groups"]) == 1:
         p.store.put_json(f"comp/{cid}/bump.json", {"comp": cid, "generated": now, **TB.bump(matches)}, cache="static")
-    if not st:
-        return
+    if not st or p.comp_due_minutes(cid) == 2:
+        return          # scenarios enumerate up to 3^8 outcomes: never inside a live competition's 2-minute refresh
     groups = []
     for g in st["groups"]:
         ids = {r["team"]["id"] for r in g["rows"]}
