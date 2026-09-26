@@ -1,0 +1,55 @@
+# Arabic team names.
+# `teams`: house-style overrides applied on top of FotMob's translation map (Participants).
+#   The 14 Pro League clubs use the official uaepl.ae Arabic names (checked 2026-09-26);
+#   FotMob differs only on 102119 («شباب الأهلي دبي»).
+# `uaepl`: uaepl.ae club slug (the /clubs/<slug> link) -> FotMob team id, with the site's own names.
+
+teams:
+  102101: الجزيرة
+  102117: العين
+  102119: شباب الأهلي
+  102111: الوصل
+  102124: الشارقة
+  102122: الوحدة
+  149994: عجمان
+  1552577: يونايتد
+  102123: النصر
+  209190: كلباء
+  149993: خورفكان
+  102118: الظفرة
+  102113: حتا
+  182933: بني ياس
+  5789: الإمارات
+
+uaepl:
+  al-jazira: 102101
+  al-ain: 102117
+  shabab-alahli: 102119
+  al-wasl: 102111
+  sharjah: 102124
+  al-wahda: 102122
+  ajman: 149994
+  united: 1552577
+  al-nasr: 102123
+  kalba: 209190
+  khorfakkan: 149993
+  al-dhafra: 102118
+  hatta: 102113
+  bani-yas: 182933
+
+# uaepl.ae English display name -> slug (the standings table has no club link, only the name)
+uaepl_en:
+  Al Jazira: al-jazira
+  Al Ain: al-ain
+  Shabab AlAhli: shabab-alahli
+  Al Wasl: al-wasl
+  Sharjah: sharjah
+  Al Wahda: al-wahda
+  Ajman: ajman
+  United: united
+  Al Nasr: al-nasr
+  Kalba: kalba
+  Khorfakkan: khorfakkan
+  Al Dhafra: al-dhafra
+  Hatta: hatta
+  Bani Yas: bani-yas

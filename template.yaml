@@ -1,0 +1,141 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  elyoxe-football (name pending): a poller Lambda writes JSON snapshots to a private S3 bucket every
+  minute; CloudFront serves them (default *.cloudfront.net domain until the brand is chosen).
+  No per-visitor compute. Same region as cinema/cards (ap-south-1).
+
+Parameters:
+  PriceClass:
+    Type: String
+    Default: PriceClass_200      # includes the Middle East edge locations (Dubai, Fujairah)
+
+Globals:
+  Function:
+    Runtime: python3.13
+    Architectures: [arm64]       # deploy.sh installs aarch64 wheels; the build machine is the Fold (aarch64)
+
+Resources:
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub elyoxe-football-${AWS::AccountId}-${AWS::Region}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules: [{ObjectOwnership: BucketOwnerEnforced}]
+      Tags: [{Key: product, Value: elyoxe-football}]
+
+  DataBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DataBucket
+      PolicyDocument:
+        Statement:
+          - Sid: CloudFrontReadsPublicPrefixOnly     # state/ (poller state, ledgers) is never reachable
+            Effect: Allow
+            Principal: {Service: cloudfront.amazonaws.com}
+            Action: s3:GetObject
+            Resource: !Sub "${DataBucket.Arn}/v1/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub elyoxe-football-oac-${AWS::Region}
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # Honour the Cache-Control each object carries (live.json 10 s ... cold files 1 day).
+  CachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub elyoxe-football-origin-ttl-${AWS::Region}
+        MinTTL: 1
+        DefaultTTL: 60
+        MaxTTL: 86400
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingGzip: true
+          EnableAcceptEncodingBrotli: true
+          HeadersConfig: {HeaderBehavior: none}
+          CookiesConfig: {CookieBehavior: none}
+          QueryStringsConfig: {QueryStringBehavior: none}
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: elyoxe-football data (name pending)
+        Enabled: true
+        HttpVersion: http2and3
+        PriceClass: !Ref PriceClass
+        Origins:
+          - Id: data
+            DomainName: !GetAtt DataBucket.RegionalDomainName
+            OriginPath: /v1
+            S3OriginConfig: {OriginAccessIdentity: ""}
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+        DefaultCacheBehavior:
+          TargetOriginId: data
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          Compress: true                 # .ics is stored plain; JSON is stored gzip already
+          CachePolicyId: !Ref CachePolicy
+          # managed "SimpleCORS": Access-Control-Allow-Origin: * so the static site can fetch cross-origin
+          ResponseHeadersPolicyId: 60669652-455b-4ae9-85a4-c4c02393f86c
+      Tags: [{Key: product, Value: elyoxe-football}]
+
+  PollerLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/elyoxe-football-poller
+      RetentionInDays: 14
+
+  Poller:
+    Type: AWS::Serverless::Function
+    DependsOn: PollerLogs
+    Properties:
+      FunctionName: elyoxe-football-poller
+      CodeUri: build/lambda/
+      Handler: poller.handler
+      MemorySize: 512
+      Timeout: 58                        # the poller stops itself at ~50 s (settings.budget_seconds)
+      ReservedConcurrentExecutions: 1    # never two pollers at once
+      Environment:
+        Variables:
+          BUCKET: !Ref DataBucket
+      Policies:
+        - S3CrudPolicy: {BucketName: !Ref DataBucket}
+      EventInvokeConfig:                 # an overrun minute is dropped, not queued and replayed later
+        MaximumEventAgeInSeconds: 60
+        MaximumRetryAttempts: 0
+      Events:
+        EveryMinute:
+          Type: Schedule
+          Properties:
+            Name: elyoxe-football-every-minute
+            Schedule: rate(1 minute)
+            Enabled: true
+            RetryPolicy:
+              MaximumRetryAttempts: 0
+              MaximumEventAgeInSeconds: 60
+      Tags: {product: elyoxe-football}
+
+Outputs:
+  Bucket:
+    Value: !Ref DataBucket
+  DistributionId:
+    Value: !Ref Distribution
+  DistributionDomain:
+    Value: !GetAtt Distribution.DomainName
+  FunctionName:
+    Value: !Ref Poller

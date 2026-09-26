@@ -1,0 +1,5 @@
+# Runtime (bundled into the Lambda by deploy.sh as aarch64 wheels). boto3 is in the Lambda runtime.
+PyYAML
+beautifulsoup4
+tzdata
+# Development (tests, local runs): pytest, boto3 — not bundled
