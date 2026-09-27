@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import analytics as AN  # noqa: E402
 import config  # noqa: E402
+from compute import winprob as WP  # noqa: E402
 from compute import ics as ICS, magic as MAGIC, prayer as PRAYER, season as SEASON, weather as WEATHER  # noqa: E402
 from compute.venues import Venues  # noqa: E402
 from sources import schema as S  # noqa: E402
@@ -274,6 +275,14 @@ class Poller:
         if d.get("periods"):
             self.st.setdefault("periods", {})[str(mid)] = d["periods"]
         full = self.enrich(d, full=True)
+        if d["status"] in S.LIVE_STATUSES or d["status"] == S.FINISHED:
+            try:
+                pm = AN.prematch(self, d)
+                upto = None if d["status"] == S.FINISHED else _minute_num(d.get("minute"), d["status"])
+                full["winprob"] = WP.curve(d["events"], pm[:3] if pm else None, upto)
+                full["winprob_prematch"] = {"p": [round(x, 3) for x in pm[:3]], "source": pm[3]} if pm else {"p": list(WP.PRIOR), "source": "base-rates"}
+            except Exception as e:
+                self.store.fail("winprob", f"{mid}: {e}")
         cache = "hot" if d["status"] in S.LIVE_STATUSES else "static" if d["status"] == S.FINISHED else "warm"
         self.store.put_json(f"match/{mid}.json", full, cache=cache, validate=S.validate_detail, health_key=f"match:{why}")
         self.store.ok(f"match:{why}")
@@ -969,6 +978,15 @@ class Poller:
         return {"mode": self.mode, "written": len(self.store.written), "unchanged": self.store.skipped_same,
                 "requests": HTTP.network_calls - self.requests_before, "seconds": round(self.clock() - self.t0, 1),
                 "refused": self.store.refused}
+
+
+def _minute_num(minute, status):
+    if status == S.HALFTIME or minute == "HT":
+        return 45
+    try:
+        return int(str(minute).split("+")[0])
+    except (TypeError, ValueError):
+        return 0
 
 
 def analytics_handler(event, context):

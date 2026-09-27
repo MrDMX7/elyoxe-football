@@ -135,3 +135,20 @@ def test_coaches_and_fatigue_written(tmp_path, fx):
                                    "home": {"id": 8}, "away": {"id": tid}, "score": {"home": 1, "away": 1}}]
     AN.coaches_and_fatigue(p)
     assert "comp/538/coaches.json" in p.store.written and "comp/538/fatigue.json" in p.store.written
+
+
+def test_winprob_curve(fx):
+    from compute import winprob as W
+    from sources.fotmob import FotMob
+    d = FotMob().match_from_raw(fx("fotmob_match_uae_5898782.json"))     # 2-2, away led 0-2 at half-time
+    c = W.curve(d["events"], (0.5, 0.25, 0.25))
+    assert c[0][1:] == [0.5, 0.25, 0.25]
+    for pt in c:
+        assert abs(sum(pt[1:]) - 1) < 0.01
+    ht = [pt for pt in c if pt[0] == 45][-1]
+    assert ht[3] > 0.7                                   # away far ahead at 0-2
+    assert c[-1][2] > 0.85                               # 2-2 at 90: draw
+    live = W.curve(d["events"], None, upto=30)
+    assert live[-1][0] == 30
+    lh, la = W.rates((0.6, 0.25, 0.15))
+    assert lh > la

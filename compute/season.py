@@ -84,7 +84,7 @@ def ledger_entry(d: dict) -> dict:
     }
 
 
-LEDGER_VERSION = 2
+LEDGER_VERSION = 3   # 3: refetch so every finished match file carries its win-probability curve
 
 
 def _statnum(v):

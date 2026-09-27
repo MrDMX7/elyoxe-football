@@ -188,6 +188,26 @@ def coaches_and_fatigue(p):
                          cache="static")
 
 
+def prematch(p, m):
+    """Pre-match (pH, pD, pA, source) for any match: Tifo club rating (UAE, then Arab clubs), national
+    Elo, else None (the win-probability model then uses league base rates)."""
+    h, a = m["home"]["id"], m["away"]["id"]
+    neutral = R.is_neutral(m)
+    for aux_name, params in (("ratings", {**R.DEFAULTS, **config.rating_params()}),
+                             ("arab_ratings", {**R.DEFAULTS, **config.rating_params()})):
+        r = (p.aux(aux_name).get("ratings") or {})
+        if str(h) in r and str(a) in r:
+            return (*R.probs(r[str(h)], r[str(a)], params, neutral), f"tifo-{aux_name}")
+    ne = p.aux("national_elo").get("ratings") or {}
+    ch, ca = config.country_of_team(h), config.country_of_team(a)
+    names = {c["fotmob_team"]: c.get("martj42") for c in config.countries() if c.get("fotmob_team")}
+    nh = names.get(h) or (NA.ALIASES.get(m["home"]["name"], m["home"]["name"]) if not ch else None)
+    na = names.get(a) or (NA.ALIASES.get(m["away"]["name"], m["away"]["name"]) if not ca else None)
+    if nh in ne and na in ne:
+        return (*R.probs(ne[nh], ne[na], {**R.DEFAULTS, **NA.NATIONAL}, True), "national-elo")
+    return None
+
+
 # ------------------------------------------------------------------ league analytics (538)
 def league(p):
     comp = config.competition(LEAGUE)
