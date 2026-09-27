@@ -26,6 +26,24 @@
   R.dayNav = function(ymd, today){ var x = dparts(ymd, today); return x.rel ? x.rel + "<small>" + esc(x.date) + "</small>" : esc(x.date); };
   R.isLive = function(m){ return m.status === "live" || m.status === "ht"; };
   R.minute = function(m){ return m.status === "ht" ? "استراحة" : m.minute ? '<bdi dir="ltr">' + esc(m.minute) + "'</bdi>" : "مباشر"; };
+  // a live match is "hot" (feature 35) from the 75th minute while it is level or one goal apart
+  R.hot = function(m){ var mn = parseInt(m.minute, 10) || 0; return m.status === "live" && mn >= 75 && m.score && Math.abs(m.score.home - m.score.away) <= 1; };
+  // «وش فاتني؟» (34): the match so far in a few plain lines, from the events
+  R.catchup = function(md){
+    if (!(R.isLive(md) || md.status === "finished") || !md.score) return "";
+    var H = md.home.name_ar || md.home.name, A = md.away.name_ar || md.away.name, s = md.score, lines = [], ev = md.events || [];
+    var lead = s.home > s.away ? H + " متقدم " + s.home + " - " + s.away : s.away > s.home ? A + " متقدم " + s.away + " - " + s.home : "التعادل " + s.home + " - " + s.away;
+    if (md.status === "finished") lead = s.home > s.away ? H + " فاز " + s.home + " - " + s.away : s.away > s.home ? A + " فاز " + s.away + " - " + s.home : "انتهت بالتعادل " + s.home + " - " + s.away;
+    lines.push(lead + (R.isLive(md) && md.minute ? " (الدقيقة " + String(md.minute).replace(/'/g, "") + ")" : "") + ".");
+    var goals = ev.filter(function(e){ return /goal/.test(e.type) && e.player; });
+    if (goals.length) lines.push("الأهداف: " + goals.map(function(e){ return e.player.name + " " + e.minute + "'" + (e.type === "penalty_goal" ? " من بلنتي" : e.type === "own_goal" ? " في مرماه" : ""); }).join("، ") + ".");
+    var reds = ev.filter(function(e){ return (e.type === "red" || e.type === "second_yellow") && e.player; });
+    if (reds.length) lines.push("طرد: " + reds.map(function(e){ return e.player.name + " (" + (e.team === "home" ? H : A) + ") " + e.minute + "'"; }).join("، ") + ".");
+    var miss = ev.filter(function(e){ return e.type === "missed_penalty" && e.player; });
+    if (miss.length) lines.push("بلنتي ضايع: " + miss.map(function(e){ return e.player.name + " " + e.minute + "'"; }).join("، ") + ".");
+    if (md.halftime_score && md.status === "finished"){ var h = md.halftime_score; if ((h.home > h.away && s.home < s.away) || (h.away > h.home && s.away < s.home)) lines.push("ريمونتادا: كان متأخر بين الشوطين وقلبها."); }
+    return '<div class="catchup"><b>' + (R.isLive(md) ? "وش فاتك" : "الخلاصة") + "</b>" + lines.map(function(l){ return "<p>" + esc(l) + "</p>"; }).join("") + "</div>";
+  };
   R.statusText = function(m){
     switch (m.status){
       case "live": case "ht": return R.minute(m);
@@ -41,7 +59,7 @@
   function sc(s){ return s.home + " - " + s.away; }
   R.chip = function(m, o){
     o = o || {}; var live = R.isLive(m);
-    if (live) return '<span class="chip live"><small>' + R.minute(m) + "</small>" + (m.score ? sc(m.score) : "0 - 0") + "</span>";
+    if (live) return '<span class="chip live' + (R.hot(m) ? " hot" : "") + '"><small>' + R.minute(m) + (R.hot(m) ? " حامي" : "") + "</small>" + (m.score ? sc(m.score) : "0 - 0") + "</span>";
     if (m.status === "finished" && m.score) return '<span class="chip">' + sc(m.score) + (m.penalties ? "<small>ترجيح " + sc(m.penalties) + "</small>" : m.status_detail === "AET" ? "<small>بعد الإضافي</small>" : "") + "</span>";
     if (m.status === "scheduled" || !m.status) return '<span class="chip up">' + (m.time_tbd ? "—" : R.hhmm(m.kickoff_uae)) + (o.date ? "<small>" + esc(dparts(R.ymd(m.kickoff_uae)).short) + "</small>" : "") + "</span>";
     return '<span class="chip off">' + R.statusText(m) + "</span>";

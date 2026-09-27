@@ -34,10 +34,10 @@ function page(o){
 <link rel="stylesheet" href="/assets/tifo.${ASSET_V}.css">${o.ld ? `<script type="application/ld+json">${JSON.stringify(o.ld).replace(/</g, "\\u003c")}</script>` : ""}</head>
 <body data-page="${o.page}"${o.attrs || ""}>
 <header class="bar"><div class="wrap"><a class="brand" href="/" aria-label="تيفو"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>تيفو</a><nav>
-<a href="/"${o.nav === "home" ? " aria-current" : ""}>اليوم</a><a href="/c/uae-pro-league/"${o.nav === "538" ? " aria-current" : ""}>دوري أدنوك</a><a href="/uae/"${o.nav === "uae" ? " aria-current" : ""}>المنتخب</a><a href="/c/gulf-cup/"${o.nav === "329" ? " aria-current" : ""}>كأس الخليج</a><a href="/competitions/"${o.nav === "comps" ? " aria-current" : ""}>البطولات</a></nav></div></header>
+<a href="/"${o.nav === "home" ? " aria-current" : ""}>اليوم</a><a href="/c/uae-pro-league/"${o.nav === "538" ? " aria-current" : ""}>دوري أدنوك</a><a href="/uae/"${o.nav === "uae" ? " aria-current" : ""}>المنتخب</a><a href="/c/gulf-cup/"${o.nav === "329" ? " aria-current" : ""}>كأس الخليج</a><a href="/competitions/"${o.nav === "comps" ? " aria-current" : ""}>البطولات</a></nav><button type="button" class="spoil" id="spoil" aria-pressed="false" title="يخفي النتايج لين تضغط عليها">بدون حرق</button></div></header>
 <main class="wrap">${o.body}</main>
-<footer class="foot"><div class="wrap"><span>تيفو، من استوديو <a href="https://elyoxe.com/">Elyoxe</a>. كل المواعيد بتوقيت الإمارات.</span><span class="updated" id="updated"></span><span>البيانات من FotMob ورابطة المحترفين الإماراتية</span></div></footer>
-<script src="/assets/colors.__CV__.js"></script><script src="/assets/render.${ASSET_V}.js"></script>${o.page === "home" ? `<script src="/assets/stand.${ASSET_V}.js"></script>` : ""}${o.page === "compare" ? `<script src="/assets/compare.${ASSET_V}.js"></script>` : ""}<script src="/assets/app.${ASSET_V}.js"></script></body></html>`;
+<footer class="foot"><div class="wrap"><span>تيفو، من استوديو <a href="https://elyoxe.com/">Elyoxe</a>. كل المواعيد بتوقيت الإمارات.</span><span><a href="/tv/">شاشة المجلس</a>، <a href="/studio/">ستوديو التيفو</a></span><span class="updated" id="updated"></span><span>البيانات من FotMob ورابطة المحترفين الإماراتية</span></div></footer>
+<script src="/assets/colors.__CV__.js"></script><script src="/assets/render.${ASSET_V}.js"></script>${o.page === "home" ? `<script src="/assets/stand.${ASSET_V}.js"></script>` : ""}${o.page === "compare" ? `<script src="/assets/compare.${ASSET_V}.js"></script>` : ""}${["match", "team", "studio"].includes(o.page) ? `<script src="/assets/share.${ASSET_V}.js"></script>` : ""}<script src="/assets/app.${ASSET_V}.js"></script></body></html>`;
 }
 const tabsHtml = (group, list) => `<div class="tabs" role="tablist" data-tabs="${group}">` + list.map((t, i) => `<button type="button" role="tab" data-t="${t[0]}" aria-selected="${i === 0}">${t[1]}</button>`).join("") + "</div>";
 const pane = (group, key, html, first) => `<section data-group="${group}" data-pane="${key}"${first ? "" : " hidden"}>${html}</section>`;
@@ -45,8 +45,8 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
 (async () => {
   const t0 = Date.now();
   fs.rmSync(OUT, { recursive:true, force:true }); fs.mkdirSync(path.join(OUT, "assets"), { recursive:true });
-  const css = fs.readFileSync(path.join(__dirname, "src/tifo.css"), "utf8"), rjs = fs.readFileSync(path.join(__dirname, "src/render.js"), "utf8"), ajs = fs.readFileSync(path.join(__dirname, "src/app.js"), "utf8"), sjs = fs.readFileSync(path.join(__dirname, "src/stand.js"), "utf8"), cmp = fs.readFileSync(path.join(__dirname, "src/compare.js"), "utf8");
-  ASSET_V = hash(css + rjs + ajs + sjs + cmp); fs.writeFileSync(path.join(OUT, `assets/compare.${ASSET_V}.js`), cmp);   // content-hashed file names: CloudFront's cache key ignores query strings
+  const css = fs.readFileSync(path.join(__dirname, "src/tifo.css"), "utf8"), rjs = fs.readFileSync(path.join(__dirname, "src/render.js"), "utf8"), ajs = fs.readFileSync(path.join(__dirname, "src/app.js"), "utf8"), sjs = fs.readFileSync(path.join(__dirname, "src/stand.js"), "utf8"), cmp = fs.readFileSync(path.join(__dirname, "src/compare.js"), "utf8"), shr = fs.readFileSync(path.join(__dirname, "src/share.js"), "utf8");
+  ASSET_V = hash(css + rjs + ajs + sjs + cmp + shr); fs.writeFileSync(path.join(OUT, `assets/compare.${ASSET_V}.js`), cmp); fs.writeFileSync(path.join(OUT, `assets/share.${ASSET_V}.js`), shr);   // content-hashed file names: CloudFront's cache key ignores query strings
   fs.writeFileSync(path.join(OUT, `assets/tifo.${ASSET_V}.css`), css); fs.writeFileSync(path.join(OUT, `assets/render.${ASSET_V}.js`), rjs); fs.writeFileSync(path.join(OUT, `assets/app.${ASSET_V}.js`), ajs); fs.writeFileSync(path.join(OUT, `assets/stand.${ASSET_V}.js`), sjs);
   // the mark: a 3x3 tifo of cards (chalk, pulse, dune on night pitch)
   const cellsSvg = [["#F6F7F2","#10A04B","#B07A3B"],["#F6F7F2","#B07A3B","#10A04B"],["#10A04B","#B07A3B","#F6F7F2"]].map((row, y) => row.map((c, x) => `<rect x="${4 + x * 8.5}" y="${4 + y * 8.5}" width="7" height="7" fill="${c}"/>`).join("")).join("");
@@ -142,7 +142,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   const w538 = compX[538] && compX[538].watch, fx538 = compData.find(d => d.c.id === 538);
   const watchHome = w538 && fx538 ? S.sec("أحلى مباريات الجولة الياية في دوري أدنوك", "", S.watch(w538, fx538.fx)) : "";
   write("index.html", page({ path:"/", page:"home", nav:"home", title:"تيفو — نتايج مباريات اليوم مباشر، الدوري الإماراتي والمنتخب وكل البطولات", desc:"نتايج المباريات مباشر بتوقيت الإمارات: دوري أدنوك، والمنتخب، وكأس الخليج، وأبطال آسيا، والدوريات الكبيرة. الأحداث والتشكيلات والترتيب والتوقعات أول بأول.",
-    body:`<section class="stand" id="stand" aria-label="مباراة اليوم"><canvas aria-hidden="true"></canvas><span class="kicker" id="standkick">مباراة اليوم</span><div class="cap" id="standcap">${R.standCap(R.featured(day.matches))}</div></section><div id="mine"></div><div class="daynav"><button type="button" id="prev" aria-label="اليوم اللي قبل">›</button><b id="daytitle">${R.dayNav(today, today)}</b><button type="button" id="next" aria-label="اليوم اللي بعد">‹</button></div><p class="livecount" id="livecount"></p><div id="day">${R.dayList(day.matches, index, { empty:"ما في مباريات اليوم." })}</div>${watchHome}<h2>البطولات</h2><div class="comps">${nav}</div>` }));
+    body:`<section class="stand" id="stand" aria-label="مباراة اليوم"><canvas aria-hidden="true"></canvas><span class="kicker" id="standkick">مباراة اليوم</span><div class="cap" id="standcap">${R.standCap(R.featured(day.matches))}</div></section><div id="uaecd"></div><div class="tools"><a class="btn" href="/tv/">شاشة المجلس</a><a class="btn" href="/studio/">ستوديو التيفو</a></div><div id="mine"></div><div class="daynav"><button type="button" id="prev" aria-label="اليوم اللي قبل">›</button><b id="daytitle">${R.dayNav(today, today)}</b><button type="button" id="next" aria-label="اليوم اللي بعد">‹</button></div><p class="livecount" id="livecount"></p><div id="day">${R.dayList(day.matches, index, { empty:"ما في مباريات اليوم." })}</div>${watchHome}<h2>البطولات</h2><div class="comps">${nav}</div>` }));
 
   // ---- 5. teams
   const tlist = [...teamIds];
@@ -181,7 +181,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     }
     const tabs = [["next", "الياية"], ["past", "النتايج"], ["squad", "اللاعبين"], nums && ["nums", id === 5789 ? "المنتخب بالأرقام" : "بالأرقام"]].filter(Boolean);
     const body = `<div class="th"><div class="in">${R.logo(t, "lg")}<div><h1>${R.tname(t)}</h1>${sub ? `<p>${sub}</p>` : ""}</div></div>${R.teamStrip(t)}</div>
-<div class="btnrow"><button type="button" class="btn" id="mybtn">هذا فريقي</button><a class="btn" href="/v1/team/${t.id}.ics" id="ics">مبارياته في تقويم جوالك</a></div>` +
+<div class="btnrow"><button type="button" class="btn" id="mybtn">هذا فريقي</button><a class="btn" href="/v1/team/${t.id}.ics" id="ics">مبارياته في تقويم جوالك</a><button type="button" class="btn" id="wpbtn" hidden>خلفية للجوال</button></div>${t.id === 5789 ? '<div id="uaecd"></div>' : ""}` +
       tabsHtml("t", tabs) + pane("t", "next", `<div id="next">${f.next.slice(0, 6).map(m => R.matchRow(m, { date:true })).join("") || '<p class="empty">ما في مباريات ياية منشورة.</p>'}</div>`, true) +
       pane("t", "past", `<div id="past">${f.past.slice(0, 10).map(m => R.matchRow(m, { date:true })).join("")}</div>`) + pane("t", "squad", `<div id="squad">${R.squad(t)}</div>`) + (nums ? pane("t", "nums", nums) : "");
     const html = page({ path:`/t/${t.id}/`, page:"team", attrs:` data-id="${t.id}" data-name="${esc(t.name_ar || t.name)}"`, nav:t.id === 5789 ? "uae" : "", title:`${t.name_ar || t.name}: المباريات والنتايج واللاعبين | تيفو`, desc:`مواعيد مباريات ${t.name_ar || t.name} بتوقيت الإمارات، ونتايجه، وقائمة اللاعبين، وأرقامه، واشتراك تقويم يتحدّث بروحه.`, body });
@@ -219,13 +219,22 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     const probs = md.status === "scheduled" ? (md.probs || sum.probs) : null, facts = md.status === "scheduled" ? factsByMatch[id] : null;
     const fa = md.status === "scheduled" && md.comp === 538 && x538.fatigue ? S.fatigue(x538.fatigue, [md.home.id, md.away.id]) : "";
     const pre = (probs ? S.probs(probs, md) : "") + (fa ? S.sec("ضغط المباريات", "", fa) : "") + (facts && facts.length ? S.sec("قبل المباراة", "", S.matchFacts(facts)) : "");
-    const body = `<div id="mh">${R.matchHead(md)}</div><div id="facts">${R.matchFacts(md, index)}</div>${pre}` +
+    const body = `<div id="mh">${R.matchHead(md)}</div><div class="tools"><button type="button" class="btn" id="storybtn">صورة للستوري</button><a class="btn" href="/tv/?m=${id}">على شاشة المجلس</a></div><div id="catchup">${R.catchup(md)}</div><div id="facts">${R.matchFacts(md, index)}</div>${pre}` +
       tabsHtml("m", [["events", "الأحداث"], ["lineups", "التشكيلة"], ["stats", "الإحصائيات"], ["h2h", "المواجهات"]]) +
       pane("m", "events", `<div id="events">${R.events(md)}</div>`, true) + pane("m", "lineups", `<div id="lineups">${R.lineups(md)}</div>`) + pane("m", "stats", `<div id="stats">${R.stats(md)}</div>`) + pane("m", "h2h", `<div id="h2h">${R.h2h(md)}</div>`);
     const ld = { "@context":"https://schema.org", "@type":"SportsEvent", name:`${md.home.name_ar || md.home.name} ضد ${md.away.name_ar || md.away.name}`, startDate:md.kickoff_utc, sport:"Football", homeTeam:{ "@type":"SportsTeam", name:md.home.name_ar || md.home.name }, awayTeam:{ "@type":"SportsTeam", name:md.away.name_ar || md.away.name }, ...(md.venue ? { location:{ "@type":"Place", name:md.venue.name_ar || md.venue.name_en } } : {}) };
     write(`m/${id}/index.html`, page({ path:`/m/${id}/`, page:"match", attrs:` data-id="${id}"`, title:`${ttl} — ${md.comp_name_ar || R.compName(index, md.comp)} | تيفو`, desc:`${R.tname(md.home)} ضد ${R.tname(md.away)} ${R.dayLabel(R.ymd(md.kickoff_uae))} الساعة ${R.hhmm(md.kickoff_uae)} بتوقيت الإمارات: النتيجة المباشرة والأحداث والتشكيلة والإحصائيات والمواجهات السابقة.`, body, ld }));
     urls.push(`/m/${id}/`);
   }
+
+  // ---- 7b. majlis TV (22, 131) and the Tifo studio (152)
+  write("tv/index.html", page({ path:"/tv/", page:"tv", title:"شاشة المجلس: كل المباريات مباشر على شاشة كبيرة | تيفو", desc:"افتحها على تلفزيون المجلس أو القهوة: كل مباريات اليوم مباشر بخط كبير، تتحدّث بروحها كل 20 ثانية.",
+    body:'<div class="tvbar"><h1>شاشة المجلس</h1><button type="button" class="btn" id="fsbtn">ملء الشاشة</button></div><div id="tv" class="tvgrid"><p class="empty">نحمّل المباريات…</p></div><p class="muted small">افتح هالصفحة على تلفزيون المجلس. تتحدّث بروحها كل 20 ثانية. ولمتابعة مباراتين جنب بعض، افتح أي مباراة واضغط «على شاشة المجلس».</p>' }));
+  urls.push("/tv/");
+  const clubs = [5789].concat(((compData.find(d => d.c.id === 538) || {}).st || { groups:[{ rows:[] }] }).groups[0].rows.map(r => r.team.id));
+  write("studio/index.html", page({ path:"/studio/", page:"studio", title:"ستوديو التيفو: صمّم لافتة فريقك للمدرج | تيفو", desc:"اختار فريقك واكتب عبارتك، وتطلع لك لافتة بألوان النادي جاهزة للطباعة وتاخذها للملعب.",
+    body:`<h1>ستوديو التيفو</h1><p class="muted">اختار فريقك واكتب عبارتك، وتطلع لك لافتة بألوان ناديك (3000×1000) جاهزة للطباعة.</p><div class="studio"><div class="cmpsel"><select id="sclub" aria-label="الفريق">${clubs.map(id => `<option value="${id}">${esc((teamsJson.teams[id] || {}).name_ar || id)}</option>`).join("")}</select><input id="stext" maxlength="40" value="ما نمشي بروحنا" aria-label="العبارة"></div><canvas id="sprev" width="1500" height="500"></canvas><div class="tools"><button type="button" class="btn" id="sdl">نزّل اللافتة</button></div></div>` }));
+  urls.push("/studio/");
 
   // ---- 8. competitions list, robots, sitemap, 404
   const groups = [["uae", "الإمارات"], ["gulf", "الخليج"], ["asia", "آسيا"], ["national", "المنتخبات"], ["arab", "العرب"], ["europe", "أوروبا"], ["world", "العالم"]];
