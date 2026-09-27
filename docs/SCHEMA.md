@@ -36,7 +36,7 @@ providers, write one adapter that returns these shapes.
 | class | Cache-Control | used for |
 |---|---|---|
 | live | max-age=10 | `live.json` |
-| hot | max-age=20 | `day/<today>.json`, live `match/{id}.json`, `index.json`, `health.json` |
+| hot | max-age=20 | `day/<today>.json`, live `match/{id}.json` (and scheduled ones from kickoff − 75 min to kickoff + 15 min), `index.json`, `health.json` |
 | warm | max-age=300 | standings, fixtures, stats, other days, upcoming matches |
 | static | max-age=3600 | finished matches, teams, `.ics`, aggregates, h2h |
 
@@ -83,6 +83,11 @@ The CloudFront cache policy honours each object's max-age (MinTTL 1 s). Unchange
   "status": "scheduled",          // scheduled | live | ht | finished | postponed | cancelled | abandoned | awarded | unknown
   "status_detail": null,          // FT, AET, Pen, PP ...
   "minute": null,                 // "67", "45+2", "HT" while live
+  // live and ht only (item W4.8): the clock anchor, from FotMob's period start times (Oslo clock -> UTC).
+  // A client ticks the minute as period_base + elapsed since period_start; period_start is null while the
+  // clock is stopped (period "HT", or "break" between a finished period and the next)
+  "period": "2H",                 // 1H | 2H | ET1 | ET2 | HT | break
+  "period_start": "2026-09-27T19:08:48Z", "period_base": 45, "period_length": 45,
   "score": null,                  // {"home": 2, "away": 3}
   "penalties": null,              // shoot-out {"home": 3, "away": 4}
   "home": {"id": 102118, "name": "Al-Dhafra", "name_ar": "الظفرة", "logo": "https://..."},
@@ -363,6 +368,17 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | Coach tenure dates | FotMob gives coach history per season, not appointment dates. Pressure uses the current coach's games this season |
 | Distance for AFC away trips | Known only once that match's detail has been fetched (backfill), because the venue comes from the match detail |
 | Kickoff times for later Pro League rounds | FotMob has rounds 1–6 (42 matches). uaepl.ae has all 182 pairings, but rounds 7–26 have no dates yet (`date_tbd`) |
+
+## Live-feed watchdog and source backoff (audit W1.12)
+
+- **Poller:** in live mode, each run compares now with its last `live.json` write (`live_written_at` in poller.json).
+  Above `live_stall_seconds` (90) while a match is live it mails the owner (tifo@ → hello@) once per match
+  (`stall_alerted`); health item `live-watchdog`.
+- **Analytics function (every 10 min):** reads the published `live.json`; a match still `live` in a file older than
+  90 s means the poller stopped running: one mail per match (`stall_alerted` in analytics.json).
+- **Backoff:** a 429 from any host, or a 403 on FotMob's core feeds (`matches`, `matchDetails`, `leagues`), makes
+  `sources/http.py` stop calling that host for 60 s, doubling to 10 min, reset by the first success. The calls fail
+  fast, so every file keeps its last good copy. A 403 on a single stats URL does not back the host off.
 
 ## Re-polls after full time (thin coverage)
 
