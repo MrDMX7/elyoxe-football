@@ -56,8 +56,61 @@ STYLE = """اكتب باللهجة الإماراتية المحكية، مب ف
 - لا تكتب «رقم 1» أو «1 مرة»: قل «أول فوز»، «مرة وحدة»، «المتصدر».
 """
 
+# ---- text provider: TIFO_TEXT=claude|gemini (env), else ai/provider.txt, else gemini. Claude = `claude -p` with Haiku on the
+# owner's subscription (one process at a time: the phone is RAM-bound); any failure falls back to Gemini for that item, and
+# 3 Claude failures in a row switch the rest of the run to Gemini (log: claude_stopped). TTS stays on Gemini.
+def _provider():
+    v = os.environ.get("TIFO_TEXT")
+    if not v:
+        try: v = open(os.path.join(HERE, "provider.txt")).read().strip()
+        except OSError: v = ""
+    return v if v in ("claude", "gemini") else "gemini"
+PROVIDER = _provider(); CLAUDE_FAILS = [0]; CLAUDE_STOPPED = []; CALLS = []   # CALLS: (provider, seconds) per call, for timing reports
+def _jschema(g):   # the Gemini schema dialect (OBJECT/STRING…) as JSON Schema
+    if not isinstance(g, dict): return g
+    o = {k: _jschema(v) for k, v in g.items() if k != "type"}
+    if "type" in g: o["type"] = g["type"].lower()
+    if "properties" in g: o["properties"] = {k: _jschema(v) for k, v in g["properties"].items()}; o["additionalProperties"] = False
+    return o
+def _fit(schema, v):   # maxLength / maxItems enforced in code, whatever the model returned
+    t = (schema or {}).get("type")
+    if t == "STRING": v = v if isinstance(v, str) else str(v); n = schema.get("maxLength"); return v[:n].rstrip() if n and len(v) > n else v
+    if t == "ARRAY": v = v if isinstance(v, list) else []; v = v[:schema.get("maxItems", len(v))]; return [_fit(schema.get("items"), x) for x in v]
+    if t == "OBJECT": v = v if isinstance(v, dict) else {}; return {k: _fit(sc, v.get(k)) for k, sc in schema.get("properties", {}).items() if k in v}
+    if t == "INTEGER":
+        try: return int(v)
+        except Exception: return v
+    return v
+def claude_text(system, payload, schema):
+    import subprocess, shutil
+    cmd = [os.environ.get("CLAUDE_BIN") or shutil.which("claude") or os.path.expanduser("~/.local/bin/claude"), "-p", "--model", "haiku", "--output-format", "json", "--tools", "", "--strict-mcp-config", "--disable-slash-commands",
+           "--no-session-persistence", "--setting-sources", "", "--settings", '{"alwaysThinkingEnabled":false}', "--system-prompt", system + "\n\nجاوب بـ JSON بس، مطابق للـ schema.", "--json-schema", json.dumps(_jschema(schema), ensure_ascii=False),
+           json.dumps(payload, ensure_ascii=False)]
+    t0 = time.time()
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=90, cwd="/tmp", env=dict(os.environ, MAX_THINKING_TOKENS="0"))   # no thinking: ~8 s instead of ~65 s
+        out = json.loads(r.stdout or "{}")
+        if r.returncode or out.get("is_error"): raise RuntimeError((out.get("result") or r.stderr or "")[:200])
+        res = out.get("structured_output") or json.loads(out.get("result") or "")
+        req = schema.get("required") or []
+        if not isinstance(res, dict) or any(k not in res for k in req): raise ValueError("schema")
+        CALLS.append(("claude", round(time.time() - t0, 1))); CLAUDE_FAILS[0] = 0
+        return _fit(schema, res)
+    except Exception as e:
+        CLAUDE_FAILS[0] += 1; print("claude failed:", str(e)[:200], file=sys.stderr)
+        if CLAUDE_FAILS[0] >= 3 and not CLAUDE_STOPPED: CLAUDE_STOPPED.append(str(e)[:120]); print("claude_stopped: Gemini for the rest of the run", file=sys.stderr)
+        return None
+
 GEMINI_OUT = []   # set on 402/429: the key is out of credit or quota; later calls return None at once instead of retrying
-def gemini(system, payload, schema, temp=0.6, tokens=4000):
+def gemini(system, payload, schema, temp=0.6, tokens=4000, provider=None):
+    """Generated text from the configured provider (name kept: every kind calls it). Claude first when chosen, Gemini as fallback."""
+    if (provider or PROVIDER) == "claude" and not CLAUDE_STOPPED:
+        out = claude_text(system, payload, schema)
+        if out is not None: return out
+    t0 = time.time(); out = gemini_api(system, payload, schema, temp, tokens)
+    if out is not None: CALLS.append(("gemini", round(time.time() - t0, 1)))
+    return out
+def gemini_api(system, payload, schema, temp=0.6, tokens=4000):
     if GEMINI_OUT: return None
     req = {"systemInstruction": {"parts": [{"text": system}]}, "contents": [{"role": "user", "parts": [{"text": json.dumps(payload, ensure_ascii=False)}]}],
            "generationConfig": {"temperature": temp, "maxOutputTokens": tokens, "responseMimeType": "application/json", "responseSchema": schema}}
@@ -570,6 +623,8 @@ def main():
                 r = do_quick(m, tabs[m["comp"]]); log["quick-" + r] = log.get("quick-" + r, 0) + 1; n += r == "new"
     if "daily5" in only: log["daily5"] = do_daily5()
     if GEMINI_OUT: log["gemini_stopped"] = GEMINI_OUT[0]
+    if CLAUDE_STOPPED: log["claude_stopped"] = CLAUDE_STOPPED[0]
+    log["provider"] = PROVIDER
     print(json.dumps(log, ensure_ascii=False))
 
 if __name__ == "__main__":
