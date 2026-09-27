@@ -1,0 +1,443 @@
+{
+ "1870": {
+  "latin": "1A",
+  "ar": "متصدر المجموعة الأولى",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1871": {
+  "latin": "1B",
+  "ar": "متصدر المجموعة الثانية",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1872": {
+  "latin": "1C",
+  "ar": "متصدر المجموعة الثالثة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1873": {
+  "latin": "1D",
+  "ar": "متصدر المجموعة الرابعة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1874": {
+  "latin": "1E",
+  "ar": "متصدر المجموعة الخامسة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1875": {
+  "latin": "1F",
+  "ar": "متصدر المجموعة السادسة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1878": {
+  "latin": "2A",
+  "ar": "وصيف المجموعة الأولى",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1879": {
+  "latin": "2B",
+  "ar": "وصيف المجموعة الثانية",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1880": {
+  "latin": "2C",
+  "ar": "وصيف المجموعة الثالثة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1881": {
+  "latin": "2D",
+  "ar": "وصيف المجموعة الرابعة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1882": {
+  "latin": "2E",
+  "ar": "وصيف المجموعة الخامسة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1883": {
+  "latin": "2F",
+  "ar": "وصيف المجموعة السادسة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1983": {
+  "latin": "Winner SF 1",
+  "ar": "الفائز من نصف النهائي 1",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1984": {
+  "latin": "Winner SF 2",
+  "ar": "الفائز من نصف النهائي 2",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2036": {
+  "latin": "Winner QF 1",
+  "ar": "الفائز من ربع النهائي 1",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2037": {
+  "latin": "Winner QF 2",
+  "ar": "الفائز من ربع النهائي 2",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2038": {
+  "latin": "Winner QF 3",
+  "ar": "الفائز من ربع النهائي 3",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2039": {
+  "latin": "Winner QF 4",
+  "ar": "الفائز من ربع النهائي 4",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "6440": {
+  "latin": "Winner 1F/2E",
+  "ar": "الفائز من متصدر السادسة ووصيف الخامسة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "102040": {
+  "latin": "JSM Laayoune",
+  "ar": "شباب المسيرة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "114403": {
+  "latin": "Kabuscorp Palanca",
+  "ar": "كابوسكورب بالانكا",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "147865": {
+  "latin": "ES Hamam Sousse",
+  "ar": "أمل حمام سوسة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "150115": {
+  "latin": "Panthère FC",
+  "ar": "بانثير",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "161717": {
+  "latin": "Al-Ahli",
+  "ar": "الأهلي",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "164857": {
+  "latin": "Virunga",
+  "ar": "فيرونغا",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "165039": {
+  "latin": "Rayon Sport",
+  "ar": "رايون سبورتس",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "194004": {
+  "latin": "Academia F. Amadou Diallo",
+  "ar": "أكاديمية أمادو ديالو",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "289697": {
+  "latin": "Telephonat Bani Sweif",
+  "ar": "تليفونات بني سويف",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "405618": {
+  "latin": "CO Korhogo",
+  "ar": "كورهوغو",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "437650": {
+  "latin": "Winner 2B/2F",
+  "ar": "الفائز من وصيف الثانية ووصيف السادسة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "437651": {
+  "latin": "Winner 2A/2C",
+  "ar": "الفائز من وصيف الأولى ووصيف الثالثة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "437654": {
+  "latin": "Winner 1E/2D",
+  "ar": "الفائز من متصدر الخامسة ووصيف الرابعة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "446686": {
+  "latin": "Hang Yuen FC",
+  "ar": "هانغ يوين",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "517927": {
+  "latin": "Dekernes",
+  "ar": "دكرنس",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "558370": {
+  "latin": "KMKM FC",
+  "ar": "كي إم كي إم",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "570488": {
+  "latin": "Widad Temara",
+  "ar": "وداد تمارة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "589564": {
+  "latin": "UNAM",
+  "ar": "أونام",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "655323": {
+  "latin": "Al-Hilal",
+  "ar": "الهلال",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "864004": {
+  "latin": "Club Jeunesse Ben Guerir",
+  "ar": "شباب بن جرير",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1404983": {
+  "latin": "Vitesse FC",
+  "ar": "فيتيس",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1421037": {
+  "latin": "AS Cotonou",
+  "ar": "جمعية كوتونو",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1470254": {
+  "latin": "Alo Egypt",
+  "ar": "ألو إيجيبت",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1628003": {
+  "latin": "Taguig",
+  "ar": "تاغويغ",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1659965": {
+  "latin": "AS PSI",
+  "ar": "بي إس آي",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1689656": {
+  "latin": "Paro FC",
+  "ar": "بارو",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1786755": {
+  "latin": "FC Masar",
+  "ar": "مسار",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1798920": {
+  "latin": "Kasuka",
+  "ar": "كاسوكا",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1799374": {
+  "latin": "Mogadishu",
+  "ar": "مقديشو",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1823298": {
+  "latin": "AS ZAM",
+  "ar": "إيه إس زام",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1988675": {
+  "latin": "Fath Casablanca",
+  "ar": "فتح الدار البيضاء",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1988676": {
+  "latin": "Mostakbal El Marsa",
+  "ar": "مستقبل المرسى",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "1988682": {
+  "latin": "Wydad Serghini",
+  "ar": "الوداد السرغيني",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2121859": {
+  "latin": "JS El Biar",
+  "ar": "شبيبة الأبيار",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2147000": {
+  "latin": "PS Sakiet Eddaïer",
+  "ar": "تقدم ساقية الدائر",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2161015": {
+  "latin": "Welwalo Adigrat University",
+  "ar": "جامعة ويلوالو أديغرات",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2161016": {
+  "latin": "Atomic Ngome",
+  "ar": "أتوميك نغومي",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2161017": {
+  "latin": "The Panthers",
+  "ar": "ذا بانثرز",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2161019": {
+  "latin": "Diarra",
+  "ar": "ديارا",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2161020": {
+  "latin": "AS Douanes",
+  "ar": "الجمارك",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2161021": {
+  "latin": "Rouge",
+  "ar": "روج",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2161023": {
+  "latin": "Bazar Brothers",
+  "ar": "بازار براذرز",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2161024": {
+  "latin": "Al-Ghazal",
+  "ar": "الغزال",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ },
+ "2161026": {
+  "latin": "UDIB",
+  "ar": "يو دي آي بي",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-09-27"
+ }
+}

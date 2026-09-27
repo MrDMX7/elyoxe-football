@@ -6,6 +6,8 @@
   var R = window.TR, B = document.body, PAGE = B.dataset.page, RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   var $ = function(s, r){ return (r || document).querySelector(s); }, $$ = function(s, r){ return [].slice.call((r || document).querySelectorAll(s)); };
   if (window.PN && R.setNames) R.setNames(window.PN);
+  if (window.TAR && R.setClubNames) R.setClubNames(window.TAR);
+  R._hasWhy = !!document.querySelector(".why");   // 391
 
   // ---- top bar: transparent over the hero, solid once the page moves
   var top = $(".top"); function onScroll(){ if (top) top.classList.toggle("solid", window.scrollY > 40); }
@@ -127,6 +129,24 @@
 
   // 356: hero crests carry a view-transition name, so a crest morphs into the team page hero (same-origin navigations)
   $$(".hero img.logo").forEach(function(img){ var m = (img.getAttribute("src") || "").match(/\/logo\/(\d+)\.png/); if (m && !$$(".hero img.logo").some(function(o){ return o !== img && o.getAttribute("src") === img.getAttribute("src"); })) img.style.viewTransitionName = "crest-" + m[1]; });
+  // 388: one match in the home hero — while the hero match is live, the national countdown leaves the hero for its rail card
+  function cdPlace(){ var cd = $("#uaecd"), hero = $("#stand"); if (!cd || !hero) return; var f = R._idx && window.__feat, live = f && R.isLive(f);
+    var a = cd.querySelector("a.cd"), mid = a && (a.getAttribute("href").match(/\/m\/(\d+)\//) || [])[1];
+    if (!live){ if (!hero.contains(cd)){ var acts = hero.querySelector(".hero-acts"); acts.parentNode.insertBefore(cd, acts); } cd.hidden = false; return; }
+    if (mid && f && String(f.id) === mid){ cd.hidden = true; return; }
+    var card = mid && $('.rc[data-mid="' + mid + '"]'); if (card){ if (!card.contains(cd)) card.appendChild(cd); cd.hidden = false; } else cd.hidden = true; }
+  document.addEventListener("tifo:day", function(e){ if (e.detail.off === 0){ window.__feat = R.featured(e.detail.ms); setTimeout(cdPlace, 0); } });
+  if ($("#uaecd") && "MutationObserver" in window) new MutationObserver(function(){ cdPlace(); }).observe($("#uaecd"), { childList:true });
+  // 403: «فريقك» empty state — a crest grid of the visitor's country's clubs; a tap makes it your team
+  var mineBox = $("#mine");
+  function mineEmpty(){ if (!mineBox || !B.dataset.cc || mineBox.querySelector(".favrow") || mineBox.querySelector(".mgrid")) return; if (!mineBox.querySelector(".mine-card")) return;
+    var cc = lsGet("tifo.country"); if (!cc){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : "AE"; } catch (e){ cc = "AE"; } } if (cc === "xx") cc = "AE";
+    fetch("/assets/cc." + B.dataset.cc + ".json").then(function(r){ return r.json(); }).then(function(m){ var list = m[cc] || m.AE || []; if (!list.length) return;
+      var g = document.createElement("div"); g.className = "mgrid"; g.innerHTML = list.map(function(t){ return '<button type="button" data-t="' + t[0] + '" data-n="' + R.esc(t[1]) + '">' + R.logo({ id:t[0] }, "md") + "<span>" + R.esc(t[1]) + "</span></button>"; }).join("");
+      g.onclick = function(e){ var b = e.target.closest("button[data-t]"); if (!b) return; var id = +b.dataset.t, n = b.dataset.n; var f = []; try { f = JSON.parse(localStorage.getItem("tifo.favs") || "[]"); } catch (x){}
+        if (!f.some(function(x){ return x.t === "team" && x.id === id; })) f.unshift({ t:"team", id:id, n:n }); lsSet("tifo.favs", JSON.stringify(f)); lsSet("tifo.mine", String(id)); lsSet("tifo.mine.name", n); location.reload(); };
+      var p = mineBox.querySelector(".mine-card p"); if (p) p.textContent = "اختار فريقك، ومبارياته تطلع لك هني أول شي."; mineBox.querySelector(".mine-card").appendChild(g); }).catch(function(){}); }
+  if (mineBox && "MutationObserver" in window) new MutationObserver(mineEmpty).observe(mineBox, { childList:true });
   // ================= owner items (2026-09-27): 355 goal moment · 357 match-state hero · 359 cinema · 360 goal sound ·
   // 370 live «لو خلصت الحين» · 373 player card · 376 lineup builder · 379 embed. Everything lives in the sheet, a tab or the hero.
   function lsGet(k){ try { return localStorage.getItem(k); } catch (e){ return null; } }

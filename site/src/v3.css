@@ -434,3 +434,66 @@ body[data-state="final"] .mhero .sc .st{color:var(--ink);font-weight:600}
 ::view-transition-group(*){animation-duration:.35s}
 @media (prefers-reduced-motion:reduce){@view-transition{navigation:none}}
 .verdict{background:var(--surf);padding:.8rem 1rem;border-inline-start:4px solid var(--ink);font-size:1.02rem;margin-block:.4rem 1rem}.verdict b{font-family:var(--kufi);font-size:.8rem;color:var(--tert);display:block}
+
+/* ===== polish batch 387–403 ===== */
+/* 387 the stand calmer (keyart.js), and a heavier night floor so the score is the hero */
+.hero .scrim{background:linear-gradient(0deg,#0A2620 0%,#0A2620f2 22%,#0A2620b3 46%,#0A262066 72%,#0A2620a6 100%)!important}
+.hero canvas{opacity:.7}
+/* 401 floodlights: soft white from the hero's top corners */
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(45% 55% at 0 0,#ffffff14,transparent 70%),radial-gradient(45% 55% at 100% 0,#ffffff14,transparent 70%)}
+/* 399 grass mowing stripes on the night ground, felt not seen */
+body.v3{background:repeating-linear-gradient(180deg,#ffffff00 0 64px,#ffffff08 64px 128px),var(--bg)}
+/* 400 stadium-board digits: each digit in its own cell */
+.cell{display:inline-block;font-style:normal;min-inline-size:.62em;padding:0 .04em;margin:0 .03em;text-align:center;background:linear-gradient(#ffffff0d,#ffffff05);box-shadow:inset 0 0 0 1px #ffffff14,inset 0 -.5em 0 #00000024;border-radius:0}
+.mini .cell,.rc .cell{box-shadow:none;background:none;min-inline-size:0;margin:0}
+.hsc .st,.board .sc .st{font-family:var(--digits);letter-spacing:.02em}
+/* 389 substitutions: TV-style arrows, two compact lines */
+.v3 ul.ev .subs{display:grid;gap:0;font-size:.84rem;line-height:1.5}
+.v3 ul.ev .subs .in::before,.v3 ul.ev .subs .out::before{display:none}
+.arr{font-style:normal;font-weight:700;display:inline-block;inline-size:1em;text-align:center;margin-inline-end:.25rem}
+.arr.up{color:var(--live)}.arr.dn{color:var(--stone)}
+.v3 ul.ev .subs .out{color:var(--stone)}
+/* 390 period separators: a thin chalk line with small centred text */
+.v3 ul.ev li.div{display:flex;align-items:center;gap:.7rem;background:none;border:0;padding:.6rem 0;margin:.2rem 0;font:600 .72rem var(--text);color:var(--stone)}
+.v3 ul.ev li.div::before,.v3 ul.ev li.div::after{content:"";flex:1;block-size:1px;background:var(--line)}
+/* 391 the trimmed catch-up */
+.catchup.mini{padding:.5rem .8rem;border-inline-start-width:2px}.catchup.mini p{font-size:.85rem;margin:0}
+/* 393 buttons: one filled primary per area; secondaries are quiet */
+.ghost{border:0;background:#F6F7F214;min-block-size:2.9rem}.ghost:hover{background:#F6F7F229}
+.v3 .btn{border:0;background:#F6F7F214;color:var(--ink);font-weight:600}.v3 .btn:hover{background:#F6F7F229;color:var(--ink)}
+.x{border:0;background:#F6F7F214}
+.unfold{border:0;background:#F6F7F20f}
+.sa{border-inline-start:0;background:#F6F7F20d}.sa:hover{border-inline-start:0}
+/* 394 competition hero on phones: a small logo beside a compact title, the table above the fold */
+@media (max-width:879px){
+  .chero.haslogo{min-block-size:0}
+  .chero.haslogo .lgart{inline-size:5.6rem;left:auto;inset-inline-end:var(--gutter);translate:0 0;inset-block-start:calc(var(--topH) + 1.1rem)}
+  .chero.haslogo .lgart .bloom{inset:-30%}
+  .chero.haslogo .hero-in{padding-block:calc(var(--topH) + 1.2rem) 1rem;padding-inline-end:calc(var(--gutter) + 6.4rem)}
+  .chero h1{font-size:clamp(1.5rem,1rem + 3vw,2.2rem)}
+  .chero .hfacts{gap:.4rem 1.2rem;margin-block-start:.7rem}.chero .hfacts div{min-inline-size:0}.chero .hfacts dd .num{font-size:1.1rem}
+  .chero .hero-acts{margin-block-start:.9rem}.chero .hero-acts .cta,.chero .hero-acts .ghost{min-block-size:2.5rem;font-size:.85rem}
+  .chero .hfacts div:nth-child(n+3){display:none}
+}
+/* 395 table zones: a thin 3px edge on the row, no filled square behind the rank */
+.v3 table.st td.rk.z{position:relative}
+.v3 table.st td.rk.z::before{content:"";position:absolute;inset-block:.35rem;inset-inline-start:0;inline-size:3px;background:var(--z)}
+.v3 table.st td.rk span{background:none!important;color:var(--ink)!important}
+/* 396 footer: four clear columns */
+.fcols{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem}
+.fcols h3{font-size:.8rem;color:var(--tert);margin:0 0 .5rem}
+.fcols a{display:block;padding:.25rem 0;color:var(--ink);font-size:.9rem}.fcols a:hover{color:var(--tert)}
+@media (max-width:640px){.fcols{grid-template-columns:1fr 1fr;gap:1.2rem 1rem}}
+/* 398 pitch-line dividers: a thin chalk line with a half centre circle */
+.shelf-h{border-block-start:0;position:relative;padding-block-start:1.6rem}
+.shelf-h::before{content:"";position:absolute;inset-inline:0;inset-block-start:0;block-size:1px;background:var(--line)}
+.shelf-h::after{content:"";position:absolute;inset-block-start:0;left:50%;inline-size:2.4rem;block-size:1.2rem;translate:-50% 0;border:1px solid var(--line);border-block-start:0;border-radius:0 0 1.2rem 1.2rem}
+/* 402 editorial icons: one line icon per topic, single colour */
+.edi{inline-size:1.7rem;block-size:1.7rem;fill:none;stroke:var(--tert);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-block-end:.2rem}
+/* 403 «فريقك» empty state: a crest grid of your country's clubs */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(5.2rem,1fr));gap:.5rem;margin-block-start:.6rem;grid-column:1/-1}
+.mgrid button{display:grid;justify-items:center;gap:.3rem;background:var(--surf);border:0;color:var(--ink);padding:.6rem .3rem;cursor:pointer;font:600 .72rem var(--text)}
+.mgrid button:hover{background:#18463B}
+.rmine .mine-card{grid-auto-flow:row;grid-auto-columns:auto}
+/* 388 the national countdown inside a rail card */
+.rc #uaecd{margin:0;min-block-size:0;font-size:.72rem}.rc #uaecd .cd{display:flex;gap:.4rem;background:none;border:0;padding:0;margin:0;color:var(--tert)}.rc #uaecd .cd b,.rc #uaecd .cd br,.rc #uaecd .cd .small{display:none}.rc #uaecd .dg{font-size:.9rem;color:var(--ink)}
