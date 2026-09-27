@@ -18,12 +18,12 @@ def transcribe(files):
     return dict(l.split("\t", 1) for l in out.strip().splitlines() if "\t" in l)
 
 def synth(path):
-    ep = json.load(open(path)); base = path[:-5]; work = base + "_lines"; os.makedirs(work, exist_ok=True); report = []
+    ep = json.load(open(path)); base = os.path.abspath(path)[:-5]; work = base + "_lines"; os.makedirs(work, exist_ok=True); report = []
     for i, l in enumerate(ep["lines"]):
         voice, g = VOICES[l["who"]]; text = l.get("spoken") or l["text"]; best = None
         for take in range(2):   # TTS quota is 100/day, shared with the films
             f = os.path.join(work, f"{i:02d}_{take}.wav")
-            for a in range(4):
+            for a in range(0 if os.path.exists(f) else 4):   # resumable: keep takes already paid for
                 try: _tts(text, f, voice, persona(g), MODEL); break
                 except RuntimeError as e: print(i, str(e)[:60], flush=True); time.sleep(4 * (a + 1))
             if not os.path.exists(f): continue

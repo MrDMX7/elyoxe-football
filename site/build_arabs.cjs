@@ -27,13 +27,13 @@ module.exports = async function(X){
   const cmpName = id => esc(R.compName(index, id) || "");
 
   const F = {}; const files = ["arabs/abroad", "arabs/week/latest", "arabs/tonight", "arabs/clashes", "arabs/national", "arabs/u21", "arabs/coefficients", "arabs/calendars", "arabs/streaks", "derbies", "archive/index-all", "arabs/continental-history", "arabs/coaches", "arabs/referees", "arabs/friendlies", "arabs/match-of-week", "arabs/golden-boot", "arabs/poty", "arabs/continental-odds", "arabs/nations-h2h", "arabs/happiness", "arabs/twins", "clubs/anniversaries", "calendar/year", "arabs/transitions", "arabs/worldcup", "national/archives", "transfers/latest"];
-  await pool(files, 6, async f => { F[f] = await get(f + ".json", 2); });
-  const wk = F["arabs/week/latest"] && F["arabs/week/latest"].path ? await get(F["arabs/week/latest"].path, 2) : null;
+  await pool(files, 6, async f => { F[f] = await get(f + ".json"); });
+  const wk = F["arabs/week/latest"] && F["arabs/week/latest"].path ? await get(F["arabs/week/latest"].path) : null;
 
   // ---- national teams (211/295, 191): index + one page per Arab national team
   const NAT = F["arabs/national"], H2HM = F["arabs/nations-h2h"], WC = F["arabs/worldcup"];
   const natTeams = NAT && NAT.teams ? NAT.teams.slice().sort((a, b) => (a.arab_rank || 99) - (b.arab_rank || 99)) : [];
-  const nat = await pool(natTeams, 4, async t => { const [ar, ff, sq] = await Promise.all([get(`national/${t.team}/archive.json`, 1), get(`national/${t.team}/fifa.json`, 1), get(`national/${t.team}/squad.json`, 1)]); return { ar, ff, sq }; });
+  const nat = await pool(natTeams, 4, async t => { const [ar, ff, sq] = await Promise.all([get(`national/${t.team}/archive.json`, 2), get(`national/${t.team}/fifa.json`, 2), get(`national/${t.team}/squad.json`, 2)]); return { ar, ff, sq }; });
   const EN_AR = {}; nat.forEach(n => ((n.ar && n.ar.h2h) || []).forEach(h => { if (h.opponent && h.name_ar) EN_AR[h.opponent] = h.name_ar; }));
   const opp = en => EN_AR[en] ? esc(EN_AR[en]) : `<span class="lat">${esc(en)}</span>`;
   const CMP = { "Friendly":"ودية", "FIFA World Cup":"كأس العالم", "FIFA World Cup qualification":"تصفيات كأس العالم", "African Cup of Nations":"كأس أمم أفريقيا", "African Cup of Nations qualification":"تصفيات كأس أمم أفريقيا", "AFC Asian Cup":"كأس آسيا", "AFC Asian Cup qualification":"تصفيات كأس آسيا", "Arab Cup":"كأس العرب", "Arab Cup qualification":"تصفيات كأس العرب", "Gulf Cup":"كأس الخليج", "FIFA Arab Cup":"كأس العرب", "Confederations Cup":"كأس القارات", "Olympic Games":"الألعاب الأولمبية", "West Asian Championship":"بطولة غرب آسيا", "African Nations Championship":"بطولة أفريقيا للمحليين", "CECAFA Cup":"كأس سيكافا", "UNCAF Cup":"كأس أونكاف" };
@@ -185,7 +185,7 @@ module.exports = async function(X){
       note("النقاط = (التقييم ناقص 6) × 10 + 4 لكل هدف + 3 لكل صناعة، وتقل للي لعب أقل من 1800 دقيقة" + (wtd ? "، ومضروبة في قوة الدوري." : ".")), { crumbs:hubLink });
   }
   // 281 TV guide per country: prerendered for the UAE, the client swaps to the visitor's country (/v1/guide/{iso}.json)
-  const gAE = await get("guide/AE.json", 1);
+  const gAE = await get("guide/AE.json");
   put("/guide/", "دليل القنوات: مباريات الأيام الياية ووين تنقل في بلدك", "مباريات الثلاث أيام الياية وقنواتها في كل دولة عربية، بتوقيت بلدك.", "دليل القنوات", "مباريات الثلاث أيام الياية والقنوات اللي تنقلها في بلدك.",
     `<div class="cmpsel"><select id="gsel" aria-label="الدولة">${R.COUNTRIES.map(c => `<option value="${c[0]}"${c[0] === "AE" ? " selected" : ""}>${c[1]}</option>`).join("")}</select><label class="chk"><input type="checkbox" id="gfree"> المجاني بس</label></div><div id="guide">${R.guide(gAE)}</div>` + note("القنوات من بحث تيفو في مواقع الناقلين والأخبار، وممكن تتغيّر. تأكد من دليل قناتك."), { page:"guide" });
   // 284 explore every stored result (archive/all/{season}.json, fetched on demand)

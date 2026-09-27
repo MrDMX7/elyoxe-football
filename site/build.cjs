@@ -81,7 +81,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   const day = await get(`day/${today.replace(/-/g, "")}.json`) || { matches:[] };
   const [ratings, compare, fifa, qual, abroad, natRatings] = await Promise.all(["ratings/uae-clubs.json", "leagues/compare.json", "national/5789/fifa.json", "national/5789/qualifying.json", "national/uae-abroad.json", "ratings/national.json"].map(f => get(f, 1)));
   const h2hIdx = await get("h2h/index.json", 1), h2hKeys = h2hIdx ? Object.keys(h2hIdx.pairs) : [];
-  const DERBIES = await get("derbies.json", 1); ((DERBIES && DERBIES.derbies) || []).forEach(d => { const k = String(d.h2h || "").replace(/^h2h\/|\.json$/g, ""); if (k && !h2hKeys.includes(k)) h2hKeys.push(k); });   // 209: the big Arab derbies get the same page
+  const DERBIES = await get("derbies.json"); ((DERBIES && DERBIES.derbies) || []).forEach(d => { const k = String(d.h2h || "").replace(/^h2h\/|\.json$/g, ""); if (k && !h2hKeys.includes(k)) h2hKeys.push(k); });   // 209: the big Arab derbies get the same page
   const h2hData = await pool(h2hKeys, 8, k => get(`h2h/${k}.json`, 1)), H2H = {}; h2hKeys.forEach((k, i) => { if (h2hData[i]) H2H[k] = h2hData[i]; });
   let NAMES_AR = {}; try { NAMES_AR = JSON.parse(fs.readFileSync(path.join(__dirname, "../names/players_ar.json"), "utf8")); } catch (e){}
   const allPlayers = {}; compData.forEach(({ c, x }) => { if (x.players && x.players.players) for (const [pid, pp] of Object.entries(x.players.players)) allPlayers[pid] = Object.assign({ comp:c.id }, pp); if (x.cards && x.cards.players) for (const [id, c] of Object.entries(x.cards.players)) allPlayers[id] = Object.assign({ name:c.name, team:c.team }, allPlayers[id] || {}); });
@@ -185,8 +185,8 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   // 238, 327, 244: per-club files for the clubs in the analytics leagues
   const AN = new Set(); compData.forEach(({ x }) => { if (x["first-goal"] && x["first-goal"].teams) Object.keys(x["first-goal"].teams).forEach(k => AN.add(+k)); });
   const tfiles = await pool(tlist, 8, async id => AN.has(id) ? { rec:await get(`team/${id}/records.json`, 1), hist:await get(`team/${id}/history.json`, 1), cu:await get(`callups/${id}.json`, 1) } : {});
-  const TWINS = await get("arabs/twins.json", 1), months = [today.slice(0, 7), new Date(Date.parse(today.slice(0, 7) + "-01") - 864e5).toISOString().slice(0, 7)];
-  const tmonth = await pool(tlist, 8, async id => AN.has(id) ? Promise.all(months.map(m => get(`team/${id}/month/${m}.json`, 1))) : []);
+  const TWINS = await get("arabs/twins.json"), months = [today.slice(0, 7), new Date(Date.parse(today.slice(0, 7) + "-01") - 864e5).toISOString().slice(0, 7)];
+  const tmonth = await pool(tlist, 8, async id => AN.has(id) ? Promise.all(months.map(m => get(`team/${id}/month/${m}.json`, 2))) : []);
   const xOf = (k, id) => { for (const { c, x } of compData) if (c.kind === "league" && x[k] && x[k].teams && x[k].teams[id]) return x[k]; return null; };
   let tcount = 0;
   const byTeam = new Map(); for (const m of matchSum.values()) for (const side of [m.home, m.away]) if (side && side.id){ if (!byTeam.has(side.id)) byTeam.set(side.id, { side, ms:[] }); byTeam.get(side.id).ms.push(m); }
@@ -344,8 +344,8 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   for (const [rid, r] of refs){ write(`r/${rid}/index.html`, page({ path:`/r/${rid}/`, page:"ref", title:`الحكم ${r.name}: كروته وبلنتياته ومبارياته | تيفو`, desc:`سجل الحكم ${r.name} في ${r.comp.name_ar}: الإنذارات والطرد وضربات الجزاء بالمباراة، وكل مبارياته.`, body:`<p class="crumbs"><a href="/c/${r.comp.key}/#num">${esc(r.comp.name_ar)}</a></p><h1 class="lat">${esc(r.name)}</h1><p class="season">حكم${r.country ? ` <span class="flag">${esc(r.country)}</span>` : ""}</p>` + S.refPage(r, byIdM) })); urls.push(`/r/${rid}/`); }
   const coachRows = new Map(); compData.forEach(({ x }) => { const ct = x.coaches && x.coaches.teams; if (!ct) return; for (const [tid, t] of Object.entries(ct)){ (t.history || []).forEach(h => { const k = h.id || h.name; if (!coachRows.has(k)) coachRows.set(k, { name:h.name, rows:[] }); coachRows.get(k).rows.push(Object.assign({ team:+tid }, h)); }); if (t.current){ const k = t.current.id || t.current.name; if (!coachRows.has(k)) coachRows.set(k, { name:t.current.name, rows:[] }); coachRows.get(k).current = +tid; } } });
   // 315/316: full careers (coaches/{id}.json) for every coach of the analytics leagues and Arab national teams, and coach-vs-coach records
-  const CIDX = await get("coaches/index.json", 1), CH2H = new Map();
-  if (CIDX && CIDX.coaches){ const cf = await pool(CIDX.coaches, 8, c => get(`coaches/${c.id}.json`, 1));
+  const CIDX = await get("coaches/index.json"), CH2H = new Map();
+  if (CIDX && CIDX.coaches){ const cf = await pool(CIDX.coaches, 8, c => get(`coaches/${c.id}.json`, 2));
     CIDX.coaches.forEach((c, i) => { const f = cf[i]; if (!f || !f.rows || !f.rows.length) return; const prev = coachRows.get(c.id) || coachRows.get(c.name); if (coachRows.has(c.name) && c.name !== c.id) coachRows.delete(c.name);
       coachRows.set(c.id, { name:f.name, rows:f.rows.map(r => Object.assign({}, r)), current:f.current_team || (prev && prev.current) }); });
     const hs = await pool(CIDX.h2h || [], 8, h => get(`coaches/h2h/${h.pair}.json`, 1));
