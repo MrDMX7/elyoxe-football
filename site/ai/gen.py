@@ -625,7 +625,13 @@ def do_daily5():
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,podcast,daily5,commentary,digest,power,why,quick"); ap.add_argument("--limit", type=int, default=40)
     ap.add_argument("--no-audio", action="store_true"); ap.add_argument("--any-time", action="store_true", help="run podcast outside its Thursday window"); ap.add_argument("--days", type=int, default=10)
-    a = ap.parse_args(); only = set(a.only.split(",")); now = dt.datetime.utcnow(); log = {}
+    a = ap.parse_args(); only = set(a.only.split(","))
+    class Tee:   # the cron job keeps only the last 2 lines; the full run log (drops, fallbacks) goes to cache/ai/_last_run.log
+        def __init__(s, *f): s.f = f
+        def write(s, x): [f.write(x) for f in s.f]
+        def flush(s): [f.flush() for f in s.f]
+    os.makedirs(CACHE, exist_ok=True); sys.stderr = Tee(sys.__stderr__, open(os.path.join(CACHE, "_last_run.log"), "w"))
+    now = dt.datetime.utcnow(); log = {}
     fx = {c: get(f"comp/{c}/fixtures.json") or {"matches": []} for c in UAE_COMPS}
     st538 = get("comp/538/standings.json"); facts = (get("comp/538/facts.json") or {}).get("matches", {}); fat = (get("comp/538/fatigue.json") or {}).get("teams", {})
     nat = get("team/5789.json") or {"fixtures": []}
