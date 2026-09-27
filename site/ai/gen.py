@@ -68,7 +68,7 @@ def _provider():
         except OSError: v = ""
     return v if v.split(":")[0] in ("claude", "gemini") else "gemini"
 PROVIDER = _provider()   # "claude", "claude:haiku", "claude:sonnet" or "gemini"
-CLAUDE_FAILS = [0]; CLAUDE_STOPPED = []; CALLS = []   # CALLS: (provider, seconds) per call, for timing reports
+CLAUDE_FAILS = [0]; CLAUDE_STOPPED = []; CALLS = []; LAST_MODEL = [""]   # LAST_MODEL: what actually wrote the last item   # CALLS: (provider, seconds) per call, for timing reports
 def _jschema(g):   # the Gemini schema dialect (OBJECT/STRING…) as JSON Schema
     if not isinstance(g, dict): return g
     o = {k: _jschema(v) for k, v in g.items() if k != "type"}
@@ -114,10 +114,10 @@ def provider_for(kind):
     return v if v.split(":")[0] in ("claude", "gemini") else "gemini"
 def gemini(system, payload, schema, temp=0.6, tokens=4000, provider=None, kind=None):
     """Generated text from the provider chosen for this kind (name kept: every kind calls it). Claude first when chosen, Gemini as fallback."""
-    prov = provider or (provider_for(kind) if kind else PROVIDER)
+    prov = provider or (provider_for(kind) if kind else PROVIDER); LAST_MODEL[0] = MODEL
     if prov.startswith("claude") and not CLAUDE_STOPPED:
-        out = claude_text(system, payload, schema, (prov.split(":") + ["haiku"])[1] or "haiku")
-        if out is not None: return out
+        cm = (prov.split(":") + ["haiku"])[1] or "haiku"; out = claude_text(system, payload, schema, cm)
+        if out is not None: LAST_MODEL[0] = "claude-" + cm; return out
     t0 = time.time(); out = gemini_api(system, payload, schema, temp, tokens)
     if out is not None: CALLS.append(("gemini", round(time.time() - t0, 1)))
     return out
@@ -249,7 +249,7 @@ def do_summary(md):
     bad = check_result(" ".join([out.get("headline", ""), out.get("summary", "")] + list(out.get("thread") or [])), md)
     bad = bad or check_table(" ".join([out.get("summary", "")] + list(out.get("thread") or [])), table_rows(get(f"comp/{md.get('comp')}/standings.json")))
     if bad: print(f"summary {md['id']} dropped: {bad}", file=sys.stderr); return "dropped"
-    out.update({"id": md["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
+    out.update({"id": md["id"], "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("summary", str(md["id"]), out); return "new"
 
 # ---- 77: preview for a coming match
@@ -268,7 +268,7 @@ def do_preview(m, ctx):
     rows = {t: {"rank": (ctx.get(k) or {}).get("rank"), "pts": (ctx.get(k) or {}).get("pts")} for t, k in ((team_ar(m["home"]), "home_table"), (team_ar(m["away"]), "away_table")) if ctx.get(k)}
     out["lines"] = keep_lines(out.get("lines") or [], rows, 4, f"preview {m['id']}", ctx)
     if not out["lines"]: return "dropped"
-    out.update({"id": m["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
+    out.update({"id": m["id"], "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("preview", str(m["id"]), out); return "new"
 
 # ---- 161: Tifo Cast, written for the ear, then voiced with Gemini TTS (ai/cast_voice.py)
@@ -329,7 +329,7 @@ def do_podcast(ctx, audio):
         leak = [n for n, l in enumerate(lines) if l["who"] == "hamed" and "الحين" in l["text"]]
         if not leak: break
         print(f"podcast {wk}: «الحين» in Hamed lines {leak}, attempt {attempt + 1}", file=sys.stderr)
-    rec = {"week": wk, "title": emirati(out["title"]), "lines": lines, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}
+    rec = {"week": wk, "title": emirati(out["title"]), "lines": lines, "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"}
     if leak: rec["held"] = f"«الحين» still in Hamed lines {leak} after 3 scripts; no audio this week"
     save("podcast", wk, rec)
     if leak: print("podcast held:", rec["held"], file=sys.stderr); mail_held(jf); return "held"
@@ -376,7 +376,7 @@ def do_commentary(md):
     ids = {e["event_id"] for e in ev}; lines = [{"event_id": l["event_id"], "text": emirati(l["text"])} for l in out["lines"] if l["event_id"] in ids]
     by = {e["event_id"]: e for e in ev}
     for l in lines: l["min"] = by[l["event_id"]].get("min")
-    save("commentary", str(md["id"]), {"id": md["id"], "status": md.get("status"), "lines": lines, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
+    save("commentary", str(md["id"]), {"id": md["id"], "status": md.get("status"), "lines": lines, "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
 
 # ---- 197: a club's week (UAE league clubs), facts only
 DIG_SYS = STYLE + """
@@ -407,7 +407,7 @@ def do_digest(team_id, st, league_name):
     if not out: return "fail"
     out = deep(out); out["paras"] = keep_lines([facts_only(x) for x in out["paras"]], table_rows(st), 2, f"digest {team_id}", ctx)
     if not out["paras"]: return "dropped"
-    out.update({"team": team_id, "week": wk, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("digest", str(team_id), out); return "new"
+    out.update({"team": team_id, "week": wk, "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("digest", str(team_id), out); return "new"
 
 # ---- 231: weekly power ranking; the order is the Tifo rating, the model only explains each place
 POW_SYS = STYLE + """
@@ -433,7 +433,7 @@ def do_power(comp):
         if bad: print(f"power {comp}: line dropped ({bad}): {l[:80]}", file=sys.stderr)
         else: lines[r["team_id"]] = l
     if len(lines) < len(rows) / 2: return "dropped"
-    save("power", name, {"comp": comp, "week": wk, "title": emirati(out["title"]), "rows": [dict(r, line=lines.get(r["team_id"], "")) for r in rows], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
+    save("power", name, {"comp": comp, "week": wk, "title": emirati(out["title"]), "rows": [dict(r, line=lines.get(r["team_id"], "")) for r in rows], "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
 
 # ---- 369 «ليش هالنتيجة؟» (why) and 372 «مباراة الليلة في 60 ثانية» (quick), approved 2026-09-27. Files:
 #   why/{match}.json   {id, comp, home, away, score:{home,away}, lines:[2 strings], sig, model, generated}
@@ -551,7 +551,7 @@ def do_why(md):
         f = os.path.join(CACHE, "why", f"{md['id']}.json")
         if os.path.exists(f): os.remove(f)
         return "dropped"
-    save("why", str(md["id"]), {"id": md["id"], "comp": md.get("comp"), "home": md["home"]["id"], "away": md["away"]["id"], "score": md.get("score"), "lines": lines, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
+    save("why", str(md["id"]), {"id": md["id"], "comp": md.get("comp"), "home": md["home"]["id"], "away": md["away"]["id"], "score": md.get("score"), "lines": lines, "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
 
 QUICK_SYS = STYLE + NAT_RULE + """
 المهمة: «مباراة الليلة في 60 ثانية»: بطاقة سريعة قبل مباراة كبيرة. اكتب lines: من 4 لين 6 أسطر، كل سطر جملة وحدة أقل من 140 حرف:
@@ -590,7 +590,7 @@ def do_quick(m, table):
     for x in [x for x in qall if ZERO.search(x)]: print(f"quick {m['id']}: zero-count line dropped: {x[:80]}", file=sys.stderr)
     qlines = keep_lines([x for x in qall if not ZERO.search(x)], table_rows(table), 4, f"quick {m['id']}", ctx)
     if not qlines: return "dropped"
-    save("quick", str(m["id"]), {"id": m["id"], "comp": m.get("comp"), "home": m["home"]["id"], "away": m["away"]["id"], "kickoff_utc": m.get("kickoff_utc"), "lines": qlines, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
+    save("quick", str(m["id"]), {"id": m["id"], "comp": m.get("comp"), "home": m["home"]["id"], "away": m["away"]["id"], "kickoff_utc": m.get("kickoff_utc"), "lines": qlines, "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
 
 
 # ---- 301: «أهم 5 أشياء اليوم» on the home page (gated like every generated text)
@@ -615,7 +615,7 @@ def do_daily5():
     if cached("daily5", today, sig): return "cached"
     out = gemini(D5_SYS, ctx, D5_SCHEMA, temp=0.5, tokens=4000, kind="daily5")
     if not out: return "fail"
-    out = deep(out); out.update({"date": today, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("daily5", today, out); return "new"
+    out = deep(out); out.update({"date": today, "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("daily5", today, out); return "new"
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,podcast,daily5,commentary,digest,power,why,quick"); ap.add_argument("--limit", type=int, default=40)

@@ -122,6 +122,8 @@ def check_history(text, evidence):
     """History claims pass only if the model's input had the kind of data behind them (and, for «أول فوز», the h2h agrees)."""
     ev = evidence if isinstance(evidence, dict) else {}
     blob = json.dumps(ev, ensure_ascii=False)
+    runs = check_runs(text, ev)
+    if runs: return runs
     for pat, keys in HIST:
         m = re.search(pat, text)
         if not m: continue
@@ -131,6 +133,35 @@ def check_history(text, evidence):
             if h and max(h.get("home_wins") or 0, h.get("away_wins") or 0) > 1: return f"«{m.group(0)}» but the h2h has {h}"
         n = re.search(r"\d+", text[m.start():m.end() + 20])
         if n and n.group(0) not in blob: return f"«{m.group(0)}»: {n.group(0)} is not in the input"
+    return None
+
+RUN_W = {"خسارة": "L", "خسارات": "L", "خسارتين": "L", "هزائم": "L", "فوز": "W", "انتصارات": "W", "انتصارين": "W", "فوزين": "W", "تعادل": "D", "تعادلات": "D", "تعادلين": "D"}
+DUAL_N = {"خسارتين": 2, "انتصارين": 2, "فوزين": 2, "تعادلين": 2}
+def _forms(ev, out=None):
+    out = [] if out is None else out
+    if isinstance(ev, dict):
+        for k, v in ev.items():
+            if k == "form" and isinstance(v, (list, str)): out.append([x for x in (v if isinstance(v, list) else list(v)) if x in "WDL"])
+            else: _forms(v, out)
+    elif isinstance(ev, list):
+        for v in ev: _forms(v, out)
+    return out
+def check_runs(text, evidence):
+    """«N خسارات/انتصارات متتالية/ورا بعض/على التوالي» (and duals) must be a run of that length in a form list of the input."""
+    forms = _forms(evidence)
+    for m in re.finditer(r"(?:(\d+)\s+)?(خسارات|خسارتين|هزائم|انتصارات|انتصارين|فوزين|تعادلات|تعادلين)\s+(?:متتالية|متتاليتين|ورا بعض|على التوالي)", text):
+        n = int(m.group(1)) if m.group(1) else DUAL_N.get(m.group(2))
+        if not n: continue
+        if not forms: return f"«{m.group(0)}» without form data in the input"
+        r = RUN_W[m.group(2)]; runs = set()
+        for f in forms:
+            k = 0
+            for x in f + ["-"]:
+                if x == r: k += 1
+                else:
+                    if k: runs.add(k)
+                    k = 0
+        if n not in runs: return f"«{m.group(0)}» but the form runs are {sorted(runs)}"
     return None
 
 LATIN_OK = {"VAR", "xG", "FotMob", "Tifo"}

@@ -67,3 +67,10 @@ def test_latin_names_become_arabic_or_are_reported():
     assert text == "سجل شيكنا دومبيا هدفين." and left == []
     text, left = checks.arabic_names("سجل Nobody Known هدف.", players)
     assert left == ["Nobody", "Known"]
+
+def test_form_runs_must_exist_in_the_form_data():
+    # Sonnet preview 1000020530: Al Dhafra's form is L L L L W, so «سلسلة خسارتين متتاليتين» is wrong
+    ev_in = {"home_table": {"form": ["W", "L", "W", "W", "L"]}, "away_table": {"form": ["L", "L", "L", "L", "W"]}}
+    assert checks.check_history("وآخر فوز له كان بعد سلسلة خسارتين متتاليتين قبلها.", ev_in)
+    assert checks.check_history("فاز بعد 4 خسارات متتالية.", ev_in) is None
+    assert checks.check_history("فاز بعد 4 خسارات متتالية.", {})
