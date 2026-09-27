@@ -8,7 +8,8 @@
   var P90 = [["goals","أهداف"],["goal_assist","صناعة"],["total_scoring_att","تسديد"],["big_chance_created","فرص صنعها"],["accurate_pass","تمريرات صحيحة"],["won_contest","مراوغات"],["total_tackle","افتكاك"],["interception","قطع"]];
   var TS = [["possession","استحواذ %",1],["shots","تسديد بالمباراة",1],["big_chances","فرص محققة",1],["passes","تمريرات",1],["tackles","افتكاك",1],["ppda","ضغط (الأقل أقوى)",-1]];
   Promise.all([get("comp/" + CID + "/cards.json"), get("comp/" + CID + "/players.json"), get("comp/" + CID + "/style.json"), get("comp/" + CID + "/standings.json"), CID === 538 ? get("ratings/uae-clubs.json") : null, get("teams.json")]).then(function(d){
-    var cards = d[0] && d[0].players || {}, pl = d[1] && d[1].players || {}, style = d[2] && d[2].teams || {}, st = d[3], rat = d[4], teams = d[5] && d[5].teams || {};
+    var cards = d[0] && d[0].players || {}, PNm = window.PN || {}; Object.keys(cards).forEach(function(id){ if (PNm[id]) cards[id].name = PNm[id]; });
+    var pl = d[1] && d[1].players || {}, style = d[2] && d[2].teams || {}, st = d[3], rat = d[4], teams = d[5] && d[5].teams || {};
     var ids = Object.keys(cards).sort(function(a, b){ return cards[b].overall - cards[a].overall; });
     var opts = ids.map(function(id){ return '<option value="' + id + '">' + R.esc(cards[id].name) + " (" + R.esc((teams[cards[id].team] || {}).name_ar || "") + ")</option>"; }).join("");
     var pa = $("#pa"), pb = $("#pb"); pa.innerHTML = pb.innerHTML = opts; pa.value = ids[0]; pb.value = ids[1];
@@ -30,7 +31,10 @@
     function players(){
       var a = cards[pa.value], b = cards[pb.value]; if (!a || !b) return;
       var sa = (pl[pa.value] || {}).stats || {}, sb = (pl[pb.value] || {}).stats || {};
-      $("#pout").innerHTML = radar(a, b) + "<h3>كل 90 دقيقة</h3>" + P90.map(function(k){ var x = sa[k[0]], y = sb[k[0]]; return line(k[1], x && x.per90, y && y.per90, 1, f1); }).join("") + line("الدقايق", (pl[pa.value] || {}).minutes, (pl[pb.value] || {}).minutes, 1, f0);
+      // 377: a verdict from the numbers — who leads in how many of the per-90 lines and the six card parts
+      var wa = 0, wb = 0; P90.forEach(function(k){ var x = sa[k[0]] && sa[k[0]].per90, y = sb[k[0]] && sb[k[0]].per90; if (x != null && y != null && x !== y){ if (x > y) wa++; else wb++; } }); PARTS.forEach(function(p){ var x = a.parts[p[0]], y = b.parts[p[0]]; if (x != null && y != null && x !== y){ if (x > y) wa++; else wb++; } });
+      var tot = wa + wb, verdict = !tot ? "" : wa === wb ? "متعادلين: كل واحد أحسن في " + wa + " من " + tot + " أرقام." : (wa > wb ? a.name : b.name) + " أحسن في " + Math.max(wa, wb) + " من " + tot + " أرقام، و" + (wa > wb ? b.name : a.name) + " في " + Math.min(wa, wb) + ".";
+      $("#pout").innerHTML = (verdict ? '<p class="verdict"><b>الحكم بالأرقام</b> ' + R.esc(verdict) + "</p>" : "") + radar(a, b) + "<h3>كل 90 دقيقة</h3>" + P90.map(function(k){ var x = sa[k[0]], y = sb[k[0]]; return line(k[1], x && x.per90, y && y.per90, 1, f1); }).join("") + line("الدقايق", (pl[pa.value] || {}).minutes, (pl[pb.value] || {}).minutes, 1, f0);
       try { history.replaceState(null, "", "?a=" + pa.value + "&b=" + pb.value + location.hash); } catch (e){}
     }
     function clubs(){

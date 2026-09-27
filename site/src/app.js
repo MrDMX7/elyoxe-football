@@ -25,14 +25,21 @@
     document.body.appendChild(box); };
   // ---- search (167): one small index, loaded on first open; Arabic normalised (أ إ آ ا، ة ه، ى ي) and Latin both matched
   var SIDX = null, sb0 = $("#srch");
-  function norm(t){ return String(t || "").toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/[\u064b-\u0652]/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+  // 363: forgiving search — hamza / ta marbuta / alef maqsura folded, tatweel and doubled letters collapsed (مبخووت), club nicknames,
+  // and one-or-two-letter typos matched word by word
+  function norm(t){ return String(t || "").toLowerCase().replace(/[أإآٱ]/g, "ا").replace(/ؤ/g, "و").replace(/ئ/g, "ي").replace(/ء/g, "").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/ـ/g, "").replace(/[\u064b-\u0652]/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/(.)\1+/g, "$1"); }
+  var NICK = { "الزعيم":["العين", "الهلال"], "العيناوي":["العين"], "الامبراطور":["الوصل"], "الفهود":["الجزيره"], "فخر ابوظبي":["الجزيره"], "العنابي":["الوحده"], "الملك":["الشارقه"], "الفرسان":["شباب الاهلي"], "العميد":["النصر", "الاتحاد"], "النموذجي":["الاتحاد"], "الملكي":["ريال مدريد"], "البلوز":["تشيلسي"], "الشياطين الحمر":["مانشستر يونايتد"], "السيتي":["مانشستر سيتي"], "البارسا":["برشلونه"], "الاحمر":["الاهلي"], "الابيض":["الزمالك", "الامارات"], "الاخضر":["السعوديه"], "الاحمر العنابي":["البحرين"], "الفراعنه":["مصر"], "اسود الاطلس":["المغرب"], "النشامي":["الاردن"] };
+  function lev(a, b, max){ if (Math.abs(a.length - b.length) > max) return max + 1; var p = [], i, j; for (j = 0; j <= b.length; j++) p[j] = j; for (i = 1; i <= a.length; i++){ var c = [i], lo = i; for (j = 1; j <= b.length; j++){ c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); if (c[j] < lo) lo = c[j]; } if (lo > max) return max + 1; p = c; } return p[b.length]; }
+  function fuzzy(item, v){ var max = v.length >= 7 ? 2 : 1; return (item[4] + " " + item[5]).split(/\s+/).some(function(w){ return w.length >= 3 && (lev(w, v, max) <= max || lev(w.replace(/^ال/, ""), v.replace(/^ال/, ""), max) <= max); }); }
   if (sb0) sb0.onclick = function(){ var box = $("#srchbox"); if (box){ box.remove(); return; }
     box = document.createElement("div"); box.id = "srchbox"; box.className = "ctrybox"; box.innerHTML = '<input id="sq" placeholder="نادي، لاعب، بطولة…" aria-label="بحث" autocomplete="off"><div id="sr"></div>'; document.body.appendChild(box);
     var q = $("#sq"); q.focus();
     (SIDX ? Promise.resolve(SIDX) : fetch("/assets/search." + sb0.dataset.v + ".json").then(function(r){ return r.json(); }).then(function(x){ SIDX = x.map(function(i){ return i.concat([norm(i[1]), norm(i[2])]); }); return SIDX; })).then(function(){
       var TY = { c:"بطولة", t:"نادي", p:"لاعب", r:"صفحة" };
       q.oninput = function(){ var v = norm(q.value.trim()); if (v.length < 2){ set("#sr", ""); return; }
-        var hits = SIDX.filter(function(i){ return i[4].indexOf(v) >= 0 || i[5].indexOf(v) >= 0; }).sort(function(a, b){ var o = { c:0, t:1, r:2, p:3 }; return (a[4].indexOf(v) === 0 || a[5].indexOf(v) === 0 ? 0 : 1) - (b[4].indexOf(v) === 0 || b[5].indexOf(v) === 0 ? 0 : 1) || o[a[0]] - o[b[0]]; }).slice(0, 20);
+        var qs = [v].concat((NICK[v] || []).map(norm)), has = function(i){ return qs.some(function(x){ return i[4].indexOf(x) >= 0 || i[5].indexOf(x) >= 0; }); };
+        var hits = SIDX.filter(has); if (hits.length < 5 && v.length >= 4 && v.indexOf(" ") < 0) hits = hits.concat(SIDX.filter(function(i){ return !has(i) && fuzzy(i, v); }).slice(0, 12));
+        hits = hits.sort(function(a, b){ var o = { c:0, t:1, r:2, p:3 }; return (a[4].indexOf(v) === 0 || a[5].indexOf(v) === 0 ? 0 : 1) - (b[4].indexOf(v) === 0 || b[5].indexOf(v) === 0 ? 0 : 1) || o[a[0]] - o[b[0]]; }).slice(0, 20);
         set("#sr", hits.length ? "<ul>" + hits.map(function(i){ return '<li><a href="' + i[3] + '"><span>' + R.esc(i[1] || i[2]) + (i[1] && i[2] ? ' <span class="muted small lat">' + R.esc(i[2]) + "</span>" : "") + '</span><span class="muted small">' + TY[i[0]] + "</span></a></li>"; }).join("") + "</ul>" : '<p class="muted small">ما لقينا شي.</p>'); };
     }); };
   document.addEventListener("keydown", function(e){ if (e.key === "Escape"){ ["#srchbox", "#ctrybox"].forEach(function(s){ var b = $(s); if (b) b.remove(); }); } });
@@ -137,8 +144,8 @@
   function match(){
     return Promise.all([index(), get("match/" + ID + ".json")]).then(function(r){
       var idx = r[0], md = r[1];
-      MD = md; FULL = md; document.dispatchEvent(new CustomEvent("tifo:match", { detail:md })); setTimeout(dist, 0); var pb = $("#p3dbtn"); if (pb) pb.hidden = !(md.lineups && md.lineups.home);
-      set("#mh", R.matchHead(md)); set("#facts", R.matchFacts(md, idx)); set("#catchup", R.catchup(md)); set("#events", R.events(md)); set("#lineups", R.lineups(md)); set("#stats", R.stats(md)); set("#h2h", R.h2h(md));
+      MD = md; FULL = md; setTimeout(dist, 0); var pb = $("#p3dbtn"); if (pb) pb.hidden = !(md.lineups && md.lineups.home);
+      set("#mh", R.matchHead(md)); set("#facts", R.matchFacts(md, idx)); set("#catchup", R.catchup(md)); set("#events", R.events(md)); set("#lineups", R.lineups(md)); set("#stats", R.stats(md)); set("#h2h", R.h2h(md)); document.dispatchEvent(new CustomEvent("tifo:match", { detail:md }));   // v3 shell: after the re-render
       stamp(md.generated);
       var t = Date.parse(md.kickoff_utc), soon = md.status === "scheduled" && t - Date.now() < 90 * 60e3 && t > Date.now() - 3 * 3600e3;
       if (R.isLive(md) || soon) poll(match, 20e3);

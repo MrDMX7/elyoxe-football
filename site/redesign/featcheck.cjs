@@ -1,0 +1,33 @@
+/* Functional check of the owner items on a local build (served at tifo.elyoxe.com, /v1 live from production). */
+const path = require("path"), fs = require("fs");
+const { chromium } = require("/root/workspace/automation/browse/node_modules/playwright-core");
+const ROOT = path.resolve(process.argv[2] || "out"), DST = "/root/.claude/jobs/abd28f85/tmp";
+const MIME = { ".html":"text/html; charset=utf-8", ".css":"text/css", ".js":"application/javascript", ".json":"application/json", ".png":"image/png", ".svg":"image/svg+xml" };
+(async () => {
+  const b = await chromium.launch({ executablePath:"/usr/bin/chromium", args:["--no-sandbox"] }), R = {};
+  const ctx = await b.newContext({ viewport:{ width:390, height:844 }, serviceWorkers:"block", acceptDownloads:true });
+  await ctx.route(/^https:\/\/tifo\.elyoxe\.com\/(?!v1\/)/, r => { let p = new URL(r.request().url()).pathname; if (p.endsWith("/")) p += "index.html"; const f = path.join(ROOT, p); return fs.existsSync(f) ? r.fulfill({ status:200, body:fs.readFileSync(f), headers:{ "content-type":MIME[path.extname(f)] || "application/octet-stream" } }) : r.continue(); });
+  const pg = await ctx.newPage(), errs = []; pg.on("pageerror", e => errs.push(e.message));
+  const T = async (name, fn) => { try { R[name] = await fn(); } catch (e){ R[name] = "ERR " + e.message.slice(0, 90); } };
+  await pg.goto("https://tifo.elyoxe.com/m/1000020522/", { waitUntil:"networkidle" }); await pg.waitForTimeout(1500);
+  await T("goal", async () => { await pg.evaluate(() => { const m = JSON.parse(JSON.stringify(window.__md)); m.score = { home:m.score.home + 1, away:m.score.away }; m.events = (m.events || []).concat([{ type:"goal", team:"home", minute:91, player:{ id:1, name:"تجربة" } }]); document.dispatchEvent(new CustomEvent("tifo:match", { detail:m })); }); await pg.waitForTimeout(350); await pg.screenshot({ path:DST + "/feat_goal.png" }); return !!(await pg.$(".goalfx")); });
+  await pg.waitForTimeout(1600);
+  await T("pcard", async () => { await pg.click('.hero [data-sheet="share"]'); await pg.click("#pcardbtn"); await pg.waitForTimeout(300); await pg.screenshot({ path:DST + "/feat_pcard_list.png" }); return await pg.$$eval("#secpicks [data-pc]", x => x.length); });
+  await T("embed", async () => { await pg.click("#embedbtn"); return (await pg.$eval("#secpicks textarea", t => t.value)).slice(0, 60); });
+  await T("cinema", async () => { await pg.click("#cinebtn"); await pg.waitForTimeout(400); await pg.screenshot({ path:DST + "/feat_cinema.png" }); const ok = !!(await pg.$(".cine .cs")); await pg.click(".cine .x"); return ok; });
+  await T("sizedImgs", async () => { await pg.click('.hero [data-sheet="share"]'); return await pg.$$eval('#share a[href*="/og/m-"]', a => a.map(x => x.getAttribute("href"))); });
+  await pg.keyboard.press("Escape");
+  await T("search", async () => { await pg.click("#srch"); const out = {}; for (const q of ["العبن", "الزعيم", "الامبراطور", "برشلونه", "الشارقة"]){ await pg.fill("#sq", q); await pg.waitForTimeout(700); out[q] = await pg.$$eval("#sr li", l => l.slice(0, 3).map(x => x.textContent.slice(0, 20))); } return out; });
+  await pg.goto("https://tifo.elyoxe.com/t/102122/", { waitUntil:"networkidle" });
+  await T("xi", async () => { await pg.click('.hero [data-sheet="share"]'); await pg.click("#xibtn"); await pg.waitForTimeout(1500); await pg.screenshot({ path:DST + "/feat_xi.png" }); return await pg.$$eval(".xi select", s => s.length); });
+  await pg.goto("https://tifo.elyoxe.com/c/uae-pro-league/compare/", { waitUntil:"networkidle" }); await pg.waitForTimeout(1200);
+  await T("verdict", async () => (await pg.$eval(".verdict", v => v.textContent)).slice(0, 90));
+  await pg.goto("https://tifo.elyoxe.com/embed/t/?c=538", { waitUntil:"networkidle" }); await pg.waitForTimeout(800);
+  await T("embedTable", async () => { await pg.screenshot({ path:DST + "/feat_embed_table.png" }); return await pg.$$eval("tr", r => r.length); });
+  await pg.goto("https://tifo.elyoxe.com/embed/m/?id=6052085", { waitUntil:"networkidle" }); await pg.waitForTimeout(800);
+  await T("embedMatch", async () => (await pg.$eval("#w", w => w.textContent)).slice(0, 60));
+  await pg.goto("https://tifo.elyoxe.com/m/6052085/", { waitUntil:"networkidle" }); await pg.waitForTimeout(1500);
+  await T("preCountdown", async () => (await pg.$eval(".mcd", e => e.textContent)).slice(0, 40));
+  console.log(JSON.stringify(R, null, 0), "errors:", JSON.stringify(errs.slice(0, 5)));
+  await b.close();
+})();
