@@ -222,6 +222,10 @@ class Poller:
             ko = parse_utc(m.get("kickoff_utc"))
             if not ko or ko < now - timedelta(days=2) or ko > now + timedelta(days=30):
                 continue
+            old = sched.get(str(m["id"]))
+            if old and old.get("status") != m["status"]:
+                # kickoff, HT, FT ...: both teams' files carry this fixture, patch them (patch_team_files)
+                self.st.setdefault("team_patch", {})[str(m["id"])] = iso(now)
             sched[str(m["id"])] = {"ko": m["kickoff_utc"], "comp": m["comp"], "status": m["status"],
                                    "h": m["home"]["id"], "a": m["away"]["id"]}
 
@@ -646,7 +650,7 @@ class Poller:
         except CONVERT_ERRORS as e:
             self.store.fail(f"team:{tid}", e)
             return
-        t["fixtures"] = [self.enrich(m) for m in t["fixtures"]]
+        t["fixtures"] = self.settle_fixtures([self.enrich(m) for m in t["fixtures"]])
         if t.get("national"):
             uae_clubs = {int(k) for k, v in self.st.get("team_comps", {}).items() if 538 in v or 11027 in v}
             for g in t["squad"]:
@@ -664,6 +668,68 @@ class Poller:
         self.st.setdefault("teams", {})[str(tid)] = [t["name"], t.get("name_ar")]
         self.write_ics(tid, t["fixtures"], self.st.setdefault("ics_seq", {}))
         self.mark("team", tid)
+
+    # ------------------------------------------------------------------ team files vs match status
+    TEAM_FILES = ("team/{}.json", "national/{}/team.json")
+
+    def _match_state(self, mid):
+        d = self.store.get_json(f"match/{mid}.json")
+        return {k: d.get(k) for k in ("status", "status_detail", "score", "penalties")} if d else None
+
+    def settle_fixtures(self, fixtures):
+        """A team page is a daily snapshot: no live minute in it (it froze at "1"), and a fixture the snapshot caught
+        live (or not yet started) takes the status and score we know now when our schedule says it moved on."""
+        sched = self.st.get("schedule", {})
+        for f in fixtures:
+            f["minute"] = None
+            for k in ("period", "period_start", "period_base", "period_length"):
+                f.pop(k, None)
+            sc = sched.get(str(f.get("id")))
+            if sc and sc.get("status") != f.get("status") and sc.get("status") in (S.FINISHED, *S.LIVE_STATUSES):
+                ms = self._match_state(f["id"])
+                if ms and ms["status"] == sc["status"]:
+                    f.update(ms)
+        return fixtures
+
+    def patch_team_files(self, limit=4):
+        """Queued status changes (remember_schedule) + a sweep of matches that finished in the last 24 h: set the
+        fixture's status, score and penalties in both teams' team/<id>.json and national/<id>/team.json."""
+        q = self.st.setdefault("team_patch", {})
+        done = self.st.setdefault("team_settled", {})
+        for k in [k for k, v in done.items() if _age_min(v, self.now()) > 3 * 1440]:
+            del done[k]
+        for mid, sc in self.st.get("schedule", {}).items():
+            if sc.get("status") == S.FINISHED and mid not in done and mid not in q and _age_min(sc.get("ko"), self.now()) <= 24 * 60:
+                q[mid] = iso(self.now())
+        n = 0
+        for mid in sorted(q, key=q.get):
+            if n >= limit or not self.has_time(8):
+                break
+            sc = self.st.get("schedule", {}).get(mid)
+            ms = self._match_state(mid)
+            n += 1
+            del q[mid]
+            if not sc or not ms:
+                continue
+            for tid in (sc["h"], sc["a"]):
+                for tpl in self.TEAM_FILES:
+                    path = tpl.format(tid)
+                    t = self.store.get_json(path)
+                    if not t:
+                        continue
+                    changed = False
+                    for f in t.get("fixtures") or []:
+                        if str(f.get("id")) == mid:
+                            for k, v in ms.items():
+                                if f.get(k) != v:
+                                    f[k], changed = v, True
+                            if f.get("minute") is not None:
+                                f["minute"], changed = None, True
+                    if changed:
+                        self.store.put_json(path, {**t, "generated": iso(self.now()), "fixtures_patched_at": iso(self.now())},
+                                            cache="static")
+            if ms["status"] == S.FINISHED:
+                done[mid] = iso(self.now())
 
     # ------------------------------------------------------------------ ledger and aggregates
     def ledger(self, cid):
@@ -996,6 +1062,10 @@ class Poller:
             if comp.get("kind") == "league" and self.due("prev", 1440, comp["id"]):
                 self.prev_season(comp)
         self.repolls()
+        try:
+            self.patch_team_files()
+        except Exception as e:
+            self.store.fail("team-patch", f"{type(e).__name__}: {e}")
         if self.has_time(8):
             self.backfill(2 if live else c.get("backfill_per_run", 6))
         if not live and self.has_time(8):
