@@ -315,6 +315,7 @@ class Poller:
         full["coverage_events"] = coverage_events(d)
         if d["status"] == S.FINISHED:
             self.plan_repoll(d, full, why)
+            self.st.setdefault("cov_checked", {})[str(mid)] = d.get("kickoff_utc")
         cache = "hot" if d["status"] in S.LIVE_STATUSES or self._near_kickoff(d) else "static" if d["status"] == S.FINISHED else "warm"
         self.store.put_json(f"match/{mid}.json", full, cache=cache, validate=S.validate_detail, health_key=f"match:{why}")
         self.store.ok(f"match:{why}")
@@ -363,6 +364,19 @@ class Poller:
             rp[mid] = {"ft": ended, "done": []}
 
     def repolls(self):
+        # matches that finished before coverage_events existed: one more fetch each (2 per run), so they get the flag
+        # and, when thin, their re-polls. Afterwards every final fetch records itself in cov_checked.
+        chk = self.st.setdefault("cov_checked", {})
+        for k in [k for k, ko in chk.items() if _age_min(ko, self.now()) > 3 * 1440]:
+            del chk[k]
+        n = 0
+        for mid, sc in sorted(self.st.get("schedule", {}).items(), key=lambda kv: kv[1].get("ko") or "", reverse=True):
+            if n >= 2 or not self.has_time(10):
+                break
+            if sc.get("status") == S.FINISHED and mid not in chk and _age_min(sc.get("ko"), self.now()) <= 24 * 60:
+                self.fetch_detail(int(mid), "final")
+                chk.setdefault(mid, sc.get("ko"))
+                n += 1
         rp = self.st.get("repoll") or {}
         for mid, r in list(rp.items()):
             if not self.has_time(8):
