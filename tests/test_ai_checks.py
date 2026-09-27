@@ -95,3 +95,10 @@ def test_straight_red_vs_second_yellow():
     assert checks.check_events("انطرد تيموثي ويا بالإنذار الثاني في الدقيقة 77.", PSG) is None
     STRAIGHT = dict(PSG, events=PSG["events"][:3] + [ev(77, "red", "home", 4, "Timothy Weah")])
     assert checks.check_events("انطرد تيموثي ويا بالإنذار الثاني في الدقيقة 77.", STRAIGHT)
+
+def test_form_counts_must_match():
+    ev_in = {"home_table": {"form": ["W", "L", "W", "W", "L"]}, "away_table": {"form": ["L", "L", "L", "L", "W"]}}
+    # Haiku v3 preview 1000020530: Sharjah is W L W W L
+    assert checks.check_history("الشارقة والفورمة تبع آخر 5 لقاءات فيها انتصارين وهزيمتين.", ev_in)
+    assert checks.check_history("الشارقة فورمته في آخر 5: 3 انتصارات وخسارتين.", ev_in) is None
+    assert gen.grammar("سجله 2 فوز و2 خسارة وتعادل") == "سجله فوزين وخسارتين وتعادل"

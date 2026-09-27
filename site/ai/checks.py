@@ -134,7 +134,7 @@ def check_history(text, evidence):
     """History claims pass only if the model's input had the kind of data behind them (and, for «أول فوز», the h2h agrees)."""
     ev = evidence if isinstance(evidence, dict) else {}
     blob = json.dumps(ev, ensure_ascii=False)
-    runs = check_runs(text, ev)
+    runs = check_runs(text, ev) or check_counts(text, ev)
     if runs: return runs
     for pat, keys in HIST:
         m = re.search(pat, text)
@@ -174,6 +174,22 @@ def check_runs(text, evidence):
                     if k: runs.add(k)
                     k = 0
         if n not in runs: return f"«{m.group(0)}» but the form runs are {sorted(runs)}"
+    return None
+
+CNT_W = {"انتصارات": "W", "انتصار": "W", "انتصارين": "W", "فوز": "W", "فوزين": "W", "فازات": "W", "خسارات": "L", "خسارة": "L", "خسارتين": "L", "هزائم": "L", "هزيمة": "L", "هزيمتين": "L",
+         "خساير": "L", "تعادلات": "D", "تعادل": "D", "تعادلين": "D"}
+def check_counts(text, evidence):
+    """In a form sentence («فورمة»، «آخر 5»، «من آخر»), «N انتصارات/هزائم/…» and the duals must equal that result's count in a form list."""
+    if not re.search(r"فورم|آخر\s*(?:5|خمس)|من آخر|آخر \d+ مباريات", text): return None
+    forms = _forms(evidence)
+    if not forms: return None
+    for m in re.finditer(r"(?:(\d+)\s+)?(انتصارات|انتصارين|انتصار|فوزين|فازات|فوز|خسارات|خسارتين|خسارة|خساير|هزائم|هزيمتين|هزيمة|تعادلات|تعادلين|تعادل)(?!\w)", text):
+        w = m.group(2); n = int(m.group(1)) if m.group(1) else 2 if w.endswith("ين") else None
+        if n is None or n > 10: continue
+        after = text[m.end():m.end() + 14]
+        if re.match(r"\s*(?:متتالي|ورا بعض|على التوالي)", after): continue   # runs are check_runs' job
+        r = CNT_W[w]
+        if all(f.count(r) != n for f in forms): return f"«{m.group(0)}» but the form lists have {[f.count(r) for f in forms]}"
     return None
 
 LATIN_OK = {"VAR", "xG", "FotMob", "Tifo"}
