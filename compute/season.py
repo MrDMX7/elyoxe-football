@@ -24,13 +24,17 @@ def ledger_entry(d: dict) -> dict:
     hid, aid = d["home"]["id"], d["away"]["id"]
     cards = {"home": {"yellow": 0, "second_yellow": 0, "red": 0}, "away": {"yellow": 0, "second_yellow": 0, "red": 0}}
     pens = {"home": {"scored": 0, "missed": 0}, "away": {"scored": 0, "missed": 0}}
-    goals, var = [], []
+    goals, var, reds, subs = [], [], [], []
     prev = {"home": 0, "away": 0}
     for e in d.get("events") or []:
         side = e.get("team")
         t = e["type"]
         if t in ("yellow", "second_yellow", "red") and side in cards:
             cards[side][t] += 1
+            if t != "yellow":
+                reds.append([e.get("minute"), e.get("added"), side])
+        elif t == "sub" and side:
+            subs.append([e.get("minute"), side, (e.get("player") or {}).get("id"), (e.get("player_out") or {}).get("id")])
         elif t in ("goal", "own_goal", "penalty_goal"):
             sc = e.get("score")
             benef = side
@@ -41,7 +45,8 @@ def ledger_entry(d: dict) -> dict:
                 benef = "away" if side == "home" else "home"
             goals.append({"m": e.get("minute"), "add": e.get("added"), "side": benef, "type": t,
                           "player": (e.get("player") or {}).get("id") if t != "own_goal" else None,
-                          "assist": (e.get("assist") or {}).get("id")})
+                          "assist": (e.get("assist") or {}).get("id"), "detail": e.get("detail"),
+                          "shot": _goal_shot(d, e)})
             if t == "penalty_goal" and side in pens:
                 pens[side]["scored"] += 1
         elif t == "missed_penalty" and side in pens:
@@ -61,12 +66,12 @@ def ledger_entry(d: dict) -> dict:
         tid = hid if side == "home" else aid
         starters = {p.get("id") for p in lu.get("starters") or []}
         for p in (lu.get("starters") or []) + (lu.get("subs") or []):
-            if p.get("id"):   # [name, country, team, rating, role, age, starter, minutes]
+            if p.get("id"):   # [name, country, team, rating, role, age, starter, minutes, minute_on]
                 st_ = p.get("id") in starters
                 on, off = p.get("minutes_on"), p.get("minutes_off")
                 mins = ((off or 90) if st_ else ((off or 90) - on if on is not None else 0))
                 players[str(p["id"])] = [p.get("name"), p.get("country"), tid, p.get("rating"), p.get("role"),
-                                         p.get("age"), st_, max(0, mins)]
+                                         p.get("age"), st_, max(0, mins), on]
     stats = {}
     for g in d.get("stats") or []:
         for it in g["items"]:
@@ -83,11 +88,23 @@ def ledger_entry(d: dict) -> dict:
         "referee": ({k: d["referee"].get(k) for k in ("id", "name", "country")} if d.get("referee") else None),
         "referee_stats": (d.get("referee") or {}).get("source_stats"),
         "cards": cards, "pens": pens, "goals": goals, "var": var, "shots": shots, "players": players,
-        "att": d.get("attendance"),
+        "att": d.get("attendance"), "reds": reds, "subs": subs, "season": d.get("season"),
     }
 
 
-LEDGER_VERSION = 3   # 3: refetch so every finished match file carries its win-probability curve
+LEDGER_VERSION = 4   # 3: win-probability curves; 4: red-card minutes, goal types, substitutions
+
+
+def _goal_shot(d, e):
+    """The shotmap shot behind a goal event (xG coverage only): body part, situation, box."""
+    pid = str((e.get("player") or {}).get("id"))
+    p = (d.get("shotmap") or {}).get(pid)
+    if not p:
+        return None
+    for x in p["shots"]:
+        if x.get("result") == "Goal" and x.get("minute") == e.get("minute"):
+            return {"body": x.get("body"), "situation": x.get("situation"), "inside_box": x.get("inside_box"), "xg": x.get("xg")}
+    return None
 
 
 def _statnum(v):

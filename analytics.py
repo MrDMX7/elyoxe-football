@@ -137,8 +137,11 @@ def probs_for(p, m):
         return None
     params = {**R.DEFAULTS, **(config.rating_params() if src == "ratings" else (config.settings().get("arab_rating") or {}))}
     ph, pd, pa = R.probs(h, a, params, R.is_neutral(m))
+    from compute import insights as IN, winprob as WP
+    lh, la = WP.rates((ph, pd, pa))
     return {"home": round(ph, 3), "draw": round(pd, 3), "away": round(pa, 3),
-            "model": "tifo-elo v1" if src == "ratings" else "tifo-elo clubs v1"}
+            "model": "tifo-elo v1" if src == "ratings" else "tifo-elo clubs v1",
+            "scores": IN.score_grid(lh, la), "expected_goals": [round(lh, 2), round(la, 2)]}
 
 
 # ------------------------------------------------------------------ club pages (coaches, all-competition fixtures)
@@ -375,9 +378,14 @@ def comp_tables(p, cid, st, matches, kind):
                and m["home"]["id"] in ids and m["away"]["id"] in ids]
         sc = TB.scenarios(g["rows"], rem)
         if sc:
-            groups.append({"group": g.get("name"), **sc})
+            arab = [r["team"]["id"] for r in g["rows"] if (p.team_country(r["team"]["id"]) or {}).get("iso2") in _ARAB_ISO()]
+            groups.append({"group": g.get("name"), "arab_clubs": arab, **sc})
     if groups:
         p.store.put_json(f"comp/{cid}/scenarios.json", {"comp": cid, "generated": now, "groups": groups}, cache="warm")
+
+
+def _ARAB_ISO():
+    return {c["iso2"] for c in config.countries() if c.get("arab")}
 
 
 def live_table(p, cid, live_matches):
@@ -471,7 +479,9 @@ def player_extras(p, cid, table, raw):
         if not p.has_time(3):
             break
         p.store.put_json(f"player/{pid}.json", {"id": int(pid), "comp": cid, "season": p.ledger(cid).get("season"),
-                                               "generated": now, **summ}, cache="static")
+                                               "generated": now, **summ, "form": p.aux("player_forms").get(pid, []),
+                                               "form_fields": ["match", "date", "rating", "minutes", "goals", "assists"]},
+                         cache="static")
     if cid == LEAGUE:
         from datetime import date
         p.store.put_json(f"comp/{cid}/young-uae.json", {"comp": cid, "generated": now,
@@ -546,6 +556,10 @@ def league_squads_step(p, limit=2):
                     t = p.fm.team(int(tid_s))
                     sq = t["squad"]
                     n += 1
+                    for g in sq:
+                        for pl_ in g["players"]:
+                            if pl_.get("dob"):
+                                p.aux("dobs")[str(pl_["id"])] = pl_["dob"]
                 players = [x for g in sq for x in g["players"]]
                 league_country = p.cc_of(cid)
                 store.setdefault(str(cid), {})[tid_s] = {
@@ -897,6 +911,8 @@ def arab_ratings(p):
     rat, history, preds = R.run(rows, params)
     cur = max((r["season"] for r in rows), default=None)
     p.aux("arab_ratings")["preds"] = {str(x["id"]): [round(v, 4) for v in x["p"]] for x in preds if x["season"] == cur}
+    import more
+    more.upsets(p, preds)
     # a club's country = the country of the domestic league it played in most recently
     comp_cc = {c["id"]: c.get("country") for c in p.comps}
     home_cc = {}

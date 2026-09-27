@@ -23,6 +23,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import analytics as AN  # noqa: E402
 import arabs as AR  # noqa: E402
+import more as MO  # noqa: E402
+from compute import insights as IN  # noqa: E402
 import config  # noqa: E402
 from compute import winprob as WP  # noqa: E402
 from compute import ics as ICS, magic as MAGIC, prayer as PRAYER, season as SEASON, weather as WEATHER  # noqa: E402
@@ -277,6 +279,12 @@ class Poller:
         if d.get("periods"):
             self.st.setdefault("periods", {})[str(mid)] = d["periods"]
         full = self.enrich(d, full=True)
+        if d.get("comp") in self.comp_ids:
+            try:
+                hrows = [r for rs in self.aux(f"history/{d['comp']}").values() for r in rs]
+                full["firsts"] = IN.firsts(d, self.ledger(d["comp"])["matches"], hrows)
+            except Exception as e:
+                self.store.fail("firsts", f"{mid}: {e}")
         if d["status"] in S.LIVE_STATUSES or str(mid) in self.st.get("ev_seen", {}):
             seen = self.st.setdefault("ev_seen", {}).setdefault(str(mid), {})
             stamp = iso(self.now())
@@ -888,6 +896,15 @@ class Poller:
                     (self.st.get("due", {}).get(f"agg:{cid_s}") or "") < changed:
                 self.aggregates(int(cid_s))
 
+    def insights_due(self):
+        for cid in AN.analytics_leagues() + [c for c in MO.CUPS if c in self.comp_ids]:
+            if self.has_time(15) and self.due("insights", 120, cid):
+                try:
+                    MO.comp_insights(self, cid)
+                except Exception as e:
+                    self.store.fail(f"insights:{cid}", f"{type(e).__name__}: {e}")
+                    self.mark("insights", cid)
+
     def records_books(self):
         for cid in self.cfg.get("records_comps", []):
             if self.has_time(10) and AN.history_complete(self, (cid,)):
@@ -904,6 +921,14 @@ class Poller:
             ("records_book", 1440, self.records_books),
             ("danger", 1440, lambda: AN.danger(self)),
             ("arab_ratings", 360, lambda: AN.arab_ratings(self)),
+            ("insights", 0, self.insights_due),
+            ("players_step", 180, lambda: MO.players_step(self)),
+            ("team_histories", 60, lambda: MO.team_histories(self)),
+            ("cups", 60, lambda: MO.cups(self)),
+            ("callups", 180, lambda: MO.callups(self)),
+            ("careers", 30, lambda: MO.careers(self)),
+            ("birthdays", 1440, lambda: MO.birthdays(self)),
+            ("transfers_feed", 60, lambda: MO.transfers_feed(self)),
             ("arabs_abroad", 60, lambda: AR.abroad(self)),
             ("arab_clashes", 60, lambda: AR.clashes(self)),
             ("arab_national", 60, lambda: AR.national_hub(self)),

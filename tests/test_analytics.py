@@ -168,3 +168,47 @@ def test_danger_fit_recovers_linear_model():
     assert m["r2_vs_xg"] > 0.99 and abs(m["coef"]["big_chances"] - 0.25) < 0.01
     p = DG.with_proxy_xg({"x": {"stats": {k: v for k, v in L["5"]["stats"].items() if k != "expected_goals"}}}, m)
     assert p["x"]["xg"]["home"] > 0
+
+
+def _led():
+    return {"1": {"id": 1, "ko": "2026-09-01T16:00:00Z", "home": 10, "away": 20, "score": {"home": 2, "away": 1},
+                  "goals": [{"m": 10, "side": "away", "type": "goal", "player": 5, "assist": None},
+                            {"m": 60, "side": "home", "type": "goal", "player": 7, "assist": 9},
+                            {"m": 80, "side": "home", "type": "penalty_goal", "player": 7, "assist": None}],
+                  "reds": [[55, None, "away"]],
+                  "players": {"7": ["A", "UAE", 10, 7.5, "FW", 24, False, 40, 50], "9": ["B", "BRA", 10, 7.0, "MF", 27, True, 90, None],
+                              "5": ["C", "UAE", 20, 6.9, "FW", 22, True, 90, None]}}}
+
+
+def test_insights_first_goal_dropped_red_subs():
+    from compute import insights as IN
+    L = _led()
+    fg = IN.first_goal(L)
+    assert fg["10"]["conceded_first"]["W"] == 1 and fg["10"]["comebacks_won"] == 1
+    d = IN.dropped(L)
+    assert d["20"]["dropped_from_winning"] == 3 and d["10"]["won_from_losing"] == 3
+    ri = IN.red_impact(L)
+    assert ri["10"]["11v10"]["W"] == 1 and ri["20"]["10v11"]["L"] == 1
+    sb = IN.subs(L)
+    assert sb["players"]["7"]["goals"] == 2 and sb["result_changing_sub_goals"] >= 1
+    assert IN.dependence(L)["10"]["top1_share"] == 100.0
+    lm = IN.local_minutes(L, "UAE")
+    assert lm["teams"][10]["national"] == 40 and lm["teams"][10]["foreign"] == 90
+
+
+def test_score_grid_and_ties():
+    from compute import insights as IN
+    g = IN.score_grid(1.5, 1.0)
+    assert abs(sum(map(sum, g)) - 1) < 0.1 and g[1][1] > g[5][5]
+    legs = {1: {"id": 1, "kickoff_utc": "2026-09-01", "status": "finished", "score": {"home": 2, "away": 0},
+                "home": {"id": 10}, "away": {"id": 20}},
+            2: {"id": 2, "kickoff_utc": "2026-09-08", "status": "scheduled", "score": None, "home": {"id": 20}, "away": {"id": 10}}}
+    t = IN.ties([{"stage": "1/8", "ties": [{"matches": [1, 2]}]}], legs)
+    assert t[0]["aggregate"] == {"10": 2, "20": 0} and t[0]["needs"]["trailing_needs_to_win_by"] == 3
+
+
+def test_season_tables_metrics():
+    from compute import insights as IN
+    rows = [{"id": 1, "ko": "x", "h": 1, "a": 2, "hs": 2, "as": 0}, {"id": 2, "ko": "y", "h": 2, "a": 1, "hs": 1, "as": 1}]
+    s = IN.season_tables({"2020/2021": rows})["2020/2021"]
+    assert s["champion"] == 1 and s["title_margin"] == 3 and s["goals_per_game"] == 2.0

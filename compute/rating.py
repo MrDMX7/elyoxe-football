@@ -68,7 +68,8 @@ def run(matches, p=None, predict_from=None):
         ph, pd, pa = probs(rh, ra, p, neutral)
         outcome = 0 if m["hs"] > m["as"] else 1 if m["hs"] == m["as"] else 2
         if predict_from is None or (m["ko"] or "") >= predict_from:
-            preds.append({"id": m["id"], "ko": m["ko"], "season": s, "h": h, "a": a, "p": (ph, pd, pa), "outcome": outcome})
+            preds.append({"id": m["id"], "ko": m["ko"], "season": s, "comp": m.get("comp"), "h": h, "a": a, "p": (ph, pd, pa),
+                          "outcome": outcome})
         e = 1 / (1 + 10 ** (-(rh + (0 if neutral else p["home"]) - ra) / 400))
         sc = 1 if outcome == 0 else 0.5 if outcome == 1 else 0
         delta = p["k"] * gd_mult(m["hs"] - m["as"]) * (sc - e)
