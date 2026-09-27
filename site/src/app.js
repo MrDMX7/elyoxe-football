@@ -317,6 +317,30 @@
     r.oninput = draw; draw(); })();
   // 230 countdown timers
   (function(){ var els = document.querySelectorAll(".cdt[data-u]"); if (!els.length) return; function tick(){ els.forEach(function(el){ var d = Math.max(0, Date.parse(el.dataset.u) - Date.now()), dd = Math.floor(d / 864e5), hh = Math.floor(d / 36e5) % 24, mm = Math.floor(d / 6e4) % 60; el.textContent = (dd ? dd + " يوم " : "") + (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm; }); } tick(); setInterval(tick, 30000); })();
+  // Arab pages (build_arabs.cjs): country filters, nations head-to-head, TV guide, results archive, birthdays and club anniversaries
+  [["#abf", "tr[data-c]"], ["#trf", "li[data-c]"]].forEach(function(x){ var s = $(x[0]); if (!s) return; s.onchange = function(){ document.querySelectorAll(x[1]).forEach(function(r){ r.hidden = !!s.value && r.dataset.c !== s.value; }); }; });
+  (function(){ var a = $("#nha"), b = $("#nhb"), d = $("#nhdata"); if (!a || !d) return; var D = JSON.parse(d.textContent), c = country();
+    a.value = D.n[c] ? c : "AE"; b.value = a.value === "SA" ? "AE" : "SA";
+    function show(){ var x = D.m[a.value] && D.m[a.value][b.value], A = D.n[a.value], Bn = D.n[b.value], o = $("#nhout");
+      if (a.value === b.value){ o.innerHTML = '<p class="empty">اختار منتخبين مختلفين.</p>'; return; }
+      if (!x){ o.innerHTML = '<p class="empty">ما تقابل ' + A + " و" + Bn + " في بياناتنا.</p>"; return; }
+      o.innerHTML = '<div class="h2hsum"><div><b>' + x.w + "</b>فوز " + A + "</div><div><b>" + x.d + "</b>تعادل</div><div><b>" + x.l + "</b>فوز " + Bn + '</div></div><p>تقابلوا <b class="num">' + x.p + '</b> مرة، والأهداف <bdi dir="ltr" class="num">' + x.gf + "-" + x.ga + "</bdi> لـ" + A + (x.last ? '. آخر مواجهة <span class="num">' + x.last + "</span>" : "") + '.</p><p class="tools"><a class="btn" href="/national/' + a.value.toLowerCase() + '/">منتخب ' + A + '</a><a class="btn" href="/national/' + b.value.toLowerCase() + '/">منتخب ' + Bn + "</a></p>"; }
+    a.onchange = b.onchange = show; show(); })();
+  (function(){ var s = $("#gsel"), box = $("#guide"), fr = $("#gfree"); if (!s || !box) return;
+    function free(){ box.querySelectorAll(".gm").forEach(function(g){ g.hidden = fr.checked && !g.querySelector(".free"); }); }
+    function load(c){ box.innerHTML = '<p class="empty">نحمّل…</p>'; get("guide/" + c + ".json").then(function(g){ box.innerHTML = R.guide(g); R.localize(box); free(); }).catch(function(){ box.innerHTML = '<p class="empty">ما عندنا دليل لهالدولة للحين.</p>'; }); }
+    var c = country(); if (c !== "xx" && c !== "AE" && R.COUNTRIES.some(function(x){ return x[0] === c; })){ s.value = c; load(c); } else R.localize(box);
+    s.onchange = function(){ load(s.value); }; fr.onchange = free; })();
+  (function(){ var s = $("#exs"), cs = $("#exc"), q = $("#ext"), out = $("#exout"); if (!s || !out) return; var CN = JSON.parse($("#excomps").textContent), T = null, cur = null;
+    function nm(id){ var t = T && T[id]; return t ? (t.name_ar || t.name || "") : ""; }
+    function draw(){ if (!cur) return; var c = cs.value, w = q.value.trim().toLowerCase(), rows = cur.matches.filter(function(m){ return (!c || String(m[2]) === c) && (!w || [m[3], m[4]].some(function(id){ var t = T && T[id]; return t && ((t.name_ar || "").indexOf(w) >= 0 || (t.name || "").toLowerCase().indexOf(w) >= 0); })); }).slice().reverse();
+      out.innerHTML = rows.length ? '<p class="muted small">' + rows.length + " مباراة" + (rows.length > 300 ? "، نعرض أحدث 300" : "") + '</p><ul class="exl">' + rows.slice(0, 300).map(function(m){ var hw = m[5] > m[6], aw = m[6] > m[5]; return '<li><span class="muted small num">' + m[1] + '</span><span class="' + (hw ? "win" : "") + '">' + R.esc(nm(m[3])) + '</span><bdi dir="ltr" class="num sc">' + m[5] + "-" + m[6] + '</bdi><span class="' + (aw ? "win" : "") + '">' + R.esc(nm(m[4])) + '</span><span class="muted small">' + R.esc(CN[m[2]] || "") + "</span></li>"; }).join("") + "</ul>" : '<p class="empty">ما في نتايج بهالبحث.</p>'; }
+    function load(){ out.innerHTML = '<p class="empty">نحمّل…</p>'; Promise.all([T ? Promise.resolve(T) : get("teams.json").then(function(t){ T = t.teams || {}; return T; }), get("archive/all/" + s.value + ".json")]).then(function(r){ cur = r[1]; var ids = {}; cur.matches.forEach(function(m){ ids[m[2]] = 1; }); var v = cs.value; cs.innerHTML = '<option value="">كل البطولات</option>' + Object.keys(ids).filter(function(k){ return CN[k]; }).map(function(k){ return '<option value="' + k + '">' + R.esc(CN[k]) + "</option>"; }).join(""); cs.value = ids[v] ? v : ""; draw(); }).catch(function(){ out.innerHTML = '<p class="empty">ما قدرنا نحمّل هالموسم.</p>'; }); }
+    s.onchange = load; cs.onchange = draw; q.oninput = draw; load(); })();
+  (function(){ var el = $("#bdays"); if (!el) return; var md = R.ymd(new Date().toISOString()).slice(5), yr = +R.ymd(new Date().toISOString()).slice(0, 4), items = [];
+    try { var an = JSON.parse(el.dataset.an || "{}")[md] || []; an.forEach(function(a){ items.push("<li>ذكرى تأسيس " + '<a href="/t/' + a[0] + '/">' + R.esc(a[1]) + '</a> <span class="muted">(' + (yr - a[2]) + " سنة، من " + a[2] + ")</span></li>"); }); } catch (e){}
+    function draw(){ if (items.length) el.innerHTML = '<section class="blk"><h2>اليوم في التقويم</h2><ul class="facts-l">' + items.join("") + "</ul></section>"; }
+    get("players/birthdays/" + md + ".json").then(function(b){ (b.players || []).slice(0, 8).forEach(function(p){ var age = p.dob ? yr - +p.dob.slice(0, 4) : null; items.push("<li>عيد ميلاد " + (p.name_ar ? R.esc(p.name_ar) : '<span class="lat">' + R.esc(p.name) + "</span>") + (age ? ' <span class="muted">(' + age + " سنة)</span>" : "") + "</li>"); }); draw(); }).catch(draw); })();
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && ID === "5789") countdown(); }
   tvFull();
   tabs(); run(); dist();

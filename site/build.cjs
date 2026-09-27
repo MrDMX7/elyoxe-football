@@ -59,7 +59,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   const teamsJson = await get("teams.json"); S.setTeams(teamsJson && teamsJson.teams || {});
 
   // ---- 1. fetch: competitions (+ every analytics file the pipeline may have written), today, national
-  const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios", "shots", "fatigue", "coaches", "transfers", "records-book", "seasons", "milestones", "upsets", "projections", "bracket", "local-minutes", "suspensions"];
+  const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios", "shots", "fatigue", "coaches", "transfers", "records-book", "seasons", "milestones", "upsets", "projections", "bracket-sim", "local-minutes", "suspensions"];
   // phase 5: generated content (ai/gen.py) is published only for kinds the owner approved (ai/approved.json)
   const APPROVED = JSON.parse(fs.readFileSync(path.join(__dirname, "ai/approved.json"), "utf8"));
   const AI = k => { const d = path.join(CACHE, "ai", k), o = {}; if (fs.existsSync(d)) for (const f of fs.readdirSync(d)) if (f.endsWith(".json")) o[f.slice(0, -5)] = JSON.parse(fs.readFileSync(path.join(d, f), "utf8")); return o; };
@@ -81,6 +81,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   const day = await get(`day/${today.replace(/-/g, "")}.json`) || { matches:[] };
   const [ratings, compare, fifa, qual, abroad, natRatings] = await Promise.all(["ratings/uae-clubs.json", "leagues/compare.json", "national/5789/fifa.json", "national/5789/qualifying.json", "national/uae-abroad.json", "ratings/national.json"].map(f => get(f, 1)));
   const h2hIdx = await get("h2h/index.json", 1), h2hKeys = h2hIdx ? Object.keys(h2hIdx.pairs) : [];
+  const DERBIES = await get("derbies.json", 1); ((DERBIES && DERBIES.derbies) || []).forEach(d => { const k = String(d.h2h || "").replace(/^h2h\/|\.json$/g, ""); if (k && !h2hKeys.includes(k)) h2hKeys.push(k); });   // 209: the big Arab derbies get the same page
   const h2hData = await pool(h2hKeys, 8, k => get(`h2h/${k}.json`, 1)), H2H = {}; h2hKeys.forEach((k, i) => { if (h2hData[i]) H2H[k] = h2hData[i]; });
   let NAMES_AR = {}; try { NAMES_AR = JSON.parse(fs.readFileSync(path.join(__dirname, "../names/players_ar.json"), "utf8")); } catch (e){}
   const allPlayers = {}; compData.forEach(({ c, x }) => { if (x.players && x.players.players) for (const [pid, pp] of Object.entries(x.players.players)) allPlayers[pid] = Object.assign({ comp:c.id }, pp); if (x.cards && x.cards.players) for (const [id, c] of Object.entries(x.cards.players)) allPlayers[id] = Object.assign({ name:c.name, team:c.team }, allPlayers[id] || {}); });
@@ -158,9 +159,10 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     }
   }
   // derby / head-to-head pages (38)
+  const DZ = {}; ((DERBIES && DERBIES.derbies) || []).forEach(d => { DZ[String(d.h2h || "").replace(/^h2h\/|\.json$/g, "")] = d.name_ar; });
   for (const [k, h] of Object.entries(H2H)){
     const [a, b] = k.split("-"), na = (teamsJson.teams[a] || {}).name_ar || a, nb = (teamsJson.teams[b] || {}).name_ar || b;
-    write(`h2h/${k}/index.html`, page({ path:`/h2h/${k}/`, page:"h2h", title:`${na} و${nb}: كل المواجهات | تيفو`, desc:`سجل مواجهات ${na} و${nb}: كم فاز كل فريق وكم تعادلوا، وكل النتايج.`, body:`<p class="crumbs"><a href="/c/uae-pro-league/#hist">تاريخ الدوري</a></p><h1>${esc(na)} و${esc(nb)}</h1>` + S.h2hPage(h) }));
+    write(`h2h/${k}/index.html`, page({ path:`/h2h/${k}/`, page:"h2h", title:`${na} و${nb}: كل المواجهات | تيفو`, desc:`سجل مواجهات ${na} و${nb}: كم فاز كل فريق وكم تعادلوا، وكل النتايج.`, body:`<p class="crumbs">${DZ[k] ? '<a href="/derbies/">الديربيات العربية</a>' : '<a href="/c/uae-pro-league/#hist">تاريخ الدوري</a>'}</p><h1>${DZ[k] ? esc(DZ[k]) : esc(na) + " و" + esc(nb)}</h1>` + S.h2hPage(h) }));
     urls.push(`/h2h/${k}/`);
   }
 
@@ -172,7 +174,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     body:`<section class="stand" id="stand" aria-label="مباراة اليوم"><canvas aria-hidden="true"></canvas><span class="kicker" id="standkick">مباراة اليوم</span><div class="cap" id="standcap">${R.standCap(R.featured(day.matches))}</div></section><div id="uaecd"></div><div id="since"></div><div class="tools"><a class="btn" href="/tv/">شاشة المجلس</a><a class="btn" href="/studio/">ستوديو التيفو</a></div><div id="mine"></div><div class="daynav"><button type="button" id="prev" aria-label="اليوم اللي قبل">›</button><b id="daytitle">${R.dayNav(today, today)}</b><button type="button" id="next" aria-label="اليوم اللي بعد">‹</button></div><p class="tools"><button type="button" class="btn" id="arabonly" aria-pressed="false">بس مباريات العرب</button><button type="button" class="btn" id="freeonly" aria-pressed="false">بس المجاني في بلدك</button><a class="btn" href="/today/">مباريات اليوم</a><a class="btn" href="/tomorrow/">مباريات بكرة</a></p><p class="livecount" id="livecount"></p><div id="day">${R.dayList(day.matches, index, { empty:"ما في مباريات اليوم." })}</div>${watchHome}<h2>البطولات</h2><div class="comps">${nav}</div>` }));
 
   // ---- 5. teams
-  const tlist = [...teamIds];
+  const tlist = [...teamIds], teamPages = new Set(), playerPages = new Set();
   const full = new Set(index.focus_teams || []); compData.filter(d => d.c.scope === "uae").forEach(d => (d.st && d.st.groups || []).forEach(g => g.rows.forEach(r => full.add(r.team.id))));
   const teams = await pool(tlist, 8, id => full.has(id) ? get(`team/${id}.json`) : null);
   const rhist = await pool(tlist, 8, id => full.has(id) && id !== 5789 ? get(`ratings/team/${id}.json`, 1) : null);
@@ -182,7 +184,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   tlist.forEach((id, i) => {
     let t = teams[i];
     if (!t){ const b = byTeam.get(id); if (!b) return; t = { id, name:b.side.name, name_ar:b.side.name_ar, fixtures:b.ms, squad:[], partial:true }; }
-    tcount++;
+    tcount++; teamPages.add(+t.id);
     const f = R.teamFixtures(t);
     { const slim = m => m && { id:m.id, comp:m.comp, kickoff_utc:m.kickoff_utc, kickoff_uae:m.kickoff_uae, status:m.status, minute:m.minute, score:m.score, home:m.home, away:m.away, time_tbd:m.time_tbd };   // favourites card (179)
       const tf = path.join(OUT, "tn", t.id + ".json"); fs.mkdirSync(path.dirname(tf), { recursive:true }); const rk = (() => { for (const d of compData){ const g = d.st && !d.st.composite && d.st.groups && d.st.groups[0]; const r = g && g.rows.find(r => r.team.id === t.id); if (r && R.compCountry(d.c) && d.c.kind === "league") return { comp:d.c.id, comp_ar:d.c.name_ar, rank:r.rank, pts:r.pts }; } return null; })();
@@ -241,7 +243,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
       (card ? S.card(id, card).replace('class="tcard"', 'class="tcard big"') : "") + S.sec("موسمه", esc(p.season || ""), st) + (cx.similar ? (() => { const sm = S.similar(cx.similar, id); return sm ? S.sec("منو يلعب مثله؟", "", sm) : ""; })() : "") +
       (cx.shots && cx.shots.available !== false && cx.shots.players && cx.shots.players[id] ? S.sec("خريطة تسديداته", "", S.shotmap(cx.shots.players[id])) : "") +
       (card ? `<p><a class="btn" href="/c/${(comps.find(cc => cc.id === (p.comp || 538)) || {}).key || "uae-pro-league"}/compare/?a=${id}">قارنه بلاعب ثاني</a></p>` : "");
-    write(`p/${id}/index.html`, page({ path:`/p/${id}/`, page:"player", title:`${p.name}: أرقامه هالموسم | تيفو`, desc:`${p.name}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.`, body }));
+    playerPages.add(String(id)); write(`p/${id}/index.html`, page({ path:`/p/${id}/`, page:"player", title:`${p.name}: أرقامه هالموسم | تيفو`, desc:`${p.name}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.`, body }));
     urls.push(`/p/${id}/`);
   });
 
@@ -276,7 +278,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     const ld = { "@context":"https://schema.org", "@type":"SportsEvent", name:`${md.home.name_ar || md.home.name} ضد ${md.away.name_ar || md.away.name}`, startDate:md.kickoff_utc, sport:"Football", homeTeam:{ "@type":"SportsTeam", name:md.home.name_ar || md.home.name }, awayTeam:{ "@type":"SportsTeam", name:md.away.name_ar || md.away.name }, ...(md.venue ? { location:{ "@type":"Place", name:md.venue.name_ar || md.venue.name_en } } : {}) };
     const recent = Date.parse(md.kickoff_utc || 0), ogOn = uaeMatch || (recent > Date.now() - 3 * 864e5 && recent < Date.now() + 7 * 864e5 && [538, 11027, 329, 525, 9469, 536, 47, 87, 42].includes(md.comp));
     if (ogOn) OGJ.push({ key:"m-" + id, home:md.home.name_ar || md.home.name, away:md.away.name_ar || md.away.name, home_id:md.home.id, away_id:md.away.id, hc:colors[md.home.id], ac:colors[md.away.id], comp:md.comp_name_ar || R.compName(index, md.comp), score:md.score ? `${md.score.away} - ${md.score.home}` : null, time:md.score ? null : R.hhmm(md.kickoff_uae), sub:md.score ? (md.status === "finished" ? "انتهت" : "مباشر") : R.dayLabel(R.ymd(md.kickoff_uae)) + " بتوقيت الإمارات" });
-    write(`m/${id}/index.html`, page({ og:ogOn ? "m-" + id : null, path:`/m/${id}/`, page:"match", attrs:` data-id="${id}"`, title:`${ttl} — ${md.comp_name_ar || R.compName(index, md.comp)} | تيفو`, desc:`${R.tname(md.home)} ضد ${R.tname(md.away)} ${R.dayLabel(R.ymd(md.kickoff_uae))} الساعة ${R.hhmm(md.kickoff_uae)} بتوقيت الإمارات: النتيجة المباشرة والأحداث والتشكيلة والإحصائيات والمواجهات السابقة.`, body:body + (tac ? S.sec("الخطط والتبديلات", "", tac) : "") + (replay ? S.sec("إعادة المباراة", "", replay) : "") + faqHtml, ld:faqQ.length ? [ld, { "@context":"https://schema.org", "@type":"FAQPage", mainEntity:faqQ.map(q => ({ "@type":"Question", name:q[0], acceptedAnswer:{ "@type":"Answer", text:q[1] } })) }] : ld }));
+    write(`m/${id}/index.html`, page({ og:ogOn ? "m-" + id : null, path:`/m/${id}/`, page:"match", attrs:` data-id="${id}"`, title:`${ttl} — ${md.comp_name_ar || R.compName(index, md.comp)} | تيفو`, desc:`${R.tname(md.home)} ضد ${R.tname(md.away)} ${R.dayLabel(R.ymd(md.kickoff_uae))} الساعة ${R.hhmm(md.kickoff_uae)} بتوقيت الإمارات: النتيجة المباشرة والأحداث والتشكيلة والإحصائيات والمواجهات السابقة.`, body:body + (tac ? S.sec("الخطط والتبديلات", "", tac) : "") + (S.winprob(md) ? S.sec("فرص الفوز دقيقة بدقيقة", "", S.winprob(md)) : "") + (S.firsts(md) ? S.sec("أوائل", "", S.firsts(md)) : "") + (replay ? S.sec("إعادة المباراة", "", replay) : "") + faqHtml, ld:faqQ.length ? [ld, { "@context":"https://schema.org", "@type":"FAQPage", mainEntity:faqQ.map(q => ({ "@type":"Question", name:q[0], acceptedAnswer:{ "@type":"Answer", text:q[1] } })) }] : ld }));
     urls.push(`/m/${id}/`);
     if (uaeMatch && (md.status === "scheduled" || Date.parse(md.kickoff_utc) > Date.now() - 3 * 864e5)){
       const nums = [probs ? `توقعات تيفو: ${Math.round(probs.home * 100)}% فوز ${md.home.name_ar}، ${Math.round(probs.draw * 100)}% تعادل، ${Math.round(probs.away * 100)}% فوز ${md.away.name_ar}.` : "", ...((factsByMatch[id] || []).map(f => String(f.text_ar).replace(/\s*\(بيانات FotMob\)/g, "")))].filter(Boolean);
@@ -395,12 +397,17 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   const wrows = comps.filter(c => BC[c.id] && BC[c.id].broadcasters && BC[c.id].broadcasters.length).map(c => S.sec(esc(c.name_ar), "", S.watchWhere(BC[c.id]))).join("");
   if (wrows){ write("watch/index.html", page({ path:"/watch/", page:"ref", title:"وين تنقل المباريات في الإمارات: القنوات والباقات والأسعار | تيفو", desc:"كل بطولة وين تنقل في الإمارات: أبوظبي الرياضية، دبي الرياضية، الشارقة الرياضية، beIN، STARZPLAY، شاهد وغيرها، مع المجاني والأسعار.", body:'<h1>وين تنقل المباريات في الإمارات</h1><p class="muted">القنوات والتطبيقات لكل بطولة هالموسم، مع المجاني والأسعار المنشورة ومصدر كل معلومة. تحققنا منها في 27 سبتمبر 2026.</p>' + wrows })); urls.push("/watch/"); }
 
+  // ---- Arab-world pages (build_arabs.cjs): national teams, Arabs abroad, derbies, clashes, streaks, guide, archive…
+  const AW = await require("./build_arabs.cjs")({ get, pool, write, page, urls, R, S, esc, index, teamsJson, teamPages, playerPages, matchPages:new Set(mids), NAMES_AR, fs, path, OUT, CACHE, H2H, BC });
+  { const hf = path.join(OUT, "index.html"), hb = ["mow", "tonight", "streaks"].map(k => AW.home[k] || "").join(""); fs.writeFileSync(hf, fs.readFileSync(hf, "utf8").replace('<h2>البطولات</h2>', hb + (AW.home.days || "") + "<h2>البطولات</h2>")); }
+
   // ---- search index (167): clubs, competitions, players, reference pages; loaded only when the visitor opens search
   { const items = []; const seen = new Set(); const add = (t, id, ar, la, u) => { const k = t + id; if (seen.has(k) || !(ar || la)) return; seen.add(k); items.push([t, ar || "", la || "", u]); };
     comps.forEach(c => add("c", c.id, c.name_ar, c.name_en, `/c/${c.key}/`));
     for (const id of teamIds){ const tj = teamsJson.teams[id] || {}; const sm = byTeam.get(id); add("t", id, tj.name_ar || (sm && sm.side.name_ar), tj.name || (sm && sm.side.name), `/t/${id}/`); }
     for (const [pid, p] of Object.entries(allPlayers)) add("p", pid, (NAMES_AR[pid] || {}).ar || "", p.name, `/p/${pid}/`);
     [["legends", "أساطير الكورة الإماراتية"], ["memorable", "مباريات لا تُنسى"], ["thisday", "هذا اليوم في كورة الإمارات"], ["laws", "قانون الكورة: التسلل، لمسة اليد، الفار"], ["watch", "وين تنقل المباريات"], ["stadiums", "دليل الملاعب"], ["week", "مباريات الأسبوع"], ["tv", "شاشة المجلس"], ["studio", "ستوديو التيفو"]].forEach(([k, n]) => add("r", k, n, "", `/${k}/`));
+    AW.search.forEach(x => items.push(x));
     const sj = JSON.stringify(items); SEARCH_V = hash(sj); fs.writeFileSync(path.join(OUT, `assets/search.${SEARCH_V}.json`), sj); }
 
   // ---- 8. competitions list, robots, sitemap, 404

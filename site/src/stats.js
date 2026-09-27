@@ -527,5 +527,30 @@
     var h = md.h2h && md.h2h.summary; if (h) q.push(["كم مرة تقابلوا؟", "فاز " + H + " " + h.home_wins + " مرات، و" + A + " " + h.away_wins + " مرات، وتعادلوا " + h.draws + " مرات في المواجهات المسجّلة."]);
     return q;
   };
+  // 187: win probability through the match (match.winprob [[minute, pH, pD, pA]]); kickoff on the right like the page reads
+  S.winprob = function(md){
+    var w = md.winprob; if (!w || w.length < 5) return "";
+    var W = 640, H = 170, max = Math.max(90, w[w.length - 1][0]), x = function(m){ return (W - m / max * W).toFixed(1); };
+    var top = w.map(function(p){ return [x(p[0]), (p[1] * H).toFixed(1)]; }), mid = w.map(function(p){ return [x(p[0]), ((p[1] + p[2]) * H).toFixed(1)]; });
+    var poly = function(a, b){ return a.map(function(p){ return p.join(","); }).concat(b.slice().reverse().map(function(p){ return p.join(","); })).join(" "); };
+    var edge = function(y){ return w.map(function(p){ return [x(p[0]), y]; }); };
+    var hc = R.col(md.home.id, 0), ac = R.col(md.away.id, 0); if (hc === ac) ac = R.col(md.away.id, 1);
+    var marks = (md.events || []).filter(function(e){ return /^(goal|own_goal|penalty_goal|red|second_yellow)$/.test(e.type) && e.minute != null; }).map(function(e){ var red = /red|second_yellow/.test(e.type), xx = x(Math.min(e.minute, max)); return '<line x1="' + xx + '" x2="' + xx + '" y1="0" y2="' + H + '" class="' + (red ? "wr" : "wg") + '"/><text x="' + xx + '" y="' + (H + 14) + '" text-anchor="middle" class="ax">' + e.minute + "'</text>"; }).join("");
+    var ax = [0, 45, 90].map(function(m){ return '<text x="' + x(m) + '" y="' + (H + 28) + '" text-anchor="' + (m === 0 ? "end" : m === max ? "start" : "middle") + '" class="ax">' + m + "'</text>"; }).join("");
+    var pre = md.winprob_prematch, base = pre && pre.source === "base-rates";
+    return '<div class="wp"><svg viewBox="0 -2 ' + W + " " + (H + 34) + '" role="img" aria-label="فرص الفوز خلال المباراة"><polygon points="' + poly(edge(0), top) + '" fill="' + hc + '"/><polygon points="' + poly(top, mid) + '" class="wd"/><polygon points="' + poly(mid, edge(H)) + '" fill="' + ac + '"/>' + marks + ax + '</svg><p class="legend"><span><i style="background:' + hc + '"></i>فوز ' + R.tname(md.home) + '</span><span><i class="wd"></i>تعادل</span><span><i style="background:' + ac + '"></i>فوز ' + R.tname(md.away) + "</span></p>" +
+      noteSrc("كل دقيقة نحسب فرص كل نتيجة من الأهداف الباقية المتوقعة. البداية على اليمين، والخطوط أهداف أو طرد." + (base ? " قبل المباراة ما كان عندنا تصنيف للفريقين، فبدينا بالمعدل العام." : "")) + "</div>";
+  };
+  // 243: firsts inside our data (match.firsts)
+  S.firsts = function(md){
+    var f = md.firsts; if (!f || !f.length) return "";
+    var li = f.map(function(x){ var who = x.player ? '<span class="lat">' + esc(x.name) + "</span>" : "";
+      if (x.kind === "first_meeting") return "<li>أول مواجهة بين الفريقين في بياناتنا (من موسم 2010/11).</li>";
+      if (!x.player) return "";
+      if (x.kind === "first_goal_season") return "<li>أول هدف لـ" + who + " هالموسم.</li>";
+      if (x.kind === "first_appearance_season") return "<li>أول مشاركة لـ" + who + " هالموسم.</li>";
+      return ""; }).filter(Boolean);
+    return li.length ? '<ul class="facts-l">' + li.join("") + "</ul>" : "";
+  };
   if (typeof module !== "undefined" && module.exports) module.exports = S; else root.TS = S;
 })(this);

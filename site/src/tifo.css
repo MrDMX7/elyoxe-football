@@ -498,3 +498,27 @@ body.clubtheme .bar{border-block-end:.35rem solid var(--club2)}
 .wb .wst{color:var(--stone)}
 .nlform{max-inline-size:28rem}
 #carbtn[aria-pressed="true"]{background:var(--pulse);border-color:var(--pulse);color:#fff}
+/* build_arabs.cjs pages + win probability (187) */
+.wp svg{direction:ltr;display:block;inline-size:100%;block-size:auto;background:var(--chalk);border:1px solid var(--line)}
+.wp polygon.wd,.legend i.wd{fill:var(--line-2);background:var(--line-2)}
+.wp line.wg{stroke:var(--ink);stroke-width:1.5;stroke-dasharray:3 3}.wp line.wr{stroke:var(--card-r);stroke-width:2}
+.wp text.ax,.rchart text.ax{font:600 12px var(--digits);fill:var(--stone)}
+.legend{display:flex;flex-wrap:wrap;gap:.3rem 1rem;font-size:.85rem;margin:.4rem 0}.legend i{display:inline-block;inline-size:.8rem;block-size:.8rem;margin-inline-end:.3rem;vertical-align:middle;border:1px solid var(--line)}
+.star{border:2px solid var(--ink);background:var(--chalk);padding:1rem;margin-block:1rem}.star .big{font:800 1.5rem/1.3 var(--kufi);margin:.3rem 0}
+.star .kicker{font:600 .8rem var(--text);background:var(--dune);color:#fff;padding:.15rem .5rem}
+.derbies{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(18rem,100%),1fr));gap:1rem}
+.derby{display:block;border:1px solid var(--line);background:var(--chalk);padding:.8rem;color:inherit;text-decoration:none}.derby h3{margin:0 0 .2rem;font-size:1rem}
+.gm{border-block-end:1px dashed var(--line);padding-block-end:.3rem}.gm .m{border-block-end:0}.bc{margin:.1rem 0 .3rem;font-size:.85rem}
+.free{font-size:.75rem;border:1px solid var(--ink);padding:0 .3rem}
+.yl,.trl,.sq,.wcl,.exl{list-style:none;margin:0;padding:0}
+.yl li,.trl li,.wcl li{padding:.45rem 0;border-block-end:1px dashed var(--line)}
+.yl li.k-final{font-weight:600}
+.sq{columns:2 12rem;column-gap:1.5rem}.sq li{break-inside:avoid;padding:.25rem 0}
+.tag{font-size:.75rem;background:var(--concrete-2);padding:.05rem .4rem;white-space:nowrap}
+.rW{font-weight:700}.rL{color:var(--stone)}
+.up,.dn{font-size:.7rem;color:var(--stone)}
+.chk{display:inline-flex;align-items:center;gap:.3rem;font-size:.9rem}
+.exl li{display:grid;grid-template-columns:5.5rem 1fr 3rem 1fr;gap:.4rem;align-items:center;padding:.35rem 0;border-block-end:1px dashed var(--line);font-size:.9rem}
+.exl li>span:last-child{grid-column:2 / -1;margin-block-start:-.2rem}.exl .sc{text-align:center;font-family:var(--digits);font-size:1.1rem}.exl .win{font-weight:700}
+.st.abt td,.st.abt th{white-space:nowrap}
+.st.wrapn td.tm{white-space:normal;min-inline-size:9rem}
