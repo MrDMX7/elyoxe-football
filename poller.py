@@ -24,6 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import analytics as AN  # noqa: E402
 import arabs as AR  # noqa: E402
 import more as MO  # noqa: E402
+import extra2 as X2  # noqa: E402
 from compute import insights as IN  # noqa: E402
 import config  # noqa: E402
 from compute import winprob as WP  # noqa: E402
@@ -279,6 +280,13 @@ class Poller:
         if d.get("periods"):
             self.st.setdefault("periods", {})[str(mid)] = d["periods"]
         full = self.enrich(d, full=True)
+        if d.get("referee") and d["status"] == S.SCHEDULED and d.get("comp") in self.comp_ids:
+            try:
+                refs = self.store.get_json(f"comp/{d['comp']}/referees.json")
+                full["referee_profile"] = IN.referee_profile(d["referee"].get("id"), d["referee"].get("name"), refs,
+                                                             self.ledger(d["comp"])["matches"], d["home"]["id"], d["away"]["id"])
+            except Exception as e:
+                self.store.fail("referee-profile", f"{mid}: {e}")
         if d.get("comp") in self.comp_ids:
             try:
                 hrows = [r for rs in self.aux(f"history/{d['comp']}").values() for r in rs]
@@ -421,6 +429,7 @@ class Poller:
                                 health_key=f"file:comp/{cid}/standings")
             if cid in (10197, 10609, 290, 329):
                 self.qualifying_section(comp, st, matches)
+            self.detect_draw(cid, st)
             try:
                 AN.comp_tables(self, cid, st, matches, comp.get("kind"))
             except Exception as e:
@@ -435,6 +444,26 @@ class Poller:
         self.comp_meta(comp, data, matches, source)
         self.write_team_calendars(cid)
         self.mark("comp", cid)
+
+    def detect_draw(self, cid, st):
+        """Item 321: record when a competition's groups or knockout pairings first appear or change."""
+        groups = sorted([g.get("name") or "", sorted(r["team"]["id"] for r in g["rows"] if r["team"]["id"])] for g in st.get("groups") or [])
+        ties = sorted(sorted(x for x in (t["home"]["id"], t["away"]["id"]) if x)
+                      for rd in st.get("bracket") or [] for t in rd["ties"] if not t.get("tbd"))
+        sig = json.dumps([groups, ties], sort_keys=True)
+        prev = self.st.setdefault("draw_sig", {}).get(str(cid))
+        if prev == sig:
+            return
+        self.st["draw_sig"][str(cid)] = sig
+        if prev is None:
+            return                      # first sight after deploy: baseline, not a draw
+        log = self.st.setdefault("draws", {}).setdefault(str(cid), [])
+        log.append({"at": iso(self.now()), "groups": [{"name": n, "teams": t} for n, t in groups], "ties": ties})
+        del log[:-10]
+        self.store.put_json(f"draws/{cid}.json", {"comp": cid, "events": log,
+                                                  "note": "each event = the groups/pairings as they appeared when they changed"},
+                            cache="warm")
+        self.st.setdefault("draw_trigger", {})[str(cid)] = iso(self.now())
 
     def merge_uaepl(self, comp, matches):
         """Add official stadium names and the not-yet-dated rounds from uaepl.ae (cached daily)."""
@@ -907,6 +936,14 @@ class Poller:
                     self.store.fail(f"insights:{cid}", f"{type(e).__name__}: {e}")
                     self.mark("insights", cid)
 
+    def draw_triggers(self):
+        done = self.an_state.setdefault("draw_done", {})
+        for cid, at in (self.st.get("draw_trigger") or {}).items():
+            if done.get(cid, "") < at and self.has_time(30):
+                MO.cups(self)
+                X2.continental_odds(self)
+                done[cid] = at
+
     def records_books(self):
         for cid in self.cfg.get("records_comps", []):
             if self.has_time(10) and AN.history_complete(self, (cid,)):
@@ -938,7 +975,22 @@ class Poller:
             ("archive_index", 1440, lambda: AR.archive_index(self)),
             ("arab_streaks", 60, lambda: AR.streaks(self)),
             ("tv_guide", 60, lambda: AR.guide(self)),
+            ("draw_triggers", 0, self.draw_triggers),
             ("national_teams", 0, lambda: AR.national_teams(self)),
+            ("abroad_per90", 60, lambda: X2.abroad_per90(self)),
+            ("match_of_week", 720, lambda: X2.match_of_week(self)),
+            ("golden_boot", 360, lambda: X2.golden_boot_and_poty(self)),
+            ("continental_odds", 360, lambda: X2.continental_odds(self)),
+            ("champion_path", 1440, lambda: X2.champion_path(self)),
+            ("coaches_all", 720, lambda: X2.coaches(self)),
+            ("happiness", 60, lambda: X2.happiness(self)),
+            ("twins", 1440, lambda: X2.twins(self)),
+            ("finishing", 720, lambda: X2.finishing(self)),
+            ("anniversaries", 360, lambda: X2.anniversaries(self)),
+            ("year_calendar", 1440, lambda: X2.year_calendar(self)),
+            ("suspensions", 60, lambda: X2.suspensions_and_absences(self)),
+            ("league_books", 720, lambda: X2.league_books(self)),
+            ("club_records", 360, lambda: X2.club_records_step(self)),
             ("continental_history", 1440, lambda: AR.continental_history(self)),
             ("arab_coaches", 360, lambda: AR.coaches(self)),
             ("arab_referees", 360, lambda: AR.referees(self)),

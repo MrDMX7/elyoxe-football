@@ -52,7 +52,7 @@ def main():
         if not r:
             empty.append(d["id"])
             continue
-        items = [x["rankingItem"] | {"conf": (x.get("tag") or {}).get("id")} for x in r]
+        items = [x["rankingItem"] | {"conf": (x.get("tag") or {}).get("id")} for x in r if x["rankingItem"].get("rank") is not None]
         arab = sorted([x for x in items if x.get("countryCode") in ARAB], key=lambda x: x["rank"])
         for team in arab:
             conf = sorted([x for x in items if x["conf"] == team["conf"]], key=lambda x: x["rank"])

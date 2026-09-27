@@ -556,10 +556,14 @@ def league_squads_step(p, limit=2):
                     t = p.fm.team(int(tid_s))
                     sq = t["squad"]
                     n += 1
+                    injured = []
                     for g in sq:
                         for pl_ in g["players"]:
                             if pl_.get("dob"):
                                 p.aux("dobs")[str(pl_["id"])] = pl_["dob"]
+                            if pl_.get("injury"):
+                                injured.append({"id": pl_["id"], "name": pl_["name"], "type": "injury", "detail": pl_["injury"]})
+                    p.aux("injuries")[tid_s] = injured
                 players = [x for g in sq for x in g["players"]]
                 league_country = p.cc_of(cid)
                 store.setdefault(str(cid), {})[tid_s] = {
@@ -621,6 +625,11 @@ def national(p):
         "params": NA.NATIONAL}, cache="static")
     for cid in (329, 290):
         tournament(p, cid, rat, known)
+    try:
+        import extra2
+        extra2.nations_h2h(p, rows + extra)
+    except ERRORS as e:
+        p.store.fail("national:h2h", e)
     try:
         national_archives(p, text_rows=rows, extra=extra, known=known)
     except ERRORS as e:

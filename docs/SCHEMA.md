@@ -300,6 +300,27 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `arabs/friendlies.json` | club friendlies (FotMob 489) of clubs in the covered Arab leagues |
 | `team/{id}/month/YYYY-MM.json` | Arab-league clubs, current and previous month: results, W/D/L, top 5 performers (average match rating, goals, assists), Tifo rating at month start/end, table position at month start/end |
 | (private) weekly accuracy report | not in v1/: Lambda `elyoxe-football-report` e-mails the owner every Monday 08:00 UAE (hit rate, Brier vs base rates, calibration, biggest misses; report.py) |
+| `arabs/match-of-week.json` | the week's pick (Monday, next 7 days) among matches with an Arab club or national team, plus a shortlist; score = 0.6×watchability + derby + stage + Arab-vs-Arab |
+| `arabs/golden-boot.json` | league goals by Arab nationals (Arab leagues + big five), raw and weighted by league strength; weight = 10^((mean Tifo club rating of the league − 1500)/800), `league_strength` included |
+| `arabs/poty.json` | Arab player of the season race: weight × ((rating − 6)×10 + 4×goals + 3×assists) × min(1, minutes/1800), with `rank_history` (weekly, last 12 weeks) |
+| `arabs/abroad.json` → `per90` | per-90 values (goals, assists, shots, shots on target, big chances created, passes, dribbles, tackles, interceptions, recoveries) for the compare page |
+| `arabs/continental-odds.json` | Arab clubs still alive in ACL Elite / ACL Two / AFC Challenge League / CAF CL / Confederation Cup: reach and title probabilities from comp/{id}/bracket-sim.json (`available: false` while only a league phase exists) |
+| `arabs/nations-h2h.json` | 22×22 matrix of Arab national teams: `matrix[A][B] = {p, w, d, l, gf, ga, last}` (martj42) |
+| `comp/{id}/champion-path.json` | Arab leagues: the champion's matches, Tifo rating by month and key moments per month (biggest win, decisive late goal). `status`: `clinched` this season or `season_end` (last completed season) |
+| `coaches/{id}.json`, `coaches/h2h/{a}-{b}.json`, `coaches/index.json` | coaches of clubs in the analytics leagues and the Arab national teams: career rows (team, season, W/D/L, ppg) and coach-vs-coach results from stored lineups |
+| `arabs/happiness.json` | per club, last 7 days: points − expected points (pre-match Tifo probabilities), `mood` |
+| `arabs/twins.json` | for every club in the Arab leagues: the 3 nearest style twins (Arab leagues + big five) and the nearest big-five club |
+| `comp/{id}/finishing.json` | players with ≥ 10 shots: goals − xG (FotMob player xG, else a fitted proxy; `proxy` flag and `proxy_model`) |
+| `clubs/anniversaries.json` | founding dates by MM-DD (and year-only list): research/tifo-2026-09-27/arab_clubs.json + Wikidata (unique exact match in the same country) |
+| `draws/{comp}.json` | draw events: when a competition's groups or knockout pairings first appear or change (timestamp, groups, ties); the analytics function reruns the cup/continental simulations right after |
+| `calendar/year.json` | the next 12 months: finals, detected draws, league starts and breaks, national-team windows (`not_included`: transfer windows and awards) |
+| `comp/{id}/suspensions.json` | `suspended` (red card or yellow threshold reached in the team's last stored match) and `at_risk` (one yellow from a ban), with the competition's rules, confidence and sources (research/tifo-2026-09-27/suspension_rules.json) |
+| `comp/{id}/absences.json` | the coming round per team: `unavailable_from_match` (FotMob, near kickoff), `injured_in_squad`, `suspended` |
+| `match/{id}.json` → `referee_profile` | upcoming matches with a named referee: his season numbers in the competition and his stored matches with each of the two teams |
+| `comp/{id}/alltime-table.json` | Arab leagues: all-time table since 2010/11 (seasons, P/W/D/L, goals, points, titles in the computed tables) |
+| `team/{id}/records.json` | per club: biggest win and loss since 2010/11, longest winning/unbeaten/losing/scoring runs, most appearances and top scorers this season |
+| `comp/{id}/promoted.json` | this season's promoted clubs vs past newcomers (final rank and points, and `pts_after_same_games`) |
+| `comp/{id}/late-goals.json` | goals after 90' that turned a draw into a win or a loss into a draw, with team counts |
 | `archive/index.json`, `archive/{id}.json` | memorable matches with full event data: derbies (competitions.yaml `derbies`), cup finals, Super Cups since 2016/17 |
 
 - **Competitions (`index.json`, `competitions.yaml`):** each has `country: {iso2, name_ar}`, or `null` plus `region` (gulf, arab, asia, africa, europe, world). `teams.json` and `team/{id}.json` (`country_info`) give each club its domestic country and each national team its own country (`national: true`).

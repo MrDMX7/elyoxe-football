@@ -496,3 +496,119 @@ def ties(bracket, matches_by_id):
                                   "live": l2["status"] in ("live", "ht")}
             out.append(state)
     return out
+
+
+# ---------------------------------------------------------------- 324-330
+def referee_profile(ref_id, ref_name, refs_doc, ledger, home, away):
+    r = next((x for x in (refs_doc or {}).get("referees", []) if (ref_id and x.get("id") == ref_id) or x.get("name") == ref_name), None)
+    hist = {str(home): [], str(away): []}
+    for e in ledger.values():
+        rf = e.get("referee") or {}
+        if (ref_id and rf.get("id") == ref_id) or (rf.get("name") and rf.get("name") == ref_name):
+            for t in (home, away):
+                if t in (e["home"], e["away"]) and e.get("score"):
+                    side = "home" if e["home"] == t else "away"
+                    f, a = (e["score"]["home"], e["score"]["away"]) if side == "home" else (e["score"]["away"], e["score"]["home"])
+                    hist[str(t)].append({"match": e["id"], "date": (e.get("ko") or "")[:10], "result": _res(f, a),
+                                         "cards": e["cards"][side]["yellow"] + e["cards"][side]["red"] + e["cards"][side]["second_yellow"]})
+    return {"season": ({k: r.get(k) for k in ("matches", "yellow", "red", "penalties", "yellow_per_match", "penalties_per_match",
+                                              "foreign", "home", "away")} if r else None),
+            "with_teams": hist, "note": "this season's stored matches in this competition"}
+
+
+def alltime_table(season_docs):
+    t = {}
+    for season, doc in season_docs.items():
+        for r in doc["table"]:
+            x = t.setdefault(r["team"], {"team": r["team"], "seasons": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0,
+                                         "gf": 0, "ga": 0, "pts": 0, "titles": 0})
+            x["seasons"] += 1
+            for k in ("played", "won", "drawn", "lost", "gf", "ga", "pts"):
+                x[k] += r[k]
+            x["titles"] += 1 if r["rank"] == 1 else 0
+    rows = sorted(t.values(), key=lambda x: (-x["pts"], -(x["gf"] - x["ga"])))
+    for i, x in enumerate(rows, 1):
+        x["rank"], x["gd"] = i, x["gf"] - x["ga"]
+    return rows
+
+
+def club_records(rows, ledger, tid):
+    games = []
+    for r in sorted(rows, key=lambda r: r["ko"] or ""):
+        if tid in (r["h"], r["a"]):
+            home = r["h"] == tid
+            f, a = (r["hs"], r["as"]) if home else (r["as"], r["hs"])
+            games.append({"match": r["id"], "date": (r["ko"] or "")[:10], "comp": r["comp"], "opponent": r["a"] if home else r["h"],
+                          "gf": f, "ga": a, "home": home})
+    if not games:
+        return None
+    biggest_win = max(games, key=lambda g: (g["gf"] - g["ga"], g["gf"]))
+    biggest_loss = max(games, key=lambda g: (g["ga"] - g["gf"], g["ga"]))
+    streak = {}
+    for k, test in (("winning", lambda g: g["gf"] > g["ga"]), ("unbeaten", lambda g: g["gf"] >= g["ga"]),
+                    ("losing", lambda g: g["gf"] < g["ga"]), ("scoring", lambda g: g["gf"] > 0)):
+        cur = best = 0
+        s0 = best_from = best_to = None
+        for g in games:
+            if test(g):
+                cur += 1
+                s0 = s0 or g["match"]
+                if cur > best:
+                    best, best_from, best_to = cur, s0, g["match"]
+            else:
+                cur, s0 = 0, None
+        streak[k] = {"length": best, "from_match": best_from, "to_match": best_to, "current": cur}
+    apps, goals = Counter(), Counter()
+    names = {}
+    for e in ledger.values():
+        for pid, pl in (e.get("players") or {}).items():
+            if pl[2] == tid and (pl[7] if len(pl) > 7 else 1):
+                apps[pid] += 1
+                names[pid] = pl[0]
+        for g in e.get("goals") or []:
+            if g["side"] in ("home", "away") and e[g["side"]] == tid and g.get("player") and g["type"] != "own_goal":
+                goals[str(g["player"])] += 1
+    return {"matches": len(games), "since": games[0]["date"], "biggest_win": biggest_win,
+            "biggest_loss": biggest_loss if biggest_loss["ga"] > biggest_loss["gf"] else None, "streaks": streak,
+            "most_appearances": [{"player": int(p), "name": names.get(p), "apps": n} for p, n in apps.most_common(10)],
+            "top_scorers": [{"player": int(p), "name": names.get(p), "goals": n} for p, n in goals.most_common(10)]}
+
+
+def promoted(season_docs, current_rows, current_season):
+    seasons = sorted(season_docs)
+    prev = [s for s in seasons if s < current_season]
+    if not prev:
+        return None
+    last = {r["team"] for r in season_docs[prev[-1]]["table"]}
+    cur_ids = [r["team"]["id"] for r in current_rows]
+    now = [r for r in current_rows if r["team"]["id"] not in last]
+    past = []
+    for i, s in enumerate(prev[1:], 1):
+        before = {r["team"] for r in season_docs[prev[i - 1]]["table"]}
+        for r in season_docs[s]["table"]:
+            if r["team"] not in before:
+                past.append({"season": s, "team": r["team"], "final_rank": r["rank"], "final_pts": r["pts"], "played": r["played"]})
+    return {"promoted_now": [{"team": r["team"]["id"], "rank": r["rank"], "played": r["played"], "pts": r["pts"],
+                              "gf": r.get("gf"), "ga": r.get("ga")} for r in now],
+            "past_promoted": past, "teams_now": len(cur_ids)}
+
+
+def late_goals(L):
+    items, teams = [], Counter()
+    for e in L.values():
+        h = a = 0
+        for g in sorted(e.get("goals") or [], key=lambda g: ((g.get("m") or 0), (g.get("add") or 0))):
+            side = g["side"]
+            if side not in ("home", "away"):
+                continue
+            late = (g.get("m") or 0) > 90 or ((g.get("m") or 0) == 90 and (g.get("add") or 0) > 0)
+            f0, a0 = (h, a) if side == "home" else (a, h)
+            if side == "home":
+                h += 1
+            else:
+                a += 1
+            if late and f0 in (a0, a0 - 1):
+                items.append({"match": e["id"], "date": (e.get("ko") or "")[:10], "team": e[side], "player": g.get("player"),
+                              "minute": g.get("m"), "added": g.get("add"), "change": "draw_to_win" if f0 == a0 else "loss_to_draw"})
+                teams[str(e[side])] += 1
+    return {"goals": sorted(items, key=lambda x: x["date"], reverse=True), "teams": dict(teams.most_common())}

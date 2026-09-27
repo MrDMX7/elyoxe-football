@@ -24,7 +24,7 @@ def ledger_entry(d: dict) -> dict:
     hid, aid = d["home"]["id"], d["away"]["id"]
     cards = {"home": {"yellow": 0, "second_yellow": 0, "red": 0}, "away": {"yellow": 0, "second_yellow": 0, "red": 0}}
     pens = {"home": {"scored": 0, "missed": 0}, "away": {"scored": 0, "missed": 0}}
-    goals, var, reds, subs = [], [], [], []
+    goals, var, reds, subs, cards_p = [], [], [], [], []
     prev = {"home": 0, "away": 0}
     for e in d.get("events") or []:
         side = e.get("team")
@@ -33,6 +33,8 @@ def ledger_entry(d: dict) -> dict:
             cards[side][t] += 1
             if t != "yellow":
                 reds.append([e.get("minute"), e.get("added"), side])
+            if (e.get("player") or {}).get("id"):
+                cards_p.append([e["player"]["id"], t, e.get("minute"), side])
         elif t == "sub" and side:
             subs.append([e.get("minute"), side, (e.get("player") or {}).get("id"), (e.get("player_out") or {}).get("id")])
         elif t in ("goal", "own_goal", "penalty_goal"):
@@ -88,7 +90,7 @@ def ledger_entry(d: dict) -> dict:
         "referee": ({k: d["referee"].get(k) for k in ("id", "name", "country")} if d.get("referee") else None),
         "referee_stats": (d.get("referee") or {}).get("source_stats"),
         "cards": cards, "pens": pens, "goals": goals, "var": var, "shots": shots, "players": players,
-        "att": d.get("attendance"), "reds": reds, "subs": subs, "season": d.get("season"),
+        "att": d.get("attendance"), "reds": reds, "subs": subs, "season": d.get("season"), "cards_p": cards_p,
     }
 
 
