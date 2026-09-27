@@ -163,7 +163,7 @@ def grammar(t, nations=()):
     def _faqat(m):
         before, after = t[:m.start()].split()[-3:], t[m.end():].split()[:3]
         return "" if any(w.strip("،.") == "بس" for w in before + after) else "بس"
-    t = re.sub(r"\s*(?<!\w)فقط(?!\w)", lambda m: (" " + _faqat(m)) if _faqat(m) else "", t)
+    t = re.sub(r"\s*(?<!\w)فقط(?!\w)", lambda m: (" " + _faqat(m)) if _faqat(m) else "", t).strip()
     t = re.sub(r"(?<![\d.,])2\s+(?:فرص|فرصة)\s+محققة", "فرصتين محققتين", t)
     t = re.sub(r"(?<![\d.,])2\s+(" + "|".join(sorted(DUAL, key=len, reverse=True)) + r")(?!\w)", lambda m: DUAL[m.group(1)], t)
     for n in nations:

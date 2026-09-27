@@ -116,3 +116,9 @@ def test_half_counts_ignore_deficits_scores_and_check_conceded():
 def test_club_without_arabic_name_gets_one():
     assert gen.team_ar({"id": 570488, "name": "Widad Temara", "name_ar": None}) == "وداد تمارة"   # names/clubs_ar.json
     assert gen.team_ar({"id": 102124, "name": "Sharjah"}) == "الشارقة"                            # teams_ar.yaml
+
+def test_plurals_after_three_to_ten_and_faqat():
+    assert gen.grammar("كان فيها 5 خسارة و4 تعادل و10 فوز و13 فوز") == "كان فيها 5 خسارات و4 تعادلات و10 انتصارات و13 فوز"
+    assert gen.grammar("11 فوز مقابل 3 فوز لعجمان فقط.") == "11 فوز مقابل 3 انتصارات لعجمان بس."
+    assert gen.grammar("3 تسديدات بس فقط على المرمى") == "3 تسديدات بس على المرمى"
+    assert gen.grammar("فقط 2 فوز") == "بس فوزين"
