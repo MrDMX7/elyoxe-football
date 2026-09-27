@@ -3,7 +3,7 @@
   "summary": true,
   "thread": true,
   "preview": true,
-  "podcast": false,
+  "podcast": true,
   "ask": true,
   "daily5": false
 }
