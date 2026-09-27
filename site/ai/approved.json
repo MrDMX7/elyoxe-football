@@ -9,7 +9,5 @@
   "commentary": true,
   "digest": true,
   "power": true,
-  "dialects": false,
-  "why": true,
-  "quick": true
+  "dialects": false
 }
