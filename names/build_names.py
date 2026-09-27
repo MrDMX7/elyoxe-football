@@ -727,7 +727,8 @@ def main():
         tmp.replace(OUT)
 
     todo = [pid for pid in pool if pid not in out
-            or (a.retry_generated and out[pid]["source"] == "generated")]
+            or (a.retry_generated and out[pid]["source"] == "generated"
+                and not out[pid].get("qid"))]
     # UAE players first so a partial run still serves the league
     todo.sort(key=lambda pid: (not pool[pid].get("uae"), int(pid)))
     if a.limit:

@@ -525,3 +525,5 @@ body.clubtheme .bar{border-block-end:.35rem solid var(--club2)}
 .cpath,.hmc{display:flex;flex-wrap:wrap;gap:2px}.cpath a,.hmc i{inline-size:12px;block-size:12px;display:block;background:var(--line)}
 .cpath .fW,.hmc .fW{background:var(--ink)}.cpath .fD,.hmc .fD{background:var(--stone);opacity:.55}.cpath .fL,.hmc .fL{background:var(--line)}
 .hm{display:grid;gap:.35rem}.hmr{display:grid;grid-template-columns:3.6rem 1fr 2.4rem;gap:.5rem;align-items:center}.hmc i{inline-size:8px;block-size:8px}
+.comm{list-style:none;margin:0;padding:0}.comm li{display:grid;grid-template-columns:2.6rem 1fr;gap:.5rem;padding:.45rem 0;border-block-end:1px dashed var(--line)}.comm b{font-family:var(--digits);color:var(--stone)}
+.lead.pow li{align-items:start}.lead.pow .who{flex-wrap:wrap}.lead.pow .who .small{flex-basis:100%;color:var(--ink)}

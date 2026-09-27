@@ -1,6 +1,6 @@
 """تيفو phase 5 — written and voiced content from the data (docs/ROADMAP.md phase 5).
 
-  python3 ai/gen.py [--samples] [--only summary,preview,podcast,daily5] [--limit N]
+  python3 ai/gen.py [--samples] [--only summary,preview,podcast,daily5,commentary,digest,power] [--limit N]
 
 What it makes (cache/ai/…, read by build.cjs; shown on the site only for kinds switched on in ai/approved.json):
   9  + 78   summary/{match}.json   finished UAE matches: an Emirati summary (4-6 sentences) + a stats thread for X (4-6 posts)
@@ -226,6 +226,91 @@ def do_podcast(ctx, audio):
             print("podcast held:", ep["held"], file=sys.stderr); return "held"
     return "new"
 
+# ---- 196: written live commentary for UAE matches, one line per event (substitutions of one team in one minute = one line)
+COM_SYS = STYLE + """
+المهمة: تعليق مباشر مكتوب. لكل حدث في events اكتب سطر واحد (أقل من 140 حرف) كأنك تكتب لحظة الحدث، بدون ما تعرف اللي بيصير بعده.
+استعمل الدقيقة والنتيجة بعد الحدث إذا موجودة. نفس ترتيب الأحداث ونفس event_id.
+- الحدث من نوع subs فيه أكثر من تبديل لنفس الفريق في نفس الدقيقة: سطر واحد يذكرهم كلهم، مثلاً «تبديلين للوحدة في الدقيقة 82: فلان وفلان».
+- لا تكرر نفس صياغة البداية في سطرين ورا بعض.
+"""
+COM_SCHEMA = OBJ({"lines": ARR(OBJ({"event_id": S(80), "text": S(200)}), 60)})
+def commentary_events(md):
+    ev = []
+    for e in md.get("events") or []:
+        if not e.get("event_id") or e.get("type") in ("added_time",): continue
+        side = e.get("team") if e.get("team") in ("home", "away") else None
+        x = {"event_id": e["event_id"], "min": e.get("minute"), "type": e.get("type"), "team": team_ar(md[side]) if side else None, "player": (e.get("player") or {}).get("name"), "score": e.get("score")}
+        if e.get("type") == "sub":
+            prev = next((p for p in reversed(ev[-4:]) if p["type"] in ("sub", "subs") and p["team"] == x["team"] and p["min"] == x["min"]), None)
+            if prev:
+                if prev["type"] == "sub": prev.update(type="subs", players=[prev.pop("player")], event_ids=[prev["event_id"]]); prev.pop("player_off", None)
+                prev["players"].append(x["player"]); prev["event_ids"].append(x["event_id"]); continue
+            x["player_off"] = (e.get("player_out") or {}).get("name")
+        ev.append(x)
+    return ev
+def do_commentary(md):
+    ev = commentary_events(md)
+    if not ev: return "none"
+    ctx = {"home": team_ar(md["home"]), "away": team_ar(md["away"]), "competition": md.get("comp_name_ar"), "events": ev}
+    sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+    if cached("commentary", str(md["id"]), sig): return "cached"
+    out = gemini(COM_SYS, ctx, COM_SCHEMA, temp=0.6, tokens=12000)
+    if not out: return "fail"
+    ids = {e["event_id"] for e in ev}; lines = [{"event_id": l["event_id"], "text": emirati(l["text"])} for l in out["lines"] if l["event_id"] in ids]
+    by = {e["event_id"]: e for e in ev}
+    for l in lines: l["min"] = by[l["event_id"]].get("min")
+    save("commentary", str(md["id"]), {"id": md["id"], "status": md.get("status"), "lines": lines, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
+
+# ---- 197: a club's week (UAE league clubs), facts only
+DIG_SYS = STYLE + """
+المهمة: نشرة أسبوعية لمشجع نادي واحد: title عنوان قصير، وparas 3 فقرات قصيرة (كل وحدة جملتين لين ثلاث):
+1) نتايج الأسبوع.  2) وين واقف في ترتيب الدوري والفورمة.  3) المباراة الياية وموعدها بتوقيت الإمارات.
+- league_table هو ترتيب الدوري. لو نتيجة الأسبوع من كأس، قول «في الدوري» صراحة لما تذكر المركز والنقاط، عشان ما يختلط الكأس بالدوري.
+- كل جملة فيها معلومة من البيانات المرفقة. لا تتوقع ولا تفترض شي مب فيها (مثل ذهاب وإياب أو نظام البطولة)، ولا تكتب جمل حشو أو تمنيات.
+- لو ما في نتايج هالأسبوع، قول إن الفريق ما لعب هالأسبوع بجملة وحدة.
+- كل جملة لازم فيها رقم أو تاريخ أو اسم فريق من البيانات. ممنوع التشجيع والنصايح والتمنيات للمشجع («خلك جاهز»، «نتمنى»، «لازم يركز»، «هذي الكورة»).
+- اكتب عربي سليم وواضح، ولا تذكر فارق الأهداف إلا بصيغة «فارق أهدافه +1» أو «فارق أهدافه -2».
+"""
+def facts_only(p):   # drops sentences that carry no number (the owner's no-filler rule for 197)
+    parts = re.split(r"(?<=[.!؟])\s+", p.strip())
+    return " ".join(x for x in parts if re.search(r"\d", x)) or p
+DIG_SCHEMA = OBJ({"title": S(80), "paras": ARR(S(420), 3)})
+def do_digest(team_id, st, league_name):
+    t = get(f"team/{team_id}.json")
+    if not t: return "none"
+    fx = t.get("fixtures") or []; now = dt.datetime.utcnow(); cut = (now - dt.timedelta(days=7)).isoformat()
+    past = [m for m in fx if m.get("status") == "finished" and (m.get("kickoff_utc") or "") >= cut]
+    nxt = next((m for m in sorted(fx, key=lambda m: m.get("kickoff_utc") or "") if m.get("status") == "scheduled" and (m.get("kickoff_utc") or "") > now.isoformat()), None)
+    row = next((r for r in table_ctx(st) if r["team"] == team_ar(t)), None)
+    ctx = {"team": team_ar(t), "results_last_7_days": [{"home": team_ar(m["home"]), "away": team_ar(m["away"]), "score": m.get("score"), "competition": m.get("comp_name_ar")} for m in past],
+           "league_table": row and dict(row, league=league_name), "next_match": nxt and {"home": team_ar(nxt["home"]), "away": team_ar(nxt["away"]), "kickoff_uae": nxt.get("kickoff_uae"), "competition": nxt.get("comp_name_ar")}}
+    wk = dt.date.today().strftime("%G-%V"); sig = hashlib.sha1(json.dumps([wk, ctx], sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+    if cached("digest", str(team_id), sig): return "cached"
+    out = gemini(DIG_SYS, ctx, DIG_SCHEMA, temp=0.3, tokens=6000)
+    if not out: return "fail"
+    out = deep(out); out["paras"] = [facts_only(x) for x in out["paras"]]; out.update({"team": team_id, "week": wk, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("digest", str(team_id), out); return "new"
+
+# ---- 231: weekly power ranking; the order is the Tifo rating, the model only explains each place
+POW_SYS = STYLE + """
+المهمة: ترتيب القوة الأسبوعي. عندك الأندية مرتبة سلفاً بتصنيف تيفو (لا تغيّر الترتيب)، ومع كل نادي ترتيبه في الدوري وفورمته وكم تغيّر تصنيفه في آخر 5 مباريات (rating_change_last5).
+لكل نادي اكتب line: جملة وحدة (أقل من 150 حرف) تشرح مكانه من الأرقام المرفقة بس. نفس الترتيب ونفس team_id.
+- تغيّر التصنيف مجموع آخر 5 مباريات مب معدل: قول «ارتفع تصنيفه بـ 20.5 نقطة» ولا تقول «بمعدل».
+"""
+POW_SCHEMA = OBJ({"title": S(80), "rows": ARR(OBJ({"team_id": {"type": "INTEGER"}, "line": S(170)}), 24)})
+POWER_SRC = {538: ("ratings/uae-clubs.json", "دوري أدنوك للمحترفين")}
+def do_power(comp):
+    src, league = POWER_SRC[comp]; rt = get(src) or {}; st = get(f"comp/{comp}/standings.json")
+    teams = [t for t in rt.get("teams", []) if t.get("in_league")]
+    if not teams: return "none"
+    tab = {r["team"]: r for r in table_ctx(st)}
+    rows = [{"team_id": t["team"], "team": t.get("name_ar"), "tifo_rating": round(t.get("rating") or 0), "rating_change_last5": t.get("change_5"), "league_table": tab.get(t.get("name_ar"))} for t in teams]
+    wk = dt.date.today().strftime("%G-%V"); name = f"{comp}-{wk}"; sig = hashlib.sha1(json.dumps(rows, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+    if cached("power", name, sig): return "cached"
+    out = gemini(POW_SYS, {"league": league, "clubs_in_order": rows}, POW_SCHEMA, temp=0.5, tokens=8000)
+    if not out: return "fail"
+    lines = {r["team_id"]: emirati(r["line"]).replace("بمعدل ", "بـ ") for r in out["rows"]}
+    save("power", name, {"comp": comp, "week": wk, "title": emirati(out["title"]), "rows": [dict(r, line=lines.get(r["team_id"], "")) for r in rows], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
+
 # ---- 301: «أهم 5 أشياء اليوم» on the home page (gated like every generated text)
 D5_SYS = STYLE + """
 المهمة: عندك مباريات اليوم (عربية أول) وأرقام على المحك. اكتب items: 5 أسطر بالضبط، كل سطر جملة وحدة أقل من 150 حرف،
@@ -251,7 +336,7 @@ def do_daily5():
     out = deep(out); out.update({"date": today, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("daily5", today, out); return "new"
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,podcast,daily5"); ap.add_argument("--limit", type=int, default=40)
+    ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,podcast,daily5,commentary,digest,power"); ap.add_argument("--limit", type=int, default=40)
     ap.add_argument("--no-audio", action="store_true"); ap.add_argument("--days", type=int, default=10)
     a = ap.parse_args(); only = set(a.only.split(",")); now = dt.datetime.utcnow(); log = {}
     fx = {c: get(f"comp/{c}/fixtures.json") or {"matches": []} for c in UAE_COMPS}
@@ -299,6 +384,16 @@ def main():
                         if p.get("rating"): top.append({"name": p["name"], "team": team_ar(d[side]), "rating": p["rating"]})
             pc["best_players"] = sorted(top, key=lambda x: -x["rating"])[:5]
             log["podcast"] = do_podcast(pc, not a.no_audio)
+    if "commentary" in only:   # finished in the last --days, and live now (the hourly run refreshes a live match's lines)
+        for m in allm:
+            live = m.get("status") not in ("finished", "scheduled", "postponed", "cancelled", None)
+            if not live and (m.get("status") != "finished" or not m.get("kickoff_utc") or (now - dt.datetime.fromisoformat(m["kickoff_utc"].replace("Z", ""))).days > a.days): continue
+            md = get(f"match/{m['id']}.json") if live else detail(m["id"])
+            if md and md.get("events"): r = do_commentary(md); log["com-" + r] = log.get("com-" + r, 0) + 1
+    if "digest" in only:
+        for r in (st538 or {}).get("groups", [{}])[0].get("rows", []): x = do_digest(r["team"]["id"], st538, "دوري أدنوك للمحترفين"); log["dig-" + x] = log.get("dig-" + x, 0) + 1
+    if "power" in only:
+        for c in POWER_SRC: log[f"power-{c}"] = do_power(c)
     if "daily5" in only: log["daily5"] = do_daily5()
     print(json.dumps(log, ensure_ascii=False))
 

@@ -664,5 +664,18 @@
     var top = (mo.top_performers || []).length ? '<ol class="lead">' + mo.top_performers.map(function(p, i){ return '<li><span class="num muted">' + (i + 1) + '</span><span class="who">' + pl(p.player, p.name) + ' <span class="muted small">' + p.matches + " مباريات، " + p.goals + " أهداف، " + p.assists + " صناعة</span></span><b>" + fx(p.avg_rating, 1) + "</b></li>"; }).join("") + "</ol>" : "";
     return st + sec("النتايج", "", res) + (top ? sec("أحسن اللاعبين", "بمتوسط التقييم", top) : "");
   };
+  // 196, 197, 231: approved generated text (ai/gen.py), each behind its approved.json key in build.cjs
+  S.aiCommentary = function(c){
+    if (!c || !c.lines || !c.lines.length) return "";
+    return '<ol class="comm">' + c.lines.slice().reverse().map(function(l){ return '<li><b class="num">' + (l.min != null ? l.min + "'" : "") + "</b><span>" + esc(l.text) + "</span></li>"; }).join("") + "</ol>" + noteSrc("كتبها تيفو من أحداث المباراة، والأحدث فوق.");
+  };
+  S.aiDigest = function(d){
+    if (!d || !d.paras || !d.paras.length) return "";
+    return "<h3>" + esc(d.title) + "</h3>" + d.paras.map(function(p){ return "<p>" + esc(p) + "</p>"; }).join("") + noteSrc("كتبها تيفو من أرقام الأسبوع.");
+  };
+  S.aiPower = function(p){
+    if (!p || !p.rows || !p.rows.length) return "";
+    return '<p class="note">الترتيب حسب تصنيف تيفو لمستوى الفريق على مدى أطول، مب حسب جدول الدوري.</p><ol class="lead pow">' + p.rows.map(function(r, i){ var ch = r.rating_change_last5; return '<li><span class="num muted">' + (i + 1) + '</span><span class="who">' + tl(r.team_id) + '<br><span class="small">' + esc(r.line) + '</span></span><b>' + r.tifo_rating + "</b></li>"; }).join("") + "</ol>" + noteSrc('الرقم = <a href="/glossary/#tifo-rating">تصنيف تيفو</a>. الأسطر كتبها تيفو من الأرقام.');
+  };
   if (typeof module !== "undefined" && module.exports) module.exports = S; else root.TS = S;
 })(this);

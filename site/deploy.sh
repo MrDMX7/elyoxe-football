@@ -22,7 +22,7 @@ if [ "$LAST" -gt 0 ] && [ "$NOW" -lt $((LAST * 85 / 100)) ]; then echo "partial 
 # assets are content-hashed -> 1 year; logos 7 days; pages 60 s (live data comes from /v1 anyway)
 aws s3 sync out/assets "s3://$BUCKET/assets" --region $REGION --only-show-errors --cache-control "public,max-age=31536000,immutable"
 aws s3 sync out/logo "s3://$BUCKET/logo" --region $REGION --only-show-errors --cache-control "public,max-age=604800"
-sync_pages(){ aws s3 sync out "s3://$BUCKET" --region $REGION --only-show-errors --delete --exclude "assets/*" --exclude "logo/*" --cache-control "public,max-age=60"; }
+sync_pages(){ aws s3 sync out "s3://$BUCKET" --region $REGION --only-show-errors --delete --exclude "assets/*" --exclude "logo/*" --exclude "next/*" --cache-control "public,max-age=60"; }
 sync_pages || { echo "sync hiccup; retrying" >&2; sleep 5; sync_pages; }   # transient S3 stream errors on a few thousand small files
 echo "$NOW" > cache/last_pages
 aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/*" --query Invalidation.Id --output text >/dev/null
