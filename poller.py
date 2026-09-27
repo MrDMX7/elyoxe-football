@@ -877,6 +877,11 @@ class Poller:
                     (self.st.get("due", {}).get(f"agg:{cid_s}") or "") < changed:
                 self.aggregates(int(cid_s))
 
+    def records_books(self):
+        for cid in self.cfg.get("records_comps", []):
+            if self.has_time(10) and AN.history_complete(self, (cid,)):
+                AN.records_book(self, cid)
+
     def player_tables_due(self):
         for cid in self.cfg.get("player_stats_comps", []):
             if self.has_time(40) and self.due("players", 1440, cid):
@@ -884,7 +889,8 @@ class Poller:
 
     def analytics_chores(self):
         steps = [
-            ("history", 0, lambda: AN.history_step(self, limit=12)),
+            ("history", 0, lambda: AN.history_step(self, limit=20)),
+            ("records_book", 1440, self.records_books),
             ("players", 0, self.player_tables_due),
             ("club_pages", 0, lambda: AN.club_pages(self)),
             ("coaches_fatigue", 0, lambda: AN.coaches_and_fatigue(self)),
@@ -902,7 +908,7 @@ class Poller:
         for key, every, fn in steps:
             if not self.has_time(12):
                 return
-            if key == "history" and AN.history_complete(self) and not self.due("history_recheck", 1440):
+            if key == "history" and AN.history_complete(self, AN.history_comps()) and not self.due("history_recheck", 1440):
                 continue
             if key in ("ratings", "league_analytics", "archive") and not AN.history_complete(self):
                 continue
@@ -912,7 +918,7 @@ class Poller:
                 fn()
                 if every:
                     self.mark(key)
-                if key == "history" and AN.history_complete(self):
+                if key == "history" and AN.history_complete(self, AN.history_comps()):
                     self.mark("history_recheck")
             except Exception as e:
                 self.store.fail(f"analytics:{key}", f"{type(e).__name__}: {e}")

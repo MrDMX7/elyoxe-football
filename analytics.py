@@ -33,11 +33,15 @@ def _seed(*parts):
 
 
 # ------------------------------------------------------------------ history
+def history_comps():
+    return [int(c) for c in config.settings().get("history_comps", R.UAE_CLUB_COMPS)]
+
+
 def history_step(p, limit=2):
-    """Fetch past seasons of the UAE club competitions, `limit` requests per call, each season once."""
+    """Fetch past seasons of the history competitions, `limit` requests per call, each season once."""
     n = 0
     meta = p.aux("history_meta")
-    for cid in R.UAE_CLUB_COMPS:
+    for cid in history_comps():
         m = meta.setdefault(str(cid), {"seasons": None, "done": []})
         if m["seasons"] is None:
             if n >= limit or not p.has_time(8):
@@ -66,17 +70,17 @@ def history_step(p, limit=2):
                 n += 1
 
 
-def history_complete(p):
+def history_complete(p, comps=R.UAE_CLUB_COMPS):
     meta = p.aux("history_meta")
     return all((meta.get(str(c)) or {}).get("seasons") is not None and
                set((meta[str(c)]["seasons"])) - {meta[str(c)].get("current")} <= set(meta[str(c)]["done"])
-               for c in R.UAE_CLUB_COMPS)
+               for c in comps)
 
 
-def all_history(p, include_current=True):
-    hist = {str(c): dict(p.aux(f"history/{c}")) for c in R.UAE_CLUB_COMPS}
+def all_history(p, include_current=True, comps=R.UAE_CLUB_COMPS):
+    hist = {str(c): dict(p.aux(f"history/{c}")) for c in comps}
     if include_current:
-        for c in R.UAE_CLUB_COMPS:
+        for c in comps:
             fx = p.fixtures(c)
             if fx:
                 season = next((m.get("season") for m in fx if m.get("season")), "current")
@@ -709,3 +713,71 @@ def archive_step(p, limit=2):
                                                 "note": "derbies (competitions.yaml `derbies`), cup finals and Super Cups since "
                                                         "2016/17 (FotMob has no match events before that); national-team "
                                                         "key games are the UAE matches in match/ and the tournament files"}, cache="static")
+
+
+# ------------------------------------------------------------------ records book
+def records_book(p, cid):
+    """comp/{id}/records-book.json from the league's history (every FotMob season) and the event ledger."""
+    hist = all_history(p, comps=(cid,)).get(str(cid), {})
+    rows = HI.finished([r for rs in hist.values() for r in rs])
+    if len(rows) < 50:
+        return
+    names = p.names["teams"]
+    nm = lambda t: names.get(str(t))  # noqa: E731
+
+    def item(r, **kw):
+        return {"match": r["id"], "date": (r["ko"] or "")[:10], "season": r["season"], "home": r["h"], "home_ar": nm(r["h"]),
+                "away": r["a"], "away_ar": nm(r["a"]), "score": [r["hs"], r["as"]], **kw}
+    biggest = sorted(rows, key=lambda r: (-abs(r["hs"] - r["as"]), -(r["hs"] + r["as"])))[:10]
+    highest = sorted(rows, key=lambda r: (-(r["hs"] + r["as"]), -abs(r["hs"] - r["as"])))[:10]
+    teams = {x for r in rows for x in (r["h"], r["a"])}
+    streaks = {"winning": [], "unbeaten": [], "losing": [], "winless": []}
+    tests = {"winning": lambda f, a: f > a, "unbeaten": lambda f, a: f >= a, "losing": lambda f, a: f < a,
+             "winless": lambda f, a: f <= a}
+    for t in teams:
+        games = [(r["ko"] or "", r["hs"] if r["h"] == t else r["as"], r["as"] if r["h"] == t else r["hs"], r["id"])
+                 for r in sorted(rows, key=lambda r: r["ko"] or "") if t in (r["h"], r["a"])]
+        for k, test in tests.items():
+            cur, start, best = 0, None, (0, None, None)
+            for ko, f, a, mid in games:
+                if test(f, a):
+                    cur += 1
+                    start = start or mid
+                    if cur > best[0]:
+                        best = (cur, start, mid)
+                else:
+                    cur, start = 0, None
+            if best[0]:
+                streaks[k].append({"team": t, "team_ar": nm(t), "length": best[0], "from_match": best[1], "to_match": best[2],
+                                   "current": cur})
+    for k in streaks:
+        streaks[k] = sorted(streaks[k], key=lambda x: -x["length"])[:10]
+    season_goals = {}
+    for r in rows:
+        for t, g in ((r["h"], r["hs"]), (r["a"], r["as"])):
+            key = (t, r["season"])
+            season_goals[key] = season_goals.get(key, 0) + g
+    most = sorted(({"team": t, "team_ar": nm(t), "season": s_, "goals": g} for (t, s_), g in season_goals.items()),
+                  key=lambda x: -x["goals"])[:10]
+    hat, fastest = [], []
+    for e in p.ledger(cid)["matches"].values():
+        per = {}
+        for g in e.get("goals") or []:
+            if g.get("player") and g["type"] != "own_goal":
+                per.setdefault(g["player"], []).append(g.get("m"))
+            if g.get("m") is not None and g["type"] != "own_goal":
+                fastest.append({"match": e["id"], "player": g.get("player"), "minute": g["m"], "team": e[g["side"]]})
+        for pid, mins in per.items():
+            if len(mins) >= 3:
+                name = ((e.get("players") or {}).get(str(pid)) or [None])[0]
+                hat.append({"match": e["id"], "player": pid, "name": name, "goals": len(mins), "minutes": mins,
+                            "date": (e.get("ko") or "")[:10]})
+    fastest = sorted(fastest, key=lambda x: x["minute"])[:10]
+    p.store.put_json(f"comp/{cid}/records-book.json", {
+        "comp": cid, "generated": iso(p.now()), "since": min(hist) if hist else None, "matches": len(rows),
+        "biggest_wins": [item(r, margin=abs(r["hs"] - r["as"])) for r in biggest],
+        "highest_scoring": [item(r, goals=r["hs"] + r["as"]) for r in highest],
+        "streaks": streaks, "most_goals_in_season": most,
+        "hat_tricks": sorted(hat, key=lambda x: x["date"], reverse=True), "fastest_goals": fastest,
+        "events_scope": f"hat-tricks and fastest goals: this season's stored match events ({p.ledger(cid).get('season')}); "
+                        "results records: every season FotMob has"}, cache="static")
