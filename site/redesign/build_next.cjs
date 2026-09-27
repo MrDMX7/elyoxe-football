@@ -12,7 +12,7 @@ const R = require("./src/rx.js"), S = require("../src/stats.js");
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const DATA = arg("--data", "https://tifo.elyoxe.com/v1").replace(/\/$/, ""), OUT = path.join(SITE, "out_next/next"), BASE = "/next/";
 const esc = R.esc, hash = s => crypto.createHash("sha1").update(s).digest("hex").slice(0, 10);
-const MATCHES = [1000020522, 6052085], COMPS = ["uae-pro-league", "saudi-pro-league", "premier-league"];
+const MATCHES = [1000020522, 6052085], COMPS_ARG = (arg => arg ? arg.split(",") : null)((process.argv.find(a => a.startsWith("--comps=")) || "").slice(8));
 
 async function get(p, tries = 3){
   for (let i = 0; i < tries; i++){
@@ -109,7 +109,7 @@ ${shareSheet}${moreSheet}
 }
 function write(rel, html){
   // links to the other prototype pages stay inside /next/
-  html = html.replace(/href="(\/(?:m\/(?:1000020522|6052085)|c\/(?:uae-pro-league|saudi-pro-league|premier-league)|competitions))\/(#[^"]*)?"/g, (m, p, h) => `href="${BASE.slice(0, -1)}${p}/${h || ""}"`);
+  html = html.replace(/href="(\/(?:m\/(?:1000020522|6052085)|c\/[a-z0-9-]+|competitions))\/(#[^"]*)?"/g, (m, p, h) => `href="${BASE.slice(0, -1)}${p}/${h || ""}"`);
   const f = path.join(OUT, rel); fs.mkdirSync(path.dirname(f), { recursive:true }); fs.writeFileSync(f, html);
 }
 
@@ -117,7 +117,7 @@ function write(rel, html){
   const t0 = Date.now();
   fs.rmSync(OUT, { recursive:true, force:true }); fs.mkdirSync(path.join(OUT, "assets"), { recursive:true }); fs.mkdirSync(path.join(OUT, "logo"), { recursive:true });
   const index = await get("index.json"); if (!index) throw new Error("no index.json");
-  const comps = index.competitions, today = new Date(Date.now() + 4 * 3600e3).toISOString().slice(0, 10);
+  const comps = index.competitions, COMPS = COMPS_ARG || comps.map(c => c.key), today = new Date(Date.now() + 4 * 3600e3).toISOString().slice(0, 10);
   const teamsJson = await get("teams.json") || { teams:{} }; S.setTeams(teamsJson.teams || {});
   const colors = readJ(path.join(CACHE, "colors.json"), {}); R.setColors(colors);
   // competition logos (redesign/league_logos.py: FotMob league crests, dark variant preferred, own cache) + their colours

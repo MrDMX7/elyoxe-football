@@ -11,7 +11,8 @@
   R.BASE = BASE;
   // the prototype pages; links to them stay inside /next/, everything else goes to production
   R.PROTO = { "/":1, "/m/1000020522/":1, "/m/6052085/":1, "/c/uae-pro-league/":1, "/c/saudi-pro-league/":1, "/c/premier-league/":1, "/competitions/":1 };
-  R.nx = function(href){ return R.PROTO[href] ? BASE.slice(0, -1) + href : href; };
+  R.isProto = function(href){ return !!(R.PROTO[href] || /^\/c\/[a-z0-9-]+\/$/.test(href)); };   // every competition page is in the preview
+  R.nx = function(href){ return R.isProto(href) ? BASE.slice(0, -1) + href : href; };
   R.logo = function(t, cls){ if (!t || !t.id) return ""; return '<img class="logo' + (cls ? " " + cls : "") + '" src="' + BASE + "logo/" + t.id + '.png" alt="" loading="lazy" width="24" height="24" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=\'/logo/' + t.id + '.png\'}else this.style.visibility=\'hidden\'">'; };
 
   // ---- Arabic names: PN = { playerId: "الاسم" }

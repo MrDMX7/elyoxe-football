@@ -23,7 +23,7 @@
     // settings buttons inside المزيد open their own boxes (app.js): close the sheet first
     if (e.target.closest("#more #ctry, #srch")) { $$(".sheet:not([hidden])").forEach(function(s){ s.hidden = true; }); scrim.hidden = true; B.classList.remove("locked"); }
     // client-rendered links to a prototype page stay inside /next/
-    var a = e.target.closest("a[href^='/']"); if (a && R.PROTO && R.PROTO[a.getAttribute("href")]) { e.preventDefault(); location.href = "/next" + a.getAttribute("href"); }
+    var a = e.target.closest("a[href^='/']"); if (a && R.isProto && R.isProto(a.getAttribute("href"))) { e.preventDefault(); location.href = "/next" + a.getAttribute("href"); }
   }, true);
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeAll(); });
 
@@ -97,7 +97,7 @@
     var mine = null; try { mine = +localStorage.getItem("tifo.mine") || null; } catch (x){}
     var all = d.ms, ids = {}; all.forEach(function(m){ ids[m.id] = 1; }); var r = R.homeRails(all.concat(((d.live || {}).matches || []).filter(function(m){ return !ids[m.id]; })), d.idx, { mine:mine });
     [["r-live", r.live], ["r-today", r.today], ["r-arab", r.arab]].forEach(function(x){ var s = document.getElementById(x[0]); if (!s) return; var box = s.querySelector(".rail-s"); if (box.innerHTML !== x[1]){ box.innerHTML = x[1]; R.localize(box); } s.hidden = !x[1]; });
-    var f = R.featured(all), go = $("#herogo"); if (f && go){ go.href = (R.PROTO["/m/" + f.id + "/"] ? "/next" : "") + "/m/" + f.id + "/"; }
+    var f = R.featured(all), go = $("#herogo"); if (f && go){ go.href = (R.isProto("/m/" + f.id + "/") ? "/next" : "") + "/m/" + f.id + "/"; }
     setTimeout(function(){ var k = $("#standkick"); if (k && f && mine && (f.home.id === mine || f.away.id === mine) && !R.isLive(f)) k.textContent = "فريقك"; else if (k && f && f.status === "scheduled") k.textContent = "الليلة"; }, 0);
     fold();
   });
