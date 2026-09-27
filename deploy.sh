@@ -51,7 +51,7 @@ if [ "${1:-}" = "--check" ]; then live_checks; exit 0; fi
 # 2. bundle: our modules + aarch64 wheels for the arm64 runtime (boto3 comes with the runtime)
 rm -rf build/lambda && mkdir -p build/lambda
 cp -r sources compute build/lambda/
-cp poller.py analytics.py store.py config.py timeutil.py competitions.yaml stadiums.yaml teams_ar.yaml countries.yaml alltime.yaml fifa_history.json build/lambda/
+cp poller.py analytics.py arabs.py store.py config.py timeutil.py competitions.yaml stadiums.yaml teams_ar.yaml countries.yaml derbies.yaml alltime.yaml fifa_history.json build/lambda/
 find build/lambda -name "__pycache__" -type d -prune -exec rm -rf {} +
 "$PY" -m pip install -q --disable-pip-version-check --target build/lambda \
   --platform manylinux2014_aarch64 --implementation cp --python-version 3.13 --only-binary=:all: \

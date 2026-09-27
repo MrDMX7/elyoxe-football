@@ -142,15 +142,17 @@ def collect(cache: Path, match_days: int):
                         add(p["id"], p["name"], p["club_id"])
     log(f"collect: {squads} squad files")
 
-    # recent match lineups (finished matches of the last N days)
-    today = dt.date.today()
+    # recent match lineups: finished matches of the last N days in every
+    # competition (all finished ones for the UAE league)
+    since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=match_days)).strftime("%Y-%m-%dT")
     mids = []
-    for d in range(match_days):
-        day = (today - dt.timedelta(days=d)).strftime("%Y%m%d")
-        dj = get_json(f"{FEED}/day/{day}.json")
-        for m in (dj or {}).get("matches") or []:
-            if m.get("status") == "finished":
+    for cid in comps:
+        fj = get_json(f"{FEED}/comp/{cid}/fixtures.json")
+        for m in (fj or {}).get("matches") or []:
+            if m.get("status") == "finished" and (
+                    cid == UAE_LEAGUE or (m.get("kickoff_utc") or "") >= since):
                 mids.append(m["id"])
+    mids = list(dict.fromkeys(mids))
     got = 0
     for mid in mids:
         mj = get_json(f"{FEED}/match/{mid}.json")
@@ -232,14 +234,22 @@ def fifa_codes(cache: Path):
     f = cache / "fifa_codes.json"
     if f.exists():
         return json.loads(f.read_text())
-    q = """SELECT ?c ?code WHERE { ?c wdt:P3441 ?code }"""
-    r = S.get(WD_SPARQL, params={"query": q, "format": "json"}, timeout=60).json()
+    # P3441 sits on the national *teams*; map through their country (P17/P1532),
+    # and add ISO alpha-3 codes (P298) of countries as a fallback.
+    q = """SELECT ?code ?c WHERE {
+      { ?t wdt:P3441 ?code . ?t wdt:P17|wdt:P1532 ?c }
+      UNION { ?c wdt:P298 ?code . ?c wdt:P31 wd:Q6256 } }"""
+    r = S.get(WD_SPARQL, params={"query": q, "format": "json"}, timeout=90).json()
     m = {}
     for b in r["results"]["bindings"]:
-        m.setdefault(b["code"]["value"].upper(), []).append(b["c"]["value"].rsplit("/", 1)[1])
-    # FotMob uses a few non-FIFA codes
-    for alias, code in {"ENG": "ENG", "UAE": "UAE", "KSA": "KSA"}.items():
-        m.setdefault(alias, m.get(code, []))
+        code = b["code"]["value"].upper()
+        c = b["c"]["value"].rsplit("/", 1)[1]
+        if c not in m.setdefault(code, []):
+            m[code].append(c)
+    # home nations: players carry England/Scotland/... or the UK
+    for code, q_ in {"ENG": "Q21", "SCO": "Q22", "WAL": "Q25", "NIR": "Q26"}.items():
+        m.setdefault(code, [])
+        m[code] += [q_, "Q145"]
     f.write_text(json.dumps(m))
     return m
 
@@ -328,6 +338,7 @@ def slim_entity(qid, e):
         "id": qid,
         "labels": labels,
         "aliases": aliases,
+        "ar_aliases": [a["value"] for lang in ("ar",) for a in (e.get("aliases") or {}).get(lang, [])],
         "dob": dob,
         "country": sorted(set(_claim_ids(e, "P1532") + _claim_ids(e, "P27"))),
         "clubs": _claim_ids(e, "P54"),
@@ -388,17 +399,57 @@ def score(p, e, fifa, tq):
     return sc, " ".join(why)
 
 
-def pick_ar(e):
-    ar = clean_ar(e["labels"].get("ar"))
-    if ar:
-        return ar, "wikidata"
-    ar = clean_ar(e.get("arwiki"))
-    if ar:
-        return ar, "arwiki"
-    ar = clean_ar(e["labels"].get("arz"))
-    if ar:
-        return ar, "wikidata"
-    return None, None
+LATIN_JOIN = {"al", "el", "ad", "as", "ash", "ar", "at", "az", "abdul", "abdel", "abd"}
+
+
+def latin_parts(name):
+    """Word count as Arabic would write it: 'Ali Al Hosani' -> 2."""
+    toks = fold(name).split()
+    n, skip = 0, False
+    for t in toks:
+        if skip:
+            skip = False
+            continue
+        n += 1
+        if t in LATIN_JOIN:
+            skip = True
+    return max(n, 1)
+
+
+def ar_parts(s):
+    toks = s.split()
+    n, skip = 0, False
+    for t in toks:
+        if skip:
+            skip = False
+            continue
+        n += 1
+        if t in ("عبد", "ال", "أبو", "ابو"):
+            skip = True
+    return n
+
+
+def pick_ar(e, latin):
+    """Best Arabic form. Wikidata often labels players with their full legal
+    name ('فابيو فيرجينيو دي ليما' for 'Fábio Lima'), so prefer a label, alias
+    or arwiki title with as many words as the name FotMob uses; otherwise
+    return the label and flag it for trimming.  -> (ar, source, needs_trim)"""
+    want = latin_parts(latin)
+    forms = []  # (text, source)
+    for txt, src in ([(e["labels"].get("ar"), "wikidata")]
+                     + [(e.get("arwiki"), "arwiki")]
+                     + [(a, "wikidata") for a in e.get("ar_aliases", [])]
+                     + [(e["labels"].get("arz"), "wikidata")]):
+        t = clean_ar(txt)
+        if t and t not in [f[0] for f in forms]:
+            forms.append((t, src))
+    if not forms:
+        return None, None, False
+    for t, src in forms:
+        if ar_parts(t) == want:
+            return t, src, False
+    t, src = forms[0]
+    return t, src, ar_parts(t) > want
 
 
 def resolve_wikidata(todo, pool, teams, cache, pause, out, save):
@@ -419,22 +470,36 @@ def resolve_wikidata(todo, pool, teams, cache, pause, out, save):
             (s1, why1), e1 = scored[0]
             s2 = scored[1][0][0] if len(scored) > 1 else -99
             evidence = any(k in why1 for k in ("nat+", "dob+", "club+"))
-            contra = any(k in why1 for k in ("nat-", "dob-"))
             mono = len(fold(p["name"]).split()) == 1
             ok = (s1 - s2 >= 1.5 or (s1 >= 6 and s1 - s2 >= 0.75))
+            ns1 = float(why1.split()[0][1:])
+            # a nationality mismatch is real evidence of another person, but
+            # Gulf leagues are full of naturalised players whose Wikidata
+            # citizenship lags: accept it only with a club match, or an exact
+            # birth year + close name + no rival candidate.
+            if "nat-" in why1 and "club+" not in why1:
+                ok = ok and "dob+" in why1 and ns1 >= 0.85 and s1 - s2 >= 3 and not mono
+            if "dob-" in why1:
+                ok = False
             if mono:
-                ok = ok and evidence and not contra and s1 >= 5.5
+                ok = ok and evidence and s1 >= 5.5
             else:
-                ok = ok and (evidence or (s1 >= 3 and len(scored) == 1 and not p.get("ages") and not p.get("country"))) and not ("dob-" in why1)
+                ok = ok and (evidence or (s1 >= 3 and len(scored) == 1 and not p.get("ages")
+                                          and not p.get("country")))
             if ok:
-                ar, src = pick_ar(e1)
-                choice = (e1["id"], ar, src, s1, why1)
+                ar, src, trim = pick_ar(e1, p["name"])
+                # matched through an alias or a longer label: the Arabic may
+                # render another form of the name (Diney Borges -> ديني إديلسون)
+                trim = trim or fold(e1["labels"].get("en", "")) != fold(p["name"])
+                choice = (e1["id"], ar, src, s1, why1, trim)
         audit.write(json.dumps({"pid": pid, "name": p["name"],
                                 "cands": [(e["id"], round(s[0], 2), s[1]) for s, e in scored[:4]],
                                 "choice": choice}, ensure_ascii=False) + "\n")
         if choice and choice[1]:
             out[pid] = {"latin": p["name"], "ar": choice[1], "source": choice[2],
                         "qid": choice[0], "checked": TODAY}
+            if choice[5]:
+                out[pid]["_trim"] = True
             found += 1
         elif choice:
             p["_qid"] = choice[0]  # matched, but no Arabic label: keep qid for the generated row
@@ -470,6 +535,8 @@ Rules:
 - If the player is Arab (Emirati, Saudi, Qatari, Egyptian, Moroccan, etc.), write his real Arabic name:
   "Ali Mabkhout" -> "علي مبخوت", "Khalid Eissa" -> "خالد عيسى", "Mohamed Salah" -> "محمد صلاح".
   Arab family prefixes: "Al" -> "ال" joined to the word ("Al Dhanhani" -> "الظنحاني"), "bin"/"ben" -> "بن".
+  "Abdulla"/"Abdullah"/"Abdalla" -> "عبدالله" (one word); "Abdul"/"Abdel" + name -> "عبد" + name
+  as two words ("Abdul Rahman" -> "عبد الرحمن", "Abdulsalam" -> "عبد السلام").
 - Otherwise transliterate by the pronunciation of his nationality's language, as Arab media do:
   Spanish/Latin American: "Nicolás Giménez" -> "نيكولاس خيمينيز", "j" -> "خ";
   Portuguese/Brazilian: "Júnior" -> "جونيور", "Rodrigues" -> "رودريغيز", "lh" -> "لي";
@@ -481,27 +548,27 @@ Rules:
 Return one item per input, with the same id."""
 
 
-def gemini_batch(key, items):
+def gemini_call(key, text, n):
+    """One structured call -> {id: ar}. Every string has a maxLength (without
+    it Gemini can loop inside a string until the token limit)."""
     schema = {
         "type": "OBJECT",
-        "properties": {"names": {"type": "ARRAY", "maxItems": len(items) + 2, "items": {
+        "properties": {"names": {"type": "ARRAY", "maxItems": n + 2, "items": {
             "type": "OBJECT",
             "properties": {"id": {"type": "STRING", "maxLength": 12},
                            "ar": {"type": "STRING", "maxLength": 60}},
             "required": ["id", "ar"]}}},
         "required": ["names"],
     }
-    lines = "\n".join(f'{it["id"]}\t{it["latin"]}\tnationality={it["nat"] or "unknown"}'
-                      + (f'\tclub={it["club"]}' if it.get("club") else "") for it in items)
     body = {
-        "contents": [{"role": "user", "parts": [{"text": PROMPT + "\n\nid\tname\thints\n" + lines}]}],
+        "contents": [{"role": "user", "parts": [{"text": text}]}],
         "generationConfig": {"responseMimeType": "application/json", "responseSchema": schema,
                              "temperature": 0.2, "maxOutputTokens": 8192},
     }
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
     for i in range(4):
         try:
-            r = S.post(url, params={"key": key}, json=body, timeout=120)
+            r = S.post(url, params={"key": key}, json=body, timeout=180)
             if r.status_code in (429, 500, 503):
                 log(f"  gemini {r.status_code}, waiting"); time.sleep(10 * (i + 1)); continue
             r.raise_for_status()
@@ -509,12 +576,15 @@ def gemini_batch(key, items):
             txt = j["candidates"][0]["content"]["parts"][0]["text"]
             return {str(x["id"]): x["ar"] for x in json.loads(txt)["names"]}
         except Exception as e:  # noqa: BLE001
-            log(f"  gemini retry {i + 1}: {e}")
+            log(f"  gemini retry {i + 1}: {str(e)[:200]}")
             time.sleep(5 * (i + 1))
     return {}
 
 
-NAT_AR = None
+def gemini_batch(key, items):
+    lines = "\n".join(f'{it["id"]}\t{it["latin"]}\tnationality={it["nat"] or "unknown"}'
+                      + (f'\tclub={it["club"]}' if it.get("club") else "") for it in items)
+    return gemini_call(key, PROMPT + "\n\nid\tname\thints\n" + lines, len(items))
 
 
 def resolve_gemini(todo, pool, teams, out, save, batch=50):
@@ -531,10 +601,57 @@ def resolve_gemini(todo, pool, teams, out, save, batch=50):
         for pid in chunk:
             ar = clean_ar(res.get(pid))
             if ar:
+                prev = out.get(pid) or {}
                 out[pid] = {"latin": pool[pid]["name"], "ar": ar, "source": "generated",
-                            "qid": pool[pid].get("_qid"), "checked": TODAY}
+                            "qid": prev.get("qid") or pool[pid].get("_qid"), "checked": TODAY}
+                if prev.get("ar"):
+                    out[pid]["wd_label"] = prev.get("wd_label") or prev["ar"]
                 done += 1
         log(f"gemini {min(i + batch, len(todo))}/{len(todo)} ok {done}")
+        save()
+
+
+TRIM_PROMPT = """Each line gives a footballer's name as FotMob shows it (Latin script) and an
+Arabic name for him from Wikidata. The Arabic may be his full legal name, or a different
+form of his name than the one FotMob uses.
+Return the Arabic words that render the FotMob name, in the same order, copied exactly
+from the Arabic (for example "Fábio Lima" + "فابيو فيرجينيو دي ليما" -> "فابيو ليما";
+"Talisca" + "أندرسون تاليسكا" -> "تاليسكا"; "Mohammed Khalaf" + "محمد خلف الحمادي" -> "محمد خلف").
+If the Arabic already renders the FotMob name, return it unchanged.
+If some word of the FotMob name has no rendering in the Arabic (for example
+"Diney Borges" + "ديني إديلسون": Borges is missing), return an empty string. Do not invent words."""
+
+_HAMZA = str.maketrans("أإآة", "اااه")
+
+
+def resolve_trim(out, save, batch=50):
+    todo = [pid for pid, o in out.items() if o.get("_trim")]
+    if not todo:
+        return
+    key = gemini_key()
+    fixed = dropped = 0
+    for i in range(0, len(todo), batch):
+        chunk = todo[i:i + batch]
+        lines = "\n".join(f'{pid}\t{out[pid]["latin"]}\t{out[pid]["ar"]}' for pid in chunk)
+        res = gemini_call(key, TRIM_PROMPT + "\n\nid\tshort\tarabic_full\n" + lines, len(chunk))
+        for pid in chunk:
+            o = out[pid]
+            o.pop("_trim", None)
+            if pid not in res:
+                o["_trim"] = True  # call failed, retry next run
+                continue
+            t = clean_ar(res.get(pid))
+            full = o["ar"].translate(_HAMZA).split()
+            if t and all(w.translate(_HAMZA) in full for w in t.split()):
+                if t != o["ar"]:
+                    o["wd_label"] = o["ar"]
+                    o["ar"] = t
+                    fixed += 1
+            else:
+                # the Wikidata Arabic is another name form: transliterate instead
+                o["_gen"] = True
+                dropped += 1
+        log(f"check {min(i + batch, len(todo))}/{len(todo)} trimmed {fixed}, sent to generate {dropped}")
         save()
 
 
@@ -612,7 +729,9 @@ def main():
     if todo:
         resolve_wikidata(todo, pool, teams, cache, a.pause, out, save)
     if not a.no_gemini:
-        rest = [pid for pid in todo if pid not in out]
+        resolve_trim(out, save)
+        rest = [pid for pid in todo if pid not in out] + \
+               [pid for pid, o in out.items() if o.get("_gen") and pid in pool]
         if rest:
             resolve_gemini(rest, pool, teams, out, save)
     save()

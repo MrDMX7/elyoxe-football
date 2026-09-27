@@ -126,6 +126,11 @@ Everything in the Match summary, plus the following:
 | `h2h` | `{summary: {home_wins, draws, away_wins}, matches: [{id, kickoff_utc, comp, home, away, score}]}`, at the full depth FotMob gives (16–27 meetings for Pro League pairs) |
 | `weather_source` | FotMob's current-weather block, when present |
 
+**Commentary feed:** every event has a stable `event_id`: `{match}-{type}-{minute}-{added}-{player}`, plus `-2`, `-3` for identical repeats.
+- It depends only on the event itself, not its position, so an event FotMob adds late does not renumber the others. The site can key generated commentary lines by `event_id`.
+- While a match is live each event also gets `first_seen` (UTC, when the poller first saw it). The finished file keeps those stamps.
+- The event log is `events[]` in `match/{id}.json`, refreshed every 20 s while live.
+
 `events[].type` takes these values:
 
 - **Goals:** `goal`, `own_goal`, `penalty_goal`, `missed_penalty`.
@@ -238,8 +243,16 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `comp/538/loans.json` | players the UAE clubs loaned out: current club, main-league stats |
 | `leagues/compare.json` | 538 vs 536, 535, 47, 87: goals per match, home-win and draw %, average squad age, foreign share, attendance (where reported) |
 | `national/5789/fifa.json` | UAE FIFA ranking since 1992: `{date, rank, points, afc_rank, arab_rank}` (FIFA API) + FotMob's current ranking |
+| `match/{id}.json` → `winprob` | live and finished matches: `[[minute, pH, pD, pA], ...]`, one point per minute plus one at every goal and red card. `winprob_prematch: {p, source}` with source `tifo-ratings`, `tifo-arab_ratings`, `national-elo` or `base-rates`. Model: Poisson remaining goals (compute/winprob.py) |
+| `models/danger.json` | the xG-proxy fit (coefficients, n, R² vs xG, correlation with goals). `comp/{id}/xg.json` then has `"proxy": true` for competitions without source xG |
+| `comp/{id}/records-book.json` | the Arab leagues in `records_comps`: `biggest_wins`, `highest_scoring`, `streaks {winning, unbeaten, losing, winless}` (with `from_match`, `to_match`, `current`), `most_goals_in_season`, `hat_tricks`, `fastest_goals`, all with match ids. Result records cover every FotMob season; hat-tricks and fastest goals cover this season's stored events |
+| `national/{id}/archive.json` | the 22 Arab national teams: every international result (martj42 since 1872; the UAE from 1972-03-17): `matches: [{date, opponent {name, id, name_ar}, home, neutral, gf, ga, result, competition, venue {city, country}, match}]` and `h2h` per opponent (W/D/L, goals, first, last) |
+| `national/archives.json` | index of those archives |
+| `national/countries.json` | 22 Arab countries plus the big-5 countries: `iso2`, `name_ar`, `name_en`, `arab`, national `team` id, domestic `competitions` |
+| `ratings/arab-clubs.json` | Arab clubs rating (one scale across the Arab leagues, linked by AFC/CAF/Arab club competitions): top 100 with country and trend (docs/TIFO-RATING.md) |
 | `archive/index.json`, `archive/{id}.json` | memorable matches with full event data: derbies (competitions.yaml `derbies`), cup finals, Super Cups since 2016/17 |
 
+- **Competitions (`index.json`, `competitions.yaml`):** each has `country: {iso2, name_ar}`, or `null` plus `region` (gulf, arab, asia, africa, europe, world). `teams.json` and `team/{id}.json` (`country_info`) give each club its domestic country and each national team its own country (`national: true`).
 - **Standings rows:** they also carry `home_rows`/`away_rows` per group (home and away tables) and `ongoing` (the live match FotMob counted, with its score).
 - **Lineup players:** they carry `role` (GK/DF/MF/FW), `age`, `minutes_on/off`, and `xy`/`xy_h` (0–1 pitch fractions as FotMob draws the vertical and horizontal lineups) for a 3D pitch.
 - **Shots:** they carry `goal_y`/`goal_z` (where the ball crossed the goal line), `on_goal {x, y}` and `keeper_id`.
@@ -249,6 +262,7 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 
 | item | status |
 |---|---|
+| Leagues of Jordan, Oman, Bahrain, Lebanon, Libya, Sudan, Syria, Palestine, Yemen | Not on FotMob (checked the country list and search on 2026-09-27). Their national teams are covered through the archive and national Elo |
 | UAE First Division | Not on FotMob (UAE list: 538, 11027, 9943, 11026), uaepl.ae, TheSportsDB or ESPN |
 | President's Cup 2026/27 | FotMob's latest season is 2025/26. The new draw is not published; the file shows last season until it is |
 | xG, shot map, momentum for UAE competitions | FotMob coverage for the Pro League is `ratings` and for the League Cup `lower`, so they have no xG, shot map or momentum. `xg.json`/`shots.json` for 538 say `available: false`. They exist for Saudi, Qatar and the European leagues (`xG` coverage) |

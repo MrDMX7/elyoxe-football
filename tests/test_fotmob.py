@@ -108,3 +108,16 @@ def test_country_fields():
     arab = [c for c in config.countries() if c.get("arab")]
     assert len(arab) == 22 and all(c["fotmob_team"] for c in arab)
     assert config.country_of_team(5789)["iso2"] == "AE"
+
+
+def test_event_ids_stable_and_unique(fx):
+    raw = fx("fotmob_match_uae_5898782.json")
+    d = FotMob().match_from_raw(raw)
+    ids = [e["event_id"] for e in d["events"]]
+    assert len(ids) == len(set(ids)) and ids[0].startswith("5898782-")
+    evs = raw["content"]["matchFacts"]["events"]["events"]
+    card = next(e for e in evs if e["type"] == "Card")
+    raw["content"]["matchFacts"]["events"]["events"] = [card] + evs      # a late-reported event arrives first
+    d2 = FotMob().match_from_raw(raw)
+    assert set(ids) <= {e["event_id"] for e in d2["events"]} | {e["event_id"] for e in d["events"]}
+    assert {e["event_id"] for e in d2["events"] if e["type"] == "goal"} == {e["event_id"] for e in d["events"] if e["type"] == "goal"}

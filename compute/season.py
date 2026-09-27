@@ -61,9 +61,12 @@ def ledger_entry(d: dict) -> dict:
         tid = hid if side == "home" else aid
         starters = {p.get("id") for p in lu.get("starters") or []}
         for p in (lu.get("starters") or []) + (lu.get("subs") or []):
-            if p.get("id"):   # [name, country, team, rating, role, age, starter]
+            if p.get("id"):   # [name, country, team, rating, role, age, starter, minutes]
+                st_ = p.get("id") in starters
+                on, off = p.get("minutes_on"), p.get("minutes_off")
+                mins = ((off or 90) if st_ else ((off or 90) - on if on is not None else 0))
                 players[str(p["id"])] = [p.get("name"), p.get("country"), tid, p.get("rating"), p.get("role"),
-                                         p.get("age"), p.get("id") in starters]
+                                         p.get("age"), st_, max(0, mins)]
     stats = {}
     for g in d.get("stats") or []:
         for it in g["items"]:

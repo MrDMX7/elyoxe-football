@@ -22,6 +22,7 @@ from datetime import timedelta
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import analytics as AN  # noqa: E402
+import arabs as AR  # noqa: E402
 import config  # noqa: E402
 from compute import winprob as WP  # noqa: E402
 from compute import ics as ICS, magic as MAGIC, prayer as PRAYER, season as SEASON, weather as WEATHER  # noqa: E402
@@ -60,6 +61,7 @@ class Poller:
         self.comp_ids = {c["id"] for c in self.comps}
         self.comp_by_id = {c["id"]: c for c in self.comps}
         self.venues = Venues()
+        self.probs_comps = set(self.cfg.get("history_comps", [])) | set(AN.R.UAE_CLUB_COMPS)
         self.log = []
         self.requests_before = HTTP.network_calls
         self.calls_before = dict(HTTP.calls)
@@ -187,7 +189,7 @@ class Poller:
     def enrich(self, m, full=False):
         m = dict(m)
         m["comp_name_ar"] = self.comp_name_ar(m.get("comp"))
-        if m.get("comp") in AN.R.UAE_CLUB_COMPS and m.get("status") == S.SCHEDULED:
+        if m.get("status") == S.SCHEDULED and m.get("comp") in self.probs_comps:
             pr = AN.probs_for(self, m)
             if pr:
                 m["probs"] = pr
@@ -275,6 +277,13 @@ class Poller:
         if d.get("periods"):
             self.st.setdefault("periods", {})[str(mid)] = d["periods"]
         full = self.enrich(d, full=True)
+        if d["status"] in S.LIVE_STATUSES or str(mid) in self.st.get("ev_seen", {}):
+            seen = self.st.setdefault("ev_seen", {}).setdefault(str(mid), {})
+            stamp = iso(self.now())
+            for e in full["events"]:
+                e["first_seen"] = seen.setdefault(e["event_id"], stamp)
+            if d["status"] == S.FINISHED:
+                self.st["ev_seen"].pop(str(mid), None)     # the finished file keeps the stamps
         if d["status"] in S.LIVE_STATUSES or d["status"] == S.FINISHED:
             try:
                 pm = AN.prematch(self, d)
@@ -894,11 +903,16 @@ class Poller:
             ("history", 0, lambda: AN.history_step(self, limit=20)),
             ("records_book", 1440, self.records_books),
             ("danger", 1440, lambda: AN.danger(self)),
+            ("arab_ratings", 360, lambda: AN.arab_ratings(self)),
+            ("arabs_abroad", 60, lambda: AR.abroad(self)),
+            ("arab_clashes", 60, lambda: AR.clashes(self)),
+            ("arab_national", 60, lambda: AR.national_hub(self)),
+            ("arab_derbies", 60, lambda: AR.derbies(self)),
             ("players", 0, self.player_tables_due),
             ("club_pages", 0, lambda: AN.club_pages(self)),
             ("coaches_fatigue", 0, lambda: AN.coaches_and_fatigue(self)),
             ("ratings", 60, lambda: AN.ratings(self)),
-            ("league_analytics", 60, lambda: AN.league(self)),
+            ("league_analytics", 0, lambda: AN.leagues_step(self)),
             ("style", 1440, lambda: AN.style(self)),
             ("national", 1440, lambda: AN.national(self)),
             ("fifa", 1440, lambda: AN.fifa(self)),
@@ -913,7 +927,7 @@ class Poller:
                 return
             if key == "history" and AN.history_complete(self, AN.history_comps()) and not self.due("history_recheck", 1440):
                 continue
-            if key in ("ratings", "league_analytics", "archive") and not AN.history_complete(self):
+            if key in ("ratings", "archive") and not AN.history_complete(self):
                 continue
             if every and not self.due(key, every):
                 continue

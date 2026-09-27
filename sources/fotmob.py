@@ -375,6 +375,7 @@ class FotMob(Source):
 
     def _events(self, evs, m):
         out = []
+        seen = {}
         hid, aid = m["home"]["id"], m["away"]["id"]
         for e in evs:
             t = e.get("type")
@@ -433,6 +434,10 @@ class FotMob(Source):
             else:
                 continue  # comments and anything new: skip rather than guess
             base["type"] = typ
+            pid = (base.get("player") or {}).get("id") or 0
+            key = f"{m['id']}-{typ}-{base['minute']}-{base['added'] or 0}-{pid}"
+            seen[key] = seen.get(key, 0) + 1
+            base["event_id"] = key if seen[key] == 1 else f"{key}-{seen[key]}"
             hl = e.get("highlight")
             if isinstance(hl, dict) and hl.get("url"):
                 base["clip"] = hl.get("url")

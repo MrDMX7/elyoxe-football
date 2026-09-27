@@ -75,3 +75,11 @@ def country_of_team(tid) -> dict | None:
         if c.get("fotmob_team") == int(tid):
             return {"iso2": c["iso2"], "name_ar": c["name_ar"], "name_en": c["name_en"]}
     return None
+
+
+def arab_derbies() -> list[dict]:
+    """derbies.yaml: the big Arab derbies [{teams: [a, b], name_ar, city, country}]."""
+    try:
+        return _load("derbies.yaml").get("derbies", [])
+    except OSError:
+        return []

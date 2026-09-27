@@ -25,10 +25,12 @@ settings:
   prematch_minutes: 75       # a match is "about to kick off" this long before kickoff
   budget_seconds: 50         # hard stop for one invocation (EventBridge fires every 60 s)
   backfill_per_run: 6        # finished-match details fetched per idle invocation until the ledger is complete
-  player_stats_comps: [538, 536, 535, 530, 47, 87]   # per-player season lists (radar, similarity, foreigners): ~29 requests each, daily
+  player_stats_comps: [538, 536, 535, 529, 524, 519, 530, 516, 544, 10721, 47, 87, 55, 54, 53, 42]   # per-player season lists (radar, similarity, foreigners): ~29 requests each, daily
   # every past season of these is fetched once (history/<id>.json): records books, Arab clubs rating
   history_comps: [538, 11027, 9943, 11026, 536, 10721, 9942, 535, 11018, 529, 524, 519, 9941, 530, 11840, 516, 544,
-                  525, 10622, 9469, 9470, 526, 9468, 10474]
+                  525, 10622, 9469, 9470, 526, 9468, 10474, 47, 87, 55, 54, 53, 42, 73, 10216, 78, 10703]
+  # leagues that get the full 538 treatment (probabilities, season sim, facts, watchability, pressure, fatigue, fortress)
+  analytics_leagues: [538, 536, 535, 529, 524, 519, 530, 516, 544, 10721, 47, 87, 55, 54, 53]
   records_comps: [538, 536, 535, 529, 524, 519, 530, 516, 544, 10721]
   compare_leagues: [538, 536, 535, 530, 516, 544, 524, 529, 519, 47, 87]      # league comparison (goals/match, age, foreign share, attendance)
 

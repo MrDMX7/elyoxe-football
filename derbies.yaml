@@ -1,0 +1,15 @@
+# The big Arab derbies (FotMob team ids, checked 2026-09-27). Head-to-heads are published in h2h/{a}-{b}.json
+# (a < b) and listed in derbies.json. comp = the domestic league where they meet.
+derbies:
+  - {teams: [101745, 80591], name_ar: ديربي القاهرة (الأهلي والزمالك), city_ar: القاهرة, country: EG, comp: 519}
+  - {teams: [2529, 101918], name_ar: ديربي الرياض (الهلال والنصر), city_ar: الرياض, country: SA, comp: 536}
+  - {teams: [8577, 2530], name_ar: ديربي جدة (الاتحاد والأهلي), city_ar: جدة, country: SA, comp: 536}
+  - {teams: [102050, 102049], name_ar: ديربي الدار البيضاء (الوداد والرجاء), city_ar: الدار البيضاء, country: MA, comp: 530}
+  - {teams: [8153, 102102], name_ar: ديربي تونس (الترجي والإفريقي), city_ar: تونس, country: TN, comp: 544}
+  - {teams: [101633, 6353], name_ar: ديربي العاصمة (شباب بلوزداد ومولودية الجزائر), city_ar: الجزائر, country: DZ, comp: 516}
+  - {teams: [6353, 101628], name_ar: ديربي العاصمة (مولودية الجزائر واتحاد العاصمة), city_ar: الجزائر, country: DZ, comp: 516}
+  - {teams: [102117, 102111], name_ar: العين والوصل, city_ar: العين/دبي, country: AE, comp: 538}
+  - {teams: [101656, 101659], name_ar: ديربي بغداد (القوة الجوية والزوراء), city_ar: بغداد, country: IQ, comp: 524}
+  - {teams: [101895, 101898], name_ar: ديربي الدوحة (السد والريان), city_ar: الدوحة, country: QA, comp: 535}
+  - {teams: [101711, 101714], name_ar: ديربي الكويت (العربي والقادسية), city_ar: الكويت, country: KW, comp: 529}
+  - {teams: [101665, 101690], name_ar: ديربي عمّان (الفيصلي والوحدات), city_ar: عمّان, country: JO, comp: null}

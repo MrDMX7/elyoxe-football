@@ -128,23 +128,27 @@ def ratings(p):
 
 
 def probs_for(p, m):
-    r = p.aux("ratings").get("ratings") or {}
-    if m.get("comp") not in R.UAE_CLUB_COMPS or m.get("status") != S.SCHEDULED or not r:
+    if m.get("status") != S.SCHEDULED:
         return None
+    src = rating_source(m.get("comp"))
+    r = p.aux(src).get("ratings") or {}
     h, a = r.get(str(m["home"]["id"])), r.get(str(m["away"]["id"]))
     if h is None or a is None:
         return None
-    params = {**R.DEFAULTS, **config.rating_params()}
+    params = {**R.DEFAULTS, **(config.rating_params() if src == "ratings" else (config.settings().get("arab_rating") or {}))}
     ph, pd, pa = R.probs(h, a, params, R.is_neutral(m))
-    return {"home": round(ph, 3), "draw": round(pd, 3), "away": round(pa, 3), "model": "tifo-elo v1"}
+    return {"home": round(ph, 3), "draw": round(pd, 3), "away": round(pa, 3),
+            "model": "tifo-elo v1" if src == "ratings" else "tifo-elo clubs v1"}
 
 
 # ------------------------------------------------------------------ club pages (coaches, all-competition fixtures)
-def club_pages(p, limit=6):
+def club_pages(p, limit=12):
     """Daily FotMob team page for every current Pro League club: current coach, coachHistory and the
     all-competition fixture list (fatigue, AFC trips). Owned by this function (state/coaches.json,
     state/team_fx.json); `limit` requests per run."""
-    clubs = sorted(int(k) for k, v in p.st.get("team_comps", {}).items() if LEAGUE in v)
+    leagues = set(analytics_leagues())
+    clubs = sorted(int(k) for k, v in p.st.get("team_comps", {}).items() if leagues & set(v))
+    clubs.sort(key=lambda t: 0 if LEAGUE in p.st["team_comps"].get(str(t), []) else 1)
     n = 0
     for tid in clubs:
         if n >= limit or not p.has_time(8):
@@ -160,6 +164,8 @@ def club_pages(p, limit=6):
             n += 1
             continue
         p.aux("coaches")[str(tid)] = {"coach": t.get("coach"), "history": t.get("coach_history")}
+        if (t.get("venue") or {}).get("lat") is not None:
+            p.aux("home_venues")[str(tid)] = {"lat": t["venue"]["lat"], "lon": t["venue"]["lon"], "name": t["venue"]["name"]}
         p.aux("team_fx")[str(tid)] = [{k: m.get(k) for k in ("id", "comp", "kickoff_utc", "status", "home", "away", "score")}
                                       for m in t["fixtures"]]
         p.mark("club_page", tid)
@@ -168,28 +174,36 @@ def club_pages(p, limit=6):
 
 
 def coaches_and_fatigue(p):
-    st = p.store.get_json(f"comp/{LEAGUE}/standings.json")
-    if not st:
+    for cid in analytics_leagues():
+        if p.has_time(6):
+            _coaches_and_fatigue(p, cid)
+
+
+def _coaches_and_fatigue(p, cid):
+    st = p.store.get_json(f"comp/{cid}/standings.json")
+    if not st or len(st.get("groups") or []) != 1:
         return
     now = p.now()
     coaches, team_fx = p.aux("coaches"), p.aux("team_fx")
     stadiums = {int(t): s for s in config.stadiums() for t in s.get("home_of") or []}
+    home_venue = p.aux("home_venues")
     fat, ctab = {}, {}
-    for r in st["groups"][0]["rows"]:
+    rows = st["groups"][0]["rows"]
+    for r in rows:
         tid = r["team"]["id"]
         tf = team_fx.get(str(tid))
         if tf is not None:
-            fat[str(tid)] = CL.fatigue(tf, now, stadiums.get(tid), p.st.get("venue_fm", {}), team_id=tid)
+            fat[str(tid)] = CL.fatigue(tf, now, stadiums.get(tid) or home_venue.get(str(tid)), p.st.get("venue_fm", {}), team_id=tid)
         c = coaches.get(str(tid))
         if c is not None:
             ctab[str(tid)] = {"current": c.get("coach"), "history": c.get("history") or []}
     if fat:
-        p.store.put_json(f"comp/{LEAGUE}/fatigue.json", {"comp": LEAGUE, "generated": iso(now), "teams": fat,
-                                                         "complete": len(fat) == len(st["groups"][0]["rows"])}, cache="static")
+        p.store.put_json(f"comp/{cid}/fatigue.json", {"comp": cid, "generated": iso(now), "teams": fat,
+                                                      "complete": len(fat) == len(rows)}, cache="static")
     if ctab:
-        p.store.put_json(f"comp/{LEAGUE}/coaches.json", {"comp": LEAGUE, "generated": iso(now), "teams": ctab,
-                                                         "complete": len(ctab) == len(st["groups"][0]["rows"]),
-                                                         "note": "FotMob coachHistory: per coach and season, W/D/L and points per game"},
+        p.store.put_json(f"comp/{cid}/coaches.json", {"comp": cid, "generated": iso(now), "teams": ctab,
+                                                      "complete": len(ctab) == len(rows),
+                                                      "note": "FotMob coachHistory: per coach and season, W/D/L and points per game"},
                          cache="static")
 
 
@@ -214,44 +228,79 @@ def prematch(p, m):
 
 
 # ------------------------------------------------------------------ league analytics (538)
-def league(p):
-    comp = config.competition(LEAGUE)
-    st = p.store.get_json(f"comp/{LEAGUE}/standings.json")
-    fx = p.fixtures(LEAGUE)
-    if not st or not fx:
+def rating_source(cid):
+    return "ratings" if cid in R.UAE_CLUB_COMPS else "arab_ratings"
+
+
+def analytics_leagues():
+    return [int(c) for c in config.settings().get("analytics_leagues", [LEAGUE])]
+
+
+def complete_round_robin(rows, fx, matches_per_team):
+    """Remaining fixtures = FotMob's unplayed ones plus, for a double round robin, every ordered pair
+    FotMob has not published yet (Botola, Algeria, Tunisia, Qatar ... publish a few rounds at a time)."""
+    teams = [r["team"]["id"] for r in rows]
+    seen, remaining = set(), []
+    for m in fx:
+        key = (m["home"]["id"], m["away"]["id"])
+        if all(key):
+            if m["status"] in (S.SCHEDULED, S.POSTPONED) and key not in seen:
+                remaining.append((key[0], key[1], False))
+            seen.add(key)
+    added = 0
+    if matches_per_team == 2 * (len(teams) - 1):
+        for h in teams:
+            for a in teams:
+                if h != a and (h, a) not in seen:
+                    remaining.append((h, a, False))
+                    added += 1
+    return remaining, added
+
+
+def league(p, cid=LEAGUE):
+    comp = config.competition(cid)
+    st = p.store.get_json(f"comp/{cid}/standings.json")
+    fx = p.fixtures(cid)
+    if not comp or not st or not fx or len(st.get("groups") or []) != 1:
         return
     rows = st["groups"][0]["rows"]
     now = p.now()
-    rat = {int(k): v for k, v in (p.aux("ratings").get("ratings") or {}).items()}
-    params = {**R.DEFAULTS, **config.rating_params()}
+    src = rating_source(cid)
+    rat = {int(k): v for k, v in (p.aux(src).get("ratings") or {}).items()}
+    params = {**R.DEFAULTS, **(config.rating_params() if src == "ratings" else (config.settings().get("arab_rating") or {}))}
     season = st.get("season")
     fin = [m for m in fx if m["status"] == S.FINISHED]
-    seen, remaining = set(), []
-    for m in fx:
-        if m["status"] in (S.SCHEDULED, S.POSTPONED):
-            key = (m["home"]["id"], m["away"]["id"])
-            if key not in seen and all(key):
-                seen.add(key)
-                remaining.append((key[0], key[1], False))
-    total = comp["matches_per_team"] * len(rows) // 2
     sim = None
-    if rat and p.has_time(15):
-        sim = SIM.simulate(rows, remaining, rat, params, n=10000, seed=_seed(season, len(fin)), legend=st.get("legend"))
-        sim.update({"comp": LEAGUE, "season": season, "generated": iso(now), "played": len(fin),
-                    "fixtures_check": {"played": len(fin), "remaining": len(remaining), "season_total": total,
-                                       "complete": len(fin) + len(remaining) == total}})
-        p.store.put_json(f"comp/{LEAGUE}/sim.json", sim, cache="static")
-    # history rows for facts / fortress / pressure (league only)
-    hist = all_history(p)
-    lrows = HI.finished([r for rows_ in hist.get(str(LEAGUE), {}).values() for r in rows_])
+    mpt = comp.get("matches_per_team")
+    if rat and mpt and comp.get("magic", True) and p.has_time(15) and all(r["team"]["id"] in rat for r in rows):
+        if cid == LEAGUE:       # 538: FotMob fixtures + official uaepl.ae pairings (already merged)
+            seen, remaining, added = set(), [], 0
+            for m in fx:
+                key = (m["home"]["id"], m["away"]["id"])
+                if m["status"] in (S.SCHEDULED, S.POSTPONED) and key not in seen and all(key):
+                    seen.add(key)
+                    remaining.append((key[0], key[1], False))
+        else:
+            remaining, added = complete_round_robin(rows, fx, mpt)
+        total = mpt * len(rows) // 2
+        played = sum((r.get("played") or 0) for r in rows) // 2
+        sim = SIM.simulate(rows, remaining, rat, params, n=10000, seed=_seed(cid, season, played), legend=st.get("legend"))
+        sim.update({"comp": cid, "season": season, "generated": iso(now), "played": played, "rating": src,
+                    "fixtures_check": {"played": played, "remaining": len(remaining), "season_total": total,
+                                       "pairings_added_not_yet_published": added,
+                                       "complete": played + len(remaining) == total}})
+        p.store.put_json(f"comp/{cid}/sim.json", sim, cache="static")
+    hist = all_history(p, comps=(cid,))
+    lrows = HI.finished([r for rows_ in hist.get(str(cid), {}).values() for r in rows_])
     window = min((r["season"] for r in lrows if r["season"]), default=None)
     names = p.names["teams"]
     upcoming = [m for m in fx if m["status"] == S.SCHEDULED and m.get("id") and parse_utc(m.get("kickoff_utc"))
                 and timedelta(0) < parse_utc(m["kickoff_utc"]) - now < timedelta(days=21)]
     facts, watch = {}, {}
-    derbies = set(config.derbies())
+    derbies = set(config.derbies()) | {tuple(sorted(d["teams"])) for d in config.arab_derbies()}
     for m in upcoming:
-        facts[str(m["id"])] = FA.match_facts(lrows, m, names, window)
+        if lrows:
+            facts[str(m["id"])] = FA.match_facts(lrows, m, names, window)
         pr = probs_for(p, m)
         if pr:
             form = []
@@ -261,33 +310,43 @@ def league(p):
             watch[str(m["id"])] = EX.watchability(m, (pr["home"], pr["draw"], pr["away"]),
                                                   tuple(sorted((m["home"]["id"], m["away"]["id"]))) in derbies,
                                                   (sim or {}).get("teams"), form)
-    p.store.put_json(f"comp/{LEAGUE}/facts.json", {"comp": LEAGUE, "generated": iso(now), "since": window,
-                                                   "matches": facts}, cache="static")
-    p.store.put_json(f"comp/{LEAGUE}/watch.json", {"comp": LEAGUE, "generated": iso(now), "matches": watch,
-                                                   "method": "35 closeness (1-|pH-pA|) + 20 derby + 30 table stakes "
-                                                             "(max 4p(1-p) of the sim's title/Asia/relegation odds) + 15 form"},
-                     cache="static")
-    # coach pressure, fatigue, coaches
-    preds = {int(k): v for k, v in (p.aux("ratings").get("preds") or {}).items()}
+    if facts:
+        p.store.put_json(f"comp/{cid}/facts.json", {"comp": cid, "generated": iso(now), "since": window,
+                                                    "matches": facts}, cache="static")
+    if watch:
+        p.store.put_json(f"comp/{cid}/watch.json", {"comp": cid, "generated": iso(now), "matches": watch,
+                                                    "method": "35 closeness (1-|pH-pA|) + 20 derby + 30 table stakes "
+                                                              "(max 4p(1-p) of the sim's title/Asia/relegation odds) + 15 form"},
+                         cache="static")
+    preds = {int(k): v for k, v in (p.aux(src).get("preds") or {}).items()}
     coaches = p.aux("coaches")
-    team_fx = p.aux("team_fx")
-    stadiums = {int(t): s for s in config.stadiums() for t in s.get("home_of") or []}
-    press, fat, coach_tables = {}, {}, {}
+    press = {}
     for r in rows:
         tid = r["team"]["id"]
         games = [g + (mid,) for g, mid in _games_with_ids(lrows, tid)]
         c = coaches.get(str(tid)) or {}
         press[str(tid)] = CL.pressure(games, preds, c.get("coach"), c.get("history"), season)
-        tf = team_fx.get(str(tid))
-        if tf:
-            fat[str(tid)] = CL.fatigue(tf, now, stadiums.get(tid), p.st.get("venue_fm", {}), team_id=tid)
-        if c.get("history"):
-            coach_tables[str(tid)] = {"current": c.get("coach"), "history": c["history"]}
-    p.store.put_json(f"comp/{LEAGUE}/pressure.json", {"comp": LEAGUE, "generated": iso(now), "teams": press,
-                                                      "method": CL.__doc__.split("FATIGUE")[0].strip()}, cache="static")
-    p.store.put_json(f"comp/{LEAGUE}/fortress.json", {"comp": LEAGUE, "generated": iso(now),
-                                                      **EX.fortress(lrows, config.stadiums(), window)}, cache="static")
-    p.mark("league_analytics")
+    if lrows and preds:
+        p.store.put_json(f"comp/{cid}/pressure.json", {"comp": cid, "generated": iso(now), "teams": press,
+                                                       "method": CL.__doc__.split("FATIGUE")[0].strip()}, cache="static")
+    if lrows:
+        stadiums = config.stadiums() if cid in R.UAE_CLUB_COMPS else \
+            [{"id": None, "name_ar": None, "home_of": [r["team"]["id"]]} for r in rows]
+        p.store.put_json(f"comp/{cid}/fortress.json", {"comp": cid, "generated": iso(now),
+                                                       **EX.fortress(lrows, stadiums, window)}, cache="static")
+    p.mark("league_analytics", cid)
+
+
+def leagues_step(p):
+    for cid in analytics_leagues():
+        if not p.has_time(20):
+            return
+        if p.due("league_analytics", 60, cid) and history_complete(p, (cid,)):
+            try:
+                league(p, cid)
+            except ERRORS as e:
+                p.store.fail(f"league-analytics:{cid}", f"{type(e).__name__}: {e}")
+                p.mark("league_analytics", cid)
 
 
 def _games_with_ids(rows, tid):
@@ -346,13 +405,18 @@ def ledger_extras(p, cid):
 
 
 def style(p):
-    comps = [LEAGUE, 47, 87, 55, 54, 53]
+    europe = [47, 87, 55, 54, 53]
+    comps = sorted(set(analytics_leagues()) | set(europe))
     styles = EX.team_style({c: p.ledger(c)["matches"] for c in comps})
-    near = EX.nearest_styles(styles, LEAGUE, set(comps) - {LEAGUE})
-    p.store.put_json(f"comp/{LEAGUE}/style.json", {"comp": LEAGUE, "generated": iso(p.now()),
-                                                   "teams": {k: v for k, v in styles.items() if v["comp"] == LEAGUE},
-                                                   "europe_pool": sum(1 for v in styles.values() if v["comp"] != LEAGUE),
-                                                   **near}, cache="static")
+    for cid in analytics_leagues():
+        if cid in europe:
+            continue
+        near = EX.nearest_styles(styles, cid, set(europe))
+        teams = {k: v for k, v in styles.items() if v["comp"] == cid}
+        if teams:
+            p.store.put_json(f"comp/{cid}/style.json", {"comp": cid, "generated": iso(p.now()), "teams": teams,
+                                                        "europe_pool": sum(1 for v in styles.values() if v["comp"] in europe),
+                                                        **near}, cache="static")
     p.mark("style")
 
 
@@ -387,26 +451,28 @@ def player_extras(p, cid, table, raw):
                                                                **PL.improved(cur, prev_list)}, cache="static")
         except ERRORS as e:
             p.store.fail(f"improved:{cid}", e)
+    squads = {k: v for k, v in p.aux("squads").items() if int(k) != NATIONAL}
+    tabs = {int(k): v for k, v in p.aux("ptables").items()}
+    if cid not in (47, 87, 55, 54, 53, 42):
+        sim_ = PL.similar(tabs, cid)
+        if sim_:
+            p.store.put_json(f"comp/{cid}/similar.json", {"comp": cid, "generated": now, "comps": sorted(tabs), **sim_}, cache="static")
+    clutch_ = EX.clutch(p.ledger(cid)["matches"])
+    info_ = {}
+    for tid, groups in squads.items():
+        for g in groups or []:
+            for pl in g.get("players") or []:
+                info_[str(pl["id"])] = {"dob": pl.get("dob"), "country": pl.get("country"), "position": pl.get("position"),
+                                        "number": pl.get("number")}
+    for pid, summ in EX.summaries(table, cards, clutch_, info_).items():
+        if not p.has_time(3):
+            break
+        p.store.put_json(f"player/{pid}.json", {"id": int(pid), "comp": cid, "season": p.ledger(cid).get("season"),
+                                               "generated": now, **summ}, cache="static")
     if cid == LEAGUE:
-        squads = {k: v for k, v in p.aux("squads").items() if int(k) != NATIONAL}
         from datetime import date
         p.store.put_json(f"comp/{cid}/young-uae.json", {"comp": cid, "generated": now,
                                                         **PL.young_uae(table, squads, date.fromisoformat(now[:10]))}, cache="static")
-        tabs = {int(k): v for k, v in p.aux("ptables").items()}
-        sim = PL.similar(tabs, LEAGUE)
-        if sim:
-            p.store.put_json(f"comp/{cid}/similar.json", {"comp": cid, "generated": now, "comps": sorted(tabs), **sim}, cache="static")
-        clutch = EX.clutch(p.ledger(cid)["matches"])
-        info = {}
-        for tid, groups in squads.items():
-            for g in groups or []:
-                for pl in g.get("players") or []:
-                    info[str(pl["id"])] = {"dob": pl.get("dob"), "country": pl.get("country"), "position": pl.get("position"),
-                                           "number": pl.get("number")}
-        for pid, summ in EX.summaries(table, cards, clutch, info).items():
-            if p.has_time(3):
-                p.store.put_json(f"player/{pid}.json", {"id": int(pid), "comp": cid, "season": p.ledger(cid).get("season"),
-                                                       "generated": now, **summ}, cache="static")
         stats = p.store.get_json(f"comp/{cid}/stats.json") or {}
         active = {e["player"]["name"]: {"id": e["player"]["id"], "goals": e["value"]}
                   for e in (stats.get("lists") or {}).get("goals", [])}
@@ -808,3 +874,59 @@ def danger(p):
                                                                    "Tifo danger index (models/danger.json), fitted on leagues with xG"},
                              cache="static")
     p.store.ok("danger")
+
+
+# ------------------------------------------------------------------ Arab clubs rating (192)
+def arab_ratings(p):
+    """One Elo scale over every Arab league and the AFC/CAF/Arab club competitions that link them."""
+    comps = history_comps()
+    if not history_complete(p, comps):
+        return
+    hist = all_history(p, comps=comps)
+    seen, rows = set(), []
+    for r in HI.finished(HI.all_rows(hist)):
+        if r["id"] in seen or not r["ko"]:
+            continue
+        seen.add(r["id"])
+        y = int(r["ko"][:4]) - (1 if int(r["ko"][5:7]) < 7 else 0)
+        rows.append({**r, "season": f"{y}/{y + 1}"})
+    params = {**R.DEFAULTS, **(config.settings().get("arab_rating") or {})}
+    rat, history, preds = R.run(rows, params)
+    cur = max((r["season"] for r in rows), default=None)
+    p.aux("arab_ratings")["preds"] = {str(x["id"]): [round(v, 4) for v in x["p"]] for x in preds if x["season"] == cur}
+    # a club's country = the country of the domestic league it played in most recently
+    comp_cc = {c["id"]: c.get("country") for c in p.comps}
+    home_cc = {}
+    for r in sorted(rows, key=lambda r: r["ko"]):
+        cc = comp_cc.get(r["comp"])
+        if cc:
+            home_cc[r["h"]] = cc
+            home_cc[r["a"]] = cc
+    arab_iso = {c["iso2"] for c in config.countries() if c.get("arab")}
+    now = p.now()
+    names = p.names["teams"]
+    table = []
+    for tid, r in rat.items():
+        cc = home_cc.get(tid)
+        if not cc or cc["iso2"] not in arab_iso:
+            continue
+        h = history.get(tid) or []
+        last = h[-1][0] if h else None
+        if not last or (now - parse_utc(last + "T00:00:00Z")).days > 400:
+            continue                           # not active in the last season
+        past = [x for x in h if x[0] and (now - parse_utc(x[0] + "T00:00:00Z")).days >= 90]
+        table.append({"team": tid, "name_ar": names.get(str(tid)), "country": cc, "rating": round(r, 1),
+                      "change_5": round(r - h[-6][1], 1) if len(h) > 5 else None,
+                      "change_90d": round(r - past[-1][1], 1) if past else None, "last_match": last})
+    table.sort(key=lambda x: -x["rating"])
+    for i, t in enumerate(table, 1):
+        t["rank"] = i
+    p.aux("arab_ratings").update({"ratings": {str(k): v for k, v in rat.items()}, "updated": iso(now)})
+    p.store.put_json("ratings/arab-clubs.json", {
+        "generated": iso(now), "model": "tifo-elo arab v1", "params": params,
+        "calibration": config.settings().get("arab_rating_calibration"), "matches_rated": len(rows),
+        "competitions": comps, "teams": table[:100], "active_clubs": len(table),
+        "note": "one scale: domestic leagues are linked by AFC, CAF and Arab club competitions; country = the "
+                "domestic league the club played in most recently; clubs inactive for 400 days are left out"},
+        cache="static")
+    p.store.ok("arab-ratings")
