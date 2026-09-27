@@ -155,7 +155,7 @@ FIXES = [("اللمسات على المرمى", "التسديدات على ال�
 def grammar(t, nations=()):
     if not isinstance(t, str): return t
     t = re.sub(r"\s{2,}", " ", EMOJI.sub("", t)).strip()
-    for a, b in FIXES: t = re.sub(r"(?<!\w)" + re.escape(a) + r"(?!\w)", b, t)
+    for a, b in FIXES: t = re.sub(r"(?<!\w)([وبل]?)" + re.escape(a) + r"(?!\w)", lambda m: m.group(1) + b, t)
     t = re.sub(r"(?<![\d.,])2\s+(?:فرص|فرصة)\s+محققة", "فرصتين محققتين", t)
     t = re.sub(r"(?<![\d.,])2\s+(" + "|".join(sorted(DUAL, key=len, reverse=True)) + r")(?!\w)", lambda m: DUAL[m.group(1)], t)
     for n in nations:
