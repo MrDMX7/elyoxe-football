@@ -230,6 +230,7 @@ def do_summary(md):
     if not out: return "fail"
     out = deep(out, nations(md["home"], md["away"]))
     bad = check_result(" ".join([out.get("headline", ""), out.get("summary", "")] + list(out.get("thread") or [])), md)
+    bad = bad or check_table(" ".join([out.get("summary", "")] + list(out.get("thread") or [])), table_rows(get(f"comp/{md.get('comp')}/standings.json")))
     if bad: print(f"summary {md['id']} dropped: {bad}", file=sys.stderr); return "dropped"
     out.update({"id": md["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("summary", str(md["id"]), out); return "new"
@@ -246,7 +247,11 @@ def do_preview(m, ctx):
     if cached("preview", str(m["id"]), sig): return "cached"
     out = gemini(PRE_SYS, ctx, PRE_SCHEMA, temp=0.5)
     if not out: return "fail"
-    out = deep(out, nations(m["home"], m["away"])); out.update({"id": m["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
+    out = deep(out, nations(m["home"], m["away"]))
+    rows = {t: {"rank": (ctx.get(k) or {}).get("rank"), "pts": (ctx.get(k) or {}).get("pts")} for t, k in ((team_ar(m["home"]), "home_table"), (team_ar(m["away"]), "away_table")) if ctx.get(k)}
+    out["lines"] = keep_lines(out.get("lines") or [], rows, 4, f"preview {m['id']}")
+    if not out["lines"]: return "dropped"
+    out.update({"id": m["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("preview", str(m["id"]), out); return "new"
 
 # ---- 161: Tifo Cast, written for the ear, then voiced with Gemini TTS (ai/cast_voice.py)
@@ -383,7 +388,9 @@ def do_digest(team_id, st, league_name):
     if cached("digest", str(team_id), sig): return "cached"
     out = gemini(DIG_SYS, ctx, DIG_SCHEMA, temp=0.3, tokens=6000)
     if not out: return "fail"
-    out = deep(out); out["paras"] = [facts_only(x) for x in out["paras"]]; out.update({"team": team_id, "week": wk, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("digest", str(team_id), out); return "new"
+    out = deep(out); out["paras"] = keep_lines([facts_only(x) for x in out["paras"]], table_rows(st), 2, f"digest {team_id}")
+    if not out["paras"]: return "dropped"
+    out.update({"team": team_id, "week": wk, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("digest", str(team_id), out); return "new"
 
 # ---- 231: weekly power ranking; the order is the Tifo rating, the model only explains each place
 POW_SYS = STYLE + """
@@ -403,7 +410,12 @@ def do_power(comp):
     if cached("power", name, sig): return "cached"
     out = gemini(POW_SYS, {"league": league, "clubs_in_order": rows}, POW_SCHEMA, temp=0.5, tokens=8000)
     if not out: return "fail"
-    lines = {r["team_id"]: emirati(r["line"]).replace("بمعدل ", "بـ ") for r in out["rows"]}
+    tr = table_rows(st); lines = {}
+    for r in out["rows"]:
+        l = emirati(r["line"]).replace("بمعدل ", "بـ "); bad = check_table(l, tr)
+        if bad: print(f"power {comp}: line dropped ({bad}): {l[:80]}", file=sys.stderr)
+        else: lines[r["team_id"]] = l
+    if len(lines) < len(rows) / 2: return "dropped"
     save("power", name, {"comp": comp, "week": wk, "title": emirati(out["title"]), "rows": [dict(r, line=lines.get(r["team_id"], "")) for r in rows], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
 
 # ---- 369 «ليش هالنتيجة؟» (why) and 372 «مباراة الليلة في 60 ثانية» (quick), approved 2026-09-27. Files:
@@ -442,6 +454,39 @@ def check_result(text, md):
         if re.search(r"فاز\s+(?:منتخب\s+)?" + N + r"(?!\w)", text) and win != n: return f"فاز {n} but result {sc}"
         if re.search(r"(?:^|[\s،.])(?:منتخب\s+)?" + N + r"\s+(?:\S+\s+){0,1}?خسر", text) and lose != n: return f"{n} خسر but result {sc}"
     return None
+
+# rank/points guard (preview, quick, digest, power, summary): «المركز/مركز N», «N نقاط/نقطة», «برصيد N», «نقطة وحدة» near a
+# team name must match that team's row; «يتصدر/المتصدر» only for rank 1 (group leader in group competitions)
+def table_rows(st):
+    """{Arabic name: {rank, pts}} for every row of every group of a standings file."""
+    out = {}
+    for g in (st or {}).get("groups", []) or []:
+        for r in g.get("rows", []): out[team_ar(r["team"])] = {"rank": r.get("rank"), "pts": r.get("pts")}
+    return out
+def check_table(text, rows):
+    """None when every rank/points claim agrees with the table, else the reason."""
+    names = sorted([n for n in rows if n], key=len, reverse=True)
+    if not names or not isinstance(text, str): return None
+    hits = sorted((m.start(), m.end(), n) for n in names for m in re.finditer(r"(?<!\w)(?:و|ل|ب)?" + re.escape(n) + r"(?!\w)", text))
+    hits = [h for i, h in enumerate(hits) if not any(o[0] <= h[0] and h[1] <= o[1] and o != h for o in hits)]   # «الأهلي» inside «شباب الأهلي»
+    for i, (a, b, n) in enumerate(hits):
+        stop = min([h[0] for h in hits[i + 1:]] + [len(text)] + [b + k.start() for k in [re.search(r"[.؛!؟\n]", text[b:])] if k])
+        win, pre, r = text[b:stop], text[max(0, a - 12):a], rows[n]
+        for m in re.finditer(r"(?:ال)?مركز\s+(\d+)", win):
+            if r["rank"] is not None and int(m.group(1)) != r["rank"]: return f"{n} rank {m.group(1)} != {r['rank']}"
+        for m in re.finditer(r"(?:برصيد\s+|بـ\s*|وعنده\s+|عنده\s+)?(\d+)\s+(?:نقاط|نقطة)|برصيد\s+(\d+)", win):
+            v = int(m.group(1) or m.group(2))
+            if r["pts"] is not None and v != r["pts"] and not re.search(r"(?:فارق|بفارق|ب?ـ?\s*فرق)\s*$", win[:m.start()]): return f"{n} pts {v} != {r['pts']}"
+        if re.search(r"نقطة وحدة", win) and r["pts"] not in (None, 1): return f"{n} pts 1 != {r['pts']}"
+        if (re.search(r"(?<!عن )(?<!من )(?<!على )(?<!ورا )(?<!خلف )(?<!لـ)(?<!و)(?<!\w)(?:يتصدر|المتصدر|متصدر)", win[:40]) or re.search(r"المتصدر\s*$|يتصدر\s*$", pre)) and r["rank"] not in (None, 1): return f"{n} leader but rank {r['rank']}"
+    return None
+def keep_lines(lines, rows, minimum, what):
+    ok = []
+    for l in lines:
+        bad = check_table(l, rows)
+        if bad: print(f"{what}: line dropped ({bad}): {l[:80]}", file=sys.stderr)
+        else: ok.append(l)
+    return ok if len(ok) >= minimum else None
 
 def do_why(md):
     ctx = match_facts(md)
@@ -502,7 +547,9 @@ def do_quick(m, table):
     if cached("quick", str(m["id"]), sig): return "cached"
     out = gemini(QUICK_SYS, ctx, QUICK_SCHEMA, temp=0.3, tokens=4000)
     if not out: return "fail"
-    save("quick", str(m["id"]), {"id": m["id"], "comp": m.get("comp"), "home": m["home"]["id"], "away": m["away"]["id"], "kickoff_utc": m.get("kickoff_utc"), "lines": [x for x in (fix(grammar(emirati(l), nations(m["home"], m["away"]))) for l in out["lines"]) if not ZERO.search(x)], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
+    qlines = keep_lines([x for x in (fix(grammar(emirati(l), nations(m["home"], m["away"]))) for l in out["lines"]) if not ZERO.search(x)], table_rows(table), 4, f"quick {m['id']}")
+    if not qlines: return "dropped"
+    save("quick", str(m["id"]), {"id": m["id"], "comp": m.get("comp"), "home": m["home"]["id"], "away": m["away"]["id"], "kickoff_utc": m.get("kickoff_utc"), "lines": qlines, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
 
 
 # ---- 301: «أهم 5 أشياء اليوم» on the home page (gated like every generated text)
