@@ -7,6 +7,7 @@ import analytics as AN
 import config
 from compute import history as HI, insights as IN, rating as R, tournament as TO, winprob as WP
 from sources import schema as S
+from sources.http import FetchError
 from timeutil import iso, parse_utc, uae_date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -347,7 +348,7 @@ def careers(p, limit=25):
             if r["minutes"] >= 900:
                 want.append((cid, int(pid)))
     cache = p.aux("careers")
-    n = 0
+    n, skipped = 0, []
     for cid, pid in want:
         if n >= limit or not p.has_time(6):
             break
@@ -364,10 +365,17 @@ def careers(p, limit=25):
                                                            **car, "note": "FotMob career history; club city/country: see teams.json "
                                                                           "(country) for covered clubs"}, cache="static")
             n += 1
-        except ERRORS as e:
-            p.store.fail("careers", e)
+        except FetchError as e:
+            p.store.fail("careers", f"{pid}: {e}")      # the source failed: health says so
+            n += 1
+        except ERRORS as e:                             # one unreadable payload: skip this player, keep the step green
+            skipped.append(pid)
+            p.note(f"careers: skipped {pid} ({type(e).__name__}: {e})")
             n += 1
         p.mark("career", pid)
+    if skipped and (p.store.health.get("careers") or {}).get("ok", True):
+        p.store.ok("careers", note=f"skipped {len(skipped)} player(s) with unreadable career data: "
+                                  + ", ".join(map(str, skipped[:10])))
     for cid in leagues():
         items = []
         for pid, v in cache.items():
