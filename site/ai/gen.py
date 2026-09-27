@@ -64,8 +64,8 @@ def _provider():
     if not v:
         try: v = open(os.path.join(HERE, "provider.txt")).read().strip()
         except OSError: v = ""
-    return v if v in ("claude", "gemini") else "gemini"
-PROVIDER = _provider(); CLAUDE_FAILS = [0]; CLAUDE_STOPPED = []; CALLS = []   # CALLS: (provider, seconds) per call, for timing reports
+    return v if v.split(":")[0] in ("claude", "gemini") else "gemini"
+PROVIDER = _provider();   # "claude", "claude:haiku", "claude:sonnet" or "gemini" CLAUDE_FAILS = [0]; CLAUDE_STOPPED = []; CALLS = []   # CALLS: (provider, seconds) per call, for timing reports
 def _jschema(g):   # the Gemini schema dialect (OBJECT/STRING…) as JSON Schema
     if not isinstance(g, dict): return g
     o = {k: _jschema(v) for k, v in g.items() if k != "type"}
@@ -81,20 +81,20 @@ def _fit(schema, v):   # maxLength / maxItems enforced in code, whatever the mod
         try: return int(v)
         except Exception: return v
     return v
-def claude_text(system, payload, schema):
+def claude_text(system, payload, schema, model="haiku"):
     import subprocess, shutil
-    cmd = [os.environ.get("CLAUDE_BIN") or shutil.which("claude") or os.path.expanduser("~/.local/bin/claude"), "-p", "--model", "haiku", "--output-format", "json", "--tools", "", "--strict-mcp-config", "--disable-slash-commands",
+    cmd = [os.environ.get("CLAUDE_BIN") or shutil.which("claude") or os.path.expanduser("~/.local/bin/claude"), "-p", "--model", model, "--output-format", "json", "--tools", "", "--strict-mcp-config", "--disable-slash-commands",
            "--no-session-persistence", "--setting-sources", "", "--settings", '{"alwaysThinkingEnabled":false}', "--system-prompt", system + "\n\nجاوب بـ JSON بس، مطابق للـ schema.", "--json-schema", json.dumps(_jschema(schema), ensure_ascii=False),
            json.dumps(payload, ensure_ascii=False)]
     t0 = time.time()
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=90, cwd="/tmp", env=dict(os.environ, MAX_THINKING_TOKENS="0"))   # no thinking: ~8 s instead of ~65 s
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=int(os.environ.get("TIFO_CLAUDE_TIMEOUT") or 90), cwd="/tmp", env=dict(os.environ, MAX_THINKING_TOKENS="0"))   # no thinking: ~8 s instead of ~65 s
         out = json.loads(r.stdout or "{}")
         if r.returncode or out.get("is_error"): raise RuntimeError((out.get("result") or r.stderr or "")[:200])
         res = out.get("structured_output") or json.loads(out.get("result") or "")
         req = schema.get("required") or []
         if not isinstance(res, dict) or any(k not in res for k in req): raise ValueError("schema")
-        CALLS.append(("claude", round(time.time() - t0, 1))); CLAUDE_FAILS[0] = 0
+        CALLS.append(("claude:" + model, round(time.time() - t0, 1))); CLAUDE_FAILS[0] = 0
         return _fit(schema, res)
     except Exception as e:
         CLAUDE_FAILS[0] += 1; print("claude failed:", str(e)[:200], file=sys.stderr)
@@ -104,8 +104,9 @@ def claude_text(system, payload, schema):
 GEMINI_OUT = []   # set on 402/429: the key is out of credit or quota; later calls return None at once instead of retrying
 def gemini(system, payload, schema, temp=0.6, tokens=4000, provider=None):
     """Generated text from the configured provider (name kept: every kind calls it). Claude first when chosen, Gemini as fallback."""
-    if (provider or PROVIDER) == "claude" and not CLAUDE_STOPPED:
-        out = claude_text(system, payload, schema)
+    prov = provider or PROVIDER
+    if prov.startswith("claude") and not CLAUDE_STOPPED:
+        out = claude_text(system, payload, schema, (prov.split(":") + ["haiku"])[1] or "haiku")
         if out is not None: return out
     t0 = time.time(); out = gemini_api(system, payload, schema, temp, tokens)
     if out is not None: CALLS.append(("gemini", round(time.time() - t0, 1)))

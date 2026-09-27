@@ -19,6 +19,7 @@ can call it and only new players are looked up.
     python3 build_names.py --stage collect # only refresh the player pool
     python3 build_names.py --no-gemini     # wikidata only, leave the rest
     python3 build_names.py --retry-generated  # re-try wikidata for generated ids
+    python3 build_names.py --kind coaches  # coaches (coaches/index.json + team coaches) -> coaches_ar.json
 
 Network: forces IPv4 (the phone's resolver stalls ~5 s on AAAA lookups).
 Caches (HTTP responses, the pool) go to --cache (default ~/.cache/tifo-names).
@@ -173,6 +174,27 @@ def collect(cache: Path, match_days: int):
     log(f"collect: {len(mids)} finished matches in {match_days} days, {got} lineup rows")
     log(f"collect: pool = {len(pool)} players")
     (cache / "pool.json").write_text(json.dumps(pool, ensure_ascii=False))
+    (cache / "teams.json").write_text(json.dumps(teams, ensure_ascii=False))
+    return pool, teams
+
+
+def collect_coaches(cache: Path):
+    """Coaches the site names: coaches/index.json (with each coach file's country and clubs) + every team's current coach."""
+    pool = {}
+    teams = (get_json(f"{FEED}/teams.json") or {}).get("teams", {})
+    idx = get_json(f"{FEED}/coaches/index.json") or {}
+    for c in idx.get("coaches") or []:
+        cj = get_json(f"{FEED}/coaches/{c['id']}.json") or {}
+        pool[str(c["id"])] = {"name": cj.get("name") or c.get("name"), "teams": sorted({r["team"] for r in cj.get("rows") or [] if r.get("team")}),
+                              "country": cj.get("country"), "ages": [], "comps": [], "uae": any(r.get("comp") == UAE_LEAGUE for r in cj.get("rows") or [])}
+    for tid in teams:
+        tj = get_json(f"{FEED}/team/{tid}.json") or {}
+        co = tj.get("coach") or {}
+        if co.get("id") and str(co["id"]) not in pool:
+            pool[str(co["id"])] = {"name": co.get("name"), "teams": [int(tid)], "country": co.get("country"), "ages": [], "comps": [], "uae": int(tid) == UAE_NATIONAL}
+    pool = {k: v for k, v in pool.items() if v.get("name")}
+    log(f"collect coaches: pool = {len(pool)}")
+    (cache / "coach_pool.json").write_text(json.dumps(pool, ensure_ascii=False))
     (cache / "teams.json").write_text(json.dumps(teams, ensure_ascii=False))
     return pool, teams
 
@@ -705,11 +727,17 @@ def main():
     ap.add_argument("--reuse-pool", action="store_true", help="use cached pool.json")
     ap.add_argument("--retry-generated", action="store_true")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--kind", choices=["players", "coaches"], default="players")
     a = ap.parse_args()
+    global OUT
+    if a.kind == "coaches":
+        OUT = HERE / "coaches_ar.json"
     cache = Path(a.cache)
     cache.mkdir(parents=True, exist_ok=True)
 
-    if a.reuse_pool and (cache / "pool.json").exists():
+    if a.kind == "coaches":
+        pool, teams = (json.loads((cache / "coach_pool.json").read_text()), json.loads((cache / "teams.json").read_text())) if a.reuse_pool and (cache / "coach_pool.json").exists() else collect_coaches(cache)
+    elif a.reuse_pool and (cache / "pool.json").exists():
         pool = json.loads((cache / "pool.json").read_text())
         teams = json.loads((cache / "teams.json").read_text())
     else:
@@ -746,7 +774,8 @@ def main():
         if rest:
             resolve_gemini(rest, pool, teams, out, save)
     save()
-    write_review(out, pool, teams)
+    if a.kind == "players":
+        write_review(out, pool, teams)
     counts = {}
     for o in out.values():
         counts[o["source"]] = counts.get(o["source"], 0) + 1
