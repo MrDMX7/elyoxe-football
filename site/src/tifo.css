@@ -442,3 +442,15 @@ body.second [data-pane="stats"]{display:block!important}
 body.second [data-pane]:not([data-pane="stats"]){display:none!important}
 body.second .board .sc .dg{font-size:6rem}
 body.second .stat{font-size:1.15rem}
+/* batch 235-264 */
+.pbar.big{block-size:.8rem}
+.clock2 p{margin:.4rem 0}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr));gap:.4rem}
+.sgrid div{display:grid;grid-template-columns:auto 1fr auto;gap:.4rem;align-items:center;background:var(--chalk);border:1px solid var(--line);padding:.35rem .5rem}
+.poster{background:#fff;color:#0E1512;border-block-start:1rem solid var(--c1);padding:1rem;max-inline-size:210mm;margin:1rem auto}
+.poster .ph{display:flex;align-items:center;gap:1rem;border-block-end:.4rem solid var(--c2);padding-block-end:.6rem;margin-block-end:.6rem}
+.poster .ph h1{margin:0;font-size:1.8rem}
+.poster table{inline-size:100%;border-collapse:collapse;font-size:.85rem}
+.poster td{padding:.3rem .25rem;border-block-end:1px solid #ddd}
+.poster .pf{text-align:center;font-family:var(--digits);margin-block-start:.6rem}
+@media print{body[data-page="poster"] .bar,body[data-page="poster"] .foot,.noprint{display:none!important}body[data-page="poster"]{background:#fff}.poster{margin:0;max-inline-size:none;border-block-start-width:.6rem}@page{size:A4;margin:10mm}}

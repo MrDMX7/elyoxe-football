@@ -59,7 +59,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   const teamsJson = await get("teams.json"); S.setTeams(teamsJson && teamsJson.teams || {});
 
   // ---- 1. fetch: competitions (+ every analytics file the pipeline may have written), today, national
-  const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios", "shots", "fatigue", "coaches", "transfers"];
+  const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios", "shots", "fatigue", "coaches", "transfers", "records-book", "seasons", "milestones", "upsets", "projections", "bracket", "local-minutes"];
   // phase 5: generated content (ai/gen.py) is published only for kinds the owner approved (ai/approved.json)
   const APPROVED = JSON.parse(fs.readFileSync(path.join(__dirname, "ai/approved.json"), "utf8"));
   const AI = k => { const d = path.join(CACHE, "ai", k), o = {}; if (fs.existsSync(d)) for (const f of fs.readdirSync(d)) if (f.endsWith(".json")) o[f.slice(0, -5)] = JSON.parse(fs.readFileSync(path.join(d, f), "utf8")); return o; };
@@ -110,11 +110,13 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     const has = { table: !!(st && st.groups && st.groups.length), stats: !!(stats && stats.lists) };
     // table + its variants (140, 51, 50) + season journey (114)
     const vars = has.table && !st.composite ? S.tables(st, x.halftime, x.xg) : [];
+    if (has.table && !st.composite){ const ft = S.formTable(fx, st), gh = S.gamesInHand(st); if (ft) vars.push(["form", "الفورمة", ft]); if (gh) vars.push(["hand", "المؤجلة", gh]); }
     const tablePane = has.table ? (vars.length ? `<div class="tabs" data-tabs="tv"><button type="button" data-t="all" aria-selected="true">الكل</button>` + vars.map(v => `<button type="button" data-t="${v[0]}" aria-selected="false">${v[1]}</button>`).join("") + "</div>" + pane("tv", "all", `<div id="table">${R.standings(st)}</div>`, true) + vars.map(v => pane("tv", v[0], v[2])).join("") : `<div id="table">${R.standings(st)}</div>`) + (x.bump ? S.sec("رحلة الموسم", "", S.bump(x.bump)) : "") : "";
     // predictions (93, 20, 136)
     const rmap = c.id === 538 ? S.ratingMap(ratings) : (x.ratings ? S.ratingMap(x.ratings) : {});
     const fdrHtml = st && !st.composite ? S.fdr(st, fx, rmap) : "", roadHtml = st && !st.composite ? S.roadTitle(st, fx, rmap, x.sim) : "";
-    const pred = [roadHtml ? S.sec("الطريق للقب", "", roadHtml) : "", fdrHtml ? S.sec("صعوبة المباريات الياية", "", fdrHtml) : "", x.watch && fx ? S.sec("أحلى مباريات الجولة الياية", "", S.watch(x.watch, fx)) : "", S.whatif(fx, st) ? S.sec("شو لو؟", "", S.whatif(fx, st)) : "", x.sim && x.sim.teams ? S.sec("توقعات آخر الموسم", "", S.sim(x.sim, st)) : "", st && st.magic ? S.sec("كم يحتاج فريقك؟", "", S.magic(st)) : "", x["tournament-sim"] ? S.sec("من بيفوز بالبطولة؟", "", S.tsim(x["tournament-sim"])) : ""].join("");
+    const clockHtml = S.seasonClock(fx, st, x.watch), projHtml = S.projections(stats, st);
+    const pred = [clockHtml ? S.sec("ساعة الموسم", "", clockHtml) : "", roadHtml ? S.sec("الطريق للقب", "", roadHtml) : "", fdrHtml ? S.sec("صعوبة المباريات الياية", "", fdrHtml) : "", x.watch && fx ? S.sec("أحلى مباريات الجولة الياية", "", S.watch(x.watch, fx)) : "", S.whatif(fx, st) ? S.sec("شو لو؟", "", S.whatif(fx, st)) : "", x.sim && x.sim.teams ? S.sec("توقعات آخر الموسم", "", S.sim(x.sim, st)) : "", st && st.magic ? S.sec("كم يحتاج فريقك؟", "", S.magic(st)) : "", x["tournament-sim"] ? S.sec("من بيفوز بالبطولة؟", "", S.tsim(x["tournament-sim"])) : "", projHtml ? S.sec("كم بيسجل الهدافين لآخر الموسم؟", "", projHtml) : ""].join("");
     // the numbers (137, 135, 46, 124, 119, 129, 139, 52, 37, 142, 143, 96, 138, 141)
     const num = [
       ["cards", "بطاقات تيفو", S.cards(x.cards, 12)], ["clutch", "منو الحاسم؟", S.clutch(x.clutch)], ["tor", "تشكيلة الجولة", S.teamOfRound(x["team-of-round"])],
@@ -128,8 +130,8 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     ].filter(v => v[2]);
     const cmpLink = x.cards ? `<p><a class="btn" href="/c/${c.key}/compare/">قارن بين لاعبين أو فريقين</a></p>` : "";
     const numPane = num.length ? cmpLink + `<nav class="chips secnav">` + num.map(v => `<a href="#n-${v[0]}">${v[1]}</a>`).join("") + "</nav>" + num.map(v => S.sec(v[1], "", v[2], "n-" + v[0])).join("") : "";
-    const derb = c.id === 538 ? S.derbyList(h2hIdx, H2H) : "";
-    const hist = (x.alltime ? S.sec("تاريخ الدوري", "من 1973", S.alltime(x.alltime)) : "") + (derb ? S.sec("سجل المواجهات بين الأندية", "", derb) : "") + (x.records && x.records.chases && x.records.chases.length ? S.sec("أرقام قياسية على المحك", "", S.records(x.records)) : "");
+    const derb = c.id === 538 ? S.derbyList(h2hIdx, H2H) : "";   // (records book renders in hist too)
+    const hist = (x.alltime ? S.sec("تاريخ الدوري", "من 1973", S.alltime(x.alltime)) : "") + (derb ? S.sec("سجل المواجهات بين الأندية", "", derb) : "") + (x.records && x.records.chases && x.records.chases.length ? S.sec("أرقام قياسية على المحك", "", S.records(x.records)) : "") + (x["records-book"] ? S.sec("كتاب الأرقام القياسية", "من " + esc(x["records-book"].since || ""), S.recordsBook(x["records-book"])) : "");
     const tl = [has.table && ["table", "الترتيب"], ["fixtures", "المباريات"], pred && ["pred", "التوقعات"], numPane && ["num", "الأرقام"], has.stats && ["goals", "الهدافين"], has.stats && ["assists", "صناع الأهداف"], hist && ["hist", "التاريخ"]].filter(Boolean);
     const body = `<p class="crumbs"><a href="/competitions/">البطولات</a></p><h1>${esc(c.name_ar)}</h1><p class="season">الموسم <span class="num">${esc(c.season || "")}</span></p>${c.dormant ? '<p class="note">البطولة متوقفة أو خلصت هالموسم. هذي آخر نتايجها.</p>' : ""}` + tabsHtml("c", tl) +
       (has.table ? pane("c", "table", tablePane, true) : "") + pane("c", "fixtures", `<div id="rounds">${rounds || '<p class="empty">ما في مباريات منشورة.</p>'}</div>`, !has.table) +
@@ -199,12 +201,13 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     }
     const tabs = [["next", "الياية"], ["past", "النتايج"], ["squad", "اللاعبين"], nums && ["nums", id === 5789 ? "المنتخب بالأرقام" : "بالأرقام"]].filter(Boolean);
     const body = `<div class="th"><div class="in">${R.logo(t, "lg")}<div><h1>${R.tname(t)}</h1>${sub ? `<p>${sub}</p>` : ""}</div></div>${R.teamStrip(t)}</div>
-<div class="btnrow"><button type="button" class="btn" id="mybtn">هذا فريقي</button><a class="btn" href="/v1/team/${t.id}.ics" id="ics">مبارياته في تقويم جوالك</a><button type="button" class="btn" id="wpbtn" hidden>خلفية للجوال</button></div>${t.id === 5789 ? '<div id="uaecd"></div>' : ""}` +
+<div class="btnrow"><button type="button" class="btn" id="mybtn">هذا فريقي</button><a class="btn" href="/v1/team/${t.id}.ics" id="ics">مبارياته في تقويم جوالك</a><button type="button" class="btn" id="wpbtn" hidden>خلفية للجوال</button><a class="btn" href="/t/${t.id}/poster/">بوستر الموسم للطباعة</a></div>${t.id === 5789 ? '<div id="uaecd"></div>' : ""}` +
       tabsHtml("t", tabs) + pane("t", "next", `<div id="next">${f.next.slice(0, 6).map(m => R.matchRow(m, { date:true })).join("") || '<p class="empty">ما في مباريات ياية منشورة.</p>'}</div>`, true) +
       pane("t", "past", `<div id="past">${f.past.slice(0, 10).map(m => R.matchRow(m, { date:true })).join("")}</div>`) + pane("t", "squad", `<div id="squad">${R.squad(t)}</div>`) + (nums ? pane("t", "nums", nums) : "");
     const tog = full.has(id); if (tog) OGJ.push({ key:"t-" + id, home:t.name_ar || t.name, home_id:id, hc:colors[id], sub:"المباريات والنتايج واللاعبين" });
     const html = page({ og:tog ? "t-" + id : null, path:`/t/${t.id}/`, page:"team", attrs:` data-id="${t.id}" data-name="${esc(t.name_ar || t.name)}"`, nav:t.id === 5789 ? "uae" : "", title:`${t.name_ar || t.name}: المباريات والنتايج واللاعبين | تيفو`, desc:`مواعيد مباريات ${t.name_ar || t.name} بتوقيت الإمارات، ونتايجه، وقائمة اللاعبين، وأرقامه، واشتراك تقويم يتحدّث بروحه.`, body });
     write(`t/${t.id}/index.html`, html); urls.push(`/t/${t.id}/`);
+    if ((t.fixtures || []).length) write(`t/${t.id}/poster/index.html`, page({ path:`/t/${t.id}/poster/`, page:"poster", title:`جدول مباريات ${t.name_ar || t.name} للطباعة | تيفو`, desc:`جدول مباريات ${t.name_ar || t.name} للموسم كامل بتوقيت بلدك، جاهز للطباعة.`, body:S.poster(t) }));
     if (t.id === 5789) write("uae/index.html", html.replace(`<link rel="canonical" href="${SITE}/t/5789/">`, `<link rel="canonical" href="${SITE}/uae/">`));
   });
 
@@ -246,7 +249,8 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     const ww = md.status !== "finished" ? S.watchWhere(BC[md.comp]) : "", hl = md.status === "finished" ? S.highlight(HLT[md.comp], md) : "";
     const mdy = md.venue && STAD[md.venue.id] ? S.matchDay(md, STAD[md.venue.id]) : "";
     const sg = mdy ? S.sec("رايح الملعب؟", "", mdy) : "";
-    const pre = ai + (hl ? `<p>${hl}</p>` : "") + (ww ? S.sec("وين تنقل في الإمارات", "", ww) : "") + sg + (probs ? S.probs(probs, md) : "") + (fa ? S.sec("ضغط المباريات", "", fa) : "") + (facts && facts.length ? S.sec("قبل المباراة", "", S.matchFacts(facts)) : "");
+    const sgrid = probs ? S.scoreGrid(probs, md) : "";
+    const pre = ai + (hl ? `<p>${hl}</p>` : "") + (ww ? S.sec("وين تنقل في الإمارات", "", ww) : "") + sg + (probs ? S.probs(probs, md) + (sgrid ? S.sec("أرجح النتايج بالضبط", "", sgrid) : "") : "") + (fa ? S.sec("ضغط المباريات", "", fa) : "") + (facts && facts.length ? S.sec("قبل المباراة", "", S.matchFacts(facts)) : "");
     const body = `<div id="mh">${R.matchHead(md)}</div><div class="tools"><button type="button" class="btn" id="secondbtn">الشاشة الثانية</button><button type="button" class="btn" id="storybtn">صورة للستوري</button><a class="btn" href="/tv/?m=${id}">على شاشة المجلس</a></div><script type="application/json" id="msum">${JSON.stringify(Object.assign({}, sum, { events:undefined, lineups:undefined, stats:undefined, h2h:undefined })).replace(/</g, "\\u003c")}</script><div id="catchup">${R.catchup(md)}</div><div id="facts">${R.matchFacts(md, index)}</div>${pre}` +
       tabsHtml("m", [["events", "الأحداث"], ["lineups", "التشكيلة"], ["stats", "الإحصائيات"], ["h2h", "المواجهات"], opp && ["opp", "تقرير الفريقين"], press && ["press", "ورقة الصحفي"], thread && ["thread", "ثريد إكس"]].filter(Boolean)) + (opp ? pane("m", "opp", opp) : "") + (press ? pane("m", "press", press) : "") + (thread ? pane("m", "thread", thread) : "") +
       pane("m", "events", `<div id="events">${R.events(md)}</div>`, true) + pane("m", "lineups", `<div class="tools"><button type="button" class="btn" id="p3dbtn" data-src="/assets/pitch3d.${ASSET_V}.js"${md.lineups && md.lineups.home ? "" : " hidden"}>شوفها على ملعب ثلاثي الأبعاد</button></div><div id="p3d"></div><div id="lineups">${R.lineups(md)}</div>`) + pane("m", "stats", `<div id="stats">${R.stats(md)}</div>`) + pane("m", "h2h", `<div id="h2h">${R.h2h(md)}</div>`);
