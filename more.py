@@ -239,9 +239,11 @@ def cups(p):
         fx = p.fixtures(cid) or []
         bracket = st.get("bracket")
         if not bracket:
-            raw_b = _bracket_only(p, cid)
-            bracket = raw_b
+            bracket = _bracket_only(p, cid)
         if not bracket:
+            fb = _fixture_cup(p, cid, fx, ratings={**rat, **uae}, params=params, st=st)
+            if fb:
+                p.store.put_json(f"comp/{cid}/bracket-sim.json", fb, cache="static")
             continue
         by_id = {m["id"]: m for m in fx if m.get("id")}
         ties_ = IN.ties(bracket, by_id)
@@ -421,3 +423,74 @@ def transfers_feed(p):
     p.store.put_json("transfers/latest.json", {"generated": iso(now), "days": 60, "transfers": out,
                                                "note": "incoming moves at clubs in the Arab leagues (FotMob league transfer feeds, "
                                                        "the latest ~100 per league)"}, cache="warm")
+
+
+ROUND_ORDER = ["1/64", "1/32", "1/16", "1/8", "1/4", "1/2", "final"]
+
+
+def _round_key(r):
+    r = str(r or "").lower().replace("round of 16", "1/8").replace("quarter-finals", "1/4").replace("semi-finals", "1/2")
+    return r
+
+
+def _fixture_cup(p, cid, fx, ratings, params, st, n=5000):
+    """Knockout cup without a FotMob bracket: rounds from the fixtures' round labels; the current round's
+    known ties are simulated, later rounds are a random redraw of the survivors (as cup draws are)."""
+    import random
+    rounds = {}
+    for m in fx:
+        k = _round_key(m.get("round"))
+        if k in ROUND_ORDER and m.get("id"):
+            rounds.setdefault(k, []).append(m)
+    if not rounds:
+        return None
+    order = [k for k in ROUND_ORDER if k in rounds]
+    cur = next((k for k in order if any(m["status"] != S.FINISHED for m in rounds[k])), None)
+    by_id = {m["id"]: m for m in fx if m.get("id")}
+    ties_ = []
+    for k in order:
+        pairs = {}
+        for m in rounds[k]:
+            pairs.setdefault(frozenset((m["home"]["id"], m["away"]["id"])), []).append(m["id"])
+        ties_ += IN.ties([{"stage": k, "ties": [{"matches": v} for v in pairs.values()]}], by_id)
+    out = {"comp": cid, "season": (st or {}).get("season"), "generated": iso(p.now()), "rounds": order, "current_round": cur,
+           "ties": ties_, "source": "fixtures"}
+    if not cur:
+        out["note"] = "cup finished (latest season on FotMob); no simulation"
+        return out
+    base = params.get("newcomer", 1400)
+    known = [m for m in rounds[cur]]
+    alive_now = {m["home"]["id"] for m in known} | {m["away"]["id"] for m in known}
+    later = ROUND_ORDER[ROUND_ORDER.index(cur) + 1:]
+    reach = {t: dict.fromkeys(later + ["winner"], 0) for t in alive_now}
+    rng = random.Random(AN._seed(cid, cur, sum(1 for m in fx if m["status"] == S.FINISHED)))
+
+    def play(h, a, neutral):
+        ph, pd, pa = R.probs(ratings.get(h, base), ratings.get(a, base), params, neutral)
+        return h if rng.random() < ph + pd / 2 else a
+    for _ in range(n):
+        surv = []
+        for m in known:
+            if m["status"] == S.FINISHED and m.get("score"):
+                sc = m["score"]
+                pen = m.get("penalties")
+                if sc["home"] != sc["away"]:
+                    surv.append(m["home"]["id"] if sc["home"] > sc["away"] else m["away"]["id"])
+                elif pen:
+                    surv.append(m["home"]["id"] if pen["home"] > pen["away"] else m["away"]["id"])
+                else:
+                    surv.append(rng.choice([m["home"]["id"], m["away"]["id"]]))
+            else:
+                surv.append(play(m["home"]["id"], m["away"]["id"], R.is_neutral(m)))
+        for k in later:
+            for t in surv:
+                reach[t][k] += 1
+            rng.shuffle(surv)
+            surv = [play(surv[i], surv[i + 1], k == "final") for i in range(0, len(surv) - 1, 2)] + (surv[-1:] if len(surv) % 2 else [])
+        if len(surv) == 1:
+            reach[surv[0]]["winner"] += 1
+    out["teams"] = {str(t): {f"reach_{k}": round(v / n, 4) for k, v in r.items()} for t, r in reach.items()}
+    out["sims"] = n
+    out["method"] = ("current round from FotMob fixtures, later rounds a random redraw of the survivors each simulation; "
+                     "Tifo club rating; knockout draws settled 50/50")
+    return out
