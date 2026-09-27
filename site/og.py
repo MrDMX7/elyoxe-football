@@ -74,6 +74,32 @@ def render(j):
     d.text((60, H - 62), "tifo.elyoxe.com", font=DIG(34), fill=(185, 199, 192), anchor="lm")
     return im
 
+# 381: platform sizes for big results (job field "sizes": any of story/feed/x) -> out/og/<key>-<size>.png
+SIZES = {"story": (1080, 1920), "feed": (1080, 1350), "x": (1600, 900)}
+def render_sized(j, w, h):
+    im = Image.new("RGB", (w, h), NIGHT); d = ImageDraw.Draw(im); portrait = h > w; u = min(w, h) / 630   # u: one unit of the 1200x630 layout
+    hc = [hexrgb(c) for c in (j.get("hc") or ["#5C6660"])]; ac = [hexrgb(c) for c in (j.get("ac") or ["#3D4A44"])] if j.get("away") else None
+    band = int(h * (0.24 if portrait else 0.28)); stand(d, 0, 0, w, band, int(30 * u), hc, ac, j["key"] + str(w)); d.rectangle([0, band, w, h], fill=NIGHT)
+    y = band + int(55 * u)
+    if j.get("comp"): d.text((w / 2, y), j["comp"], font=TXT(int(30 * u)), fill=(185, 199, 192), anchor="mm", direction="rtl", language="ar")
+    if j.get("away"):
+        if portrait: ls = int(min(0.16 * h, 0.28 * w)); ly = band + int(0.11 * h); ny = ly + ls + int(0.04 * h); sy, sf = ly + ls + int(0.15 * h), int(0.12 * h); suby = sy + int(sf * 0.8)
+        else: ls = int(150 * u); ly = y + int(60 * u); ny = ly + ls + int(45 * u); sy, sf, suby = ly + ls / 2, int((150 if j.get("score") else 120) * u), ly + ls / 2 + int(110 * u)
+        for side, x in (("home", w * 0.75), ("away", w * 0.25)):
+            lg = logo(os.path.join(CACHE, "logo", f"{j[side + '_id']}.png"), ls)
+            if lg: im.paste(lg, (int(x - lg.width / 2), ly), lg)
+            d.text((x, ny), j[side], font=fit(d, j[side], KUFI, int(46 * u), w * 0.42), fill=CHALK, anchor="mm", direction="rtl", language="ar")
+        d.text((w / 2, sy), j.get("score") or j.get("time") or "", font=DIG(sf), fill=CHALK, anchor="mm")
+        if j.get("sub"): d.text((w / 2, suby), j["sub"], font=KUFI(int(30 * u)), fill=DUNE, anchor="mm", direction="rtl", language="ar")
+    else:
+        lg = logo(os.path.join(CACHE, "logo", f"{j.get('home_id')}.png"), int(200 * u)) if j.get("home_id") else None
+        if lg: im.paste(lg, (int(w / 2 - lg.width / 2), y + int(60 * u)), lg)
+        d.text((w / 2, y + int(330 * u)), j["home"], font=fit(d, j["home"], KUFI, int(64 * u), w - 160), fill=CHALK, anchor="mm", direction="rtl", language="ar")
+        if j.get("sub"): d.text((w / 2, y + int(400 * u)), j["sub"], font=TXT(int(30 * u)), fill=(185, 199, 192), anchor="mm", direction="rtl", language="ar")
+    fy = h - int(70 * u); mark(d, w - int(150 * u), fy - int(26 * u), int(16 * u)); d.text((w - int(190 * u), fy), "تيفو", font=KUFI(int(40 * u)), fill=CHALK, anchor="rm", direction="rtl", language="ar")
+    d.text((int(60 * u), fy), "tifo.elyoxe.com", font=DIG(int(34 * u)), fill=(185, 199, 192), anchor="lm")
+    return im
+
 def main():
     jobs = json.load(open(os.path.join(OUT, "og", "jobs.json"))); os.makedirs(os.path.join(CACHE, "og"), exist_ok=True); new = 0
     for j in jobs:
@@ -82,6 +108,11 @@ def main():
         if not os.path.exists(cf):
             render(j).save(cf, optimize=True); new += 1
         shutil.copyfile(cf, os.path.join(OUT, "og", f"{j['key']}.png"))
+        for sz in j.get("sizes") or []:
+            if sz not in SIZES: continue
+            cs = os.path.join(CACHE, "og", f"{j['key']}-{sz}-{h}.png")
+            if not os.path.exists(cs): render_sized(j, *SIZES[sz]).save(cs, optimize=True); new += 1
+            shutil.copyfile(cs, os.path.join(OUT, "og", f"{j['key']}-{sz}.png"))
     os.remove(os.path.join(OUT, "og", "jobs.json"))
     print(f"og: {len(jobs)} images ({new} new)")
 
