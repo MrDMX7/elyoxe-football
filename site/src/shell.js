@@ -253,8 +253,11 @@
   function flapCells(prev, md){ if (!md.score) return; var nw = String(md.score.home) + String(md.score.away), old = prev ? String(prev.home) + String(prev.away) : "";
     $$("#mh .sc .dg, .hsc .dg, #mini .ms .dg, .cine .cs").forEach(function(box){ var cs = box.querySelectorAll(".cell"); if (!cs.length){ box.classList.remove("flap"); void box.offsetWidth; box.classList.add("flap"); return; }
       [].forEach.call(cs, function(c, i){ if (old[i] !== nw[i]){ c.classList.remove("flap"); void c.offsetWidth; c.classList.add("flap"); } }); }); }
+  // W4.6: one polite live region speaks goals and full time only (never the minute)
+  function say(t){ var a = $("#alive"); if (!a || B.classList.contains("nospoil")) return; a.textContent = ""; setTimeout(function(){ a.textContent = t; }, 60); }
   function goalMoment(md, side, prev, undone){
     var tm = md[side], ev = (md.events || []).filter(function(e){ return /goal/.test(e.type) && e.team === side; }).pop(), who = ev && ev.player ? ev.player.name : "";
+    if (md.score) say((undone ? "انلغى هدف " + (tm.name_ar || tm.name) : "هدف لـ" + (tm.name_ar || tm.name) + (who ? "، " + who : "")) + ". " + (md.home.name_ar || md.home.name) + " " + md.score.home + "، " + (md.away.name_ar || md.away.name) + " " + md.score.away);
     flapCells(prev, md); if (RM) return;
     var mine = +lsGet("tifo.mine") || null, against = mine && (md.home.id === mine || md.away.id === mine) && tm.id !== mine;
     if (against && !undone) return;   // a goal against my team: the flap only
@@ -265,8 +268,9 @@
     else { var mb = $("#mini"); if (mb && B.classList.contains("mini-on")){ mb.style.setProperty("--gc", R.colOn(tm.id)); mb.classList.remove("gstripe"); void mb.offsetWidth; mb.classList.add("gstripe"); setTimeout(function(){ mb.classList.remove("gstripe"); }, 1300); } }
     if (!undone) whistle();
   }
-  var lastScore = {};
+  var lastScore = {}, lastSt = {};
   function scoreWatch(md){ if (!md || !md.score) return; var k = md.id, p = lastScore[k]; lastScore[k] = { home:md.score.home, away:md.score.away };
+    if (lastSt[k] && lastSt[k] !== "finished" && md.status === "finished") say("انتهت. " + (md.home.name_ar || md.home.name) + " " + md.score.home + "، " + (md.away.name_ar || md.away.name) + " " + md.score.away); lastSt[k] = md.status;
     if (p && (md.score.home > p.home || md.score.away > p.away)) goalMoment(md, md.score.home > p.home ? "home" : "away", p);
     else if (p && (md.score.home < p.home || md.score.away < p.away)) goalMoment(md, md.score.home < p.home ? "home" : "away", p, true);   // a disallowed goal flaps back
     tabTitle(md); }
@@ -397,4 +401,28 @@
       .then(function(L){ L = L.filter(function(x){ return x.p !== "/offline/"; }).sort(function(a, b){ return b.m - a.m; });
         ul.innerHTML = L.length ? L.map(function(x){ return '<li><a href="' + R.esc(x.p) + '">' + R.esc(x.t) + "</a></li>"; }).join("") : '<li class="muted">ما في صفحات محفوظة للحين. افتح مبارياتك وأنت على النت وبتحصلها هني.</li>'; })
       .catch(function(){ ul.innerHTML = '<li class="muted">ما قدرنا نقرا المحفوظ.</li>'; }); })(); }
+
+  // ---- W4.1 /thisday/: today in the visitor's own time zone, أمس/بكرة step one calendar day, the folded days are the source
+  (function(){ var box = $("#tdnow"); if (!box) return; var MON = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+    var today = new Date().toLocaleDateString("en-CA").slice(5), cur = today, body = $("#tdb"), head = $("#tdh");
+    function step(md, d){ var t = new Date(Date.UTC(2024, +md.slice(0, 2) - 1, +md.slice(3) + d)); return ("0" + (t.getUTCMonth() + 1)).slice(-2) + "-" + ("0" + t.getUTCDate()).slice(-2); }
+    function show(md){ cur = md; var s = $('details.tdm section[data-md="' + md + '"]'), lbl = +md.slice(3) + " " + MON[+md.slice(0, 2) - 1];
+      head.textContent = md === today ? "اليوم، " + lbl : md === step(today, -1) ? "أمس، " + lbl : md === step(today, 1) ? "بكرة، " + lbl : lbl; box.dataset.md = md;
+      if (s){ var c = s.cloneNode(true), h = c.querySelector("h2"); if (h) h.remove(); body.innerHTML = c.innerHTML; } else body.innerHTML = '<p class="muted">ما عندنا حدث مسجّل في هاليوم.</p>'; }
+    if (today !== box.dataset.md) show(today);
+    box.addEventListener("click", function(e){ var t = e.target.closest("[data-td]"); if (t) show(step(cur, +t.dataset.td)); }); })();
+
+  // ---- W4.6 tabs: RTL arrow keys (← next, → previous, Home/End) with a roving tabindex
+  function rove(bar){ var ts = $$('[role="tab"]', bar), sel = ts.filter(function(t){ return t.getAttribute("aria-selected") === "true"; })[0] || ts[0]; ts.forEach(function(t){ t.tabIndex = t === sel ? 0 : -1; }); }
+  $$('[role="tablist"]').forEach(rove);
+  document.addEventListener("click", function(e){ var bar = e.target.closest && e.target.closest('[role="tablist"]'); if (bar) setTimeout(function(){ rove(bar); }, 0); });
+  document.addEventListener("keydown", function(e){ var t = e.target.closest && e.target.closest('[role="tab"]'); if (!t) return; var bar = t.closest('[role="tablist"]'), ts = $$('[role="tab"]', bar).filter(function(x){ return !x.hidden; }), i = ts.indexOf(t), n = -1;
+    if (e.key === "ArrowLeft") n = (i + 1) % ts.length; else if (e.key === "ArrowRight") n = (i - 1 + ts.length) % ts.length; else if (e.key === "Home") n = 0; else if (e.key === "End") n = ts.length - 1; else return;
+    e.preventDefault(); ts[n].focus(); ts[n].click(); rove(bar); });
+
+  // ---- W4.6 404: search and today's matches
+  (function(){ var s = $("#srch404"); if (s) s.onclick = function(){ var b = $("#srch"); if (b) b.click(); };
+    var d = $("#day404"); if (!d || !R.dayList) return; var ymd = new Date(Date.now() + 4 * 3600e3).toISOString().slice(0, 10).replace(/-/g, "");
+    Promise.all([fetch("/v1/day/" + ymd + ".json").then(function(r){ return r.json(); }), fetch("/v1/index.json").then(function(r){ return r.json(); })]).then(function(r){ var ms = r[0].matches || []; if (!ms.length) return;
+      d.innerHTML = "<h2>مباريات اليوم</h2>" + R.dayList(ms, r[1], {}); if (R.localize) R.localize(d); }).catch(function(){}); })();
 })();

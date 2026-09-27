@@ -148,17 +148,20 @@ else if (cmd === "gate"){
   const LAT = {}; for (const nf of ["players_ar.json", "coaches_ar.json", "referees_ar.json", "clubs_ar.json"]) try { for (const v of Object.values(JSON.parse(fs.readFileSync(path.join(SITE, "../names/" + nf), "utf8")))) if (v.latin && v.ar) (LAT[v.latin] = LAT[v.latin] || []).push(v.ar); } catch (e){}
   (MAP.rename = MAP.rename || {}); for (const [l, a] of Object.entries(LAT)) MAP.rename[l] = (MAP.rename[l] || []).concat(a);
   const byT = {}; for (const p of listPages(OLD)){ const k = tkey(p); if (!k || (only && !only.split(",").includes(k))) continue; if (fs.existsSync(pageFile(NEW, p))) (byT[k] = byT[k] || []).push(p); }
-  const res = {}; let bad = 0;
+  const res = {}, moved = {}; let bad = 0;   // drops can be scoped to one template: "<template>|type:label"
   for (const [k, list] of Object.entries(byT)){
     const step = Math.max(1, Math.floor(list.length / N)), sample = list.filter((_, i) => i % step === 0).slice(0, N), miss = {};
     for (const p of sample){
-      const o = extract(fs.readFileSync(pageFile(OLD, p), "utf8")).items, n = extract(fs.readFileSync(pageFile(NEW, p), "utf8")).items;
+      // W4.2/W4.3: an old URL that became a redirect stub is compared with the page it points to
+      let nh = fs.readFileSync(pageFile(NEW, p), "utf8"); const mv = nh.includes('data-moved="1"') && (nh.match(/<link rel="canonical" href="https?:\/\/[^/]+(\/[^"]*)"/) || [])[1];
+      if (mv){ const t = mv.split(/[?#]/)[0]; if (fs.existsSync(pageFile(NEW, t))) nh = fs.readFileSync(pageFile(NEW, t), "utf8"); moved[p] = mv; }
+      const o = extract(fs.readFileSync(pageFile(OLD, p), "utf8")).items, n = extract(nh).items;
       for (const it of o){ if (it.shell || isDate(it.label)) continue; const al = (MAP.rename[it.label] || []).concat([it.label]).map(norm);
-        const hit = n.find(x => (it.id && x.id === it.id) || al.includes(norm(x.label))) || MAP.dropped[it.label] || MAP.dropped[it.type + ":" + it.label]; if (!hit){ const key = it.type + ":" + it.label + (it.id ? "#" + it.id : ""); (miss[key] = miss[key] || []).push(p); } }
+        const hit = n.find(x => (it.id && x.id === it.id) || al.includes(norm(x.label))) || MAP.dropped[k + "|" + it.type + ":" + it.label] || MAP.dropped[it.label] || MAP.dropped[it.type + ":" + it.label]; if (!hit){ const key = it.type + ":" + it.label + (it.id ? "#" + it.id : ""); (miss[key] = miss[key] || []).push(p); } }
     }
     res[k] = { pages:list.length, sampled:sample.length, missing:Object.entries(miss).map(([m, ps]) => ({ item:m, n:ps.length, eg:ps[0] })) }; bad += res[k].missing.length;
   }
-  fs.writeFileSync(path.join(__dirname, "gate.json"), JSON.stringify(res, null, 1));
+  fs.writeFileSync(path.join(__dirname, "gate.json"), JSON.stringify(res, null, 1)); if (Object.keys(moved).length) console.log("moved pages compared at their target: " + Object.keys(moved).length + " (e.g. " + Object.entries(moved).slice(0, 3).map(([a, b]) => a + " -> " + b).join(", ") + ")");
   for (const [k, r] of Object.entries(res)) if (r.missing.length) console.log(k + ": " + r.missing.map(m => m.item + " (" + m.n + ", " + m.eg + ")").join(" | "));
   console.log(`gate: ${Object.keys(res).length} templates, ${Object.values(res).reduce((a, r) => a + r.sampled, 0)} pages, ${bad} missing item kinds`); process.exitCode = bad ? 1 : 0;
 }

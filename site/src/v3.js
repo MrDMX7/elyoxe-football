@@ -133,6 +133,9 @@
   R.PP = (root && root.PP) || null;
   // W2.7: on team pages every fixture row carries its competition's crest
   var mr0 = R.matchRow; R.matchRow = function(m, o){ var h = mr0.apply(R, arguments).replace(/<\/(a|div)>$/, function(x){ return R.chan(m) + x; }), team = (o && o.crest) || (root && root.document && root.document.body && root.document.body.dataset.page === "team");
+    // W4.6: one spoken line per row («اليمن 0، قطر 1، مباشر الدقيقة 86»); client re-renders rebuild it with the row
+    if (m && m.home && m.away && /^<a /.test(h)){ var hn = m.home.name_ar || m.home.name || "", an = m.away.name_ar || m.away.name || "", s = m.score, mn = String(m.minute || "").replace(/'/g, ""), st = R.isLive(m) ? "مباشر" + (mn ? " " + ((R.periodAr && R.periodAr(mn)) || "الدقيقة " + mn) : "") : m.status === "finished" ? "انتهت" : m.status === "scheduled" ? (m.time_tbd ? "الموعد مب محدد" : "الساعة " + R.hhmm(m.kickoff_uae)) : "";
+      var lbl = s && m.status !== "scheduled" ? hn + " " + s.home + "، " + an + " " + s.away : hn + " ضد " + an; h = h.replace(/^<a /, '<a aria-label="' + esc(lbl + (st ? "، " + st : "")) + '" '); }
     return team && m && m.comp ? h.replace(/(<span class="t h[^"]*">)/, '$1<img class="clg" src="/lg/' + m.comp + '.png" alt="" loading="lazy" onerror="this.remove()">') : h; };
   // W3.4: the visitor's channel on every upcoming or live row: the first broadcaster in their country (+ «مجاني»); UAE in the prerender
   R.CHN = (root && root.CHN_AE) || {};

@@ -318,10 +318,10 @@
   document.addEventListener("click", function(e){ var b = e.target.closest("[data-copy],[data-copy-from]"); if (!b) return; var t = b.dataset.copy || ((document.querySelector(b.dataset.copyFrom) || {}).innerText || "");
     (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function(){ var o = b.textContent; b.textContent = "انسخ ✓"; setTimeout(function(){ b.textContent = o; }, 1500); }, function(){}); });
   // «اسأل تيفو» (76)
-  var af = $("#askf"); if (af) af.onsubmit = function(e){ e.preventDefault(); var q = $("#askq").value.trim(); if (q.length < 4) return; set("#aska", '<p class="muted">لحظة…</p>');
+  var af = $("#askf"); if (af) af.onsubmit = function(e){ e.preventDefault(); var q = $("#askq").value.trim(); if (q.length < 4) return; set("#aska", '<p class="muted">لحظة…</p>'); var sb = af.querySelector("button"); if (sb) sb.disabled = true; var done = function(){ if (sb) sb.disabled = false; };   // W4.6: no double send
     fetch("/api/tifo/ask", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ q:q }) }).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
-      .then(function(x){ set("#aska", x.ok ? '<div class="ai"><p>' + R.esc(x.j.answer) + "</p></div>" : '<p class="note">' + R.esc((x.j && (x.j.error || x.j.message)) || "ما قدرنا نجاوب الحين") + "</p>"); })
-      .catch(function(){ set("#aska", '<p class="note">ما قدرنا نجاوب الحين، جرّب بعد شوي.</p>'); }); };
+      .then(function(x){ set("#aska", x.ok ? '<div class="ai"><p>' + R.esc(x.j.answer) + "</p></div>" : '<p class="note">' + R.esc((x.j && (x.j.error || x.j.message)) || "ما قدرنا نجاوب الحين") + "</p>"); done(); })
+      .catch(function(){ set("#aska", '<p class="note">ما قدرنا نجاوب الحين، جرّب بعد شوي.</p>'); done(); }); };
   // commentator mode (177): the press sheet full screen, big type, the live score on top, facts cycling every 8 s
   document.addEventListener("click", function(e){ var b = e.target.closest("#commbtn"); if (!b) return; var p = $(".press"); if (!p) return;
     var on = !document.body.classList.contains("comm"); document.body.classList.toggle("comm", on); b.textContent = on ? "سكّر وضع المعلّق" : "وضع المعلّق";
@@ -340,7 +340,12 @@
   // 235 round story: the table re-sorts as each result lands (FLIP via --i row index)
   (function(){ var d = $("#storydata"); if (!d) return; var snaps = JSON.parse(d.textContent), rows = {}; document.querySelectorAll(".stbl li").forEach(function(li){ rows[li.dataset.t] = li; });
     function show(k){ (snaps[k] || []).forEach(function(x, i){ var li = rows[x[0]]; if (!li) return; li.style.setProperty("--i", i); li.querySelector(".rk").textContent = i + 1; li.querySelector(".pt").textContent = x[1]; li.classList.toggle("moved", k > 0 && snaps[k - 1] && snaps[k - 1].findIndex(function(y){ return y[0] === x[0]; }) !== i); }); }
-    if ("IntersectionObserver" in window){ var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting){ document.querySelectorAll(".step.on").forEach(function(s){ s.classList.remove("on"); }); e.target.classList.add("on"); show(+e.target.dataset.s); } }); }, { rootMargin:"-45% 0px -45% 0px" }); document.querySelectorAll(".step").forEach(function(s){ io.observe(s); }); } else show(snaps.length - 1); })();
+    // W4.4: «شغّل الجولة» plays each result onto the table; reduced motion jumps to the end
+    var play = $("#stplay"), now = $("#stnow"), steps = [].slice.call(document.querySelectorAll(".steps .step")), tmr = null;
+    if (play && now){ play.onclick = function(){ clearInterval(tmr); var RMq = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches, k = RMq ? snaps.length - 1 : 0;
+        function at(k){ show(k); var st = steps[k]; now.innerHTML = st ? st.innerHTML : ""; R.localize && R.localize(now); play.textContent = k >= snaps.length - 1 ? "شغّلها مرة ثانية" : "شغّالة…"; }
+        at(k); if (RMq) return; tmr = setInterval(function(){ k++; if (k >= snaps.length){ clearInterval(tmr); return; } at(k); }, 1400); }; }
+    else if ("IntersectionObserver" in window){ var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting){ document.querySelectorAll(".step.on").forEach(function(s){ s.classList.remove("on"); }); e.target.classList.add("on"); show(+e.target.dataset.s); } }); }, { rootMargin:"-45% 0px -45% 0px" }); document.querySelectorAll(".step").forEach(function(s){ io.observe(s); }); } else show(snaps.length - 1); })();
   // 204/205: where to watch in the visitor's country (research/broadcast_by_country.json); UAE list with a note when missing
   var BCD = null; function bcData(){ return BCD ? Promise.resolve(BCD) : fetch("/assets/bc." + B.dataset.bc + ".json").then(function(r){ return r.json(); }).then(function(x){ BCD = x; return x; }).catch(function(){ return {}; }); }
   function freeIn(comp){ var c = country(), e = BCD && BCD[c] && BCD[c][comp]; if (!e || !e.b || !e.b.length) return true; return e.b.some(function(b){ return b[1]; }); }   // unknown channel: keep it (W1.2b)
@@ -381,7 +386,7 @@
   (function(){ var m = $("#nlmsg"), q = null; try { q = new URLSearchParams(location.search); } catch (e){}
     if (m && q){ if (q.has("ok")) m.innerHTML = '<p class="note">' + (q.get("ok") === "1" ? "تم اشتراكك، النشرة توصلك كل خميس." : "الرابط مب صحيح أو انتهى.") + "</p>"; if (q.has("bye")) m.innerHTML = '<p class="note">' + (q.get("bye") === "1" ? "انلغى اشتراكك." : "الرابط مب صحيح.") + "</p>"; }
     document.querySelectorAll(".nlform").forEach(function(f){ f.onsubmit = function(e){ e.preventDefault(); var em = f.querySelector("input[type=email]").value.trim(), out = f.previousElementSibling && f.previousElementSibling.id === "nlmsg" ? f.previousElementSibling : null;
-      var say = function(t){ if (out) out.innerHTML = '<p class="note">' + R.esc(t) + "</p>"; else alert(t); };
+      var sb = f.querySelector("button"); if (sb) sb.disabled = true; var say = function(t){ if (sb) sb.disabled = false; if (out) out.innerHTML = '<p class="note">' + R.esc(t) + "</p>"; else alert(t); };
       fetch("/api/tifo/subscribe", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ email:em, country:country() }) }).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
         .then(function(x){ if (x.ok) say(x.j.already ? "أنت مشترك من قبل." : "وصلك إيميل تأكيد، افتحه واضغط الزر."); else say((x.j && (x.j.error || x.j.message)) || "صار خطأ، جرّب مرة ثانية."); }).catch(function(){ say("صار خطأ، جرّب مرة ثانية."); }); }; }); })();
   // 333 watch mode: the favourite club's live or next match, big
@@ -412,7 +417,11 @@
   // 230 countdown timers
   (function(){ var els = document.querySelectorAll(".cdt[data-u]"); if (!els.length) return; function tick(){ els.forEach(function(el){ var d = Math.max(0, Date.parse(el.dataset.u) - Date.now()), dd = Math.floor(d / 864e5), hh = Math.floor(d / 36e5) % 24, mm = Math.floor(d / 6e4) % 60; el.textContent = (dd ? dd + " يوم " : "") + (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm; }); } tick(); setInterval(tick, 30000); })();
   // Arab pages (build_arabs.cjs): country filters, nations head-to-head, TV guide, results archive, birthdays and club anniversaries
-  [["#abf", "tr[data-c]"], ["#trf", "li[data-c]"]].forEach(function(x){ var s = $(x[0]); if (!s) return; s.onchange = function(){ document.querySelectorAll(x[1]).forEach(function(r){ r.hidden = !!s.value && r.dataset.c !== s.value; }); }; });
+  [["#abf", "tr[data-c]"], ["#trf", "li[data-c]"]].forEach(function(x){ var s = $(x[0]); if (!s) return; s.onchange = function(){ document.querySelectorAll(x[1]).forEach(function(r){ r.hidden = !!s.value && r.dataset.c !== s.value; }); if (s.id === "trf") cap(); }; });
+  // W4.4 /transfers/: opens on the visitor's country (when it has transfers) and the latest 30, with «ورني الكل»
+  var trf = $("#trf"), trAll = false; function cap(){ var n = 0, rows = [].slice.call(document.querySelectorAll(".trl li[data-c]")); rows.forEach(function(r){ var vis = !trf.value || r.dataset.c === trf.value; r.hidden = !vis || (!trAll && ++n > 30); }); var more = $("#trmore"), over = rows.filter(function(r){ return !trf.value || r.dataset.c === trf.value; }).length > 30;
+    if (!more){ more = document.createElement("button"); more.type = "button"; more.id = "trmore"; more.className = "ghost"; more.textContent = "ورني الكل"; more.onclick = function(){ trAll = true; cap(); }; var l = $(".trl"); if (l) l.parentNode.insertBefore(more, l.nextSibling); } more.hidden = trAll || !over; }
+  if (trf){ var tc = country(); if (tc && [].some.call(trf.options, function(o){ return o.value === tc; })) trf.value = tc; cap(); }
   (function(){ var a = $("#nha"), b = $("#nhb"), d = $("#nhdata"); if (!a || !d) return; var D = JSON.parse(d.textContent), c = country();
     a.value = D.n[c] ? c : "AE"; b.value = a.value === "SA" ? "AE" : "SA";
     function show(){ var x = D.m[a.value] && D.m[a.value][b.value], A = D.n[a.value], Bn = D.n[b.value], o = $("#nhout");

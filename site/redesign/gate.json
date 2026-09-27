@@ -4,6 +4,11 @@
   "sampled": 1,
   "missing": []
  },
+ "arabs-europe": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
  "arabs": {
   "pages": 1,
   "sampled": 1,
@@ -170,6 +175,11 @@
   "missing": []
  },
  "newsletter": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "offline": {
   "pages": 1,
   "sampled": 1,
   "missing": []
