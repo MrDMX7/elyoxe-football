@@ -728,6 +728,7 @@ def main():
     ap.add_argument("--retry-generated", action="store_true")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--kind", choices=["players", "coaches"], default="players")
+    ap.add_argument("--no-wikidata", action="store_true", help="skip the Wikidata pass (Gemini only; --retry-generated later)")
     a = ap.parse_args()
     global OUT
     if a.kind == "coaches":
@@ -765,7 +766,7 @@ def main():
     if a.limit:
         todo = todo[:a.limit]
     log(f"{len(out)} already done, {len(todo)} to resolve")
-    if todo:
+    if todo and not a.no_wikidata:
         resolve_wikidata(todo, pool, teams, cache, a.pause, out, save)
     if not a.no_gemini:
         resolve_trim(out, save)
