@@ -991,6 +991,7 @@ class Poller:
             ("suspensions", 60, lambda: X2.suspensions_and_absences(self)),
             ("league_books", 720, lambda: X2.league_books(self)),
             ("club_records", 360, lambda: X2.club_records_step(self)),
+            ("transitions", 1440, lambda: MO.transitions(self)),
             ("continental_history", 1440, lambda: AR.continental_history(self)),
             ("arab_coaches", 360, lambda: AR.coaches(self)),
             ("arab_referees", 360, lambda: AR.referees(self)),

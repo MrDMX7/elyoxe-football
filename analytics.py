@@ -628,6 +628,7 @@ def national(p):
     try:
         import extra2
         extra2.nations_h2h(p, rows + extra)
+        extra2.worldcup(p, rows)
     except ERRORS as e:
         p.store.fail("national:h2h", e)
     try:

@@ -315,7 +315,7 @@ def callups(p):
 
 
 # ------------------------------------------------------------------ careers + milestones (241, 274)
-def careers(p, limit=15):
+def careers(p, limit=25):
     """playerData for the players who matter most (league top-30 scorers and appearances, Arab players abroad),
     weekly per player."""
     want = []
@@ -325,6 +325,10 @@ def careers(p, limit=15):
             want += [(cid, e["player"]["id"]) for e in ((stats.get("lists") or {}).get(k) or [])[:30]]
     ab = p.store.get_json("arabs/abroad.json") or {}
     want += [(None, x["id"]) for x in ab.get("players", [])]
+    for cid in leagues():          # every regular (>= 900 league minutes) for the league-transition study (336)
+        for pid, r in ((p.aux("ptables").get(str(cid)) or {}).get("players") or {}).items():
+            if r["minutes"] >= 900:
+                want.append((cid, int(pid)))
     cache = p.aux("careers")
     n = 0
     for cid, pid in want:
@@ -494,3 +498,24 @@ def _fixture_cup(p, cid, fx, ratings, params, st, n=5000):
     out["method"] = ("current round from FotMob fixtures, later rounds a random redraw of the survivors each simulation; "
                      "Tifo club rating; knockout draws settled 50/50")
     return out
+
+
+
+def transitions(p):
+    covered = set(leagues()) | {42}
+    res = IN.transitions(p.aux("careers"), covered)
+    names = {c["id"]: c["name_ar"] for c in p.comps}
+    summary = sorted(({"pair": k, "from": int(k.split("->")[0]), "to": int(k.split("->")[1]),
+                       "from_ar": names.get(int(k.split("->")[0])), "to_ar": names.get(int(k.split("->")[1])),
+                       **{kk: v[kk] for kk in ("n", "median_rating_change", "median_ga_per_app_change")}}
+                      for k, v in res.items()), key=lambda x: -x["n"])
+    p.store.put_json("arabs/transitions.json", {"generated": iso(p.now()), "pairs": summary, "detail": res,
+                                                "players_with_careers": len(p.aux("careers")),
+                                                "method": "FotMob career rows per player, league and season (apps, goals, assists, FotMob "
+                                                          "season rating); a transition = consecutive seasons with >= 8 league apps in two "
+                                                          "different covered leagues since 2016; change = after - before; per appearance, "
+                                                          "not per 90 (career rows carry no minutes)",
+                                                "limits": "selection bias (only players still good enough to be a regular in a covered league "
+                                                          "now, whose careers we fetched); small n for most pairs; ratings are league-relative, "
+                                                          "so a drop after moving up can mean a harder league, not a worse player"},
+                     cache="static")

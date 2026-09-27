@@ -703,3 +703,48 @@ def club_records_step(p, limit=80):
         cur += 1
         n += 1
     p.aux("cursor")["club_records"] = cur
+
+
+
+# ------------------------------------------------------------------ 337 World Cup
+GOALS_URL = "https://raw.githubusercontent.com/martj42/international_results/master/goalscorers.csv"
+
+
+def worldcup(p, rows):
+    import csv, io
+    teams = {c["martj42"]: c for c in config.countries() if c.get("arab")}
+    try:
+        text = urllib.request.urlopen(urllib.request.Request(GOALS_URL, headers={"User-Agent": UA}), timeout=40).read().decode("utf-8")
+        scorers = list(csv.DictReader(io.StringIO(text)))
+    except ERRORS as e:
+        p.store.fail("worldcup:goalscorers", e)
+        scorers = []
+    by_match = {}
+    for g in scorers:
+        by_match.setdefault((g["date"], g["home_team"], g["away_team"]), []).append(
+            {"team": g["team"], "scorer": g["scorer"], "minute": g.get("minute"), "own_goal": g.get("own_goal") == "TRUE",
+             "penalty": g.get("penalty") == "TRUE"})
+    out = {}
+    for date, h, a, hs, as_, tour, neutral, *venue in rows:
+        if tour != "FIFA World Cup" or not (h in teams or a in teams):
+            continue
+        for me in (h, a):
+            if me not in teams:
+                continue
+            c = teams[me]
+            opp = a if me == h else h
+            gf, ga = (hs, as_) if me == h else (as_, hs)
+            t = out.setdefault(c["iso2"], {"team": c["fotmob_team"], "name_ar": c["name_ar"], "tournaments": {}})
+            t["tournaments"].setdefault(date[:4], []).append({
+                "date": date, "opponent": opp, "gf": gf, "ga": ga, "result": "W" if gf > ga else "D" if gf == ga else "L",
+                "venue": {"city": venue[0], "country": venue[1]} if venue and venue[0] else None,
+                "goals": [x for x in by_match.get((date, h, a), []) if x["team"] == me]})
+    for t in out.values():
+        allm = [m for ms in t["tournaments"].values() for m in ms]
+        t["summary"] = {"tournaments": len(t["tournaments"]), "played": len(allm), "won": sum(m["result"] == "W" for m in allm),
+                        "drawn": sum(m["result"] == "D" for m in allm), "lost": sum(m["result"] == "L" for m in allm),
+                        "gf": sum(m["gf"] for m in allm), "ga": sum(m["ga"] for m in allm)}
+    p.store.put_json("arabs/worldcup.json", {"generated": iso(p.now()), "teams": out,
+                                             "source": "github.com/martj42/international_results results.csv + goalscorers.csv (CC0)",
+                                             "note": "World Cup finals matches only; goals list scorers where the dataset has them"},
+                     cache="static")

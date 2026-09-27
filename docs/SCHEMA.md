@@ -321,6 +321,8 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `team/{id}/records.json` | per club: biggest win and loss since 2010/11, longest winning/unbeaten/losing/scoring runs, most appearances and top scorers this season |
 | `comp/{id}/promoted.json` | this season's promoted clubs vs past newcomers (final rank and points, and `pts_after_same_games`) |
 | `comp/{id}/late-goals.json` | goals after 90' that turned a draw into a win or a loss into a draw, with team counts |
+| `arabs/transitions.json` | league-to-league moves since 2016: per pair (e.g. `538->536`) n, median rating change and median (goals+assists)/appearance change, with players. Method: FotMob career rows per season and league (≥ 8 apps both sides). Limits: selection bias, small n, league-relative ratings, per appearance not per 90 |
+| `arabs/worldcup.json` | every World Cup finals match of Arab national teams, grouped by team and tournament, with scorers where martj42 goalscorers.csv has them, plus W/D/L summaries |
 | `archive/index.json`, `archive/{id}.json` | memorable matches with full event data: derbies (competitions.yaml `derbies`), cup finals, Super Cups since 2016/17 |
 
 - **Competitions (`index.json`, `competitions.yaml`):** each has `country: {iso2, name_ar}`, or `null` plus `region` (gulf, arab, asia, africa, europe, world). `teams.json` and `team/{id}.json` (`country_info`) give each club its domestic country and each national team its own country (`national: true`).

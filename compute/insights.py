@@ -436,6 +436,49 @@ def career(pd):
                                         "goals": _n(x.get("goals")), "assists": _n(x.get("assists")), "active": x.get("active"),
                                         "loan": ((x.get("transferType") or {}).get("text") or "") == "on loan"}
                                        for x in c.get("teamEntries") or []]
+    seasons = []
+    for x in ((ci.get("senior") or {}).get("seasonEntries") or []):
+        for t in x.get("tournamentStats") or []:
+            if t.get("isFriendly") or not t.get("leagueId"):
+                continue
+            seasons.append({"season": t.get("seasonName") or x.get("seasonName"), "team": x.get("teamId"), "comp": t.get("leagueId"),
+                            "apps": _n(t.get("appearances")), "goals": _n(t.get("goals")), "assists": _n(t.get("assists")),
+                            "rating": _f((t.get("rating") or {}).get("rating"))})
+    out["league_seasons"] = seasons
+    return out
+
+
+def _f(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def transitions(careers, covered, since="2016"):
+    """League A season -> league B next season for the same player (covered leagues only).
+    Per player: change in rating and in (goals + assists) per appearance; aggregated by league pair."""
+    pairs = {}
+    for pid, v in careers.items():
+        rows = [r for r in (v.get("career") or {}).get("league_seasons") or [] if r["comp"] in covered and (r["apps"] or 0) >= 8
+                and (r["season"] or "") >= since]
+        rows.sort(key=lambda r: r["season"] or "")
+        for a, b in zip(rows, rows[1:]):
+            if a["comp"] == b["comp"] or a["season"] == b["season"]:
+                continue
+            ga = lambda r: ((r["goals"] or 0) + (r["assists"] or 0)) / r["apps"]  # noqa: E731
+            item = {"player": int(pid), "name": (v.get("info") or {}).get("name"), "from": a["comp"], "to": b["comp"],
+                    "season_before": a["season"], "season_after": b["season"],
+                    "rating_change": round(b["rating"] - a["rating"], 2) if a["rating"] and b["rating"] else None,
+                    "ga_per_app_change": round(ga(b) - ga(a), 3)}
+            pairs.setdefault(f"{a['comp']}->{b['comp']}", []).append(item)
+    out = {}
+    for k, xs in pairs.items():
+        rc = sorted(x["rating_change"] for x in xs if x["rating_change"] is not None)
+        gc = sorted(x["ga_per_app_change"] for x in xs)
+        med = lambda v: (v[len(v) // 2] if len(v) % 2 else (v[len(v) // 2 - 1] + v[len(v) // 2]) / 2) if v else None  # noqa: E731
+        out[k] = {"n": len(xs), "median_rating_change": med(rc), "median_ga_per_app_change": round(med(gc), 3) if gc else None,
+                  "players": xs}
     return out
 
 
