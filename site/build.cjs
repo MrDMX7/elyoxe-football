@@ -319,7 +319,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
 
   // ---- 7c. Tifo Cast (161): only when approved; audio copied next to the pages (19, the round recap, was dropped 2026-09-27)
   const casts = [];
-  if (APPROVED.podcast) for (const [k, p] of Object.entries(AIC)) if (fs.existsSync(path.join(CACHE, "ai/podcast", k + ".mp3"))) casts.push({ kind:"podcast", key:k, title:p.title, file:`/audio/podcast-${k}.mp3`, src:path.join(CACHE, "ai/podcast", k + ".mp3"), lines:p.lines });
+  if (APPROVED.podcast) for (const [k, p] of Object.entries(AIC)) if (!p.held && fs.existsSync(path.join(CACHE, "ai/podcast", k + ".mp3"))) casts.push({ kind:"podcast", key:k, title:p.title, file:`/audio/podcast-${k}.mp3`, src:path.join(CACHE, "ai/podcast", k + ".mp3"), lines:p.lines });
   if (casts.length){
     fs.mkdirSync(path.join(OUT, "audio"), { recursive:true }); casts.forEach(c => fs.copyFileSync(c.src, path.join(OUT, c.file)));
     casts.sort((a, b) => b.key.localeCompare(a.key));

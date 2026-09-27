@@ -197,18 +197,33 @@ def round_ctx(fx, st, detail):
 
 def do_podcast(ctx, audio):
     wk = dt.date.today().strftime("%G-%V"); sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
-    if cached("podcast", wk, sig) and (not audio or os.path.exists(os.path.join(CACHE, "podcast", wk + ".mp3"))): return "cached"
-    out = gemini(POD_SYS, ctx, POD_SCHEMA, temp=0.8, tokens=12000)
-    if not out: return "fail"
-    # both hosts address the listener in the masculine and each other by name only, so one lexicon pass fits every line
-    lines = []
-    for l in out["lines"]:
-        t = emirati(l["text"]); lines.append({"who": l["who"], "text": t, "spoken": spoken(t)})
+    jf, mp3 = os.path.join(CACHE, "podcast", wk + ".json"), os.path.join(CACHE, "podcast", wk + ".mp3")
+    if cached("podcast", wk, sig):
+        if json.load(open(jf)).get("held"): return "held"   # this week failed a gate: no new script or TTS spend until next week
+        if not audio or os.path.exists(mp3): return "cached"
+    # Orus reads «الحين» as «الآن»: a Hamed line with it means a new script (2 retries), else no episode this week
+    for attempt in range(3):
+        out = gemini(POD_SYS, ctx, POD_SCHEMA, temp=0.8, tokens=12000)
+        if not out: return "fail"
+        # both hosts address the listener in the masculine and each other by name only, so one lexicon pass fits every line
+        lines = []
+        for l in out["lines"]:
+            t = emirati(l["text"]); lines.append({"who": l["who"], "text": t, "spoken": spoken(t)})
+        leak = [n for n, l in enumerate(lines) if l["who"] == "hamed" and "الحين" in l["text"]]
+        if not leak: break
+        print(f"podcast {wk}: «الحين» in Hamed lines {leak}, attempt {attempt + 1}", file=sys.stderr)
     rec = {"week": wk, "title": emirati(out["title"]), "lines": lines, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}
+    if leak: rec["held"] = f"«الحين» still in Hamed lines {leak} after 3 scripts; no audio this week"
     save("podcast", wk, rec)
+    if leak: print("podcast held:", rec["held"], file=sys.stderr); return "held"
     if audio:   # Gemini TTS (Orus = حامد, Aoede = مها): writes the mp3 next to the json and adds qa/voices
         from cast_voice import synth
-        synth(os.path.join(CACHE, "podcast", wk + ".json"))
+        synth(jf)
+        ep = json.load(open(jf)); bad = [q["line"] for q in ep.get("qa", []) if not q.get("take") or q.get("flags")]
+        if bad:   # a flagged line: this week's mp3 is set aside, the site keeps last week's episode
+            os.replace(mp3, os.path.join(CACHE, "podcast", wk + ".held.mp3")) if os.path.exists(mp3) else None
+            ep["held"] = f"TTS QA flagged lines {bad}; mp3 kept as {wk}.held.mp3, not published"; json.dump(ep, open(jf, "w"), ensure_ascii=False, indent=1)
+            print("podcast held:", ep["held"], file=sys.stderr); return "held"
     return "new"
 
 # ---- 301: «أهم 5 أشياء اليوم» on the home page (gated like every generated text)
