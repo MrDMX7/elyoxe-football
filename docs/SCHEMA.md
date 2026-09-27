@@ -125,6 +125,7 @@ Everything in the Match summary, plus the following:
 | `highlights` | `{url, image, source}`. For UAE matches this is the official `@uaeproleague` YouTube video, as FotMob links it |
 | `h2h` | `{summary: {home_wins, draws, away_wins}, matches: [{id, kickoff_utc, comp, home, away, score}]}`, at the full depth FotMob gives (16–27 meetings for Pro League pairs) |
 | `weather_source` | FotMob's current-weather block, when present |
+| `coverage_events` | `{subs, cards}`: whether the source's event feed reports them for this match. `subs: false` = past 60' (or finished), lineups present, not one substitution event (the source did not report them; it does not mean nobody came on). `cards: false` = the same case with no card either (with subs reported, zero cards is a real zero). The Gulf Cup (329) feed has only goals and half markers live; cards appear later on some matches, substitutions never (checked 2026-09-27 on all 7 matches) |
 
 **Commentary feed:** every event has a stable `event_id`: `{match}-{type}-{minute}-{added}-{player}`, plus `-2`, `-3` for identical repeats.
 - It depends only on the event itself, not its position, so an event FotMob adds late does not renumber the others. The site can key generated commentary lines by `event_id`.
@@ -362,6 +363,17 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | Coach tenure dates | FotMob gives coach history per season, not appointment dates. Pressure uses the current coach's games this season |
 | Distance for AFC away trips | Known only once that match's detail has been fetched (backfill), because the venue comes from the match detail |
 | Kickoff times for later Pro League rounds | FotMob has rounds 1–6 (42 matches). uaepl.ae has all 182 pairings, but rounds 7–26 have no dates yet (`date_tbd`) |
+
+## Re-polls after full time (thin coverage)
+
+A finished match whose `coverage_events` has `subs` or `cards` false is fetched again 30, 60, 180 and 1,440 minutes after
+full time (`REPOLL_MINUTES`; FotMob filled in Gulf Cup cards a day later). Events the new copy has are published (and
+fed to the ledger); an event an earlier copy had that the new one lacks is kept; live `first_seen` stamps are kept. The
+re-polls stop early once both flags are true. State: `repoll` in `state/poller.json`.
+
+No second source for substitutions was found (checked 2026-09-27): ESPN lists the Gulf Cup (`global.gulf_cup`) with
+scores only (no lineups, key events or commentary, even for finished games); SofaScore's API answers 403; TheSportsDB's
+free key returns 3 events a day and no Gulf Cup.
 
 ## Analytics steps that were not ready
 

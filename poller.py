@@ -311,6 +311,9 @@ class Poller:
                 full["winprob_prematch"] = {"p": [round(x, 3) for x in pm[:3]], "source": pm[3]} if pm else {"p": list(WP.PRIOR), "source": "base-rates"}
             except Exception as e:
                 self.store.fail("winprob", f"{mid}: {e}")
+        full["coverage_events"] = coverage_events(d)
+        if d["status"] == S.FINISHED:
+            self.plan_repoll(d, full, why)
         cache = "hot" if d["status"] in S.LIVE_STATUSES else "static" if d["status"] == S.FINISHED else "warm"
         self.store.put_json(f"match/{mid}.json", full, cache=cache, validate=S.validate_detail, health_key=f"match:{why}")
         self.store.ok(f"match:{why}")
@@ -320,6 +323,48 @@ class Poller:
         if d["status"] == S.FINISHED and d.get("comp") in self.comp_ids:
             self.add_ledger(d)
         return d
+
+    # ------------------------------------------------------------------ thin-coverage re-polls after full time
+    def plan_repoll(self, d, full, why):
+        """Finished match whose feed lacks subs or cards: fetch it again REPOLL_MINUTES after full time (FotMob
+        sometimes fills events in later), and keep any event an earlier copy had that the new one lacks."""
+        mid = str(d["id"])
+        rp = self.st.setdefault("repoll", {})
+        cov = full["coverage_events"]
+        if why == "repoll":
+            prev = self.store.get_json(f"match/{mid}.json") or {}
+            seen = {e.get("event_id"): e.get("first_seen") for e in prev.get("events") or [] if e.get("first_seen")}
+            for e in full.get("events") or []:
+                if e.get("event_id") in seen:
+                    e["first_seen"] = seen[e["event_id"]]       # keep the live stamps of events we already had
+            have = {e.get("event_id") for e in full.get("events") or []}
+            kept = [e for e in prev.get("events") or [] if e.get("event_id") and e["event_id"] not in have]
+            if kept:
+                full["events"] = sorted(full["events"] + kept, key=lambda e: (e.get("minute") or 0, e.get("added") or 0))
+            new = len(have - {e.get("event_id") for e in prev.get("events") or []})
+            if new:
+                self.note(f"repoll {mid}: {new} new events from the source")
+            if cov["subs"] and cov["cards"]:
+                rp.pop(mid, None)           # the feed is complete now
+            return
+        if mid in rp or cov["subs"] and cov["cards"]:
+            return
+        ended = ((d.get("periods") or {}).get("gameEnded")) or iso(self.now())
+        if _age_min(ended, self.now()) <= 6 * 60:          # only matches that just ended, not the backfill
+            rp[mid] = {"ft": ended, "done": []}
+
+    def repolls(self):
+        rp = self.st.get("repoll") or {}
+        for mid, r in list(rp.items()):
+            if not self.has_time(8):
+                return
+            age = _age_min(r["ft"], self.now())
+            todo = [x for x in REPOLL_MINUTES if x <= age and x not in r["done"]]
+            if todo:
+                r["done"] += todo
+                self.fetch_detail(int(mid), "repoll")
+            if len(r["done"]) >= len(REPOLL_MINUTES) or age > REPOLL_MINUTES[-1] + 120:
+                rp.pop(mid, None)
 
     def live_pass(self, n):
         now = self.now()
@@ -927,6 +972,7 @@ class Poller:
                 break
             if comp.get("kind") == "league" and self.due("prev", 1440, comp["id"]):
                 self.prev_season(comp)
+        self.repolls()
         if self.has_time(8):
             self.backfill(2 if live else c.get("backfill_per_run", 6))
         if not live and self.has_time(8):
@@ -1180,6 +1226,24 @@ class Poller:
         return {"mode": self.mode, "written": len(self.store.written), "unchanged": self.store.skipped_same,
                 "requests": HTTP.network_calls - self.requests_before, "seconds": round(self.clock() - self.t0, 1),
                 "refused": self.store.refused}
+
+
+REPOLL_MINUTES = (30, 60, 180, 1440)   # after full time, for matches whose feed lacks subs or cards (1440: FotMob
+                                       # added Gulf Cup cards a day later, 2026-09-27)
+
+
+def coverage_events(d):
+    """What the source's event feed covers for this match. subs = false when the match is past 60' (or finished)
+    and has lineups but not one substitution event: the source did not report them (a real match always has some).
+    cards = false in the same case when there is no card either; with subs reported, zero cards is a real zero."""
+    ev = d.get("events") or []
+    lu = d.get("lineups") or {}
+    has_lineups = any((lu.get(s) or {}).get("starters") for s in ("home", "away"))
+    past60 = d.get("status") == S.FINISHED or (d.get("status") in S.LIVE_STATUSES and _minute_num(d.get("minute"), d["status"]) >= 60)
+    subs = any(e["type"] == "sub" for e in ev)
+    cards = any(e["type"] in ("yellow", "second_yellow", "red") for e in ev)
+    thin = past60 and has_lineups
+    return {"subs": subs or not thin, "cards": cards or subs or not thin}
 
 
 def _ses_send(subject, body):
