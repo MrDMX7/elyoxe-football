@@ -558,7 +558,7 @@
   S.firstGoal = function(f){
     if (!f || !f.teams || !Object.keys(f.teams).length) return "";
     var ids = Object.keys(f.teams).sort(function(a, b){ return (f.teams[b].scored_first.win_pct || 0) - (f.teams[a].scored_first.win_pct || 0); });
-    return tb(["الفريق", "لما سجل أول", "لما استقبل أول", "قلبها فوز"], ids.map(function(id){ var t = f.teams[id]; return '<tr><td class="tm">' + tl(id) + "</td><td>" + wdl(t.scored_first) + "</td><td>" + wdl(t.conceded_first) + "</td><td>" + (t.comebacks_won || 0) + "</td></tr>"; })) + noteSrc("الأرقام فوز-تعادل-خسارة. «قلبها فوز» = استقبل أول وفاز.");
+    return tb(["الفريق", "لما سجل أول", "لما استقبل أول", "قلبها فوز"], ids.map(function(id){ var t = f.teams[id]; return '<tr><td class="tm">' + tl(id) + "</td><td>" + wdl(t.scored_first) + "</td><td>" + wdl(t.conceded_first) + "</td><td>" + (t.comebacks_won || 0) + "</td></tr>"; })) + noteSrc("الأرقام من اليسار: فوز-تعادل-خسارة. «قلبها فوز» = استقبل أول وفاز.");
   };
   S.dropped = function(d){
     if (!d || !d.teams) return ""; var ids = Object.keys(d.teams); if (!ids.some(function(id){ return d.teams[id].dropped_from_winning || d.teams[id].won_from_losing; })) return "";
@@ -578,7 +578,7 @@
   };
   S.signings = function(s){
     if (!s || !s.signings || !s.signings.length) return "";
-    return '<ol class="lead">' + s.signings.filter(function(x){ return x.minutes > 0; }).slice(0, 10).map(function(x, i){ return '<li><span class="num muted">' + (i + 1) + '</span><span class="who">' + R.logo(team(x.team), "sm") + pl(x.player.id, x.player.name) + ' <span class="muted small">' + R.tname(team(x.team)) + (x.from && x.from.id ? "، من " + R.tname(x.from) : "") + "، " + x.minutes + " دقيقة، تقييم " + fx(x.rating, 1) + "</span></span><b>" + fx(x.rating, 1) + "</b></li>"; }).join("") + "</ol>" + noteSrc("صفقات هالموسم مرتبة بتقييم اللاعب مع ناديه اليديد، وتقل للي لعب أقل من 900 دقيقة.");
+    return '<ol class="lead">' + s.signings.filter(function(x){ return x.minutes > 0; }).slice(0, 10).map(function(x, i){ return '<li><span class="num muted">' + (i + 1) + '</span><span class="who">' + R.logo(team(x.team), "sm") + pl(x.player.id, x.player.name) + ' <span class="muted small">' + R.tname(team(x.team)) + (x.from && x.from.id ? "، من " + R.tname(x.from) : "") + "، " + x.minutes + " دقيقة</span></span><b>" + fx(x.rating, 1) + "</b></li>"; }).join("") + "</ol>" + noteSrc("صفقات هالموسم مرتبة بتقييم اللاعب مع ناديه اليديد، وتقل للي لعب أقل من 900 دقيقة.");
   };
   var CHG = { draw_to_win:"قلب التعادل فوز", loss_to_draw:"قلب الخسارة تعادل" };
   S.lateGoals = function(l){
@@ -624,11 +624,11 @@
   var STK = { winning:"فوز ورا فوز", unbeaten:"بدون خسارة", losing:"خسارة ورا خسارة", scoring:"يسجل في كل مباراة" };
   S.teamRecords = function(r){
     if (!r || !r.matches) return ""; var li = [];
-    if (r.biggest_win) li.push('أكبر فوز <bdi dir="ltr" class="num">' + r.biggest_win.gf + "-" + r.biggest_win.ga + "</bdi> على " + R.tname(team(r.biggest_win.opponent)) + ' <span class="muted small">' + esc(r.biggest_win.date) + "</span>");
-    if (r.biggest_loss) li.push('أكبر خسارة <bdi dir="ltr" class="num">' + r.biggest_loss.gf + "-" + r.biggest_loss.ga + "</bdi> من " + R.tname(team(r.biggest_loss.opponent)) + ' <span class="muted small">' + esc(r.biggest_loss.date) + "</span>");
+    if (r.biggest_win) li.push('أكبر فوز <bdi dir="ltr" class="num">' + r.biggest_win.gf + "-" + r.biggest_win.ga + "</bdi> على " + R.tname(team(r.biggest_win.opponent)) + ' <span class="muted small"><bdi dir="ltr">' + esc(r.biggest_win.date) + "</bdi></span>");
+    if (r.biggest_loss) li.push('أكبر خسارة <bdi dir="ltr" class="num">' + r.biggest_loss.gf + "-" + r.biggest_loss.ga + "</bdi> من " + R.tname(team(r.biggest_loss.opponent)) + ' <span class="muted small"><bdi dir="ltr">' + esc(r.biggest_loss.date) + "</bdi></span>");
     Object.keys(STK).forEach(function(k){ var s = r.streaks && r.streaks[k]; if (s && s.length) li.push("أطول سلسلة " + STK[k] + ': <b class="num">' + s.length + "</b> مباراة" + (s.current ? ' <span class="muted small">(الحين ' + s.current + ")</span>" : "")); });
     var top = (r.top_scorers || []).filter(function(p){ return p.goals; }).slice(0, 3);
-    return '<ul class="facts-l">' + li.map(function(x){ return "<li>" + x + "</li>"; }).join("") + (top.length ? "<li>هدافين هالموسم: " + top.map(function(p){ return pl(p.player, p.name) + ' <span class="num">' + p.goals + "</span>"; }).join("، ") + "</li>" : "") + "</ul>" + noteSrc(r.matches + " مباراة من " + esc(r.since || "") + " في كل البطولات المسجّلة.");
+    return '<ul class="facts-l">' + li.map(function(x){ return "<li>" + x + "</li>"; }).join("") + (top.length ? "<li>هدافين هالموسم: " + top.map(function(p){ return "<bdi>" + pl(p.player, p.name) + '</bdi> <b class="num">' + p.goals + "</b>"; }).join("، ") + "</li>" : "") + "</ul>" + noteSrc(r.matches + ' مباراة من <bdi dir="ltr">' + esc(r.since || "") + "</bdi> في كل البطولات المسجّلة.");
   };
   S.heatmap = function(h){
     var ms = h && h.matches; if (!ms || ms.length < 20) return "";

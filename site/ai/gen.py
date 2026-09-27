@@ -13,7 +13,7 @@ applied again after generation; no tanween; male singular address, no ج suffix;
 Nothing is published until the owner approves a sample of each kind (approved.json). Every Gemini schema string has a
 maxLength (the loop-until-token-limit trap). Numbers become Emirati words only in the spoken (TTS) text.
 """
-import argparse, datetime as dt, hashlib, json, os, re, subprocess, sys, time, urllib.request
+import argparse, datetime as dt, hashlib, json, os, re, sys, time, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(HERE)
@@ -164,28 +164,18 @@ def do_preview(m, ctx):
     out = deep(out); out.update({"id": m["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("preview", str(m["id"]), out); return "new"
 
-# ---- 161: Tifo Cast, written for the ear, then voiced (audio: Polly for now, Gemini TTS once the owner picks the voices)
+# ---- 161: Tifo Cast, written for the ear, then voiced with Gemini TTS (ai/cast_voice.py)
 POD_SYS = STYLE + """
 المهمة: حلقة «تيفو كاست» الأسبوعية، حوار بين حامد ومها (صديقين يسولفون عن الجولة)، حوالي 5 دقايق (600 لين 750 كلمة).
 - حامد يبدا: «هلا والله، معاكم حامد» ومها تسلّم.
 - الاثنين يكلّمون المستمع بصيغة المذكر المفرد (عليك، لك، شفت).
-- حامد ومها ينادون بعض بالاسم بس، وممنوع أي صيغة مؤنث للمخاطب في الحوار كله (لا «عليج» ولا «لج» ولا «رايج»). لو حامد يسأل مها، يقول مثلاً «شو رايك يا مها؟».
+- حامد ومها ما يخاطبون بعض أبداً (لا «انت» ولا «رايك» ولا «عليج» ولا «يا مها»). كل واحد يتكلم عن الثاني بصيغة الغايب وبالاسم، مثلاً «مها عندها رقم حلو هني» أو «حامد يقول إن…»، وكلامهم موجّه للمستمع.
+- اكتب عبارات عربية سليمة وواضحة، كل جملة لها معنى كامل. لا تركّب كلمات غريبة أو ناقصة.
 - الأرقام تنكتب أرقام.
 - أقسام: نتايج الجولة، أحلى لحظة، لاعب الجولة (من التقييمات)، الترتيب وتوقعات تيفو، مباراة الجولة الياية اللي لازم تنشاف.
 - سطور قصيرة متبادلة (12 لين 24 سطر)، كل سطر أقل من 400 حرف. طنازة خفيفة مسموحة، بس لا تخترع أي معلومة.
 """
 POD_SCHEMA = OBJ({"title": S(80), "lines": ARR(OBJ({"who": {"type": "STRING", "enum": ["hamed", "maha"]}, "text": S(420)}), 24)})
-
-def polly_mp3(chunks, out):
-    import boto3
-    pl = boto3.client("polly", region_name="ap-south-1"); parts = []
-    for i, (voice, text) in enumerate(chunks):
-        for j, piece in enumerate(re.findall(r".{1,2800}(?:\s|$)", text, re.S)):
-            r = pl.synthesize_speech(Engine="neural", VoiceId=voice, OutputFormat="mp3", SampleRate="24000", Text=piece.strip())
-            f = f"{out}.part{i:03d}{j}.mp3"; open(f, "wb").write(r["AudioStream"].read()); parts.append(f)
-    lst = out + ".txt"; open(lst, "w").write("".join(f"file '{p}'\n" for p in parts))
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst, "-c:a", "libmp3lame", "-b:a", "64k", out], check=True)
-    for p in parts + [lst]: os.remove(p)
 
 def round_ctx(fx, st, detail):
     rounds = {}
@@ -210,9 +200,11 @@ def do_podcast(ctx, audio):
     lines = []
     for l in out["lines"]:
         t = emirati(l["text"]); lines.append({"who": l["who"], "text": t, "spoken": spoken(t)})
-    rec = {"week": wk, "title": emirati(out["title"]), "lines": lines, "sig": sig, "model": MODEL, "voices": {"hamed": "Zayd", "maha": "Hala"}, "generated": dt.datetime.utcnow().isoformat() + "Z"}
+    rec = {"week": wk, "title": emirati(out["title"]), "lines": lines, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}
     save("podcast", wk, rec)
-    if audio: polly_mp3([("Zayd" if l["who"] == "hamed" else "Hala", l["spoken"]) for l in lines], os.path.join(CACHE, "podcast", wk + ".mp3"))
+    if audio:   # Gemini TTS (Orus = حامد, Aoede = مها): writes the mp3 next to the json and adds qa/voices
+        from cast_voice import synth
+        synth(os.path.join(CACHE, "podcast", wk + ".json"))
     return "new"
 
 # ---- 301: «أهم 5 أشياء اليوم» on the home page (gated like every generated text)

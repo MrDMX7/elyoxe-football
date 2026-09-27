@@ -1,10 +1,9 @@
 {
   "_note": "phase 5 publishing gate: a kind appears on tifo.elyoxe.com only after the owner approves a sample (his rule: text passes him before it goes out, and he hears the voice first)",
-  "summary": false,
-  "thread": false,
-  "preview": false,
-  "round": false,
+  "summary": true,
+  "thread": true,
+  "preview": true,
   "podcast": false,
-  "ask": false,
+  "ask": true,
   "daily5": false
 }
