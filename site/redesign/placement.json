@@ -86,6 +86,12 @@
   "heading:الخطط والتبديلات": "W2.1 (391): dropped; formations are in التشكيلة and subs in الأحداث",
   "tab:التحليل": "W2.6: analysis merged into «الأرقام»",
   "heading:هذا اليوم في كورة الإمارات": "data: shown only on dates that have an event in the history file (none for 28 September)",
-  "more-link:كل الأيام": "data: part of the this-day block, which shows only on dates with an event"
+  "more-link:كل الأيام": "data: part of the this-day block, which shows only on dates with an event",
+  "heading:العرب في أوروبا هالموسم": "W3.9: the 92-row Europe table moved to /arabs/europe/ (with the golden boot); the «اللاعبين برا» card links it",
+  "tile:العرب في أوروبا هالموسم": "W3.9: moved to /arabs/europe/",
+  "heading:كل الأقسام": "W3.9: now the «كل الأقسام» fold (details/summary) at the end of /arabs/",
+  "tool:مبارياته في تقويم جوالك": "W3.6: the calendar link moved from the share sheet to the team hero (a text link under the buttons; Google Calendar on Android)",
+  "control:الدولة": "W3.9: the country filter moved with the Europe table to /arabs/europe/",
+  "mount:#since": "W3.7: «من آخر زيارة» (#since) is absorbed into the «فريقك» slot (results since the last visit get «يديد», rank moves show under the club)"
  }
 }

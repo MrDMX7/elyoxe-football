@@ -21,12 +21,12 @@
  },
  "comp": {
   "pages": 46,
-  "sampled": 25,
+  "sampled": 20,
   "missing": []
  },
  "round": {
   "pages": 491,
-  "sampled": 25,
+  "sampled": 20,
   "missing": []
  },
  "compare": {
@@ -56,7 +56,7 @@
  },
  "coach": {
   "pages": 883,
-  "sampled": 25,
+  "sampled": 20,
   "missing": []
  },
  "coach-compare": {
@@ -84,6 +84,16 @@
   "sampled": 1,
   "missing": []
  },
+ "embed-m": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "embed-t": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
  "explore": {
   "pages": 1,
   "sampled": 1,
@@ -106,7 +116,7 @@
  },
  "h2h": {
   "pages": 80,
-  "sampled": 25,
+  "sampled": 20,
   "missing": []
  },
  "home": {
@@ -131,12 +141,12 @@
  },
  "match": {
   "pages": 5147,
-  "sampled": 25,
+  "sampled": 20,
   "missing": []
  },
  "kit": {
   "pages": 26,
-  "sampled": 25,
+  "sampled": 20,
   "missing": []
  },
  "match-of-week": {
@@ -151,7 +161,7 @@
  },
  "national": {
   "pages": 22,
-  "sampled": 22,
+  "sampled": 20,
   "missing": []
  },
  "nations-h2h": {
@@ -166,7 +176,7 @@
  },
  "player": {
   "pages": 4183,
-  "sampled": 25,
+  "sampled": 20,
   "missing": []
  },
  "poty": {
@@ -176,7 +186,7 @@
  },
  "referee": {
   "pages": 295,
-  "sampled": 25,
+  "sampled": 20,
   "missing": []
  },
  "stadium": {
@@ -201,17 +211,17 @@
  },
  "team": {
   "pages": 649,
-  "sampled": 25,
+  "sampled": 20,
   "missing": []
  },
  "poster": {
   "pages": 649,
-  "sampled": 25,
+  "sampled": 20,
   "missing": []
  },
  "month": {
   "pages": 60,
-  "sampled": 25,
+  "sampled": 20,
   "missing": []
  },
  "thisday": {

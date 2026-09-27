@@ -598,3 +598,93 @@ input,select,textarea{font-size:max(16px,1em)}
 .phero .stalen,.phero .netnote{inset-block-start:calc(var(--topH) + .3rem)}
 #catchup{min-block-size:0}
 .cdph{min-block-size:2.2rem}
+
+/* ===== Wave 3 ===== */
+/* W3.1: the stand at first paint (inline mosaic), the canvas fades in over it when it has painted */
+.hero{background-image:var(--mos,none);background-size:cover;background-position:center;image-rendering:pixelated}
+.hero.painted{background-image:none}
+.hero canvas{opacity:0;transition:opacity .35s ease}.hero canvas.on{opacity:.7}
+.top{view-transition-name:top}.tabbar{view-transition-name:tabbar}
+@media (prefers-reduced-motion:reduce){.hero canvas{transition:none}}
+/* W3.2: the goal text slides in from the scorer's side; the mini-bar's club stripe when the hero is off screen */
+.gtext{position:absolute;inset-block-end:38%;z-index:3;display:grid;gap:.2rem;pointer-events:none;animation:gtr 2.2s cubic-bezier(.2,.7,.2,1) forwards}
+.gtext.fr{inset-inline-start:var(--gutter)}.gtext.fl{inset-inline-end:var(--gutter);text-align:end;animation-name:gtl}
+.gtext b{font:800 clamp(2.2rem,8vw,4.5rem)/1 var(--kufi);color:var(--ink)}.gtext span{font:800 clamp(1rem,3.5vw,1.6rem) var(--kufi);color:var(--ink)}
+.gtext.mine b{text-decoration:underline 4px var(--mine);text-underline-offset:.3em}
+@keyframes gtr{0%{opacity:0;transform:translateX(40%)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+@keyframes gtl{0%{opacity:0;transform:translateX(-40%)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+.mini.gstripe{background:linear-gradient(90deg,transparent,var(--gc) 30%,var(--gc) 70%,transparent) center/100% 100% no-repeat,#061B16fa;animation:gstripe 1.2s ease forwards}
+@keyframes gstripe{from{background-size:0% 100%,auto}to{background-size:100% 100%,auto}}
+/* W3.3: split-flap — only the digit that changed folds (two halves, 180 + 180 ms) */
+.cell.flap,.dg.flap,.chip.flap{animation:flapfold .36s cubic-bezier(.3,.6,.3,1)}
+@keyframes flapfold{0%{clip-path:inset(0 0 50% 0);transform:perspective(300px) rotateX(0)}50%{clip-path:inset(0 0 50% 0);transform:perspective(300px) rotateX(-90deg)}51%{clip-path:inset(50% 0 0 0);transform:perspective(300px) rotateX(90deg)}100%{clip-path:inset(0 0 0 0);transform:perspective(300px) rotateX(0)}}
+.rc.just,.m.just{box-shadow:inset 0 3px 0 var(--jc)}
+@media (prefers-reduced-motion:reduce){.gtext,.mini.gstripe,.cell.flap,.dg.flap,.chip.flap{animation:none}}
+/* W3.4: your channel on every row */
+.chn{grid-column:1/-1;justify-self:center;font-size:.75rem;color:var(--tert);line-height:1.3;margin-block-start:-.2rem}
+.chn b{font-weight:600;color:var(--ink);border:1px solid var(--rule);padding:0 .3rem;margin-inline-start:.2rem}
+.rc .chn{justify-self:start;margin:0}
+/* W3.5: the prayer that falls during the match, in the visitor's city; its line is reserved in the first paint */
+.prayl{margin:.7rem 0 0;font-size:.82rem;color:var(--tert);line-height:1.5;min-block-size:1.5em}
+.mcd{min-block-size:1.9rem}
+.prayl.in{margin:.4rem 0 .8rem}
+/* W3.6: install ask (fixed, so it never moves the page), install sheet, calendar link, offline list */
+.instask{position:fixed;z-index:var(--z-mini);inset-inline:.75rem;inset-block-end:calc(var(--tabH) + .75rem + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:.6rem;padding:.6rem .8rem;background:var(--sunken);border:1px solid var(--rule);font-size:.9rem}
+.instask span{flex:1 1 auto;min-inline-size:0}
+.instask .cta{min-block-size:2.4rem;padding-inline:1rem;font-size:.85rem}
+.instask .x{background:none;border:0;color:var(--tert);font:inherit;font-size:.8rem;cursor:pointer;padding:.4rem}
+@media (min-width:880px){.instask{inset-inline:auto var(--gutter);inset-block-end:1.25rem;max-inline-size:26rem}}
+.inst-l{margin:.2rem 0 1rem;color:var(--tert);line-height:1.7}
+.inst-ios{margin:.8rem 0 0;line-height:1.7}
+.nobet{margin:.6rem 0 0;font-size:.8rem;color:var(--stone)}
+.calk{margin:.8rem 0 0;font-size:.85rem}.calk a{color:var(--tert);text-decoration:underline;text-underline-offset:.25em}
+#offl li{padding-block:.5rem;border-block-end:1px solid var(--rule-2)}
+/* W3.7: فريقك follows you — suggested rows (no favourites yet) are not «my team», so no dune */
+.rmine .sugrow{background:var(--surf);padding:.7rem .8rem;border-block-start:3px solid var(--rule)}
+.rmine .sugrow .h{font-family:var(--kufi);font-weight:800;display:flex;align-items:center;gap:.4rem}
+.rmine .tg{font:600 .72rem var(--text);color:var(--tert);border:1px solid var(--rule);padding:0 .35rem}
+.rmine .nwd{font:600 .72rem var(--text);font-style:normal;color:var(--bg);background:var(--ink);padding:0 .35rem;margin-inline-start:auto}
+.mlinks{display:flex;flex-wrap:wrap;gap:.3rem 1rem;margin:.1rem 0 .5rem;font-size:.82rem}.mlinks a{color:var(--tert);text-decoration:underline;text-underline-offset:.25em}
+.rkch{margin:.3rem 0 0;font-size:.8rem;color:var(--tert)}
+/* W3.9: /arabs/ as a section front — the live strip, 4 group cards, «كل الأقسام» folded */
+.atn .atl{display:grid;grid-auto-flow:column;grid-auto-columns:min(62%,12.5rem);gap:.6rem;overflow-x:auto;scrollbar-width:none;margin-inline:calc(var(--gutter) * -1);padding-inline:var(--gutter);scroll-snap-type:x proximity}
+.atr{display:grid;gap:.2rem;align-content:start;background:var(--surf);padding:.7rem .8rem;color:var(--ink);text-decoration:none;scroll-snap-align:start;border-block-start:3px solid var(--rule)}
+.atr.live{border-block-start-color:var(--live)}
+.atr .atp{font-family:var(--kufi);font-weight:800;font-size:.95rem;line-height:1.35}
+.atr .atc{display:flex;align-items:center;gap:.3rem;font-size:.8rem;color:var(--tert)}.atr .atc .logo{inline-size:1.1rem;block-size:1.1rem}
+.atr .atm{font-size:.8rem;color:var(--tert)}.atr.live .atm{color:var(--live-text)}
+.atr .atg{font-size:.8rem;font-weight:600;min-block-size:1.1em}
+.agrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;margin-block:1.2rem}
+@media (min-width:880px){.agrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.agc{background:var(--surf);padding:.9rem;display:grid;align-content:start;gap:.5rem}
+.agc h3{margin:0;font-size:.95rem}
+.agn{margin:0;display:grid;gap:.1rem}.agn b{font-size:2rem;line-height:1}.agn span{font-size:.78rem;color:var(--tert);line-height:1.4}
+.agl{display:grid;gap:.25rem;font-size:.85rem}.agl a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:.25em}
+.allsec{margin-block:1.5rem}.allsec summary{cursor:pointer;font-family:var(--kufi);font-weight:800;padding-block:.6rem;list-style-position:inside}
+/* W3.10: lineup builder on the pitch */
+.xih{margin:0 0 .8rem}
+.lnk{background:none;border:0;padding:0;color:var(--ink);font:inherit;font-size:.9rem;text-decoration:underline;text-decoration-color:var(--rule-ctl);text-underline-offset:.3em;cursor:pointer}
+.xpitch{max-inline-size:24rem}
+.xpitch .xs{border:0;background:none;color:var(--ink);cursor:pointer;padding:0;font:inherit;transform:translate(-50%,-50%);inline-size:4.6rem}
+.xpitch .xs b{inline-size:2.1rem;block-size:2.1rem;font-size:1.05rem;background:transparent;outline:2px dashed #F6F7F280;color:var(--ink)}
+.xpitch .xs.on b{background:var(--hc,var(--ink));color:var(--hi,var(--bg));outline:0}
+.xpitch .xs:focus-visible b{outline:3px solid var(--focus)}
+.xcount{text-align:center;margin:.2rem 0 .6rem}
+.pn-in{position:relative}
+.xpick{position:sticky;inset-block-end:0;z-index:2;background:var(--sunken);border-block-start:3px solid var(--ink);max-block-size:55vh;overflow:auto;margin-inline:calc(var(--gutter) * -1);padding:0 var(--gutter) .8rem}
+.xp-h{display:flex;justify-content:space-between;align-items:center;position:sticky;inset-block-start:0;background:var(--sunken);padding-block:.7rem}
+.xp-h .x{background:none;border:0;color:var(--tert);font:inherit;cursor:pointer}
+.xp-r{background:none;border:1px solid var(--rule);color:var(--ink);font:inherit;font-size:.85rem;padding:.4rem .7rem;margin-block-end:.5rem;cursor:pointer}
+.xp-l{list-style:none;margin:0;padding:0}
+.xp-l button{display:flex;align-items:center;gap:.7rem;inline-size:100%;background:none;border:0;border-block-end:1px solid var(--rule-2);color:var(--ink);font:inherit;text-align:start;padding:.6rem 0;cursor:pointer;min-block-size:2.75rem}
+.xp-l button .num{inline-size:1.8rem;font-weight:700;color:var(--tert)}
+.xp-l button small{margin-inline-start:auto;color:var(--tert);font-size:.75rem}
+.xp-l button[aria-current]{color:var(--mine)}
+/* W3.11: search with context */
+#sr li a{display:grid;grid-template-columns:1fr;gap:.1rem;padding:.55rem .2rem;border-block-end:1px solid var(--rule-2);color:var(--ink);text-decoration:none}
+#sr .srn{font-weight:600}#sr .srs{font-size:.78rem}
+.sre-h{margin:.9rem 0 .3rem;font-size:.78rem;color:var(--tert)}
+.sre{display:flex;flex-wrap:wrap;gap:.4rem;margin-block-start:.6rem}
+.sqc{display:inline-flex;align-items:center;min-block-size:2.5rem;padding:0 .9rem;background:var(--raised);border:1px solid var(--rule);color:var(--ink);font:inherit;font-size:.85rem;cursor:pointer;text-decoration:none}
+/* W3.12: four cells in the scorers control fit a phone without a hidden fourth */
+@media (max-width:479px){.seg:has(> button:nth-child(4)) button{padding-inline:.55rem;font-size:.82rem}}

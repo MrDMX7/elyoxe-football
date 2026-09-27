@@ -28,21 +28,39 @@
   // 363: forgiving search — hamza / ta marbuta / alef maqsura folded, tatweel and doubled letters collapsed (مبخووت), club nicknames,
   // and one-or-two-letter typos matched word by word
   function norm(t){ return String(t || "").toLowerCase().replace(/[أإآٱ]/g, "ا").replace(/ؤ/g, "و").replace(/ئ/g, "ي").replace(/ء/g, "").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/ـ/g, "").replace(/[\u064b-\u0652]/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/(.)\1+/g, "$1"); }
-  var NICK = { "الزعيم":["العين", "الهلال"], "العيناوي":["العين"], "الامبراطور":["الوصل"], "الفهود":["الجزيره"], "فخر ابوظبي":["الجزيره"], "العنابي":["الوحده"], "الملك":["الشارقه"], "الفرسان":["شباب الاهلي"], "العميد":["النصر", "الاتحاد"], "النموذجي":["الاتحاد"], "الملكي":["ريال مدريد"], "البلوز":["تشيلسي"], "الشياطين الحمر":["مانشستر يونايتد"], "السيتي":["مانشستر سيتي"], "البارسا":["برشلونه"], "الاحمر":["الاهلي"], "الابيض":["الزمالك", "الامارات"], "الاخضر":["السعوديه"], "الاحمر العنابي":["البحرين"], "الفراعنه":["مصر"], "اسود الاطلس":["المغرب"], "النشامي":["الاردن"] };
+  var NICK = { "الزعيم":["العين", "الهلال"], "العيناوي":["العين"], "الامبراطور":["الوصل"], "الفهود":["الجزيره"], "فخر ابوظبي":["الجزيره"], "العنابي":["الوحده"], "الملك":["الشارقه"], "الفرسان":["شباب الاهلي"], "العميد":["النصر", "الاتحاد"], "النموذجي":["الاتحاد"], "الملكي":["ريال مدريد"], "البلوز":["تشيلسي"], "الشياطين الحمر":["مانشستر يونايتد"], "السيتي":["مانشستر سيتي"], "البارسا":["برشلونه"], "الاحمر":["الاهلي"], "الابيض":["الزمالك", "الامارات"], "الاخضر":["السعوديه"], "الاحمر العنابي":["البحرين"], "الفراعنه":["مصر"], "اسود الاطلس":["المغرب"], "النشامي":["الاردن"],
+    // W3.11: pan-Arab nicknames (keys are folded by norm() below, so they can be written normally)
+    "العالمي":["النصر"], "الراقي":["الأهلي"], "النمور":["الاتحاد"], "الليث":["الشباب"], "سكري القصيم":["التعاون"], "الرهيب":["الريان"], "السداوي":["السد"],
+    "القلعة الحمراء":["الأهلي", "الوداد"], "الفارس الأبيض":["الزمالك"], "الدراويش":["الإسماعيلي"], "المكشخة":["الترجي"], "جوهرة الساحل":["النجم الساحلي"], "النسور الخضر":["الرجاء"], "الزعيم السداوي":["السد"],
+    "الأخضر السعودي":["السعودية"], "الصقور الخضر":["السعودية"], "الأزرق":["الكويت"], "أسود الرافدين":["العراق"], "نسور قرطاج":["تونس"], "محاربو الصحراء":["الجزائر"], "الخضر":["الجزائر"],
+    "الفدائي":["فلسطين"], "نسور قاسيون":["سوريا"], "رجال الأرز":["لبنان"], "فرسان المتوسط":["ليبيا"], "صقور الجديان":["السودان"], "العنابي القطري":["قطر"] };
+  (function(){ var n = {}; Object.keys(NICK).forEach(function(k){ var nk = norm(k); n[nk] = (n[nk] || []).concat(NICK[k]); }); NICK = n; if (n["الزعيم"]) n["الزعيم"].push("السد"); if (n["العميد"]) n["العميد"].push("مولودية الجزائر"); if (n["العنابي"]) n["العنابي"].push("قطر"); })();
   function lev(a, b, max){ if (Math.abs(a.length - b.length) > max) return max + 1; var p = [], i, j; for (j = 0; j <= b.length; j++) p[j] = j; for (i = 1; i <= a.length; i++){ var c = [i], lo = i; for (j = 1; j <= b.length; j++){ c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); if (c[j] < lo) lo = c[j]; } if (lo > max) return max + 1; p = c; } return p[b.length]; }
-  function fuzzy(item, v){ var max = v.length >= 7 ? 2 : 1; return (item[4] + " " + item[5]).split(/\s+/).some(function(w){ return w.length >= 3 && (lev(w, v, max) <= max || lev(w.replace(/^ال/, ""), v.replace(/^ال/, ""), max) <= max); }); }
+  function fuzzy(item, v){ var max = v.length >= 7 ? 2 : 1; return (item.na + " " + item.nl).split(/\s+/).some(function(w){ return w.length >= 3 && (lev(w, v, max) <= max || lev(w.replace(/^ال/, ""), v.replace(/^ال/, ""), max) <= max); }); }
   if (sb0) sb0.onclick = function(){ var box = $("#srchbox"); if (box){ box.remove(); return; }
     // W2.9: search is a sheet: a real search form, Enter opens the first hit, a failed index load says so
-    box = document.createElement("div"); box.id = "srchbox"; box.className = "ctrybox srchsheet"; box.innerHTML = '<i class="grab" aria-hidden="true"></i><form role="search" class="sfrm"><input id="sq" type="search" enterkeyhint="search" placeholder="نادي، لاعب، بطولة…" aria-label="بحث" autocomplete="off"></form><div id="sr"></div>'; document.body.appendChild(box);
+    box = document.createElement("div"); box.id = "srchbox"; box.className = "ctrybox srchsheet"; box.innerHTML = '<i class="grab" aria-hidden="true"></i><form role="search" class="sfrm"><input id="sq" type="search" enterkeyhint="search" placeholder="نادي، لاعب، مباراة، مدرب…" aria-label="بحث" autocomplete="off"></form><div id="sr"></div>'; document.body.appendChild(box);
     box.querySelector("form").onsubmit = function(e){ e.preventDefault(); var a = box.querySelector("#sr a"); if (a) location.href = a.href; };
     var q = $("#sq"); q.focus();
-    (SIDX ? Promise.resolve(SIDX) : fetch("/assets/search." + sb0.dataset.v + ".json").then(function(r){ return r.json(); }).then(function(x){ SIDX = x.map(function(i){ return i.concat([norm(i[1]), norm(i[2])]); }); return SIDX; })).then(function(){
-      var TY = { c:"بطولة", t:"نادي", p:"لاعب", r:"صفحة" };
-      q.oninput = function(){ var v = norm(q.value.trim()); if (v.length < 2){ set("#sr", ""); return; }
-        var qs = [v].concat((NICK[v] || []).map(norm)), has = function(i){ return qs.some(function(x){ return i[4].indexOf(x) >= 0 || i[5].indexOf(x) >= 0; }); };
+    // W3.11: empty state (فريقي chips · مباشر الحين · آخر بحث), a subline on every hit, the visitor's country breaks name ties
+    function recent(){ try { return JSON.parse(localStorage.getItem("tifo.sq") || "[]"); } catch (e){ return []; } }
+    function remember(v){ v = String(v || "").trim(); if (v.length < 2) return; var r = recent().filter(function(x){ return x !== v; }); r.unshift(v); try { localStorage.setItem("tifo.sq", JSON.stringify(r.slice(0, 5))); } catch (e){} }
+    function empty(){ var ch = favs().filter(function(x){ return x.t === "team" && x.n; }).slice(0, 6).map(function(x){ return '<a class="sqc" href="/t/' + x.id + '/">' + R.esc(x.n) + "</a>"; }).join(""), rc = recent().map(function(x){ return '<button type="button" class="sqc" data-q="' + R.esc(x) + '">' + R.esc(x) + "</button>"; }).join("");
+      set("#sr", (ch ? '<p class="sre-h">فريقي</p><div class="sre">' + ch + "</div>" : "") + '<div class="sre"><a class="sqc" href="/#matches">مباشر الحين</a><a class="sqc" href="/today/">مباريات اليوم</a></div>' + (rc ? '<p class="sre-h">آخر بحث</p><div class="sre">' + rc + "</div>" : "")); }
+    box.addEventListener("click", function(e){ var c = e.target.closest("[data-q]"); if (c){ q.value = c.dataset.q; q.oninput && q.oninput(); q.focus(); return; } if (e.target.closest("#sr a")) remember(q.value); });
+    box.querySelector("form").addEventListener("submit", function(){ remember(q.value); });
+    empty();
+    (SIDX ? Promise.resolve(SIDX) : fetch("/assets/search." + sb0.dataset.v + ".json").then(function(r){ return r.json(); }).then(function(x){ var S = x.s || [], L = x.i || x; SIDX = L.map(function(i){ return { t:i[0], ar:i[1], la:i[2], u:i[3], sub:(typeof i[4] === "number" ? S[i[4]] : i[4]) || "", cc:i[5] || "", ko:i[6] || "", na:norm(i[1]), nl:norm(i[2]) }; }); return SIDX; })).then(function(){
+      var TY = { c:"بطولة", t:"نادي", p:"لاعب", r:"صفحة", m:"مباراة", k:"مدرب", f:"حكم" }, O = { c:0, t:1, m:2, k:3, f:4, r:5, p:6 }, CC = country();
+      q.oninput = function(){ var v = norm(q.value.trim()); if (v.length < 2){ empty(); return; }
+        var qs = [v].concat((NICK[v] || []).map(norm)), has = function(i){ return qs.some(function(x){ return i.na.indexOf(x) >= 0 || i.nl.indexOf(x) >= 0; }); };
         var hits = SIDX.filter(has); if (hits.length < 5 && v.length >= 4 && v.indexOf(" ") < 0) hits = hits.concat(SIDX.filter(function(i){ return !has(i) && fuzzy(i, v); }).slice(0, 12));
-        hits = hits.sort(function(a, b){ var o = { c:0, t:1, r:2, p:3 }; return (a[4].indexOf(v) === 0 || a[5].indexOf(v) === 0 ? 0 : 1) - (b[4].indexOf(v) === 0 || b[5].indexOf(v) === 0 ? 0 : 1) || o[a[0]] - o[b[0]]; }).slice(0, 20);
-        set("#sr", hits.length ? "<ul>" + hits.map(function(i){ return '<li><a href="' + i[3] + '"><span>' + R.esc(i[1] || i[2]) + (i[1] && i[2] ? ' <span class="muted small lat">' + R.esc(i[2]) + "</span>" : "") + '</span><span class="muted small">' + TY[i[0]] + "</span></a></li>"; }).join("") + "</ul>" : '<p class="muted small">ما لقينا شي.</p>'); };
+        var pre = function(i){ return qs.some(function(x){ return i.na.indexOf(x) === 0 || i.nl.indexOf(x) === 0; }) ? 0 : 1; }, now = Date.now();
+        hits = hits.filter(function(i){ return i.t !== "m" || !i.ko || Date.parse(i.ko) > now - 3 * 3600e3; })
+          .sort(function(a, b){ return pre(a) - pre(b) || O[a.t] - O[b.t] || (a.cc === CC ? 0 : 1) - (b.cc === CC ? 0 : 1) || (a.t === "m" ? Date.parse(a.ko) - Date.parse(b.ko) : 0); }).slice(0, 20);
+        set("#sr", hits.length ? "<ul>" + hits.map(function(i){ var sub = i.t === "m" && i.ko ? (i.sub ? R.esc(i.sub) + " · " : "") + R.td(i.ko) + " " + R.tt(i.ko) : R.esc(i.sub);
+          return '<li><a href="' + i.u + '"><span class="srn">' + R.esc(i.ar || i.la) + (i.ar && i.la && i.t !== "m" ? ' <span class="muted small lat">' + R.esc(i.la) + "</span>" : "") + '</span><span class="muted small srs">' + (i.t === "t" && i.sub === "منتخب" ? "منتخب" : TY[i.t] + (sub ? " · " + sub : "")) + "</span></a></li>"; }).join("") + "</ul>" : '<p class="muted small">ما لقينا شي.</p>');
+        var sr = $("#sr"); if (sr && R.localize) R.localize(sr); };
     }).catch(function(){ set("#sr", '<p class="muted small">ما قدرنا نحمّل البحث، تأكد من النت.</p>'); }); };
   document.addEventListener("keydown", function(e){ if (e.key === "Escape"){ ["#srchbox", "#ctrybox"].forEach(function(s){ var b = $(s); if (b) b.remove(); }); } });
   // ---- favourites (179): several clubs and players; the first club stays «فريقي»
@@ -74,7 +92,7 @@
       var lv = (live.matches || []); set("#livecount", lv.length ? '<i class="cardflip"></i>' + (R.n ? R.n(lv.length, ["مباراة وحدة مباشرة الحين", "مباراتين مباشرة الحين", "مباريات مباشرة الحين", "مباراة مباشرة الحين"]) : lv.length + " مباريات مباشرة الحين") : "");
       if (dayOff === 0) stand(R.featured(ms));
       stamp(live.generated || day.generated);
-      myCard(idx); countdown();
+      myCard(idx, dayOff === 0 ? ms : [], live); countdown();
       poll(home, lv.length || ms.some(function(m){ var t = Date.parse(m.kickoff_utc); return m.status === "scheduled" && t - Date.now() < 15 * 60e3 && t > Date.now() - 3 * 3600e3; }) ? 20e3 : 120e3);
     }).catch(function(){ retry(home); });
   }
@@ -85,14 +103,55 @@
     if (!ST) ST = window.TifoStand.mount(box.querySelector("canvas"));
     ST.set(m);
   }
-  function myCard(idx){
-    var el = $("#mine"); if (!el) return; var teams = favs().filter(function(x){ return x.t === "team"; });
-    if (!teams.length){ el.innerHTML = '<div class="mine-card"><div class="h">مفضلتي</div><p class="small" style="margin:0">افتح صفحة أي نادي واضغط «هذا فريقي»، وضيف كم فريق تبا، ومبارياتهم تطلع لك أول شي هنا.</p></div>'; return; }
-    // tn/{id}.json: next and last match per team, written by the build for every club on the site
-    Promise.all(teams.slice(0, 6).map(function(x){ return fetch("/tn/" + x.id + ".json").then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }); })).then(function(rs){
-      var h = rs.map(function(t, i){ if (!t) return ""; return '<div class="favrow"><a class="h" href="/t/' + t.id + '/">' + R.logo(t) + " " + R.tname(t) + (i === 0 ? " <small>فريقي</small>" : "") + "</a>" + (t.next ? R.matchRow(t.next, { date:true }) : "") + (!t.next && t.last ? R.matchRow(t.last, { date:true }) : "") + "</div>"; }).join("");
-      el.innerHTML = '<div class="mine-card">' + h + '<button type="button" class="btn copy" id="themebtn">ألوان فريقي على الموقع</button></div>'; R.localize(el);
+  // W3.7: «فريقك» follows you (it absorbed #since). Per team: a live match first; else a result from the last 24 h after full time,
+  // with «ليش هالنتيجة؟» and «صورة للستوري», then the next match if it's within a day; else the next match. «يديد» marks a result that
+  // finished since the last visit (the visit that started this session). The visitor's national team joins when it has something today.
+  // No favourites: the national team and the league of the visitor's country, above the crest grid.
+  var LASTV = (function(){ var l = 0; try { var s = sessionStorage.getItem("tifo.lv"); if (s != null) return +s; l = +localStorage.getItem("tifo.lastvisit") || 0; sessionStorage.setItem("tifo.lv", String(l)); localStorage.setItem("tifo.lastvisit", Date.now()); } catch (e){} return l; })();
+  var TN = {}, RKD = {};   // rank moves are worked out once per page load (the home poll re-renders this card every 20 s)
+  function tn(id){ return TN[id] || (TN[id] = fetch("/tn/" + id + ".json").then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })); }
+  function myCard(idx, ms, live){
+    var el = $("#mine"); if (!el) return; var teams = favs().filter(function(x){ return x.t === "team"; }).slice(0, 6), fb = !teams.length, cc = country(), nid = (window.NAT || {})[cc];
+    if (nid && !teams.some(function(x){ return x.id === nid; })) teams.push({ id:nid, nat:1 });
+    if (!teams.length){ el.innerHTML = '<div class="mine-card"><div class="h">مفضلتي</div><p class="small" style="margin:0">افتح صفحة أي نادي واضغط «هذا فريقي»، وضيف كم فريق تبا، ومبارياته تطلع لك أول شي هنا.</p></div>'; return; }
+    var by = {}; (ms || []).concat((live && live.matches) || []).forEach(function(m){ by[m.id] = Object.assign({}, by[m.id] || {}, m); });
+    Promise.all(teams.map(function(x){ return tn(x.id); })).then(function(rs){
+      var now = Date.now(), rows = [];
+      rs.forEach(function(t, i){ if (!t) return; var nat = teams[i].nat, seen = {}, c = [];
+        [t.last, t.next].concat((ms || []).filter(function(m){ return m.home.id === t.id || m.away.id === t.id; })).forEach(function(m){ if (!m || seen[m.id]) return; seen[m.id] = 1; c.push(by[m.id] ? Object.assign({}, m, by[m.id]) : m); });
+        var ko = function(m){ return Date.parse(m.kickoff_utc) || 0; };
+        var lv = c.filter(R.isLive)[0], res = c.filter(function(m){ return m.status === "finished" && now - ko(m) < 26 * 3600e3; }).sort(function(a, b){ return ko(b) - ko(a); })[0],
+            nx = c.filter(function(m){ return m.status === "scheduled" && ko(m) > now - 3 * 3600e3; }).sort(function(a, b){ return ko(a) - ko(b); })[0];
+        var body = "", nw = false;
+        if (lv) body = R.matchRow(lv, { date:false });
+        else if (res){ nw = LASTV > 0 && ko(res) + 2 * 3600e3 > LASTV;
+          body = R.matchRow(res, { date:true }) + '<p class="mlinks">' + (res.why ? '<a href="/m/' + res.id + '/">ليش هالنتيجة؟</a>' : "") + '<a href="/m/' + res.id + '/#story">صورة للستوري</a></p>' + (nx && ko(nx) - now < 24 * 3600e3 ? R.matchRow(nx, { date:true }) : ""); }
+        else if (nat && !fb) return;   // the national team only rides along when it has something now
+        else body = nx ? R.matchRow(nx, { date:true }) : t.last ? R.matchRow(t.last, { date:true }) : "";
+        if (!body) return;
+        if (!(t.id in RKD)){ var prev = null; RKD[t.id] = ""; try { prev = JSON.parse(localStorage.getItem("tifo.rank." + t.id) || "null"); } catch (e){}
+          if (t.table){ if (prev && prev.rank !== t.table.rank) RKD[t.id] = '<p class="rkch">' + (t.table.rank < prev.rank ? "طلع" : "نزل") + " من المركز " + prev.rank + " للمركز " + t.table.rank + " في " + R.esc(t.table.comp_ar) + "</p>"; try { localStorage.setItem("tifo.rank." + t.id, JSON.stringify(t.table)); } catch (e){} } }
+        var rk = RKD[t.id];
+        rows.push({ k:lv ? 0 : res ? 1 : 2, i:i, h:'<div class="' + (nat ? "sugrow" : "favrow") + (nw ? " nw" : "") + '"><a class="h" href="/t/' + t.id + '/">' + R.logo(t) + " " + R.tname(t) + (i === 0 && !fb ? " <small>فريقي</small>" : nat ? ' <span class="tg">منتخب بلدك</span>' : "") + (nw ? ' <i class="nwd">يديد</i>' : "") + "</a>" + body + rk + "</div>" }); });
+      // the league of the visitor's country, for a first visit with no favourites
+      if (fb){ var L = (window.CL || {})[cc], comp = L && (idx.competitions || []).filter(function(c){ return c.key === L[0]; })[0];
+        if (comp){ var lm = (ms || []).filter(function(m){ return m.comp === comp.id; }).sort(function(a, b){ return R.isLive(b) - R.isLive(a); })[0];
+          rows.push({ k:3, i:99, h:'<div class="sugrow"><a class="h" href="/c/' + comp.key + '/">' + '<img class="logo" src="/lg/' + comp.id + '.png" alt="" loading="lazy" onerror="this.remove()">' + " " + R.esc(comp.name_ar) + ' <span class="tg">دوري بلدك</span></a>' + (lm ? R.matchRow(by[lm.id] || lm, { date:false }) : '<p class="small muted">الترتيب والمباريات الياية</p>') + "</div>" }); } }
+      rows.sort(function(a, b){ return a.k - b.k || a.i - b.i; });
+      var html = '<div class="mine-card">' + rows.map(function(r){ return r.h; }).join("") + (fb ? '<p class="small" style="margin:0">اختار فريقك، ومبارياته تطلع لك هني أول شي.</p>' : '<button type="button" class="btn copy" id="themebtn">ألوان فريقي على الموقع</button>') + "</div>";
+      if (el._h === html) return; el._h = html; el.innerHTML = html; R.localize(el);
     });
+  }
+
+  // ---- W3.9 /arabs/: the «العرب الليلة» strip keeps moving — minute and score from live.json, goals and assists from the live match file
+  function arabs(){
+    var cards = [].slice.call(document.querySelectorAll("#atn .atr[data-m]")); if (!cards.length) return Promise.resolve();
+    return get("live.json").then(function(l){ var by = {}; (l.matches || []).forEach(function(m){ by[m.id] = m; }); var ids = {};
+      cards.forEach(function(c){ var m = by[+c.dataset.m]; if (!m) return; ids[m.id] = m; var st = c.querySelector(".atm"); if (st) st.innerHTML = R.minute(m) + (m.score ? ' <bdi dir="ltr" class="num">' + m.score.home + " - " + m.score.away + "</bdi>" : ""); c.classList.toggle("live", R.isLive(m)); });
+      return Promise.all(Object.keys(ids).map(function(id){ return get("match/" + id + ".json").then(function(d){ var g = {}, a = {};
+        (d.events || []).forEach(function(e){ if (e.type !== "goal" || e.detail === "own_goal") return; if (e.player && e.player.id) g[e.player.id] = (g[e.player.id] || 0) + 1; if (e.assist && e.assist.id) a[e.assist.id] = (a[e.assist.id] || 0) + 1; });
+        cards.forEach(function(c){ if (+c.dataset.m !== +id) return; var p = +c.dataset.p, x = c.querySelector(".atg"); if (!x) return; x.textContent = [g[p] ? (g[p] > 1 ? g[p] + " أهداف" : "هدف") : "", a[p] ? (a[p] > 1 ? a[p] + " صناعة" : "صناعة") : ""].filter(Boolean).join(" · "); }); }).catch(function(){}); }))
+        .then(function(){ poll(arabs, Object.keys(ids).length ? 30e3 : 120e3); }); }).catch(function(){ poll(arabs, 120e3); });
   }
 
   // ---- competition: standings (live), fixtures, leaders
@@ -198,7 +257,8 @@
 
   var pv = $("#prev"), nx = $("#next");
   if (pv && nx && PAGE === "home"){ pv.onclick = function(){ dayOff--; home(); }; nx.onclick = function(){ dayOff++; home(); }; }
-  var ics = $("#ics"); if (ics) ics.href = "webcal://" + location.host + "/v1/team/" + ID + ".ics";
+  // W3.6: webcal:// does nothing on Android Chrome; Google Calendar subscribes to the same feed by cid
+  var ics = $("#ics"); if (ics){ var wc = "webcal://" + location.host + "/v1/team/" + ID + ".ics"; ics.href = /Android/i.test(navigator.userAgent) ? "https://calendar.google.com/calendar/r?cid=" + wc : wc; if (/Android/i.test(navigator.userAgent)){ ics.target = "_blank"; ics.rel = "noopener"; } }
   // ---- countdown to the national team's next match (62), on home and /uae/
   var CD = null;
   // W2.4: the countdown follows the visitor's national team (window.NAT, iso2 -> team id), built once, then only the digits change
@@ -308,13 +368,6 @@
     function draw(){ var x = tot(a.value), y = tot(b.value), i = function(v){ return v; }, f2 = function(v){ return v.toFixed(2); };
       $("#cout").innerHTML = line("مباريات", x.g, y.g, 1, i) + line("فوز", x.w, y.w, 1, i) + line("تعادل", x.d, y.d, 0, i) + line("خسارة", x.l, y.l, -1, i) + line("نقاط بالمباراة", x.ppg, y.ppg, 1, f2) + line("مواسم", Object.keys(x.s).length, Object.keys(y.s).length, 1, i) + '<p class="small">' + R.esc(C[a.value].n) + ": " + R.esc(Object.keys(x.c).join("، ")) + '</p><p class="small">' + R.esc(C[b.value].n) + ": " + R.esc(Object.keys(y.c).join("، ")) + "</p>"; }
     a.onchange = b.onchange = draw; draw(); }); })();
-  // 292: since your last visit, for your favourite clubs
-  (function(){ var el = $("#since"); if (!el) return; var last = 0; try { last = +localStorage.getItem("tifo.lastvisit") || 0; localStorage.setItem("tifo.lastvisit", Date.now()); } catch (e){}
-    var teams = favs().filter(function(x){ return x.t === "team"; }); if (!last || !teams.length || Date.now() - last < 3 * 3600e3) return;
-    Promise.all(teams.slice(0, 6).map(function(x){ return fetch("/tn/" + x.id + ".json").then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }); })).then(function(rs){
-      var lines = []; rs.forEach(function(t){ if (!t) return; (t.recent || []).filter(function(m){ return m && m.score && Date.parse(m.kickoff_utc) > last; }).forEach(function(m){ var h = m.home.id === t.id, a = h ? m.score.home : m.score.away, b = h ? m.score.away : m.score.home, o = h ? m.away : m.home; lines.push('<li><a href="/m/' + m.id + '/">' + R.tname(t) + " " + (a > b ? "فاز على" : a === b ? "تعادل مع" : "خسر من") + " " + R.tname(o) + ' <b class="num">' + a + " - " + b + "</b></a></li>"); });
-        var prev = null; try { prev = JSON.parse(localStorage.getItem("tifo.rank." + t.id) || "null"); } catch (e){} if (t.table){ if (prev && prev.rank !== t.table.rank) lines.push("<li>" + R.tname(t) + " " + (t.table.rank < prev.rank ? "طلع" : "نزل") + " من المركز " + prev.rank + " للمركز " + t.table.rank + " في " + R.esc(t.table.comp_ar) + "</li>"); try { localStorage.setItem("tifo.rank." + t.id, JSON.stringify(t.table)); } catch (e){} } });
-      if (lines.length) el.innerHTML = '<section class="blk"><h2>من آخر زيارة لك</h2><ul class="facts-l">' + lines.join("") + "</ul></section>"; }); })();
   // 293: a toast when a favourite club scores while any page is open (skipped in no-spoiler mode)
   (function(){ var teams = favs().filter(function(x){ return x.t === "team"; }).map(function(x){ return x.id; }); if (!teams.length) return; var seen = {};
     function check(){ if (document.hidden) return; fetch("/v1/live.json", { cache:"no-cache" }).then(function(r){ return r.json(); }).then(function(l){ (l.matches || []).forEach(function(m){ [["home", m.home], ["away", m.away]].forEach(function(x){ if (teams.indexOf(x[1].id) < 0 || !m.score) return; var k = m.id + x[0], g = m.score[x[0]]; if (seen[k] != null && g > seen[k] && !document.body.classList.contains("nospoil")) toast("⚽ هدف لـ" + R.tname(x[1]) + "! " + m.score.home + " - " + m.score.away, "/m/" + m.id + "/"); seen[k] = g; }); }); }).catch(function(){}); }
@@ -382,7 +435,7 @@
     try { var an = JSON.parse(el.dataset.an || "{}")[md] || []; an.forEach(function(a){ items.push("<li>ذكرى تأسيس " + '<a href="/t/' + a[0] + '/">' + R.esc(a[1]) + '</a> <span class="muted">(' + (yr - a[2]) + " سنة، من " + a[2] + ")</span></li>"); }); } catch (e){}
     function draw(){ if (items.length) el.innerHTML = '<section class="blk"><h2>اليوم في التقويم</h2><ul class="facts-l">' + items.join("") + "</ul></section>"; }
     get("players/birthdays/" + md + ".json").then(function(b){ (b.players || []).slice(0, 8).forEach(function(p){ var age = p.dob ? yr - +p.dob.slice(0, 4) : null; items.push("<li>عيد ميلاد " + (p.name_ar ? R.esc(p.name_ar) : '<span class="lat">' + R.esc(p.name) + "</span>") + (age ? ' <span class="muted">(' + age + " سنة)</span>" : "") + "</li>"); }); draw(); }).catch(draw); })();
-  function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio, daypage:daypage }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && Object.keys(window.NAT || {}).some(function(k){ return String(window.NAT[k]) === ID; })) countdown(); }
+  function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio, daypage:daypage, arabs:arabs }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && Object.keys(window.NAT || {}).some(function(k){ return String(window.NAT[k]) === ID; })) countdown(); }
   tvFull();
   tabs(); run(); dist();
 })();

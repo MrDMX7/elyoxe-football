@@ -78,7 +78,7 @@
     var mine = o.mine && (m.home.id === o.mine || m.away.id === o.mine);
     return '<a class="rc' + (live ? " live" : "") + (mine ? " mine" : "") + '" href="' + R.nx("/m/" + m.id + "/") + '" data-mid="' + m.id + '" style="--hc:' + R.colOn(m.home.id) + ";--ac:" + R.colOn(m.away.id) + '">' +
       '<span class="cp">' + esc(o.comp || m.comp_name_ar || "") + "</span>" +
-      '<span class="rt3"><span class="t' + (fin && s && s.home > s.away ? " win" : "") + '">' + R.logo(m.home, "md") + "<span>" + R.tname(m.home) + '</span></span><span class="mid">' + mid + '</span><span class="t' + (fin && s && s.away > s.home ? " win" : "") + '">' + R.logo(m.away, "md") + "<span>" + R.tname(m.away) + "</span></span></span></a>";
+      '<span class="rt3"><span class="t' + (fin && s && s.home > s.away ? " win" : "") + '">' + R.logo(m.home, "md") + "<span>" + R.tname(m.home) + '</span></span><span class="mid">' + mid + '</span><span class="t' + (fin && s && s.away > s.home ? " win" : "") + '">' + R.logo(m.away, "md") + "<span>" + R.tname(m.away) + "</span></span></span>" + R.chan(m) + "</a>";
   };
   R.rail = function(id, title, cards, more, slot){
     return '<section class="rail" id="' + id + '" data-slot="' + (slot || "rail") + '"' + (cards ? "" : " hidden") + '><div class="rail-h"><h2>' + title + "</h2>" + (more || "") + '</div><div class="rail-s" tabindex="0">' + (cards || "") + "</div></section>";
@@ -132,8 +132,11 @@
   R.pos = function(p){ var k = String(p || "").split(",")[0].trim().toUpperCase(); return POS[k] || (/[\u0600-\u06FF]/.test(p) ? p : ""); };
   R.PP = (root && root.PP) || null;
   // W2.7: on team pages every fixture row carries its competition's crest
-  var mr0 = R.matchRow; R.matchRow = function(m, o){ var h = mr0.apply(R, arguments), team = (o && o.crest) || (root && root.document && root.document.body && root.document.body.dataset.page === "team");
+  var mr0 = R.matchRow; R.matchRow = function(m, o){ var h = mr0.apply(R, arguments).replace(/<\/(a|div)>$/, function(x){ return R.chan(m) + x; }), team = (o && o.crest) || (root && root.document && root.document.body && root.document.body.dataset.page === "team");
     return team && m && m.comp ? h.replace(/(<span class="t h[^"]*">)/, '$1<img class="clg" src="/lg/' + m.comp + '.png" alt="" loading="lazy" onerror="this.remove()">') : h; };
+  // W3.4: the visitor's channel on every upcoming or live row: the first broadcaster in their country (+ «مجاني»); UAE in the prerender
+  R.CHN = (root && root.CHN_AE) || {};
+  R.chan = function(m){ if (!m || m.status === "finished" || !m.comp) return ""; var c = R.CHN[m.comp]; if (!c) return ""; return '<span class="chn" data-comp="' + m.comp + '">' + esc(c[0]) + (c[1] ? ' <b>مجاني</b>' : "") + "</span>"; };
   // W2.10: Arabic counts — 1 and 2 have their own forms, 3–10 take the plural, 11+ the singular; 0 hides the line
   R.n = function(k, f){ k = +k || 0; if (!k) return ""; if (k === 1) return f[0]; if (k === 2) return f[1]; return k + " " + (k <= 10 ? f[2] : f[3]); };
   // W2.10: one kicker for a match everywhere: مباشر الحين / انتهت / الليلة / اليوم 15:00 / بكرة / the weekday
@@ -154,7 +157,10 @@
   var cells = function(t){ return String(t).replace(/(\d)/g, '<i class="cell">$1</i>'); };
   var vt = function(h){ var n = 0; return h.replace(/<img class="logo (lg|xl)" src="[^"]*\/logo\/(\d+)\.png"/g, function(m, c, id){ return n++ < 2 ? m + ' style="view-transition-name:crest-' + id + '"' : m; }); };
   var head0 = R.matchHead; R.matchHead = function(md){ var h = vt(head0.apply(R, arguments).replace(/<div class="timeline">[\s\S]*$/, ""));
-    return h.replace(/(<div class="sc"><span class="dg">)([^<]*)(<\/span>)/, function(_, a, t, b){ return a + cells(t) + b; }); };
+    h = h.replace(/(<div class="sc"><span class="dg">)([^<]*)(<\/span>)/, function(_, a, t, b){ return a + cells(t) + b; });
+    // the countdown's line is part of the first paint (it used to be appended after load and moved the hero)
+    if (md && md.status === "scheduled" && md.kickoff_utc && !md.time_tbd) h = h.replace(/(<div class="sc">[\s\S]*?<span class="st">[\s\S]*?<\/span>)(<\/div>)/, '$1<span class="mcd"></span>$2');
+    return h; };
   var hl0 = R.heroLine; R.heroLine = function(){ return vt(hl0.apply(R, arguments)).replace(/(<b class="dg big">)([^<]*)(<\/b>)/, function(_, a, t, b){ return a + cells(t) + b; }); };
   // 395: zones as a thin coloured edge on the row, not a filled square behind the rank
   var TIER = ["#F6F7F2", "#F6F7F2A6", "#F6F7F266", "#A7B6AF"];

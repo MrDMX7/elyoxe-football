@@ -6,10 +6,16 @@
    - tifo-data: other /v1 files, network first with a 4 s budget, the newest 40 kept.
    Live data (/v1/live.json, /v1/match/*, /v1/day/*) is network only; the last copy is served only when the network fails
    outright (offline), never on a timeout, or a slow stadium connection would freeze the score. /og/ is never cached.
+   Offline: a navigation that fails with nothing cached gets /offline/ (tifo-off, filled on install).
    Kill switch: on activate the worker reads /sw.json and unregisters itself (and clears its caches) when it says {"off":true}. */
 const V = "__V__", A = "tifo-assets-" + V, CREST = "tifo-crest", PAGES = "tifo-pages", DATA = "tifo-data";
 const LIMIT = { [CREST]:300, [PAGES]:60, [DATA]:40 };
-self.addEventListener("install", e => { self.skipWaiting(); });
+// W3.6: the offline page (and the assets it links) is kept apart from the 60-page cache so it is never trimmed away
+const OFF = "tifo-off";
+self.addEventListener("install", e => { self.skipWaiting(); e.waitUntil((async () => { try {
+  const r = await fetch("/offline/", { cache:"no-store" }); if (!r.ok) return; const h = await r.clone().text(); await (await caches.open(OFF)).put("/offline/", r);
+  const a = await caches.open(A); for (const m of h.matchAll(/(?:href|src)="(\/assets\/[^"]+)"/g)) try { const x = await fetch(m[1]); if (x.ok) await a.put(m[1], x); } catch (err){}
+} catch (err){} })()); });
 self.addEventListener("activate", e => { e.waitUntil((async () => {
   try { const r = await fetch("/sw.json", { cache:"no-store" }); if (r.ok && (await r.json()).off){ for (const k of await caches.keys()) if (k.startsWith("tifo-")) await caches.delete(k); await self.registration.unregister(); return; } } catch (err){}
   for (const k of await caches.keys()) if ((k.startsWith("tifo-assets-") && k !== A) || /^tifo-2-/.test(k)) await caches.delete(k);   // tifo-2-* = the pre-split single cache
@@ -32,6 +38,6 @@ self.addEventListener("fetch", e => {
     const net = (async () => { const pre = e.request.mode === "navigate" && e.preloadResponse ? await e.preloadResponse : null; const r = pre || await fetch(e.request); if (r.ok) e.waitUntil(put(name, e.request, r.clone())); return r; })();
     e.waitUntil(net.catch(() => {}));   // a response that lands after the budget still refreshes the cache
     const slow = new Promise(ok => setTimeout(ok, 4000)).then(() => caches.match(e.request)).then(hit => hit || net);
-    return Promise.race([net.catch(() => caches.match(e.request).then(hit => { if (hit) return hit; throw new Error("offline"); })), slow]);
+    return Promise.race([net.catch(() => caches.match(e.request).then(hit => { if (hit) return hit; if (e.request.mode === "navigate") return caches.match("/offline/").then(o => { if (o) return o; throw new Error("offline"); }); throw new Error("offline"); })), slow]);
   })());
 });
