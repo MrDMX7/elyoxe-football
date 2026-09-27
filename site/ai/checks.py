@@ -96,7 +96,7 @@ def check_events(text, md, players=None):
         if re.search(r"قلب(?:ها)? (?:النتيجة|الطاولة)|قلبها|ريمونتادا|يقلب(?:ها)?|رجع (?:في النتيجة|بقوة|من ورا)", s) and t["win"] and not t["trailed"][t["win"]]:
             return "comeback claimed but the winner never trailed"
         # named scorer at a minute
-        if re.search(r"سج[ّ]?ل|هدف", s) and not re.search(r"طرد|إنذار|أصفر|ضي[ّ]?ع|ضايع|أهدر", s):
+        if re.search(r"سج[ّ]?ل|هدف", s) and not re.search(r"طرد|إنذار|أصفر|أحمر|حمراء|ضي[ّ]?ع|ضايع|أهدر|تصد[ىي]|أنقذ", s):
             for a0, b0, pid in _name_spans(s, players):
                 mm = re.search(r"^\D{0,25}?(?:في\s+)?الدقيقة\s+(\d+)", s[b0:])
                 if not mm: continue
