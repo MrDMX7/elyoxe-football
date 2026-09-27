@@ -14,6 +14,8 @@ from urllib.parse import urlparse
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
       "Chrome/140.0.0.0 Safari/537.36")
 _MAXAGE = re.compile(r"(?:s-)?max-age=(\d+)")
+# a 403 on these means the source is refusing us (not one dead stats URL): back the whole host off
+CORE_FEEDS = ("/api/data/matches?", "/api/data/matchDetails?", "/api/data/leagues?")
 
 
 class FetchError(Exception):
@@ -30,6 +32,7 @@ class Http:
         self.calls: dict[str, int] = {}
         self.ok: dict[str, int] = {}          # per host: fetches that returned a body (after the retry)
         self.failed: dict[str, int] = {}      # per host: fetches that raised FetchError (HTTP error, timeout, bad JSON)
+        self.backoff: dict[str, tuple[float, float]] = {}   # host -> (until, seconds): after a 429, or a 403 on a core feed
         self.network_calls = 0
 
     def _ttl(self, headers) -> int:
@@ -47,10 +50,14 @@ class Http:
         hit = self._cache.get(url)
         if hit and hit[0] > now:
             return hit[1]
+        host = urlparse(url).netloc
+        bo = self.backoff.get(host)
+        if bo and bo[0] > now:      # rate-limited or refused: no request, the caller keeps its last good file
+            self.failed[host] = self.failed.get(host, 0) + 1
+            raise FetchError(url, f"backing off {host} for {bo[0] - now:.0f} s after a 429/403", 429)
         h = {"User-Agent": UA, "Accept": "application/json, text/html;q=0.9, */*;q=0.8",
              "Accept-Encoding": "gzip", "Accept-Language": "en-US,en;q=0.9,ar;q=0.8"}
         h.update(headers or {})
-        host = urlparse(url).netloc
         last = None
         for attempt in (1, 2):
             self.calls[host] = self.calls.get(host, 0) + 1
@@ -66,9 +73,14 @@ class Http:
                 if ttl > 0:
                     self._cache[url] = (self.clock() + ttl, body)
                 self.ok[host] = self.ok.get(host, 0) + 1
+                self.backoff.pop(host, None)
                 return body
             except urllib.error.HTTPError as e:
                 last = FetchError(url, f"HTTP {e.code}", e.code)
+                if e.code == 429 or (e.code == 403 and any(k in url for k in CORE_FEEDS)):
+                    prev = (self.backoff.get(host) or (0, 0))[1]
+                    secs = min(600, max(60, 2 * prev))           # 60 s, 120 s ... 10 min
+                    self.backoff[host] = (self.clock() + secs, secs)
                 if e.code < 500:
                     break
             except Exception as e:  # timeout, DNS, reset

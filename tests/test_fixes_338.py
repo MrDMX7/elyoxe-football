@@ -160,3 +160,81 @@ def test_repoll_schedule_and_merge(tmp_path):
     ids = [e["event_id"] for e in full2["events"]]
     assert "1-half-11" in ids and "1-half-12" in ids       # the old event the new copy lacked is kept
     assert next(e for e in full2["events"] if e["event_id"] == "1-goal-10")["first_seen"] == "2026-09-27T17:10:00Z"
+
+
+def test_live_watchdog_once_per_match(tmp_path):
+    p = _poller(tmp_path)
+    mail = _Mail()
+    p.mailer = mail
+    t = datetime(2026, 9, 27, 19, 0, tzinfo=timezone.utc)
+    p.now_fn = lambda: t
+    p.st.update({"live_ids": ["6052085"], "live_written_at": "2026-09-27T18:59:30Z"})
+    p.live_watchdog()
+    assert mail.sent == [] and p.store.health["live-watchdog"]["ok"]            # 30 s: fine
+    p.st["live_written_at"] = "2026-09-27T18:57:00Z"
+    p.live_watchdog()
+    p.live_watchdog()
+    assert mail.sent == ["Tifo: live feed stalled 180 s"]                         # once per match
+    p.st["live_ids"] = []
+    p.live_watchdog()
+    assert p.st["stall_alerted"] == {}
+
+
+def test_live_watchdog_analytics_reads_live_json(tmp_path):
+    p = _poller(tmp_path, "analytics")
+    mail = _Mail()
+    p.mailer = mail
+    p.now_fn = lambda: datetime(2026, 9, 27, 19, 10, tzinfo=timezone.utc)
+    lj = {"generated": "2026-09-27T19:00:00Z", "matches": [{"id": 1, "status": "live"}, {"id": 2, "status": "finished"}]}
+    p.live_watchdog(lj)
+    assert len(mail.sent) == 1 and p.an_state["stall_alerted"] == {"1": "2026-09-27T19:10:00Z"}
+
+
+def test_http_backs_off_after_429():
+    import urllib.error
+    from sources import http as H
+    t = [100.0]
+    h = H.Http(clock=lambda: t[0])
+    calls = []
+
+    def boom(req, timeout):
+        calls.append(req.full_url)
+        raise urllib.error.HTTPError(req.full_url, 429, "Too Many", {}, None)
+    orig = H.urllib.request.urlopen
+    H.urllib.request.urlopen = boom
+    try:
+        for _ in range(3):
+            try:
+                h.get_bytes("https://www.fotmob.com/api/data/matches?date=20260927")
+            except H.FetchError:
+                pass
+        assert len(calls) == 1 and h.failed["www.fotmob.com"] == 3            # no request while backing off
+        t[0] += 61
+        try:
+            h.get_bytes("https://www.fotmob.com/api/data/matches?date=20260927")
+        except H.FetchError:
+            pass
+        assert len(calls) == 2 and h.backoff["www.fotmob.com"][1] == 120        # doubled
+        calls.clear()
+
+        def forbid(req, timeout):
+            calls.append(req.full_url)
+            raise urllib.error.HTTPError(req.full_url, 403, "Forbidden", {}, None)
+        H.urllib.request.urlopen = forbid
+        h2 = H.Http(clock=lambda: t[0])
+        for _ in range(2):
+            try:
+                h2.get_bytes("https://data.fotmob.com/stats/530/season/1/rating.json")
+            except H.FetchError:
+                pass
+        assert len(calls) == 2 and not h2.backoff                               # one dead stats URL: no host backoff
+    finally:
+        H.urllib.request.urlopen = orig
+
+
+def test_clock_of_live_periods():
+    from sources import fotmob as F
+    st = {"halfs": {"firstHalfStarted": "27.09.2026 20:01:38", "secondHalfStarted": "27.09.2026 21:08:48"}, "periodLength": 45}
+    c = F.clock_of(st, "live")
+    assert c == {"period": "2H", "period_start": "2026-09-27T19:08:48Z", "period_base": 45, "period_length": 45}
+    assert F.clock_of(st, "ht")["period_start"] is None and F.clock_of(st, "scheduled") == {}

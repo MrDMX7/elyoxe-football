@@ -61,6 +61,29 @@ def status_of(st: dict) -> tuple[str, str | None, str | None]:
     return S.SCHEDULED, None, None
 
 
+PERIODS = (("1H", "firstHalfStarted", "firstHalfEnded", 0), ("2H", "secondHalfStarted", "secondHalfEnded", 45),
+           ("ET1", "firstExtraHalfStarted", None, 90), ("ET2", "secondExtraHalfStarted", None, 105))
+
+
+def clock_of(st: dict, status: str) -> dict:
+    """Live clock anchor from FotMob's period start times (Oslo wall clock -> UTC): the running period, when it
+    started and its base minute, so a client can tick the minute locally (base + elapsed). period_start is null
+    while the clock is stopped (half-time, the break before extra time, penalties) or unknown."""
+    if status not in S.LIVE_STATUSES:
+        return {}
+    halfs = (st or {}).get("halfs") or {}
+    cur = None
+    for name, start, end, base in PERIODS:
+        if halfs.get(start):
+            cur = (name, start, end, base)
+    if not cur or status == S.HALFTIME or (cur[2] and halfs.get(cur[2])):
+        return {"period": "HT" if status == S.HALFTIME else "break" if cur else None, "period_start": None,
+                "period_base": None, "period_length": None}
+    started = parse_fotmob_local(halfs.get(cur[1]))
+    return {"period": cur[0], "period_start": iso(started) if started else None, "period_base": cur[3],
+            "period_length": 15 if cur[0].startswith("ET") else (st.get("periodLength") or 45)}
+
+
 def score_of(score_str, home=None, away=None):
     if isinstance(home, int) and isinstance(away, int) and not score_str:
         return {"home": home, "away": away}
@@ -97,6 +120,7 @@ class FotMob(Source):
             "score": score, "penalties": pens,
             "home": self._team(home.get("id"), home.get("name") or home.get("longName")),
             "away": self._team(away.get("id"), away.get("name") or away.get("longName")),
+            **clock_of(status_block, status),
             "source": self.name,
         }
 
