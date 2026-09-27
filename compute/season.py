@@ -223,7 +223,7 @@ def xg_table(ledger: dict) -> dict:
             "method": "expected points from independent Poisson goals with the match xG as means; luck = pts - xPts"}
 
 
-def referees(ledger: dict) -> dict:
+def referees(ledger: dict, league_country: str | None = None) -> dict:
     out = {}
     for e in ledger.values():
         ref = e.get("referee")
@@ -232,7 +232,10 @@ def referees(ledger: dict) -> dict:
         k = str(ref.get("id") or ref["name"])
         r = out.setdefault(k, {"id": ref.get("id"), "name": ref["name"], "country": ref.get("country"), "matches": 0,
                                "yellow": 0, "second_yellow": 0, "red": 0, "penalties": 0, "var": 0, "match_ids": [],
-                               "source_stats": None})
+                               "source_stats": None,
+                               "foreign": (bool(ref.get("country")) and bool(league_country) and ref.get("country") != league_country)
+                               if league_country else None,
+                               "home": {"yellow": 0, "red": 0, "penalties": 0}, "away": {"yellow": 0, "red": 0, "penalties": 0}})
         r["matches"] += 1
         r["match_ids"].append(e["id"])
         for side in ("home", "away"):
@@ -241,6 +244,9 @@ def referees(ledger: dict) -> dict:
             r["second_yellow"] += c["second_yellow"]
             r["red"] += c["red"] + c["second_yellow"]
             r["penalties"] += e["pens"][side]["scored"] + e["pens"][side]["missed"]
+            r[side]["yellow"] += c["yellow"]
+            r[side]["red"] += c["red"] + c["second_yellow"]
+            r[side]["penalties"] += e["pens"][side]["scored"] + e["pens"][side]["missed"]
         r["var"] += len(e.get("var") or [])
         if e.get("referee_stats") and (r["source_stats"] is None or (e.get("ko") or "") >= r.get("_ss_ko", "")):
             r["source_stats"], r["_ss_ko"] = e["referee_stats"], e.get("ko") or ""
@@ -251,7 +257,8 @@ def referees(ledger: dict) -> dict:
         r["penalties_per_match"] = round(r["penalties"] / m, 2)
     return {"referees": sorted(out.values(), key=lambda r: -r["matches"]),
             "note": "counted from match events we stored (penalties = scored + missed, second yellow counted as red); "
-                    "source_stats = FotMob's own referee block (its scope may be another competition)"}
+                    "source_stats = FotMob's own referee block (its scope may be another competition); home/away = cards and "
+                    "penalties against the home/away side; foreign = referee country differs from the league's country"}
 
 
 def shots(ledger: dict) -> dict:

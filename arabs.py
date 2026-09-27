@@ -282,3 +282,199 @@ def national_hub(p, limit=6):
                                              "note": "FIFA rank from FotMob (the national team's page); Tifo rating = national Elo "
                                                      "(ratings/national.json); groups = current tables of covered qualifying competitions"},
                      cache="static")
+
+
+# ------------------------------------------------------------------ 279 tonight
+def tonight(p):
+    """Next 48 h of abroad-competition matches with Arab-nationality players in either club's squad,
+    plus performance once played (from the stored lineups)."""
+    codes = arab_codes()
+    roster = p.aux("arab_rosters")          # team id -> [{id, name, nationality}], from squads + lineups
+    for tid, groups in p.aux("squads").items():
+        rs = [{"id": pl["id"], "name": pl["name"], "nationality": codes[pl["country"]]} for g in groups or []
+              for pl in g.get("players") or [] if pl.get("country") in codes]
+        if rs:
+            roster[tid] = rs
+    for a in appearances(p):
+        lst = roster.setdefault(str(a["team"]), [])
+        if all(x["id"] != a["player"] for x in lst):
+            lst.append({"id": a["player"], "name": a["name"], "nationality": a["nationality"]})
+    now = p.now()
+    apps = {}
+    for a in appearances(p):
+        apps.setdefault(a["match"], []).append(a)
+    out = []
+    for cid in ABROAD_COMPS:
+        for m in p.fixtures(cid) or []:
+            ko = parse_utc(m.get("kickoff_utc"))
+            if not ko or not (now - timedelta(hours=30) <= ko <= now + timedelta(hours=48)):
+                continue
+            ps = [dict(x, team=int(side_id)) for side_id in (str(m["home"]["id"]), str(m["away"]["id"])) for x in roster.get(side_id, [])]
+            if not ps:
+                continue
+            out.append({"match": m["id"], "comp": cid, "comp_name_ar": m.get("comp_name_ar"), "kickoff_utc": m["kickoff_utc"],
+                        "kickoff_uae": m.get("kickoff_uae"), "status": m["status"], "score": m.get("score"),
+                        "home": m["home"], "away": m["away"], "players": ps, "performance": apps.get(m["id"])})
+    out.sort(key=lambda x: x["kickoff_utc"])
+    p.store.put_json("arabs/tonight.json", {"generated": iso(now), "matches": out,
+                                            "note": "abroad competitions, 30 h back to 48 h ahead; players = Arab nationals on either "
+                                                    "club's squad (FotMob squads we hold + every stored lineup); performance appears "
+                                                    "after the match's final detail is stored"}, cache="warm")
+
+
+# ------------------------------------------------------------------ 280 coefficients
+def coefficients(p):
+    import json, os
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "coefficients.json"), encoding="utf-8") as f:
+            doc = json.load(f)
+    except OSError:
+        return
+    p.store.put_json("arabs/coefficients.json", {"generated": iso(p.now()), **doc}, cache="static")
+
+
+# ------------------------------------------------------------------ 282 calendars
+ARAB_LEAGUES = (538, 536, 535, 529, 524, 519, 530, 516, 544, 10721)
+
+
+def calendars(p):
+    out = {}
+    fifa_windows = []
+    for cid in ARAB_LEAGUES:
+        fx = [m for m in p.fixtures(cid) or [] if m.get("kickoff_utc")]
+        if not fx:
+            continue
+        ds = sorted({m["kickoff_utc"][:10] for m in fx})
+        gaps = []
+        from datetime import date as D
+        for a, b in zip(ds, ds[1:]):
+            da, db = D.fromisoformat(a), D.fromisoformat(b)
+            if (db - da).days >= 12:
+                gaps.append({"from": a, "to": b, "days": (db - da).days})
+        out[str(cid)] = {"name_ar": (config.competition(cid) or {}).get("name_ar"), "country": (config.competition(cid) or {}).get("country"),
+                         "first_match": ds[0], "last_published_match": ds[-1], "matches_published": len(fx),
+                         "breaks": gaps}
+    for cid in (10608, 10197, 10609, 329, 290, 114):
+        for m in p.fixtures(cid) or []:
+            if m.get("kickoff_utc"):
+                fifa_windows.append(m["kickoff_utc"][:10])
+    cutoff = (p.now() - timedelta(days=365)).strftime("%Y-%m-%d")
+    fifa_windows = sorted(d for d in set(fifa_windows) if d >= cutoff)
+    windows, cur = [], None
+    from datetime import date as D
+    for d in fifa_windows:
+        if cur and (D.fromisoformat(d) - D.fromisoformat(cur["to"])).days <= 3:
+            cur["to"] = d
+        else:
+            if cur:
+                windows.append(cur)
+            cur = {"from": d, "to": d}
+    if cur:
+        windows.append(cur)
+    p.store.put_json("arabs/calendars.json", {"generated": iso(p.now()), "leagues": out, "national_team_windows": windows,
+                                              "note": "breaks = gaps of 12+ days between published match dates; last_published_match "
+                                                      "is not the season end where the league publishes a few rounds at a time; "
+                                                      "national-team windows = dates of covered national-team matches"}, cache="static")
+
+
+# ------------------------------------------------------------------ 284 archive index
+def archive_index(p):
+    by_season = {}
+    for cid in set(config.settings().get("history_comps", [])):
+        for season, rows in p.aux(f"history/{cid}").items():
+            for r in HI.finished(rows):
+                y = int(r["ko"][:4]) - (1 if int(r["ko"][5:7]) < 7 else 0) if r.get("ko") else None
+                key = f"{y}-{y + 1}" if y else "unknown"
+                by_season.setdefault(key, []).append([r["id"], (r["ko"] or "")[:10], r["comp"], r["h"], r["a"], r["hs"], r["as"]])
+    for cid in [c["id"] for c in p.comps]:
+        for m in p.fixtures(cid) or []:
+            if m["status"] == S.FINISHED and m.get("id") and m.get("score") and m.get("kickoff_utc"):
+                ko = m["kickoff_utc"]
+                y = int(ko[:4]) - (1 if int(ko[5:7]) < 7 else 0)
+                lst = by_season.setdefault(f"{y}-{y + 1}", [])
+                lst.append([m["id"], ko[:10], m["comp"], m["home"]["id"], m["away"]["id"], m["score"]["home"], m["score"]["away"]])
+    index = []
+    for season, rows in sorted(by_season.items()):
+        seen, uniq = set(), []
+        for r in sorted(rows, key=lambda r: r[1]):
+            if r[0] not in seen:
+                seen.add(r[0])
+                uniq.append(r)
+        p.store.put_json(f"archive/all/{season}.json", {"season": season, "fields": ["id", "date", "comp", "home", "away", "hs", "as"],
+                                                        "matches": uniq}, cache="static")
+        index.append({"season": season, "matches": len(uniq), "file": f"archive/all/{season}.json"})
+    p.store.put_json("archive/index-all.json", {"generated": iso(p.now()), "seasons": index,
+                                                "note": "every stored match result (history competitions since 2010/11 + current fixtures), "
+                                                        "split by July-June season; team names in teams.json"}, cache="static")
+
+
+# ------------------------------------------------------------------ 287 streaks
+def streaks(p):
+    names = p.names["teams"]
+    out = {k: [] for k in ("unbeaten", "winning", "clean_sheets", "winless", "losing")}
+    tests = {"unbeaten": lambda f, a: f >= a, "winning": lambda f, a: f > a, "clean_sheets": lambda f, a: a == 0,
+             "winless": lambda f, a: f <= a, "losing": lambda f, a: f < a}
+    for cid in ARAB_LEAGUES:
+        fx = [m for m in p.fixtures(cid) or [] if m["status"] == S.FINISHED and m.get("score") and m.get("id")]
+        hist = [r for rs in p.aux(f"history/{cid}").values() for r in HI.finished(rs)]
+        rows = {r["id"]: (r["ko"] or "", r["h"], r["a"], r["hs"], r["as"]) for r in hist}
+        for m in fx:
+            rows[m["id"]] = (m["kickoff_utc"] or "", m["home"]["id"], m["away"]["id"], m["score"]["home"], m["score"]["away"])
+        games = sorted(rows.items(), key=lambda kv: kv[1][0])
+        teams = {x for _, r in games for x in (r[1], r[2])}
+        current = {m["home"]["id"] for m in fx} | {m["away"]["id"] for m in fx}
+        for t in teams & current:
+            seq = [(mid, r[3], r[4]) if r[1] == t else (mid, r[4], r[3]) for mid, r in games if t in (r[1], r[2])]
+            for k, test in tests.items():
+                n = 0
+                for mid, f, a in reversed(seq):
+                    if test(f, a):
+                        n += 1
+                    else:
+                        break
+                if n >= 3:
+                    out[k].append({"team": t, "team_ar": names.get(str(t)), "comp": cid,
+                                   "country": (config.competition(cid) or {}).get("country"), "length": n,
+                                   "since_match": seq[-n][0], "last_match": seq[-1][0]})
+    for k in out:
+        out[k].sort(key=lambda x: -x["length"])
+    p.store.put_json("arabs/streaks.json", {"generated": iso(p.now()), "streaks": out,
+                                            "note": "league games only (domestic league of each club), running now, length >= 3, "
+                                                    "counted across seasons from FotMob history"}, cache="warm")
+
+
+# ------------------------------------------------------------------ 281 TV guide
+def guide(p):
+    import json, os
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "broadcast_by_country.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            bc = json.load(f)
+    except OSError:
+        return
+    now = p.now()
+    fx = {}
+    for key in {k for c, v in bc.items() if c != "_meta" for k in (v.get("competitions") or {})}:
+        if key.isdigit():
+            fx[key] = [m for m in p.fixtures(int(key)) or [] if m.get("kickoff_utc")
+                       and now - timedelta(hours=2) <= parse_utc(m["kickoff_utc"]) <= now + timedelta(days=3)]
+    for iso2, v in bc.items():
+        if iso2 == "_meta":
+            continue
+        items = []
+        for key, info in (v.get("competitions") or {}).items():
+            for m in fx.get(key, []):
+                items.append({"match": m["id"], "comp": int(key), "comp_name_ar": m.get("comp_name_ar"), "kickoff_utc": m["kickoff_utc"],
+                              "kickoff_uae": m.get("kickoff_uae"), "home": m["home"], "away": m["away"], "status": m["status"],
+                              "broadcasters": info.get("broadcasters") or [], "confidence": info.get("confidence"),
+                              "note": info.get("note")})
+        items.sort(key=lambda x: x["kickoff_utc"])
+        by_bc = {}
+        for it in items:
+            for b in it["broadcasters"]:
+                by_bc.setdefault(b.get("name_en") or b.get("name_ar") or "?", []).append(it["match"])
+        p.store.put_json(f"guide/{iso2}.json", {"country": iso2, "country_ar": v.get("country_ar"), "generated": iso(now),
+                                                "days": 3, "matches": items, "by_broadcaster": by_bc,
+                                                "source": "research/tifo-2026-09-27/broadcast_by_country.json (checked "
+                                                          + str((bc.get("_meta") or {}).get("checked")) + ") x FotMob fixtures"},
+                         cache="warm")

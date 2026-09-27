@@ -250,6 +250,48 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `national/archives.json` | index of those archives |
 | `national/countries.json` | 22 Arab countries plus the big-5 countries: `iso2`, `name_ar`, `name_en`, `arab`, national `team` id, domestic `competitions` |
 | `ratings/arab-clubs.json` | Arab clubs rating (one scale across the Arab leagues, linked by AFC/CAF/Arab club competitions): top 100 with country and trend (docs/TIFO-RATING.md) |
+| `match/{id}.json` → `events[].event_id`, `first_seen` | stable event ids for commentary (see "Commentary feed") |
+| `match/{id}.json` → `firsts` | inside our data: `first_meeting` (no earlier meeting in FotMob history since 2010/11), `first_appearance_season`, `first_goal_season` (this season's stored matches) |
+| `…probs.scores`, `probs.expected_goals` | on every scheduled match with a rated pair: exact-score probabilities, a 6×6 grid [home goals 0–5][away goals 0–5] from the Poisson rates behind the W/D/L probabilities |
+| `player/{id}.json` → `form` | last 10 stored appearances, all competitions: `[[match, date, rating, minutes, goals, assists], ...]` |
+| `player/{id}/teammates.json` | top 30 teammates by matches together (stored lineups; written on a rolling cursor) |
+| `player/{id}/career.json` | FotMob career: `senior` / `national_team` clubs with dates, apps, goals, assists, loan. Written for league top-30 scorers/assisters and Arab players abroad, refreshed weekly |
+| `team/{id}/history.json` | every result since 2010/11 across the history competitions: `[date, comp, opponent, gf, ga, result, H/A, match]` (clubs in the analytics leagues, rolling cursor) |
+| `comp/{id}/seasons.json` | leagues: per season since 2010/11, the computed final table plus `goals_per_game`, `home_win_pct`, `draw_pct`, `title_margin`, `champion`; `avg_age`/`foreign_share_pct` for the current season |
+| `comp/{id}/milestones.json` | players within 5 goals or 10 apps of 50/100/150/200/250/300 for a club or the national team (FotMob career) |
+| `comp/{id}/upsets.json` | per season: wins by a side whose pre-match win probability was < 20% (Tifo rating, predicted before the match) |
+| `comp/{id}/projections.json` | top scorers and assisters projected to the season end at their current per-match rate |
+| `comp/{id}/bracket-sim.json` | knockout cups and continental competitions: Monte Carlo reach probabilities per round (Tifo club rating) and `ties` for two-legged rounds (aggregate, `needs.trailing_needs_to_win_by`, live flag) |
+| `comp/{id}/scenarios.json` → `arab_clubs` | AFC/CAF groups list their Arab clubs (group scenarios for every group with ≤ 8 games left) |
+| `comp/{id}/games-in-hand.json` | overdue (kickoff passed, not played) matches, games in hand, projected points with overdue games at expected points, adjusted rank |
+| `comp/{id}/local-minutes.json` | minutes by nationals vs foreigners per club and league (lineup nationality vs league country) |
+| `comp/{id}/first-goal.json` | per team: record when scoring first / conceding first, comebacks |
+| `comp/{id}/dropped.json` | points dropped from winning positions and won from losing positions |
+| `comp/{id}/red-impact.json` | record when playing 11v10 / 10v11 after the first red card, and points gained or lost after it |
+| `comp/{id}/goal-types.json` | per team and player: header / right_foot / left_foot (+set_piece, +outside_box) / penalty / free_kick, with `coverage` (shot map or FotMob goal description; UAE goals are mostly untyped) |
+| `comp/{id}/dependence.json` | share of team goals from the top scorer and top 2 |
+| `comp/{id}/subs.json` | substitutes' goals/assists and points added per player and per coach; result-changing sub goals |
+| `comp/{id}/xi.json` | starts per player, formations used, most common starting XI and the 11 most-used players |
+| `comp/{id}/workload.json` | minutes in the last 30 days and last 5 matches (all competitions) with `overload` (≥ 540 min in 30 days, or ≥ 450 min over 5 matches within 18 days) |
+| `comp/{id}/signings.json` | this season's incoming transfers ranked by FotMob rating × min(1, minutes/900) at the new club |
+| `national/{id}/squad.json` | 22 Arab national teams: FotMob's current squad (latest call-up) with each player's club |
+| `callups/{club_id}.json` | the club's players currently in an Arab national squad |
+| `players/birthdays/MM-DD.json` | players born on that day: FotMob dates of birth + Wikidata P569 for players in `names/players_ar.json` with a QID |
+| `transfers/latest.json` | incoming moves at clubs in the Arab leagues, last 60 days, newest first |
+| `arabs/abroad.json` | Arab nationals who played in the big five or UEFA club competitions this season: nationality (ISO2 + Arabic), club, apps, minutes, goals, assists, average rating, league season stats |
+| `arabs/day/YYYYMMDD.json` | Arab players' appearances abroad that UAE day: minutes, goals, assists, rating, match |
+| `arabs/week/YYYY-WW.json`, `arabs/week/latest.json` | star of the week and top 5 (rating + 1×goals + 0.7×assists, last 7 days) |
+| `arabs/tonight.json` | next 48 h (and last 30 h) abroad matches with Arab players in either squad; `performance` after the match |
+| `arabs/clashes.json` | AFC/CAF/Arab club competition matches between two Arab clubs, ±45 days |
+| `arabs/national.json` | 22 Arab national teams: FIFA rank, Tifo national rating and world/Arab position, next match, last result, current qualification groups |
+| `arabs/u21.json` | Arab-league players ≤ 21 with ≥ 450 minutes, by rating then (G+A)/90 |
+| `arabs/coefficients.json` | AFC association ranking and CAF association + club 5-year ranking (Wikipedia revision + the sources it cites; `arab` flag and Arabic country) |
+| `arabs/calendars.json` | per Arab league: first and last published match, breaks of 12+ days; national-team match windows |
+| `arabs/streaks.json` | running streaks (≥ 3) across the Arab leagues: unbeaten, winning, clean sheets, winless, losing |
+| `derbies.json`, `h2h/{a}-{b}.json` | the 12 big Arab derbies (derbies.yaml) with Arabic names, city and full FotMob head-to-head |
+| `archive/index-all.json`, `archive/all/{season}.json` | every stored result by July–June season: `[id, date, comp, home, away, hs, as]` |
+| `guide/{iso2}.json` | per country: the next 3 days of covered matches with their broadcasters (research/tifo-2026-09-27/broadcast_by_country.json × fixtures) and `by_broadcaster` |
+| `comp/{id}/referees.json` → `foreign`, `home`, `away` | referee nationality vs the league's country; yellows, reds and penalties against the home/away side |
 | `archive/index.json`, `archive/{id}.json` | memorable matches with full event data: derbies (competitions.yaml `derbies`), cup finals, Super Cups since 2016/17 |
 
 - **Competitions (`index.json`, `competitions.yaml`):** each has `country: {iso2, name_ar}`, or `null` plus `region` (gulf, arab, asia, africa, europe, world). `teams.json` and `team/{id}.json` (`country_info`) give each club its domestic country and each national team its own country (`national: true`).
@@ -276,7 +318,8 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | Player radar | Per-player lists cover only the competitions in `player_stats_comps` (538, 536, 535). FotMob's own percentiles exist per player (`playerData.firstSeasonStats`) but would cost one request per player; `players.json` computes them from the lists instead |
 | Highlights fallback | FotMob already links the official `@uaeproleague` YouTube video per match (checked through YouTube oEmbed: author "UAE Pro League"). If that ever disappears, the channel's RSS feed (`youtube.com/feeds/videos.xml?channel_id=<id>`, one request, latest 15 videos) matches on titles of the form «ملخص وأهداف مباراة {home_ar} ضد {away_ar} الجولة {round} من دوري ادنوك للمحترفين». This is not implemented, and YouTube is not scraped |
 | World Cup qualifying (AFC) | The 2023/25 cycle (id 10197) is finished, and the next cycle is not published. `qualifying.json` shows the finished group. The Asian Cup 2027 group E (290) and Gulf Cup group B (329) have remaining fixtures |
-| Player names in Arabic | Not in any source |
+| Player names in Arabic | Not from FotMob; another agent builds `names/players_ar.json` (Wikidata), used here only for birthdays |
+| Most improved / player lists for some leagues | FotMob returns 403 for older rating lists of Morocco, Algeria, Tunisia, Kuwait and has no per-player lists for Iraq |
 | Match events before 2016/17, lineups before 2018/19 | FotMob match details are empty for 2014/15 and earlier and have no lineups for 2016/17. The archive starts at 2016/17 |
 | UAE league results before 2010/11 | No free machine-readable source. Champions since 1973–74 come from Wikipedia/RSSSF (`alltime.json`) |
 | FIFA ranking for 2026 dates | FIFA's API returns empty lists for its newest ids (`FRS_*`). FotMob's current ranking fills in from then on, without AFC/Arab ranks |

@@ -600,7 +600,7 @@ class Poller:
             return
         now = iso(self.now())
         base = {"comp": cid, "season": self.ledger(cid).get("season"), "generated": now, "matches_counted": len(L)}
-        self.store.put_json(f"comp/{cid}/referees.json", {**base, **SEASON.referees(L)}, cache="static")
+        self.store.put_json(f"comp/{cid}/referees.json", {**base, **SEASON.referees(L, self.cc_of(cid))}, cache="static")
         self.store.put_json(f"comp/{cid}/halftime.json", {**base, **SEASON.ht_table(L)}, cache="static")
         self.store.put_json(f"comp/{cid}/goal-bands.json", {**base, **SEASON.goal_bands(L)}, cache="static")
         xt = SEASON.xg_table(L)
@@ -620,7 +620,9 @@ class Poller:
             raw = self.fm.league_raw(cid, comp.get("season"))
             lists = self.fm.player_stat_lists(raw)
             if not lists:
-                raise S.Invalid("no player stat lists")
+                self.store.ok(f"players:{cid}", note="FotMob publishes no per-player season lists for this league")
+                self.mark("players", cid)
+                return
         except CONVERT_ERRORS as e:
             self.store.fail(f"players:{cid}", e)
             return
@@ -930,6 +932,12 @@ class Poller:
             ("birthdays", 1440, lambda: MO.birthdays(self)),
             ("transfers_feed", 60, lambda: MO.transfers_feed(self)),
             ("arabs_abroad", 60, lambda: AR.abroad(self)),
+            ("arabs_tonight", 30, lambda: AR.tonight(self)),
+            ("coefficients", 1440, lambda: AR.coefficients(self)),
+            ("calendars", 1440, lambda: AR.calendars(self)),
+            ("archive_index", 1440, lambda: AR.archive_index(self)),
+            ("arab_streaks", 60, lambda: AR.streaks(self)),
+            ("tv_guide", 60, lambda: AR.guide(self)),
             ("arab_clashes", 60, lambda: AR.clashes(self)),
             ("arab_national", 60, lambda: AR.national_hub(self)),
             ("arab_derbies", 60, lambda: AR.derbies(self)),

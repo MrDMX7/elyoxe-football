@@ -1,0 +1,2099 @@
+{
+"sources": {
+"afc": {
+"url": "https://en.wikipedia.org/w/index.php?title=AFC_club_competitions_ranking&oldid=1376983778",
+"cites": "https://footyrankings.github.io/crank2027/ (AFC ranking recomputed from AFC results)"
+},
+"caf": {
+"url": "https://en.wikipedia.org/w/index.php?title=CAF_5-year_ranking&oldid=1373597003",
+"cites": "CAF / RSSSF as cited in the article"
+}
+},
+"afc_associations_2026_27": [
+{
+"region_rank": "W1",
+"rank": 1,
+"prev_rank": 1,
+"association": "Saudi Arabia",
+"code": "KSA",
+"arab": true,
+"iso2": "SA",
+"name_ar": "السعودية",
+"season_points": [
+10.0,
+26.35,
+20.95,
+19.075,
+27.1,
+34.542,
+31.1,
+4.578
+],
+"total": 114.632
+},
+{
+"region_rank": "W2",
+"rank": 4,
+"prev_rank": 4,
+"association": "United Arab Emirates",
+"code": "UAE",
+"arab": true,
+"iso2": "AE",
+"name_ar": "الإمارات",
+"season_points": [
+8.1,
+7.633,
+14.4,
+8.083,
+25.5,
+16.4,
+19.55,
+4.333
+],
+"total": 70.431
+},
+{
+"region_rank": "W3",
+"rank": 5,
+"prev_rank": 5,
+"association": "Iran",
+"code": "IRN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+18.85,
+11.5,
+14.225,
+13.25,
+9.3,
+13.274,
+16.102,
+3.889
+],
+"total": 60.828
+},
+{
+"region_rank": "W4",
+"rank": 6,
+"prev_rank": 6,
+"association": "Qatar",
+"code": "QAT",
+"arab": true,
+"iso2": "QA",
+"name_ar": "قطر",
+"season_points": [
+19.85,
+15.9,
+7.3,
+13.5,
+8.1,
+14.701,
+15.896,
+3.5
+],
+"total": 59.302
+},
+{
+"region_rank": "W5",
+"rank": 9,
+"prev_rank": 10,
+"association": "Uzbekistan",
+"code": "UZB",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+9.4,
+9.0,
+8.96,
+10.057,
+11.25,
+10.333,
+6.76,
+4.522
+],
+"total": 47.251
+},
+{
+"region_rank": "W6",
+"rank": 12,
+"prev_rank": 12,
+"association": "Jordan",
+"code": "JOR",
+"arab": true,
+"iso2": "JO",
+"name_ar": "الأردن",
+"season_points": [
+7.633,
+7.967,
+4.893,
+6.0,
+5.415,
+12.0,
+12.555,
+2.333
+],
+"total": 38.546
+},
+{
+"region_rank": "W7",
+"rank": 13,
+"prev_rank": 13,
+"association": "Iraq",
+"code": "IRQ",
+"arab": true,
+"iso2": "IQ",
+"name_ar": "العراق",
+"season_points": [
+8.633,
+8.3,
+3.25,
+7.45,
+7.473,
+8.5,
+11.086,
+3.5
+],
+"total": 37.513
+},
+{
+"region_rank": "W8",
+"rank": 16,
+"prev_rank": 17,
+"association": "Oman",
+"code": "OMA",
+"arab": true,
+"iso2": "OM",
+"name_ar": "عُمان",
+"season_points": [
+1.583,
+1.433,
+0.0,
+6.795,
+9.78,
+9.0,
+6.722,
+2.333
+],
+"total": 27.544
+},
+{
+"region_rank": "W9",
+"rank": 17,
+"prev_rank": 16,
+"association": "Bahrain",
+"code": "BHR",
+"arab": true,
+"iso2": "BH",
+"name_ar": "البحرين",
+"season_points": [
+1.633,
+2.5,
+5.51,
+5.215,
+7.02,
+7.583,
+7.207,
+2.333
+],
+"total": 27.174
+},
+{
+"region_rank": "W10",
+"rank": 20,
+"prev_rank": 18,
+"association": "Kuwait",
+"code": "KUW",
+"arab": true,
+"iso2": "KW",
+"name_ar": "الكويت",
+"season_points": [
+0.0,
+3.433,
+7.07,
+4.16,
+3.165,
+8.075,
+9.572,
+1.767
+],
+"total": 26.462
+},
+{
+"region_rank": "W11",
+"rank": 21,
+"prev_rank": 21,
+"association": "Turkmenistan",
+"code": "TKM",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+7.583,
+5.267,
+3.125,
+2.64,
+3.463,
+7.45,
+6.494,
+2.95
+],
+"total": 24.707
+},
+{
+"region_rank": "W12",
+"rank": 23,
+"prev_rank": 24,
+"association": "Kyrgyzstan",
+"code": "KGZ",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.15,
+2.433,
+0.835,
+0.565,
+11.83,
+4.6,
+6.158,
+1.05
+],
+"total": 20.328
+},
+{
+"region_rank": "W13",
+"rank": 24,
+"prev_rank": 25,
+"association": "Lebanon",
+"code": "LBN",
+"arab": true,
+"iso2": "LB",
+"name_ar": "لبنان",
+"season_points": [
+3.933,
+6.933,
+2.67,
+1.525,
+4.84,
+4.5,
+5.806,
+1.5
+],
+"total": 19.917
+},
+{
+"region_rank": "W14",
+"rank": 25,
+"prev_rank": 26,
+"association": "India",
+"code": "IND",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+4.417,
+3.217,
+3.677,
+4.797,
+3.453,
+6.5,
+1.338,
+2.183
+],
+"total": 18.333
+},
+{
+"region_rank": "W15",
+"rank": 26,
+"prev_rank": 23,
+"association": "Tajikistan",
+"code": "TJK",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+4.433,
+3.0,
+4.97,
+2.493,
+2.23,
+3.276,
+5.774,
+1.6
+],
+"total": 17.489
+},
+{
+"region_rank": "W16",
+"rank": 27,
+"prev_rank": 28,
+"association": "Bangladesh",
+"code": "BAN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+1.433,
+6.933,
+2.79,
+3.76,
+4.73,
+1.5,
+2.433,
+2.1
+],
+"total": 15.655
+},
+{
+"region_rank": "W17",
+"rank": 31,
+"prev_rank": 31,
+"association": "Syria",
+"code": "SYR",
+"arab": true,
+"iso2": "SY",
+"name_ar": "سوريا",
+"season_points": [
+2.0,
+3.133,
+1.785,
+2.89,
+1.4,
+2.5,
+1.0,
+1.65
+],
+"total": 10.01
+},
+{
+"region_rank": "W18",
+"rank": 33,
+"prev_rank": 35,
+"association": "Bhutan",
+"code": "BHU",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.15,
+0.1,
+0.1,
+0.1,
+0.1,
+3.6,
+2.544,
+1.6
+],
+"total": 7.035
+},
+{
+"region_rank": "W19",
+"rank": 35,
+"prev_rank": 34,
+"association": "Maldives",
+"code": "MDV",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+4.3,
+0.0,
+0.2,
+2.03,
+2.64,
+1.5,
+0.5,
+0.5
+],
+"total": 6.606
+},
+{
+"region_rank": "W20",
+"rank": 36,
+"prev_rank": 36,
+"association": "Palestine",
+"code": "PLE",
+"arab": true,
+"iso2": "PS",
+"name_ar": "فلسطين",
+"season_points": [
+0.15,
+2.967,
+0.835,
+0.61,
+0.1,
+2.5,
+0.0,
+0.0
+],
+"total": 4.085
+},
+{
+"region_rank": "W21",
+"rank": 40,
+"prev_rank": 40,
+"association": "Afghanistan",
+"code": "AFG",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.0,
+0.0,
+0.0,
+0.5,
+0.5,
+0.5
+],
+"total": 1.35
+},
+{
+"region_rank": "W22",
+"rank": 41,
+"prev_rank": 39,
+"association": "Nepal",
+"code": "NEP",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.667,
+0.2,
+0.1,
+0.2,
+0.5,
+0.0,
+0.0
+],
+"total": 0.967
+},
+{
+"region_rank": "W23",
+"rank": 43,
+"prev_rank": 42,
+"association": "Sri Lanka",
+"code": "SRI",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.35,
+0.1,
+0.2,
+0.0,
+0.0,
+0.0,
+0.0
+],
+"total": 0.301
+},
+{
+"region_rank": "W24",
+"rank": 44,
+"prev_rank": 43,
+"association": "Yemen",
+"code": "YEM",
+"arab": true,
+"iso2": "YE",
+"name_ar": "اليمن",
+"season_points": [
+0.0,
+0.0,
+0.0,
+0.0,
+0.0,
+0.0,
+0.0,
+0.0
+],
+"total": 0.0
+},
+{
+"region_rank": "E1",
+"rank": 2,
+"prev_rank": 2,
+"association": "Japan",
+"code": "JPN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+13.85,
+21.8,
+17.875,
+20.088,
+21.35,
+27.97,
+30.375,
+4.817
+],
+"total": 103.341
+},
+{
+"region_rank": "E2",
+"rank": 3,
+"prev_rank": 3,
+"association": "South Korea",
+"code": "KOR",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+18.35,
+13.6,
+22.75,
+15.8,
+22.35,
+14.762,
+14.333,
+4.083
+],
+"total": 76.237
+},
+{
+"region_rank": "E3",
+"rank": 7,
+"prev_rank": 7,
+"association": "Thailand",
+"code": "THA",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+16.2,
+5.05,
+8.5,
+11.11,
+8.567,
+14.875,
+16.208,
+3.167
+],
+"total": 53.447
+},
+{
+"region_rank": "E4",
+"rank": 8,
+"prev_rank": 9,
+"association": "Australia",
+"code": "AUS",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+7.3,
+2.6,
+0.0,
+7.9,
+10.593,
+12.796,
+17.667,
+3.222
+],
+"total": 44.744
+},
+{
+"region_rank": "E5",
+"rank": 10,
+"prev_rank": 11,
+"association": "Malaysia",
+"code": "MAS",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+3.633,
+4.45,
+4.0,
+9.677,
+6.213,
+15.511,
+12.083,
+3.0
+],
+"total": 41.309
+},
+{
+"region_rank": "E6",
+"rank": 11,
+"prev_rank": 8,
+"association": "China",
+"code": "CHN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+16.2,
+17.35,
+0.8,
+0.5,
+11.9,
+10.25,
+7.383,
+5.333
+],
+"total": 41.008
+},
+{
+"region_rank": "E7",
+"rank": 14,
+"prev_rank": 15,
+"association": "Vietnam",
+"code": "VIE",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+3.267,
+10.752,
+6.0,
+5.3,
+5.4,
+11.333,
+8.667,
+3.113
+],
+"total": 35.241
+},
+{
+"region_rank": "E8",
+"rank": 15,
+"prev_rank": 14,
+"association": "Singapore",
+"code": "SIN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+5.617,
+4.133,
+0.0,
+3.253,
+3.64,
+14.833,
+14.5,
+2.333
+],
+"total": 34.008
+},
+{
+"region_rank": "E9",
+"rank": 18,
+"prev_rank": 19,
+"association": "Cambodia",
+"code": "CAM",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+2.25,
+1.0,
+0.0,
+2.07,
+5.62,
+11.0,
+10.1,
+3.0
+],
+"total": 27.141
+},
+{
+"region_rank": "E10",
+"rank": 19,
+"prev_rank": 20,
+"association": "Indonesia",
+"code": "IDN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+4.1,
+5.045,
+0.0,
+3.96,
+3.56,
+7.204,
+11.033,
+2.95
+],
+"total": 26.759
+},
+{
+"region_rank": "E11",
+"rank": 22,
+"prev_rank": 22,
+"association": "Hong Kong",
+"code": "HKG",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+3.3,
+3.65,
+7.333,
+6.587,
+4.9,
+3.333,
+4.333,
+2.333
+],
+"total": 22.398
+},
+{
+"region_rank": "E12",
+"rank": 28,
+"prev_rank": 27,
+"association": "Philippines",
+"code": "PHI",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+5.843,
+4.782,
+2.6,
+0.3,
+0.6,
+3.667,
+5.875,
+1.5
+],
+"total": 15.287
+},
+{
+"region_rank": "E14",
+"rank": 30,
+"prev_rank": 30,
+"association": "Myanmar",
+"code": "MYA",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+4.062,
+1.6,
+0.0,
+0.0,
+1.64,
+7.15,
+2.05,
+1.6
+],
+"total": 12.172
+},
+{
+"region_rank": "E15",
+"rank": 32,
+"prev_rank": 32,
+"association": "Mongolia",
+"code": "MNG",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.1,
+0.1,
+0.0,
+0.1,
+5.08,
+2.2,
+3.6,
+1.05
+],
+"total": 9.736
+},
+{
+"region_rank": "E16",
+"rank": 34,
+"prev_rank": 33,
+"association": "North Korea",
+"code": "PRK",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+7.433,
+11.067,
+0.0,
+0.0,
+0.0,
+0.0,
+0.0,
+0.0
+],
+"total": 6.657
+},
+{
+"region_rank": "E17",
+"rank": 37,
+"prev_rank": 37,
+"association": "Laos",
+"code": "LAO",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.15,
+0.333,
+0.0,
+0.0,
+0.1,
+1.65,
+1.55,
+0.5
+],
+"total": 3.463
+},
+{
+"region_rank": "E18",
+"rank": 38,
+"prev_rank": 38,
+"association": "Macau",
+"code": "MAC",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+4.0,
+0.0,
+0.0,
+0.0,
+1.37,
+0.0,
+0.0,
+0.0
+],
+"total": 2.159
+},
+{
+"region_rank": "E19",
+"rank": 39,
+"prev_rank": 41,
+"association": "Brunei",
+"code": "BRU",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.0,
+0.0,
+0.1,
+0.0,
+0.5,
+1.6
+],
+"total": 2.12
+},
+{
+"region_rank": "E20",
+"rank": 42,
+"prev_rank": 43,
+"association": "East Timor",
+"code": "TLS",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.0,
+0.0,
+0.0,
+0.0,
+0.0,
+0.5
+],
+"total": 0.5
+},
+{
+"region_rank": "E21",
+"rank": 44,
+"prev_rank": 43,
+"association": "Guam",
+"code": "GUM",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.0,
+0.0,
+0.0,
+0.0,
+0.0,
+0.0
+],
+"total": 0.0
+}
+],
+"caf_associations_2026_27": [
+{
+"rank": 1,
+"prev_rank": 1,
+"code": "EGY",
+"arab": true,
+"iso2": "EG",
+"name_ar": "مصر",
+"total": 190.0
+},
+{
+"rank": 2,
+"prev_rank": 2,
+"code": "MAR",
+"arab": true,
+"iso2": "MA",
+"name_ar": "المغرب",
+"total": 162
+},
+{
+"rank": 3,
+"prev_rank": 4,
+"code": "ALG",
+"arab": true,
+"iso2": "DZ",
+"name_ar": "الجزائر",
+"total": 140
+},
+{
+"rank": 4,
+"prev_rank": 3,
+"code": "RSA",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 127.5
+},
+{
+"rank": 5,
+"prev_rank": 5,
+"code": "TAN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 80.5
+},
+{
+"rank": 6,
+"prev_rank": 6,
+"code": "TUN",
+"arab": true,
+"iso2": "TN",
+"name_ar": "تونس",
+"total": 73.0
+},
+{
+"rank": 7,
+"prev_rank": 7,
+"code": "ANG",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 48.5
+},
+{
+"rank": 8,
+"prev_rank": 8,
+"code": "COD",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 44
+},
+{
+"rank": 9,
+"prev_rank": 9,
+"code": "SDN",
+"arab": true,
+"iso2": "SD",
+"name_ar": "السودان",
+"total": 42
+},
+{
+"rank": 10,
+"prev_rank": 13,
+"code": "MLI",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 34.0
+},
+{
+"rank": 11,
+"prev_rank": 10,
+"code": "CIV",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 30.5
+},
+{
+"rank": 12,
+"prev_rank": 12,
+"code": "NGA",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 19
+},
+{
+"rank": 13,
+"prev_rank": 11,
+"code": "LBY",
+"arab": true,
+"iso2": "LY",
+"name_ar": "ليبيا",
+"total": 15.0
+},
+{
+"rank": 14,
+"prev_rank": 19,
+"code": "CGO",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 14.5
+},
+{
+"rank": 15,
+"prev_rank": 24,
+"code": "ZAM",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 13.0
+},
+{
+"rank": 16,
+"prev_rank": 14,
+"code": "GHA",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 12
+},
+{
+"rank": 17,
+"prev_rank": 15,
+"code": "GUI",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 6.5
+},
+{
+"rank": 18,
+"prev_rank": 16,
+"code": "BOT",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 6.0
+},
+{
+"rank": 18,
+"prev_rank": 18,
+"code": "MTN",
+"arab": true,
+"iso2": "MR",
+"name_ar": "موريتانيا",
+"total": 6
+},
+{
+"rank": 20,
+"prev_rank": 17,
+"code": "SEN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 4
+},
+{
+"rank": 21,
+"prev_rank": null,
+"code": "KEN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 2.5
+},
+{
+"rank": 21,
+"prev_rank": 20,
+"code": "CMR",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 2.5
+},
+{
+"rank": 23,
+"prev_rank": 23,
+"code": "MOZ",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 2.0
+},
+{
+"rank": 23,
+"prev_rank": 21,
+"code": "TOG",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 2
+},
+{
+"rank": 23,
+"prev_rank": 22,
+"code": "UGA",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 2
+},
+{
+"rank": 26,
+"prev_rank": 25,
+"code": "SWZ",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 0.5
+},
+{
+"rank": 26,
+"prev_rank": 25,
+"code": "NIG",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"total": 0.5
+}
+],
+"caf_clubs_2026_27": [
+{
+"rank": 1,
+"club": "Mamelodi Sundowns",
+"code": "RSA",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+3.0,
+4.0,
+4.0,
+5.0,
+6.0
+],
+"total": 73
+},
+{
+"rank": 2,
+"club": "Al Ahly",
+"code": "EGY",
+"arab": true,
+"iso2": "EG",
+"name_ar": "مصر",
+"season_points": [
+5.0,
+6.0,
+6.0,
+4.0,
+3.0
+],
+"total": 66
+},
+{
+"rank": 3,
+"club": "Espérance de Tunis",
+"code": "TUN",
+"arab": true,
+"iso2": "TN",
+"name_ar": "تونس",
+"season_points": [
+3.0,
+4.0,
+5.0,
+3.0,
+4.0
+],
+"total": 58
+},
+{
+"rank": 4,
+"club": "RS Berkane",
+"code": "MAR",
+"arab": true,
+"iso2": "MA",
+"name_ar": "المغرب",
+"season_points": [
+5.0,
+0.0,
+4.0,
+5.0,
+4.0
+],
+"total": 57
+},
+{
+"rank": 5,
+"club": "USM Alger",
+"code": "ALG",
+"arab": true,
+"iso2": "DZ",
+"name_ar": "الجزائر",
+"season_points": [
+0.0,
+5.0,
+3.0,
+2.0,
+5.0
+],
+"total": 52
+},
+{
+"rank": 6,
+"club": "Zamalek",
+"code": "EGY",
+"arab": true,
+"iso2": "EG",
+"name_ar": "مصر",
+"season_points": [
+2.0,
+2.0,
+5.0,
+2.0,
+4.0
+],
+"total": 49
+},
+{
+"rank": 7,
+"club": "Pyramids",
+"code": "EGY",
+"arab": true,
+"iso2": "EG",
+"name_ar": "مصر",
+"season_points": [
+2.0,
+2.0,
+1.0,
+6.0,
+3.0
+],
+"total": 48
+},
+{
+"rank": 8,
+"club": "ASFAR Rabat",
+"code": "MAR",
+"arab": true,
+"iso2": "MA",
+"name_ar": "المغرب",
+"season_points": [
+0.0,
+2.0,
+0.0,
+3.0,
+5.0
+],
+"total": 41
+},
+{
+"rank": 9,
+"club": "Al-Hilal",
+"code": "SDN",
+"arab": true,
+"iso2": "SD",
+"name_ar": "السودان",
+"season_points": [
+2.0,
+2.0,
+2.0,
+3.0,
+3.0
+],
+"total": 39
+},
+{
+"rank": 10,
+"club": "CR Belouizdad",
+"code": "ALG",
+"arab": true,
+"iso2": "DZ",
+"name_ar": "الجزائر",
+"season_points": [
+3.0,
+3.0,
+2.0,
+2.0,
+3.0
+],
+"total": 38
+},
+{
+"rank": 11,
+"club": "Simba",
+"code": "TAN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+2.0,
+3.0,
+3.0,
+4.0,
+1.0
+],
+"total": 38
+},
+{
+"rank": 12,
+"club": "Young Africans",
+"code": "TAN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+4.0,
+3.0,
+2.0,
+2.0
+],
+"total": 35
+},
+{
+"rank": 13,
+"club": "Wydad AC",
+"code": "MAR",
+"arab": true,
+"iso2": "MA",
+"name_ar": "المغرب",
+"season_points": [
+6.0,
+5.0,
+2.0,
+0.0,
+2.0
+],
+"total": 32
+},
+{
+"rank": 14,
+"club": "Petro de Luanda",
+"code": "ANG",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+4.0,
+2.0,
+3.0,
+0.0,
+2.0
+],
+"total": 27
+},
+{
+"rank": 15,
+"club": "ASEC Mimosas",
+"code": "CIV",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+1.0,
+3.0,
+3.0,
+2.0,
+0.0
+],
+"total": 24
+},
+{
+"rank": 16,
+"club": "Stade Malien",
+"code": "MLI",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+2.0,
+0.5,
+3.0
+],
+"total": 23.0
+},
+{
+"rank": 17,
+"club": "MC Alger",
+"code": "ALG",
+"arab": true,
+"iso2": "DZ",
+"name_ar": "الجزائر",
+"season_points": [
+0.0,
+0.0,
+0.0,
+3.0,
+2.0
+],
+"total": 22
+},
+{
+"rank": 18,
+"club": "Al-Masry",
+"code": "EGY",
+"arab": true,
+"iso2": "EG",
+"name_ar": "مصر",
+"season_points": [
+2.0,
+0.0,
+0.0,
+2.0,
+2.0
+],
+"total": 20
+},
+{
+"rank": 19,
+"club": "Orlando Pirates",
+"code": "RSA",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+4.0,
+0.0,
+0.0,
+4.0,
+0.0
+],
+"total": 20
+},
+{
+"rank": 20,
+"club": "TP Mazembe",
+"code": "COD",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+3.0,
+0.5,
+4.0,
+1.0,
+0.0
+],
+"total": 20.0
+},
+{
+"rank": 21,
+"club": "Raja CA",
+"code": "MAR",
+"arab": true,
+"iso2": "MA",
+"name_ar": "المغرب",
+"season_points": [
+3.0,
+3.0,
+0.0,
+2.0,
+0.0
+],
+"total": 17
+},
+{
+"rank": 22,
+"club": "Olympic Safi",
+"code": "MAR",
+"arab": true,
+"iso2": "MA",
+"name_ar": "المغرب",
+"season_points": [
+0.0,
+0.0,
+0.0,
+0.0,
+3.0
+],
+"total": 15
+},
+{
+"rank": 23,
+"club": "Rivers United",
+"code": "NGA",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+2.0,
+2.0,
+0.0,
+1.0
+],
+"total": 15
+},
+{
+"rank": 24,
+"club": "Stellenbosch",
+"code": "RSA",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.0,
+3.0,
+0.5
+],
+"total": 14.5
+},
+{
+"rank": 25,
+"club": "Maniema Union",
+"code": "COD",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.0,
+1.0,
+2.0
+],
+"total": 14
+},
+{
+"rank": 26,
+"club": "CS Constantine",
+"code": "ALG",
+"arab": true,
+"iso2": "DZ",
+"name_ar": "الجزائر",
+"season_points": [
+0.0,
+0.0,
+0.0,
+3.0,
+0.0
+],
+"total": 12
+},
+{
+"rank": 27,
+"club": "Sagrada Esperança",
+"code": "ANG",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+1.0,
+0.0,
+1.0,
+2.0,
+0.0
+],
+"total": 12
+},
+{
+"rank": 28,
+"club": "AS Otôho",
+"code": "CGO",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+1.0,
+0.0,
+0.0,
+0.0,
+2.0
+],
+"total": 11
+},
+{
+"rank": 29,
+"club": "JS Kabylie",
+"code": "ALG",
+"arab": true,
+"iso2": "DZ",
+"name_ar": "الجزائر",
+"season_points": [
+0.0,
+3.0,
+0.0,
+0.0,
+1.0
+],
+"total": 11
+},
+{
+"rank": 30,
+"club": "Power Dynamos",
+"code": "ZAM",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.0,
+0.0,
+2.0
+],
+"total": 10
+},
+{
+"rank": 31,
+"club": "Djoliba",
+"code": "MLI",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.0,
+1.0,
+1.0
+],
+"total": 9
+},
+{
+"rank": 32,
+"club": "Dreams FC",
+"code": "GHA",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+3.0,
+0.0,
+0.0
+],
+"total": 9
+},
+{
+"rank": 33,
+"club": "Saint-Éloi Lupopo",
+"code": "COD",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+1.0,
+0.0,
+0.0,
+1.0
+],
+"total": 7
+},
+{
+"rank": 34,
+"club": "Future",
+"code": "EGY",
+"arab": true,
+"iso2": "EG",
+"name_ar": "مصر",
+"season_points": [
+0.0,
+0.5,
+2.0,
+0.0,
+0.0
+],
+"total": 7.0
+},
+{
+"rank": 0,
+"club": "Abu Salim",
+"code": "LBY",
+"arab": true,
+"iso2": "LY",
+"name_ar": "ليبيا",
+"season_points": [
+0.0,
+0.0,
+2.0,
+0.0,
+0.0
+],
+"total": 6
+},
+{
+"rank": 37,
+"club": "Marumo Gallants",
+"code": "RSA",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+3.0,
+0.0,
+0.0,
+0.0
+],
+"total": 6
+},
+{
+"rank": 0,
+"club": "Azam",
+"code": "TAN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.0,
+0.0,
+1.0
+],
+"total": 5
+},
+{
+"rank": 41,
+"club": "Étoile du Sahel",
+"code": "TUN",
+"arab": true,
+"iso2": "TN",
+"name_ar": "تونس",
+"season_points": [
+2.0,
+0.0,
+1.0,
+0.0,
+0.0
+],
+"total": 5
+},
+{
+"rank": 42,
+"club": "Horoya",
+"code": "GUI",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+1.0,
+2.0,
+0.0,
+0.0,
+0.0
+],
+"total": 5
+},
+{
+"rank": 0,
+"club": "Bravos do Maquis",
+"code": "ANG",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.0,
+1.0,
+0.0
+],
+"total": 4
+},
+{
+"rank": 48,
+"club": "Jwaneng Galaxy",
+"code": "BOT",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+1.0,
+0.0,
+1.0,
+0.0,
+0.0
+],
+"total": 4
+},
+{
+"rank": 49,
+"club": "US Monastir",
+"code": "TUN",
+"arab": true,
+"iso2": "TN",
+"name_ar": "تونس",
+"season_points": [
+0.0,
+2.0,
+0.0,
+0.0,
+0.0
+],
+"total": 4
+},
+{
+"rank": 50,
+"club": "ES Sétif",
+"code": "ALG",
+"arab": true,
+"iso2": "DZ",
+"name_ar": "الجزائر",
+"season_points": [
+4.0,
+0.0,
+0.0,
+0.0,
+0.0
+],
+"total": 4
+},
+{
+"rank": 51,
+"club": "Diables Noirs",
+"code": "CGO",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+1.0,
+0.5,
+0.0,
+0.0
+],
+"total": 3.5
+},
+{
+"rank": 52,
+"club": "CS Sfaxien",
+"code": "TUN",
+"arab": true,
+"iso2": "TN",
+"name_ar": "تونس",
+"season_points": [
+1.0,
+0.0,
+0.0,
+0.5,
+0.0
+],
+"total": 3.0
+},
+{
+"rank": 0,
+"club": "Al Hilal Benghazi",
+"code": "LBY",
+"arab": true,
+"iso2": "LY",
+"name_ar": "ليبيا",
+"season_points": [
+0.0,
+0.0,
+1.0,
+0.0,
+0.0
+],
+"total": 3
+},
+{
+"rank": 57,
+"club": "Al-Merrikh",
+"code": "SDN",
+"arab": true,
+"iso2": "SD",
+"name_ar": "السودان",
+"season_points": [
+1.0,
+1.0,
+0.0,
+0.0,
+0.0
+],
+"total": 3
+},
+{
+"rank": 58,
+"club": "Al-Ahli Tripoli",
+"code": "LBY",
+"arab": true,
+"iso2": "LY",
+"name_ar": "ليبيا",
+"season_points": [
+3.0,
+0.0,
+0.0,
+0.0,
+0.0
+],
+"total": 3
+},
+{
+"rank": 0,
+"club": "Nairobi United",
+"code": "KEN",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.0,
+0.0,
+0.5
+],
+"total": 2.5
+},
+{
+"rank": 62,
+"club": "Coton Sport",
+"code": "CMR",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.5,
+1.0,
+0.0,
+0.0,
+0.0
+],
+"total": 2.5
+},
+{
+"rank": 0,
+"club": "Orapa United",
+"code": "BOT",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.0,
+0.5,
+0.0
+],
+"total": 2.0
+},
+{
+"rank": 0,
+"club": "Real Bamako",
+"code": "MLI",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+1.0,
+0.0,
+0.0,
+0.0
+],
+"total": 2
+},
+{
+"rank": 0,
+"club": "Al Ittihad",
+"code": "LBY",
+"arab": true,
+"iso2": "LY",
+"name_ar": "ليبيا",
+"season_points": [
+2.0,
+0.0,
+0.0,
+0.0,
+0.0
+],
+"total": 2
+},
+{
+"rank": 0,
+"club": "Académica do Lobito",
+"code": "ANG",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.0,
+0.5,
+0.0,
+0.0
+],
+"total": 1.5
+},
+{
+"rank": 0,
+"club": "DC Motema Pembe",
+"code": "COD",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.0,
+0.5,
+0.0,
+0.0,
+0.0
+],
+"total": 1.0
+},
+{
+"rank": 76,
+"club": "JS Saoura",
+"code": "ALG",
+"arab": true,
+"iso2": "DZ",
+"name_ar": "الجزائر",
+"season_points": [
+1.0,
+0.0,
+0.0,
+0.0,
+0.0
+],
+"total": 1
+},
+{
+"rank": 0,
+"club": "Zanaco",
+"code": "ZAM",
+"arab": false,
+"iso2": null,
+"name_ar": null,
+"season_points": [
+0.5,
+0.0,
+0.0,
+0.0,
+0.0
+],
+"total": 0.5
+}
+],
+"history": "the articles keep only the current and previous season; the previous season's AFC table and CAF 'Historical rankings since 2011' are not parsed yet",
+"note": "facts only (ranks, points); AFC has no official club ranking table, only associations"
+}
