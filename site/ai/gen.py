@@ -157,6 +157,13 @@ def grammar(t, nations=()):
     if not isinstance(t, str): return t
     t = re.sub(r"\s{2,}", " ", EMOJI.sub("", t)).strip()
     for a, b in FIXES: t = re.sub(r"(?<!\w)([وبل]?)" + re.escape(a) + r"(?!\w)", lambda m: m.group(1) + b, t)
+    # plurals after 3-10 («11 فوز» and up stays: accepted Gulf usage)
+    t = re.sub(r"(?<![\d.,])((?:[3-9]|10))\s+(فوز|خسارة|تعادل)(?!\w)", lambda m: m.group(1) + " " + {"فوز": "انتصارات", "خسارة": "خسارات", "تعادل": "تعادلات"}[m.group(2)], t)
+    # «فقط» → «بس», or dropped when «بس» is already within 3 words either side
+    def _faqat(m):
+        before, after = t[:m.start()].split()[-3:], t[m.end():].split()[:3]
+        return "" if any(w.strip("،.") == "بس" for w in before + after) else "بس"
+    t = re.sub(r"\s*(?<!\w)فقط(?!\w)", lambda m: (" " + _faqat(m)) if _faqat(m) else "", t)
     t = re.sub(r"(?<![\d.,])2\s+(?:فرص|فرصة)\s+محققة", "فرصتين محققتين", t)
     t = re.sub(r"(?<![\d.,])2\s+(" + "|".join(sorted(DUAL, key=len, reverse=True)) + r")(?!\w)", lambda m: DUAL[m.group(1)], t)
     for n in nations:
