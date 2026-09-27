@@ -70,11 +70,12 @@
 
   // ---- key art
   var hero = $(".hero"), art = null;
-  if (hero && window.TifoArt){
+  if (hero && window.TifoArt) (window.requestIdleCallback || function(f){ setTimeout(f, 120); })(function(){   // after first paint: the mosaic never delays the page
     var cv = hero.querySelector("canvas");
+    if ((hero.classList.contains("thero") || hero.classList.contains("phero")) && cv){ try { art = window.TifoArt.mount(cv); art.paint(JSON.parse(hero.dataset.art || "[]"), 5); } catch (e){} }
     if (hero.classList.contains("chero") && cv){ try { art = window.TifoArt.mount(cv); art.paint(JSON.parse(hero.dataset.art || "[]"), 11); } catch (e){} }
     if (hero.classList.contains("mhero")){ try { var ms = JSON.parse($("#msum").textContent); art = window.TifoArt.mount(cv); art.set(ms); } catch (e){} }
-  }
+  }, { timeout:700 });
   // parallax + fade: the art drifts at 0.35x scroll, the title fades as it leaves
   var hin = hero && hero.querySelector(".hero-in"), ticking = false;
   window.addEventListener("scroll", function(){ onScroll(); if (RM || !hero || ticking) return; ticking = true; requestAnimationFrame(function(){ ticking = false; var y = window.scrollY, h = hero.offsetHeight; if (y > h * 1.2) return;
