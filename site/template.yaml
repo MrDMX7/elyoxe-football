@@ -14,6 +14,13 @@ Parameters:
   CertArn:
     Type: String
     Default: ""
+  ApiDomain:
+    Type: String
+    Default: 5cz397q2l4.execute-api.ap-south-1.amazonaws.com
+  ApiOriginKey:
+    Type: String
+    NoEcho: true
+    Default: ""
 
 Conditions:
   HasDomain: !Not [!Equals [!Ref CertArn, ""]]
@@ -78,6 +85,10 @@ Resources:
           - Id: data
             DomainName: !Ref DataDomain
             CustomOriginConfig: { OriginProtocolPolicy: https-only, OriginSSLProtocols: [TLSv1.2] }
+          - Id: api
+            DomainName: !Ref ApiDomain
+            CustomOriginConfig: { OriginProtocolPolicy: https-only, OriginSSLProtocols: [TLSv1.2] }
+            OriginCustomHeaders: [{ HeaderName: X-Origin-Key, HeaderValue: !Ref ApiOriginKey }]
         DefaultCacheBehavior:
           TargetOriginId: site
           ViewerProtocolPolicy: redirect-to-https
@@ -85,6 +96,12 @@ Resources:
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6   # Managed-CachingOptimized (honours origin max-age)
           FunctionAssociations: [{ EventType: viewer-request, FunctionARN: !GetAtt IndexRewrite.FunctionMetadata.FunctionARN }]
         CacheBehaviors:
+          - PathPattern: /api/tifo/*
+            TargetOriginId: api
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad          # Managed-CachingDisabled
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac   # Managed-AllViewerExceptHostHeader
           - PathPattern: /v1/*
             TargetOriginId: data
             ViewerProtocolPolicy: redirect-to-https

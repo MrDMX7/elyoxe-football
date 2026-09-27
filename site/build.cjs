@@ -34,9 +34,9 @@ function page(o){
 <link rel="stylesheet" href="/assets/tifo.${ASSET_V}.css">${o.page === "match" ? '<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>' : ""}${o.ld ? `<script type="application/ld+json">${JSON.stringify(o.ld).replace(/</g, "\\u003c")}</script>` : ""}</head>
 <body data-page="${o.page}"${o.attrs || ""}>
 <header class="bar"><div class="wrap"><a class="brand" href="/" aria-label="تيفو"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>تيفو</a><nav>
-<a href="/"${o.nav === "home" ? " aria-current" : ""}>اليوم</a><a href="/c/uae-pro-league/"${o.nav === "538" ? " aria-current" : ""}>دوري أدنوك</a><a href="/uae/"${o.nav === "uae" ? " aria-current" : ""}>المنتخب</a><a href="/c/gulf-cup/"${o.nav === "329" ? " aria-current" : ""}>كأس الخليج</a><a href="/competitions/"${o.nav === "comps" ? " aria-current" : ""}>البطولات</a></nav><button type="button" class="spoil" id="spoil" aria-pressed="false" title="يخفي النتايج لين تضغط عليها">بدون حرق</button></div></header>
+<a href="/"${o.nav === "home" ? " aria-current" : ""}>اليوم</a><a href="/c/uae-pro-league/"${o.nav === "538" ? " aria-current" : ""}>دوري أدنوك</a><a href="/uae/"${o.nav === "uae" ? " aria-current" : ""}>المنتخب</a><a href="/c/gulf-cup/"${o.nav === "329" ? " aria-current" : ""}>كأس الخليج</a><a href="/week/"${o.nav === "week" ? " aria-current" : ""}>الأسبوع</a><a href="/competitions/"${o.nav === "comps" ? " aria-current" : ""}>البطولات</a></nav><button type="button" class="spoil" id="spoil" aria-pressed="false" title="يخفي النتايج لين تضغط عليها">بدون حرق</button></div></header>
 <main class="wrap">${o.body}</main>
-<footer class="foot"><div class="wrap"><span>تيفو، من استوديو <a href="https://elyoxe.com/">Elyoxe</a>. كل المواعيد بتوقيت الإمارات.</span><span><a href="/tv/">شاشة المجلس</a>، <a href="/studio/">ستوديو التيفو</a></span><span class="updated" id="updated"></span><span>البيانات من FotMob ورابطة المحترفين الإماراتية</span></div></footer>
+<footer class="foot"><div class="wrap"><span>تيفو، من استوديو <a href="https://elyoxe.com/">Elyoxe</a>. كل المواعيد بتوقيت الإمارات.</span><span><a href="/tv/">شاشة المجلس</a>، <a href="/studio/">ستوديو التيفو</a>، <a href="/week/">مباريات الأسبوع</a>، <a href="/legends/">الأساطير</a>، <a href="/memorable/">مباريات لا تُنسى</a>، <a href="/thisday/">هذا اليوم</a>، <a href="/laws/">قانون الكورة</a>، <a href="/watch/">وين تنقل</a>، <a href="/stadiums/">الملاعب</a></span><span class="updated" id="updated"></span><span>البيانات من FotMob ورابطة المحترفين الإماراتية</span></div></footer>
 <script src="/assets/colors.__CV__.js"></script><script src="/assets/render.${ASSET_V}.js"></script>${o.page === "home" ? `<script src="/assets/stand.${ASSET_V}.js"></script>` : ""}${o.page === "compare" ? `<script src="/assets/compare.${ASSET_V}.js"></script>` : ""}${["match", "team", "studio"].includes(o.page) ? `<script src="/assets/share.${ASSET_V}.js"></script>` : ""}<script src="/assets/app.${ASSET_V}.js"></script></body></html>`;
 }
 const tabsHtml = (group, list) => `<div class="tabs" role="tablist" data-tabs="${group}">` + list.map((t, i) => `<button type="button" role="tab" data-t="${t[0]}" aria-selected="${i === 0}">${t[1]}</button>`).join("") + "</div>";
@@ -58,7 +58,13 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   const teamsJson = await get("teams.json"); S.setTeams(teamsJson && teamsJson.teams || {});
 
   // ---- 1. fetch: competitions (+ every analytics file the pipeline may have written), today, national
-  const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios", "shots", "fatigue", "coaches"];
+  const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios", "shots", "fatigue", "coaches", "transfers"];
+  // phase 5: generated content (ai/gen.py) is published only for kinds the owner approved (ai/approved.json)
+  const APPROVED = JSON.parse(fs.readFileSync(path.join(__dirname, "ai/approved.json"), "utf8"));
+  const AI = k => { const d = path.join(CACHE, "ai", k), o = {}; if (fs.existsSync(d)) for (const f of fs.readdirSync(d)) if (f.endsWith(".json")) o[f.slice(0, -5)] = JSON.parse(fs.readFileSync(path.join(d, f), "utf8")); return o; };
+  const AIS = AI("summary"), AIP = AI("preview"), AIR = AI("round"), AIC = AI("podcast");
+  const RSD = path.join(process.env.HOME, "workspace/research/tifo-2026-09-27"), readRes = f => { try { return JSON.parse(fs.readFileSync(path.join(RSD, f), "utf8")); } catch (e){ return {}; } };
+  const BC = readRes("broadcast.json"), HLT = readRes("highlights.json"), STAD = {}; ((readRes("stadiums.json").stadiums) || []).forEach(x => { STAD[x.id] = x; });
   const compData = await pool(comps, 3, async c => {
     const [st, fx, stats] = await Promise.all([c.files && c.files.standings ? get(`comp/${c.id}/standings.json`) : null, get(`comp/${c.id}/fixtures.json`), get(`comp/${c.id}/stats.json`)]);
     const x = {}; await pool(EXTRA, 3, async k => { x[k] = await get(`comp/${c.id}/${k}.json`, 2); });
@@ -110,6 +116,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
       ["clock", "ساعة الأهداف", S.clock(x["minute-clock"])], ["late", "ملوك الدقايق الأخيرة", S.late(x["goal-bands"])],
       ["pressure", "ترمومتر المدربين", S.pressure(x.pressure)], ["style", "بصمة كل فريق", S.style(x.style)], ["fortress", "حصون الملاعب", S.fortress(x.fortress)],
       ["fatigue", "مؤشر الإرهاق", S.fatigue(x.fatigue)], ["coaches", "أنجح المدربين في التاريخ", S.coachesLeague(x.coaches)],
+      ["transfers", "سوق الانتقالات", S.transfers(x.transfers)],
       ["refs", "الحكام", S.referees(x.referees)], ["ages", "أعمار التشكيلات", S.ages(x["lineup-ages"])], ["rot", "مؤشر التدوير", S.rotation(x.rotation)],
       ["rating", "تصنيف تيفو للأندية", c.id === 538 ? S.ratingTable(ratings) : ""], ["world", "الدوري الإماراتي ضد العالم", c.id === 538 ? S.compare(compare, 538) : ""],
     ].filter(v => v[2]);
@@ -178,6 +185,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
       if (fifa) nums += S.sec("تصنيف فيفا", "من 1992", S.fifa(fifa));
       if (natRatings && natRatings.uae) nums += S.sec("تصنيف تيفو للمنتخبات", "", `<p>الإمارات في المركز <b class="num">${natRatings.uae_world_rank}</b> عالمياً بتصنيف تيفو (<span class="num">${Math.round(natRatings.uae)}</span> نقطة).</p>`);
       if (abroad) { const ab = S.abroad(abroad); if (ab) nums += S.sec("الإماراتيين المحترفين برا", "", ab); }
+      const nc = S.natClubs(t); if (nc) nums += S.sec("لاعبي المنتخب في أنديتهم", "", nc);
     }
     const tabs = [["next", "الياية"], ["past", "النتايج"], ["squad", "اللاعبين"], nums && ["nums", id === 5789 ? "المنتخب بالأرقام" : "بالأرقام"]].filter(Boolean);
     const body = `<div class="th"><div class="in">${R.logo(t, "lg")}<div><h1>${R.tname(t)}</h1>${sub ? `<p>${sub}</p>` : ""}</div></div>${R.teamStrip(t)}</div>
@@ -218,9 +226,16 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     const md = D.get(id) || matchSum.get(id), sum = matchSum.get(id), ttl = `${R.tname(md.home)} ${md.score ? md.score.home + "-" + md.score.away : "ضد"} ${R.tname(md.away)}`;
     const probs = md.status === "scheduled" ? (md.probs || sum.probs) : null, facts = md.status === "scheduled" ? factsByMatch[id] : null;
     const fa = md.status === "scheduled" && md.comp === 538 && x538.fatigue ? S.fatigue(x538.fatigue, [md.home.id, md.away.id]) : "";
-    const pre = (probs ? S.probs(probs, md) : "") + (fa ? S.sec("ضغط المباريات", "", fa) : "") + (facts && facts.length ? S.sec("قبل المباراة", "", S.matchFacts(facts)) : "");
+    const ai = (APPROVED.summary && AIS[id] ? S.aiSummary(AIS[id]) : "") + (APPROVED.preview && md.status === "scheduled" && AIP[id] ? S.sec("تحليل ما قبل المباراة", "", S.aiPreview(AIP[id])) : "");
+    const cx = compX[md.comp] || {}, cdata = compData.find(d => d.c.id === md.comp) || {};
+    const uaeMatch = R.UAE_COMPS.indexOf(md.comp) >= 0 || md.home.id === 5789 || md.away.id === 5789;
+    const press = md.status === "scheduled" && uaeMatch ? S.pressSheet(md, cdata.st, cdata.stats, factsByMatch[id], cx.fatigue, D.get(id)) : "";
+    const thread = APPROVED.thread && AIS[id] ? S.aiThread(AIS[id]) : "";
+    const ww = md.status !== "finished" ? S.watchWhere(BC[md.comp]) : "", hl = md.status === "finished" ? S.highlight(HLT[md.comp], md) : "";
+    const sg = md.venue && STAD[md.venue.id] ? `<p><a class="btn" href="/s/${md.venue.id}/">دليل الملعب: المواقف والتذاكر</a></p>` : "";
+    const pre = ai + (hl ? `<p>${hl}</p>` : "") + (ww ? S.sec("وين تنقل في الإمارات", "", ww) : "") + sg + (probs ? S.probs(probs, md) : "") + (fa ? S.sec("ضغط المباريات", "", fa) : "") + (facts && facts.length ? S.sec("قبل المباراة", "", S.matchFacts(facts)) : "");
     const body = `<div id="mh">${R.matchHead(md)}</div><div class="tools"><button type="button" class="btn" id="storybtn">صورة للستوري</button><a class="btn" href="/tv/?m=${id}">على شاشة المجلس</a></div><script type="application/json" id="msum">${JSON.stringify(Object.assign({}, sum, { events:undefined, lineups:undefined, stats:undefined, h2h:undefined })).replace(/</g, "\\u003c")}</script><div id="catchup">${R.catchup(md)}</div><div id="facts">${R.matchFacts(md, index)}</div>${pre}` +
-      tabsHtml("m", [["events", "الأحداث"], ["lineups", "التشكيلة"], ["stats", "الإحصائيات"], ["h2h", "المواجهات"]]) +
+      tabsHtml("m", [["events", "الأحداث"], ["lineups", "التشكيلة"], ["stats", "الإحصائيات"], ["h2h", "المواجهات"], press && ["press", "ورقة الصحفي"], thread && ["thread", "ثريد إكس"]].filter(Boolean)) + (press ? pane("m", "press", press) : "") + (thread ? pane("m", "thread", thread) : "") +
       pane("m", "events", `<div id="events">${R.events(md)}</div>`, true) + pane("m", "lineups", `<div class="tools"><button type="button" class="btn" id="p3dbtn" data-src="/assets/pitch3d.${ASSET_V}.js"${md.lineups && md.lineups.home ? "" : " hidden"}>شوفها على ملعب ثلاثي الأبعاد</button></div><div id="p3d"></div><div id="lineups">${R.lineups(md)}</div>`) + pane("m", "stats", `<div id="stats">${R.stats(md)}</div>`) + pane("m", "h2h", `<div id="h2h">${R.h2h(md)}</div>`);
     const ld = { "@context":"https://schema.org", "@type":"SportsEvent", name:`${md.home.name_ar || md.home.name} ضد ${md.away.name_ar || md.away.name}`, startDate:md.kickoff_utc, sport:"Football", homeTeam:{ "@type":"SportsTeam", name:md.home.name_ar || md.home.name }, awayTeam:{ "@type":"SportsTeam", name:md.away.name_ar || md.away.name }, ...(md.venue ? { location:{ "@type":"Place", name:md.venue.name_ar || md.venue.name_en } } : {}) };
     write(`m/${id}/index.html`, page({ path:`/m/${id}/`, page:"match", attrs:` data-id="${id}"`, title:`${ttl} — ${md.comp_name_ar || R.compName(index, md.comp)} | تيفو`, desc:`${R.tname(md.home)} ضد ${R.tname(md.away)} ${R.dayLabel(R.ymd(md.kickoff_uae))} الساعة ${R.hhmm(md.kickoff_uae)} بتوقيت الإمارات: النتيجة المباشرة والأحداث والتشكيلة والإحصائيات والمواجهات السابقة.`, body, ld }));
@@ -235,6 +250,56 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   write("studio/index.html", page({ path:"/studio/", page:"studio", title:"ستوديو التيفو: صمّم لافتة فريقك للمدرج | تيفو", desc:"اختار فريقك واكتب عبارتك، وتطلع لك لافتة بألوان النادي جاهزة للطباعة وتاخذها للملعب.",
     body:`<h1>ستوديو التيفو</h1><p class="muted">اختار فريقك واكتب عبارتك، وتطلع لك لافتة بألوان ناديك (3000×1000) جاهزة للطباعة.</p><div class="studio"><div class="cmpsel"><select id="sclub" aria-label="الفريق">${clubs.map(id => `<option value="${id}">${esc((teamsJson.teams[id] || {}).name_ar || id)}</option>`).join("")}</select><input id="stext" maxlength="40" value="ما نمشي بروحنا" aria-label="العبارة"></div><canvas id="sprev" width="1500" height="500"></canvas><div class="tools"><button type="button" class="btn" id="sdl">نزّل اللافتة</button></div></div>` }));
   urls.push("/studio/");
+
+  // ---- 7c. Tifo Cast (19, 161): only approved kinds; audio copied next to the pages
+  const casts = [];
+  if (APPROVED.podcast) for (const [k, p] of Object.entries(AIC)) if (fs.existsSync(path.join(CACHE, "ai/podcast", k + ".mp3"))) casts.push({ kind:"podcast", key:k, title:p.title, file:`/audio/podcast-${k}.mp3`, src:path.join(CACHE, "ai/podcast", k + ".mp3"), lines:p.lines });
+  if (APPROVED.round) for (const [k, r] of Object.entries(AIR)) if (fs.existsSync(path.join(CACHE, "ai/round", k + ".mp3"))) casts.push({ kind:"round", key:k, title:r.title, file:`/audio/round-${k}.mp3`, src:path.join(CACHE, "ai/round", k + ".mp3"), text:r.script });
+  if (casts.length){
+    fs.mkdirSync(path.join(OUT, "audio"), { recursive:true }); casts.forEach(c => fs.copyFileSync(c.src, path.join(OUT, c.file)));
+    casts.sort((a, b) => b.key.localeCompare(a.key));
+    write("cast/index.html", page({ path:"/cast/", page:"cast", title:"تيفو كاست: الجولة بصوت إماراتي | تيفو", desc:"خلاصة كل جولة من دوري أدنوك بصوت زايد، وبودكاست تيفو كاست الأسبوعي بصوت زايد وهلا.",
+      body:"<h1>تيفو كاست</h1>" + casts.map(c => S.sec(esc(c.title), c.kind === "podcast" ? "بودكاست الأسبوع" : "خلاصة الجولة", `<audio controls preload="none" src="${c.file}"></audio><details class="more"><summary>النص</summary>${c.lines ? c.lines.map(l => `<p><b>${l.who === "zayd" ? "زايد" : "هلا"}:</b> ${esc(l.text)}</p>`).join("") : `<p>${esc(c.text)}</p>`}</details>`)).join("") }));
+    urls.push("/cast/");
+  }
+  // ---- 7d. matches of the week (25): the next 7 days, UAE first, then by what's at stake
+  const in7 = [...matchSum.values()].filter(m => m.status === "scheduled" && m.kickoff_utc && Date.parse(m.kickoff_utc) > Date.now() && Date.parse(m.kickoff_utc) < Date.now() + 7 * 864e5);
+  const wscore = m => { let v = 0; if (R.UAE_COMPS.indexOf(m.comp) >= 0) v += 100; if (m.home.id === 5789 || m.away.id === 5789) v += 150; const w = compX[m.comp] && compX[m.comp].watch && compX[m.comp].watch.matches[m.id]; if (w) v += w.score; const st = (compData.find(d => d.c.id === m.comp) || {}).st; if (st && st.groups && !st.composite){ const rk = id => { const r = st.groups[0].rows.find(r => r.team.id === id); return r ? r.rank : 20; }; v += Math.max(0, 40 - 2 * (rk(m.home.id) + rk(m.away.id))); } if ([42, 525].includes(m.comp)) v += 20; return v; };
+  const picks = in7.map(m => ({ m, v:wscore(m) })).sort((a, b) => b.v - a.v).slice(0, 12).sort((a, b) => a.m.kickoff_utc.localeCompare(b.m.kickoff_utc));
+  write("week/index.html", page({ path:"/week/", page:"week", title:"مباريات الأسبوع اللي تستاهل تسهر لها | تيفو", desc:"أهم 12 مباراة في الأسبوع الياي بتوقيت الإمارات: الإماراتية أول، وبعدها اللي الترتيب فيها على المحك.",
+    body:"<h1>مباريات الأسبوع</h1><p class=\"muted\">أهم مباريات الأيام السبعة الياية بتوقيت الإمارات: مباريات الإمارات أول، وبعدها اللي فيها الترتيب على المحك أو الفريقين من فوق الجدول.</p>" + (picks.length ? picks.map(x => `<div class="wk"><span class="muted small">${esc(x.m.comp_name_ar || R.compName(index, x.m.comp))}</span>${R.matchRow(x.m, { date:true })}</div>`).join("") : '<p class="empty">ما في مباريات في الأيام الياية.</p>') }));
+  urls.push("/week/");
+
+  // ---- 7e. phase 4 reference pages (research/tifo-2026-09-27 + Arabic from ai/history_ar.py)
+  const RS = path.join(process.env.HOME, "workspace/research/tifo-2026-09-27"), HC = path.join(CACHE, "history");
+  const rj = (f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch (e){ return null; } };
+  const hl = rj(path.join(HC, "legends.json")) || {}, hm = rj(path.join(HC, "memorable.json")) || {}, ht = rj(path.join(HC, "thisday.json")) || {}, hw = rj(path.join(HC, "laws.json")) || {};
+  const legRaw = ((rj(path.join(RS, "legends.json")) || {}).players || []).filter(p => !/Mohamed Salem/i.test(p.name_en || ""));   // ambiguous: waits for the owner
+  const memRaw = (rj(path.join(RS, "memorable.json")) || {}).matches || [], tdRaw = (rj(path.join(RS, "thisday.json")) || {}).events || [], lawRaw = (rj(path.join(RS, "laws.json")) || {}).topics || [];
+  const refPage = (p, title, desc, h1, lead, body) => { if (!body) return; write(p.slice(1) + "index.html", page({ path:p, page:"ref", title, desc, body:`<h1>${h1}</h1><p class="muted">${lead}</p>` + body })); urls.push(p); };
+  refPage("/legends/", "أساطير الكورة الإماراتية | تيفو", "الطلياني وإسماعيل مطر وعمر عبدالرحمن وعلي مبخوت وغيرهم: مسيرتهم وأرقامهم، مع المصادر.", "أساطير الكورة الإماراتية", "مسيرة وأرقام أبرز لاعبين في تاريخ الكورة الإماراتية، وكل معلومة معها مصدرها.", S.legends(legRaw, hl));
+  refPage("/memorable/", "مباريات لا تُنسى في تاريخ الكورة الإماراتية | تيفو", "من تصفيات 1990 لين نهائي آسيا 2024: المباريات اللي صنعت تاريخ الكورة الإماراتية.", "مباريات لا تُنسى", "مباريات صنعت تاريخ الكورة الإماراتية، من الأحدث للأقدم.", S.memorable(memRaw, hm));
+  refPage("/laws/", "قانون الكورة بالإماراتي: التسلل، اللمسة، البلنتي، الفار | تيفو", "ليش ألغى الحكم الهدف؟ شرح قوانين الكورة الرسمية (IFAB 2026/27) بالإماراتي: التسلل، لمسة اليد، البلنتي، الفار، والوقت بدل الضايع.", "قانون الكورة بالإماراتي", "شرح بسيط لقوانين الكورة من النص الرسمي لـIFAB (نسخة 2026/27)، وتحت كل شرح الجملة الرسمية نفسها.", S.laws(lawRaw, hw));
+  const mmddToday = today.slice(5);
+  const tdToday = S.thisday(tdRaw, ht, mmddToday, 8);
+  const tdAll = [...new Set(tdRaw.map(e => e["mm-dd"]))].sort().map(md => { const x = S.thisday(tdRaw, ht, md, 20); if (!x) return ""; const [mo, dd] = md.split("-").map(Number); return `<section class="blk"><h2>${dd} ${["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"][mo - 1]}</h2>${x}</section>`; }).join("");
+  refPage("/thisday/", "هذا اليوم في تاريخ الكورة الإماراتية | تيفو", "كل يوم في السنة وشو صار فيه في تاريخ الكورة الإماراتية: مباريات وبطولات ومواليد الأساطير.", "هذا اليوم في كورة الإمارات", "أحداث من تاريخ الكورة الإماراتية لكل يوم في السنة، ومع كل حدث مصدره.", tdAll);
+
+  if (tdToday){ const hf = path.join(OUT, "index.html"); fs.writeFileSync(hf, fs.readFileSync(hf, "utf8").replace('<h2>البطولات</h2>', S.sec("هذا اليوم في كورة الإمارات", '<a href="/thisday/">كل الأيام</a>', tdToday) + "<h2>البطولات</h2>")); }
+
+  // «اسأل تيفو» (76): only after the owner approves sample answers
+  if (APPROVED.ask){ write("ask/index.html", page({ path:"/ask/", page:"ask", title:"اسأل تيفو: أي سؤال عن الكورة الإماراتية | تيفو", desc:"اسأل بالعامية عن الدوري الإماراتي والمنتخب: الترتيب، الهدافين، البطولات، المواجهات. الجواب من بيانات تيفو.",
+    body:'<h1>اسأل تيفو</h1><p class="muted">اسأل بالعامية عن الدوري الإماراتي والمنتخب، والجواب من بيانات تيفو بس.</p><form id="askf" class="ask"><input id="askq" maxlength="200" placeholder="مثلاً: متى آخر مرة فاز الوصل على العين؟" aria-label="سؤالك"><button class="btn" type="submit">اسأل</button></form><div id="aska"></div><p class="src">الجواب يكتبه نموذج ذكاء اصطناعي من أرقام تيفو، وممكن يغلط. 25 سؤال باليوم لكل شخص.</p>' })); urls.push("/ask/"); }
+
+  // stadium guide pages (8) + where-to-watch page (7)
+  for (const [sid, x] of Object.entries(STAD)){
+    const nm = (x.name_ar && x.name_ar.value) || (x.name_en && x.name_en.value) || sid;
+    write(`s/${sid}/index.html`, page({ path:`/s/${sid}/`, page:"ref", title:`${nm}: الموقع والمواقف والتذاكر | تيفو`, desc:`دليل ${nm}: السعة والعنوان والخريطة والمواصلات ومنصة التذاكر، من المصادر الرسمية.`, body:`<p class="crumbs"><a href="/stadiums/">الملاعب</a></p><h1>${esc(nm)}</h1>` + S.stadium(x) }));
+    urls.push(`/s/${sid}/`);
+  }
+  if (Object.keys(STAD).length){ write("stadiums/index.html", page({ path:"/stadiums/", page:"ref", title:"دليل ملاعب دوري أدنوك | تيفو", desc:"كل ملاعب دوري أدنوك للمحترفين: السعة والمواقع والمواصلات والتذاكر.", body:'<h1>دليل الملاعب</h1><div class="comps">' + Object.entries(STAD).map(([sid, x]) => `<a href="/s/${sid}/"><span>${esc((x.name_ar && x.name_ar.value) || sid)}</span><span class="muted small num">${x.capacity && x.capacity.value ? Number(x.capacity.value).toLocaleString("en-US") : ""}</span></a>`).join("") + "</div>" })); urls.push("/stadiums/"); }
+  const wrows = comps.filter(c => BC[c.id] && BC[c.id].broadcasters && BC[c.id].broadcasters.length).map(c => S.sec(esc(c.name_ar), "", S.watchWhere(BC[c.id]))).join("");
+  if (wrows){ write("watch/index.html", page({ path:"/watch/", page:"ref", title:"وين تنقل المباريات في الإمارات: القنوات والباقات والأسعار | تيفو", desc:"كل بطولة وين تنقل في الإمارات: أبوظبي الرياضية، دبي الرياضية، الشارقة الرياضية، beIN، STARZPLAY، شاهد وغيرها، مع المجاني والأسعار.", body:'<h1>وين تنقل المباريات في الإمارات</h1><p class="muted">القنوات والتطبيقات لكل بطولة هالموسم، مع المجاني والأسعار المنشورة ومصدر كل معلومة. تحققنا منها في 27 سبتمبر 2026.</p>' + wrows })); urls.push("/watch/"); }
 
   // ---- 8. competitions list, robots, sitemap, 404
   const groups = [["uae", "الإمارات"], ["gulf", "الخليج"], ["asia", "آسيا"], ["national", "المنتخبات"], ["arab", "العرب"], ["europe", "أوروبا"], ["world", "العالم"]];

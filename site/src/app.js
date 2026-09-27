@@ -101,7 +101,7 @@
   function match(){
     return Promise.all([index(), get("match/" + ID + ".json")]).then(function(r){
       var idx = r[0], md = r[1];
-      MD = md; FULL = md; var pb = $("#p3dbtn"); if (pb) pb.hidden = !(md.lineups && md.lineups.home);
+      MD = md; FULL = md; setTimeout(dist, 0); var pb = $("#p3dbtn"); if (pb) pb.hidden = !(md.lineups && md.lineups.home);
       set("#mh", R.matchHead(md)); set("#facts", R.matchFacts(md, idx)); set("#catchup", R.catchup(md)); set("#events", R.events(md)); set("#lineups", R.lineups(md)); set("#stats", R.stats(md)); set("#h2h", R.h2h(md));
       stamp(md.generated);
       var t = Date.parse(md.kickoff_utc), soon = md.status === "scheduled" && t - Date.now() < 90 * 60e3 && t > Date.now() - 3 * 3600e3;
@@ -171,7 +171,20 @@
   if (sp) sp.onclick = function(){ spoilSet(!document.body.classList.contains("nospoil")); };
   document.addEventListener("click", function(e){ if (!document.body.classList.contains("nospoil")) return; var t = e.target.closest(".chip,.board .dg"); if (t && !t.classList.contains("shown")){ e.preventDefault(); t.classList.add("shown"); } }, true);
 
+  // distance from your emirate (45): remembered choice, rough driving time at ~90 km/h
+  function dist(){ var em = "dubai"; try { em = localStorage.getItem("tifo.emirate") || "dubai"; } catch (e){}
+    document.querySelectorAll(".dist").forEach(function(d){ var km = JSON.parse(d.dataset.km || "{}"), sel = d.querySelector("select"); if (!sel) return; sel.value = em;
+      var paint = function(){ var k = km[sel.value]; d.querySelector(".dk").textContent = k != null ? Math.round(k) : "—"; d.querySelector(".dt").textContent = k != null ? "حوالي " + Math.max(5, Math.round(k / 90 * 60 / 5) * 5) + " دقيقة سواقة" : ""; };
+      sel.onchange = function(){ try { localStorage.setItem("tifo.emirate", sel.value); } catch (e){} em = sel.value; dist(); }; paint(); }); }
+  // copy buttons (thread posts, press sheet)
+  document.addEventListener("click", function(e){ var b = e.target.closest("[data-copy],[data-copy-from]"); if (!b) return; var t = b.dataset.copy || ((document.querySelector(b.dataset.copyFrom) || {}).innerText || "");
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function(){ var o = b.textContent; b.textContent = "انسخ ✓"; setTimeout(function(){ b.textContent = o; }, 1500); }, function(){}); });
+  // «اسأل تيفو» (76)
+  var af = $("#askf"); if (af) af.onsubmit = function(e){ e.preventDefault(); var q = $("#askq").value.trim(); if (q.length < 4) return; set("#aska", '<p class="muted">لحظة…</p>');
+    fetch("/api/tifo/ask", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ q:q }) }).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+      .then(function(x){ set("#aska", x.ok ? '<div class="ai"><p>' + R.esc(x.j.answer) + "</p></div>" : '<p class="note">' + R.esc((x.j && (x.j.error || x.j.message)) || "ما قدرنا نجاوب الحين") + "</p>"); })
+      .catch(function(){ set("#aska", '<p class="note">ما قدرنا نجاوب الحين، جرّب بعد شوي.</p>'); }); };
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && ID === "5789") countdown(); }
   tvFull();
-  tabs(); run();
+  tabs(); run(); dist();
 })();

@@ -4,6 +4,8 @@
 #   ./deploy.sh --stack    also (re)deploy the CloudFormation stack first
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; cd "$HERE"
+mkdir -p cache; exec 9>cache/deploy.lock
+flock -n 9 || { echo "another tifo build/deploy is running; skipping" >&2; exit 0; }   # the hourly job and a manual run share out/
 REGION=ap-south-1 STACK=elyoxe-tifo-site
 out() { aws cloudformation describe-stacks --region $REGION --stack-name $STACK --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
 if [ "${1:-}" = "--stack" ] || ! aws cloudformation describe-stacks --region $REGION --stack-name $STACK >/dev/null 2>&1; then
@@ -15,7 +17,7 @@ FLAG=--preview; [ "$ALIASES" != "0" ] && FLAG=""
 node build.cjs $FLAG
 # guard: a flaky fetch can yield a partial build, and `sync --delete` would then wipe live pages. Refuse a build that
 # lost more than 15% of the last published page count.
-NOW=$(cat out/.pages 2>/dev/null || echo 0); LAST=$(cat cache/last_pages 2>/dev/null || echo 0)
+NOW=$(find out -name index.html | wc -l); LAST=$(cat cache/last_pages 2>/dev/null || echo 0)
 if [ "$LAST" -gt 0 ] && [ "$NOW" -lt $((LAST * 85 / 100)) ]; then echo "partial build: $NOW pages vs $LAST last time; not publishing" >&2; exit 7; fi
 # assets are content-hashed -> 1 year; logos 7 days; pages 60 s (live data comes from /v1 anyway)
 aws s3 sync out/assets "s3://$BUCKET/assets" --region $REGION --only-show-errors --cache-control "public,max-age=31536000,immutable"

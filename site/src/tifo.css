@@ -390,3 +390,27 @@ body[data-page="tv"] img.logo{inline-size:2.2rem;block-size:2.2rem}
 .p3d canvas{display:block;inline-size:100%}
 .p3tip{position:absolute;inset-block-start:.6rem;inset-inline-start:.6rem;background:var(--chalk);color:var(--ink);border:2px solid var(--ink);padding:.35rem .6rem;font-size:.85rem;z-index:2;max-inline-size:70%}
 .p3tip b{font-family:var(--digits);font-size:1.1rem}
+/* phase 4/5 */
+.ai{background:var(--chalk);border:2px solid var(--ink);border-inline-start:.5rem solid var(--pulse);padding:.7rem .9rem;margin-block:.8rem}
+.ai b{font-family:var(--kufi);font-weight:800}
+.ai p{margin:.35rem 0}
+.ai ul.prev{margin:0;padding:0;list-style:none}
+.ai ul.prev li{padding:.3rem 0;border-block-end:1px dashed var(--line)}
+.ai ul.prev b{font-size:.78rem;background:var(--night);color:var(--chalk);padding:0 .35rem;margin-inline-end:.3rem}
+.aisrc{font-size:.72rem;color:var(--stone)}
+ol.thread{padding-inline-start:1.2rem}
+ol.thread li{margin-block:.5rem;padding:.5rem;background:var(--chalk);border:1px solid var(--line)}
+ol.thread p{margin:0 0 .3rem}
+.btn.copy{font-size:.78rem;padding:.2rem .6rem}
+.press ul{padding-inline-start:1.1rem}
+.press li{margin-block:.2rem}
+.dist select{border:1px solid var(--line);background:var(--chalk);font-size:.85rem}
+.wk{border-block-end:1px solid var(--line-2);padding-block-start:.4rem}
+.wk .m{border:0}
+audio{inline-size:100%;margin-block:.4rem}
+@media print{.bar,.foot,.tabs,.tools,.board,.timeline,.facts,.tiles,.btnrow,#catchup,.probs{display:none!important}[data-pane]{display:block!important}[data-pane]:not([data-pane="press"]){display:none!important}body{background:#fff}}
+.ask{display:grid;grid-template-columns:1fr auto;gap:.5rem;margin-block:1rem}
+.ask input{padding:.55rem;border:2px solid var(--ink);background:var(--chalk)}
+ul.bc{list-style:none;margin:0;padding:0}
+ul.bc li{padding:.35rem 0;border-block-end:1px dashed var(--line)}
+blockquote{margin:.5rem 0;padding:.4rem .7rem;border-inline-start:3px solid var(--dune);font-size:.85rem;color:var(--stone);background:var(--chalk)}

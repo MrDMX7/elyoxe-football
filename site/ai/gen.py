@@ -51,6 +51,7 @@ STYLE = """اكتب باللهجة الإماراتية المحكية، مب ف
 - أسماء اللاعبين اكتبها بالعربي بالطريقة المشهورة في الإعلام الإماراتي.
 - في النص المكتوب اكتب كل الأرقام والنتايج والدقايق بالأرقام (0-9) مب بالكلمات: «فاز 3 - 1»، «في الدقيقة 9»، «61%».
 - استعمل «فاز على» مب «هزم»، و«عقب» أو «بعدين» للترتيب.
+- لا تكتب «رقم 1» أو «1 مرة»: قل «أول فوز»، «مرة وحدة»، «المتصدر».
 """
 
 def gemini(system, payload, schema, temp=0.6, tokens=4000):
@@ -143,7 +144,7 @@ SUM_SCHEMA = OBJ({"headline": S(80), "summary": S(900), "thread": ARR(S(270), 6)
 def do_summary(md):
     ctx = match_facts(md); sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("summary", str(md["id"]), sig): return "cached"
-    out = gemini(SUM_SYS, ctx, SUM_SCHEMA)
+    out = gemini(SUM_SYS, ctx, SUM_SCHEMA, tokens=8000)
     if not out: return "fail"
     out = deep(out); out.update({"id": md["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("summary", str(md["id"]), out); return "new"
@@ -152,7 +153,7 @@ def do_summary(md):
 PRE_SYS = STYLE + """
 المهمة: عندك بيانات مباراة ياية: ترتيب الفريقين وفورمتهم، ونسب توقعات تيفو، والمواجهات السابقة، وأرقام على المحك، وضغط المباريات.
 اكتب lines: 5 أسطر بالضبط، كل سطر جملة وحدة (أقل من 200 حرف):
-1) الفريق الأول: نقطة قوة من الأرقام.  2) الفريق الثاني: نقطة قوة من الأرقام.  3) نقطة ضعف أو قلق لواحد منهم.  4) مفتاح المباراة.  5) توقع تيفو بالنسب (قلها بالأرقام من البيانات، بدون ما تجزم).
+1) الفريق الأول: نقطة قوة من الأرقام.  2) الفريق الثاني: نقطة قوة من الأرقام.  3) نقطة ضعف أو قلق لواحد منهم.  4) مفتاح المباراة.  5) توقع تيفو بالنسب مقرّبة لأقرب رقم صحيح (بدون فواصل عشرية)، بدون ما تجزم. إذا النسب مب موجودة في البيانات، خل السطر الخامس عن فورمة الفريقين أو أرقام على المحك بدل النسب، ولا تقول إنها مب متوفرة.
 """
 PRE_SCHEMA = OBJ({"lines": ARR(S(220), 5)})
 def do_preview(m, ctx):
@@ -209,7 +210,7 @@ def round_ctx(fx, st, detail):
 def do_round(k, ctx, audio):
     sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]; name = f"538-{k}"
     if cached("round", name, sig) and (not audio or os.path.exists(os.path.join(CACHE, "round", name + ".mp3"))): return "cached"
-    out = gemini(ROUND_SYS, ctx, ROUND_SCHEMA, temp=0.7)
+    out = gemini(ROUND_SYS, ctx, ROUND_SCHEMA, temp=0.7, tokens=9000)
     if not out: return "fail"
     out = deep(out); out.update({"round": k, "sig": sig, "spoken": spoken(out["script"]), "model": MODEL, "voice": "Zayd", "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("round", name, out)
@@ -219,7 +220,7 @@ def do_round(k, ctx, audio):
 def do_podcast(ctx, audio):
     wk = dt.date.today().strftime("%G-%V"); sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("podcast", wk, sig) and (not audio or os.path.exists(os.path.join(CACHE, "podcast", wk + ".mp3"))): return "cached"
-    out = gemini(POD_SYS, ctx, POD_SCHEMA, temp=0.8, tokens=6000)
+    out = gemini(POD_SYS, ctx, POD_SCHEMA, temp=0.8, tokens=12000)
     if not out: return "fail"
     # the lexicon pass must not "fix" Zayd addressing Hala in the feminine
     lines = []

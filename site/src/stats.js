@@ -248,5 +248,83 @@
     all = all.filter(function(a){ return a.g >= 30; }).sort(function(a, b){ return b.ppg - a.ppg; }).slice(0, 12);
     return all.length ? '<ol class="lead">' + all.map(function(a, i){ return '<li><span class="num muted">' + (i + 1) + '</span><span class="who"><span class="lat">' + esc(a.name) + "</span> " + R.logo(team(a.team), "sm") + ' <span class="muted">' + R.tname(team(a.team)) + "، " + a.g + " مباراة</span></span><b>" + a.ppg.toFixed(2) + "</b></li>"; }).join("") + "</ol>" + noteSrc("أعلى معدل نقاط بالمباراة لمدرب مع نادي في الدوري، لمن درّب 30 مباراة أو أكثر مع نفس النادي.") : "";
   };
+
+  // ---- phase 5 blocks (only rendered when ai/approved.json allows the kind)
+  S.aiSummary = function(a){ if (!a) return ""; return '<div class="ai"><b>' + esc(a.headline) + "</b><p>" + esc(a.summary) + '</p><span class="aisrc">كتبها تيفو من أرقام المباراة</span></div>'; };
+  S.aiThread = function(a){ if (!a || !a.thread) return ""; return '<ol class="thread">' + a.thread.map(function(t, i){ return '<li><p>' + esc(t) + '</p><button type="button" class="btn copy" data-copy="' + esc(t) + '">انسخ</button></li>'; }).join("") + '</ol><button type="button" class="btn copy" data-copy="' + esc(a.thread.join("\n\n")) + '">انسخ الثريد كامل</button>'; };
+  S.aiPreview = function(a){ if (!a || !a.lines) return ""; var lab = ["قوة الأول", "قوة الثاني", "نقطة القلق", "مفتاح المباراة", "التوقع"]; return '<div class="ai"><ul class="prev">' + a.lines.map(function(l, i){ return "<li><b>" + lab[i] + "</b> " + esc(l) + "</li>"; }).join("") + '</ul><span class="aisrc">كتبها تيفو من الأرقام</span></div>'; };
+  // ---- 79: the journalist sheet (numbers only, no AI)
+  S.pressSheet = function(m, st, stats, facts, fat, md){
+    var rows = st && st.groups && st.groups[0] ? st.groups[0].rows : [], by = {}; rows.forEach(function(r){ by[r.team.id] = r; });
+    var side = function(t){ var r = by[t.id], out = "<h3>" + R.tname(t) + "</h3><ul>";
+      if (r) out += "<li>المركز " + r.rank + " برصيد " + r.pts + " نقطة من " + r.played + " مباريات (" + r.won + " فوز، " + r.drawn + " تعادل، " + r.lost + " خسارة)، له " + r.gf + " وعليه " + r.ga + ".</li><li>آخر النتايج: " + (r.form || []).map(function(x){ return { W:"فوز", D:"تعادل", L:"خسارة" }[x]; }).join("، ") + ".</li>";
+      var g = stats && stats.lists && (stats.lists.goals || []).filter(function(p){ return p.team && p.team.id === t.id; }).slice(0, 2);
+      if (g && g.length) out += "<li>هدافه: " + g.map(function(p){ return '<span class="lat">' + esc(p.player.name) + "</span> (" + p.value + ")"; }).join("، ") + ".</li>";
+      var f = fat && fat.teams && fat.teams[t.id]; if (f) out += "<li>لعب " + f.matches_14d + " مباريات في آخر أسبوعين" + (f.days_since_last != null ? "، وارتاح " + f.days_since_last + " أيام" : "") + (f.afc_km_30d ? "، وسافر " + Number(f.afc_km_30d).toLocaleString("en-US") + " كم في آسيا" : "") + ".</li>";
+      return out + "</ul>"; };
+    var h = md && md.h2h && md.h2h.summary, p = m.probs || (md && md.probs);
+    var body = side(m.home) + side(m.away) + "<h3>بين الفريقين</h3><ul>" + (h ? "<li>المواجهات السابقة: " + h.home_wins + " فوز لـ" + R.tname(m.home) + "، و" + h.draws + " تعادل، و" + h.away_wins + " فوز لـ" + R.tname(m.away) + ".</li>" : "") + (p ? "<li>توقعات تيفو: " + Math.round(p.home * 100) + "% فوز " + R.tname(m.home) + "، " + Math.round(p.draw * 100) + "% تعادل، " + Math.round(p.away * 100) + "% فوز " + R.tname(m.away) + ".</li>" : "") + (facts || []).map(function(f){ return "<li>" + esc(String(f.text_ar).replace(/\s*\(بيانات FotMob\)/g, "")) + "</li>"; }).join("") + "</ul>";
+    return '<div class="press">' + body + '<p class="tools"><button type="button" class="btn" onclick="window.print()">اطبعها</button><button type="button" class="btn copy" data-copy-from=".press">انسخ النص</button></p>' + noteSrc("كل رقم هني من بيانات تيفو (FotMob ورابطة المحترفين). جاهزة للمعلقين والصحفيين.") + "</div>";
+  };
+  // ---- 58: transfers
+  S.transfers = function(tr){
+    var l = [], seen = {}; Object.keys((tr && tr.teams) || {}).forEach(function(id){ var t = tr.teams[id]; (t["in"] || []).forEach(function(x){ var k = (x.player && x.player.id) + (x.date || ""); if (!seen[k] && !x.extension){ seen[k] = 1; l.push(x); } }); });
+    l.sort(function(a, b){ return (b.date || "").localeCompare(a.date || ""); }); if (!l.length) return "";
+    return '<ol class="lead">' + l.slice(0, 30).map(function(x){ return '<li><span class="num muted">' + esc((x.date || "").slice(5, 10)) + '</span><span class="who"><span class="lat">' + esc(x.player && x.player.name) + '</span> <span class="muted">من ' + (x.from ? R.tname(x.from) : "—") + " لـ" + (x.to ? R.tname(x.to) : "—") + (x.loan ? "، إعارة" : x.free_agent ? "، حر" : "") + (x.fee_eur ? "، " + Math.round(x.fee_eur / 1e5) / 10 + " مليون يورو" : "") + "</span></span><b></b></li>"; }).join("") + "</ol>";
+  };
+  // ---- 27: national team players at their clubs
+  S.natClubs = function(t){
+    if (!t || !t.squad) return ""; var ps = []; t.squad.forEach(function(g){ if (g.group !== "coach") g.players.forEach(function(p){ ps.push(p); }); });
+    if (!ps.length) return "";
+    return '<ol class="lead">' + ps.map(function(p){ return '<li><span class="num muted">' + esc(p.number || "") + '</span><span class="who"><a class="lat" href="/p/' + p.id + '/">' + esc(p.name) + '</a> <span class="muted">' + (p.club_id ? '<a href="/t/' + p.club_id + '/">' + esc(p.club || "") + "</a>" : esc(p.club || "")) + (p.abroad ? "، يلعب برا" : "") + "</span></span><b>" + (p.goals || 0) + "</b></li>"; }).join("") + "</ol>" + noteSrc("الرقم على اليسار أهدافه مع المنتخب في هالقائمة.");
+  };
+
+  // ---- phase 4 reference pages: legends (106), memorable (108), this day (40), laws (53)
+  function srcs(list){ return (list || []).slice(0, 3).map(function(u, i){ return '<a href="' + esc(u) + '" rel="noopener">' + (i + 1) + "</a>"; }).join(" "); }
+  S.legends = function(raw, ar){
+    return raw.map(function(p){ var k = p.name_en || p.name, a = ar[k]; if (!a) return ""; return '<section class="blk legend" id="' + esc(String(k).toLowerCase().replace(/[^a-z]+/g, "-")) + '"><h2>' + esc(p.name_ar || k) + '<small class="lat">' + esc(k) + "</small></h2><p>" + esc(a.bio) + "</p><ul class=\"facts-l\">" + (a.facts || []).map(function(f){ return "<li>" + esc(f) + "</li>"; }).join("") + '</ul><p class="src">المصادر: ' + srcs(p.sources) + (p.fotmob_id ? ' · <a href="/p/' + p.fotmob_id + '/">صفحته في تيفو</a>' : "") + "</p></section>"; }).join("");
+  };
+  S.memorable = function(raw, ar){
+    return raw.slice().sort(function(a, b){ return (b.date || "").localeCompare(a.date || ""); }).map(function(m){ var a = ar[m.id]; if (!a) return ""; return '<section class="blk mem"><h2>' + esc(a.title) + '<small class="num">' + esc(m.date) + '</small></h2><p class="score"><span class="lat">' + esc(m.home) + '</span> <b class="num">' + esc(m.score) + '</b> <span class="lat">' + esc(m.away) + "</span>" + (m.pens ? ' <span class="muted">(ترجيح ' + esc(m.pens) + ")</span>" : "") + '</p><p>' + esc(a.why) + '</p><p class="src">' + esc(m.competition || "") + " · المصادر: " + srcs(m.sources) + "</p></section>"; }).join("");
+  };
+  S.thisday = function(events, ar, mmdd, n){
+    var k = function(e){ return e["mm-dd"] + "-" + e.year + "-" + (e.text_en_neutral || "").slice(0, 30); };
+    var list = events.filter(function(e){ return e["mm-dd"] === mmdd && ar[k(e)]; }).sort(function(a, b){ return (a.tier === "headline" ? 0 : 1) - (b.tier === "headline" ? 0 : 1) || a.year - b.year; }).slice(0, n || 5);
+    return list.length ? '<ul class="facts-l">' + list.map(function(e){ return "<li>" + esc(ar[k(e)].line) + ' <span class="src">' + srcs(e.sources) + "</span></li>"; }).join("") + "</ul>" : "";
+  };
+  S.laws = function(raw, ar){
+    return raw.map(function(t){ var a = ar[t.id]; if (!a) return ""; var q = (t.key_quotes || t.quotes || [])[0]; return '<section class="blk law" id="' + esc(t.id) + '"><h2>' + esc(a.title_ar) + '<small class="lat">' + esc(t.law || "") + "</small></h2><p>" + esc(a.summary) + "</p>" + (a.disallowed && a.disallowed.length ? "<h3>ليش ألغى الهدف؟</h3><ul class=\"facts-l\">" + a.disallowed.map(function(x){ return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" : "") + (q ? '<blockquote class="lat" dir="ltr">' + esc(q.text || q.quote || "") + '</blockquote><p class="src">النص الرسمي: <a href="' + esc(q.url || (t.sources || [])[0] || "") + '" rel="noopener">IFAB</a></p>' : "") + "</section>"; }).join("");
+  };
+
+  // ---- 7: where to watch in the UAE; 63: official highlights; 8: stadium guide
+  S.watchWhere = function(b){
+    if (!b || !b.broadcasters || !b.broadcasters.length) return "";
+    return '<ul class="bc">' + b.broadcasters.map(function(x){ return '<li><b>' + esc(x.name_ar || x.name_en) + "</b>" + (x.free ? ' <span class="ok">مجاني</span>' : "") + (x.package ? ' <span class="muted small">' + esc(x.package) + "</span>" : "") + (x.price_aed ? ' <span class="num">' + x.price_aed + "</span> درهم" : "") + (x.url ? ' <a class="src" href="' + esc(x.url) + '" rel="noopener">المصدر</a>' : "") + "</li>"; }).join("") + "</ul>" + (b.confidence && b.confidence !== "high" ? '<p class="src">المعلومة من الصحافة، ما لقينا إعلان رسمي للموسم.</p>' : "");
+  };
+  S.highlight = function(h, md){
+    var ch = h && h.channels && h.channels.filter(function(c){ return c.search_url_template && c.posts_per_match_highlights !== false; })[0]; if (!ch) return "";
+    var q = "ملخص مباراة " + (md.home.name_ar || md.home.name) + " " + (md.away.name_ar || md.away.name);
+    return '<a class="btn" href="' + esc(ch.search_url_template.replace("{q}", encodeURIComponent(q))) + '" rel="noopener" target="_blank">شوف الملخص الرسمي (' + esc(ch.name) + ")</a>";
+  };
+  function v(f){ return f && f.value != null && f.value !== "" ? f.value : null; }
+  function enAr(t){ return String(t).replace(/^Metro:\s*no.*$/i, "ما في مترو قريب").replace(/^Metro:\s*yes,?\s*/i, "مترو: ").replace(/^Bus:\s*yes,?\s*about\s*([\d.]+)\s*km/i, "باص على بعد حوالي $1 كم").replace(/^Bus:\s*no.*$/i, "ما في باص قريب").replace(/^Parking:\s*/i, "مواقف: "); }
+  S.stadium = function(x, T2){
+    var L = x.location || {}, G = x.getting_there || {}, K = x.tickets || {}, F = x.facilities || {}, rows = [];
+    if (v(x.capacity)) rows.push(["السعة", '<span class="num">' + Number(v(x.capacity)).toLocaleString("en-US") + "</span> مقعد"]);
+    if (v(x.opened)) rows.push(["افتُتح", '<span class="num">' + v(x.opened) + "</span>"]);
+    var clubs = (x.home_clubs || []).map(function(c){ var t = c.value || {}; return t.fotmob_id ? '<a href="/t/' + t.fotmob_id + '/">' + esc(t.name_ar || t.name_en) + "</a>" : esc(t.name_ar || t.name_en); }).filter(Boolean);
+    if (clubs.length) rows.push(["ملعب", clubs.join("، ")]);
+    var addr = v(L.address_ar) || v(L.address_en); if (addr) rows.push(["العنوان", esc(addr)]);
+    var gm = v(L.google_maps); if (gm) rows.push(["الخريطة", '<a href="' + esc(gm) + '" rel="noopener">افتحه في خرايط قوقل</a>']);
+    var metro = v(G.metro_official); if (metro) rows.push(["المترو", esc(enAr(metro))]);
+    var bus = (G.bus || []).map(v).filter(Boolean); if (bus.length) rows.push(["الباص", esc(bus.map(enAr).join("، "))]);
+    var park = v(G.parking); rows.push(["المواقف", park ? esc(enAr(park)) : '<span class="muted">ما في معلومة منشورة</span>']);
+    var pf = v(K.platform); if (pf){ var pn = String(pf.name || pf).split(/\s*[(+]/)[0]; rows.push(["التذاكر", pf.url ? '<a class="lat" href="' + esc(pf.url) + '" rel="noopener">' + esc(pn) + "</a>" : esc(pn)]); }
+    var pr = v(K.price_range_aed); if (pr) rows.push(["أسعار التذاكر", '<span class="num">' + esc(typeof pr === "object" ? (pr.min + " - " + pr.max) : pr) + "</span> درهم"]);
+    var fac = [["air_conditioned_stands", "مدرجات مكيّفة"], ["covered_seating", "مدرجات مظللة"], ["family_section", "قسم عائلات"], ["prayer_room", "مصلى"]].filter(function(f){ return v(F[f[0]]) === true; }).map(function(f){ return f[1]; });
+    if (fac.length) rows.push(["فيه", fac.join("، ")]);
+    var src = []; ["capacity", "opened"].forEach(function(k){ (x[k] && x[k].sources || []).forEach(function(u){ if (src.indexOf(u) < 0) src.push(u); }); });
+    return '<dl class="facts">' + rows.map(function(r){ return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + '</dl><p class="src">المصادر: ' + srcs(src) + "، وتاريخ التحقق " + esc(x.checked || "") + ".</p>";
+  };
   if (typeof module !== "undefined" && module.exports) module.exports = S; else root.TS = S;
 })(this);
