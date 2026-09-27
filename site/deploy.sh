@@ -20,8 +20,10 @@ node build.cjs $FLAG
 NOW=$(find out -name index.html | wc -l); LAST=$(cat cache/last_pages 2>/dev/null || echo 0)
 if [ "$LAST" -gt 0 ] && [ "$NOW" -lt $((LAST * 85 / 100)) ]; then echo "partial build: $NOW pages vs $LAST last time; not publishing" >&2; exit 7; fi
 # assets are content-hashed -> 1 year; logos 7 days; pages 60 s (live data comes from /v1 anyway)
-aws s3 sync out/assets "s3://$BUCKET/assets" --region $REGION --only-show-errors --cache-control "public,max-age=31536000,immutable"
-aws s3 sync out/logo "s3://$BUCKET/logo" --region $REGION --only-show-errors --cache-control "public,max-age=604800"
+sync_assets(){ aws s3 sync out/assets "s3://$BUCKET/assets" --region $REGION --only-show-errors --cache-control "public,max-age=31536000,immutable"; }
+sync_logos(){ aws s3 sync out/logo "s3://$BUCKET/logo" --region $REGION --only-show-errors --cache-control "public,max-age=604800"; }
+sync_assets || { echo "assets sync hiccup; retrying" >&2; sleep 5; sync_assets; }   # one retry, as for the pages: a single S3 blip failed the 23:25 run
+sync_logos || { echo "logo sync hiccup; retrying" >&2; sleep 5; sync_logos; }
 sync_pages(){ aws s3 sync out "s3://$BUCKET" --region $REGION --only-show-errors --delete --exclude "assets/*" --exclude "logo/*" --exclude "next/*" --cache-control "public,max-age=60"; }
 sync_pages || { echo "sync hiccup; retrying" >&2; sleep 5; sync_pages; }   # transient S3 stream errors on a few thousand small files
 echo "$NOW" > cache/last_pages

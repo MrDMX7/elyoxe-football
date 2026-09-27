@@ -122,3 +122,20 @@ def test_plurals_after_three_to_ten_and_faqat():
     assert gen.grammar("11 فوز مقابل 3 فوز لعجمان فقط.") == "11 فوز مقابل 3 انتصارات لعجمان بس."
     assert gen.grammar("3 تسديدات بس فقط على المرمى") == "3 تسديدات بس على المرمى"
     assert gen.grammar("فقط 2 فوز") == "بس فوزين"
+
+def test_audit_w13a_generic_rules():
+    neutral = {"neutral": True, "venue_city": "Jeddah"}
+    assert checks.check_history("منتخب قطر يبا يراوي الجميع قوته برا أرضه ويحقق نتيجة إيجابية.", neutral)
+    assert checks.check_history("منتخب قطر يبا يراوي الجميع قوته برا أرضه.", {"neutral": False}) is None
+    assert checks.check_history("نسب توقعات تيفو مب متوفرة الحين للمباراة.", {})
+    assert checks.check_history("هذا فوزه رقم 2 في البطولة.", {})
+    assert checks.check_history("مفتاح المباراة: مفتاح المباراة.", {})
+    assert checks.check_history("مفتاح المباراة: هجوم الشارقة اللي سجل 10 أهداف قدام دفاع استقبل 9.", {}) is None
+
+def test_meta_phrases_and_24h_times():
+    assert checks.check_history("منتخب الإمارات فورمته فوز واحد مسجل بالبيانات.", {})
+    assert checks.check_history("منتخب الإمارات المتصدر بفارق نظافة شبكته.", {})
+    assert checks.check_history("منتخب الإمارات ما استقبل أي هدف في مباراتين.", {}) is None
+    assert gen.grammar("يوم 2 أكتوبر 2026 الساعة 5:15 عصرا بتوقيت الإمارات") == "يوم 2 أكتوبر 2026 الساعة 17:15 بتوقيت الإمارات"
+    assert gen.grammar("الساعة 9:30 مساءً") == "الساعة 21:30"
+    assert gen.grammar("الساعة 19:45") == "الساعة 19:45"

@@ -161,8 +161,17 @@ Resources:
         Variables:
           BUCKET: !Ref DataBucket
           ANALYTICS_BUDGET: "280"
+          ALERT_FROM: tifo@elyoxe.com      # live-feed watchdog (a poller that stopped running while a match is live)
+          ALERT_TO: hello@elyoxe.com
       Policies:
         - S3CrudPolicy: {BucketName: !Ref DataBucket}
+        - Statement:
+            - Effect: Allow
+              Action: [ses:SendEmail]
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  ses:FromAddress: tifo@elyoxe.com
       EventInvokeConfig:
         MaximumEventAgeInSeconds: 300
         MaximumRetryAttempts: 0

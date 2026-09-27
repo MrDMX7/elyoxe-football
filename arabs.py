@@ -501,7 +501,17 @@ def guide(p):
                 items.append({"match": m["id"], "comp": int(key), "comp_name_ar": m.get("comp_name_ar"), "kickoff_utc": m["kickoff_utc"],
                               "kickoff_uae": m.get("kickoff_uae"), "home": m["home"], "away": m["away"], "status": m["status"],
                               "broadcasters": info.get("broadcasters") or [], "confidence": info.get("confidence"),
-                              "note": info.get("note")})
+                              "note": info.get("note"), "channel_known": bool(info.get("broadcasters"))})
+        # W1.2c: this country's own teams (national team, its clubs) in a competition the research has no row for
+        # still get listed, with the channel marked unknown instead of the match silently missing
+        have = {it["match"] for it in items}
+        for m in _own_matches(p, iso2, now):
+            if m["id"] in have:
+                continue
+            items.append({"match": m["id"], "comp": m["comp"], "comp_name_ar": m.get("comp_name_ar"), "kickoff_utc": m["kickoff_utc"],
+                          "kickoff_uae": m.get("kickoff_uae"), "home": m["home"], "away": m["away"], "status": m["status"],
+                          "broadcasters": [], "confidence": None, "note": None, "channel_known": False,
+                          "channel_ar": "القناة: ما تأكدنا"})
         items.sort(key=lambda x: x["kickoff_utc"])
         by_bc = {}
         for it in items:
@@ -512,6 +522,30 @@ def guide(p):
                                                 "source": "research/tifo-2026-09-27/broadcast_by_country.json (checked "
                                                           + str((bc.get("_meta") or {}).get("checked")) + ") x FotMob fixtures"},
                          cache="warm")
+
+
+_OWN_CACHE = {}
+
+
+def _own_matches(p, iso2, now):
+    """Next 3 days (and the last 2 h) of tracked matches where a team from this country plays (its national team,
+    or a club whose domestic league is in this country)."""
+    key = iso(now)[:16]
+    if _OWN_CACHE.get("at") != key:
+        ms = []
+        for c in p.comps:
+            for m in p.fixtures(c["id"]) or []:
+                ko = parse_utc(m.get("kickoff_utc"))
+                if m.get("id") and ko and now - timedelta(hours=2) <= ko <= now + timedelta(days=3):
+                    ms.append(m)
+        _OWN_CACHE.update({"at": key, "matches": ms, "cc": {}})
+    cc = _OWN_CACHE["cc"]
+
+    def country(tid):
+        if tid not in cc:
+            cc[tid] = (p.team_country(tid) or {}).get("iso2") if tid else None
+        return cc[tid]
+    return [m for m in _OWN_CACHE["matches"] if iso2 in (country(m["home"]["id"]), country(m["away"]["id"]))]
 
 
 # ------------------------------------------------------------------ 295 national team folders

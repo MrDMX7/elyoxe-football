@@ -268,6 +268,7 @@ class Poller:
                 keep.append(m)
         self.store.put_json("live.json", {"generated": iso(now), "live": sum(m["status"] in S.LIVE_STATUSES for m in keep),
                                           "matches": keep}, cache="live", heartbeat=True)
+        self.st["live_written_at"] = iso(now)
 
     def fetch_detail(self, mid, why):
         try:
@@ -314,7 +315,8 @@ class Poller:
         full["coverage_events"] = coverage_events(d)
         if d["status"] == S.FINISHED:
             self.plan_repoll(d, full, why)
-        cache = "hot" if d["status"] in S.LIVE_STATUSES else "static" if d["status"] == S.FINISHED else "warm"
+            self.st.setdefault("cov_checked", {})[str(mid)] = d.get("kickoff_utc")
+        cache = "hot" if d["status"] in S.LIVE_STATUSES or self._near_kickoff(d) else "static" if d["status"] == S.FINISHED else "warm"
         self.store.put_json(f"match/{mid}.json", full, cache=cache, validate=S.validate_detail, health_key=f"match:{why}")
         self.store.ok(f"match:{why}")
         s = self.st.setdefault("schedule", {}).get(str(mid))
@@ -323,6 +325,14 @@ class Poller:
         if d["status"] == S.FINISHED and d.get("comp") in self.comp_ids:
             self.add_ledger(d)
         return d
+
+    def _near_kickoff(self, d):
+        """Scheduled but within kickoff - prematch_minutes .. kickoff + 15 min: cache like a live file (20 s), so the
+        switch to live is not hidden behind a 5-minute 'warm' copy (audit W1.1b)."""
+        ko = parse_utc(d.get("kickoff_utc"))
+        if d.get("status") != S.SCHEDULED or not ko:
+            return False
+        return ko - timedelta(minutes=self.cfg.get("prematch_minutes", 75)) <= self.now() <= ko + timedelta(minutes=15)
 
     # ------------------------------------------------------------------ thin-coverage re-polls after full time
     def plan_repoll(self, d, full, why):
@@ -354,6 +364,19 @@ class Poller:
             rp[mid] = {"ft": ended, "done": []}
 
     def repolls(self):
+        # matches that finished before coverage_events existed: one more fetch each (2 per run), so they get the flag
+        # and, when thin, their re-polls. Afterwards every final fetch records itself in cov_checked.
+        chk = self.st.setdefault("cov_checked", {})
+        for k in [k for k, ko in chk.items() if _age_min(ko, self.now()) > 3 * 1440]:
+            del chk[k]
+        n = 0
+        for mid, sc in sorted(self.st.get("schedule", {}).items(), key=lambda kv: kv[1].get("ko") or "", reverse=True):
+            if n >= 2 or not self.has_time(10):
+                break
+            if sc.get("status") == S.FINISHED and mid not in chk and _age_min(sc.get("ko"), self.now()) <= 24 * 60:
+                self.fetch_detail(int(mid), "final")
+                chk.setdefault(mid, sc.get("ko"))
+                n += 1
         rp = self.st.get("repoll") or {}
         for mid, r in list(rp.items()):
             if not self.has_time(8):
@@ -1017,6 +1040,7 @@ class Poller:
     def analytics_chores(self, only=None):
         """`only`: a replacement step list (tests)."""
         steps = [
+            ("live_watchdog", 0, lambda: self.live_watchdog(self.store.get_json("live.json") or {})),
             ("history", 0, lambda: AN.history_step(self, limit=20)),
             ("records_book", 1440, self.records_books),
             ("danger", 1440, lambda: AN.danger(self)),
@@ -1162,6 +1186,44 @@ class Poller:
         self.store.ok("source-alert", note=f"{kind} mail sent")
         self.note(f"source alert: {kind} mail sent")
 
+    # ------------------------------------------------------------------ live-feed watchdog (audit W1.12)
+    def live_watchdog(self, live_json=None):
+        """While a match is live, live.json must move every 20 s. If its last write is more than live_stall_seconds
+        old, mail the owner once per match (poller: a gap between runs; analytics: a poller that stopped running)."""
+        now = self.now()
+        limit = self.cfg.get("live_stall_seconds", 90)
+        if live_json is None:
+            live = set(self.st.get("live_ids") or [])
+            last = self.st.get("live_written_at")
+        else:
+            live = {str(m["id"]) for m in live_json.get("matches") or [] if m.get("status") in S.LIVE_STATUSES}
+            last = live_json.get("generated")
+        state = (self.an_state if self.role == "analytics" else self.st).setdefault("stall_alerted", {})
+        for k in [k for k in state if k not in live]:
+            del state[k]                        # match over: a new stall of another match alerts again
+        if not live or not last:
+            return
+        gap = (now - parse_utc(last)).total_seconds()
+        if gap <= limit:
+            self.store.ok("live-watchdog", note=f"live.json {gap:.0f} s old")
+            return
+        todo = sorted(m for m in live if m not in state)
+        if not todo:
+            return
+        who = "the poller has not run" if self.role == "analytics" else "the previous runs did not write it"
+        body = (f"live.json توقف: آخر تحديث قبل {gap:.0f} ثانية ({last} UTC) والمباريات {', '.join(todo)} شغالة.\n"
+                f"السبب المرجّح: {who}. الموقع يعرض آخر نسخة سليمة.\n"
+                "الحالة: https://tifo.elyoxe.com/v1/health.json · السجل: bash run.sh logs")
+        try:
+            (self.mailer or _ses_send)(f"Tifo: live feed stalled {gap:.0f} s", body)
+        except Exception as e:
+            self.store.fail("live-watchdog", f"mail not sent: {type(e).__name__}: {e}")
+            return
+        for m in todo:
+            state[m] = iso(now)
+        self.store.fail("live-watchdog", f"live.json {gap:.0f} s old while live (alerted: {', '.join(todo)})")
+        self.note(f"live watchdog: stall of {gap:.0f} s mailed")
+
     def team_country(self, tid):
         """National team -> its country; club -> the country of its first domestic competition."""
         c = config.country_of_team(tid)
@@ -1195,6 +1257,11 @@ class Poller:
                     "refused": self.store.refused}
         live_ids = self.live_window()
         self.mode = "live" if live_ids else "idle"
+        try:
+            if live_ids:
+                self.live_watchdog()
+        except Exception as e:
+            self.store.fail("live-watchdog", f"{type(e).__name__}: {e}")
         try:
             if live_ids:
                 step = self.cfg.get("live_pass_seconds", 20)
