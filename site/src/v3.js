@@ -19,15 +19,16 @@
   function ar(p){ if (p && p.id && PN[p.id] && !p._ar){ p.name_en = p.name; p.name = PN[p.id]; p._ar = 1; } }
   R.arNames = function(md){
     if (!md || md._arn) return md; md._arn = 1;
+    if (md.venue && !md.venue.name_ar && PN.venue) md.venue.name_ar = PN.venue;
     (md.events || []).forEach(function(e){ ar(e.player); ar(e.assist); ar(e.player_out); });
-    var L = md.lineups; if (L) ["home", "away"].forEach(function(s){ if (!L[s]) return; (L[s].starters || []).concat(L[s].subs || [], L[s].unavailable || []).forEach(ar); });
+    var L = md.lineups; if (L) ["home", "away"].forEach(function(s){ if (!L[s]) return; (L[s].starters || []).concat(L[s].subs || [], L[s].unavailable || [], L[s].coach ? [L[s].coach] : []).forEach(ar); });
     return md;
   };
   // scorer / assister lists (app.js re-renders them from fresh stats.json)
   var lead0 = R.leaders; R.leaders = function(stats){ if (stats && stats.lists) Object.keys(stats.lists).forEach(function(k){ (stats.lists[k] || []).forEach(function(r){ ar(r.player); }); }); return lead0.apply(R, arguments); };
   // squads (team pages): app.js re-renders #squad from fresh team json
   var squad0 = R.squad; R.squad = function(t){ ((t && t.squad) || []).forEach(function(g){ (g.players || []).forEach(ar); }); return squad0.apply(R, arguments); };
-  ["lineups", "catchup"].forEach(function(k){ var f = R[k]; R[k] = function(md){ return f.apply(R, [R.arNames(md)].concat([].slice.call(arguments, 1))); }; });
+  ["lineups", "catchup", "matchFacts"].forEach(function(k){ var f = R[k]; R[k] = function(md){ return f.apply(R, [R.arNames(md)].concat([].slice.call(arguments, 1))); }; });
 
   // ---- events: same minute + same team substitutions on one line
   var EV = { penalty_goal:"بلنتي", own_goal:"في مرماه", missed_penalty:"بلنتي ضايع", yellow:"إنذار", red:"طرد", second_yellow:"إنذار ثاني وطرد", var:"الفار" };

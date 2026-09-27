@@ -190,6 +190,13 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   const DERBIES = await get("derbies.json"); ((DERBIES && DERBIES.derbies) || []).forEach(d => { const k = String(d.h2h || "").replace(/^h2h\/|\.json$/g, ""); if (k && !h2hKeys.includes(k)) h2hKeys.push(k); });   // 209: the big Arab derbies get the same page
   const h2hData = await pool(h2hKeys, 8, k => get(`h2h/${k}.json`, 1)), H2H = {}; h2hKeys.forEach((k, i) => { if (h2hData[i]) H2H[k] = h2hData[i]; });
   let NAMES_AR = {}; try { NAMES_AR = JSON.parse(fs.readFileSync(path.join(__dirname, "../names/players_ar.json"), "utf8")); } catch (e){}
+  // coaches (names/coaches_ar.json) and stadiums (stadiums.yaml fotmob_name/name_en + research stadiums.json) in Arabic; Latin stays the fallback
+  let COACH_AR = {}; try { COACH_AR = JSON.parse(fs.readFileSync(path.join(__dirname, "../names/coaches_ar.json"), "utf8")); } catch (e){}
+  const coachAr = co => co && co.id && COACH_AR[co.id] && COACH_AR[co.id].ar ? COACH_AR[co.id].ar : null;
+  const VENUE_AR = {}; { const norm = v => String(v || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    try { let cur = {}; for (const l of fs.readFileSync(path.join(__dirname, "../stadiums.yaml"), "utf8").split("\n")){ const m = l.match(/^\s*-?\s*(id|name_en|name_ar|fotmob_name):\s*(.+?)\s*(#.*)?$/); if (!m) continue; if (m[1] === "id"){ cur = {}; } cur[m[1]] = m[2]; if (cur.name_ar){ if (cur.name_en) VENUE_AR[norm(cur.name_en)] = cur.name_ar; if (cur.fotmob_name) VENUE_AR[norm(cur.fotmob_name)] = cur.name_ar; } } } catch (e){}
+    ((readRes("stadiums.json").stadiums) || []).forEach(x => { if (x.name_ar && x.name_ar.value && x.name_en && x.name_en.value) VENUE_AR[norm(x.name_en.value)] = VENUE_AR[norm(x.name_en.value)] || x.name_ar.value; });
+    VENUE_AR.get = n => VENUE_AR[norm(n)] || null; }
   const allPlayers = {}; compData.forEach(({ c, x }) => { if (x.players && x.players.players) for (const [pid, pp] of Object.entries(x.players.players)) allPlayers[pid] = Object.assign({ comp:c.id }, pp); if (x.cards && x.cards.players) for (const [id, c] of Object.entries(x.cards.players)) allPlayers[id] = Object.assign({ name:c.name, team:c.team }, allPlayers[id] || {}); });
   S.setPlayers(allPlayers);
   for (const { st, fx } of compData){
@@ -367,7 +374,8 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
     { const slim = m => m && { id:m.id, comp:m.comp, kickoff_utc:m.kickoff_utc, kickoff_uae:m.kickoff_uae, status:m.status, minute:m.minute, score:m.score, home:m.home, away:m.away, time_tbd:m.time_tbd };   // favourites card (179)
       const tf = path.join(OUT, "tn", t.id + ".json"); fs.mkdirSync(path.dirname(tf), { recursive:true }); const rk = (() => { for (const d of compData){ const g = d.st && !d.st.composite && d.st.groups && d.st.groups[0]; const r = g && g.rows.find(r => r.team.id === t.id); if (r && R.compCountry(d.c) && d.c.kind === "league") return { comp:d.c.id, comp_ar:d.c.name_ar, rank:r.rank, pts:r.pts }; } return null; })();
       fs.writeFileSync(tf, JSON.stringify({ id:t.id, name:t.name, name_ar:t.name_ar, next:slim(f.next[0]), last:slim(f.past[0]), recent:f.past.slice(0, 5).map(slim), table:rk })); }
-    const sub = [t.coach ? `المدرب <span class="lat">${esc(t.coach.name)}</span>` : "", t.venue && t.venue.name ? `الملعب <span class="lat">${esc(t.venue.name)}</span>` : ""].filter(Boolean).join("<br>");
+    const cAr = coachAr(t.coach), vAr = t.venue && VENUE_AR.get(t.venue.name);
+    const sub = [t.coach ? `المدرب ${cAr ? esc(cAr) : `<span class="lat">${esc(t.coach.name)}</span>`}` : "", t.venue && t.venue.name ? `الملعب ${vAr ? esc(vAr) : `<span class="lat">${esc(t.venue.name)}</span>`}` : ""].filter(Boolean).join("<br>");
     // the club in numbers (91, 36, 96, 135, 137, 141)
     let nums = "";
     if (rhist[i]) nums += S.sec("تصنيف تيفو عبر السنين", "", S.ratingChart(rhist[i], id));
@@ -455,6 +463,7 @@ ${nxt ? `<p class="tnext"><span>الياية</span> <a href="/m/${nxt.id}/">${R.
     const probs = md.status === "scheduled" ? (md.probs || sum.probs) : null, facts = md.status === "scheduled" ? factsByMatch[id] : null;
     const fa = md.status === "scheduled" && md.comp === 538 && x538.fatigue ? S.fatigue(x538.fatigue, [md.home.id, md.away.id]) : "";
     // v3 match page (DESIGN-v3.md): club-colour key art hero, sticky mini-bar, 5 tabs, analysis as shelf tiles, one sheet
+    if (md.venue && !md.venue.name_ar){ const va = VENUE_AR.get(md.venue.name_en || md.venue.name); if (va) md.venue.name_ar = va; }
     SEQ = 0; R.arNames(md); PALETTE = [colors[md.home.id], colors[md.away.id]].filter(Boolean); if (!PALETTE.length) PALETTE = [["#5C6660", "#F6F7F2"]];
     const cx = compX[md.comp] || {}, cdata = compData.find(d => d.c.id === md.comp) || {};
     const uaeMatch = R.UAE_COMPS.indexOf(md.comp) >= 0 || md.home.id === 5789 || md.away.id === 5789;
@@ -491,7 +500,9 @@ ${nxt ? `<p class="tnext"><span>الياية</span> <a href="/m/${nxt.id}/">${R.
       vpane("m", "stats", `<div id="stats">${R.stats(md)}</div>`) +
       vpane("m", "ana", (anaLead + (anaSecs.length ? shelf(anaSecs, { title:"التحليل كله" }) : "")) || '<p class="empty">التحليل ينزل مع قرب المباراة.</p>') +
       vpane("m", "h2h", `<div id="h2h">${R.h2h(md)}</div>`) + "</div>" + faqHtml;
-    const names = {}; (md.events || []).forEach(e => [e.player, e.assist, e.player_out].forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); }));
+    const names = {}; if (md.venue && md.venue.name_ar) names.venue = md.venue.name_ar;
+    if (md.lineups) ["home", "away"].forEach(sd => { const co = md.lineups[sd] && md.lineups[sd].coach; if (coachAr(co)) names[co.id] = coachAr(co); });
+    (md.events || []).forEach(e => [e.player, e.assist, e.player_out].forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); }));
     if (md.lineups) ["home", "away"].forEach(sd => md.lineups[sd] && [].concat(md.lineups[sd].starters || [], md.lineups[sd].subs || [], md.lineups[sd].unavailable || []).forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); }));
     [md.home.id, md.away.id].forEach(tid => { const tj = teamById.get(tid); ((tj && tj.squad) || []).forEach(g => (g.players || []).forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); })); });   // squads: live subs/scorers stay Arabic
     const ld = (() => { const st = { postponed:"https://schema.org/EventPostponed", cancelled:"https://schema.org/EventCancelled" }[md.status] || "https://schema.org/EventScheduled", H = md.home.name_ar || md.home.name, A = md.away.name_ar || md.away.name, v = md.venue || {};   // 348
@@ -572,6 +583,8 @@ ${items}
       coachRows.set(c.id, { name:f.name, rows:f.rows.map(r => Object.assign({}, r)), current:f.current_team || (prev && prev.current) }); });
     const hs = await pool(CIDX.h2h || [], 8, h => get(`coaches/h2h/${h.pair}.json`, 1));
     hs.forEach(h => { if (!h || !h.coaches) return; const [a, b] = h.coaches; [[a, b], [b, a]].forEach(([me, op]) => { if (!CH2H.has(me)) CH2H.set(me, []); CH2H.get(me).push({ op, name:h.names[op], w:h.wins[me] || 0, d:h.wins.draws || 0, l:h.wins[op] || 0 }); }); }); }
+  for (const [cid, co] of coachRows){ const a = COACH_AR[cid] && COACH_AR[cid].ar; if (a && !co.name_en){ co.name_en = co.name; co.name = a; } }
+  for (const list of CH2H.values()) list.forEach(o => { const a = COACH_AR[o.op] && COACH_AR[o.op].ar; if (a) o.name = a; });
   { const cj = {}; for (const [cid, co] of coachRows) if (co.rows.length) cj[cid] = { n:co.name, r:co.rows.map(r => [r.season, r.team, (teamsJson.teams[r.team] || {}).name_ar || "", r.won, r.drawn, r.lost]) };
     fs.writeFileSync(path.join(OUT, "assets/coaches.json"), JSON.stringify(cj));
     write("coach/compare/index.html", page({ path:"/coach/compare/", page:"coachcmp", title:"قارن بين مدربين | تيفو", desc:"قارن أي مدربين درّبوا في الدوري: المباريات والفوز ومعدل النقاط والأندية.", body:'<h1>قارن بين مدربين</h1><div class="cmpsel"><select id="ca" aria-label="المدرب الأول"></select><select id="cb" aria-label="المدرب الثاني"></select></div><div id="cout"></div>' })); urls.push("/coach/compare/"); }
