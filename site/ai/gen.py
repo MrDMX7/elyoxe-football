@@ -14,6 +14,8 @@ Nothing is published until the owner approves a sample of each kind (approved.js
 maxLength (the loop-until-token-limit trap). Numbers become Emirati words only in the spoken (TTS) text.
 """
 import argparse, datetime as dt, hashlib, json, os, re, sys, time, urllib.request
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import checks
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(HERE)
@@ -50,7 +52,7 @@ STYLE = """اكتب باللهجة الإماراتية المحكية، مب ف
 - كاف المخاطب تبقى كاف: عليك، لك، فريقك. ممنوع «عليج، لج، فريقج».
 - خفيف على القلب بس كل جملة فيها معلومة من البيانات. ممنوع المبالغة والشعارات («ملحمة»، «تاريخي») إلا إذا الرقم يثبتها.
 - لا تخترع أي رقم أو اسم أو حدث مب موجود في البيانات. إذا ما تعرف شي، لا تذكره.
-- أسماء اللاعبين اكتبها بالعربي بالطريقة المشهورة في الإعلام الإماراتي.
+- أسماء اللاعبين اكتبها بالعربي كما هي في البيانات بالضبط، ولا تكتب أي اسم بحروف لاتينية.
 - في النص المكتوب اكتب كل الأرقام والنتايج والدقايق بالأرقام (0-9) مب بالكلمات: «فاز 3 - 1»، «في الدقيقة 9»، «61%».
 - استعمل «فاز على» مب «هزم»، و«عقب» أو «بعدين» للترتيب.
 - لا تكتب «رقم 1» أو «1 مرة»: قل «أول فوز»، «مرة وحدة»، «المتصدر».
@@ -103,9 +105,16 @@ def claude_text(system, payload, schema, model="haiku"):
         return None
 
 GEMINI_OUT = []   # set on 402/429: the key is out of credit or quota; later calls return None at once instead of retrying
-def gemini(system, payload, schema, temp=0.6, tokens=4000, provider=None):
-    """Generated text from the configured provider (name kept: every kind calls it). Claude first when chosen, Gemini as fallback."""
-    prov = provider or PROVIDER
+def provider_for(kind):
+    """TIFO_TEXT (env) wins for every kind; else ai/provider.json {kind: provider, "default": …}; else ai/provider.txt; else gemini."""
+    if os.environ.get("TIFO_TEXT"): return PROVIDER
+    try: cfg = json.load(open(os.path.join(HERE, "provider.json")))
+    except (OSError, ValueError): cfg = {}
+    v = cfg.get(kind) or cfg.get("default") or PROVIDER
+    return v if v.split(":")[0] in ("claude", "gemini") else "gemini"
+def gemini(system, payload, schema, temp=0.6, tokens=4000, provider=None, kind=None):
+    """Generated text from the provider chosen for this kind (name kept: every kind calls it). Claude first when chosen, Gemini as fallback."""
+    prov = provider or (provider_for(kind) if kind else PROVIDER)
     if prov.startswith("claude") and not CLAUDE_STOPPED:
         out = claude_text(system, payload, schema, (prov.split(":") + ["haiku"])[1] or "haiku")
         if out is not None: return out
@@ -187,9 +196,11 @@ def spoken(t):
 
 # ---- context builders: only facts from our files
 def team_ar(t): return (t or {}).get("name_ar") or (t or {}).get("name")
+def pname(p):   # a player's Arabic name (names/players_ar.json) when we have one, else FotMob's
+    p = p or {}; return checks.names_ar().get(str(p.get("id"))) or p.get("name")
 def match_facts(md):
     ev = [{"min": e.get("minute"), "type": e.get("type"), "team": team_ar(md[e["team"]]) if e.get("team") in ("home", "away") else None,
-           "player": (e.get("player") or {}).get("name"), "assist": (e.get("assist") or {}).get("name"), "score": e.get("score")} for e in md.get("events") or [] if e.get("type") not in ("sub", "added_time")]
+           "player": pname(e.get("player")), "assist": pname(e.get("assist")) if e.get("assist") else None, "score": e.get("score")} for e in md.get("events") or [] if e.get("type") not in ("sub", "added_time")]
     stats = {}
     for g in md.get("stats") or []:
         for i in g.get("items", []):
@@ -197,7 +208,7 @@ def match_facts(md):
     best = []
     for side in ("home", "away"):
         for p in ((md.get("lineups") or {}).get(side) or {}).get("starters") or []:
-            if p.get("rating"): best.append({"name": p["name"], "team": team_ar(md[side]), "rating": p["rating"]})
+            if p.get("rating"): best.append({"name": pname(p), "team": team_ar(md[side]), "rating": p["rating"]})
     best.sort(key=lambda x: -x["rating"])
     return {"competition": md.get("comp_name_ar"), "round": md.get("round"), "date": (md.get("kickoff_uae") or "")[:10], "home": team_ar(md["home"]), "away": team_ar(md["away"]),
             "score": md.get("score"), "halftime": md.get("halftime_score"), "venue": (md.get("venue") or {}).get("name_ar"), "events": ev, "stats_home_away": stats, "top_rated": best[:4],
@@ -228,9 +239,13 @@ SUM_SCHEMA = OBJ({"headline": S(80), "summary": S(900), "thread": ARR(S(270), 6)
 def do_summary(md):
     ctx = match_facts(md); sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("summary", str(md["id"]), sig): return "cached"
-    out = gemini(SUM_SYS, ctx, SUM_SCHEMA, tokens=8000)
+    out = gemini(SUM_SYS, ctx, SUM_SCHEMA, tokens=8000, kind="summary")
     if not out: return "fail"
     out = deep(out, nations(md["home"], md["away"]))
+    out["summary"] = vet_text(out.get("summary", ""), md, ctx, f"summary {md['id']}")
+    out["thread"] = vet(list(out.get("thread") or []), md, ctx, f"thread {md['id']}", 0) or []
+    out["headline"] = (vet([out.get("headline", "")], md, ctx, f"headline {md['id']}") or [""])[0]
+    if len(re.findall(r"[.!؟]", out["summary"])) < 2 or len(out["thread"]) < 3: print(f"summary {md['id']} dropped: too little left after checks", file=sys.stderr); return "dropped"
     bad = check_result(" ".join([out.get("headline", ""), out.get("summary", "")] + list(out.get("thread") or [])), md)
     bad = bad or check_table(" ".join([out.get("summary", "")] + list(out.get("thread") or [])), table_rows(get(f"comp/{md.get('comp')}/standings.json")))
     if bad: print(f"summary {md['id']} dropped: {bad}", file=sys.stderr); return "dropped"
@@ -247,11 +262,11 @@ PRE_SCHEMA = OBJ({"lines": ARR(S(220), 5)})
 def do_preview(m, ctx):
     sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("preview", str(m["id"]), sig): return "cached"
-    out = gemini(PRE_SYS, ctx, PRE_SCHEMA, temp=0.5)
+    out = gemini(PRE_SYS, ctx, PRE_SCHEMA, temp=0.5, kind="preview")
     if not out: return "fail"
     out = deep(out, nations(m["home"], m["away"]))
     rows = {t: {"rank": (ctx.get(k) or {}).get("rank"), "pts": (ctx.get(k) or {}).get("pts")} for t, k in ((team_ar(m["home"]), "home_table"), (team_ar(m["away"]), "away_table")) if ctx.get(k)}
-    out["lines"] = keep_lines(out.get("lines") or [], rows, 4, f"preview {m['id']}")
+    out["lines"] = keep_lines(out.get("lines") or [], rows, 4, f"preview {m['id']}", ctx)
     if not out["lines"]: return "dropped"
     out.update({"id": m["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("preview", str(m["id"]), out); return "new"
@@ -305,7 +320,7 @@ def do_podcast(ctx, audio):
         if not audio or os.path.exists(mp3): return "cached"
     # Orus reads «الحين» as «الآن»: a Hamed line with it means a new script (2 retries), else no episode this week
     for attempt in range(3):
-        out = gemini(POD_SYS, ctx, POD_SCHEMA, temp=0.8, tokens=12000)
+        out = gemini(POD_SYS, ctx, POD_SCHEMA, temp=0.8, tokens=12000, kind="podcast")
         if not out: return "fail"
         # both hosts address the listener in the masculine and each other by name only, so one lexicon pass fits every line
         lines = []
@@ -356,7 +371,7 @@ def do_commentary(md):
     ctx = {"home": team_ar(md["home"]), "away": team_ar(md["away"]), "competition": md.get("comp_name_ar"), "events": ev}
     sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("commentary", str(md["id"]), sig): return "cached"
-    out = gemini(COM_SYS, ctx, COM_SCHEMA, temp=0.6, tokens=12000)
+    out = gemini(COM_SYS, ctx, COM_SCHEMA, temp=0.6, tokens=12000, kind="commentary")
     if not out: return "fail"
     ids = {e["event_id"] for e in ev}; lines = [{"event_id": l["event_id"], "text": emirati(l["text"])} for l in out["lines"] if l["event_id"] in ids]
     by = {e["event_id"]: e for e in ev}
@@ -388,9 +403,9 @@ def do_digest(team_id, st, league_name):
            "league_table": row and dict(row, league=league_name), "next_match": nxt and {"home": team_ar(nxt["home"]), "away": team_ar(nxt["away"]), "kickoff_uae": nxt.get("kickoff_uae"), "competition": nxt.get("comp_name_ar")}}
     wk = dt.date.today().strftime("%G-%V"); sig = hashlib.sha1(json.dumps([wk, ctx], sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("digest", str(team_id), sig): return "cached"
-    out = gemini(DIG_SYS, ctx, DIG_SCHEMA, temp=0.3, tokens=6000)
+    out = gemini(DIG_SYS, ctx, DIG_SCHEMA, temp=0.3, tokens=6000, kind="digest")
     if not out: return "fail"
-    out = deep(out); out["paras"] = keep_lines([facts_only(x) for x in out["paras"]], table_rows(st), 2, f"digest {team_id}")
+    out = deep(out); out["paras"] = keep_lines([facts_only(x) for x in out["paras"]], table_rows(st), 2, f"digest {team_id}", ctx)
     if not out["paras"]: return "dropped"
     out.update({"team": team_id, "week": wk, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("digest", str(team_id), out); return "new"
 
@@ -410,11 +425,11 @@ def do_power(comp):
     rows = [{"team_id": t["team"], "team": t.get("name_ar"), "tifo_rating": round(t.get("rating") or 0), "rating_change_last5": t.get("change_5"), "league_table": tab.get(t.get("name_ar"))} for t in teams]
     wk = dt.date.today().strftime("%G-%V"); name = f"{comp}-{wk}"; sig = hashlib.sha1(json.dumps(rows, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("power", name, sig): return "cached"
-    out = gemini(POW_SYS, {"league": league, "clubs_in_order": rows}, POW_SCHEMA, temp=0.5, tokens=8000)
+    out = gemini(POW_SYS, {"league": league, "clubs_in_order": rows}, POW_SCHEMA, temp=0.5, tokens=8000, kind="power")
     if not out: return "fail"
     tr = table_rows(st); lines = {}
     for r in out["rows"]:
-        l = emirati(r["line"]).replace("بمعدل ", "بـ "); bad = check_table(l, tr)
+        l = emirati(r["line"]).replace("بمعدل ", "بـ "); bad = check_table(l, tr) or checks.check_history(l, {"clubs_in_order": rows})
         if bad: print(f"power {comp}: line dropped ({bad}): {l[:80]}", file=sys.stderr)
         else: lines[r["team_id"]] = l
     if len(lines) < len(rows) / 2: return "dropped"
@@ -482,13 +497,34 @@ def check_table(text, rows):
         if re.search(r"نقطة وحدة", win) and r["pts"] not in (None, 1): return f"{n} pts 1 != {r['pts']}"
         if (re.search(r"(?<!عن )(?<!من )(?<!على )(?<!ورا )(?<!خلف )(?<!لـ)(?<!و)(?<!\w)(?:يتصدر|المتصدر|متصدر)", win[:40]) or re.search(r"المتصدر\s*$|يتصدر\s*$", pre)) and r["rank"] not in (None, 1): return f"{n} leader but rank {r['rank']}"
     return None
-def keep_lines(lines, rows, minimum, what):
+def keep_lines(lines, rows, minimum, what, evidence=None):
     ok = []
     for l in lines:
-        bad = check_table(l, rows)
+        bad = check_table(l, rows) or (checks.check_history(l, evidence) if evidence is not None else None)
         if bad: print(f"{what}: line dropped ({bad}): {l[:80]}", file=sys.stderr)
         else: ok.append(l)
     return ok if len(ok) >= minimum else None
+
+def vet(lines, md=None, evidence=None, what="", minimum=1):
+    """Every generated line through the fact checks (checks.py + check_result + check_table is done by callers).
+    Returns the kept lines, or None when fewer than `minimum` survive. Drops are logged."""
+    players = checks.match_players(md) if md else {}; out = []
+    for l in lines:
+        why = None
+        if md:
+            l, left = checks.arabic_names(l, players)
+            if left: why = "Latin name left: " + " ".join(left[:3])
+            if not why:
+                why, rest = checks.check_halves(l, md)
+                why = why or check_result(rest, md) or checks.check_events(l, md, players)
+        why = why or checks.check_history(l, evidence)
+        if why: print(f"{what}: line dropped ({why}): {l[:90]}", file=sys.stderr)
+        else: out.append(l)
+    return out if len(out) >= minimum else None
+def vet_text(text, md=None, evidence=None, what=""):
+    """Sentence-level vet for a paragraph (summary): failing sentences are cut out."""
+    parts = re.split(r"(?<=[.!؟])\s+", text or ""); kept = vet(parts, md, evidence, what, 0) or []
+    return " ".join(kept)
 
 def do_why(md):
     ctx = match_facts(md)
@@ -502,12 +538,12 @@ def do_why(md):
                      "draw_goals_each": gh if gh == ga else None}
     sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("why", str(md["id"]), sig): return "cached"
-    out = gemini(WHY_SYS, ctx, WHY_SCHEMA, temp=0.3, tokens=4000)
+    out = gemini(WHY_SYS, ctx, WHY_SCHEMA, temp=0.3, tokens=4000, kind="why")
     if not out: return "fail"
     lines = [fix(grammar(emirati(l), nations(md["home"], md["away"]))) for l in out["lines"]]
     for l in [l for l in lines if ZERO.search(l)]: print(f"why {md['id']}: zero-count line dropped: {l[:80]}", file=sys.stderr)
     lines = [l for l in lines if not ZERO.search(l)]
-    bad = next((r for r in (check_result(l, md) for l in lines) if r), None)
+    lines = vet(lines, md, ctx, f"why {md['id']}", 0) or []; bad = None
     win = ctx["result"]["winner"] and ctx["result"]["winner"]["team"]
     if not bad and win and lines and win not in lines[0] and len(lines) > 1 and win in lines[1]: lines.reverse()   # the winner first
     if bad or len(lines) < 2 or (win and win not in lines[0]):
@@ -548,11 +584,11 @@ def do_quick(m, table):
            "head_to_head": (md.get("h2h") or {}).get("summary")}
     sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("quick", str(m["id"]), sig): return "cached"
-    out = gemini(QUICK_SYS, ctx, QUICK_SCHEMA, temp=0.3, tokens=4000)
+    out = gemini(QUICK_SYS, ctx, QUICK_SCHEMA, temp=0.3, tokens=4000, kind="quick")
     if not out: return "fail"
     qall = [fix(grammar(emirati(l), nations(m["home"], m["away"]))) for l in out["lines"]]
     for x in [x for x in qall if ZERO.search(x)]: print(f"quick {m['id']}: zero-count line dropped: {x[:80]}", file=sys.stderr)
-    qlines = keep_lines([x for x in qall if not ZERO.search(x)], table_rows(table), 4, f"quick {m['id']}")
+    qlines = keep_lines([x for x in qall if not ZERO.search(x)], table_rows(table), 4, f"quick {m['id']}", ctx)
     if not qlines: return "dropped"
     save("quick", str(m["id"]), {"id": m["id"], "comp": m.get("comp"), "home": m["home"]["id"], "away": m["away"]["id"], "kickoff_utc": m.get("kickoff_utc"), "lines": qlines, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
 
@@ -577,7 +613,7 @@ def do_daily5():
     if not ms: return "none"
     sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("daily5", today, sig): return "cached"
-    out = gemini(D5_SYS, ctx, D5_SCHEMA, temp=0.5, tokens=4000)
+    out = gemini(D5_SYS, ctx, D5_SCHEMA, temp=0.5, tokens=4000, kind="daily5")
     if not out: return "fail"
     out = deep(out); out.update({"date": today, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("daily5", today, out); return "new"
 
