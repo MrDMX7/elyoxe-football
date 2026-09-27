@@ -1083,6 +1083,8 @@ class Poller:
             if w.get("alerted_at"):
                 self._alert("recovery", w, _age_min(w["first_bad_at"], now) if w.get("first_bad_at") else None)
             if not w.get("alerted_at") or w.get("send_failures", 0) >= 5:
+                if w.get("send_failures", 0) >= 5:
+                    self.store.ok("source-alert", note="gave up sending after 5 failures; outage over")   # health.ok again
                 w.update({"first_bad_at": None, "alerted_at": None, "send_failures": 0})
             self.store.ok("source:fotmob")
 

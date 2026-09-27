@@ -108,3 +108,13 @@ def test_short_blip_sends_nothing(tmp_path):
     for i, o in enumerate(["bad"] * 10 + ["good"] + ["bad"] * 10 + ["good"]):
         _minute(tmp_path, st, t0 + timedelta(minutes=i), mail, o)
     assert mail.sent == []
+
+
+def test_source_alert_gives_up_then_clears_health(tmp_path):
+    st, mail = {}, _Mail(fail=99)
+    t0 = datetime(2026, 9, 27, 18, 0, tzinfo=timezone.utc)
+    for i in range(25):
+        _minute(tmp_path, st, t0 + timedelta(minutes=i), mail, "bad")
+    assert mail.sent == [] and st["source_watch"]["send_failures"] == 5
+    p = _minute(tmp_path, st, t0 + timedelta(minutes=26), mail, "good")
+    assert p.store.health["source-alert"]["ok"] and st["source_watch"]["send_failures"] == 0
