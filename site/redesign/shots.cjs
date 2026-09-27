@@ -4,9 +4,9 @@
 "use strict";
 const path = require("path"), fs = require("fs");
 const { chromium } = require("/root/workspace/automation/browse/node_modules/playwright-core");
-const ROOT = path.join(__dirname, "../out_next/next"), DST = "/root/.claude/jobs/abd28f85/tmp";
+const ROOT = process.env.ROOT ? path.resolve(process.env.ROOT) : path.join(__dirname, "../out_next/next"), MOUNT = process.env.ROOT ? "" : "/next", DST = "/root/.claude/jobs/abd28f85/tmp";
 const PAGES = { home:"/next/", match:"/next/m/1000020522/", live:"/next/m/6052085/", comp:"/next/c/uae-pro-league/", saudi:"/next/c/saudi-pro-league/", pl:"/next/c/premier-league/", comps:"/next/competitions/" };
-if (process.env.PAGES) for (const k of Object.keys(PAGES)) delete PAGES[k]; (process.env.PAGES || "").split(",").filter(Boolean).forEach(x => { PAGES[x] = "/next/c/" + x + "/"; });
+if (process.env.PAGES) for (const k of Object.keys(PAGES)) delete PAGES[k]; (process.env.PAGES || "").split(",").filter(Boolean).forEach(x => { if (x.includes("=")) { const [k, u] = x.split("="); PAGES[k] = u; } else PAGES[x] = "/next/c/" + x + "/"; });
 const W = process.env.W ? process.env.W.split(",").map(Number) : [390, 880, 1440], tag = process.argv[2] && process.argv[2] !== "-" ? "_" + process.argv[2] : "", only = process.argv.slice(3);
 const MIME = { ".html":"text/html; charset=utf-8", ".css":"text/css", ".js":"application/javascript", ".json":"application/json", ".png":"image/png", ".txt":"text/plain" };
 (async () => {
@@ -15,7 +15,7 @@ const MIME = { ".html":"text/html; charset=utf-8", ".css":"text/css", ".js":"app
   try {
     for (const w of W){
       const ctx = await b.newContext({ viewport:{ width:w, height:w < 500 ? 844 : w < 1000 ? 1000 : 900 }, deviceScaleFactor:1, locale:"ar-AE", timezoneId:"Asia/Dubai", serviceWorkers:"block" });
-      await ctx.route("https://tifo.elyoxe.com/next/**", async r => { let p = new URL(r.request().url()).pathname.replace(/^\/next/, ""); if (p.endsWith("/")) p += "index.html"; const f = path.join(ROOT, p); if (fs.existsSync(f)) return r.fulfill({ status:200, body:fs.readFileSync(f), headers:{ "content-type":MIME[path.extname(f)] || "application/octet-stream" } }); return r.fulfill({ status:404, body:"nf" }); });
+      await ctx.route(MOUNT ? "https://tifo.elyoxe.com/next/**" : /^https:\/\/tifo\.elyoxe\.com\/(?!v1\/)/, async r => { let p = new URL(r.request().url()).pathname.replace(MOUNT ? /^\/next/ : /^$/, ""); if (p.endsWith("/")) p += "index.html"; const f = path.join(ROOT, p); if (fs.existsSync(f)) return r.fulfill({ status:200, body:fs.readFileSync(f), headers:{ "content-type":MIME[path.extname(f)] || "application/octet-stream" } }); return MOUNT ? r.fulfill({ status:404, body:"nf" }) : r.continue(); });
       for (const [k, u] of Object.entries(PAGES)){
         if (only.length && !only.includes(k)) continue;
         const pg = await ctx.newPage(), errs = []; pg.on("pageerror", e => errs.push(e.message)); pg.on("response", r => { if (r.status() >= 400) errs.push(r.status() + " " + r.url()); });

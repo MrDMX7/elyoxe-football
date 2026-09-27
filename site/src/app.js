@@ -58,7 +58,7 @@
       if (arabOnly()){ var AT = window.ARABT || {}, ar = {}; R.COUNTRIES.forEach(function(c){ ar[c[0]] = 1; }); var cc = {}; (idx.competitions || []).forEach(function(c){ cc[c.id] = R.compCountry(c); }); ms = ms.filter(function(m){ return ar[cc[m.comp]] || AT[m.home.id] || AT[m.away.id]; }); }
       set("#daytitle", R.dayNav(uaeToday(dayOff), uaeToday(0)));
       var natIds = []; try { natIds = JSON.parse(localStorage.getItem("tifo.natids") || "{}")[country()] || []; } catch (e){}
-      set("#day", R.dayList(ms, idx, { mine:mine(), country:country(), natIds:natIds, empty:"ما في مباريات في هاليوم." }));
+      set("#day", R.dayList(ms, idx, { mine:mine(), country:country(), natIds:natIds, empty:"ما في مباريات في هاليوم." })); document.dispatchEvent(new CustomEvent("tifo:day", { detail:{ ms:ms, idx:idx, live:live, off:dayOff } }));
       var lv = (live.matches || []); set("#livecount", lv.length ? '<i class="cardflip"></i>' + lv.length + " مباراة مباشرة الحين" : "");
       if (dayOff === 0) stand(R.featured(ms));
       stamp(live.generated || day.generated);
@@ -137,7 +137,7 @@
   function match(){
     return Promise.all([index(), get("match/" + ID + ".json")]).then(function(r){
       var idx = r[0], md = r[1];
-      MD = md; FULL = md; setTimeout(dist, 0); var pb = $("#p3dbtn"); if (pb) pb.hidden = !(md.lineups && md.lineups.home);
+      MD = md; FULL = md; document.dispatchEvent(new CustomEvent("tifo:match", { detail:md })); setTimeout(dist, 0); var pb = $("#p3dbtn"); if (pb) pb.hidden = !(md.lineups && md.lineups.home);
       set("#mh", R.matchHead(md)); set("#facts", R.matchFacts(md, idx)); set("#catchup", R.catchup(md)); set("#events", R.events(md)); set("#lineups", R.lineups(md)); set("#stats", R.stats(md)); set("#h2h", R.h2h(md));
       stamp(md.generated);
       var t = Date.parse(md.kickoff_utc), soon = md.status === "scheduled" && t - Date.now() < 90 * 60e3 && t > Date.now() - 3 * 3600e3;
@@ -172,7 +172,7 @@
       if (R.isLive(m) || Date.parse(m.kickoff_utc) <= Date.now()){ el.innerHTML = '<a class="cd" href="/m/' + m.id + '/"><b>المنتخب يلعب الحين</b><span class="dg">مباشر</span></a>'; return; }
       var tick = function(){ var d = Math.max(0, Date.parse(m.kickoff_utc) - Date.now()), dd = Math.floor(d / 864e5), hh = Math.floor(d / 36e5) % 24, mm = Math.floor(d / 6e4) % 60, ss = Math.floor(d / 1e3) % 60, p2 = function(n){ return n < 10 ? "0" + n : n; };
         var opp = m.home.id === 5789 ? m.away : m.home;
-        el.innerHTML = '<a class="cd" href="/m/' + m.id + '/"><span><b>الإمارات ضد ' + R.tname(opp) + '</b><br><span class="small">' + R.esc(R.dayLabel(R.ymd(m.kickoff_uae))) + " " + R.hhmm(m.kickoff_uae) + '</span></span><span class="dg">' + (dd ? dd + " يوم " : "") + p2(hh) + ":" + p2(mm) + ":" + p2(ss) + "</span></a>"; };
+        el.innerHTML = '<a class="cd" href="/m/' + m.id + '/"><span><b>' + R.tname(m.home) + ' ضد ' + R.tname(m.away) + '</b><br><span class="small">' + R.esc(R.dayLabel(R.ymd(m.kickoff_uae))) + " " + R.hhmm(m.kickoff_uae) + '</span></span><span class="dg">' + (dd ? dd + " يوم " : "") + p2(hh) + ":" + p2(mm) + ":" + p2(ss) + "</span></a>"; };
       tick(); clearInterval(el._t); el._t = setInterval(tick, 1000);
     }).catch(function(){});
   }
@@ -236,11 +236,7 @@
   var sb2 = $("#secondbtn"), wl = null;
   if (sb2) sb2.onclick = function(){ var on = !document.body.classList.contains("second"); document.body.classList.toggle("second", on); sb2.textContent = on ? "سكّر الشاشة الثانية" : "الشاشة الثانية";
     if (on && navigator.wakeLock) navigator.wakeLock.request("screen").then(function(l){ wl = l; }).catch(function(){}); else if (wl){ wl.release(); wl = null; } };
-  // 250: a share button on every numbers section; the card is drawn from the section's title and first rows
-  document.querySelectorAll("section.blk > h2").forEach(function(h){ if (!window.TifoShare || h.querySelector(".shr")) return; var b = document.createElement("button"); b.type = "button"; b.className = "shr"; b.textContent = "شارك"; b.onclick = function(){
-    var sec = h.parentNode, lines = [].slice.call(sec.querySelectorAll("li, tbody tr, .th1, .fr, .wt")).slice(0, 8).map(function(e){ return e.innerText.replace(/\s+/g, " ").trim(); }).filter(Boolean);
-    if (!lines.length) lines = [sec.innerText.replace(/\s+/g, " ").slice(h.innerText.length, h.innerText.length + 160)];
-    window.TifoShare.card(h.firstChild.textContent.trim(), lines); }; h.appendChild(b); });
+  // 250: per-section share buttons became the page sheet's «صورة لأي قسم» (v3, src/shell.js)
   // 235 round story: the table re-sorts as each result lands (FLIP via --i row index)
   (function(){ var d = $("#storydata"); if (!d) return; var snaps = JSON.parse(d.textContent), rows = {}; document.querySelectorAll(".stbl li").forEach(function(li){ rows[li.dataset.t] = li; });
     function show(k){ (snaps[k] || []).forEach(function(x, i){ var li = rows[x[0]]; if (!li) return; li.style.setProperty("--i", i); li.querySelector(".rk").textContent = i + 1; li.querySelector(".pt").textContent = x[1]; li.classList.toggle("moved", k > 0 && snaps[k - 1] && snaps[k - 1].findIndex(function(y){ return y[0] === x[0]; }) !== i); }); }

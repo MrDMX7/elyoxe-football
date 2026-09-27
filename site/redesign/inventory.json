@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-27T12:16:52.879Z",
+ "generated": "2026-09-27T14:04:35.555Z",
  "source": "site/out/ (snapshot in redesign/snap/old)",
  "pages": {
   "academy": 1,
@@ -38,7 +38,7 @@
   "newsletter": 1,
   "player": 4183,
   "poty": 1,
-  "referee": 275,
+  "referee": 296,
   "stadium": 15,
   "stadiums": 1,
   "streaks": 1,
@@ -293,6 +293,11 @@
      "type": "heading",
      "label": "مدربين عرب",
      "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "برا بلدانهم",
+     "level": 3
     },
     {
      "type": "heading",

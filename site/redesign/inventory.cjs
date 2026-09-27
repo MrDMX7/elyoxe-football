@@ -138,5 +138,27 @@ else if (cmd === "new"){
   fs.writeFileSync(path.join(__dirname, "inventory.diff.json"), JSON.stringify(diff, null, 1));
   for (const [k, d] of Object.entries(diff.templates)) console.log(`${k}: ${d.total} old items -> kept ${d.kept}, merged ${d.merged}, MISSING ${d.missing.length}` + (d.missing.length ? "\n   " + d.missing.map(m => m.type + ":" + m.label + (m.id ? "#" + m.id : "")).join("\n   ") : ""));
 }
-else console.log("usage: node redesign/inventory.cjs snap|old|new");
+else if (cmd === "gate"){
+  // production gate: every template, up to N sampled pages that exist in both builds, old item by old item
+  const OLD = path.resolve(SITE, arg("--old", "out_base")), NEW = path.resolve(SITE, arg("--new", "out")), N = +arg("--n", "20"), only = arg("--only", "");
+  const MAP = JSON.parse(fs.readFileSync(path.join(__dirname, "placement.json"), "utf8")), norm = s => clean(String(s)).replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
+  // player names moved to Arabic (names/players_ar.json): a Latin label found as its Arabic form counts as kept
+  const LAT = {}; try { for (const v of Object.values(JSON.parse(fs.readFileSync(path.join(SITE, "../names/players_ar.json"), "utf8")))) if (v.latin && v.ar) (LAT[v.latin] = LAT[v.latin] || []).push(v.ar); } catch (e){}
+  (MAP.rename = MAP.rename || {}); for (const [l, a] of Object.entries(LAT)) MAP.rename[l] = (MAP.rename[l] || []).concat(a);
+  const byT = {}; for (const p of listPages(OLD)){ const k = tkey(p); if (!k || (only && !only.split(",").includes(k))) continue; if (fs.existsSync(pageFile(NEW, p))) (byT[k] = byT[k] || []).push(p); }
+  const res = {}; let bad = 0;
+  for (const [k, list] of Object.entries(byT)){
+    const step = Math.max(1, Math.floor(list.length / N)), sample = list.filter((_, i) => i % step === 0).slice(0, N), miss = {};
+    for (const p of sample){
+      const o = extract(fs.readFileSync(pageFile(OLD, p), "utf8")).items, n = extract(fs.readFileSync(pageFile(NEW, p), "utf8")).items;
+      for (const it of o){ if (it.shell) continue; const al = (MAP.rename[it.label] || []).concat([it.label]).map(norm);
+        const hit = n.find(x => (it.id && x.id === it.id) || al.includes(norm(x.label))); if (!hit){ const key = it.type + ":" + it.label + (it.id ? "#" + it.id : ""); (miss[key] = miss[key] || []).push(p); } }
+    }
+    res[k] = { pages:list.length, sampled:sample.length, missing:Object.entries(miss).map(([m, ps]) => ({ item:m, n:ps.length, eg:ps[0] })) }; bad += res[k].missing.length;
+  }
+  fs.writeFileSync(path.join(__dirname, "gate.json"), JSON.stringify(res, null, 1));
+  for (const [k, r] of Object.entries(res)) if (r.missing.length) console.log(k + ": " + r.missing.map(m => m.item + " (" + m.n + ", " + m.eg + ")").join(" | "));
+  console.log(`gate: ${Object.keys(res).length} templates, ${Object.values(res).reduce((a, r) => a + r.sampled, 0)} pages, ${bad} missing item kinds`); process.exitCode = bad ? 1 : 0;
+}
+else console.log("usage: node redesign/inventory.cjs snap|old|new|gate");
 module.exports = { extract, tkey };
