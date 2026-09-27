@@ -43,7 +43,8 @@ def parse_csv(text):
             hs, as_ = int(r["home_score"]), int(r["away_score"])
         except (TypeError, ValueError):
             continue          # scheduled fixtures carry NA
-        rows.append((r["date"], r["home_team"], r["away_team"], hs, as_, r["tournament"], r["neutral"] == "TRUE"))
+        rows.append((r["date"], r["home_team"], r["away_team"], hs, as_, r["tournament"], r["neutral"] == "TRUE",
+                     r.get("city"), r.get("country")))
     return rows
 
 
@@ -51,7 +52,7 @@ def elo(rows, p=None, predict_from=None):
     """rows [(date, home, away, hs, as, tournament, neutral)] -> (ratings by name, predictions)."""
     p = {**NATIONAL, **(p or {})}
     r, preds = {}, []
-    for date, h, a, hs, as_, tour, neutral in sorted(rows):
+    for date, h, a, hs, as_, tour, neutral, *_ in sorted(rows):
         rh, ra = r.get(h, p["base"]), r.get(a, p["base"])
         ph, pd, pa = R.probs(rh, ra, p, neutral)
         out = 0 if hs > as_ else 1 if hs == as_ else 2

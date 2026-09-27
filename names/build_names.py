@@ -1,0 +1,627 @@
+#!/usr/bin/env python3
+"""Arabic player-name dictionary for tifo.elyoxe.com.
+
+FotMob gives player names in Latin script only. This script collects every
+player the site shows (from the public /v1 feed), then finds the Arabic
+spelling Arab sports media use, most reliable source first:
+
+  1. Wikidata  - search footballers by name, match on nationality / birth
+                 year / club, take the `ar` label           -> source "wikidata"
+  2. arwiki    - the Arabic Wikipedia title (sitelink)      -> source "arwiki"
+     (then the Egyptian-Arabic `arz` label, also "wikidata")
+  3. Gemini    - transliterate the rest, 50 per call, with
+                 nationality as a hint                      -> source "generated"
+
+Incremental: ids already in players_ar.json are skipped, so the hourly job
+can call it and only new players are looked up.
+
+    python3 build_names.py                 # collect + resolve + write
+    python3 build_names.py --stage collect # only refresh the player pool
+    python3 build_names.py --no-gemini     # wikidata only, leave the rest
+    python3 build_names.py --retry-generated  # re-try wikidata for generated ids
+
+Network: forces IPv4 (the phone's resolver stalls ~5 s on AAAA lookups).
+Caches (HTTP responses, the pool) go to --cache (default ~/.cache/tifo-names).
+"""
+import argparse
+import csv
+import datetime as dt
+import gzip
+import json
+import os
+import random
+import re
+import socket
+import sys
+import time
+import unicodedata
+from pathlib import Path
+
+import requests
+import urllib3.util.connection as _uc
+
+_uc.allowed_gai_family = lambda: socket.AF_INET  # IPv4 only
+
+HERE = Path(__file__).resolve().parent
+OUT = HERE / "players_ar.json"
+REVIEW = HERE / "review_uae.csv"
+FEED = "https://tifo.elyoxe.com/v1"
+UA = "ElyoxeTifoNames/1.0 (https://tifo.elyoxe.com; hello@elyoxe.com)"
+WD_API = "https://www.wikidata.org/w/api.php"
+WD_SPARQL = "https://query.wikidata.org/sparql"
+GEMINI_MODEL = "gemini-3.5-flash"
+UAE_LEAGUE = 538
+UAE_NATIONAL = 5789
+FOOTBALLER = "Q937857"  # association football player
+TODAY = dt.date.today().isoformat()
+
+S = requests.Session()
+S.headers["User-Agent"] = UA
+
+
+def log(*a):
+    print(time.strftime("%H:%M:%S"), *a, file=sys.stderr, flush=True)
+
+
+def get_json(url, params=None, tries=4, pause=0.0, timeout=40):
+    for i in range(tries):
+        try:
+            r = S.get(url, params=params, timeout=timeout)
+            if r.status_code == 404:
+                return None
+            if r.status_code in (429, 503, 502, 504):
+                wait = int(r.headers.get("Retry-After", 0) or 0) or 5 * (i + 1)
+                log(f"  {r.status_code}, waiting {wait}s")
+                time.sleep(wait)
+                continue
+            r.raise_for_status()
+            if pause:
+                time.sleep(pause)
+            return r.json()
+        except (requests.RequestException, ValueError) as e:
+            log(f"  retry {i + 1}: {url} {e}")
+            time.sleep(3 * (i + 1))
+    return None
+
+
+# --------------------------------------------------------------------------
+# 1. collect the pool of players from the feed
+# --------------------------------------------------------------------------
+
+def collect(cache: Path, match_days: int):
+    """Returns {pid: {name, teams:set, country, birth_years:set, comps:set}}."""
+    pool = {}
+
+    def add(pid, name, team=None, country=None, age=None, comp=None, uae=False):
+        if not pid or not name:
+            return
+        pid = str(pid)
+        p = pool.setdefault(pid, {"name": name, "teams": [], "country": None,
+                                  "ages": [], "comps": [], "uae": False})
+        if team and team not in p["teams"]:
+            p["teams"].append(team)
+        if country and not p["country"]:
+            p["country"] = country
+        if age and age not in p["ages"]:
+            p["ages"].append(age)
+        if comp and comp not in p["comps"]:
+            p["comps"].append(comp)
+        if uae:
+            p["uae"] = True
+
+    index = get_json(f"{FEED}/index.json")
+    teams = (get_json(f"{FEED}/teams.json") or {}).get("teams", {})
+    comps = [c["id"] for c in index["competitions"]]
+    log(f"collect: {len(comps)} competitions, {len(teams)} teams")
+
+    for cid in comps:
+        pj = get_json(f"{FEED}/comp/{cid}/players.json")
+        for pid, p in ((pj or {}).get("players") or {}).items():
+            add(pid, p.get("name"), p.get("team"), comp=cid, uae=(cid == UAE_LEAGUE))
+        sj = get_json(f"{FEED}/comp/{cid}/stats.json")
+        for lst in ((sj or {}).get("lists") or {}).values():
+            for row in lst or []:
+                pl = row.get("player") or {}
+                add(pl.get("id"), pl.get("name"), (row.get("team") or {}).get("id"),
+                    comp=cid, uae=(cid == UAE_LEAGUE))
+
+    squads = 0
+    for tid in teams:
+        tj = get_json(f"{FEED}/team/{tid}.json")
+        if not tj:
+            continue
+        squads += 1
+        uae_team = UAE_LEAGUE in (teams[tid].get("comps") or []) or int(tid) == UAE_NATIONAL
+        for grp in tj.get("squad") or []:
+            for p in grp.get("players") or []:
+                add(p.get("id"), p.get("name"), int(tid), p.get("country"), p.get("age"),
+                    uae=uae_team)
+                if int(tid) == UAE_NATIONAL:
+                    pool[str(p["id"])]["national"] = UAE_NATIONAL
+                    if p.get("club_id"):
+                        add(p["id"], p["name"], p["club_id"])
+    log(f"collect: {squads} squad files")
+
+    # recent match lineups (finished matches of the last N days)
+    today = dt.date.today()
+    mids = []
+    for d in range(match_days):
+        day = (today - dt.timedelta(days=d)).strftime("%Y%m%d")
+        dj = get_json(f"{FEED}/day/{day}.json")
+        for m in (dj or {}).get("matches") or []:
+            if m.get("status") == "finished":
+                mids.append(m["id"])
+    got = 0
+    for mid in mids:
+        mj = get_json(f"{FEED}/match/{mid}.json")
+        if not mj:
+            continue
+        lu = mj.get("lineups") or {}
+        if not isinstance(lu, dict):
+            continue
+        cid = mj.get("comp")
+        for side in ("home", "away"):
+            s = lu.get(side) or {}
+            tid = s.get("team_id")
+            for key in ("starters", "subs", "unavailable"):
+                for p in s.get(key) or []:
+                    add(p.get("id"), p.get("name"), tid, p.get("country"), p.get("age"),
+                        comp=cid, uae=(cid == UAE_LEAGUE))
+                    got += 1
+    log(f"collect: {len(mids)} finished matches in {match_days} days, {got} lineup rows")
+    log(f"collect: pool = {len(pool)} players")
+    (cache / "pool.json").write_text(json.dumps(pool, ensure_ascii=False))
+    (cache / "teams.json").write_text(json.dumps(teams, ensure_ascii=False))
+    return pool, teams
+
+
+# --------------------------------------------------------------------------
+# helpers: names, countries
+# --------------------------------------------------------------------------
+
+def fold(s):
+    s = unicodedata.normalize("NFKD", s or "")
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    s = s.replace("ø", "o").replace("ß", "ss").replace("ł", "l").replace("đ", "d").replace("ı", "i")
+    s = re.sub(r"[^a-z0-9 ]", " ", s.lower().replace("-", " ").replace("'", ""))
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def name_score(latin, labels):
+    """0..1 how well a candidate's labels/aliases fit the FotMob name."""
+    a = fold(latin)
+    ta = set(a.split())
+    best = 0.0
+    for lab in labels:
+        b = fold(lab)
+        if not b:
+            continue
+        if a == b:
+            return 1.0
+        tb = set(b.split())
+        # al/el prefixes: "Al Dhanhani" vs "Al-Dhanhani" handled by fold
+        inter = len(ta & tb)
+        if not inter:
+            continue
+        sc = inter / max(len(ta), 1)
+        if ta <= tb or tb <= ta:
+            sc = max(sc, 0.85)
+        best = max(best, sc)
+    return best
+
+
+AR_DIACRITICS = re.compile(r"[ؐ-ًؚ-ٰٟۖ-ۭـ]")
+ARABIC = re.compile(r"[؀-ۿ]")
+
+
+def clean_ar(s):
+    if not s:
+        return None
+    s = re.sub(r"\s*\([^)]*\)\s*$", "", s)  # "(لاعب كرة قدم)"
+    s = AR_DIACRITICS.sub("", s)
+    s = s.replace("‏", "").replace("‎", "").replace("_", " ")
+    s = re.sub(r"\s*-\s*", "-", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    if not ARABIC.search(s) or re.search(r"[A-Za-z]", s):
+        return None
+    return s
+
+
+def fifa_codes(cache: Path):
+    """FIFA 3-letter code -> set of Wikidata country QIDs (and reverse)."""
+    f = cache / "fifa_codes.json"
+    if f.exists():
+        return json.loads(f.read_text())
+    q = """SELECT ?c ?code WHERE { ?c wdt:P3441 ?code }"""
+    r = S.get(WD_SPARQL, params={"query": q, "format": "json"}, timeout=60).json()
+    m = {}
+    for b in r["results"]["bindings"]:
+        m.setdefault(b["code"]["value"].upper(), []).append(b["c"]["value"].rsplit("/", 1)[1])
+    # FotMob uses a few non-FIFA codes
+    for alias, code in {"ENG": "ENG", "UAE": "UAE", "KSA": "KSA"}.items():
+        m.setdefault(alias, m.get(code, []))
+    f.write_text(json.dumps(m))
+    return m
+
+
+# --------------------------------------------------------------------------
+# 2. Wikidata
+# --------------------------------------------------------------------------
+
+class WD:
+    def __init__(self, cache: Path, pause: float):
+        self.dir = cache / "wd"
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self.pause = pause
+        self.ent_file = self.dir / "entities.jsonl"
+        self.ents = {}
+        if self.ent_file.exists():
+            for line in self.ent_file.open():
+                e = json.loads(line)
+                self.ents[e["id"]] = e
+        self.search_file = self.dir / "search.jsonl"
+        self.searches = {}
+        if self.search_file.exists():
+            for line in self.search_file.open():
+                k, v = json.loads(line)
+                self.searches[k] = v
+
+    def search(self, name):
+        """CirrusSearch restricted to footballers. Returns QIDs."""
+        key = fold(name)
+        if key in self.searches:
+            return self.searches[key]
+        qids = []
+        for q in (f'{name} haswbstatement:P106={FOOTBALLER}',):
+            j = get_json(WD_API, {"action": "query", "list": "search", "srsearch": q,
+                                  "srlimit": 10, "srnamespace": 0, "format": "json"},
+                         pause=self.pause)
+            for hit in ((j or {}).get("query") or {}).get("search") or []:
+                if hit["title"] not in qids:
+                    qids.append(hit["title"])
+            if j is None:
+                return []  # do not cache failures
+        self.searches[key] = qids
+        with self.search_file.open("a") as f:
+            f.write(json.dumps([key, qids], ensure_ascii=False) + "\n")
+        return qids
+
+    def fetch(self, qids):
+        need = [q for q in dict.fromkeys(qids) if q not in self.ents]
+        for i in range(0, len(need), 50):
+            chunk = need[i:i + 50]
+            j = get_json(WD_API, {"action": "wbgetentities", "ids": "|".join(chunk),
+                                  "props": "labels|aliases|claims|sitelinks",
+                                  "languages": "en|ar|arz|fr|es|pt|de|it",
+                                  "sitefilter": "enwiki|arwiki", "format": "json"},
+                         pause=self.pause)
+            with self.ent_file.open("a") as f:
+                for qid, e in ((j or {}).get("entities") or {}).items():
+                    slim = slim_entity(qid, e)
+                    self.ents[qid] = slim
+                    f.write(json.dumps(slim, ensure_ascii=False) + "\n")
+        return [self.ents[q] for q in qids if q in self.ents]
+
+
+def _claim_ids(e, prop):
+    out = []
+    for c in (e.get("claims") or {}).get(prop, []):
+        v = ((c.get("mainsnak") or {}).get("datavalue") or {}).get("value")
+        if isinstance(v, dict) and "id" in v:
+            out.append(v["id"])
+    return out
+
+
+def slim_entity(qid, e):
+    labels = {k: v["value"] for k, v in (e.get("labels") or {}).items()}
+    aliases = [a["value"] for lang in ("en", "fr", "es", "pt", "de", "it")
+               for a in (e.get("aliases") or {}).get(lang, [])]
+    dob = None
+    for c in (e.get("claims") or {}).get("P569", []):
+        v = ((c.get("mainsnak") or {}).get("datavalue") or {}).get("value")
+        if v and v.get("time"):
+            m = re.match(r"[+-](\d{4})", v["time"])
+            if m:
+                dob = int(m.group(1))
+                break
+    return {
+        "id": qid,
+        "labels": labels,
+        "aliases": aliases,
+        "dob": dob,
+        "country": sorted(set(_claim_ids(e, "P1532") + _claim_ids(e, "P27"))),
+        "clubs": _claim_ids(e, "P54"),
+        "occ": _claim_ids(e, "P106"),
+        "enwiki": ((e.get("sitelinks") or {}).get("enwiki") or {}).get("title"),
+        "arwiki": ((e.get("sitelinks") or {}).get("arwiki") or {}).get("title"),
+    }
+
+
+def team_qids(wd: WD, teams, cache: Path):
+    """FotMob team id -> set of candidate Wikidata QIDs (by name search)."""
+    f = cache / "team_qids.json"
+    m = json.loads(f.read_text()) if f.exists() else {}
+    for tid, t in teams.items():
+        if tid in m:
+            continue
+        j = get_json(WD_API, {"action": "wbsearchentities", "search": t["name"], "language": "en",
+                              "type": "item", "limit": 7, "format": "json"}, pause=wd.pause)
+        m[tid] = [h["id"] for h in (j or {}).get("search") or []]
+    f.write_text(json.dumps(m))
+    return {k: set(v) for k, v in m.items()}
+
+
+def score(p, e, fifa, tq):
+    """Score one candidate entity for FotMob player p. Returns (score, why)."""
+    labels = [e["labels"].get(l) for l in ("en", "fr", "es", "pt", "de", "it") if e["labels"].get(l)]
+    ns = name_score(p["name"], labels + e["aliases"])
+    if ns < 0.5:
+        return -99, "name"
+    sc, why = ns * 3, [f"n{ns:.2f}"]
+    if FOOTBALLER in e["occ"]:
+        sc += 0.5
+    # nationality
+    if p.get("country"):
+        cq = set(fifa.get(p["country"].upper(), []))
+        if cq and e["country"]:
+            if cq & set(e["country"]):
+                sc += 2; why.append("nat+")
+            else:
+                sc -= 1.5; why.append("nat-")
+    # birth year from age
+    if p.get("ages") and e["dob"]:
+        by = {int(TODAY[:4]) - a - k for a in p["ages"] for k in (0, 1)}
+        if e["dob"] in by:
+            sc += 2.5; why.append("dob+")
+        elif min(abs(e["dob"] - b) for b in by) <= 1:
+            sc += 1; why.append("dob~")
+        else:
+            sc -= 3; why.append("dob-")
+    elif e["dob"] and e["dob"] < 1978:
+        sc -= 2; why.append("old")
+    # club
+    clubs = set(e["clubs"])
+    for t in p.get("teams") or []:
+        if clubs & tq.get(str(t), set()):
+            sc += 2.5; why.append("club+")
+            break
+    return sc, " ".join(why)
+
+
+def pick_ar(e):
+    ar = clean_ar(e["labels"].get("ar"))
+    if ar:
+        return ar, "wikidata"
+    ar = clean_ar(e.get("arwiki"))
+    if ar:
+        return ar, "arwiki"
+    ar = clean_ar(e["labels"].get("arz"))
+    if ar:
+        return ar, "wikidata"
+    return None, None
+
+
+def resolve_wikidata(todo, pool, teams, cache, pause, out, save):
+    wd = WD(cache, pause)
+    fifa = fifa_codes(cache)
+    tq = team_qids(wd, teams, cache)
+    audit = (cache / "wd_audit.jsonl").open("a")
+    found = 0
+    for n, pid in enumerate(todo, 1):
+        p = pool[pid]
+        qids = wd.search(p["name"])
+        # short mononyms ("Erik", "Julimar"): the search is noisy, still try
+        cands = wd.fetch(qids)
+        scored = sorted(((score(p, e, fifa, tq), e) for e in cands), key=lambda x: -x[0][0])
+        scored = [x for x in scored if x[0][0] > -99]
+        choice = None
+        if scored:
+            (s1, why1), e1 = scored[0]
+            s2 = scored[1][0][0] if len(scored) > 1 else -99
+            evidence = any(k in why1 for k in ("nat+", "dob+", "club+"))
+            contra = any(k in why1 for k in ("nat-", "dob-"))
+            mono = len(fold(p["name"]).split()) == 1
+            ok = (s1 - s2 >= 1.5 or (s1 >= 6 and s1 - s2 >= 0.75))
+            if mono:
+                ok = ok and evidence and not contra and s1 >= 5.5
+            else:
+                ok = ok and (evidence or (s1 >= 3 and len(scored) == 1 and not p.get("ages") and not p.get("country"))) and not ("dob-" in why1)
+            if ok:
+                ar, src = pick_ar(e1)
+                choice = (e1["id"], ar, src, s1, why1)
+        audit.write(json.dumps({"pid": pid, "name": p["name"],
+                                "cands": [(e["id"], round(s[0], 2), s[1]) for s, e in scored[:4]],
+                                "choice": choice}, ensure_ascii=False) + "\n")
+        if choice and choice[1]:
+            out[pid] = {"latin": p["name"], "ar": choice[1], "source": choice[2],
+                        "qid": choice[0], "checked": TODAY}
+            found += 1
+        elif choice:
+            p["_qid"] = choice[0]  # matched, but no Arabic label: keep qid for the generated row
+        if n % 100 == 0:
+            log(f"wikidata {n}/{len(todo)} found {found}")
+            save()
+    audit.close()
+    save()
+    log(f"wikidata done: {found}/{len(todo)}")
+
+
+# --------------------------------------------------------------------------
+# 3. Gemini transliteration
+# --------------------------------------------------------------------------
+
+def gemini_key():
+    k = os.environ.get("GEMINI_API_KEY")
+    if k:
+        return k
+    for f in (Path.home() / "workspace/content-pipeline/.env",):
+        if f.exists():
+            for line in f.read_text().splitlines():
+                if line.startswith("GEMINI_API_KEY="):
+                    return line.split("=", 1)[1].strip().strip('"\'')
+    raise SystemExit("GEMINI_API_KEY not found")
+
+
+PROMPT = """You are an Arabic sports editor (think beIN Sports, Al Kass, Kooora, Al Ittihad).
+Write each footballer's name in Arabic exactly as Arab sports media commonly spell it.
+
+Rules:
+- Arabic script only, no diacritics (no tashkeel), no Latin letters.
+- If the player is Arab (Emirati, Saudi, Qatari, Egyptian, Moroccan, etc.), write his real Arabic name:
+  "Ali Mabkhout" -> "علي مبخوت", "Khalid Eissa" -> "خالد عيسى", "Mohamed Salah" -> "محمد صلاح".
+  Arab family prefixes: "Al" -> "ال" joined to the word ("Al Dhanhani" -> "الظنحاني"), "bin"/"ben" -> "بن".
+- Otherwise transliterate by the pronunciation of his nationality's language, as Arab media do:
+  Spanish/Latin American: "Nicolás Giménez" -> "نيكولاس خيمينيز", "j" -> "خ";
+  Portuguese/Brazilian: "Júnior" -> "جونيور", "Rodrigues" -> "رودريغيز", "lh" -> "لي";
+  French: silent final letters ("Mbappé" -> "مبابي", "Dembélé" -> "ديمبيلي");
+  English: "Harry Kane" -> "هاري كين".
+- Keep particles as media write them: "de"/"di" -> "دي", "da" -> "دا", "van" -> "فان", "dos" -> "دوس".
+- Use "غ" for hard "g", "ج" for "j" in English/French/Portuguese, "تش" for "ch" (Spanish/English), "ف" for "v".
+- Keep the same number of name parts as the Latin name (a mononym stays one word).
+Return one item per input, with the same id."""
+
+
+def gemini_batch(key, items):
+    schema = {
+        "type": "OBJECT",
+        "properties": {"names": {"type": "ARRAY", "maxItems": len(items) + 2, "items": {
+            "type": "OBJECT",
+            "properties": {"id": {"type": "STRING", "maxLength": 12},
+                           "ar": {"type": "STRING", "maxLength": 60}},
+            "required": ["id", "ar"]}}},
+        "required": ["names"],
+    }
+    lines = "\n".join(f'{it["id"]}\t{it["latin"]}\tnationality={it["nat"] or "unknown"}'
+                      + (f'\tclub={it["club"]}' if it.get("club") else "") for it in items)
+    body = {
+        "contents": [{"role": "user", "parts": [{"text": PROMPT + "\n\nid\tname\thints\n" + lines}]}],
+        "generationConfig": {"responseMimeType": "application/json", "responseSchema": schema,
+                             "temperature": 0.2, "maxOutputTokens": 8192},
+    }
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+    for i in range(4):
+        try:
+            r = S.post(url, params={"key": key}, json=body, timeout=120)
+            if r.status_code in (429, 500, 503):
+                log(f"  gemini {r.status_code}, waiting"); time.sleep(10 * (i + 1)); continue
+            r.raise_for_status()
+            j = r.json()
+            txt = j["candidates"][0]["content"]["parts"][0]["text"]
+            return {str(x["id"]): x["ar"] for x in json.loads(txt)["names"]}
+        except Exception as e:  # noqa: BLE001
+            log(f"  gemini retry {i + 1}: {e}")
+            time.sleep(5 * (i + 1))
+    return {}
+
+
+NAT_AR = None
+
+
+def resolve_gemini(todo, pool, teams, out, save, batch=50):
+    key = gemini_key()
+    done = 0
+    for i in range(0, len(todo), batch):
+        chunk = todo[i:i + batch]
+        items = []
+        for pid in chunk:
+            p = pool[pid]
+            club = next((teams[str(t)]["name"] for t in p.get("teams") or [] if str(t) in teams), None)
+            items.append({"id": pid, "latin": p["name"], "nat": p.get("country"), "club": club})
+        res = gemini_batch(key, items)
+        for pid in chunk:
+            ar = clean_ar(res.get(pid))
+            if ar:
+                out[pid] = {"latin": pool[pid]["name"], "ar": ar, "source": "generated",
+                            "qid": pool[pid].get("_qid"), "checked": TODAY}
+                done += 1
+        log(f"gemini {min(i + batch, len(todo))}/{len(todo)} ok {done}")
+        save()
+
+
+# --------------------------------------------------------------------------
+# 4. outputs
+# --------------------------------------------------------------------------
+
+def write_review(out, pool, teams):
+    rows = []
+    for pid, p in pool.items():
+        in_league = UAE_LEAGUE in p.get("comps", []) or any(
+            UAE_LEAGUE in (teams.get(str(t), {}).get("comps") or []) for t in p.get("teams") or [])
+        national = p.get("national") == UAE_NATIONAL or UAE_NATIONAL in (p.get("teams") or [])
+        if not (in_league or national):
+            continue
+        uae_clubs = [t for t in p.get("teams") or []
+                     if UAE_LEAGUE in (teams.get(str(t), {}).get("comps") or [])]
+        if uae_clubs:
+            team = teams[str(uae_clubs[0])].get("name_ar") or teams[str(uae_clubs[0])]["name"]
+        else:
+            team = teams.get(str(UAE_NATIONAL), {}).get("name_ar") or "منتخب الإمارات"
+        if national and uae_clubs:
+            team += " + المنتخب"
+        o = out.get(pid, {})
+        rows.append([pid, p["name"], o.get("ar", ""), o.get("source", ""), team])
+    rows.sort(key=lambda r: (r[4], r[1]))
+    with REVIEW.open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["id", "latin", "ar", "source", "team"])
+        w.writerows(rows)
+    log(f"review_uae.csv: {len(rows)} rows")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--stage", choices=["all", "collect"], default="all")
+    ap.add_argument("--cache", default=str(Path.home() / ".cache/tifo-names"))
+    ap.add_argument("--match-days", type=int, default=21)
+    ap.add_argument("--pause", type=float, default=0.3, help="seconds between Wikidata calls")
+    ap.add_argument("--no-gemini", action="store_true")
+    ap.add_argument("--reuse-pool", action="store_true", help="use cached pool.json")
+    ap.add_argument("--retry-generated", action="store_true")
+    ap.add_argument("--limit", type=int, default=0)
+    a = ap.parse_args()
+    cache = Path(a.cache)
+    cache.mkdir(parents=True, exist_ok=True)
+
+    if a.reuse_pool and (cache / "pool.json").exists():
+        pool = json.loads((cache / "pool.json").read_text())
+        teams = json.loads((cache / "teams.json").read_text())
+    else:
+        pool, teams = collect(cache, a.match_days)
+    if a.stage == "collect":
+        return
+
+    out = json.loads(OUT.read_text()) if OUT.exists() else {}
+    # FotMob can rename a player; keep latin fresh
+    for pid, o in out.items():
+        if pid in pool and pool[pid]["name"] != o["latin"]:
+            o["latin"] = pool[pid]["name"]
+
+    def save():
+        tmp = OUT.with_suffix(".tmp")
+        tmp.write_text(json.dumps(dict(sorted(out.items(), key=lambda kv: int(kv[0]))),
+                                  ensure_ascii=False, indent=1))
+        tmp.replace(OUT)
+
+    todo = [pid for pid in pool if pid not in out
+            or (a.retry_generated and out[pid]["source"] == "generated")]
+    # UAE players first so a partial run still serves the league
+    todo.sort(key=lambda pid: (not pool[pid].get("uae"), int(pid)))
+    if a.limit:
+        todo = todo[:a.limit]
+    log(f"{len(out)} already done, {len(todo)} to resolve")
+    if todo:
+        resolve_wikidata(todo, pool, teams, cache, a.pause, out, save)
+    if not a.no_gemini:
+        rest = [pid for pid in todo if pid not in out]
+        if rest:
+            resolve_gemini(rest, pool, teams, out, save)
+    save()
+    write_review(out, pool, teams)
+    counts = {}
+    for o in out.values():
+        counts[o["source"]] = counts.get(o["source"], 0) + 1
+    log(f"total {len(out)} of pool {len(pool)}: {counts}")
+
+
+if __name__ == "__main__":
+    main()

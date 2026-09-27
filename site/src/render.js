@@ -14,8 +14,16 @@
   R.col = function(id, i){ var c = TC[id]; return c ? (c[i || 0] || c[0]) : (i ? "#F6F7F2" : "#5C6660"); };
   R.logo = function(t, cls){ if (!t || !t.id) return ""; return '<img class="logo' + (cls ? " " + cls : "") + '" src="/logo/' + t.id + '.png" alt="" loading="lazy" width="24" height="24" onerror="this.style.visibility=\'hidden\'">'; };
   R.tname = function(t){ return t ? esc(t.name_ar || t.name) : ""; };
-  R.hhmm = function(iso){ return iso ? iso.slice(11, 16) : ""; };
-  R.ymd = function(iso){ return iso ? iso.slice(0, 10) : ""; };
+  // times: the build prints UAE time (kickoff_uae is "+04:00"); in the browser R.TZ is the visitor's country time zone (203)
+  // and every <time class="tt|td"> is rewritten by R.localize(). kickoff_uae strings parse to the right instant anywhere.
+  R.TZ = null;
+  var fmtCache = {};
+  function inTz(iso, opt){ var k = R.TZ + JSON.stringify(opt); if (!fmtCache[k]) fmtCache[k] = new Intl.DateTimeFormat("en-CA", Object.assign({ timeZone:R.TZ, hourCycle:"h23" }, opt)); return fmtCache[k].format(new Date(iso)); }
+  R.hhmm = function(iso){ if (!iso) return ""; if (R.TZ){ try { return inTz(iso, { hour:"2-digit", minute:"2-digit" }).replace(/^24/, "00"); } catch (e){} } return iso.slice(11, 16); };
+  R.ymd = function(iso){ if (!iso) return ""; if (R.TZ && iso.length > 10){ try { return inTz(iso, { year:"numeric", month:"2-digit", day:"2-digit" }); } catch (e){} } return iso.slice(0, 10); };
+  R.tt = function(iso){ return iso ? '<time class="tt" data-u="' + esc(iso) + '">' + R.hhmm(iso) + "</time>" : ""; };
+  R.td = function(iso, full){ if (!iso) return ""; var p = dparts(R.ymd(iso)); return '<time class="td" data-u="' + esc(iso) + '"' + (full ? ' data-f="1"' : "") + ">" + esc(full ? p.date : p.short) + "</time>"; };
+  R.localize = function(root){ if (!R.TZ) return; (root || document).querySelectorAll("time.tt[data-u]").forEach(function(t){ t.textContent = R.hhmm(t.dataset.u); }); (root || document).querySelectorAll("time.td[data-u]").forEach(function(t){ var p = dparts(R.ymd(t.dataset.u)); t.textContent = t.dataset.f ? p.date : p.short; }); };
   function dparts(ymd, today){
     if (!ymd) return { rel:"", date:"" }; var p = ymd.split("-").map(Number), d = new Date(Date.UTC(p[0], p[1] - 1, p[2]));
     var rel = ""; if (today){ var t = today.split("-").map(Number), diff = Math.round((d - Date.UTC(t[0], t[1] - 1, t[2])) / 864e5); rel = diff === 0 ? "اليوم" : diff === 1 ? "بكرة" : diff === -1 ? "أمس" : ""; }
@@ -52,7 +60,7 @@
       case "cancelled": return "ألغيت";
       case "abandoned": return "توقفت";
       case "awarded": return "قرار إداري";
-      default: return m.time_tbd ? "الوقت ما تحدد" : R.hhmm(m.kickoff_uae);
+      default: return m.time_tbd ? "الوقت ما تحدد" : R.tt(m.kickoff_uae);
     }
   };
   // score always "home - away" inside RTL text: home's number sits on the right, under the home team
@@ -61,7 +69,7 @@
     o = o || {}; var live = R.isLive(m);
     if (live) return '<span class="chip live' + (R.hot(m) ? " hot" : "") + '"><small>' + R.minute(m) + (R.hot(m) ? " حامي" : "") + "</small>" + (m.score ? sc(m.score) : "0 - 0") + "</span>";
     if (m.status === "finished" && m.score) return '<span class="chip">' + sc(m.score) + (m.penalties ? "<small>ترجيح " + sc(m.penalties) + "</small>" : m.status_detail === "AET" ? "<small>بعد الإضافي</small>" : "") + "</span>";
-    if (m.status === "scheduled" || !m.status) return '<span class="chip up">' + (m.time_tbd ? "—" : R.hhmm(m.kickoff_uae)) + (o.date ? "<small>" + esc(dparts(R.ymd(m.kickoff_uae)).short) + "</small>" : "") + "</span>";
+    if (m.status === "scheduled" || !m.status) return '<span class="chip up">' + (m.time_tbd ? "—" : R.tt(m.kickoff_uae)) + (o.date ? "<small>" + R.td(m.kickoff_uae) + "</small>" : "") + "</span>";
     return '<span class="chip off">' + R.statusText(m) + "</span>";
   };
   R.matchRow = function(m, o){
@@ -75,11 +83,16 @@
   R.compName = function(index, id){ var c = (index.competitions || []).filter(function(c){ return c.id === id; })[0]; return c ? c.name_ar : ""; };
   R.compKey = function(index, id){ var c = (index.competitions || []).filter(function(c){ return c.id === id; })[0]; return c ? c.key : null; };
   R.stageAr = function(s){ if (!s) return ""; var g = /Gr(?:ou)?p\.?\s*([A-Z0-9]+)/i.exec(s); return g ? "المجموعة " + g[1] : s; };
+  // the 22 Arab League countries (203, 199): time zone and name; "xx" = outside the Arab world (browser time zone)
+  R.COUNTRIES = [["AE","الإمارات","Asia/Dubai"],["SA","السعودية","Asia/Riyadh"],["EG","مصر","Africa/Cairo"],["MA","المغرب","Africa/Casablanca"],["DZ","الجزائر","Africa/Algiers"],["TN","تونس","Africa/Tunis"],["IQ","العراق","Asia/Baghdad"],["JO","الأردن","Asia/Amman"],["KW","الكويت","Asia/Kuwait"],["QA","قطر","Asia/Qatar"],["BH","البحرين","Asia/Bahrain"],["OM","عُمان","Asia/Muscat"],["LB","لبنان","Asia/Beirut"],["SY","سوريا","Asia/Damascus"],["PS","فلسطين","Asia/Hebron"],["YE","اليمن","Asia/Aden"],["LY","ليبيا","Africa/Tripoli"],["SD","السودان","Africa/Khartoum"],["MR","موريتانيا","Africa/Nouakchott"],["SO","الصومال","Africa/Mogadishu"],["DJ","جيبوتي","Africa/Djibouti"],["KM","جزر القمر","Indian/Comoro"]];
+  var KEYC = { "uae-":"AE", "saudi-":"SA", "qatar-":"QA", "egyptian-":"EG", "botola":"MA", "moroccan-":"MA", "algerian-":"DZ", "tunisian-":"TN", "iraqi-":"IQ", "oman":"OM", "kuwait":"KW", "bahrain":"BH", "jordan":"JO", "libya":"LY", "sudan":"SD", "lebanon":"LB" };
+  R.compCountry = function(c){ if (!c) return null; if (c.country) return c.country.iso || c.country.iso2 || c.country; for (var k in KEYC) if ((c.key || "").indexOf(k) === 0) return KEYC[k]; return null; };
   // matches grouped by competition, my team's competition first, then index order (UAE first)
   R.dayList = function(matches, index, o){
     o = o || {}; var ord = R.compOrder(index), g = {};
     (matches || []).forEach(function(m){ (g[m.comp] = g[m.comp] || []).push(m); });
     var ids = Object.keys(g).map(Number).sort(function(a, b){ return (ord[a] == null ? 999 : ord[a]) - (ord[b] == null ? 999 : ord[b]); });
+    if (o.country){ var cc = {}; (index.competitions || []).forEach(function(c){ cc[c.id] = R.compCountry(c); }); var natIds = o.natIds || []; var hc = function(id){ return cc[id] === o.country || g[id].some(function(m){ return natIds.indexOf(m.home.id) >= 0 || natIds.indexOf(m.away.id) >= 0; }) ? 1 : 0; }; ids.sort(function(a, b){ return hc(b) - hc(a); }); }
     if (o.mine){ var has = function(id){ return g[id].some(function(m){ return m.home.id === o.mine || m.away.id === o.mine; }) ? 1 : 0; }; ids.sort(function(a, b){ return has(b) - has(a); }); }
     if (!ids.length) return '<p class="empty">' + (o.empty || "ما في مباريات.") + "</p>";
     return ids.map(function(id){
@@ -193,9 +206,9 @@
   };
   function band(t){ return '<span class="band" aria-hidden="true"><i style="background:' + R.col(t.id, 0) + '"></i><i style="background:' + R.col(t.id, 1) + '"></i></span>'; }
   R.matchHead = function(md){
-    var live = R.isLive(md), st = live ? '<i class="cardflip"></i>' + R.minute(md) : md.status === "scheduled" ? esc(R.dayLabel(R.ymd(md.kickoff_uae))) : R.statusText(md) + (md.halftime_score && md.status === "finished" ? '، الشوط الأول <span class="num">' + sc(md.halftime_score) + "</span>" : "");
+    var live = R.isLive(md), st = live ? '<i class="cardflip"></i>' + R.minute(md) : md.status === "scheduled" ? R.td(md.kickoff_uae, true) : R.statusText(md) + (md.halftime_score && md.status === "finished" ? '، الشوط الأول <span class="num">' + sc(md.halftime_score) + "</span>" : "");
     return '<div class="board' + (live ? " live" : "") + '">' + band(md.home) + '<a class="tm" href="/t/' + md.home.id + '/">' + R.logo(md.home, "lg") + R.tname(md.home) + "</a>" +
-      '<div class="sc"><span class="dg">' + (md.score ? sc(md.score) : R.hhmm(md.kickoff_uae) || "—") + "</span>" + (md.penalties ? '<span class="pens">ترجيح <span class="num">' + sc(md.penalties) + "</span></span>" : "") + '<span class="st">' + st + "</span></div>" +
+      '<div class="sc"><span class="dg">' + (md.score ? sc(md.score) : R.tt(md.kickoff_uae) || "—") + "</span>" + (md.penalties ? '<span class="pens">ترجيح <span class="num">' + sc(md.penalties) + "</span></span>" : "") + '<span class="st">' + st + "</span></div>" +
       '<a class="tm" href="/t/' + md.away.id + '/">' + R.logo(md.away, "lg") + R.tname(md.away) + "</a>" + band(md.away) + "</div>" + R.timeline(md);
   };
   R.matchFacts = function(md, index){
@@ -203,7 +216,7 @@
     f.push(["البطولة", key ? '<a href="/c/' + key + '/">' + esc(md.comp_name_ar || R.compName(index, md.comp)) + "</a>" : esc(md.comp_name_ar || "")]);
     if (md.round && !isNaN(parseFloat(md.round))) f.push(["الجولة", '<span class="num">' + esc(md.round) + "</span>"]);
     else if (md.stage && /Gr(ou)?p/i.test(md.stage)) f.push(["الدور", esc(R.stageAr(md.stage))]);
-    f.push(["الموعد بتوقيت الإمارات", esc(R.dayLabel(R.ymd(md.kickoff_uae))) + ' <span class="num">' + R.hhmm(md.kickoff_uae) + "</span>"]);
+    f.push(["الموعد بتوقيت بلدك", R.td(md.kickoff_uae, true) + ' <span class="num">' + R.tt(md.kickoff_uae) + "</span>"]);
     if (md.venue) f.push(["الملعب", esc(md.venue.name_ar || md.venue.name_en || md.venue.name)]);
     if (md.venue && md.venue.distance_km){ var EM = [["abu-dhabi","أبوظبي"],["dubai","دبي"],["sharjah","الشارقة"],["ajman","عجمان"],["umm-al-quwain","أم القيوين"],["ras-al-khaimah","رأس الخيمة"],["fujairah","الفجيرة"],["al-ain","العين"]];
       f.push(["المسافة من", '<span class="dist" data-km=\'' + esc(JSON.stringify(md.venue.distance_km)) + '\'><select class="emsel" aria-label="إمارتك">' + EM.map(function(e){ return '<option value="' + e[0] + '"' + (e[0] === "dubai" ? " selected" : "") + ">" + e[1] + "</option>"; }).join("") + '</select> <b class="num dk">' + Math.round(md.venue.distance_km.dubai) + '</b> كم <span class="muted small dt"></span></span>']); }
@@ -241,7 +254,7 @@
   };
   R.standCap = function(m){
     if (!m) return "";
-    var live = R.isLive(m), mid = live ? '<span class="dg">' + (m.score ? sc(m.score) : "0 - 0") + "</span>" + R.minute(m) : m.score ? '<span class="dg">' + sc(m.score) + "</span>" + R.statusText(m) : '<span class="dg">' + R.hhmm(m.kickoff_uae) + "</span>" + esc(dparts(R.ymd(m.kickoff_uae)).date);
+    var live = R.isLive(m), mid = live ? '<span class="dg">' + (m.score ? sc(m.score) : "0 - 0") + "</span>" + R.minute(m) : m.score ? '<span class="dg">' + sc(m.score) + "</span>" + R.statusText(m) : '<span class="dg">' + R.tt(m.kickoff_uae) + "</span>" + R.td(m.kickoff_uae, true);
     return '<a class="h" href="/m/' + m.id + '/">' + R.logo(m.home) + "<span>" + R.tname(m.home) + '</span></a><a class="mid' + (live ? " live" : "") + '" href="/m/' + m.id + '/">' + mid + '</a><a class="a" href="/m/' + m.id + '/"><span>' + R.tname(m.away) + "</span>" + R.logo(m.away) + "</a>";
   };
   R.UAE_COMPS = UAE_COMPS;

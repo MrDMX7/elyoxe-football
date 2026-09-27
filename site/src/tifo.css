@@ -414,3 +414,17 @@ audio{inline-size:100%;margin-block:.4rem}
 ul.bc{list-style:none;margin:0;padding:0}
 ul.bc li{padding:.35rem 0;border-block-end:1px dashed var(--line)}
 blockquote{margin:.5rem 0;padding:.4rem .7rem;border-inline-start:3px solid var(--dune);font-size:.85rem;color:var(--stone);background:var(--chalk)}
+.ctrybox{position:fixed;inset-inline:0;top:3.2rem;z-index:30;margin-inline:auto;max-inline-size:32rem;background:var(--chalk);border:2px solid var(--ink);padding:.8rem}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(7rem,1fr));gap:.3rem}
+.cgrid button{border:1px solid var(--line);background:var(--concrete);padding:.35rem;cursor:pointer}
+.cgrid button[aria-pressed="true"]{background:var(--night);color:var(--chalk)}
+.favrow + .favrow{border-block-start:1px dashed var(--line);padding-block-start:.3rem}
+.bar .spoil + .spoil{margin-inline-start:.25rem}
+#srchbox input{inline-size:100%;padding:.55rem;border:2px solid var(--ink);background:#fff;font-size:1rem}
+#sr ul{list-style:none;margin:.5rem 0 0;padding:0;max-block-size:60vh;overflow:auto}
+#sr li a{display:flex;justify-content:space-between;gap:.5rem;padding:.45rem .2rem;border-block-end:1px dashed var(--line)}
+body.comm .bar,body.comm .foot,body.comm .tabs,body.comm .tools:not(:has(#commbtn)),body.comm #facts,body.comm .tiles,body.comm .probs,body.comm .blk,body.comm #catchup{display:none!important}
+body.comm .press{font-size:1.5rem;line-height:1.6}
+body.comm .press li{padding:.4rem;transition:background .3s}
+body.comm .press li.hot1{background:var(--dune-soft)}
+ul.md li{margin-block:.35rem}

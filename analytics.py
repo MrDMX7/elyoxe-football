@@ -518,7 +518,7 @@ def national(p):
                 unmatched.update(x for x, y in ((m["home"]["name"], h), (m["away"]["name"], a)) if not y)
                 continue
             tour = {329: "Gulf Cup", 290: "AFC Asian Cup", 77: "FIFA World Cup", 10242: "FIFA Arab Cup"}.get(cid, "qualification" if cid in (10609, 10197, 11156) else "Friendly")
-            extra.append((m["kickoff_utc"][:10], h, a, m["score"]["home"], m["score"]["away"], tour, True))
+            extra.append((m["kickoff_utc"][:10], h, a, m["score"]["home"], m["score"]["away"], tour, True, None, None))
     rat, _ = NA.elo(rows + extra)
     p.aux("national_elo").clear()
     p.aux("national_elo").update({"ratings": rat, "dataset_last": last, "fotmob_added": len(extra)})
@@ -533,8 +533,77 @@ def national(p):
         "params": NA.NATIONAL}, cache="static")
     for cid in (329, 290):
         tournament(p, cid, rat, known)
+    try:
+        national_archives(p, text_rows=rows, extra=extra, known=known)
+    except ERRORS as e:
+        p.store.fail("national:archive", e)
     p.mark("national")
     p.store.ok("national:martj42")
+
+
+def _name_to_fotmob(p, known):
+    """martj42 team name -> FotMob national-team id, from every national competition's fixtures."""
+    out = {c["martj42"]: c["fotmob_team"] for c in config.countries() if c.get("martj42") and c.get("fotmob_team")}
+    for cid in (329, 290, 10609, 10197, 77, 10242, 11156, 289, 10608, 9571):
+        for m in p.fixtures(cid) or []:
+            for side in ("home", "away"):
+                nm = NA.dataset_name(m[side]["name"], known)
+                if nm and m[side]["id"] and nm not in out:
+                    out[nm] = m[side]["id"]
+    return out
+
+
+def national_archives(p, text_rows, extra, known):
+    """national/{id}/archive.json for the 22 Arab national teams: every result in martj42 (+ FotMob
+    after its last date) and per-opponent head-to-head summaries."""
+    to_id = _name_to_fotmob(p, known)
+    ar = p.names["teams"]
+    fotmob_ids = {}      # (date, fotmob team, fotmob opponent) -> FotMob match id, from national-team fixture lists
+    for cid in (329, 290, 10609, 10197, 77, 10242, 11156, 289, 10608, 114):
+        for m in p.fixtures(cid) or []:
+            if m.get("kickoff_utc") and m.get("id"):
+                d = m["kickoff_utc"][:10]
+                fotmob_ids[(d, m["home"]["id"], m["away"]["id"])] = m["id"]
+    rows = sorted(text_rows + extra)
+    index = []
+    for c in config.countries():
+        if not c.get("arab"):
+            continue
+        me, tid = c["martj42"], c["fotmob_team"]
+        games, h2h = [], {}
+        for date, h, a, hs, as_, tour, neutral, *venue in rows:
+            if me not in (h, a):
+                continue
+            home = h == me
+            opp = a if home else h
+            oid = to_id.get(opp)
+            gf, ga = (hs, as_) if home else (as_, hs)
+            res = "W" if gf > ga else "D" if gf == ga else "L"
+            mid = fotmob_ids.get((date, tid, oid) if home else (date, oid, tid))
+            games.append({"date": date, "opponent": {"name": opp, "id": oid, "name_ar": ar.get(str(oid)) if oid else None},
+                          "home": home and not neutral, "neutral": neutral, "gf": gf, "ga": ga, "result": res,
+                          "competition": tour, "match": mid,
+                          "venue": {"city": venue[0], "country": venue[1]} if venue and venue[0] else None})
+            s_ = h2h.setdefault(opp, {"opponent": opp, "id": oid, "name_ar": ar.get(str(oid)) if oid else None,
+                                      "played": 0, "won": 0, "drawn": 0, "lost": 0, "gf": 0, "ga": 0, "first": date, "last": None})
+            s_["played"] += 1
+            s_[{"W": "won", "D": "drawn", "L": "lost"}[res]] += 1
+            s_["gf"] += gf
+            s_["ga"] += ga
+            s_["last"] = {"date": date, "gf": gf, "ga": ga, "competition": tour}
+        if not games:
+            continue
+        w = sum(1 for g in games if g["result"] == "W")
+        d_ = sum(1 for g in games if g["result"] == "D")
+        p.store.put_json(f"national/{tid}/archive.json", {
+            "team": tid, "country": {"iso2": c["iso2"], "name_ar": c["name_ar"]}, "generated": iso(p.now()),
+            "played": len(games), "won": w, "drawn": d_, "lost": len(games) - w - d_, "first": games[0]["date"],
+            "matches": games, "h2h": sorted(h2h.values(), key=lambda x: -x["played"]),
+            "source": "github.com/martj42/international_results (CC0) + FotMob results after its last date",
+            "note": "venue = city and country from the dataset (FotMob-sourced rows after its last date have none); "
+                    "match = FotMob match id where FotMob has the game in a covered competition"}, cache="static")
+        index.append({"team": tid, "iso2": c["iso2"], "name_ar": c["name_ar"], "played": len(games), "first": games[0]["date"]})
+    p.store.put_json("national/archives.json", {"generated": iso(p.now()), "teams": index}, cache="static")
 
 
 def tournament(p, cid, rat_by_name, known):

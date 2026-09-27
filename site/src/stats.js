@@ -119,7 +119,7 @@
     return '<div class="tblwrap"><table class="st"><thead><tr><th style="text-align:start">الحكم</th><th>مباريات</th><th>إنذار بالمباراة</th><th>طرد</th><th>بلنتي</th></tr></thead><tbody>' + rf.referees.slice().sort(function(a, b){ return b.matches - a.matches; }).map(function(r){ var s = r.source_stats; return '<tr><td class="tm lat">' + esc(r.name) + "</td><td>" + (s ? s.matches : r.matches) + "</td><td>" + (s ? s.yellow_per_match : r.yellow_per_match).toFixed(1) + "</td><td>" + (s ? s.red : r.red) + "</td><td>" + (s ? s.penalties : r.penalties) + "</td></tr>"; }).join("") + "</tbody></table></div>";
   };
   S.ages = function(la){
-    if (!la || !la.rounds) return ""; var k = Object.keys(la.rounds).sort(function(a, b){ return b - a; })[0], r = la.rounds[k];
+    if (!la || !la.rounds) return ""; var k = Object.keys(la.rounds).filter(function(k){ return la.rounds[k] && la.rounds[k].all; }).sort(function(a, b){ return b - a; })[0], r = la.rounds[k]; if (!r) return "";
     return '<p class="muted small">الجولة <span class="num">' + k + '</span>: متوسط عمر التشكيلة الأساسية</p><ol class="lead">' + r.all.map(function(x, i){ return '<li><span class="num muted">' + (i + 1) + '</span><span class="who">' + tl(x.team) + "</span><b>" + fx(x.avg_age, 1) + "</b></li>"; }).join("") + "</ol>";
   };
   S.rotation = function(ro){
@@ -264,7 +264,7 @@
       return out + "</ul>"; };
     var h = md && md.h2h && md.h2h.summary, p = m.probs || (md && md.probs);
     var body = side(m.home) + side(m.away) + "<h3>بين الفريقين</h3><ul>" + (h ? "<li>المواجهات السابقة: " + h.home_wins + " فوز لـ" + R.tname(m.home) + "، و" + h.draws + " تعادل، و" + h.away_wins + " فوز لـ" + R.tname(m.away) + ".</li>" : "") + (p ? "<li>توقعات تيفو: " + Math.round(p.home * 100) + "% فوز " + R.tname(m.home) + "، " + Math.round(p.draw * 100) + "% تعادل، " + Math.round(p.away * 100) + "% فوز " + R.tname(m.away) + ".</li>" : "") + (facts || []).map(function(f){ return "<li>" + esc(String(f.text_ar).replace(/\s*\(بيانات FotMob\)/g, "")) + "</li>"; }).join("") + "</ul>";
-    return '<div class="press">' + body + '<p class="tools"><button type="button" class="btn" onclick="window.print()">اطبعها</button><button type="button" class="btn copy" data-copy-from=".press">انسخ النص</button></p>' + noteSrc("كل رقم هني من بيانات تيفو (FotMob ورابطة المحترفين). جاهزة للمعلقين والصحفيين.") + "</div>";
+    return '<div class="press">' + body + '<p class="tools"><button type="button" class="btn" id="commbtn">وضع المعلّق</button><button type="button" class="btn" onclick="window.print()">اطبعها</button><button type="button" class="btn copy" data-copy-from=".press">انسخ النص</button></p>' + noteSrc("كل رقم هني من بيانات تيفو (FotMob ورابطة المحترفين). جاهزة للمعلقين والصحفيين.") + "</div>";
   };
   // ---- 58: transfers
   S.transfers = function(tr){
@@ -325,6 +325,25 @@
     if (fac.length) rows.push(["فيه", fac.join("، ")]);
     var src = []; ["capacity", "opened"].forEach(function(k){ (x[k] && x[k].sources || []).forEach(function(u){ if (src.indexOf(u) < 0) src.push(u); }); });
     return '<dl class="facts">' + rows.map(function(r){ return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + '</dl><p class="src">المصادر: ' + srcs(src) + "، وتاريخ التحقق " + esc(x.checked || "") + ".</p>";
+  };
+
+  // ---- 180: match day for fans going to the stadium
+  S.matchDay = function(md, x){
+    if (!x || md.status !== "scheduled") return "";
+    var G = x.getting_there || {}, K = x.tickets || {}, rows = [];
+    rows.push('<li>اطلع من بيتك الساعة <b class="leave num" data-kick="' + esc(md.kickoff_utc) + '">—</b> <span class="muted small">(على حسب إمارتك فوق، والأبواب تفتح قبل المباراة بساعتين)</span></li>');
+    var pf = v(K.platform); if (pf) rows.push('<li>التذاكر: ' + (pf.url ? '<a class="lat" href="' + esc(pf.url) + '" rel="noopener">' + esc(String(pf.name || "").split(/\s*[(+]/)[0]) + "</a>" : esc(pf.name)) + (v(K.price_range_aed) ? ' <span class="muted small">(' + esc(typeof v(K.price_range_aed) === "object" ? v(K.price_range_aed).min + " - " + v(K.price_range_aed).max : v(K.price_range_aed)) + " درهم)</span>" : "") + "</li>");
+    var fe = v(K.free_entry); if (fe) rows.push("<li>الدخول مجاني للأطفال والنساء وكبار المواطنين حسب الرابطة، والتذاكر تنصرف من أكشاك الملعب يوم المباراة.</li>");
+    var park = v(G.parking); rows.push("<li>المواقف: " + (park ? esc(enAr(park)) : '<span class="muted">ما في معلومة منشورة</span>') + "</li>");
+    var metro = v(G.metro_official); if (metro) rows.push("<li>" + esc(enAr(metro)) + "</li>");
+    return '<ul class="facts-l md">' + rows.join("") + '</ul><p><a href="/s/' + esc(x.id) + '/">دليل الملعب كامل</a></p>';
+  };
+  // ---- 175: travel with your club (continental away matches)
+  S.travel = function(t, ms){
+    var away = (ms || []).filter(function(m){ return m.away && m.away.id === t.id && [525, 9469, 9470, 10622].indexOf(m.comp) >= 0 && Date.parse(m.kickoff_utc) > Date.now(); });
+    if (!away.length) return "";
+    return '<ul class="facts-l">' + away.slice(0, 4).map(function(m){ var d = (m.kickoff_uae || "").slice(0, 10), dep = new Date(Date.parse(m.kickoff_utc) - 2 * 864e5).toISOString().slice(0, 10), q = encodeURIComponent("Flights from Dubai to the home city of " + (m.home.name || "") + " on " + dep);
+      return "<li>" + R.tname(m.home) + " ضد " + R.tname(t) + ' <span class="muted small">' + R.td(m.kickoff_uae, true) + '</span> <a class="btn copy" href="https://www.google.com/travel/flights?q=' + q + '" rel="noopener" target="_blank">شوف الرحلات</a></li>'; }).join("") + '</ul><p class="src">الرحلات من قوقل فلايتس، قبل المباراة بيومين من دبي. غيّر المدينة والتاريخ من هناك.</p>';
   };
   if (typeof module !== "undefined" && module.exports) module.exports = S; else root.TS = S;
 })(this);
