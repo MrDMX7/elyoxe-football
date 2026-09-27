@@ -24,6 +24,8 @@
     var L = md.lineups; if (L) ["home", "away"].forEach(function(s){ if (!L[s]) return; (L[s].starters || []).concat(L[s].subs || [], L[s].unavailable || []).forEach(ar); });
     return md;
   };
+  // scorer / assister lists (app.js re-renders them from fresh stats.json)
+  var lead0 = R.leaders; R.leaders = function(stats){ if (stats && stats.lists) Object.keys(stats.lists).forEach(function(k){ (stats.lists[k] || []).forEach(function(r){ ar(r.player); }); }); return lead0.apply(R, arguments); };
   ["lineups", "catchup"].forEach(function(k){ var f = R[k]; R[k] = function(md){ return f.apply(R, [R.arNames(md)].concat([].slice.call(arguments, 1))); }; });
 
   // ---- events: same minute + same team substitutions on one line

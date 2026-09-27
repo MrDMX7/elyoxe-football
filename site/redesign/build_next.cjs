@@ -91,7 +91,7 @@ ${G("اقرا وتعلّم", [L("/legends/", "الأساطير"), L("/memorable/
 ${G("سوّ بنفسك", [L("/studio/", "ستوديو التيفو"), L("/lab/", "المختبر"), L("/ask/", "اسأل تيفو"), L("/cast/", "تيفو كاست"), L("/newsletter/", "النشرة")])}</div></div>`;
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>${esc(o.title)}</title><meta name="description" content="${esc(o.desc)}"><meta name="robots" content="noindex"><meta name="theme-color" content="#0A2620">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" href="${BASE}favicon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Noto+Kufi+Arabic:wght@800&family=Readex+Pro:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Noto+Kufi+Arabic:wght@800&family=Readex+Pro:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="${BASE}assets/next.${ASSET.css}.css">${o.page === "match" ? '<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>' : ""}${(o.ld ? [].concat(o.ld) : []).map(l => `<script type="application/ld+json">${JSON.stringify(l).replace(/</g, "\\u003c")}</script>`).join("")}</head>
 <body class="v3" data-page="${o.page}" data-bc="${BC_V}"${o.attrs || ""}>
@@ -239,7 +239,8 @@ function write(rel, html){
 ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(nextR).replace(/</g, "\\u003c")}</script>` : ""}<div class="wrap body">` + tabsBar("c", tl) +
       (has.table ? pane("c", "table", tableLead + tableShelf, true) : "") + pane("c", "fixtures", `<div id="rounds">${rounds || '<p class="empty">ما في مباريات منشورة.</p>'}</div>`, !has.table) +
       ((numLead || numSecs.length) ? pane("c", "num", numPane) : "") + ((predLead || predSecs.length) ? pane("c", "pred", predPane) : "") + (histSecs.length ? pane("c", "hist", shelf(histSecs, { title:"التاريخ والأرقام القياسية" })) : "") + "</div>";
-    write(`c/${c.key}/index.html`, page({ path:`/c/${c.key}/`, page:"comp", nav:"comps", attrs:` data-comp="${c.id}"`, tools, title:`${c.name_ar}: الترتيب والمباريات والتوقعات ${c.season || ""} | تيفو`, desc:`ترتيب ${c.name_ar} ومواعيد المباريات والنتايج المباشرة والتوقعات والأرقام.`, body }));
+    const names = {}; if (stats && stats.lists) Object.values(stats.lists).forEach(l => (l || []).forEach(r => { if (r.player && nameOf(r.player.id)) names[r.player.id] = nameOf(r.player.id); }));
+    write(`c/${c.key}/index.html`, page({ path:`/c/${c.key}/`, page:"comp", nav:"comps", attrs:` data-comp="${c.id}"`, tools, names, title:`${c.name_ar}: الترتيب والمباريات والتوقعات ${c.season || ""} | تيفو`, desc:`ترتيب ${c.name_ar} ومواعيد المباريات والنتايج المباشرة والتوقعات والأرقام.`, body }));
   }
 
   // ---- 2. match pages
@@ -286,7 +287,8 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
       pane("m", "ana", (anaLead || "") + (anaSecs.length ? shelf(anaSecs, { title:"التحليل كله" }) : "") || '<p class="empty">التحليل ينزل مع قرب المباراة.</p>') +
       pane("m", "h2h", `<div id="h2h">${R.h2h(md)}</div>`) + "</div>" + faqHtml;
     const ld = { "@context":"https://schema.org", "@type":"SportsEvent", name:`${md.home.name_ar || md.home.name} ضد ${md.away.name_ar || md.away.name}`, startDate:md.kickoff_utc, sport:"Football", homeTeam:{ "@type":"SportsTeam", name:md.home.name_ar || md.home.name }, awayTeam:{ "@type":"SportsTeam", name:md.away.name_ar || md.away.name } };
-    const names = {}; (md.events || []).forEach(e => [e.player, e.assist, e.player_out].forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); })); if (md.lineups) ["home", "away"].forEach(s => md.lineups[s] && [].concat(md.lineups[s].starters || [], md.lineups[s].subs || [], md.lineups[s].unavailable || []).forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); }));
+    const names = {}; for (const tid of [md.home.id, md.away.id]){ const tj = await get(`team/${tid}.json`, 2); ((tj && tj.squad) || []).forEach(g => (g.players || []).forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); })); }
+    (md.events || []).forEach(e => [e.player, e.assist, e.player_out].forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); })); if (md.lineups) ["home", "away"].forEach(s => md.lineups[s] && [].concat(md.lineups[s].starters || [], md.lineups[s].subs || [], md.lineups[s].unavailable || []).forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); }));
     const ttl = `${R.tname(md.home)} ${md.score ? md.score.home + "-" + md.score.away : "ضد"} ${R.tname(md.away)}`;
     write(`m/${id}/index.html`, page({ path:`/m/${id}/`, page:"match", nav:"home", attrs:` data-id="${id}"`, tools, names, title:`${ttl} — ${cname} | تيفو`, desc:`${R.tname(md.home)} ضد ${R.tname(md.away)}: النتيجة المباشرة والأحداث والتشكيلة والإحصائيات والتحليل والمواجهات.`, body, ld:faqQ.length ? [ld, { "@context":"https://schema.org", "@type":"FAQPage", mainEntity:faqQ.map(q => ({ "@type":"Question", name:q[0], acceptedAnswer:{ "@type":"Answer", text:q[1] } })) }] : ld }));
   }
@@ -294,7 +296,8 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
   // ---- 3. home: hero, rails, the day list, the crest grid, the editorial rail
   PALETTE = Object.values(colors).slice(0, 60);
   const heroM = R.heroPick(day.matches, index, null);
-  const rails = R.homeRails(day.matches, index, {});
+  const seen = new Set(day.matches.map(m => m.id)), railMs = day.matches.concat((live.matches || []).filter(m => !seen.has(m.id)));
+  const rails = R.homeRails(railMs, index, {});
   const snapHome = fs.readFileSync(path.join(HERE, "snap/old/index.html"), "utf8"), oldMain = snapHome.slice(snapHome.indexOf("<main"), snapHome.indexOf("</main>"));
   const bdays = (oldMain.match(/<div id="bdays"[^>]*><\/div>/) || [""])[0];
   const ed = blocks(oldMain).secs.filter(s => s.title && s.title !== "البطولات");
@@ -306,10 +309,10 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
   // crest grid: every running competition as a tile of its clubs' colours
   const run = comps.filter(c => !c.dormant);
   const tileOf = c => { const d = compData[c.id] || {}; let tids = stIdsOf(d.st); if (!tids.length && d.fx && d.fx.matches) tids = [...new Set(d.fx.matches.flatMap(m => [m.home.id, m.away.id]))]; const cols = tids.slice(0, 12).map(id => (colors[id] || ["#123A31"])[0]); while (cols.length && cols.length < 12) cols.push(...cols.slice(0, 12 - cols.length));
-    return `<a class="ct" href="/c/${c.key}/"><span class="cm" aria-hidden="true">${(cols.length ? cols : Array(12).fill("#123A31")).map(cl => `<i style="background:${cl}"></i>`).join("")}</span><b>${esc(c.name_ar)}</b><small>${esc((c.country && c.country.name_ar) || { gulf:"الخليج", asia:"آسيا", europe:"أوروبا", arab:"العرب", africa:"أفريقيا", world:"العالم", national:"المنتخبات", uae:"الإمارات" }[c.scope] || "")}</small></a>`; };
+    return `<a class="ct" href="/c/${c.key}/"><span class="cm" aria-hidden="true">${(cols.length ? cols : Array.from({ length:12 }, (_, i) => ["#1B4A3F", "#123A31", "#2A5A4E"][i % 3])).map(cl => `<i style="background:${cl}"></i>`).join("")}</span><b>${esc(c.name_ar)}</b><small>${esc((c.country && c.country.name_ar) || { gulf:"الخليج", asia:"آسيا", europe:"أوروبا", arab:"العرب", africa:"أفريقيا", world:"العالم", national:"المنتخبات", uae:"الإمارات" }[c.scope] || "")}</small></a>`; };
   const heroHtml = `<section class="hero hhero" data-slot="hero" id="stand"><canvas aria-hidden="true"></canvas><div class="scrim"></div><div class="hero-in wrap"><span class="kick" id="standkick">${heroM ? (R.isLive(heroM) ? "مباشر الحين" : heroM.status === "finished" ? "انتهت" : "الليلة") : "اليوم"}</span><div class="cap" id="standcap">${R.heroLine(heroM, index)}</div><div id="uaecd"></div>
 <div class="hero-acts">${heroM ? `<a class="cta" id="herogo" href="${R.nx("/m/" + heroM.id + "/")}">تابع المباراة</a>` : ""}<button type="button" class="ghost" data-sheet="share">شارك</button></div></div></section><div id="since" class="wrap"></div>`;
-  const mineRail = `<section class="rail rmine" id="r-mine" data-slot="rail"><div class="rail-h"><h2>فريقك</h2><button type="button" class="more-l" data-sheet="more">غيّر بلدك</button></div><div id="mine"></div></section>`;
+  const mineRail = `<section class="rail rmine" id="r-mine" data-slot="rail"><div class="rail-h"><h2>فريقك</h2></div><div id="mine"></div></section>`;
   const dayBox = `<section class="daybox" id="matches" data-slot="list"><div class="rail-h"><h2>كل المباريات</h2><p class="livecount" id="livecount"></p></div>
 <div class="daynav"><button type="button" id="prev" aria-label="اليوم اللي قبل">›</button><b id="daytitle">${R.dayNav(today, today)}</b><button type="button" id="next" aria-label="اليوم اللي بعد">‹</button></div>
 <div class="seg segf" role="group" aria-label="اعرض"><button type="button" id="segall" aria-pressed="true">الكل</button><button type="button" id="arabonly" aria-pressed="false">العرب</button><button type="button" id="freeonly" aria-pressed="false">المجاني في بلدك</button></div>
@@ -327,6 +330,8 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
   const need = new Set(); for (const f of [["index.html"], ...COMPS.map(k => ["c", k, "index.html"]), ...MATCHES.map(id => ["m", String(id), "index.html"])]){ const p = path.join(OUT, ...f); if (fs.existsSync(p)) (fs.readFileSync(p, "utf8").match(/\/next\/logo\/(\d+)\.png/g) || []).forEach(s => need.add(s.match(/(\d+)\.png/)[1])); }
   (day.matches || []).forEach(m => { need.add(String(m.home.id)); need.add(String(m.away.id)); });
   let nl = 0; for (const id of need){ const f = path.join(CACHE, "logo", id + ".png"); if (fs.existsSync(f)){ fs.copyFileSync(f, path.join(OUT, "logo", id + ".png")); nl++; } }
+  const cells = [["#F6F7F2","#10A04B","#B07A3B"],["#F6F7F2","#B07A3B","#10A04B"],["#10A04B","#B07A3B","#F6F7F2"]].map((row, y) => row.map((c, x) => `<rect x="${4 + x * 8.5}" y="${4 + y * 8.5}" width="7" height="7" fill="${c}"/>`).join("")).join("");
+  fs.writeFileSync(path.join(OUT, "favicon.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#0A2620"/>${cells}</svg>`);
   fs.writeFileSync(path.join(OUT, "robots.txt"), "User-agent: *\nDisallow: /\n");
   console.log(`next: 5 pages, ${nl} crests, css ${(css.length / 1024).toFixed(0)}KB js ${(js.length / 1024).toFixed(0)}KB in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 })().catch(e => { console.error(e); process.exit(1); });

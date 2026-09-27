@@ -15,15 +15,15 @@ Pool: **7,070 players**, all resolved.
 
 | source | players | share |
 |---|---|---|
-| `wikidata` (Arabic label, or an Arabic alias) | 3,495 | 49.4% |
-| `arwiki` (Arabic Wikipedia title) | 65 | 0.9% |
-| `generated` (Gemini transliteration) | 3,510 | 49.6% |
+| `wikidata` (Arabic label, or an Arabic alias) | 3,458 | 48.9% |
+| `arwiki` (Arabic Wikipedia title) | 64 | 0.9% |
+| `generated` (Gemini transliteration) | 3,548 | 50.2% |
 
 - Of the `generated` entries, 1,671 matched a Wikidata item that has no Arabic label; `qid` is kept for them.
-- 159 Wikidata entries were **trimmed** from the full legal name to the name FotMob uses, for example «فابيو فيرجينيو دي ليما» → «فابيو ليما». The original is kept in `wd_label`.
-- 116 were **dropped to generated** because the Wikidata Arabic renders a different form of the name, for example Diney Borges → «ديني إديلسون». The original is kept in `wd_label`.
+- 162 Wikidata entries were **trimmed** from the full legal name to the name FotMob uses, for example «فابيو فيرجينيو دي ليما» → «فابيو ليما». The original is kept in `wd_label`.
+- 154 were **dropped to generated** because the Wikidata Arabic renders a different form of the name or another person, for example Diney Borges → «ديني إديلسون» and Mohammed Al-Yami → «محمد الربيعي». After the first build, the check was run once over all 3,401 Wikidata/arwiki entries; it changed 40 of them. The original is kept in `wd_label`.
 - 252 more were **dropped to generated** because their only Arabic was an `arz` (Egyptian Wikipedia) label or used پ/چ/ڤ/گ. These are bot transliterations such as «ديجو زيڤوليك», and the model gives «دييغو زيفوليتش» instead. The arz form is kept in `wd_label`.
-- `review_uae.csv`: 443 players, of which 162 are `wikidata`, 5 `arwiki` and 276 `generated`. Emirati squad players are mostly missing from Wikidata.
+- `review_uae.csv`: 443 players, of which 161 are `wikidata`, 5 `arwiki` and 277 `generated`. Emirati squad players are mostly missing from Wikidata.
 
 ## Where the pool comes from
 
@@ -78,4 +78,5 @@ python3 build_names.py --reuse-pool --limit 500   # resume in chunks from the ca
 ## Known weak spots
 
 - Some Wikidata Arabic labels are bot transliterations, not media spellings (e.g. «موستافا ازادزوى», «ياكو ميت»). They are marked `wikidata`, but they deserve a look for the most-shown players.
-- Emirati squad players: 62% are `generated`. `review_uae.csv` exists for exactly this.
+- Emirati squad players: 63% are `generated`.
+- The check is strict, so it occasionally drops a real media nickname. For example, Tsimikas is «كوستاس تسيميكاس» in the media but became «كونستانتينوس». The dropped form is always in `wd_label`. `review_uae.csv` exists for exactly this.

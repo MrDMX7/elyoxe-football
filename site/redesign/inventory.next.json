@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-27T12:29:48.124Z",
+ "generated": "2026-09-27T12:47:16.915Z",
  "templates": {
   "home": {
    "path": "/next/",
@@ -95,11 +95,6 @@
      "type": "heading",
      "label": "فريقك",
      "level": 2,
-     "slot": "rail"
-    },
-    {
-     "type": "button",
-     "label": "غيّر بلدك",
      "slot": "rail"
     },
     {
@@ -608,6 +603,14 @@
      "type": "mount",
      "label": "#scrimall",
      "id": "scrimall"
+    },
+    {
+     "type": "button",
+     "label": "ألوان فريقي على الموقع",
+     "id": "themebtn",
+     "client": true,
+     "slot": "rail",
+     "note": "app.js myCard() inside #mine (rail:mine)"
     }
    ]
   },

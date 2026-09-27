@@ -58,7 +58,8 @@
    6. `list:day`, the full match centre: day switcher, one segmented filter, and matches grouped by competition, folded after 4 competitions
    7. `grid:comps`
    8. `rail:tifo`, the editorial rail
-   9. `shelf:more`
+
+   The hero carries `#uaecd` (national-team countdown) as one line, and `#since` («since your last visit») sits directly under it.
 
    - A feature that wants home space must replace a card inside an existing rail, or become an editorial card in `rail:tifo`.
    - It never becomes a new stacked block.
@@ -67,7 +68,7 @@
    - If it is a page-level action, it goes into the page's single sheet.
    - It never becomes a new block between the hero and the tabs.
 4. **Each page has one share/tools sheet.**
-   - The only trigger is the «شارك» button in the hero. Mobile also shows it on the sticky mini-bar.
+   - It has three triggers that all open the same sheet: the share icon in the top bar, the «شارك» button in the hero, and the share icon on the match mini-bar.
    - The sheet holds everything the page used to show as a tool row:
      - copy the link
      - native share
@@ -96,7 +97,7 @@
 8. **Names are in Arabic.**
    - Player names come from `names/players_ar.json`, applied to player-shaped nodes only (events, lineups, scorer lists).
    - Latin is the fallback, isolated with `.lat`.
-9. **Budgets.** v3 adds about 12 KB CSS and 7 KB JS (gzip) on top of v2, and no new frameworks. Only the key-art canvas animates, and only on load and in answer to something (a touch or a goal).
+9. **Budgets.** Measured on the prototype: CSS 15.0 KB gzip (v2: 9.3 KB), JS 40.7 KB gzip in one file (v2: 34.1 KB across render/app/share/stand). That is +5.7 KB CSS and +6.6 KB JS, with no new frameworks. Only the key-art canvas animates, and only on load and in answer to something (a touch or a goal).
 
 ## 4. Components
 - **Top bar.**
@@ -126,7 +127,7 @@ The machine-checked version is `redesign/inventory.diff.json`, from `node redesi
   - Majlis TV and the studio go into المزيد and `rail:tifo`.
   - `#mine` becomes `rail:mine`.
   - The day nav and the Arab/free toggles become `list:day` plus a segmented control.
-  - Today and tomorrow are segments of the same control; their pages stay in المزيد.
+  - Yesterday and tomorrow are the day switcher's arrows. The /today/ and /tomorrow/ pages are the rail headers' links («مباريات اليوم» on the today rail, «مباريات بكرة» on the Arab rail) and entries in المزيد.
   - The editorial blocks (best matches, this day, the international window, match of the week, streaks, birthdays, records tonight, daily 5) go into `rail:tifo` cards, each opening the reader panel.
   - The competitions list becomes `grid:comps`.
 - **Match**

@@ -1,20 +1,13 @@
 {
- "generated": "2026-09-27T12:29:48.124Z",
+ "generated": "2026-09-27T12:47:16.915Z",
  "templates": {
   "home": {
    "old": "/",
    "next": "/next/",
    "total": 52,
-   "kept": 51,
+   "kept": 52,
    "merged": 0,
-   "missing": [
-    {
-     "type": "button",
-     "label": "ألوان فريقي على الموقع",
-     "id": "themebtn",
-     "now": "MISSING"
-    }
-   ],
+   "missing": [],
    "rows": [
     {
      "type": "nav",
@@ -289,7 +282,7 @@
      "type": "button",
      "label": "ألوان فريقي على الموقع",
      "id": "themebtn",
-     "now": "MISSING"
+     "now": "rail"
     }
    ],
    "new_items": [
@@ -316,11 +309,6 @@
     {
      "type": "heading",
      "label": "فريقك",
-     "slot": "rail"
-    },
-    {
-     "type": "button",
-     "label": "غيّر بلدك",
      "slot": "rail"
     },
     {
@@ -2352,15 +2340,9 @@
    "old": "/m/6052085/",
    "next": "/next/m/6052085/",
    "total": 28,
-   "kept": 27,
+   "kept": 28,
    "merged": 0,
-   "missing": [
-    {
-     "type": "tab",
-     "label": "الأحداث",
-     "now": "MISSING"
-    }
-   ],
+   "missing": [],
    "rows": [
     {
      "type": "button",
@@ -2408,7 +2390,7 @@
     {
      "type": "tab",
      "label": "الأحداث",
-     "now": "MISSING"
+     "now": "tabs as «قبل المباراة»"
     },
     {
      "type": "tab",
@@ -2549,11 +2531,6 @@
      "type": "tool",
      "label": "وين تنقل",
      "slot": "hero"
-    },
-    {
-     "type": "tab",
-     "label": "قبل المباراة",
-     "slot": "tabs"
     },
     {
      "type": "tab",
