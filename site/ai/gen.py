@@ -73,16 +73,37 @@ def ARR(item, mx): return {"type": "ARRAY", "items": item, "maxItems": mx}
 
 # ---- the dialect pass after generation (the lexicon, word-bounded; tanween out; masculine address)
 FEM = {"عليج": "عليك", "لج": "لك", "إنج": "إنك", "انج": "انك", "فريقج": "فريقك", "بيتج": "بيتك", "راسج": "راسك"}
+# deterministic grammar pass after generation (every kind): Arabic duals for a bare 2, and national teams (feminine
+# country names) given «منتخب» when a masculine verb follows. `nations` = the national teams' Arabic names in the item.
+DUAL = {"فرص": "فرصتين", "فرصة": "فرصتين", "أهداف": "هدفين", "هدف": "هدفين", "مباراة": "مباراتين", "مباريات": "مباراتين", "مرات": "مرتين", "مرة": "مرتين",
+        "تسديدات": "تسديدتين", "تسديدة": "تسديدتين", "نقاط": "نقطتين", "نقطة": "نقطتين", "ركنيات": "ركنيتين", "ركنية": "ركنيتين", "مواجهات": "مواجهتين", "مواجهة": "مواجهتين",
+        "تبديلات": "تبديلين", "تبديل": "تبديلين", "انتصارات": "انتصارين", "خسارات": "خسارتين", "تعادلات": "تعادلين", "جولات": "جولتين", "إنذارات": "إنذارين"}
+MASC_VERBS = "فاز|خسر|تعادل|تقدم|تقدّم|سجل|سجّل|لعب|حقق|تصدر|تصدّر|يلعب|يواجه|يلاقي|يدخل"
+def grammar(t, nations=()):
+    if not isinstance(t, str): return t
+    t = re.sub(r"(?<![\d.,])2\s+(?:فرص|فرصة)\s+محققة", "فرصتين محققتين", t)
+    t = re.sub(r"(?<![\d.,])2\s+(" + "|".join(sorted(DUAL, key=len, reverse=True)) + r")(?!\w)", lambda m: DUAL[m.group(1)], t)
+    for n in nations:
+        if not n: continue
+        t = re.sub(r"(?<!منتخب )(?<!\w)(و?)" + re.escape(n) + r"\s+(" + MASC_VERBS + r")(?!\w)", lambda m: m.group(1) + "منتخب " + n + " " + m.group(2), t)
+    return t
+
 def emirati(t):
     if not isinstance(t, str): return t
     for a, b in LEX["phrases"].items(): t = t.replace(a, b)
     for a, b in list(LEX["words"].items()) + list(FEM.items()) + [("مين", "منو"), ("كذا", "جذيه"), ("يرى", "يشوف"), ("أرى", "أشوف"), ("نرى", "نشوف")]:
         t = re.sub(r"(?<!\w)" + re.escape(a) + r"(?!\w)", b, t)
-    return re.sub("[ً-ٍ]", "", t)
-def deep(x):
-    if isinstance(x, dict): return {k: deep(v) for k, v in x.items()}
-    if isinstance(x, list): return [deep(v) for v in x]
-    return emirati(x)
+    return grammar(re.sub("[ً-ٍ]", "", t))
+def deep(x, nations=()):
+    if isinstance(x, dict): return {k: deep(v, nations) for k, v in x.items()}
+    if isinstance(x, list): return [deep(v, nations) for v in x]
+    return grammar(emirati(x), nations)
+_TEAMS = {}
+def nations(*sides):
+    """Arabic names of the national teams among these match sides (teams.json `national`)."""
+    if not _TEAMS: _TEAMS.update((get("teams.json") or {}).get("teams", {}) or {"_": {}})
+    return [team_ar(t) for t in sides if t and ((_TEAMS.get(str(t.get("id"))) or {}).get("country") or {}).get("national")]
+NAT_RULE = "\n- لو الفريق منتخب (اسم دولة مثل الإمارات أو البحرين)، اكتب «منتخب الإمارات» والفعل بعده مذكر («منتخب الإمارات فاز»).\n"
 
 # ---- numbers as Emirati words, for the spoken text only (digits invite Polly/Gemini to read Fusha)
 ONES = ["صفر", "واحد", "ثنين", "ثلاث", "أربع", "خمس", "ست", "سبع", "ثمان", "تسع", "عشر", "احدعش", "اثنعش", "ثلطعش", "ربعطعش", "خمسطعش", "سطعش", "سبعطعش", "ثمنطعش", "تسعطعش"]
@@ -136,7 +157,7 @@ def cached(kind, name, sig):
     except Exception: return False
 
 # ---- 9 + 78: summary and stats thread for a finished match
-SUM_SYS = STYLE + """
+SUM_SYS = STYLE + NAT_RULE + """
 المهمة: عندك بيانات مباراة خلصت. اكتب:
 1) summary: ملخص من 4 لين 6 جمل بالإماراتي، يبدا بالنتيجة ومنو فاز، وبعدين كيف انسجلت الأهداف (منو ومتى)، وأبرز لاعب حسب التقييم، ورقم واحد مهم من الإحصائيات، وسطر أخير عن شو يعني هالنتيجة.
 2) thread: ثريد لإكس من 4 لين 6 تغريدات، كل وحدة أقل من 260 حرف، كل تغريدة فيها رقم من البيانات. الأولى فيها النتيجة. بدون هاشتاقات وبدون إيموجي زايد (وحدة بالكثير في التغريدة).
@@ -148,11 +169,11 @@ def do_summary(md):
     if cached("summary", str(md["id"]), sig): return "cached"
     out = gemini(SUM_SYS, ctx, SUM_SCHEMA, tokens=8000)
     if not out: return "fail"
-    out = deep(out); out.update({"id": md["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
+    out = deep(out, nations(md["home"], md["away"])); out.update({"id": md["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("summary", str(md["id"]), out); return "new"
 
 # ---- 77: preview for a coming match
-PRE_SYS = STYLE + """
+PRE_SYS = STYLE + NAT_RULE + """
 المهمة: عندك بيانات مباراة ياية: ترتيب الفريقين وفورمتهم، ونسب توقعات تيفو، والمواجهات السابقة، وأرقام على المحك، وضغط المباريات.
 اكتب lines: 5 أسطر بالضبط، كل سطر جملة وحدة (أقل من 200 حرف):
 1) الفريق الأول: نقطة قوة من الأرقام.  2) الفريق الثاني: نقطة قوة من الأرقام.  3) نقطة ضعف أو قلق لواحد منهم.  4) مفتاح المباراة.  5) توقع تيفو بالنسب مقرّبة لأقرب رقم صحيح (بدون فواصل عشرية)، بدون ما تجزم. إذا النسب مب موجودة في البيانات، خل السطر الخامس عن فورمة الفريقين أو أرقام على المحك بدل النسب، ولا تقول إنها مب متوفرة.
@@ -163,7 +184,7 @@ def do_preview(m, ctx):
     if cached("preview", str(m["id"]), sig): return "cached"
     out = gemini(PRE_SYS, ctx, PRE_SCHEMA, temp=0.5)
     if not out: return "fail"
-    out = deep(out); out.update({"id": m["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
+    out = deep(out, nations(m["home"], m["away"])); out.update({"id": m["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("preview", str(m["id"]), out); return "new"
 
 # ---- 161: Tifo Cast, written for the ear, then voiced with Gemini TTS (ai/cast_voice.py)

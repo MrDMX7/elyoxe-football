@@ -31,7 +31,7 @@ def dialects(md):
     if not res: return "fail"
     gen.save("dialects", str(md["id"]), {"id": md["id"], "summaries": res, "review": "owner must review each dialect; no lexicon pass applied", "model": gen.MODEL, "generated": now()}); return "ok"
 
-WHY_SYS = gen.STYLE + """
+WHY_SYS = gen.STYLE + gen.NAT_RULE + """
 المهمة: «ليش هالنتيجة؟» لمباراة خلصت. اكتب lines: سطرين بالضبط، كل سطر جملة وحدة أقل من 150 حرف، تشرح ليش انتهت المباراة جذيه من الأرقام المرفقة بس
 (الاستحواذ، التسديدات، التسديدات على المرمى، الفرص المحققة، الأهداف المتوقعة إذا موجودة، الطرد، البلنتي، توقيت الأهداف).
 - كل سطر لازم فيه رقم واحد على الأقل من البيانات. مثال على الأسلوب: «سيطر الوحدة على الاستحواذ 61% بس ضيّع 3 فرص محققة».
@@ -49,9 +49,9 @@ def why(md):
         if e["type"] == "own_goal": e["goal_for"] = ctx["away"] if e["team"] == ctx["home"] else ctx["home"]
     out = gen.gemini(WHY_SYS, ctx, WHY_SCHEMA, temp=0.3, tokens=4000)
     if not out: return "fail"
-    gen.save("why", str(md["id"]), {"id": md["id"], "match": f"{ctx['home']} {md['score']['home']}-{md['score']['away']} {ctx['away']}", "competition": ctx.get("competition"), "lines": [fix(gen.emirati(l)) for l in out["lines"]], "model": gen.MODEL, "generated": now()}); return "ok"
+    gen.save("why", str(md["id"]), {"id": md["id"], "match": f"{ctx['home']} {md['score']['home']}-{md['score']['away']} {ctx['away']}", "competition": ctx.get("competition"), "lines": [fix(gen.grammar(gen.emirati(l), gen.nations(md["home"], md["away"]))) for l in out["lines"]], "model": gen.MODEL, "generated": now()}); return "ok"
 
-QUICK_SYS = gen.STYLE + """
+QUICK_SYS = gen.STYLE + gen.NAT_RULE + """
 المهمة: «مباراة الليلة في 60 ثانية»: بطاقة سريعة قبل مباراة كبيرة. اكتب lines: من 4 لين 6 أسطر، كل سطر جملة وحدة أقل من 140 حرف:
 الموعد، وضع الفريقين في الترتيب وفورمتهم، المواجهات السابقة (h2h)، وتوقع تيفو بالنسب إذا موجود. بس هذي الأربعة، ولا شي غيرها.
 - كل سطر فيه رقم من البيانات. لو ما في توقع تيفو، لا تذكر أي توقع. سمّها «توقعات تيفو» دايماً.
@@ -82,7 +82,7 @@ def quick(m, table, facts):
            "head_to_head": (md.get("h2h") or {}).get("summary")}
     out = gen.gemini(QUICK_SYS, ctx, QUICK_SCHEMA, temp=0.3, tokens=4000)
     if not out: return "fail"
-    gen.save("quick", str(m["id"]), {"id": m["id"], "match": f"{H} ضد {A}", "lines": [fix(gen.emirati(l)) for l in out["lines"]], "context": ctx, "model": gen.MODEL, "generated": now()}); return "ok"
+    gen.save("quick", str(m["id"]), {"id": m["id"], "match": f"{H} ضد {A}", "lines": [fix(gen.grammar(gen.emirati(l), gen.nations(m["home"], m["away"]))) for l in out["lines"]], "context": ctx, "model": gen.MODEL, "generated": now()}); return "ok"
 
 def samples_369_372():
     log = {}
