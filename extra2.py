@@ -346,6 +346,8 @@ def coaches(p):
 # ------------------------------------------------------------------ 317 happiness
 def happiness(p):
     sp = p.aux("arab_ratings").get("season_preds") or []
+    if not sp:
+        return False                  # pre-match probabilities come from the Arab clubs rating run: not ready yet
     now = p.now()
     names = p.names["teams"]
     per = {}
@@ -401,6 +403,12 @@ def twins(p):
 FIN_FEATURES = ("ontarget_scoring_att", "total_scoring_att", "big_chance_missed", "penalty_won")
 
 
+def _season_total(stats, k):
+    """Season count of a stat: FotMob's per-90 lists (shots, shots on target) carry `total` (rate x minutes / 90)."""
+    s = stats.get(k) or {}
+    return (s["total"] if "total" in s else s.get("value")) or 0
+
+
 def finishing(p):
     tabs = {int(k): v for k, v in p.aux("ptables").items()}
     X, y = [], []
@@ -409,7 +417,7 @@ def finishing(p):
             xg = (r["stats"].get("expected_goals") or {}).get("value")
             if xg is None:
                 continue
-            f = [(r["stats"].get(k) or {}).get("value") or 0 for k in FIN_FEATURES]
+            f = [_season_total(r["stats"], k) for k in FIN_FEATURES]
             if f[1] >= 10:
                 X.append([1.0] + [float(v) for v in f])
                 y.append(float(xg))
@@ -424,6 +432,7 @@ def finishing(p):
             my = sum(y) / len(y)
             r2 = 1 - sum((t - q) ** 2 for t, q in zip(y, pred)) / sum((t - my) ** 2 for t in y)
             model = {"coef": dict(zip(("intercept",) + FIN_FEATURES, [round(c, 4) for c in coef])), "r2": round(r2, 3), "n": len(y)}
+    written = 0
     for cid in set(ARAB_LEAGUES) | set(BIG5):
         t = tabs.get(cid)
         if not t:
@@ -431,19 +440,19 @@ def finishing(p):
         rows = []
         for pid, r in t["players"].items():
             st = r["stats"]
-            shots = (st.get("total_scoring_att") or {}).get("value") or 0
+            shots = _season_total(st, "total_scoring_att")
             if shots < 10:
                 continue
             goals = (st.get("goals") or {}).get("value") or 0
             xg = (st.get("expected_goals") or {}).get("value")
             proxy = False
             if xg is None and model:
-                f = [1.0] + [float((st.get(k) or {}).get("value") or 0) for k in FIN_FEATURES]
+                f = [1.0] + [float(_season_total(st, k)) for k in FIN_FEATURES]
                 xg = max(0.0, sum(model["coef"][k] * v for k, v in zip(("intercept",) + FIN_FEATURES, f)))
                 proxy = True
             if xg is None:
                 continue
-            rows.append({"player": int(pid), "name": r["name"], "team": r["team"], "shots": shots, "goals": goals,
+            rows.append({"player": int(pid), "name": r["name"], "team": r["team"], "shots": round(shots), "goals": goals,
                          "xg": round(xg, 2), "luck": round(goals - xg, 2), "proxy": proxy})
         rows.sort(key=lambda x: -x["luck"])
         if rows:
@@ -451,7 +460,10 @@ def finishing(p):
                                                             "proxy_model": model if any(r["proxy"] for r in rows) else None,
                                                             "note": "goals minus xG; where FotMob has no player xG, a linear proxy from "
                                                                     "shots on target, shots, big chances missed and penalties won, fitted on "
-                                                                    "players with xG in the other leagues"}, cache="static")
+                                                                    "players with xG in the other leagues; shots = FotMob's shots "
+                                                                    "per 90 x minutes / 90"}, cache="static")
+            written += 1
+    return written > 0                  # False = not ready (no table reached 10 shots yet): analytics_chores retries soon
 
 
 # ------------------------------------------------------------------ 320 anniversaries

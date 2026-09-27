@@ -143,9 +143,10 @@ def derbies(p, limit=4):
             p.store.fail("arab-derbies", e)
             continue
         h = m.get("h2h")
+        if not h or not h.get("matches"):
+            p.store.fail("arab-derbies", f"{a}-{b}: FotMob match {mid} has no head-to-head block yet")
+            continue                    # not marked: tried again next run, not in a week
         p.mark("arab_derby", f"{a}-{b}")
-        if not h:
-            continue
         wins = {str(a): 0, str(b): 0, "draws": 0}
         for x in h["matches"]:
             sc = x.get("score")
@@ -159,6 +160,8 @@ def derbies(p, limit=4):
                     wins[str(wnr)] += 1
         p.store.put_json(f"h2h/{a}-{b}.json", {"teams": [a, b], "name_ar": d["name_ar"], "generated": iso(p.now()),
                                               "wins": wins, "matches": h["matches"], "via_match": mid,
+                                              "sources": [f"https://www.fotmob.com/match/{mid}",
+                                                          f"https://www.fotmob.com/api/data/matchDetails?matchId={mid}"],
                                               "note": "all meetings FotMob lists for this pair (its depth, all competitions)"},
                          cache="static")
     p.store.put_json("derbies.json", {"generated": iso(p.now()), "derbies": out}, cache="static")
@@ -525,6 +528,8 @@ def national_teams(p, limit=6):
 # ------------------------------------------------------------------ 297 continental history
 def continental_history(p):
     arab = {c["iso2"] for c in config.countries() if c.get("arab")}
+    if not p.aux("arab_ratings").get("club_country"):
+        return False                  # club countries come from the Arab clubs rating run: not ready yet
     cc = dict((p.aux("arab_ratings").get("club_country") or {}))
     for k, v in p.aux("team_country").items():
         if v and v.get("iso2"):

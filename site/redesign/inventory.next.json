@@ -1,0 +1,4132 @@
+{
+ "generated": "2026-09-27T12:29:48.124Z",
+ "templates": {
+  "home": {
+   "path": "/next/",
+   "items": [
+    {
+     "type": "nav",
+     "label": "اليوم",
+     "href": "/next/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "البطولات",
+     "href": "/competitions/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "المنتخبات",
+     "href": "/national/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "الأسبوع",
+     "href": "/week/",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "المزيد",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "بحث",
+     "id": "srch",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "slot": "nav"
+    },
+    {
+     "type": "mount",
+     "label": "#uaecd",
+     "id": "uaecd",
+     "slot": "hero"
+    },
+    {
+     "type": "tool",
+     "label": "تابع المباراة",
+     "href": "/m/6052085/",
+     "slot": "hero"
+    },
+    {
+     "type": "mount",
+     "label": "#since",
+     "id": "since"
+    },
+    {
+     "type": "heading",
+     "label": "مباشر الحين",
+     "level": 2,
+     "slot": "rail"
+    },
+    {
+     "type": "heading",
+     "label": "اليوم",
+     "level": 2,
+     "slot": "rail"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات اليوم",
+     "href": "/today/",
+     "slot": "rail"
+    },
+    {
+     "type": "heading",
+     "label": "مباريات العرب",
+     "level": 2,
+     "slot": "rail"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات بكرة",
+     "href": "/tomorrow/",
+     "slot": "rail"
+    },
+    {
+     "type": "heading",
+     "label": "فريقك",
+     "level": 2,
+     "slot": "rail"
+    },
+    {
+     "type": "button",
+     "label": "غيّر بلدك",
+     "slot": "rail"
+    },
+    {
+     "type": "mount",
+     "label": "#mine",
+     "id": "mine",
+     "slot": "rail"
+    },
+    {
+     "type": "heading",
+     "label": "كل المباريات",
+     "level": 2,
+     "slot": "list"
+    },
+    {
+     "type": "mount",
+     "label": "#livecount",
+     "id": "livecount",
+     "slot": "list"
+    },
+    {
+     "type": "button",
+     "label": "›",
+     "id": "prev",
+     "slot": "list"
+    },
+    {
+     "type": "button",
+     "label": "‹",
+     "id": "next",
+     "slot": "list"
+    },
+    {
+     "type": "button",
+     "label": "الكل",
+     "id": "segall",
+     "slot": "list"
+    },
+    {
+     "type": "button",
+     "label": "العرب",
+     "id": "arabonly",
+     "slot": "list"
+    },
+    {
+     "type": "button",
+     "label": "المجاني في بلدك",
+     "id": "freeonly",
+     "slot": "list"
+    },
+    {
+     "type": "button",
+     "label": "كل المباريات",
+     "id": "unfold",
+     "slot": "list"
+    },
+    {
+     "type": "heading",
+     "label": "البطولات",
+     "level": 2,
+     "slot": "grid"
+    },
+    {
+     "type": "tool",
+     "label": "كل البطولات",
+     "href": "/competitions/",
+     "slot": "grid"
+    },
+    {
+     "type": "heading",
+     "label": "من تيفو",
+     "level": 2,
+     "slot": "rail"
+    },
+    {
+     "type": "tile",
+     "label": "أحلى مباريات الجولة الياية في دوري أدنوك",
+     "slot": "rail"
+    },
+    {
+     "type": "tile",
+     "label": "هذا اليوم في كورة الإمارات",
+     "slot": "rail"
+    },
+    {
+     "type": "tile",
+     "label": "فترة المنتخبات",
+     "slot": "rail"
+    },
+    {
+     "type": "tile",
+     "label": "مباراة الأسبوع",
+     "slot": "rail"
+    },
+    {
+     "type": "tile",
+     "label": "سلاسل شغالة",
+     "slot": "rail"
+    },
+    {
+     "type": "mount",
+     "label": "#bdays",
+     "id": "bdays",
+     "slot": "rail"
+    },
+    {
+     "type": "tool",
+     "label": "الأساطير",
+     "href": "/legends/",
+     "slot": "rail"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات لا تُنسى",
+     "href": "/memorable/",
+     "slot": "rail"
+    },
+    {
+     "type": "tool",
+     "label": "تيفو كاست",
+     "href": "/cast/",
+     "slot": "rail"
+    },
+    {
+     "type": "tool",
+     "label": "قانون الكورة",
+     "href": "/laws/",
+     "slot": "rail"
+    },
+    {
+     "type": "tool",
+     "label": "شاشة المجلس",
+     "href": "/tv/",
+     "slot": "rail"
+    },
+    {
+     "type": "tool",
+     "label": "ستوديو التيفو",
+     "href": "/studio/",
+     "slot": "rail"
+    },
+    {
+     "type": "heading",
+     "label": "أحلى مباريات الجولة الياية في دوري أدنوك",
+     "level": 2,
+     "slot": "rail",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "هذا اليوم في كورة الإمارات",
+     "level": 2,
+     "sub": "كل الأيام",
+     "slot": "rail",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "كل الأيام",
+     "href": "/thisday/",
+     "slot": "rail",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "فترة المنتخبات",
+     "level": 2,
+     "sub": "كل المباريات",
+     "slot": "rail",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "كل المباريات",
+     "href": "/break/",
+     "slot": "rail",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "مباراة الأسبوع",
+     "level": 2,
+     "sub": "ليش اخترناها؟",
+     "slot": "rail",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "ليش اخترناها؟",
+     "href": "/match-of-week/",
+     "slot": "rail",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "سلاسل شغالة",
+     "level": 2,
+     "sub": "كل السلاسل",
+     "slot": "rail",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "كل السلاسل",
+     "href": "/streaks/",
+     "slot": "rail",
+     "tile": true
+    },
+    {
+     "type": "footer",
+     "label": "Elyoxe",
+     "href": "https://elyoxe.com/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "شاشة المجلس",
+     "href": "/tv/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "ستوديو التيفو",
+     "href": "/studio/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "مباريات الأسبوع",
+     "href": "/week/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الأساطير",
+     "href": "/legends/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "مباريات لا تُنسى",
+     "href": "/memorable/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "هذا اليوم",
+     "href": "/thisday/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "قانون الكورة",
+     "href": "/laws/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "وين تنقل",
+     "href": "/watch/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الملاعب",
+     "href": "/stadiums/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "المختبر",
+     "href": "/lab/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الأكاديمية",
+     "href": "/academy/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "القاموس",
+     "href": "/glossary/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "وضع المتابعة",
+     "href": "/w/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "كم باقي؟",
+     "href": "/countdowns/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "النشرة",
+     "href": "/newsletter/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "mount",
+     "label": "#updated",
+     "id": "updated",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "heading",
+     "label": "شارك وأدوات",
+     "level": 2,
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "سكّر",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "انسخ الرابط",
+     "id": "copylink",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "شارك الصفحة",
+     "id": "nshare",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "صورة لأي قسم",
+     "id": "secpick",
+     "slot": "sheet"
+    },
+    {
+     "type": "mount",
+     "label": "#secpicks",
+     "id": "secpicks",
+     "slot": "sheet"
+    },
+    {
+     "type": "heading",
+     "label": "المزيد",
+     "level": 2,
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "بلدك",
+     "id": "ctry",
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "بدون حرق",
+     "id": "spoil",
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "وضع السيارة",
+     "id": "carbtn",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "اختصارات",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "دوري أدنوك",
+     "href": "/c/uae-pro-league/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "المنتخب",
+     "href": "/uae/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "كأس الخليج",
+     "href": "/c/gulf-cup/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات الأسبوع",
+     "href": "/week/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "كم باقي؟",
+     "href": "/countdowns/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "الشاشات",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "وضع المتابعة",
+     "href": "/w/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "وين تنقل",
+     "href": "/watch/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الملاعب",
+     "href": "/stadiums/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "اقرا وتعلّم",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "هذا اليوم",
+     "href": "/thisday/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الأكاديمية",
+     "href": "/academy/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "القاموس",
+     "href": "/glossary/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "سوّ بنفسك",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "المختبر",
+     "href": "/lab/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "اسأل تيفو",
+     "href": "/ask/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "النشرة",
+     "href": "/newsletter/",
+     "slot": "more"
+    },
+    {
+     "type": "mount",
+     "label": "#panels",
+     "id": "panels"
+    },
+    {
+     "type": "mount",
+     "label": "#panelb",
+     "id": "panelb"
+    },
+    {
+     "type": "mount",
+     "label": "#scrimall",
+     "id": "scrimall"
+    }
+   ]
+  },
+  "comp": {
+   "path": "/next/c/uae-pro-league/",
+   "items": [
+    {
+     "type": "nav",
+     "label": "اليوم",
+     "href": "/next/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "البطولات",
+     "href": "/competitions/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "المنتخبات",
+     "href": "/national/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "الأسبوع",
+     "href": "/week/",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "المزيد",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "بحث",
+     "id": "srch",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "slot": "nav"
+    },
+    {
+     "type": "heading",
+     "label": "دوري أدنوك للمحترفين",
+     "level": 1,
+     "slot": "hero"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات الجولة",
+     "href": "#fixtures",
+     "slot": "hero"
+    },
+    {
+     "type": "tab",
+     "label": "الترتيب",
+     "group": "c",
+     "key": "table",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "المباريات",
+     "group": "c",
+     "key": "fixtures",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "الأرقام",
+     "group": "c",
+     "key": "num",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "التوقعات",
+     "group": "c",
+     "key": "pred",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "التاريخ",
+     "group": "c",
+     "key": "hist",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "الكل",
+     "group": "tv",
+     "key": "all",
+     "slot": "tab:table"
+    },
+    {
+     "type": "tab",
+     "label": "بملعبه",
+     "group": "tv",
+     "key": "home",
+     "slot": "tab:table"
+    },
+    {
+     "type": "tab",
+     "label": "برا ملعبه",
+     "group": "tv",
+     "key": "away",
+     "slot": "tab:table"
+    },
+    {
+     "type": "tab",
+     "label": "الشوط الأول",
+     "group": "tv",
+     "key": "ht",
+     "slot": "tab:table"
+    },
+    {
+     "type": "tab",
+     "label": "العادل",
+     "group": "tv",
+     "key": "xg",
+     "slot": "tab:table"
+    },
+    {
+     "type": "tab",
+     "label": "الفورمة",
+     "group": "tv",
+     "key": "form",
+     "slot": "tab:table"
+    },
+    {
+     "type": "heading",
+     "label": "الموسم بالرسم",
+     "level": 3,
+     "slot": "tab:table"
+    },
+    {
+     "type": "tile",
+     "label": "رحلة الموسم",
+     "slot": "tab:table"
+    },
+    {
+     "type": "heading",
+     "label": "رحلة الموسم",
+     "level": 2,
+     "slot": "tab:table",
+     "tile": true
+    },
+    {
+     "type": "tab",
+     "label": "الهدافين",
+     "group": "lead",
+     "key": "goals",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tab",
+     "label": "صناع الأهداف",
+     "group": "lead",
+     "key": "assists",
+     "slot": "tab:num"
+    },
+    {
+     "type": "heading",
+     "label": "الأرقام كلها",
+     "level": 3,
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "بطاقات تيفو",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "منو الحاسم؟",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "تشكيلة الجولة",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "أفضل محترف أجنبي",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "الأكثر تطوّر",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "المواهب الإماراتية تحت 23",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "ساعة الأهداف",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "ملوك الدقايق الأخيرة",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "ترمومتر المدربين",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "بصمة كل فريق",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "حصون الملاعب",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "مؤشر الإرهاق",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "أنجح المدربين في التاريخ",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "سوق الانتقالات",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "الإيقافات",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "الحكام",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "أعمار التشكيلات",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "مؤشر التدوير",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "منو يسجل أول؟",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "نقاط ضاعت ونقاط رجعت",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "الاعتماد على الهداف",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "أهداف بعد الدقيقة 90",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "أحسن صفقات الموسم",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "أرقام شخصية قريبة",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "تصنيف تيفو للأندية",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "الدوري الإماراتي ضد العالم",
+     "slot": "tab:num"
+    },
+    {
+     "type": "heading",
+     "label": "بطاقات تيفو",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#tifo-card",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "منو الحاسم؟",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#clutch",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "تشكيلة الجولة",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أفضل محترف أجنبي",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الأكثر تطوّر",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "المواهب الإماراتية تحت 23",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "ساعة الأهداف",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "ملوك الدقايق الأخيرة",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "يسجلون في الآخر",
+     "level": 3,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "ينصادون في الآخر",
+     "level": 3,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "ترمومتر المدربين",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#pressure-index",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "بصمة كل فريق",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#ppda",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "حصون الملاعب",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "مؤشر الإرهاق",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#fatigue",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أنجح المدربين في التاريخ",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "سوق الانتقالات",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الإيقافات",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "قانون الإيقاف",
+     "level": 3,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الحكام",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أعمار التشكيلات",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "مؤشر التدوير",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#rotation",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "منو يسجل أول؟",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "نقاط ضاعت ونقاط رجعت",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "نقاط ضاعت وهو متقدّم",
+     "level": 3,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "نقاط جابها وهو متأخر",
+     "level": 3,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الاعتماد على الهداف",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أهداف بعد الدقيقة 90",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أحسن صفقات الموسم",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أرقام شخصية قريبة",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "تصنيف تيفو للأندية",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#tifo-rating",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الدوري الإماراتي ضد العالم",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "توقعات آخر الموسم",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#simulator",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "heading",
+     "label": "بعد في التوقعات",
+     "level": 3,
+     "slot": "tab:pred"
+    },
+    {
+     "type": "tile",
+     "label": "ساعة الموسم",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "tile",
+     "label": "الطريق للقب",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "tile",
+     "label": "صعوبة المباريات الياية",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "tile",
+     "label": "أحلى مباريات الجولة الياية",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "tile",
+     "label": "شو لو؟",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "tile",
+     "label": "كم يحتاج فريقك؟",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "tile",
+     "label": "كم بيسجل الهدافين لآخر الموسم؟",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "tile",
+     "label": "غيابات الجولة 6",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "heading",
+     "label": "ساعة الموسم",
+     "level": 2,
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الطريق للقب",
+     "level": 2,
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "صعوبة المباريات الياية",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#difficulty",
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أحلى مباريات الجولة الياية",
+     "level": 2,
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "شو لو؟",
+     "level": 2,
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "mount",
+     "label": "#wi-r",
+     "id": "wi-r",
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "mount",
+     "label": "#wi-m",
+     "id": "wi-m",
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الترتيب لو صارت هالنتايج",
+     "level": 3,
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "mount",
+     "label": "#wi-t",
+     "id": "wi-t",
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "كم يحتاج فريقك؟",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#magic-number",
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "كم بيسجل الهدافين لآخر الموسم؟",
+     "level": 2,
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "غيابات الجولة 6",
+     "level": 2,
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "التاريخ والأرقام القياسية",
+     "level": 3,
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "طريق البطل",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "الجدول التاريخي",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "الدوري موسم بموسم",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "الصاعدين هالموسم",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "تاريخ الدوري",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "سجل المواجهات بين الأندية",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "أرقام قياسية على المحك",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "كتاب الأرقام القياسية",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "heading",
+     "label": "طريق البطل",
+     "level": 2,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الجدول التاريخي",
+     "level": 2,
+     "sub": "من 2010/2011",
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الدوري موسم بموسم",
+     "level": 2,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الصاعدين هالموسم",
+     "level": 2,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "تاريخ الدوري",
+     "level": 2,
+     "sub": "من 1973",
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "البطولات",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الهدافين التاريخيين",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "سجل المواجهات بين الأندية",
+     "level": 2,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أرقام قياسية على المحك",
+     "level": 2,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "كتاب الأرقام القياسية",
+     "level": 2,
+     "sub": "من 2010/2011",
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أكبر فوز",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أكثر مباراة فيها أهداف",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أطول سلسلة انتصارات",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أطول سلسلة بدون خسارة",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أطول سلسلة خسارات",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أكثر أهداف في موسم",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الهاتريك",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "footer",
+     "label": "Elyoxe",
+     "href": "https://elyoxe.com/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "شاشة المجلس",
+     "href": "/tv/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "ستوديو التيفو",
+     "href": "/studio/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "مباريات الأسبوع",
+     "href": "/week/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الأساطير",
+     "href": "/legends/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "مباريات لا تُنسى",
+     "href": "/memorable/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "هذا اليوم",
+     "href": "/thisday/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "قانون الكورة",
+     "href": "/laws/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "وين تنقل",
+     "href": "/watch/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الملاعب",
+     "href": "/stadiums/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "المختبر",
+     "href": "/lab/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الأكاديمية",
+     "href": "/academy/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "القاموس",
+     "href": "/glossary/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "وضع المتابعة",
+     "href": "/w/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "كم باقي؟",
+     "href": "/countdowns/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "النشرة",
+     "href": "/newsletter/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "mount",
+     "label": "#updated",
+     "id": "updated",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "heading",
+     "label": "شارك وأدوات",
+     "level": 2,
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "سكّر",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "انسخ الرابط",
+     "id": "copylink",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "شارك الصفحة",
+     "id": "nshare",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "صورة توقعات الجولة 6",
+     "id": "rpbtn",
+     "slot": "sheet"
+    },
+    {
+     "type": "tool",
+     "label": "قارن بين لاعبين أو فريقين",
+     "href": "/c/uae-pro-league/compare/",
+     "slot": "sheet"
+    },
+    {
+     "type": "tool",
+     "label": "ترتيب القوة هالأسبوع",
+     "href": "/c/uae-pro-league/power/",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "صورة لأي قسم",
+     "id": "secpick",
+     "slot": "sheet"
+    },
+    {
+     "type": "mount",
+     "label": "#secpicks",
+     "id": "secpicks",
+     "slot": "sheet"
+    },
+    {
+     "type": "heading",
+     "label": "المزيد",
+     "level": 2,
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "بلدك",
+     "id": "ctry",
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "بدون حرق",
+     "id": "spoil",
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "وضع السيارة",
+     "id": "carbtn",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "اختصارات",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "دوري أدنوك",
+     "href": "/c/uae-pro-league/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "المنتخب",
+     "href": "/uae/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "كأس الخليج",
+     "href": "/c/gulf-cup/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات اليوم",
+     "href": "/today/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات بكرة",
+     "href": "/tomorrow/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات الأسبوع",
+     "href": "/week/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "كم باقي؟",
+     "href": "/countdowns/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "الشاشات",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "شاشة المجلس",
+     "href": "/tv/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "وضع المتابعة",
+     "href": "/w/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "وين تنقل",
+     "href": "/watch/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الملاعب",
+     "href": "/stadiums/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "اقرا وتعلّم",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الأساطير",
+     "href": "/legends/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات لا تُنسى",
+     "href": "/memorable/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "هذا اليوم",
+     "href": "/thisday/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "قانون الكورة",
+     "href": "/laws/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الأكاديمية",
+     "href": "/academy/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "القاموس",
+     "href": "/glossary/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "سوّ بنفسك",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "ستوديو التيفو",
+     "href": "/studio/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "المختبر",
+     "href": "/lab/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "اسأل تيفو",
+     "href": "/ask/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "تيفو كاست",
+     "href": "/cast/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "النشرة",
+     "href": "/newsletter/",
+     "slot": "more"
+    },
+    {
+     "type": "mount",
+     "label": "#panels",
+     "id": "panels"
+    },
+    {
+     "type": "mount",
+     "label": "#panelb",
+     "id": "panelb"
+    },
+    {
+     "type": "mount",
+     "label": "#scrimall",
+     "id": "scrimall"
+    }
+   ]
+  },
+  "comp-2": {
+   "path": "/next/c/saudi-pro-league/",
+   "items": [
+    {
+     "type": "nav",
+     "label": "اليوم",
+     "href": "/next/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "البطولات",
+     "href": "/competitions/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "المنتخبات",
+     "href": "/national/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "الأسبوع",
+     "href": "/week/",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "المزيد",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "بحث",
+     "id": "srch",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "slot": "nav"
+    },
+    {
+     "type": "heading",
+     "label": "دوري روشن السعودي",
+     "level": 1,
+     "slot": "hero"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات الجولة",
+     "href": "#fixtures",
+     "slot": "hero"
+    },
+    {
+     "type": "tab",
+     "label": "الترتيب",
+     "group": "c",
+     "key": "table",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "المباريات",
+     "group": "c",
+     "key": "fixtures",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "الأرقام",
+     "group": "c",
+     "key": "num",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "التوقعات",
+     "group": "c",
+     "key": "pred",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "التاريخ",
+     "group": "c",
+     "key": "hist",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "الكل",
+     "group": "tv",
+     "key": "all",
+     "slot": "tab:table"
+    },
+    {
+     "type": "tab",
+     "label": "بملعبه",
+     "group": "tv",
+     "key": "home",
+     "slot": "tab:table"
+    },
+    {
+     "type": "tab",
+     "label": "برا ملعبه",
+     "group": "tv",
+     "key": "away",
+     "slot": "tab:table"
+    },
+    {
+     "type": "tab",
+     "label": "الشوط الأول",
+     "group": "tv",
+     "key": "ht",
+     "slot": "tab:table"
+    },
+    {
+     "type": "tab",
+     "label": "العادل",
+     "group": "tv",
+     "key": "xg",
+     "slot": "tab:table"
+    },
+    {
+     "type": "tab",
+     "label": "الفورمة",
+     "group": "tv",
+     "key": "form",
+     "slot": "tab:table"
+    },
+    {
+     "type": "heading",
+     "label": "الموسم بالرسم",
+     "level": 3,
+     "slot": "tab:table"
+    },
+    {
+     "type": "tile",
+     "label": "رحلة الموسم",
+     "slot": "tab:table"
+    },
+    {
+     "type": "heading",
+     "label": "رحلة الموسم",
+     "level": 2,
+     "slot": "tab:table",
+     "tile": true
+    },
+    {
+     "type": "tab",
+     "label": "الهدافين",
+     "group": "lead",
+     "key": "goals",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tab",
+     "label": "صناع الأهداف",
+     "group": "lead",
+     "key": "assists",
+     "slot": "tab:num"
+    },
+    {
+     "type": "heading",
+     "label": "الأرقام كلها",
+     "level": 3,
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "بطاقات تيفو",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "منو الحاسم؟",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "تشكيلة الجولة",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "أفضل محترف أجنبي",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "الأكثر تطوّر",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "ساعة الأهداف",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "ملوك الدقايق الأخيرة",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "حصون الملاعب",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "مؤشر الإرهاق",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "سوق الانتقالات",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "الإيقافات",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "الحكام",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "أعمار التشكيلات",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "مؤشر التدوير",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "منو يسجل أول؟",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "نقاط ضاعت ونقاط رجعت",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "الاعتماد على الهداف",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "أهداف بعد الدقيقة 90",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "أحسن صفقات الموسم",
+     "slot": "tab:num"
+    },
+    {
+     "type": "tile",
+     "label": "أرقام شخصية قريبة",
+     "slot": "tab:num"
+    },
+    {
+     "type": "heading",
+     "label": "بطاقات تيفو",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#tifo-card",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "منو الحاسم؟",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#clutch",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "تشكيلة الجولة",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أفضل محترف أجنبي",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الأكثر تطوّر",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "ساعة الأهداف",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "ملوك الدقايق الأخيرة",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "يسجلون في الآخر",
+     "level": 3,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "ينصادون في الآخر",
+     "level": 3,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "حصون الملاعب",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "مؤشر الإرهاق",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#fatigue",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "سوق الانتقالات",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الإيقافات",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "قانون الإيقاف",
+     "level": 3,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الحكام",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أعمار التشكيلات",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "مؤشر التدوير",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#rotation",
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "منو يسجل أول؟",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "نقاط ضاعت ونقاط رجعت",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "نقاط ضاعت وهو متقدّم",
+     "level": 3,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "نقاط جابها وهو متأخر",
+     "level": 3,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الاعتماد على الهداف",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أهداف بعد الدقيقة 90",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أحسن صفقات الموسم",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أرقام شخصية قريبة",
+     "level": 2,
+     "slot": "tab:num",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "بعد في التوقعات",
+     "level": 3,
+     "slot": "tab:pred"
+    },
+    {
+     "type": "tile",
+     "label": "ساعة الموسم",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "tile",
+     "label": "شو لو؟",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "tile",
+     "label": "كم يحتاج فريقك؟",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "tile",
+     "label": "كم بيسجل الهدافين لآخر الموسم؟",
+     "slot": "tab:pred"
+    },
+    {
+     "type": "heading",
+     "label": "ساعة الموسم",
+     "level": 2,
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "شو لو؟",
+     "level": 2,
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "mount",
+     "label": "#wi-r",
+     "id": "wi-r",
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "mount",
+     "label": "#wi-m",
+     "id": "wi-m",
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الترتيب لو صارت هالنتايج",
+     "level": 3,
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "mount",
+     "label": "#wi-t",
+     "id": "wi-t",
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "كم يحتاج فريقك؟",
+     "level": 2,
+     "sub": "شو يعني؟",
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#magic-number",
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "كم بيسجل الهدافين لآخر الموسم؟",
+     "level": 2,
+     "slot": "tab:pred",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "التاريخ والأرقام القياسية",
+     "level": 3,
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "طريق البطل",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "الهدافين التاريخيين",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "الجدول التاريخي",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "الدوري موسم بموسم",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "الصاعدين هالموسم",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "tile",
+     "label": "كتاب الأرقام القياسية",
+     "slot": "tab:hist"
+    },
+    {
+     "type": "heading",
+     "label": "طريق البطل",
+     "level": 2,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الهدافين التاريخيين",
+     "level": 2,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الجدول التاريخي",
+     "level": 2,
+     "sub": "من 2010/2011",
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الدوري موسم بموسم",
+     "level": 2,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الصاعدين هالموسم",
+     "level": 2,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "كتاب الأرقام القياسية",
+     "level": 2,
+     "sub": "من 2010/2011",
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أكبر فوز",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أكثر مباراة فيها أهداف",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أطول سلسلة انتصارات",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أطول سلسلة بدون خسارة",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أطول سلسلة خسارات",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أكثر أهداف في موسم",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الهاتريك",
+     "level": 3,
+     "slot": "tab:hist",
+     "tile": true
+    },
+    {
+     "type": "footer",
+     "label": "Elyoxe",
+     "href": "https://elyoxe.com/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "شاشة المجلس",
+     "href": "/tv/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "ستوديو التيفو",
+     "href": "/studio/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "مباريات الأسبوع",
+     "href": "/week/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الأساطير",
+     "href": "/legends/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "مباريات لا تُنسى",
+     "href": "/memorable/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "هذا اليوم",
+     "href": "/thisday/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "قانون الكورة",
+     "href": "/laws/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "وين تنقل",
+     "href": "/watch/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الملاعب",
+     "href": "/stadiums/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "المختبر",
+     "href": "/lab/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الأكاديمية",
+     "href": "/academy/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "القاموس",
+     "href": "/glossary/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "وضع المتابعة",
+     "href": "/w/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "كم باقي؟",
+     "href": "/countdowns/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "النشرة",
+     "href": "/newsletter/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "mount",
+     "label": "#updated",
+     "id": "updated",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "heading",
+     "label": "شارك وأدوات",
+     "level": 2,
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "سكّر",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "انسخ الرابط",
+     "id": "copylink",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "شارك الصفحة",
+     "id": "nshare",
+     "slot": "sheet"
+    },
+    {
+     "type": "tool",
+     "label": "قارن بين لاعبين أو فريقين",
+     "href": "/c/saudi-pro-league/compare/",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "صورة لأي قسم",
+     "id": "secpick",
+     "slot": "sheet"
+    },
+    {
+     "type": "mount",
+     "label": "#secpicks",
+     "id": "secpicks",
+     "slot": "sheet"
+    },
+    {
+     "type": "heading",
+     "label": "المزيد",
+     "level": 2,
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "بلدك",
+     "id": "ctry",
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "بدون حرق",
+     "id": "spoil",
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "وضع السيارة",
+     "id": "carbtn",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "اختصارات",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "دوري أدنوك",
+     "href": "/c/uae-pro-league/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "المنتخب",
+     "href": "/uae/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "كأس الخليج",
+     "href": "/c/gulf-cup/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات اليوم",
+     "href": "/today/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات بكرة",
+     "href": "/tomorrow/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات الأسبوع",
+     "href": "/week/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "كم باقي؟",
+     "href": "/countdowns/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "الشاشات",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "شاشة المجلس",
+     "href": "/tv/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "وضع المتابعة",
+     "href": "/w/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "وين تنقل",
+     "href": "/watch/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الملاعب",
+     "href": "/stadiums/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "اقرا وتعلّم",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الأساطير",
+     "href": "/legends/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات لا تُنسى",
+     "href": "/memorable/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "هذا اليوم",
+     "href": "/thisday/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "قانون الكورة",
+     "href": "/laws/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الأكاديمية",
+     "href": "/academy/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "القاموس",
+     "href": "/glossary/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "سوّ بنفسك",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "ستوديو التيفو",
+     "href": "/studio/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "المختبر",
+     "href": "/lab/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "اسأل تيفو",
+     "href": "/ask/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "تيفو كاست",
+     "href": "/cast/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "النشرة",
+     "href": "/newsletter/",
+     "slot": "more"
+    },
+    {
+     "type": "mount",
+     "label": "#panels",
+     "id": "panels"
+    },
+    {
+     "type": "mount",
+     "label": "#panelb",
+     "id": "panelb"
+    },
+    {
+     "type": "mount",
+     "label": "#scrimall",
+     "id": "scrimall"
+    }
+   ]
+  },
+  "match": {
+   "path": "/next/m/1000020522/",
+   "items": [
+    {
+     "type": "nav",
+     "label": "اليوم",
+     "href": "/next/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "البطولات",
+     "href": "/competitions/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "المنتخبات",
+     "href": "/national/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "الأسبوع",
+     "href": "/week/",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "المزيد",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "بحث",
+     "id": "srch",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "شارك وأدوات",
+     "slot": "hero"
+    },
+    {
+     "type": "tool",
+     "label": "التشكيلة",
+     "href": "#lineups",
+     "slot": "hero"
+    },
+    {
+     "type": "tab",
+     "label": "الأحداث",
+     "group": "m",
+     "key": "events",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "التشكيلة",
+     "group": "m",
+     "key": "lineups",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "الإحصائيات",
+     "group": "m",
+     "key": "stats",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "التحليل",
+     "group": "m",
+     "key": "ana",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "المواجهات",
+     "group": "m",
+     "key": "h2h",
+     "slot": "tabs"
+    },
+    {
+     "type": "tool",
+     "label": "شوف الملخص الرسمي (UAE Pro League)",
+     "href": "https://www.youtube.com/@uaeproleague/search?query=%D9%85%D9%84%D8%AE%D8%B5%20%D9%85%D8%A8%D8%A7%D8%B1%D8%A7%D8%A9%20%D8%A7%D9%84%D9%88%D8%AD%D8%AF%D8%A9%20%D8%A7%D9%84%D8%B4%D8%A7%D8%B1%D9%82%D8%A9",
+     "slot": "tab:events"
+    },
+    {
+     "type": "heading",
+     "label": "تفاصيل المباراة",
+     "level": 3,
+     "slot": "tab:events"
+    },
+    {
+     "type": "control",
+     "label": "إمارتك",
+     "slot": "tab:events"
+    },
+    {
+     "type": "button",
+     "label": "شوفها على ملعب ثلاثي الأبعاد",
+     "id": "p3dbtn",
+     "slot": "tab:lineups"
+    },
+    {
+     "type": "mount",
+     "label": "#p3d",
+     "id": "p3d",
+     "slot": "tab:lineups"
+    },
+    {
+     "type": "heading",
+     "label": "الوحدة4-1-4-1",
+     "level": 3,
+     "slot": "tab:lineups"
+    },
+    {
+     "type": "heading",
+     "label": "الاحتياط",
+     "level": 3,
+     "slot": "tab:lineups"
+    },
+    {
+     "type": "heading",
+     "label": "الشارقة4-2-3-1",
+     "level": 3,
+     "slot": "tab:lineups"
+    },
+    {
+     "type": "heading",
+     "label": "فرص الفوز دقيقة بدقيقة",
+     "level": 2,
+     "slot": "tab:ana"
+    },
+    {
+     "type": "heading",
+     "label": "التحليل كله",
+     "level": 3,
+     "slot": "tab:ana"
+    },
+    {
+     "type": "tile",
+     "label": "الخطط والتبديلات",
+     "slot": "tab:ana"
+    },
+    {
+     "type": "tile",
+     "label": "أوائل",
+     "slot": "tab:ana"
+    },
+    {
+     "type": "tile",
+     "label": "إعادة المباراة",
+     "slot": "tab:ana"
+    },
+    {
+     "type": "heading",
+     "label": "الخطط والتبديلات",
+     "level": 2,
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أوائل",
+     "level": 2,
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "إعادة المباراة",
+     "level": 2,
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "control",
+     "label": "الدقيقة",
+     "id": "rpr",
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "tool",
+     "label": "كل مواجهاتهم",
+     "href": "/h2h/102122-102124/",
+     "slot": "tab:h2h"
+    },
+    {
+     "type": "heading",
+     "label": "أسئلة عن المباراة",
+     "level": 2,
+     "slot": "footer-faq"
+    },
+    {
+     "type": "footer",
+     "label": "Elyoxe",
+     "href": "https://elyoxe.com/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "شاشة المجلس",
+     "href": "/tv/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "ستوديو التيفو",
+     "href": "/studio/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "مباريات الأسبوع",
+     "href": "/week/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الأساطير",
+     "href": "/legends/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "مباريات لا تُنسى",
+     "href": "/memorable/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "هذا اليوم",
+     "href": "/thisday/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "قانون الكورة",
+     "href": "/laws/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "وين تنقل",
+     "href": "/watch/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الملاعب",
+     "href": "/stadiums/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "المختبر",
+     "href": "/lab/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الأكاديمية",
+     "href": "/academy/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "القاموس",
+     "href": "/glossary/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "وضع المتابعة",
+     "href": "/w/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "كم باقي؟",
+     "href": "/countdowns/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "النشرة",
+     "href": "/newsletter/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "mount",
+     "label": "#updated",
+     "id": "updated",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "heading",
+     "label": "شارك وأدوات",
+     "level": 2,
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "سكّر",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "انسخ الرابط",
+     "id": "copylink",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "شارك الصفحة",
+     "id": "nshare",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "صورة للستوري",
+     "id": "storybtn",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "الشاشة الثانية",
+     "id": "secondbtn",
+     "slot": "sheet"
+    },
+    {
+     "type": "tool",
+     "label": "على شاشة المجلس",
+     "href": "/tv/?m=1000020522",
+     "slot": "sheet"
+    },
+    {
+     "type": "tool",
+     "label": "عدّة صانع المحتوى",
+     "href": "/m/1000020522/kit/",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "صورة لأي قسم",
+     "id": "secpick",
+     "slot": "sheet"
+    },
+    {
+     "type": "mount",
+     "label": "#secpicks",
+     "id": "secpicks",
+     "slot": "sheet"
+    },
+    {
+     "type": "heading",
+     "label": "المزيد",
+     "level": 2,
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "بلدك",
+     "id": "ctry",
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "بدون حرق",
+     "id": "spoil",
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "وضع السيارة",
+     "id": "carbtn",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "اختصارات",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "دوري أدنوك",
+     "href": "/c/uae-pro-league/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "المنتخب",
+     "href": "/uae/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "كأس الخليج",
+     "href": "/c/gulf-cup/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات اليوم",
+     "href": "/today/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات بكرة",
+     "href": "/tomorrow/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات الأسبوع",
+     "href": "/week/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "كم باقي؟",
+     "href": "/countdowns/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "الشاشات",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "شاشة المجلس",
+     "href": "/tv/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "وضع المتابعة",
+     "href": "/w/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "وين تنقل",
+     "href": "/watch/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الملاعب",
+     "href": "/stadiums/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "اقرا وتعلّم",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الأساطير",
+     "href": "/legends/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات لا تُنسى",
+     "href": "/memorable/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "هذا اليوم",
+     "href": "/thisday/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "قانون الكورة",
+     "href": "/laws/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الأكاديمية",
+     "href": "/academy/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "القاموس",
+     "href": "/glossary/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "سوّ بنفسك",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "ستوديو التيفو",
+     "href": "/studio/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "المختبر",
+     "href": "/lab/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "اسأل تيفو",
+     "href": "/ask/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "تيفو كاست",
+     "href": "/cast/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "النشرة",
+     "href": "/newsletter/",
+     "slot": "more"
+    },
+    {
+     "type": "mount",
+     "label": "#panels",
+     "id": "panels"
+    },
+    {
+     "type": "mount",
+     "label": "#panelb",
+     "id": "panelb"
+    },
+    {
+     "type": "mount",
+     "label": "#scrimall",
+     "id": "scrimall"
+    }
+   ]
+  },
+  "match-2": {
+   "path": "/next/m/6052085/",
+   "items": [
+    {
+     "type": "nav",
+     "label": "اليوم",
+     "href": "/next/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "البطولات",
+     "href": "/competitions/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "المنتخبات",
+     "href": "/national/",
+     "slot": "nav"
+    },
+    {
+     "type": "nav",
+     "label": "الأسبوع",
+     "href": "/week/",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "المزيد",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "بحث",
+     "id": "srch",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "slot": "nav"
+    },
+    {
+     "type": "button",
+     "label": "شارك وأدوات",
+     "slot": "hero"
+    },
+    {
+     "type": "tool",
+     "label": "وين تنقل",
+     "href": "#events",
+     "slot": "hero"
+    },
+    {
+     "type": "tab",
+     "label": "قبل المباراة",
+     "group": "m",
+     "key": "events",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "التشكيلة",
+     "group": "m",
+     "key": "lineups",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "الإحصائيات",
+     "group": "m",
+     "key": "stats",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "التحليل",
+     "group": "m",
+     "key": "ana",
+     "slot": "tabs"
+    },
+    {
+     "type": "tab",
+     "label": "المواجهات",
+     "group": "m",
+     "key": "h2h",
+     "slot": "tabs"
+    },
+    {
+     "type": "mount",
+     "label": "#catchup",
+     "id": "catchup",
+     "slot": "tab:events"
+    },
+    {
+     "type": "heading",
+     "label": "وين تنقل في الإمارات",
+     "level": 2,
+     "slot": "tab:events"
+    },
+    {
+     "type": "heading",
+     "label": "تفاصيل المباراة",
+     "level": 3,
+     "slot": "tab:events"
+    },
+    {
+     "type": "control",
+     "label": "إمارتك",
+     "slot": "tab:events"
+    },
+    {
+     "type": "button",
+     "label": "شوفها على ملعب ثلاثي الأبعاد",
+     "id": "p3dbtn",
+     "slot": "tab:lineups"
+    },
+    {
+     "type": "mount",
+     "label": "#p3d",
+     "id": "p3d",
+     "slot": "tab:lineups"
+    },
+    {
+     "type": "heading",
+     "label": "البحرين4-1-4-1",
+     "level": 3,
+     "slot": "tab:lineups"
+    },
+    {
+     "type": "heading",
+     "label": "الاحتياط",
+     "level": 3,
+     "slot": "tab:lineups"
+    },
+    {
+     "type": "heading",
+     "label": "الإمارات4-2-3-1",
+     "level": 3,
+     "slot": "tab:lineups"
+    },
+    {
+     "type": "heading",
+     "label": "التحليل كله",
+     "level": 3,
+     "slot": "tab:ana"
+    },
+    {
+     "type": "tile",
+     "label": "تحليل ما قبل المباراة",
+     "slot": "tab:ana"
+    },
+    {
+     "type": "tile",
+     "label": "تقرير الفريقين",
+     "slot": "tab:ana"
+    },
+    {
+     "type": "tile",
+     "label": "ورقة الصحفي",
+     "slot": "tab:ana"
+    },
+    {
+     "type": "tile",
+     "label": "الخطط والتبديلات",
+     "slot": "tab:ana"
+    },
+    {
+     "type": "heading",
+     "label": "تحليل ما قبل المباراة",
+     "level": 2,
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "تقرير الفريقين",
+     "level": 2,
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "البحرين",
+     "level": 3,
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الإمارات",
+     "level": 3,
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "ورقة الصحفي",
+     "level": 2,
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "بين الفريقين",
+     "level": 3,
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "button",
+     "label": "وضع المعلّق",
+     "id": "commbtn",
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "button",
+     "label": "اطبعها",
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "button",
+     "label": "انسخ النص",
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "الخطط والتبديلات",
+     "level": 2,
+     "slot": "tab:ana",
+     "tile": true
+    },
+    {
+     "type": "heading",
+     "label": "أسئلة عن المباراة",
+     "level": 2,
+     "slot": "footer-faq"
+    },
+    {
+     "type": "footer",
+     "label": "Elyoxe",
+     "href": "https://elyoxe.com/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "شاشة المجلس",
+     "href": "/tv/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "ستوديو التيفو",
+     "href": "/studio/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "مباريات الأسبوع",
+     "href": "/week/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الأساطير",
+     "href": "/legends/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "مباريات لا تُنسى",
+     "href": "/memorable/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "هذا اليوم",
+     "href": "/thisday/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "قانون الكورة",
+     "href": "/laws/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "وين تنقل",
+     "href": "/watch/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الملاعب",
+     "href": "/stadiums/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "المختبر",
+     "href": "/lab/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "الأكاديمية",
+     "href": "/academy/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "القاموس",
+     "href": "/glossary/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "وضع المتابعة",
+     "href": "/w/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "كم باقي؟",
+     "href": "/countdowns/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "footer",
+     "label": "النشرة",
+     "href": "/newsletter/",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "mount",
+     "label": "#updated",
+     "id": "updated",
+     "shell": true,
+     "slot": "footer"
+    },
+    {
+     "type": "heading",
+     "label": "شارك وأدوات",
+     "level": 2,
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "سكّر",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "انسخ الرابط",
+     "id": "copylink",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "شارك الصفحة",
+     "id": "nshare",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "صورة للستوري",
+     "id": "storybtn",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "الشاشة الثانية",
+     "id": "secondbtn",
+     "slot": "sheet"
+    },
+    {
+     "type": "tool",
+     "label": "على شاشة المجلس",
+     "href": "/tv/?m=6052085",
+     "slot": "sheet"
+    },
+    {
+     "type": "tool",
+     "label": "عدّة صانع المحتوى",
+     "href": "/m/6052085/kit/",
+     "slot": "sheet"
+    },
+    {
+     "type": "button",
+     "label": "صورة لأي قسم",
+     "id": "secpick",
+     "slot": "sheet"
+    },
+    {
+     "type": "mount",
+     "label": "#secpicks",
+     "id": "secpicks",
+     "slot": "sheet"
+    },
+    {
+     "type": "heading",
+     "label": "المزيد",
+     "level": 2,
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "بلدك",
+     "id": "ctry",
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "بدون حرق",
+     "id": "spoil",
+     "slot": "more"
+    },
+    {
+     "type": "button",
+     "label": "وضع السيارة",
+     "id": "carbtn",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "اختصارات",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "دوري أدنوك",
+     "href": "/c/uae-pro-league/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "المنتخب",
+     "href": "/uae/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "كأس الخليج",
+     "href": "/c/gulf-cup/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات اليوم",
+     "href": "/today/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات بكرة",
+     "href": "/tomorrow/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات الأسبوع",
+     "href": "/week/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "كم باقي؟",
+     "href": "/countdowns/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "الشاشات",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "شاشة المجلس",
+     "href": "/tv/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "وضع المتابعة",
+     "href": "/w/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "وين تنقل",
+     "href": "/watch/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الملاعب",
+     "href": "/stadiums/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "اقرا وتعلّم",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الأساطير",
+     "href": "/legends/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات لا تُنسى",
+     "href": "/memorable/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "هذا اليوم",
+     "href": "/thisday/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "قانون الكورة",
+     "href": "/laws/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "الأكاديمية",
+     "href": "/academy/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "القاموس",
+     "href": "/glossary/",
+     "slot": "more"
+    },
+    {
+     "type": "heading",
+     "label": "سوّ بنفسك",
+     "level": 3,
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "ستوديو التيفو",
+     "href": "/studio/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "المختبر",
+     "href": "/lab/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "اسأل تيفو",
+     "href": "/ask/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "تيفو كاست",
+     "href": "/cast/",
+     "slot": "more"
+    },
+    {
+     "type": "tool",
+     "label": "النشرة",
+     "href": "/newsletter/",
+     "slot": "more"
+    },
+    {
+     "type": "mount",
+     "label": "#panels",
+     "id": "panels"
+    },
+    {
+     "type": "mount",
+     "label": "#panelb",
+     "id": "panelb"
+    },
+    {
+     "type": "mount",
+     "label": "#scrimall",
+     "id": "scrimall"
+    }
+   ]
+  }
+ }
+}

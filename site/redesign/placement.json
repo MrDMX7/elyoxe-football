@@ -1,0 +1,23 @@
+{
+ "_note": "old label -> new label(s) where v3 renamed a control; 'dropped' names where an old item was merged (must name its new home). Read by inventory.cjs new.",
+ "rename": {
+  "بس مباريات العرب": [
+   "العرب"
+  ],
+  "بس المجاني في بلدك": [
+   "المجاني في بلدك"
+  ],
+  "شارك": [
+   "صورة لأي قسم"
+  ],
+  "المنتخب": [
+   "المنتخب",
+   "المنتخبات"
+  ],
+  "الأحداث": [
+   "الأحداث",
+   "قبل المباراة"
+  ]
+ },
+ "dropped": {}
+}

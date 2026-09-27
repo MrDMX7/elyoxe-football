@@ -8,7 +8,7 @@ spelling Arab sports media use, most reliable source first:
   1. Wikidata  - search footballers by name, match on nationality / birth
                  year / club, take the `ar` label           -> source "wikidata"
   2. arwiki    - the Arabic Wikipedia title (sitelink)      -> source "arwiki"
-     (then the Egyptian-Arabic `arz` label, also "wikidata")
+     (Egyptian-Arabic `arz` labels are NOT used: bot transliterations)
   3. Gemini    - transliterate the rest, 50 per call, with
                  nationality as a hint                      -> source "generated"
 
@@ -221,10 +221,12 @@ def clean_ar(s):
         return None
     s = re.sub(r"\s*\([^)]*\)\s*$", "", s)  # "(لاعب كرة قدم)"
     s = AR_DIACRITICS.sub("", s)
-    s = s.replace("‏", "").replace("‎", "").replace("_", " ")
+    s = re.sub(r"[\u200b-\u200f\u00a0]", " ", s).replace("_", " ")
+    s = s.replace("\u06cc", "\u064a").replace("\u06a9", "\u0643")  # Persian yeh/keheh
     s = re.sub(r"\s*-\s*", "-", s)
     s = re.sub(r"\s+", " ", s).strip()
-    if not ARABIC.search(s) or re.search(r"[A-Za-z]", s):
+    # پ چ ڤ ژ گ: Persian / Egyptian-Wikipedia letters Arab sports media do not use
+    if not ARABIC.search(s) or re.search(r"[A-Za-z\u067e\u0686\u06a4\u0698\u06af]", s):
         return None
     return s
 
@@ -445,8 +447,9 @@ def pick_ar(e, latin):
     forms = []  # (text, source)
     for txt, src in ([(e["labels"].get("ar"), "wikidata")]
                      + [(e.get("arwiki"), "arwiki")]
-                     + [(a, "wikidata") for a in e.get("ar_aliases", [])]
-                     + [(e["labels"].get("arz"), "wikidata")]):
+                     + [(a, "wikidata") for a in e.get("ar_aliases", [])]):
+        # arz (Egyptian Wikipedia) labels were tried and dropped: they are bot
+        # transliterations («ديجو», «جورتنير», ڤ/پ) not media spellings
         t = clean_ar(txt)
         if t and t not in [f[0] for f in forms]:
             forms.append((t, src))
@@ -611,7 +614,7 @@ def resolve_gemini(todo, pool, teams, out, save, batch=50):
                 prev = out.get(pid) or {}
                 out[pid] = {"latin": pool[pid]["name"], "ar": ar, "source": "generated",
                             "qid": prev.get("qid") or pool[pid].get("_qid"), "checked": TODAY}
-                if prev.get("ar"):
+                if prev.get("wd_label") or (prev.get("ar") and prev.get("source") != "generated"):
                     out[pid]["wd_label"] = prev.get("wd_label") or prev["ar"]
                 done += 1
         log(f"gemini {min(i + batch, len(todo))}/{len(todo)} ok {done}")

@@ -15,14 +15,15 @@ Pool: **7,070 players**, all resolved.
 
 | source | players | share |
 |---|---|---|
-| `wikidata` (Arabic label, or an Arabic alias) | 3,747 | 53.0% |
+| `wikidata` (Arabic label, or an Arabic alias) | 3,495 | 49.4% |
 | `arwiki` (Arabic Wikipedia title) | 65 | 0.9% |
-| `generated` (Gemini transliteration) | 3,258 | 46.1% |
+| `generated` (Gemini transliteration) | 3,510 | 49.6% |
 
 - Of the `generated` entries, 1,671 matched a Wikidata item that has no Arabic label; `qid` is kept for them.
-- 182 Wikidata entries were **trimmed** from the full legal name to the name FotMob uses, for example «فابيو فيرجينيو دي ليما» → «فابيو ليما». The original is kept in `wd_label`.
+- 159 Wikidata entries were **trimmed** from the full legal name to the name FotMob uses, for example «فابيو فيرجينيو دي ليما» → «فابيو ليما». The original is kept in `wd_label`.
 - 116 were **dropped to generated** because the Wikidata Arabic renders a different form of the name, for example Diney Borges → «ديني إديلسون». The original is kept in `wd_label`.
-- `review_uae.csv`: 443 players, of which 168 are `wikidata`, 5 `arwiki` and 270 `generated`. Emirati squad players are mostly missing from Wikidata.
+- 252 more were **dropped to generated** because their only Arabic was an `arz` (Egyptian Wikipedia) label or used پ/چ/ڤ/گ. These are bot transliterations such as «ديجو زيڤوليك», and the model gives «دييغو زيفوليتش» instead. The arz form is kept in `wd_label`.
+- `review_uae.csv`: 443 players, of which 162 are `wikidata`, 5 `arwiki` and 276 `generated`. Emirati squad players are mostly missing from Wikidata.
 
 ## Where the pool comes from
 
@@ -47,7 +48,7 @@ The pool is read from the public feed `https://tifo.elyoxe.com/v1/` (gzip):
 
    A nationality mismatch (common for naturalised Gulf players) is accepted only with a club match, or with an exact birth year and no rival candidate. A one-word name (mononym) needs strong evidence.
 
-   The Arabic form is picked in this order: the `ar` label, then the arwiki title, then the `ar` aliases, then `arz`. Among these, the builder prefers the form with as many words as the FotMob name.
+   The Arabic form is picked in this order: the `ar` label, then the arwiki title, then the `ar` aliases. The builder never uses `arz` labels, which are Egyptian-Wikipedia bot transliterations. Among these, the builder prefers the form with as many words as the FotMob name.
 2. **Check.** Some matches have an Arabic name longer than the FotMob name, or an English label that differs from it. For these, Gemini is asked which words of the Arabic render the FotMob name. The answer is accepted only if every word is copied from the Wikidata Arabic, so the entry keeps source `wikidata`/`arwiki`. If no words fit, the player goes to step 3.
 3. **Gemini** (`gemini-3.5-flash`, key `GEMINI_API_KEY` from `~/workspace/content-pipeline/.env`).
    - Names go in batches of 50, with the nationality (and club) as a hint.
@@ -56,7 +57,8 @@ The pool is read from the public feed `https://tifo.elyoxe.com/v1/` (gzip):
    - Every string in the `responseSchema` has a `maxLength`; without it the model loops.
 4. **Normalize.**
    - Diacritics and tatweel are removed, and a trailing «(لاعب كرة قدم)» is dropped.
-   - Anything that is not pure Arabic script is rejected.
+   - Persian ی/ک are mapped to ي/ك, and zero-width characters and NBSP are removed.
+   - Anything with Latin letters or پ چ ڤ ژ گ is rejected.
 
 ## Re-running (hourly job)
 
@@ -76,4 +78,4 @@ python3 build_names.py --reuse-pool --limit 500   # resume in chunks from the ca
 ## Known weak spots
 
 - Some Wikidata Arabic labels are bot transliterations, not media spellings (e.g. «موستافا ازادزوى», «ياكو ميت»). They are marked `wikidata`, but they deserve a look for the most-shown players.
-- Emirati squad players: 61% are `generated`. `review_uae.csv` exists for exactly this.
+- Emirati squad players: 62% are `generated`. `review_uae.csv` exists for exactly this.

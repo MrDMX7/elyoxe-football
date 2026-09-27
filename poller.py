@@ -40,6 +40,7 @@ from timeutil import now_utc, parse_utc, iso, uae_date, UAE  # noqa: E402
 HTTP = Http()                     # module level: a warm Lambda container keeps the source cache
 _NAMES = {"stamp": None, "data": None}
 NATIONAL = 5789
+NOT_READY_RETRY = 30             # minutes: an analytics step whose inputs were not ready runs again this soon
 CONVERT_ERRORS = (FetchError, S.Invalid, KeyError, TypeError, ValueError, IndexError, AttributeError)
 
 
@@ -68,6 +69,8 @@ class Poller:
         self.log = []
         self.requests_before = HTTP.network_calls
         self.calls_before = dict(HTTP.calls)
+        self.ok_before, self.failed_before = dict(HTTP.ok), dict(HTTP.failed)
+        self.mailer = None            # tests inject a fake; None = SES (_ses_send)
 
     # ------------------------------------------------------------------ helpers
     def now(self):
@@ -452,18 +455,25 @@ class Poller:
                       for rd in st.get("bracket") or [] for t in rd["ties"] if not t.get("tbd"))
         sig = json.dumps([groups, ties], sort_keys=True)
         prev = self.st.setdefault("draw_sig", {}).get(str(cid))
-        if prev == sig:
+        base = self.st.setdefault("draw_base", {})
+        if prev == sig and str(cid) in base:
             return
         self.st["draw_sig"][str(cid)] = sig
-        if prev is None:
-            return                      # first sight after deploy: baseline, not a draw
         log = self.st.setdefault("draws", {}).setdefault(str(cid), [])
-        log.append({"at": iso(self.now()), "groups": [{"name": n, "teams": t} for n, t in groups], "ties": ties})
-        del log[:-10]
-        self.store.put_json(f"draws/{cid}.json", {"comp": cid, "events": log,
-                                                  "note": "each event = the groups/pairings as they appeared when they changed"},
+        if prev is None or str(cid) not in base:
+            base[str(cid)] = iso(self.now())      # first sight: the baseline, not a draw (its date is unknown)
+        if prev is not None and prev != sig:
+            log.append({"at": iso(self.now()), "groups": [{"name": n, "teams": t} for n, t in groups], "ties": ties})
+            del log[:-10]
+            self.st.setdefault("draw_trigger", {})[str(cid)] = iso(self.now())
+        if not log and (not (groups or ties) or (self.comp_by_id.get(cid) or {}).get("kind") == "league"):
+            return                      # no draw events: a baseline file only for cups and group tournaments
+        self.store.put_json(f"draws/{cid}.json", {"comp": cid, "events": log, "baseline_at": base[str(cid)],
+                                                  "current": {"groups": [{"name": n, "teams": t} for n, t in groups], "ties": ties},
+                                                  "note": "each event = the groups/pairings as they appeared when they changed; "
+                                                          "current = what the source shows now; baseline_at = when we first saw it "
+                                                          "(a draw made before that is not an event)"},
                             cache="warm")
-        self.st.setdefault("draw_trigger", {})[str(cid)] = iso(self.now())
 
     def merge_uaepl(self, comp, matches):
         """Add official stadium names and the not-yet-dated rounds from uaepl.ae (cached daily)."""
@@ -954,7 +964,8 @@ class Poller:
             if self.has_time(40) and self.due("players", 1440, cid):
                 self.player_tables(cid)
 
-    def analytics_chores(self):
+    def analytics_chores(self, only=None):
+        """`only`: a replacement step list (tests)."""
         steps = [
             ("history", 0, lambda: AN.history_step(self, limit=20)),
             ("records_book", 1440, self.records_books),
@@ -993,7 +1004,7 @@ class Poller:
             ("club_records", 360, lambda: X2.club_records_step(self)),
             ("transitions", 1440, lambda: MO.transitions(self)),
             ("continental_history", 1440, lambda: AR.continental_history(self)),
-            ("arab_coaches", 360, lambda: AR.coaches(self)),
+            ("arab_coaches", 60, lambda: AR.coaches(self)),
             ("arab_referees", 360, lambda: AR.referees(self)),
             ("friendlies", 360, lambda: AR.friendlies(self)),
             ("monthly", 720, lambda: AR.monthly(self)),
@@ -1013,7 +1024,7 @@ class Poller:
             ("league_squads", 0, lambda: AN.league_squads_step(self)),
             ("compare", 1440, lambda: AN.league_compare(self)),
             ("archive", 0, lambda: AN.archive_step(self)),
-        ]
+        ] if only is None else only
         for key, every, fn in steps:
             if not self.has_time(12):
                 return
@@ -1024,14 +1035,80 @@ class Poller:
             if every and not self.due(key, every):
                 continue
             try:
-                fn()
-                if every:
+                done = fn()
+                if every and done is False and every > NOT_READY_RETRY:
+                    # inputs not there yet (history, ratings, careers ... fill in over several runs): try again in
+                    # NOT_READY_RETRY minutes instead of publishing nothing, or an empty file, for a whole cadence
+                    self.dues()[key] = iso(self.now() - timedelta(minutes=every - NOT_READY_RETRY))
+                elif every:
                     self.mark(key)
                 if key == "history" and AN.history_complete(self, AN.history_comps()):
                     self.mark("history_recheck")
             except Exception as e:
                 self.store.fail(f"analytics:{key}", f"{type(e).__name__}: {e}")
                 self.mark(key)
+
+    # ------------------------------------------------------------------ source outage alert (343)
+    SOURCE_KEYS = ("day:", "match:", "team:", "names:fotmob", "prev-season:", "players:")
+
+    def _source_key(self, k):
+        return k.startswith(self.SOURCE_KEYS) or (k.startswith("comp:") and k.endswith(":fotmob"))
+
+    def source_watch(self):
+        """One e-mail when FotMob has failed (errors, or empty/malformed data the validators refused) for
+        source_alert_minutes, one when it answers again. A run is good if any FotMob-fed item succeeded, bad if
+        FotMob items failed and none succeeded, neutral if it touched none (idle minutes): neutral runs never
+        start or end an outage. State in poller.json (source_watch)."""
+        now = self.now()
+        w = self.st.setdefault("source_watch", {"first_bad_at": None, "alerted_at": None, "last_error": None, "send_failures": 0})
+        mine = {k: v for k, v in self.store.health.items() if self._source_key(k)}
+        fm_ok = sum(n - self.ok_before.get(h, 0) for h, n in HTTP.ok.items() if "fotmob.com" in h)
+        fm_bad = sum(n - self.failed_before.get(h, 0) for h, n in HTTP.failed.items() if "fotmob.com" in h)
+        good = any(v["ok"] for v in mine.values()) or (not mine and fm_ok > 0 and not fm_bad)
+        bad = not good and (any(not v["ok"] for v in mine.values()) or fm_bad > 0)
+        limit = self.cfg.get("source_alert_minutes", 15)
+        if bad:
+            err = next((f"{k}: {v['error']}" for k, v in mine.items() if not v["ok"]), f"{fm_bad} FotMob requests failed")
+            w["last_error"] = err[:300]
+            w["first_bad_at"] = w.get("first_bad_at") or iso(now)
+            down = _age_min(w["first_bad_at"], now)
+            self.store.fail("source:fotmob", f"failing for {down:.0f} min: {err}")
+            if down >= limit and not w.get("alerted_at") and w.get("send_failures", 0) < 5:
+                self._alert("outage", w, down)
+        elif good:
+            if w.get("alerted_at"):
+                self._alert("recovery", w, _age_min(w["first_bad_at"], now) if w.get("first_bad_at") else None)
+            if not w.get("alerted_at") or w.get("send_failures", 0) >= 5:
+                w.update({"first_bad_at": None, "alerted_at": None, "send_failures": 0})
+            self.store.ok("source:fotmob")
+
+    def _alert(self, kind, w, minutes):
+        mins = f"{minutes:.0f}" if minutes is not None else "?"
+        if kind == "outage":
+            subj = f"Tifo: FotMob down for {mins} min"
+            body = (f"مصدر البيانات FotMob متعطل من {w['first_bad_at']} (UTC)، يعني {mins} دقيقة.\n"
+                    f"آخر خطأ: {w['last_error']}\n\n"
+                    "الموقع يعرض آخر نسخة سليمة من كل ملف (keep-last-good)، والنتائج الحية واقفة لين يرجع المصدر.\n"
+                    "بيوصلك إيميل ثاني واحد بس لما يرجع. الحالة: https://tifo.elyoxe.com/v1/health.json\n"
+                    "خطة البديل: docs/SOURCE-MIGRATION.md")
+        else:
+            subj = f"Tifo: FotMob back after {mins} min"
+            body = (f"رجع FotMob يرد بشكل سليم. بدأ العطل {w['first_bad_at']} (UTC) واستمر حوالي {mins} دقيقة.\n"
+                    f"آخر خطأ كان: {w['last_error']}\n"
+                    "الملفات تتحدث من جديد في الدورات الياية.")
+        try:
+            (self.mailer or _ses_send)(subj, body)
+        except Exception as e:
+            w["send_failures"] = w.get("send_failures", 0) + 1
+            self.store.fail("source-alert", f"{kind} mail not sent ({w['send_failures']}/5): {type(e).__name__}: {e}")
+            return
+        w["send_failures"] = 0
+        if kind == "outage":
+            w["alerted_at"] = iso(self.now())
+        else:
+            w.update({"first_bad_at": None, "alerted_at": None})
+        self.store.ok("source-alert", note=f"{kind} mail sent")
+        self.note(f"source alert: {kind} mail sent")
 
     def team_country(self, tid):
         """National team -> its country; club -> the country of its first domestic competition."""
@@ -1088,11 +1165,24 @@ class Poller:
         except Exception as e:   # never lose the state because one chore blew up
             self.store.fail("poller", f"{type(e).__name__}: {e}")
             traceback.print_exc()
+        try:
+            self.source_watch()
+        except Exception as e:
+            self.store.fail("source-watch", f"{type(e).__name__}: {e}")
         self.write_index()
         self.save()
         return {"mode": self.mode, "written": len(self.store.written), "unchanged": self.store.skipped_same,
                 "requests": HTTP.network_calls - self.requests_before, "seconds": round(self.clock() - self.t0, 1),
                 "refused": self.store.refused}
+
+
+def _ses_send(subject, body):
+    """Plain-text mail to the owner through SES ap-south-1 (elyoxe.com is a verified domain)."""
+    import boto3
+    boto3.client("ses", region_name=os.environ.get("ALERT_REGION", "ap-south-1")).send_email(
+        Source=f"Tifo <{os.environ.get('ALERT_FROM', 'tifo@elyoxe.com')}>",
+        Destination={"ToAddresses": [os.environ.get("ALERT_TO", "hello@elyoxe.com")]},
+        Message={"Subject": {"Data": subject, "Charset": "UTF-8"}, "Body": {"Text": {"Data": body, "Charset": "UTF-8"}}})
 
 
 def _minute_num(minute, status):

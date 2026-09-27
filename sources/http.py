@@ -28,6 +28,8 @@ class Http:
         self.clock = clock
         self._cache: dict[str, tuple[float, bytes]] = {}
         self.calls: dict[str, int] = {}
+        self.ok: dict[str, int] = {}          # per host: fetches that returned a body (after the retry)
+        self.failed: dict[str, int] = {}      # per host: fetches that raised FetchError (HTTP error, timeout, bad JSON)
         self.network_calls = 0
 
     def _ttl(self, headers) -> int:
@@ -63,6 +65,7 @@ class Http:
                 ttl = max(ttl, min_ttl)
                 if ttl > 0:
                     self._cache[url] = (self.clock() + ttl, body)
+                self.ok[host] = self.ok.get(host, 0) + 1
                 return body
             except urllib.error.HTTPError as e:
                 last = FetchError(url, f"HTTP {e.code}", e.code)
@@ -72,6 +75,7 @@ class Http:
                 last = FetchError(url, f"{type(e).__name__}: {e}")
             if attempt == 1:
                 time.sleep(1.0)
+        self.failed[host] = self.failed.get(host, 0) + 1
         raise last
 
     def get_json(self, url, headers=None, min_ttl=0):
@@ -80,4 +84,7 @@ class Http:
             return json.loads(body)
         except ValueError as e:
             self._cache.pop(url, None)
+            host = urlparse(url).netloc
+            self.ok[host] = max(0, self.ok.get(host, 0) - 1)
+            self.failed[host] = self.failed.get(host, 0) + 1
             raise FetchError(url, f"bad JSON: {e}")

@@ -30,20 +30,32 @@ def comp_insights(p, cid):
     now = iso(p.now())
     base = {"comp": cid, "season": p.ledger(cid).get("season"), "generated": now, "matches_counted": len(L)}
     if L:
+        # what the source gives this competition: some Arab leagues have results only (no lineups, no substitutions)
+        lu = sum(1 for e in L.values() if e.get("players"))
+        cov = {"matches": len(L), "with_lineups": lu, "with_subs": sum(1 for e in L.values() if e.get("subs"))}
+        gt = IN.goal_types(L)
+        gt_ok = bool((gt["coverage"].get("coverage_pct") or 0) > 0)
         p.store.put_json(f"comp/{cid}/first-goal.json", {**base, "teams": IN.first_goal(L)}, cache="static")
         p.store.put_json(f"comp/{cid}/dropped.json", {**base, "teams": IN.dropped(L)}, cache="static")
         p.store.put_json(f"comp/{cid}/red-impact.json", {**base, "teams": IN.red_impact(L),
                                                          "note": "state after the first red card; pts_after_red = final points "
                                                                  "minus the points the score gave at the red card"}, cache="static")
-        p.store.put_json(f"comp/{cid}/goal-types.json", {**base, **IN.goal_types(L),
+        p.store.put_json(f"comp/{cid}/goal-types.json", {**base, **gt, "available": gt_ok,
+                                                         **({} if gt_ok else {"reason": "FotMob gives this competition neither a shot map "
+                                                                              "nor a goal description (body part), only penalties"}),
                                                          "note": "body part/situation from the shot map (xG coverage) or FotMob's goal "
                                                                  "description; coverage says how many goals have a type"}, cache="static")
         p.store.put_json(f"comp/{cid}/dependence.json", {**base, "teams": IN.dependence(L)}, cache="static")
-        p.store.put_json(f"comp/{cid}/subs.json", {**base, **IN.subs(L)}, cache="static")
+        p.store.put_json(f"comp/{cid}/subs.json", {**base, **IN.subs(L), "available": cov["with_subs"] > 0, "source_coverage": cov,
+                                                   **({} if cov["with_subs"] else {"reason": "FotMob lists no substitutions for "
+                                                                                   "this competition's matches"})}, cache="static")
         p.store.put_json(f"comp/{cid}/xi.json", {**base, "teams": IN.xi(L)}, cache="static")
         cc = p.cc_of(cid)
         if cc and cc != "INT":
             p.store.put_json(f"comp/{cid}/local-minutes.json", {**base, "country_code": cc, **IN.local_minutes(L, cc),
+                                                               "available": lu > 0, "source_coverage": cov,
+                                                               **({} if lu else {"reason": "FotMob publishes no lineups for this "
+                                                                                 "competition's matches"}),
                                                                "note": "minutes by players whose FotMob nationality is the league's "
                                                                        "country vs everyone else (unknown = no nationality in lineup)"},
                              cache="static")
@@ -99,8 +111,11 @@ def players_step(p):
         if not st:
             continue
         team_ids = {r["team"]["id"] for g in st["groups"] for r in g["rows"]}
+        wl = IN.workload(apps, team_ids, now)
         p.store.put_json(f"comp/{cid}/workload.json", {"comp": cid, "generated": iso(now),
-                                                       "players": IN.workload(apps, team_ids, now),
+                                                       "players": wl, "available": bool(wl),
+                                                       **({} if wl else {"reason": "no stored lineups with minutes for this league "
+                                                                         "(FotMob publishes none for it)"}),
                                                        "thresholds": {"minutes_30d": IN.WORKLOAD_30D, "minutes_last5": IN.WORKLOAD_LAST5,
                                                                       "last5_within_days": 18},
                                                        "note": "all covered competitions count; overload = >= 540 min in 30 days, "
@@ -110,7 +125,7 @@ def players_step(p):
     cur = p.aux("cursor").get("teammates", 0)
     keys = sorted(tm)
     n = 0
-    while keys and n < 400 and p.has_time(8):
+    while keys and n < min(len(keys), 3000) and p.has_time(120):     # the whole list in a few runs; leave time for later steps
         pid = keys[cur % len(keys)]
         p.store.put_json(f"player/{pid}/teammates.json", {"player": int(pid), "generated": iso(now), "teammates": tm[pid],
                                                           "fields": ["player", "matches_together"],
@@ -135,6 +150,8 @@ def _dobs(p):
 
 def u21(p, max_age=21, min_minutes=450):
     dobs = _dobs(p)
+    if not dobs or not any(p.aux("ptables").get(str(c)) for c in ARAB_LEAGUES):
+        return False                  # dates of birth (squads, Wikidata) or player tables not loaded yet
     today = date.fromisoformat(iso(p.now())[:10])
     rows = []
     for cid in ARAB_LEAGUES:
@@ -509,6 +526,8 @@ def transitions(p):
                        "from_ar": names.get(int(k.split("->")[0])), "to_ar": names.get(int(k.split("->")[1])),
                        **{kk: v[kk] for kk in ("n", "median_rating_change", "median_ga_per_app_change")}}
                       for k, v in res.items()), key=lambda x: -x["n"])
+    if not summary:
+        return False                  # careers still filling in (30 per run): not ready, retried soon
     p.store.put_json("arabs/transitions.json", {"generated": iso(p.now()), "pairs": summary, "detail": res,
                                                 "players_with_careers": len(p.aux("careers")),
                                                 "method": "FotMob career rows per player, league and season (apps, goals, assists, FotMob "

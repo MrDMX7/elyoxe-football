@@ -432,7 +432,8 @@ def style(p):
 def player_extras(p, cid, table, raw):
     now = iso(p.now())
     slim = {pid: {"name": x["name"], "team": x["team"], "minutes": x["minutes"],
-                  "stats": {k: {"per90": v.get("per90"), "value": v.get("value"), "pct": v.get("pct")} for k, v in x["stats"].items()}}
+                  "stats": {k: {"per90": v.get("per90"), "value": v.get("value"), "pct": v.get("pct"),
+                                **({"total": v["total"]} if "total" in v else {})} for k, v in x["stats"].items()}}
             for pid, x in table["players"].items()}
     p.aux("ptables")[str(cid)] = {"players": slim, "min_minutes": table["min_minutes"]}
     roles = {}
@@ -908,7 +909,7 @@ def arab_ratings(p):
     """One Elo scale over every Arab league and the AFC/CAF/Arab club competitions that link them."""
     comps = history_comps()
     if not history_complete(p, comps):
-        return
+        return False                  # not ready: analytics_chores retries in 30 min, not 6 h
     hist = all_history(p, comps=comps)
     seen, rows = set(), []
     for r in HI.finished(HI.all_rows(hist)):

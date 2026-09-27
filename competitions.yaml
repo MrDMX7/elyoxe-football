@@ -24,6 +24,7 @@ settings:
   live_pass_seconds: 20      # inside one invocation while matches are live: 0 s, 20 s, 40 s
   prematch_minutes: 75       # a match is "about to kick off" this long before kickoff
   budget_seconds: 50         # hard stop for one invocation (EventBridge fires every 60 s)
+  source_alert_minutes: 15   # FotMob failing this long (bad runs, neutral idle runs ignored) -> one mail to hello@; one more on recovery
   backfill_per_run: 6        # finished-match details fetched per idle invocation until the ledger is complete
   player_stats_comps: [538, 536, 535, 529, 524, 519, 530, 516, 544, 10721, 47, 87, 55, 54, 53, 42]   # per-player season lists (radar, similarity, foreigners): ~29 requests each, daily
   # every past season of these is fetched once (history/<id>.json): records books, Arab clubs rating

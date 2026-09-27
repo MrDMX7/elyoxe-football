@@ -308,16 +308,22 @@ def player_table(stat_lists: dict, min_minutes=270) -> dict:
     players, averages = {}, {}
     for stat, sl in stat_lists.items():
         vals = []
+        # FotMob titles its already-per-90 lists "Shots per 90", "Tackles per 90" ...: the value is the rate itself
+        rate = not stat.endswith("_per_90") and "per 90" in (sl.get("title") or "").lower()
         for e in sl["entries"]:
             pid = str(e["player"]["id"])
             m = mins.get(pid) or e.get("minutes") or 0
             p = players.setdefault(pid, {"name": e["player"]["name"], "team": e.get("team_id"), "minutes": m, "stats": {}})
             v = e["value"]
             per90 = None
-            if v is not None and m and not stat.endswith("_per_90") and stat not in ("rating", "mins_played") \
+            if rate:
+                per90 = v
+            elif v is not None and m and not stat.endswith("_per_90") and stat not in ("rating", "mins_played") \
                     and not stat.startswith("_save") and "percent" not in (sl.get("format") or ""):
                 per90 = round(v * 90 / m, 3)
             p["stats"][stat] = {"value": v, "per90": per90}
+            if rate:          # season total back from the rate (FotMob rounds the rate to 0.1)
+                p["stats"][stat]["total"] = round(v * m / 90, 1) if v is not None and m else None
             if m >= min_minutes and v is not None:
                 vals.append((pid, per90 if per90 is not None else v))
         if vals:
@@ -329,6 +335,8 @@ def player_table(stat_lists: dict, min_minutes=270) -> dict:
                 players[pid]["stats"][stat]["pct"] = round(100 * below / max(n - 1, 1), 1)
     return {"min_minutes": min_minutes, "averages": averages, "players": players,
             "note": "per90 = value x 90 / minutes (not for ratings, percentages or lists that are already per 90); "
+                    "lists FotMob publishes per 90 ('Shots per 90' ...) keep value = per90 = the source rate and add "
+                    "total = rate x minutes / 90 (an estimate: the source rounds the rate to 0.1); "
                     "pct = percentile among players with >= min_minutes"}
 
 

@@ -113,8 +113,17 @@ Resources:
       Environment:
         Variables:
           BUCKET: !Ref DataBucket
+          ALERT_FROM: tifo@elyoxe.com      # source outage alert (poller.source_watch): one mail per outage + one on recovery
+          ALERT_TO: hello@elyoxe.com
       Policies:
         - S3CrudPolicy: {BucketName: !Ref DataBucket}
+        - Statement:
+            - Effect: Allow
+              Action: [ses:SendEmail]
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  ses:FromAddress: tifo@elyoxe.com
       EventInvokeConfig:                 # an overrun minute is dropped, not queued and replayed later
         MaximumEventAgeInSeconds: 60
         MaximumRetryAttempts: 0

@@ -280,7 +280,7 @@ def summaries(table, cards_out, clutch_out, squads_info):
     out = {}
     for pid, p in table.get("players", {}).items():
         st = p["stats"]
-        v = lambda k: (st.get(k) or {}).get("value")  # noqa: E731
+        v = lambda k: (st.get(k) or {}).get("total", (st.get(k) or {}).get("value"))  # noqa: E731  (per-90 lists: season total)
         out[pid] = {"name": p["name"], "team": p["team"], "minutes": p["minutes"], "rating": v("rating"),
                     "goals": v("goals") or 0, "assists": v("goal_assist") or 0, "shots": v("total_scoring_att"),
                     "chances_created": v("big_chance_created"), "tackles": v("total_tackle"),

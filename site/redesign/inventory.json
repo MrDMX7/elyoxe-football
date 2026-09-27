@@ -1,0 +1,4409 @@
+{
+ "generated": "2026-09-27T12:16:52.879Z",
+ "source": "site/out/ (snapshot in redesign/snap/old)",
+ "pages": {
+  "academy": 1,
+  "arabs": 1,
+  "arabs-week": 1,
+  "ask": 1,
+  "break": 1,
+  "comp": 46,
+  "round": 491,
+  "compare": 15,
+  "power": 1,
+  "calendars": 1,
+  "cast": 1,
+  "clashes": 1,
+  "coach": 883,
+  "coach-compare": 1,
+  "coefficients": 1,
+  "competitions": 1,
+  "countdowns": 1,
+  "derbies": 1,
+  "explore": 1,
+  "glossary": 1,
+  "golden-boot": 1,
+  "guide": 1,
+  "h2h": 80,
+  "home": 1,
+  "lab": 1,
+  "laws": 1,
+  "legends": 1,
+  "match": 5148,
+  "kit": 28,
+  "match-of-week": 1,
+  "memorable": 1,
+  "national": 22,
+  "nations-h2h": 1,
+  "newsletter": 1,
+  "player": 4183,
+  "poty": 1,
+  "referee": 275,
+  "stadium": 15,
+  "stadiums": 1,
+  "streaks": 1,
+  "studio": 1,
+  "team": 679,
+  "poster": 679,
+  "month": 60,
+  "thisday": 1,
+  "today": 1,
+  "tomorrow": 1,
+  "transfers": 1,
+  "tv": 1,
+  "national-uae": 1,
+  "w": 1,
+  "watch": 1,
+  "week": 1,
+  "worldcup-arabs": 1,
+  "year": 1
+ },
+ "shell": [
+  {
+   "type": "nav",
+   "label": "اليوم",
+   "href": "/",
+   "shell": true
+  },
+  {
+   "type": "nav",
+   "label": "دوري أدنوك",
+   "href": "/c/uae-pro-league/",
+   "shell": true
+  },
+  {
+   "type": "nav",
+   "label": "المنتخب",
+   "href": "/uae/",
+   "shell": true
+  },
+  {
+   "type": "nav",
+   "label": "كأس الخليج",
+   "href": "/c/gulf-cup/",
+   "shell": true
+  },
+  {
+   "type": "nav",
+   "label": "الأسبوع",
+   "href": "/week/",
+   "shell": true
+  },
+  {
+   "type": "nav",
+   "label": "البطولات",
+   "href": "/competitions/",
+   "shell": true
+  },
+  {
+   "type": "button",
+   "label": "بحث",
+   "id": "srch",
+   "shell": true
+  },
+  {
+   "type": "button",
+   "label": "بلدك",
+   "id": "ctry",
+   "shell": true
+  },
+  {
+   "type": "button",
+   "label": "بدون حرق",
+   "id": "spoil",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "Elyoxe",
+   "href": "https://elyoxe.com/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "شاشة المجلس",
+   "href": "/tv/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "ستوديو التيفو",
+   "href": "/studio/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "مباريات الأسبوع",
+   "href": "/week/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "الأساطير",
+   "href": "/legends/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "مباريات لا تُنسى",
+   "href": "/memorable/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "هذا اليوم",
+   "href": "/thisday/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "قانون الكورة",
+   "href": "/laws/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "وين تنقل",
+   "href": "/watch/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "الملاعب",
+   "href": "/stadiums/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "المختبر",
+   "href": "/lab/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "الأكاديمية",
+   "href": "/academy/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "القاموس",
+   "href": "/glossary/",
+   "shell": true
+  },
+  {
+   "type": "mount",
+   "label": "#updated",
+   "id": "updated",
+   "shell": true
+  },
+  {
+   "type": "button",
+   "label": "وضع السيارة",
+   "id": "carbtn",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "وضع المتابعة",
+   "href": "/w/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "كم باقي؟",
+   "href": "/countdowns/",
+   "shell": true
+  },
+  {
+   "type": "footer",
+   "label": "النشرة",
+   "href": "/newsletter/",
+   "shell": true
+  }
+ ],
+ "templates": {
+  "academy": {
+   "path": "/academy/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "أكاديمية تيفو",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "1. تصنيف تيفو: منو أقوى فريق؟",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "2. نسب الفوز: مب توقع أكيد",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "3. محاكي الموسم",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "4. الأهداف المتوقعة والحظ",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "5. الضغط: الرقم الأقل أقوى",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "6. منو الحاسم؟",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "7. صعوبة المباريات",
+     "level": 2
+    }
+   ]
+  },
+  "arabs": {
+   "path": "/arabs/",
+   "page": "arabs",
+   "items": [
+    {
+     "type": "heading",
+     "label": "العرب",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "العرب في أوروبا هالموسم",
+     "level": 2,
+     "sub": "92 لاعب"
+    },
+    {
+     "type": "control",
+     "label": "الدولة",
+     "id": "abf"
+    },
+    {
+     "type": "heading",
+     "label": "مدربين عرب",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "حكام عرب في البطولات القارية",
+     "level": 2,
+     "sub": "هالموسم"
+    },
+    {
+     "type": "heading",
+     "label": "ودّيات الأندية العربية",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (4 here)"
+    }
+   ]
+  },
+  "arabs-week": {
+   "path": "/arabs/week/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "نجوم العرب برا هالأسبوع",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "أحسن 5",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (1 here)"
+    }
+   ]
+  },
+  "ask": {
+   "path": "/ask/",
+   "page": "ask",
+   "items": [
+    {
+     "type": "heading",
+     "label": "اسأل تيفو",
+     "level": 1
+    },
+    {
+     "type": "control",
+     "label": "سؤالك",
+     "id": "askq"
+    },
+    {
+     "type": "button",
+     "label": "اسأل"
+    },
+    {
+     "type": "mount",
+     "label": "#aska",
+     "id": "aska"
+    }
+   ]
+  },
+  "break": {
+   "path": "/break/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "فترة المنتخبات",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "الياية",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "آخر النتايج",
+     "level": 2
+    },
+    {
+     "type": "tool",
+     "label": "المنتخبات العربية",
+     "href": "/national/"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (2 here)"
+    }
+   ]
+  },
+  "comp": {
+   "path": "/c/uae-pro-league/",
+   "page": "comp",
+   "items": [
+    {
+     "type": "heading",
+     "label": "دوري أدنوك للمحترفين",
+     "level": 1
+    },
+    {
+     "type": "tab",
+     "label": "الترتيب",
+     "group": "c",
+     "key": "table"
+    },
+    {
+     "type": "tab",
+     "label": "المباريات",
+     "group": "c",
+     "key": "fixtures"
+    },
+    {
+     "type": "tab",
+     "label": "التوقعات",
+     "group": "c",
+     "key": "pred"
+    },
+    {
+     "type": "tab",
+     "label": "الأرقام",
+     "group": "c",
+     "key": "num"
+    },
+    {
+     "type": "tab",
+     "label": "الهدافين",
+     "group": "c",
+     "key": "goals"
+    },
+    {
+     "type": "tab",
+     "label": "صناع الأهداف",
+     "group": "c",
+     "key": "assists"
+    },
+    {
+     "type": "tab",
+     "label": "التاريخ",
+     "group": "c",
+     "key": "hist"
+    },
+    {
+     "type": "tab",
+     "label": "الكل",
+     "group": "tv",
+     "key": "all"
+    },
+    {
+     "type": "tab",
+     "label": "بملعبه",
+     "group": "tv",
+     "key": "home"
+    },
+    {
+     "type": "tab",
+     "label": "برا ملعبه",
+     "group": "tv",
+     "key": "away"
+    },
+    {
+     "type": "tab",
+     "label": "الشوط الأول",
+     "group": "tv",
+     "key": "ht"
+    },
+    {
+     "type": "tab",
+     "label": "العادل",
+     "group": "tv",
+     "key": "xg"
+    },
+    {
+     "type": "tab",
+     "label": "الفورمة",
+     "group": "tv",
+     "key": "form"
+    },
+    {
+     "type": "heading",
+     "label": "رحلة الموسم",
+     "level": 2
+    },
+    {
+     "type": "tool",
+     "label": "ترتيب القوة هالأسبوع",
+     "href": "/c/uae-pro-league/power/"
+    },
+    {
+     "type": "button",
+     "label": "صورة توقعات الجولة 6",
+     "id": "rpbtn"
+    },
+    {
+     "type": "heading",
+     "label": "ساعة الموسم",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الطريق للقب",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "صعوبة المباريات الياية",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#difficulty"
+    },
+    {
+     "type": "heading",
+     "label": "أحلى مباريات الجولة الياية",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "شو لو؟",
+     "level": 2
+    },
+    {
+     "type": "mount",
+     "label": "#wi-r",
+     "id": "wi-r"
+    },
+    {
+     "type": "mount",
+     "label": "#wi-m",
+     "id": "wi-m"
+    },
+    {
+     "type": "heading",
+     "label": "الترتيب لو صارت هالنتايج",
+     "level": 3
+    },
+    {
+     "type": "mount",
+     "label": "#wi-t",
+     "id": "wi-t"
+    },
+    {
+     "type": "heading",
+     "label": "توقعات آخر الموسم",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#simulator"
+    },
+    {
+     "type": "heading",
+     "label": "كم يحتاج فريقك؟",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#magic-number"
+    },
+    {
+     "type": "heading",
+     "label": "كم بيسجل الهدافين لآخر الموسم؟",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "غيابات الجولة 6",
+     "level": 2
+    },
+    {
+     "type": "tool",
+     "label": "قارن بين لاعبين أو فريقين",
+     "href": "/c/uae-pro-league/compare/"
+    },
+    {
+     "type": "heading",
+     "label": "بطاقات تيفو",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#tifo-card"
+    },
+    {
+     "type": "heading",
+     "label": "منو الحاسم؟",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#clutch"
+    },
+    {
+     "type": "heading",
+     "label": "تشكيلة الجولة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أفضل محترف أجنبي",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الأكثر تطوّر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "المواهب الإماراتية تحت 23",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "ساعة الأهداف",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "ملوك الدقايق الأخيرة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "يسجلون في الآخر",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ينصادون في الآخر",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ترمومتر المدربين",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#pressure-index"
+    },
+    {
+     "type": "heading",
+     "label": "بصمة كل فريق",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#ppda"
+    },
+    {
+     "type": "heading",
+     "label": "حصون الملاعب",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "مؤشر الإرهاق",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#fatigue"
+    },
+    {
+     "type": "heading",
+     "label": "أنجح المدربين في التاريخ",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "سوق الانتقالات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الإيقافات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "قانون الإيقاف",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الحكام",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أعمار التشكيلات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "مؤشر التدوير",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#rotation"
+    },
+    {
+     "type": "heading",
+     "label": "منو يسجل أول؟",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "نقاط ضاعت ونقاط رجعت",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "نقاط ضاعت وهو متقدّم",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "نقاط جابها وهو متأخر",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الاعتماد على الهداف",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أهداف بعد الدقيقة 90",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أحسن صفقات الموسم",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أرقام شخصية قريبة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "تصنيف تيفو للأندية",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#tifo-rating"
+    },
+    {
+     "type": "heading",
+     "label": "الدوري الإماراتي ضد العالم",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "طريق البطل",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الجدول التاريخي",
+     "level": 2,
+     "sub": "من 2010/2011"
+    },
+    {
+     "type": "heading",
+     "label": "الدوري موسم بموسم",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الصاعدين هالموسم",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "تاريخ الدوري",
+     "level": 2,
+     "sub": "من 1973"
+    },
+    {
+     "type": "heading",
+     "label": "البطولات",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الهدافين التاريخيين",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "سجل المواجهات بين الأندية",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أرقام قياسية على المحك",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "كتاب الأرقام القياسية",
+     "level": 2,
+     "sub": "من 2010/2011"
+    },
+    {
+     "type": "heading",
+     "label": "أكبر فوز",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "أكثر مباراة فيها أهداف",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "أطول سلسلة انتصارات",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "أطول سلسلة بدون خسارة",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "أطول سلسلة خسارات",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "أكثر أهداف في موسم",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الهاتريك",
+     "level": 3
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (44 here)"
+    }
+   ]
+  },
+  "round": {
+   "path": "/c/uae-pro-league/r/5/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "الجولة 5",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "قصة الجولة",
+     "level": 2,
+     "sub": "انزل وشوف"
+    },
+    {
+     "type": "heading",
+     "label": "تشكيلة الجولة",
+     "level": 2
+    },
+    {
+     "type": "tool",
+     "label": "الجولة اللي قبل",
+     "href": "/c/uae-pro-league/r/4/"
+    },
+    {
+     "type": "tool",
+     "label": "الجولة اللي بعد",
+     "href": "/c/uae-pro-league/r/6/"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (2 here)"
+    }
+   ]
+  },
+  "compare": {
+   "path": "/c/uae-pro-league/compare/",
+   "page": "compare",
+   "items": [
+    {
+     "type": "heading",
+     "label": "قارن",
+     "level": 1
+    },
+    {
+     "type": "tab",
+     "label": "لاعبين",
+     "group": "k",
+     "key": "players"
+    },
+    {
+     "type": "tab",
+     "label": "فريقين",
+     "group": "k",
+     "key": "clubs"
+    },
+    {
+     "type": "control",
+     "label": "اللاعب الأول",
+     "id": "pa"
+    },
+    {
+     "type": "control",
+     "label": "اللاعب الثاني",
+     "id": "pb"
+    },
+    {
+     "type": "control",
+     "label": "الفريق الأول",
+     "id": "ta"
+    },
+    {
+     "type": "control",
+     "label": "الفريق الثاني",
+     "id": "tb"
+    },
+    {
+     "type": "mount",
+     "label": "#tout",
+     "id": "tout"
+    }
+   ]
+  },
+  "power": {
+   "path": "/c/uae-pro-league/power/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "ترتيب القوة",
+     "level": 1
+    }
+   ]
+  },
+  "calendars": {
+   "path": "/calendars/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "روزنامة الدوريات العربية",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "الرابطة المحترفة الأولى الجزائرية",
+     "level": 2,
+     "sub": "الجزائر"
+    },
+    {
+     "type": "heading",
+     "label": "التوقفات",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الدوري المصري الممتاز",
+     "level": 2,
+     "sub": "مصر"
+    },
+    {
+     "type": "heading",
+     "label": "دوري نجوم العراق",
+     "level": 2,
+     "sub": "العراق"
+    },
+    {
+     "type": "heading",
+     "label": "الدوري الكويتي الممتاز",
+     "level": 2,
+     "sub": "الكويت"
+    },
+    {
+     "type": "heading",
+     "label": "البطولة الاحترافية المغربية",
+     "level": 2,
+     "sub": "المغرب"
+    },
+    {
+     "type": "heading",
+     "label": "دوري نجوم قطر",
+     "level": 2,
+     "sub": "قطر"
+    },
+    {
+     "type": "heading",
+     "label": "دوري روشن السعودي",
+     "level": 2,
+     "sub": "السعودية"
+    },
+    {
+     "type": "heading",
+     "label": "دوري أدنوك للمحترفين",
+     "level": 2,
+     "sub": "الإمارات"
+    },
+    {
+     "type": "heading",
+     "label": "الرابطة المحترفة الأولى التونسية",
+     "level": 2,
+     "sub": "تونس"
+    },
+    {
+     "type": "heading",
+     "label": "دوري يلو السعودي",
+     "level": 2,
+     "sub": "السعودية"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (10 here)"
+    }
+   ]
+  },
+  "cast": {
+   "path": "/cast/",
+   "page": "cast",
+   "items": [
+    {
+     "type": "heading",
+     "label": "تيفو كاست",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "تيفو كاست - تحليل الجولة 5 من دورينا",
+     "level": 2,
+     "sub": "بودكاست الأسبوع"
+    },
+    {
+     "type": "control",
+     "label": "audio"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (1 here)"
+    }
+   ]
+  },
+  "clashes": {
+   "path": "/clashes/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "مواجهات الأندية العربية",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "الياية",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "اللي خلصت",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (2 here)"
+    }
+   ]
+  },
+  "coach": {
+   "path": "/coach/96945/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "Gian Piero Gasperini",
+     "level": 1
+    },
+    {
+     "type": "tool",
+     "label": "قارنه بمدرب ثاني",
+     "href": "/coach/compare/?a=96945"
+    },
+    {
+     "type": "heading",
+     "label": "ضد المدربين",
+     "level": 2,
+     "sub": "هالموسم"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (1 here)"
+    }
+   ]
+  },
+  "coach-compare": {
+   "path": "/coach/compare/",
+   "page": "coachcmp",
+   "items": [
+    {
+     "type": "heading",
+     "label": "قارن بين مدربين",
+     "level": 1
+    },
+    {
+     "type": "control",
+     "label": "المدرب الأول",
+     "id": "ca"
+    },
+    {
+     "type": "control",
+     "label": "المدرب الثاني",
+     "id": "cb"
+    },
+    {
+     "type": "mount",
+     "label": "#cout",
+     "id": "cout"
+    }
+   ]
+  },
+  "coefficients": {
+   "path": "/coefficients/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "أقوى دوري عربي؟",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "تصنيف الاتحاد الآسيوي للدول",
+     "level": 2,
+     "sub": "2026/27"
+    },
+    {
+     "type": "heading",
+     "label": "تصنيف الاتحاد الأفريقي للدول",
+     "level": 2,
+     "sub": "آخر 5 مواسم"
+    },
+    {
+     "type": "heading",
+     "label": "الأندية العربية في تصنيف أفريقيا",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (3 here)"
+    }
+   ]
+  },
+  "competitions": {
+   "path": "/competitions/",
+   "page": "comps",
+   "items": [
+    {
+     "type": "heading",
+     "label": "البطولات",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "الإمارات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "السعودية",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "مصر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "المغرب",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الجزائر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "تونس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "العراق",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الكويت",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "قطر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الخليج",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "آسيا",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أفريقيا",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "المنتخبات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "العرب",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أوروبا",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "العالم",
+     "level": 2
+    }
+   ]
+  },
+  "countdowns": {
+   "path": "/countdowns/",
+   "page": "countdowns",
+   "items": [
+    {
+     "type": "heading",
+     "label": "كم باقي؟",
+     "level": 1
+    }
+   ]
+  },
+  "derbies": {
+   "path": "/derbies/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "الديربيات العربية",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "ديربي القاهرة (الأهلي والزمالك)",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ديربي الرياض (الهلال والنصر)",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ديربي جدة (الاتحاد والأهلي)",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ديربي الدار البيضاء (الوداد والرجاء)",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ديربي تونس (الترجي والإفريقي)",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ديربي العاصمة (شباب بلوزداد ومولودية الجزائر)",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ديربي العاصمة (مولودية الجزائر واتحاد العاصمة)",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "العين والوصل",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ديربي بغداد (القوة الجوية والزوراء)",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ديربي الدوحة (السد والريان)",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ديربي الكويت (العربي والقادسية)",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ديربي عمّان (الفيصلي والوحدات)",
+     "level": 3
+    }
+   ]
+  },
+  "explore": {
+   "path": "/explore/",
+   "page": "explore",
+   "items": [
+    {
+     "type": "heading",
+     "label": "أرشيف النتايج",
+     "level": 1
+    },
+    {
+     "type": "control",
+     "label": "الموسم",
+     "id": "exs"
+    },
+    {
+     "type": "control",
+     "label": "البطولة",
+     "id": "exc"
+    },
+    {
+     "type": "control",
+     "label": "الفريق",
+     "id": "ext"
+    }
+   ]
+  },
+  "glossary": {
+   "path": "/glossary/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "قاموس المصطلحات",
+     "level": 1
+    }
+   ]
+  },
+  "golden-boot": {
+   "path": "/golden-boot/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "الحذاء الذهبي العربي",
+     "level": 1
+    }
+   ]
+  },
+  "guide": {
+   "path": "/guide/",
+   "page": "guide",
+   "items": [
+    {
+     "type": "heading",
+     "label": "دليل القنوات",
+     "level": 1
+    },
+    {
+     "type": "control",
+     "label": "الدولة",
+     "id": "gsel"
+    },
+    {
+     "type": "control",
+     "label": "input",
+     "id": "gfree"
+    },
+    {
+     "type": "heading",
+     "label": "الأحد 27 سبتمبر",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الاثنين 28 سبتمبر",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الثلاثاء 29 سبتمبر",
+     "level": 3
+    }
+   ]
+  },
+  "h2h": {
+   "path": "/h2h/8153-102102/",
+   "page": "h2h",
+   "items": [
+    {
+     "type": "heading",
+     "label": "ديربي تونس (الترجي والإفريقي)",
+     "level": 1
+    }
+   ]
+  },
+  "home": {
+   "path": "/",
+   "page": "home",
+   "items": [
+    {
+     "type": "mount",
+     "label": "#uaecd",
+     "id": "uaecd"
+    },
+    {
+     "type": "mount",
+     "label": "#since",
+     "id": "since"
+    },
+    {
+     "type": "tool",
+     "label": "شاشة المجلس",
+     "href": "/tv/"
+    },
+    {
+     "type": "tool",
+     "label": "ستوديو التيفو",
+     "href": "/studio/"
+    },
+    {
+     "type": "mount",
+     "label": "#mine",
+     "id": "mine"
+    },
+    {
+     "type": "button",
+     "label": "›",
+     "id": "prev"
+    },
+    {
+     "type": "button",
+     "label": "‹",
+     "id": "next"
+    },
+    {
+     "type": "button",
+     "label": "بس مباريات العرب",
+     "id": "arabonly"
+    },
+    {
+     "type": "button",
+     "label": "بس المجاني في بلدك",
+     "id": "freeonly"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات اليوم",
+     "href": "/today/"
+    },
+    {
+     "type": "tool",
+     "label": "مباريات بكرة",
+     "href": "/tomorrow/"
+    },
+    {
+     "type": "mount",
+     "label": "#livecount",
+     "id": "livecount"
+    },
+    {
+     "type": "heading",
+     "label": "أحلى مباريات الجولة الياية في دوري أدنوك",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "هذا اليوم في كورة الإمارات",
+     "level": 2,
+     "sub": "كل الأيام"
+    },
+    {
+     "type": "more-link",
+     "label": "كل الأيام",
+     "href": "/thisday/"
+    },
+    {
+     "type": "heading",
+     "label": "فترة المنتخبات",
+     "level": 2,
+     "sub": "كل المباريات"
+    },
+    {
+     "type": "more-link",
+     "label": "كل المباريات",
+     "href": "/break/"
+    },
+    {
+     "type": "heading",
+     "label": "مباراة الأسبوع",
+     "level": 2,
+     "sub": "ليش اخترناها؟"
+    },
+    {
+     "type": "more-link",
+     "label": "ليش اخترناها؟",
+     "href": "/match-of-week/"
+    },
+    {
+     "type": "heading",
+     "label": "سلاسل شغالة",
+     "level": 2,
+     "sub": "كل السلاسل"
+    },
+    {
+     "type": "more-link",
+     "label": "كل السلاسل",
+     "href": "/streaks/"
+    },
+    {
+     "type": "mount",
+     "label": "#bdays",
+     "id": "bdays"
+    },
+    {
+     "type": "heading",
+     "label": "البطولات",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (5 here)"
+    },
+    {
+     "type": "button",
+     "label": "ألوان فريقي على الموقع",
+     "id": "themebtn",
+     "client": true,
+     "note": "app.js myCard(), shown once a favourite club is set"
+    }
+   ]
+  },
+  "lab": {
+   "path": "/lab/",
+   "page": "lab",
+   "items": [
+    {
+     "type": "heading",
+     "label": "مختبر تيفو",
+     "level": 1
+    },
+    {
+     "type": "control",
+     "label": "الدوري",
+     "id": "lcomp"
+    },
+    {
+     "type": "control",
+     "label": "الرقم الأفقي",
+     "id": "lx"
+    },
+    {
+     "type": "control",
+     "label": "الرقم العمودي",
+     "id": "ly"
+    },
+    {
+     "type": "control",
+     "label": "ظلّل لاعب",
+     "id": "lq"
+    }
+   ]
+  },
+  "laws": {
+   "path": "/laws/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "قانون الكورة بالإماراتي",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "قانون التسلل",
+     "level": 2,
+     "sub": "Law 11 – Offside"
+    },
+    {
+     "type": "heading",
+     "label": "ليش ألغى الهدف؟",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "قانون لمسة اليد في الكورة",
+     "level": 2,
+     "sub": "Law 12.1 – Direct free kick (Handling the ball)"
+    },
+    {
+     "type": "heading",
+     "label": "ضربة الجزاء: وقفة الحارس على الخط ودخول اللاعبين",
+     "level": 2,
+     "sub": "Law 14 – The Penalty Kick"
+    },
+    {
+     "type": "heading",
+     "label": "قوانين منع الأهداف والكرت الأحمر والأصفر",
+     "level": 2,
+     "sub": "Law 12.4 – Disciplinary action"
+    },
+    {
+     "type": "heading",
+     "label": "بروتوكول حكم الفيديو المساعد (VAR)",
+     "level": 2,
+     "sub": "Law 5.4 – Video assistant referee (VAR); VAR protocol (Notes and modifications)"
+    },
+    {
+     "type": "heading",
+     "label": "قانون إتاحة الفرصة في الكورة",
+     "level": 2,
+     "sub": "Law 5.3 – Powers and duties (Advantage); Law 12.4 (Advantage)"
+    },
+    {
+     "type": "heading",
+     "label": "قانون ضربة المرمى",
+     "level": 2,
+     "sub": "Law 16 – The Goal Kick"
+    },
+    {
+     "type": "heading",
+     "label": "قوانين رمية التماس في كورة القدم",
+     "level": 2,
+     "sub": "Law 15 – The Throw-in"
+    },
+    {
+     "type": "heading",
+     "label": "قانون إسقاط الكورة",
+     "level": 2,
+     "sub": "Law 8.2 – Dropped ball; Law 9.1 – Ball out of play"
+    },
+    {
+     "type": "heading",
+     "label": "الوقت بدل الضايع في المباراة",
+     "level": 2,
+     "sub": "Law 7.3 – Allowance for time lost; 7.4 – Penalty kick"
+    }
+   ]
+  },
+  "legends": {
+   "path": "/legends/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "أساطير الكورة الإماراتية",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "عدنان الطلياني",
+     "level": 2,
+     "sub": "Adnan Al Talyani"
+    },
+    {
+     "type": "heading",
+     "label": "إسماعيل مطر",
+     "level": 2,
+     "sub": "Ismail Matar"
+    },
+    {
+     "type": "heading",
+     "label": "عمر عبد الرحمن",
+     "level": 2,
+     "sub": "Omar Abdulrahman"
+    },
+    {
+     "type": "heading",
+     "label": "علي مبخوت",
+     "level": 2,
+     "sub": "Ali Mabkhout"
+    },
+    {
+     "type": "heading",
+     "label": "فهد خميس",
+     "level": 2,
+     "sub": "Fahad Khamees"
+    },
+    {
+     "type": "heading",
+     "label": "زهير بخيت",
+     "level": 2,
+     "sub": "Zuhair Bakheet"
+    },
+    {
+     "type": "heading",
+     "label": "عبد الرحمن محمد",
+     "level": 2,
+     "sub": "Abdulrahman Mohamed"
+    },
+    {
+     "type": "heading",
+     "label": "خالد إسماعيل",
+     "level": 2,
+     "sub": "Khalid Ismail"
+    },
+    {
+     "type": "heading",
+     "label": "محسن مصباح",
+     "level": 2,
+     "sub": "Muhsin Musabah"
+    },
+    {
+     "type": "heading",
+     "label": "أحمد خليل",
+     "level": 2,
+     "sub": "Ahmed Khalil"
+    },
+    {
+     "type": "heading",
+     "label": "سبيت خاطر",
+     "level": 2,
+     "sub": "Subait Khater"
+    },
+    {
+     "type": "heading",
+     "label": "سعد بخيت مبارك",
+     "level": 2,
+     "sub": "Saad Bakheet Mubarak"
+    },
+    {
+     "type": "heading",
+     "label": "وليد عباس",
+     "level": 2,
+     "sub": "Walid Abbas"
+    },
+    {
+     "type": "heading",
+     "label": "علي خصيف",
+     "level": 2,
+     "sub": "Ali Khasif"
+    },
+    {
+     "type": "heading",
+     "label": "ماجد ناصر",
+     "level": 2,
+     "sub": "Majed Naser"
+    },
+    {
+     "type": "heading",
+     "label": "حيدر ألو علي",
+     "level": 2,
+     "sub": "Haider Alo Ali"
+    },
+    {
+     "type": "heading",
+     "label": "حمدان الكمالي",
+     "level": 2,
+     "sub": "Hamdan Al Kamali"
+    },
+    {
+     "type": "heading",
+     "label": "خالد عيسى",
+     "level": 2,
+     "sub": "Khalid Eisa"
+    },
+    {
+     "type": "heading",
+     "label": "عبد العزيز محمد",
+     "level": 2,
+     "sub": "Abdulaziz Mohamed"
+    },
+    {
+     "type": "heading",
+     "label": "محمد عمر",
+     "level": 2,
+     "sub": "Mohammad Omar"
+    },
+    {
+     "type": "heading",
+     "label": "فيصل خليل",
+     "level": 2,
+     "sub": "Faisal Khalil"
+    },
+    {
+     "type": "heading",
+     "label": "محمد سالم مبارك",
+     "level": 2,
+     "sub": "Mohamed Salim Mubarak"
+    }
+   ]
+  },
+  "match": {
+   "path": "/m/1000020522/",
+   "page": "match",
+   "items": [
+    {
+     "type": "button",
+     "label": "الشاشة الثانية",
+     "id": "secondbtn"
+    },
+    {
+     "type": "button",
+     "label": "صورة للستوري",
+     "id": "storybtn"
+    },
+    {
+     "type": "tool",
+     "label": "على شاشة المجلس",
+     "href": "/tv/?m=1000020522"
+    },
+    {
+     "type": "tool",
+     "label": "عدّة صانع المحتوى",
+     "href": "/m/1000020522/kit/"
+    },
+    {
+     "type": "control",
+     "label": "إمارتك"
+    },
+    {
+     "type": "tool",
+     "label": "شوف الملخص الرسمي (UAE Pro League)",
+     "href": "https://www.youtube.com/@uaeproleague/search?query=%D9%85%D9%84%D8%AE%D8%B5%20%D9%85%D8%A8%D8%A7%D8%B1%D8%A7%D8%A9%20%D8%A7%D9%84%D9%88%D8%AD%D8%AF%D8%A9%20%D8%A7%D9%84%D8%B4%D8%A7%D8%B1%D9%82%D8%A9"
+    },
+    {
+     "type": "tab",
+     "label": "الأحداث",
+     "group": "m",
+     "key": "events"
+    },
+    {
+     "type": "tab",
+     "label": "التشكيلة",
+     "group": "m",
+     "key": "lineups"
+    },
+    {
+     "type": "tab",
+     "label": "الإحصائيات",
+     "group": "m",
+     "key": "stats"
+    },
+    {
+     "type": "tab",
+     "label": "المواجهات",
+     "group": "m",
+     "key": "h2h"
+    },
+    {
+     "type": "button",
+     "label": "شوفها على ملعب ثلاثي الأبعاد",
+     "id": "p3dbtn"
+    },
+    {
+     "type": "mount",
+     "label": "#p3d",
+     "id": "p3d"
+    },
+    {
+     "type": "heading",
+     "label": "الوحدة4-1-4-1",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الاحتياط",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الشارقة4-2-3-1",
+     "level": 3
+    },
+    {
+     "type": "tool",
+     "label": "كل مواجهاتهم",
+     "href": "/h2h/102122-102124/"
+    },
+    {
+     "type": "heading",
+     "label": "الخطط والتبديلات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "فرص الفوز دقيقة بدقيقة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أوائل",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "إعادة المباراة",
+     "level": 2
+    },
+    {
+     "type": "control",
+     "label": "الدقيقة",
+     "id": "rpr"
+    },
+    {
+     "type": "heading",
+     "label": "أسئلة عن المباراة",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (5 here)"
+    }
+   ]
+  },
+  "kit": {
+   "path": "/m/6052085/kit/",
+   "page": "kit",
+   "items": [
+    {
+     "type": "heading",
+     "label": "عدّة صانع المحتوى",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "أرقام جاهزة للنسخ",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "صور للمشاركة",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "صورة ستوري للمباراة",
+     "id": "storybtn"
+    },
+    {
+     "type": "heading",
+     "label": "الموعد والقناة في كل دولة عربية",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (3 here)"
+    }
+   ]
+  },
+  "match-of-week": {
+   "path": "/match-of-week/",
+   "page": "mow",
+   "items": [
+    {
+     "type": "heading",
+     "label": "مباراة الأسبوع",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "وين تنقل في الإمارات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "مرشحة بعدها",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (2 here)"
+    }
+   ]
+  },
+  "memorable": {
+   "path": "/memorable/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "مباريات لا تُنسى",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "خسارة صعبة للمنتخب في البصرة تنهي حلم مونديال 2026",
+     "level": 2,
+     "sub": "2025-11-18"
+    },
+    {
+     "type": "heading",
+     "label": "العين يحقق اللقب الآسيوي الثاني عقب فوزه 5 - 1 على يوكوهاما",
+     "level": 2,
+     "sub": "2024-05-25"
+    },
+    {
+     "type": "heading",
+     "label": "خسارة العين جدام يوكوهاما في ذهاب نهائي آسيا",
+     "level": 2,
+     "sub": "2024-05-11"
+    },
+    {
+     "type": "heading",
+     "label": "خروج الأبيض من نصف نهائي كأس آسيا 2019",
+     "level": 2,
+     "sub": "2019-01-29"
+    },
+    {
+     "type": "heading",
+     "label": "فوز الإمارات على أستراليا في كأس آسيا 2019",
+     "level": 2,
+     "sub": "2019-01-25"
+    },
+    {
+     "type": "heading",
+     "label": "تعادل الإمارات والبحرين في افتتاح كأس آسيا 2019",
+     "level": 2,
+     "sub": "2019-01-05"
+    },
+    {
+     "type": "heading",
+     "label": "العين ضد ريال مدريد في نهائي مونديال الأندية 2018",
+     "level": 2,
+     "sub": "2018-12-22"
+    },
+    {
+     "type": "heading",
+     "label": "تأهل العين لنهائي مونديال الأندية 2018 عقب فوزه على ريفر بليت",
+     "level": 2,
+     "sub": "2018-12-18"
+    },
+    {
+     "type": "heading",
+     "label": "مباراة الجزيرة ضد ريال مدريد في مونديال الأندية 2017",
+     "level": 2,
+     "sub": "2017-12-13"
+    },
+    {
+     "type": "heading",
+     "label": "فوز الجزيرة على أوراوا 1 - 0 في مونديال 2017",
+     "level": 2,
+     "sub": "2017-12-09"
+    },
+    {
+     "type": "heading",
+     "label": "تعادل العين وجونبوك وضياع اللقب الآسيوي في 2016",
+     "level": 2,
+     "sub": "2016-11-26"
+    },
+    {
+     "type": "heading",
+     "label": "فوز الإمارات على اليابان في كأس آسيا 2015",
+     "level": 2,
+     "sub": "2015-01-23"
+    },
+    {
+     "type": "heading",
+     "label": "تتويج الإمارات بلقب كأس الخليج الثاني عقب الفوز على العراق",
+     "level": 2,
+     "sub": "2013-01-18"
+    },
+    {
+     "type": "heading",
+     "label": "أول مباراة لمنتخبنا في الأولمبياد ضد الأوروغواي",
+     "level": 2,
+     "sub": "2012-07-26"
+    },
+    {
+     "type": "heading",
+     "label": "فوز الإمارات بأول لقب في كأس الخليج 2007",
+     "level": 2,
+     "sub": "2007-01-30"
+    },
+    {
+     "type": "heading",
+     "label": "تتويج العين بأول لقب دوري أبطال آسيا في 2003",
+     "level": 2,
+     "sub": "2003-10-11"
+    },
+    {
+     "type": "heading",
+     "label": "فوز العين على بيك تيرو في ذهاب أول نهائي لدوري أبطال آسيا",
+     "level": 2,
+     "sub": "2003-10-03"
+    },
+    {
+     "type": "heading",
+     "label": "أول نهائي آسيوي لمنتخبنا ضد السعودية سنة 1996",
+     "level": 2,
+     "sub": "1996-12-21"
+    },
+    {
+     "type": "heading",
+     "label": "يوم حسن سعيد ودانا نهائي كأس آسيا 1996",
+     "level": 2,
+     "sub": "1996-12-19"
+    },
+    {
+     "type": "heading",
+     "label": "ريمونتادا الأبيض على الكويت في كأس آسيا 1996",
+     "level": 2,
+     "sub": "1996-12-07"
+    },
+    {
+     "type": "heading",
+     "label": "أول هدف إماراتي في كأس العالم ضد ألمانيا الغربية",
+     "level": 2,
+     "sub": "1990-06-15"
+    },
+    {
+     "type": "heading",
+     "label": "أول ظهور لمنتخب الإمارات في كأس العالم",
+     "level": 2,
+     "sub": "1990-06-09"
+    },
+    {
+     "type": "heading",
+     "label": "تعادل الإمارات وكوريا الجنوبية في تصفيات 1989",
+     "level": 2,
+     "sub": "1989-10-28"
+    },
+    {
+     "type": "heading",
+     "label": "فوز الإمارات على الصين في تصفيات كأس العالم 1990",
+     "level": 2,
+     "sub": "1989-10-17"
+    }
+   ]
+  },
+  "national": {
+   "path": "/national/sa/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "منتخب السعودية",
+     "level": 1
+    },
+    {
+     "type": "tool",
+     "label": "المباريات والنتايج",
+     "href": "/t/7795/"
+    },
+    {
+     "type": "heading",
+     "label": "آخر نتيجة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "المباراة الياية",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "وين واقف في البطولات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "آخر 10 نتايج",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "تاريخه الدولي",
+     "level": 2,
+     "sub": "من 18 نوفمبر 1963"
+    },
+    {
+     "type": "heading",
+     "label": "ضد المنتخبات العربية",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "في كأس العالم",
+     "level": 2
+    },
+    {
+     "type": "tool",
+     "label": "كل مبارياته في كأس العالم",
+     "href": "/worldcup-arabs/#SA"
+    },
+    {
+     "type": "heading",
+     "label": "تصنيف فيفا",
+     "level": 2,
+     "sub": "من 1992"
+    },
+    {
+     "type": "heading",
+     "label": "آخر قائمة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الحراس",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الدفاع",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الوسط",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الهجوم",
+     "level": 3
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (9 here)"
+    }
+   ]
+  },
+  "nations-h2h": {
+   "path": "/nations-h2h/",
+   "page": "nh2h",
+   "items": [
+    {
+     "type": "heading",
+     "label": "مواجهات المنتخبات العربية",
+     "level": 1
+    },
+    {
+     "type": "control",
+     "label": "المنتخب الأول",
+     "id": "nha"
+    },
+    {
+     "type": "control",
+     "label": "المنتخب الثاني",
+     "id": "nhb"
+    },
+    {
+     "type": "mount",
+     "label": "#nhout",
+     "id": "nhout"
+    }
+   ]
+  },
+  "newsletter": {
+   "path": "/newsletter/",
+   "page": "newsletter",
+   "items": [
+    {
+     "type": "heading",
+     "label": "نشرة تيفو",
+     "level": 1
+    },
+    {
+     "type": "mount",
+     "label": "#nlmsg",
+     "id": "nlmsg"
+    },
+    {
+     "type": "control",
+     "label": "إيميلك"
+    },
+    {
+     "type": "button",
+     "label": "اشترك"
+    }
+   ]
+  },
+  "player": {
+   "path": "/p/794427/",
+   "page": "player",
+   "items": [
+    {
+     "type": "heading",
+     "label": "Joao Félix",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "موسمه",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "مسيرته",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "خريطة تسديداته",
+     "level": 2
+    },
+    {
+     "type": "tool",
+     "label": "قارنه بلاعب ثاني",
+     "href": "/c/saudi-pro-league/compare/?a=794427"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (3 here)"
+    }
+   ]
+  },
+  "poty": {
+   "path": "/poty/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "سباق أحسن لاعب عربي",
+     "level": 1
+    }
+   ]
+  },
+  "referee": {
+   "path": "/r/1001072180/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "Michael Oliver",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "مبارياته",
+     "level": 2
+    }
+   ]
+  },
+  "stadium": {
+   "path": "/s/hazza-bin-zayed-stadium/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "استاد هزاع بن زايد",
+     "level": 1
+    }
+   ]
+  },
+  "stadiums": {
+   "path": "/stadiums/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "دليل الملاعب",
+     "level": 1
+    }
+   ]
+  },
+  "streaks": {
+   "path": "/streaks/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "السلاسل الشغالة",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "بدون خسارة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "فوز ورا فوز",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "شباك نظيفة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "بدون فوز",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "خسارة ورا خسارة",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (5 here)"
+    }
+   ]
+  },
+  "studio": {
+   "path": "/studio/",
+   "page": "studio",
+   "items": [
+    {
+     "type": "heading",
+     "label": "ستوديو التيفو",
+     "level": 1
+    },
+    {
+     "type": "control",
+     "label": "الفريق",
+     "id": "sclub"
+    },
+    {
+     "type": "control",
+     "label": "العبارة",
+     "id": "stext"
+    },
+    {
+     "type": "button",
+     "label": "نزّل اللافتة",
+     "id": "sdl"
+    }
+   ]
+  },
+  "team": {
+   "path": "/t/5789/",
+   "page": "team",
+   "items": [
+    {
+     "type": "heading",
+     "label": "الإمارات",
+     "level": 1
+    },
+    {
+     "type": "button",
+     "label": "هذا فريقي",
+     "id": "mybtn"
+    },
+    {
+     "type": "tool",
+     "label": "مبارياته في تقويم جوالك",
+     "href": "/v1/team/5789.ics"
+    },
+    {
+     "type": "button",
+     "label": "خلفية للجوال",
+     "id": "wpbtn"
+    },
+    {
+     "type": "tool",
+     "label": "بوستر الموسم للطباعة",
+     "href": "/t/5789/poster/"
+    },
+    {
+     "type": "mount",
+     "label": "#uaecd",
+     "id": "uaecd"
+    },
+    {
+     "type": "tab",
+     "label": "الياية",
+     "group": "t",
+     "key": "next"
+    },
+    {
+     "type": "tab",
+     "label": "النتايج",
+     "group": "t",
+     "key": "past"
+    },
+    {
+     "type": "tab",
+     "label": "اللاعبين",
+     "group": "t",
+     "key": "squad"
+    },
+    {
+     "type": "tab",
+     "label": "المنتخب بالأرقام",
+     "group": "t",
+     "key": "nums"
+    },
+    {
+     "type": "heading",
+     "label": "حراس المرمى",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الدفاع",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الوسط",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الهجوم",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "حسابات النادي الرسمية",
+     "level": 2
+    },
+    {
+     "type": "tool",
+     "label": "الموقع الرسمي",
+     "href": "https://www.uaefa.ae/"
+    },
+    {
+     "type": "tool",
+     "label": "إكس @uaefa_ae",
+     "href": "https://x.com/uaefa_ae"
+    },
+    {
+     "type": "tool",
+     "label": "إنستقرام",
+     "href": "https://www.instagram.com/uaefa/"
+    },
+    {
+     "type": "tool",
+     "label": "يوتيوب",
+     "href": "https://www.youtube.com/channel/UCHnMgexT0Q9ZjabtygyXpWA"
+    },
+    {
+     "type": "heading",
+     "label": "سيناريوهات كأس الخليج",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "فرص الإمارات في كأس الخليج",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "فرص الإمارات في كأس آسيا",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "تصنيف فيفا",
+     "level": 2,
+     "sub": "من 1992"
+    },
+    {
+     "type": "heading",
+     "label": "تصنيف تيفو للمنتخبات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الإماراتيين المحترفين برا",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "لاعبي المنتخب في أنديتهم",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (8 here)"
+    }
+   ]
+  },
+  "poster": {
+   "path": "/t/8633/poster/",
+   "page": "poster",
+   "items": [
+    {
+     "type": "heading",
+     "label": "ريال مدريد",
+     "level": 1
+    },
+    {
+     "type": "button",
+     "label": "اطبع"
+    }
+   ]
+  },
+  "month": {
+   "path": "/t/101919/month/2026-08/",
+   "page": "poster",
+   "items": [
+    {
+     "type": "heading",
+     "label": "القادسية في أغسطس 2026",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "النتايج",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أحسن اللاعبين",
+     "level": 2,
+     "sub": "بمتوسط التقييم"
+    },
+    {
+     "type": "button",
+     "label": "اطبعه"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (2 here)"
+    }
+   ]
+  },
+  "thisday": {
+   "path": "/thisday/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "هذا اليوم في كورة الإمارات",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "2 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "5 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "8 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "10 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "11 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "14 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "15 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "17 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "18 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "19 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "20 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "21 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "23 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "24 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "25 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "27 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "28 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "29 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "30 يناير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "3 فبراير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "6 فبراير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "9 فبراير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "14 فبراير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "19 فبراير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "20 فبراير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "21 فبراير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "27 فبراير",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "4 مارس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "9 مارس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "10 مارس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "11 مارس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "12 مارس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "15 مارس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "17 مارس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "1 أبريل",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "7 أبريل",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "9 أبريل",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "12 أبريل",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "14 أبريل",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "17 أبريل",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "20 أبريل",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "23 أبريل",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "2 مايو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "11 مايو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "13 مايو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "23 مايو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "25 مايو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "7 يونيو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "8 يونيو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "9 يونيو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "11 يونيو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "15 يونيو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "18 يونيو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "19 يونيو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "22 يونيو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "26 يونيو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "30 يونيو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "1 يوليو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "3 يوليو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "7 يوليو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "13 يوليو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "16 يوليو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "26 يوليو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "29 يوليو",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "1 أغسطس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "16 أغسطس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "23 أغسطس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "27 أغسطس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "30 أغسطس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "31 أغسطس",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "3 سبتمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "15 سبتمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "20 سبتمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "27 سبتمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "30 سبتمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "1 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "3 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "5 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "7 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "10 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "11 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "12 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "14 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "15 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "16 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "17 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "20 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "21 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "23 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "24 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "28 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "30 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "31 أكتوبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "1 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "2 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "3 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "4 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "5 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "6 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "7 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "8 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "11 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "12 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "13 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "14 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "15 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "17 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "18 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "19 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "20 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "21 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "23 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "25 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "26 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "27 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "29 نوفمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "1 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "2 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "4 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "6 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "7 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "8 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "9 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "10 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "11 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "12 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "13 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "15 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "16 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "17 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "18 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "19 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "21 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "22 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "25 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "28 ديسمبر",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (136 here)"
+    }
+   ]
+  },
+  "today": {
+   "path": "/today/",
+   "page": "daypage",
+   "items": [
+    {
+     "type": "heading",
+     "label": "مباريات اليوم",
+     "level": 1
+    },
+    {
+     "type": "tool",
+     "label": "وين تنقل كل بطولة",
+     "href": "/watch/"
+    }
+   ]
+  },
+  "tomorrow": {
+   "path": "/tomorrow/",
+   "page": "daypage",
+   "items": [
+    {
+     "type": "heading",
+     "label": "مباريات بكرة",
+     "level": 1
+    },
+    {
+     "type": "tool",
+     "label": "وين تنقل كل بطولة",
+     "href": "/watch/"
+    }
+   ]
+  },
+  "transfers": {
+   "path": "/transfers/",
+   "page": "transfers",
+   "items": [
+    {
+     "type": "heading",
+     "label": "آخر الانتقالات",
+     "level": 1
+    },
+    {
+     "type": "control",
+     "label": "الدوري",
+     "id": "trf"
+    }
+   ]
+  },
+  "tv": {
+   "path": "/tv/",
+   "page": "tv",
+   "items": [
+    {
+     "type": "heading",
+     "label": "شاشة المجلس",
+     "level": 1
+    },
+    {
+     "type": "button",
+     "label": "ملء الشاشة",
+     "id": "fsbtn"
+    }
+   ]
+  },
+  "national-uae": {
+   "path": "/uae/",
+   "page": "team",
+   "items": [
+    {
+     "type": "heading",
+     "label": "الإمارات",
+     "level": 1
+    },
+    {
+     "type": "button",
+     "label": "هذا فريقي",
+     "id": "mybtn"
+    },
+    {
+     "type": "tool",
+     "label": "مبارياته في تقويم جوالك",
+     "href": "/v1/team/5789.ics"
+    },
+    {
+     "type": "button",
+     "label": "خلفية للجوال",
+     "id": "wpbtn"
+    },
+    {
+     "type": "tool",
+     "label": "بوستر الموسم للطباعة",
+     "href": "/t/5789/poster/"
+    },
+    {
+     "type": "mount",
+     "label": "#uaecd",
+     "id": "uaecd"
+    },
+    {
+     "type": "tab",
+     "label": "الياية",
+     "group": "t",
+     "key": "next"
+    },
+    {
+     "type": "tab",
+     "label": "النتايج",
+     "group": "t",
+     "key": "past"
+    },
+    {
+     "type": "tab",
+     "label": "اللاعبين",
+     "group": "t",
+     "key": "squad"
+    },
+    {
+     "type": "tab",
+     "label": "المنتخب بالأرقام",
+     "group": "t",
+     "key": "nums"
+    },
+    {
+     "type": "heading",
+     "label": "حراس المرمى",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الدفاع",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الوسط",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الهجوم",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "حسابات النادي الرسمية",
+     "level": 2
+    },
+    {
+     "type": "tool",
+     "label": "الموقع الرسمي",
+     "href": "https://www.uaefa.ae/"
+    },
+    {
+     "type": "tool",
+     "label": "إكس @uaefa_ae",
+     "href": "https://x.com/uaefa_ae"
+    },
+    {
+     "type": "tool",
+     "label": "إنستقرام",
+     "href": "https://www.instagram.com/uaefa/"
+    },
+    {
+     "type": "tool",
+     "label": "يوتيوب",
+     "href": "https://www.youtube.com/channel/UCHnMgexT0Q9ZjabtygyXpWA"
+    },
+    {
+     "type": "heading",
+     "label": "سيناريوهات كأس الخليج",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "فرص الإمارات في كأس الخليج",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "فرص الإمارات في كأس آسيا",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "تصنيف فيفا",
+     "level": 2,
+     "sub": "من 1992"
+    },
+    {
+     "type": "heading",
+     "label": "تصنيف تيفو للمنتخبات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الإماراتيين المحترفين برا",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "لاعبي المنتخب في أنديتهم",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (8 here)"
+    }
+   ]
+  },
+  "w": {
+   "path": "/w/",
+   "page": "watch",
+   "items": []
+  },
+  "watch": {
+   "path": "/watch/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "وين تنقل المباريات في الإمارات",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "دوري أدنوك للمحترفين",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "كأس رابطة المحترفين",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "كأس رئيس الدولة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "كأس السوبر الإماراتي",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "كأس الخليج العربي",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "كأس آسيا",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "تصفيات كأس آسيا",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "تصفيات كأس العالم - آسيا",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "كأس العالم",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "دوري أبطال آسيا للنخبة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "دوري أبطال آسيا 2",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "دوري التحدي الآسيوي",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "دوري روشن السعودي",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "دوري نجوم قطر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الدوري المصري الممتاز",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الدوري الإنجليزي الممتاز",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الدوري الإسباني",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الدوري الإيطالي",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الدوري الألماني",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الدوري الفرنسي",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "دوري أبطال أوروبا",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الدوري الأوروبي",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "دوري المؤتمر الأوروبي",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (23 here)"
+    }
+   ]
+  },
+  "week": {
+   "path": "/week/",
+   "page": "week",
+   "items": [
+    {
+     "type": "button",
+     "label": "صورة جدول الأسبوع بتوقيت بلدك",
+     "id": "wkbtn"
+    },
+    {
+     "type": "heading",
+     "label": "مباريات الأسبوع",
+     "level": 1
+    }
+   ]
+  },
+  "worldcup-arabs": {
+   "path": "/worldcup-arabs/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "العرب في كأس العالم",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "المغرب",
+     "level": 2,
+     "sub": "7 نسخ"
+    },
+    {
+     "type": "heading",
+     "label": "السعودية",
+     "level": 2,
+     "sub": "7 نسخ"
+    },
+    {
+     "type": "heading",
+     "label": "تونس",
+     "level": 2,
+     "sub": "7 نسخ"
+    },
+    {
+     "type": "heading",
+     "label": "الجزائر",
+     "level": 2,
+     "sub": "5 نسخ"
+    },
+    {
+     "type": "heading",
+     "label": "مصر",
+     "level": 2,
+     "sub": "4 نسخ"
+    },
+    {
+     "type": "heading",
+     "label": "العراق",
+     "level": 2,
+     "sub": "2 نسخ"
+    },
+    {
+     "type": "heading",
+     "label": "قطر",
+     "level": 2,
+     "sub": "2 نسخ"
+    },
+    {
+     "type": "heading",
+     "label": "الكويت",
+     "level": 2,
+     "sub": "1 نسخ"
+    },
+    {
+     "type": "heading",
+     "label": "الإمارات",
+     "level": 2,
+     "sub": "1 نسخ"
+    },
+    {
+     "type": "heading",
+     "label": "الأردن",
+     "level": 2,
+     "sub": "1 نسخ"
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (10 here)"
+    }
+   ]
+  },
+  "year": {
+   "path": "/year/",
+   "page": "ref",
+   "items": [
+    {
+     "type": "heading",
+     "label": "السنة الياية",
+     "level": 1
+    },
+    {
+     "type": "heading",
+     "label": "سبتمبر 2026",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أكتوبر 2026",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "نوفمبر 2026",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "ديسمبر 2026",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "يناير 2027",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "فبراير 2027",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "مارس 2027",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أبريل 2027",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "مايو 2027",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (9 here)"
+    }
+   ]
+  },
+  "comp-2": {
+   "path": "/c/saudi-pro-league/",
+   "page": "comp",
+   "items": [
+    {
+     "type": "heading",
+     "label": "دوري روشن السعودي",
+     "level": 1
+    },
+    {
+     "type": "tab",
+     "label": "الترتيب",
+     "group": "c",
+     "key": "table"
+    },
+    {
+     "type": "tab",
+     "label": "المباريات",
+     "group": "c",
+     "key": "fixtures"
+    },
+    {
+     "type": "tab",
+     "label": "التوقعات",
+     "group": "c",
+     "key": "pred"
+    },
+    {
+     "type": "tab",
+     "label": "الأرقام",
+     "group": "c",
+     "key": "num"
+    },
+    {
+     "type": "tab",
+     "label": "الهدافين",
+     "group": "c",
+     "key": "goals"
+    },
+    {
+     "type": "tab",
+     "label": "صناع الأهداف",
+     "group": "c",
+     "key": "assists"
+    },
+    {
+     "type": "tab",
+     "label": "التاريخ",
+     "group": "c",
+     "key": "hist"
+    },
+    {
+     "type": "tab",
+     "label": "الكل",
+     "group": "tv",
+     "key": "all"
+    },
+    {
+     "type": "tab",
+     "label": "بملعبه",
+     "group": "tv",
+     "key": "home"
+    },
+    {
+     "type": "tab",
+     "label": "برا ملعبه",
+     "group": "tv",
+     "key": "away"
+    },
+    {
+     "type": "tab",
+     "label": "الشوط الأول",
+     "group": "tv",
+     "key": "ht"
+    },
+    {
+     "type": "tab",
+     "label": "العادل",
+     "group": "tv",
+     "key": "xg"
+    },
+    {
+     "type": "tab",
+     "label": "الفورمة",
+     "group": "tv",
+     "key": "form"
+    },
+    {
+     "type": "heading",
+     "label": "رحلة الموسم",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "ساعة الموسم",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "شو لو؟",
+     "level": 2
+    },
+    {
+     "type": "mount",
+     "label": "#wi-r",
+     "id": "wi-r"
+    },
+    {
+     "type": "mount",
+     "label": "#wi-m",
+     "id": "wi-m"
+    },
+    {
+     "type": "heading",
+     "label": "الترتيب لو صارت هالنتايج",
+     "level": 3
+    },
+    {
+     "type": "mount",
+     "label": "#wi-t",
+     "id": "wi-t"
+    },
+    {
+     "type": "heading",
+     "label": "كم يحتاج فريقك؟",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#magic-number"
+    },
+    {
+     "type": "heading",
+     "label": "كم بيسجل الهدافين لآخر الموسم؟",
+     "level": 2
+    },
+    {
+     "type": "tool",
+     "label": "قارن بين لاعبين أو فريقين",
+     "href": "/c/saudi-pro-league/compare/"
+    },
+    {
+     "type": "heading",
+     "label": "بطاقات تيفو",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#tifo-card"
+    },
+    {
+     "type": "heading",
+     "label": "منو الحاسم؟",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#clutch"
+    },
+    {
+     "type": "heading",
+     "label": "تشكيلة الجولة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أفضل محترف أجنبي",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الأكثر تطوّر",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "ساعة الأهداف",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "ملوك الدقايق الأخيرة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "يسجلون في الآخر",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "ينصادون في الآخر",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "حصون الملاعب",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "مؤشر الإرهاق",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#fatigue"
+    },
+    {
+     "type": "heading",
+     "label": "سوق الانتقالات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الإيقافات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "قانون الإيقاف",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الحكام",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أعمار التشكيلات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "مؤشر التدوير",
+     "level": 2,
+     "sub": "شو يعني؟"
+    },
+    {
+     "type": "more-link",
+     "label": "شو يعني؟",
+     "href": "/glossary/#rotation"
+    },
+    {
+     "type": "heading",
+     "label": "منو يسجل أول؟",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "نقاط ضاعت ونقاط رجعت",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "نقاط ضاعت وهو متقدّم",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "نقاط جابها وهو متأخر",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الاعتماد على الهداف",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أهداف بعد الدقيقة 90",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أحسن صفقات الموسم",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أرقام شخصية قريبة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "طريق البطل",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الهدافين التاريخيين",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الجدول التاريخي",
+     "level": 2,
+     "sub": "من 2010/2011"
+    },
+    {
+     "type": "heading",
+     "label": "الدوري موسم بموسم",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "الصاعدين هالموسم",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "كتاب الأرقام القياسية",
+     "level": 2,
+     "sub": "من 2010/2011"
+    },
+    {
+     "type": "heading",
+     "label": "أكبر فوز",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "أكثر مباراة فيها أهداف",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "أطول سلسلة انتصارات",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "أطول سلسلة بدون خسارة",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "أطول سلسلة خسارات",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "أكثر أهداف في موسم",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الهاتريك",
+     "level": 3
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (31 here)"
+    }
+   ]
+  },
+  "match-2": {
+   "path": "/m/6052085/",
+   "page": "match",
+   "items": [
+    {
+     "type": "button",
+     "label": "الشاشة الثانية",
+     "id": "secondbtn"
+    },
+    {
+     "type": "button",
+     "label": "صورة للستوري",
+     "id": "storybtn"
+    },
+    {
+     "type": "tool",
+     "label": "على شاشة المجلس",
+     "href": "/tv/?m=6052085"
+    },
+    {
+     "type": "tool",
+     "label": "عدّة صانع المحتوى",
+     "href": "/m/6052085/kit/"
+    },
+    {
+     "type": "mount",
+     "label": "#catchup",
+     "id": "catchup"
+    },
+    {
+     "type": "control",
+     "label": "إمارتك"
+    },
+    {
+     "type": "heading",
+     "label": "تحليل ما قبل المباراة",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "وين تنقل في الإمارات",
+     "level": 2
+    },
+    {
+     "type": "tab",
+     "label": "الأحداث",
+     "group": "m",
+     "key": "events"
+    },
+    {
+     "type": "tab",
+     "label": "التشكيلة",
+     "group": "m",
+     "key": "lineups"
+    },
+    {
+     "type": "tab",
+     "label": "الإحصائيات",
+     "group": "m",
+     "key": "stats"
+    },
+    {
+     "type": "tab",
+     "label": "المواجهات",
+     "group": "m",
+     "key": "h2h"
+    },
+    {
+     "type": "tab",
+     "label": "تقرير الفريقين",
+     "group": "m",
+     "key": "opp"
+    },
+    {
+     "type": "tab",
+     "label": "ورقة الصحفي",
+     "group": "m",
+     "key": "press"
+    },
+    {
+     "type": "heading",
+     "label": "البحرين",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الإمارات",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "بين الفريقين",
+     "level": 3
+    },
+    {
+     "type": "button",
+     "label": "وضع المعلّق",
+     "id": "commbtn"
+    },
+    {
+     "type": "button",
+     "label": "اطبعها"
+    },
+    {
+     "type": "button",
+     "label": "انسخ النص"
+    },
+    {
+     "type": "button",
+     "label": "شوفها على ملعب ثلاثي الأبعاد",
+     "id": "p3dbtn"
+    },
+    {
+     "type": "mount",
+     "label": "#p3d",
+     "id": "p3d"
+    },
+    {
+     "type": "heading",
+     "label": "البحرين4-1-4-1",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الاحتياط",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الإمارات4-2-3-1",
+     "level": 3
+    },
+    {
+     "type": "heading",
+     "label": "الخطط والتبديلات",
+     "level": 2
+    },
+    {
+     "type": "heading",
+     "label": "أسئلة عن المباراة",
+     "level": 2
+    },
+    {
+     "type": "button",
+     "label": "شارك",
+     "client": true,
+     "note": "app.js injects one «شارك» on every section.blk h2 (4 here)"
+    }
+   ]
+  }
+ }
+}
