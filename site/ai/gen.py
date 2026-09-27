@@ -56,6 +56,8 @@ STYLE = """اكتب باللهجة الإماراتية المحكية، مب ف
 - في النص المكتوب اكتب كل الأرقام والنتايج والدقايق بالأرقام (0-9) مب بالكلمات: «فاز 3 - 1»، «في الدقيقة 9»، «61%».
 - استعمل «فاز على» مب «هزم»، و«عقب» أو «بعدين» للترتيب.
 - لا تكتب «رقم 1» أو «1 مرة»: قل «أول فوز»، «مرة وحدة»، «المتصدر».
+- لا تتكلم عن البيانات نفسها («بالبيانات»، «حسب البيانات»، «مسجل بالبيانات»، «في البيانات»). ولا تكتب «نظافة شبكته»: قول «ما استقبل أي هدف».
+- الأوقات اكتبها بالضبط مثل ما هي في البيانات بصيغة 24 ساعة (17:15)، بدون «عصرا» أو «مساء».
 - اذكر الأرقام بس، لا الدوافع ولا المشاعر ولا النصايح: ممنوع «معنويات»، «دفعة معنوية»، «لازم يثبت نفسه»، «حافز»، «ثقة». وبدون إيموجي.
 """
 
@@ -153,8 +155,20 @@ MASC_VERBS = "فاز|خسر|تعادل|تقدم|تقدّم|سجل|سجّل|لع�
 EMOJI = re.compile("[\U0001F000-\U0001FAFF\u2600-\u27BF\uFE0F\u200D\u2B00-\u2BFF]")
 FIXES = [("اللمسات على المرمى", "التسديدات على المرمى")]
 ALLOWED = {"إيي", "ييي", "يات", "ياي", "الياي", "يديد"}   # correct Emirati (ج→ي): never "fixed" by any pass (owner, 2026-09-27)
+AMPM = {"الفجر": "am", "فجرا": "am", "صباحا": "am", "صباحاً": "am", "الصبح": "am", "الصباح": "am", "ظهرا": "noon", "ظهراً": "noon", "الظهر": "noon",
+        "عصرا": "pm", "عصراً": "pm", "العصر": "pm", "مساء": "pm", "مساءً": "pm", "مساءا": "pm", "المسا": "pm", "المساء": "pm", "بالليل": "pm", "ليلا": "pm", "ليلاً": "pm", "الليل": "pm"}
+def to24(t):
+    """«5:15 عصرا» → «17:15» (every time on the site is 24-hour)."""
+    def f(m):
+        h, mm, w = int(m.group(1)), m.group(2), AMPM[m.group(3)]
+        if w == "pm" and h < 12: h += 12
+        elif w == "noon" and h < 6: h += 12
+        elif w == "am" and h == 12: h = 0
+        return f"{h:02d}:{mm}" if h < 10 and w == "am" else f"{h}:{mm}"
+    return re.sub(r"(?<!\d)(\d{1,2}):(\d{2})\s*(?:ب?ال)?\s*(" + "|".join(sorted(AMPM, key=len, reverse=True)) + r")(?!\w)", f, t)
 def grammar(t, nations=()):
     if not isinstance(t, str): return t
+    t = to24(t)
     t = re.sub(r"\s{2,}", " ", EMOJI.sub("", t)).strip()
     for a, b in FIXES: t = re.sub(r"(?<!\w)([وبل]?)" + re.escape(a) + r"(?!\w)", lambda m: m.group(1) + b, t)
     # plurals after 3-10 («11 فوز» and up stays: accepted Gulf usage)
@@ -263,8 +277,9 @@ SUM_SYS = STYLE + NAT_RULE + """
 3) headline: عنوان قصير (أقل من 70 حرف).
 """
 SUM_SCHEMA = OBJ({"headline": S(80), "summary": S(900), "thread": ARR(S(270), 6)})
+PROMPT_V = {"why": 2, "summary": 2}   # bump to regenerate a kind after a prompt change (2026-09-27: why = numbers, summary = story)
 def do_summary(md):
-    ctx = match_facts(md); sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+    ctx = match_facts(md); sig = hashlib.sha1(json.dumps([PROMPT_V["summary"], ctx], sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("summary", str(md["id"]), sig): return "cached"
     out = gemini(SUM_SYS, ctx, SUM_SCHEMA, tokens=8000, kind="summary")
     if not out: return "fail"
@@ -592,7 +607,7 @@ def do_why(md):
     H, A = ctx["home"], ctx["away"]
     ctx["result"] = {"draw": gh == ga, "winner": {"team": H if gh > ga else A, "goals": max(gh, ga)} if gh != ga else None, "loser": {"team": A if gh > ga else H, "goals": min(gh, ga)} if gh != ga else None,
                      "draw_goals_each": gh if gh == ga else None}
-    sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+    sig = hashlib.sha1(json.dumps([PROMPT_V["why"], ctx], sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("why", str(md["id"]), sig): return "cached"
     out = gemini(WHY_SYS, ctx, WHY_SCHEMA, temp=0.3, tokens=4000, kind="why")
     if not out: return "fail"

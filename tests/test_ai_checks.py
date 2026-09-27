@@ -131,3 +131,11 @@ def test_audit_w13a_generic_rules():
     assert checks.check_history("هذا فوزه رقم 2 في البطولة.", {})
     assert checks.check_history("مفتاح المباراة: مفتاح المباراة.", {})
     assert checks.check_history("مفتاح المباراة: هجوم الشارقة اللي سجل 10 أهداف قدام دفاع استقبل 9.", {}) is None
+
+def test_meta_phrases_and_24h_times():
+    assert checks.check_history("منتخب الإمارات فورمته فوز واحد مسجل بالبيانات.", {})
+    assert checks.check_history("منتخب الإمارات المتصدر بفارق نظافة شبكته.", {})
+    assert checks.check_history("منتخب الإمارات ما استقبل أي هدف في مباراتين.", {}) is None
+    assert gen.grammar("يوم 2 أكتوبر 2026 الساعة 5:15 عصرا بتوقيت الإمارات") == "يوم 2 أكتوبر 2026 الساعة 17:15 بتوقيت الإمارات"
+    assert gen.grammar("الساعة 9:30 مساءً") == "الساعة 21:30"
+    assert gen.grammar("الساعة 19:45") == "الساعة 19:45"
