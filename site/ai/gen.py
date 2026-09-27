@@ -238,8 +238,32 @@ def do_podcast(ctx, audio):
     if audio: polly_mp3([("Zayd" if l["who"] == "zayd" else "Hala", l["spoken"]) for l in lines], os.path.join(CACHE, "podcast", wk + ".mp3"))
     return "new"
 
+# ---- 301: «أهم 5 أشياء اليوم» on the home page (gated like every generated text)
+D5_SYS = STYLE + """
+المهمة: عندك مباريات اليوم (عربية أول) وأرقام على المحك. اكتب items: 5 أسطر بالضبط، كل سطر جملة وحدة أقل من 150 حرف،
+كل سطر عن شي يستاهل المشجع العربي يعرفه اليوم (مباراة مهمة وموعدها بتوقيت الإمارات، رقم قياسي على المحك، مباراة منتخب).
+الأولوية: منتخبات عربية، ديربيات، القمة في الدوريات العربية، ثم أبطال آسيا وأفريقيا، ثم أوروبا. لا تخترع أي شي.
+"""
+D5_SCHEMA = OBJ({"items": ARR(S(170), 5)})
+def do_daily5():
+    today = (dt.datetime.utcnow() + dt.timedelta(hours=4)).strftime("%Y%m%d")
+    day = get(f"day/{today}.json") or {"matches": []}
+    ms = [{"comp": m.get("comp_name_ar"), "home": team_ar(m["home"]), "away": team_ar(m["away"]), "kickoff_uae": (m.get("kickoff_uae") or "")[11:16], "probs": m.get("probs")} for m in day.get("matches", []) if m.get("status") == "scheduled"][:40]
+    facts = []
+    for c in (538,):
+        fm = (get(f"comp/{c}/facts.json") or {}).get("matches", {})
+        for m in day.get("matches", []):
+            facts += [f.get("text_ar") for f in fm.get(str(m["id"]), []) if f.get("record_at_stake")]
+    ctx = {"date": today, "matches": ms, "records_at_stake": facts[:10]}
+    if not ms: return "none"
+    sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+    if cached("daily5", today, sig): return "cached"
+    out = gemini(D5_SYS, ctx, D5_SCHEMA, temp=0.5, tokens=4000)
+    if not out: return "fail"
+    out = deep(out); out.update({"date": today, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("daily5", today, out); return "new"
+
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,round,podcast"); ap.add_argument("--limit", type=int, default=40)
+    ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,round,podcast,daily5"); ap.add_argument("--limit", type=int, default=40)
     ap.add_argument("--no-audio", action="store_true"); ap.add_argument("--days", type=int, default=10)
     a = ap.parse_args(); only = set(a.only.split(",")); now = dt.datetime.utcnow(); log = {}
     fx = {c: get(f"comp/{c}/fixtures.json") or {"matches": []} for c in UAE_COMPS}
@@ -289,6 +313,7 @@ def main():
                             if p.get("rating"): top.append({"name": p["name"], "team": team_ar(d[side]), "rating": p["rating"]})
                 pc["best_players"] = sorted(top, key=lambda x: -x["rating"])[:5]
                 log["podcast"] = do_podcast(pc, not a.no_audio)
+    if "daily5" in only: log["daily5"] = do_daily5()
     print(json.dumps(log, ensure_ascii=False))
 
 if __name__ == "__main__":

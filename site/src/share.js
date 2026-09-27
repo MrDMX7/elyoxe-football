@@ -104,5 +104,18 @@
       footer(x, W, H); return window.TifoShare.out(c, "tifo-card.png");
     });
   }
-  window.TifoShare = { story:story, wallpaper:wallpaper, banner:banner, out:out, card:card };
+  // 291: the coming round with Tifo odds; 314: the week's matches in the visitor's time zone with channels
+  function listCard(title, sub, rows, name){
+    var W = 1080, H = Math.max(1080, 320 + rows.length * 120 + 160), c = document.createElement("canvas"); c.width = W; c.height = H; var x = c.getContext("2d");
+    return fonts().then(function(){ return Promise.all(rows.map(function(r){ return Promise.all([r.h ? img("/logo/" + r.h + ".png") : null, r.a ? img("/logo/" + r.a + ".png") : null]); })); }).then(function(L){
+      x.fillStyle = NIGHT; x.fillRect(0, 0, W, H); var cl = [CHALK, PULSE, DUNE]; for (var i = 0; i < 27; i++){ x.fillStyle = cl[i % 3]; x.fillRect(i * 40, 0, 36, 36); }
+      text(x, title, W - 70, 150, fit(x, title, '800 60px "Noto Kufi Arabic"', W - 140), CHALK, "right"); if (sub) text(x, sub, W - 70, 210, '400 32px "Readex Pro"', "#B9C7C0", "right");
+      var y = 270; rows.forEach(function(r, i){ x.fillStyle = NIGHT2; x.fillRect(60, y, W - 120, 104);
+        if (L[i][0]) x.drawImage(L[i][0], W - 140, y + 22, 60, 60); if (L[i][1]) x.drawImage(L[i][1], 80, y + 22, 60, 60);
+        text(x, r.home, W - 160, y + 50, fit(x, r.home, '800 34px "Noto Kufi Arabic"', 300), CHALK, "right"); text(x, r.away, 160, y + 50, fit(x, r.away, '800 34px "Noto Kufi Arabic"', 300), CHALK, "left");
+        text(x, r.mid, W / 2, y + 50, '700 40px "Barlow Condensed"', DUNE); if (r.low) text(x, r.low, W / 2, y + 88, '400 26px "Readex Pro"', "#B9C7C0");
+        y += 120; });
+      footer(x, W, H); return window.TifoShare.out(c, name || "tifo-list.png"); });
+  }
+  window.TifoShare = { story:story, wallpaper:wallpaper, banner:banner, out:out, card:card, listCard:listCard };
 })();
