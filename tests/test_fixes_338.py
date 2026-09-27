@@ -238,3 +238,27 @@ def test_clock_of_live_periods():
     c = F.clock_of(st, "live")
     assert c == {"period": "2H", "period_start": "2026-09-27T19:08:48Z", "period_base": 45, "period_length": 45}
     assert F.clock_of(st, "ht")["period_start"] is None and F.clock_of(st, "scheduled") == {}
+
+
+def test_career_dates_in_epoch_ms():
+    from compute import insights as IN
+    pd = {"careerHistory": {"careerItems": {"senior": {"teamEntries": [
+        {"team": "MCO Oujda", "teamId": 102045, "startDate": 1600128000000, "endDate": "", "appearances": None},
+        {"team": "X", "teamId": 1, "startDate": "2019-07-01T00:00:00Z", "endDate": None}]}}}}
+    c = IN.career(pd)["senior"]
+    assert c[0]["start"] == "2020-09-15" and c[0]["end"] is None           # FotMob sent milliseconds (player 1257567)
+    assert c[1]["start"] == "2019-07-01"
+
+
+def test_careers_skips_one_bad_player(tmp_path, monkeypatch):
+    import more as MO
+    p = _poller(tmp_path, "analytics")
+    p.store.put_json("comp/538/stats.json", {"lists": {"goals": [{"player": {"id": 1}}, {"player": {"id": 2}}]}})
+    monkeypatch.setattr(MO, "leagues", lambda: [538])
+    good = {"name": "Good", "careerHistory": {"careerItems": {"senior": {"teamEntries": [{"teamId": 9, "startDate": "2020-01-01"}]}}}}
+    bad = {"name": "Bad", "careerHistory": {"careerItems": {"senior": {"teamEntries": [{"teamId": 9, "startDate": {"odd": 1}}]}}}}
+    monkeypatch.setattr(MO.IN, "career", lambda pd: (_ for _ in ()).throw(TypeError("boom")) if pd["name"] == "Bad" else {"senior": [], "national_team": [], "league_seasons": []})
+    p.fm.http.get_json = lambda url, min_ttl=0: bad if url.endswith("id=1") else good
+    MO.careers(p)
+    assert "player/2/career.json" in p.store.written and "player/1/career.json" not in p.store.written
+    assert p.store.health["careers"]["ok"] and "1" in p.store.health["careers"]["note"]

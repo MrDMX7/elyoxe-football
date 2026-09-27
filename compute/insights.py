@@ -425,14 +425,25 @@ def firsts(detail, ledger, history_rows):
 MILESTONES = (50, 100, 150, 200, 250, 300)
 
 
+def _day(v):
+    """FotMob career dates: usually an ISO string, sometimes epoch milliseconds (int), sometimes ""."""
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        from datetime import datetime, timezone
+        try:
+            return datetime.fromtimestamp(v / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
+        except (OverflowError, OSError, ValueError):
+            return None
+    return (v[:10] or None) if isinstance(v, str) else None
+
+
 def career(pd):
     """playerData careerHistory -> clubs [{team, start, end, apps, goals, assists, active, loan}] + season rows."""
     ci = ((pd.get("careerHistory") or {}).get("careerItems") or {})
     out = {}
     for kind in ("senior", "national team"):
         c = ci.get(kind) or {}
-        out[kind.replace(" ", "_")] = [{"team": x.get("teamId"), "name": x.get("team"), "start": (x.get("startDate") or "")[:10] or None,
-                                        "end": (x.get("endDate") or "")[:10] or None, "apps": _n(x.get("appearances")),
+        out[kind.replace(" ", "_")] = [{"team": x.get("teamId"), "name": x.get("team"), "start": _day(x.get("startDate")),
+                                        "end": _day(x.get("endDate")), "apps": _n(x.get("appearances")),
                                         "goals": _n(x.get("goals")), "assists": _n(x.get("assists")), "active": x.get("active"),
                                         "loan": ((x.get("transferType") or {}).get("text") or "") == "on loan"}
                                        for x in c.get("teamEntries") or []]
