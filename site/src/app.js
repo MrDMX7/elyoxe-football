@@ -184,6 +184,10 @@
     // the team file can lag a live match; live.json (fresh every few seconds) wins for the matches it carries
     return Promise.all([get("team/" + ID + ".json"), get("live.json").catch(function(){ return { matches:[] }; })]).then(function(r){
       var t = r[0], by = {}; (r[1].matches || []).forEach(function(m){ by[m.id] = m; }); t.fixtures = (t.fixtures || []).map(function(m){ var l = by[m.id]; return l ? Object.assign({}, m, { status:l.status, score:l.score, minute:l.minute, period:l.period, period_start:l.period_start, period_base:l.period_base, period_length:l.period_length }) : m; });
+      // a fixture that says live/ht but live.json doesn't list it: the match file decides (once); never «مباشر» from a stale file
+      var stale = t.fixtures.filter(function(m){ return R.isLive(m) && !by[m.id]; });
+      return Promise.all(stale.map(function(m){ return get("match/" + m.id + ".json").then(function(d){ ["status", "score", "minute", "status_detail"].forEach(function(k){ m[k] = d[k]; }); }).catch(function(){ if (Date.now() - Date.parse(m.kickoff_utc) > 3 * 3600e3){ m.status = "unknown"; m.minute = null; } }); })).then(function(){ return t; });
+    }).then(function(t){
       var f = R.teamFixtures(t);
       set("#next", f.next.length ? f.next.slice(0, 6).map(function(m){ return R.matchRow(m, { date:true }); }).join("") : '<p class="empty">ما في مباريات ياية منشورة.</p>');
       set("#past", f.past.length ? f.past.slice(0, 10).map(function(m){ return R.matchRow(m, { date:true }); }).join("") : '<p class="empty">ما في نتايج.</p>');
@@ -203,7 +207,7 @@
     var el = $("#uaecd"); if (!el) return; var tid = PAGE === "team" ? +ID : natId(); if (!tid){ el.innerHTML = ""; return; }
     (CD && CD._t === tid ? Promise.resolve(CD) : fetch("/tn/" + tid + ".json").then(function(r){ return r.ok ? r.json() : null; }).then(function(t){ var m = t && t.next; CD = m && m.kickoff_utc && !m.time_tbd ? m : null; if (CD) CD._t = tid; return CD; })).then(function(m){
       if (!m || m.status === "finished" || Date.now() - Date.parse(m.kickoff_utc) > 3 * 3600e3){ el.innerHTML = ""; return; }
-      if (R.isLive(m) || Date.parse(m.kickoff_utc) <= Date.now()){ el.innerHTML = '<a class="cd" href="/m/' + m.id + '/"><b>المنتخب يلعب الحين</b><span class="dg">مباشر</span></a>'; return; }
+      if (R.isLive(m) || Date.parse(m.kickoff_utc) <= Date.now()){ get("live.json").then(function(lv){ var l = (lv.matches || []).filter(function(x){ return String(x.id) === String(m.id); })[0]; el.innerHTML = l && R.isLive(l) ? '<a class="cd" href="/m/' + m.id + '/"><b>المنتخب يلعب الحين</b><span class="dg">مباشر</span></a>' : ""; }).catch(function(){ el.innerHTML = ""; }); return; }   // live only when live.json confirms it
       var inHero = window.__feat && String(window.__feat.id) === String(m.id);
       if (!el.querySelector(".dg") || el.dataset.m !== String(m.id) + inHero){ el.dataset.m = String(m.id) + inHero;
         el.innerHTML = '<a class="cd" href="/m/' + m.id + '/"><span><b>' + (inHero ? "تبدا بعد" : R.tname(m.home) + " ضد " + R.tname(m.away)) + "</b>" + (inHero ? "" : '<br><span class="small">' + R.esc(R.dayLabel(R.ymd(m.kickoff_uae))) + " " + R.hhmm(m.kickoff_uae) + "</span>") + '</span><span class="dg"></span></a>'; }

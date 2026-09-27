@@ -123,7 +123,10 @@
   };
   // W4.8 feed: the live clock ticks between polls: period_base + time since period_start (frozen when period_start is null)
   R.clock = function(ps, pb, pl){ var e = Math.max(0, Math.floor((Date.now() - Date.parse(ps)) / 60000)); pl = +pl || 45; pb = +pb || 0; return e < pl ? (pb + e + 1) + "'" : (pb + pl) + "+" + (e - pl + 1) + "'"; };
-  var min0 = R.minute; R.minute = function(m){ if (m && m.period_start && m.period_base != null && /^(1H|2H|ET1|ET2)$/.test(m.period || "")) return '<bdi dir="ltr" class="lmin" data-ps="' + esc(m.period_start) + '" data-pb="' + m.period_base + '" data-pl="' + (m.period_length || 45) + '">' + R.clock(m.period_start, m.period_base, m.period_length) + "</bdi>"; return min0(m); };
+  // period codes in Arabic everywhere (a feed minute of "HT" never reaches the page)
+  var PER = { "1H":"الشوط الأول", "2H":"الشوط الثاني", ET1:"الشوط الإضافي الأول", ET2:"الشوط الإضافي الثاني", HT:"استراحة", BREAK:"استراحة", PEN:"ركلات الترجيح", PENS:"ركلات الترجيح", FT:"انتهت", AET:"بعد الإضافي", ET:"الوقت الإضافي" };
+  R.periodAr = function(c){ return PER[String(c || "").toUpperCase()] || ""; };
+  var min0 = R.minute; R.minute = function(m){ if (m && (m.status === "ht" || R.periodAr(m.minute) || (m.period && /^(HT|break)$/i.test(m.period)))) return R.periodAr(m.status === "ht" ? "HT" : m.minute) || R.periodAr(m.period) || "استراحة"; if (m && m.period_start && m.period_base != null && /^(1H|2H|ET1|ET2)$/.test(m.period || "")) return '<bdi dir="ltr" class="lmin" data-ps="' + esc(m.period_start) + '" data-pb="' + m.period_base + '" data-pl="' + (m.period_length || 45) + '">' + R.clock(m.period_start, m.period_base, m.period_length) + "</bdi>"; return min0(m); };
   // W2.7: positions in Arabic (squads, player pages)
   var POS = { GK:"حارس", G:"حارس", CB:"قلب دفاع", LB:"ظهير أيسر", RB:"ظهير أيمن", LWB:"ظهير أيسر", RWB:"ظهير أيمن", DM:"وسط دفاعي", CDM:"وسط دفاعي", CM:"وسط", LM:"وسط أيسر", RM:"وسط أيمن", AM:"وسط هجومي", CAM:"وسط هجومي", LW:"جناح أيسر", RW:"جناح أيمن", ST:"مهاجم", CF:"مهاجم", SS:"مهاجم ثاني", D:"مدافع", DF:"مدافع", M:"وسط", MF:"وسط", F:"مهاجم", FW:"مهاجم", GOALKEEPER:"حارس", KEEPER:"حارس", DEFENDER:"مدافع", MIDFIELDER:"وسط", FORWARD:"مهاجم", ATTACKER:"مهاجم" };
   R.pos = function(p){ var k = String(p || "").split(",")[0].trim().toUpperCase(); return POS[k] || (/[\u0600-\u06FF]/.test(p) ? p : ""); };

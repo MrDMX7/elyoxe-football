@@ -264,6 +264,9 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
     (st && st.groups || []).forEach(g => g.rows.forEach(r => teamIds.add(r.team.id)));
   }
   (day.matches || []).forEach(m => { if (!matchSum.has(m.id)) matchSum.set(m.id, m); [m.home, m.away].forEach(t => { if (t && t.id) teamIds.add(t.id); }); });
+  // a fixture that still says live/ht 3 h after kickoff is stale input: take a non-live copy from the fresher files, or say nothing live
+  const unstale = m => { if (!m || !R.isLive(m) || !(Date.now() - Date.parse(m.kickoff_utc) > 3 * 3600e3)) return m; const s = matchSum.get(m.id); return s && s !== m && !R.isLive(s) ? Object.assign({}, m, { status:s.status, score:s.score, minute:null }) : Object.assign({}, m, { status:"unknown", minute:null }); };
+  day.matches = (day.matches || []).map(unstale); compData.forEach(d => { if (d.fx && d.fx.matches) d.fx.matches = d.fx.matches.map(unstale); });
 
   // ---- 2. logos (self-hosted copies) + club colours from them, before any page that paints colour
   fs.mkdirSync(path.join(CACHE, "logo"), { recursive:true }); fs.mkdirSync(path.join(OUT, "logo"), { recursive:true });
@@ -439,8 +442,9 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
   let tcount = 0;
   const byTeam = new Map(); for (const m of matchSum.values()) for (const side of [m.home, m.away]) if (side && side.id){ if (!byTeam.has(side.id)) byTeam.set(side.id, { side, ms:[] }); byTeam.get(side.id).ms.push(m); }
   tlist.forEach((id, i) => {
-    let t = teams[i];
+    let t = teams[i]; if (t && t.fixtures) t.fixtures = t.fixtures.map(unstale);
     if (!t){ const b = byTeam.get(id); if (!b) return; t = { id, name:b.side.name, name_ar:b.side.name_ar, fixtures:b.ms, squad:[], partial:true }; }
+    if (/^(winner|loser)\b/i.test(t.name || "") || /^[1-4][A-Z]{1,4}(\/[1-4]?[A-Z]{1,4})?$/.test(t.name || "")) return;   // bracket placeholders («Winner SF 2», «3CDE») get no page
     tcount++; teamPages.add(+t.id);
     const f = R.teamFixtures(t);
     { const slim = m => m && { id:m.id, comp:m.comp, kickoff_utc:m.kickoff_utc, kickoff_uae:m.kickoff_uae, status:m.status, minute:m.minute, score:m.score, home:m.home, away:m.away, time_tbd:m.time_tbd };   // favourites card (179)

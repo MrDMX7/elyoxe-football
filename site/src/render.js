@@ -48,7 +48,8 @@
     var H = md.home.name_ar || md.home.name, A = md.away.name_ar || md.away.name, s = md.score, lines = [], ev = md.events || [];
     var lead = s.home > s.away ? H + " متقدم " + s.home + " - " + s.away : s.away > s.home ? A + " متقدم " + s.away + " - " + s.home : "التعادل " + s.home + " - " + s.away;
     if (md.status === "finished") lead = s.home > s.away ? H + " فاز " + s.home + " - " + s.away : s.away > s.home ? A + " فاز " + s.away + " - " + s.home : "انتهت بالتعادل " + s.home + " - " + s.away;
-    lines.push(lead + (R.isLive(md) && md.minute ? " (الدقيقة " + String(md.minute).replace(/'/g, "") + ")" : "") + ".");
+    var mn0 = String(md.minute || "").replace(/'/g, ""), per = R.periodAr ? R.periodAr(md.status === "ht" ? "HT" : mn0) : "";
+    lines.push(lead + (R.isLive(md) && (md.minute || md.status === "ht") ? (per ? " (" + per + ")" : " (الدقيقة " + mn0 + ")") : "") + ".");
     var goals = ev.filter(function(e){ return /goal/.test(e.type) && e.player; });
     if (goals.length) lines.push("الأهداف: " + goals.map(function(e){ return e.player.name + " " + e.minute + "'" + (e.type === "penalty_goal" ? " من بلنتي" : e.type === "own_goal" ? " في مرماه" : ""); }).join("، ") + ".");
     var reds = ev.filter(function(e){ return (e.type === "red" || e.type === "second_yellow") && e.player; });
