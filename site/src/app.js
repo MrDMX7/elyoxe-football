@@ -12,7 +12,7 @@
   function mine(){ try { return +localStorage.getItem("tifo.mine") || null; } catch (e){ return null; } }
   function setMine(id, name){ try { if (id) { localStorage.setItem("tifo.mine", id); localStorage.setItem("tifo.mine.name", name || ""); } else { localStorage.removeItem("tifo.mine"); } } catch (e){} }
   function uaeToday(off){ var d = new Date(Date.now() + 4 * 3600e3 + (off || 0) * 864e5); return d.toISOString().slice(0, 10); }
-  function set(sel, html){ var el = $(sel); if (el){ el.innerHTML = html; R.localize(el); } }
+  function set(sel, html){ var el = $(sel); if (el && el._h !== html){ el._h = html; el.innerHTML = html; R.localize(el); } }   // W2.11: unchanged HTML is not re-rendered
   // ---- country (203, 199): time zone + what comes first; guessed from the browser's time zone, changeable in the header
   function country(){ try { var c = localStorage.getItem("tifo.country"); if (c) return c; } catch (e){} var tz = ""; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e){} var hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; return hit ? hit[0] : "xx"; }
   function applyCountry(){ var c = country(), row = R.COUNTRIES.filter(function(x){ return x[0] === c; })[0]; try { R.TZ = row ? row[2] : Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e){ R.TZ = "Asia/Dubai"; }
@@ -32,7 +32,9 @@
   function lev(a, b, max){ if (Math.abs(a.length - b.length) > max) return max + 1; var p = [], i, j; for (j = 0; j <= b.length; j++) p[j] = j; for (i = 1; i <= a.length; i++){ var c = [i], lo = i; for (j = 1; j <= b.length; j++){ c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); if (c[j] < lo) lo = c[j]; } if (lo > max) return max + 1; p = c; } return p[b.length]; }
   function fuzzy(item, v){ var max = v.length >= 7 ? 2 : 1; return (item[4] + " " + item[5]).split(/\s+/).some(function(w){ return w.length >= 3 && (lev(w, v, max) <= max || lev(w.replace(/^ال/, ""), v.replace(/^ال/, ""), max) <= max); }); }
   if (sb0) sb0.onclick = function(){ var box = $("#srchbox"); if (box){ box.remove(); return; }
-    box = document.createElement("div"); box.id = "srchbox"; box.className = "ctrybox"; box.innerHTML = '<input id="sq" placeholder="نادي، لاعب، بطولة…" aria-label="بحث" autocomplete="off"><div id="sr"></div>'; document.body.appendChild(box);
+    // W2.9: search is a sheet: a real search form, Enter opens the first hit, a failed index load says so
+    box = document.createElement("div"); box.id = "srchbox"; box.className = "ctrybox srchsheet"; box.innerHTML = '<i class="grab" aria-hidden="true"></i><form role="search" class="sfrm"><input id="sq" type="search" enterkeyhint="search" placeholder="نادي، لاعب، بطولة…" aria-label="بحث" autocomplete="off"></form><div id="sr"></div>'; document.body.appendChild(box);
+    box.querySelector("form").onsubmit = function(e){ e.preventDefault(); var a = box.querySelector("#sr a"); if (a) location.href = a.href; };
     var q = $("#sq"); q.focus();
     (SIDX ? Promise.resolve(SIDX) : fetch("/assets/search." + sb0.dataset.v + ".json").then(function(r){ return r.json(); }).then(function(x){ SIDX = x.map(function(i){ return i.concat([norm(i[1]), norm(i[2])]); }); return SIDX; })).then(function(){
       var TY = { c:"بطولة", t:"نادي", p:"لاعب", r:"صفحة" };
@@ -41,13 +43,13 @@
         var hits = SIDX.filter(has); if (hits.length < 5 && v.length >= 4 && v.indexOf(" ") < 0) hits = hits.concat(SIDX.filter(function(i){ return !has(i) && fuzzy(i, v); }).slice(0, 12));
         hits = hits.sort(function(a, b){ var o = { c:0, t:1, r:2, p:3 }; return (a[4].indexOf(v) === 0 || a[5].indexOf(v) === 0 ? 0 : 1) - (b[4].indexOf(v) === 0 || b[5].indexOf(v) === 0 ? 0 : 1) || o[a[0]] - o[b[0]]; }).slice(0, 20);
         set("#sr", hits.length ? "<ul>" + hits.map(function(i){ return '<li><a href="' + i[3] + '"><span>' + R.esc(i[1] || i[2]) + (i[1] && i[2] ? ' <span class="muted small lat">' + R.esc(i[2]) + "</span>" : "") + '</span><span class="muted small">' + TY[i[0]] + "</span></a></li>"; }).join("") + "</ul>" : '<p class="muted small">ما لقينا شي.</p>'); };
-    }); };
+    }).catch(function(){ set("#sr", '<p class="muted small">ما قدرنا نحمّل البحث، تأكد من النت.</p>'); }); };
   document.addEventListener("keydown", function(e){ if (e.key === "Escape"){ ["#srchbox", "#ctrybox"].forEach(function(s){ var b = $(s); if (b) b.remove(); }); } });
   // ---- favourites (179): several clubs and players; the first club stays «فريقي»
   function favs(){ try { return JSON.parse(localStorage.getItem("tifo.favs") || "[]"); } catch (e){ return []; } }
   function setFavs(f){ try { localStorage.setItem("tifo.favs", JSON.stringify(f)); } catch (e){} }
   (function migrate(){ var m = mine(), f = favs(); if (m && !f.some(function(x){ return x.t === "team" && x.id === m; })){ f.unshift({ t:"team", id:m, n:(localStorage.getItem("tifo.mine.name") || "") }); setFavs(f); } })();
-  function stamp(g){ var el = $("#updated"); if (el && g) el.textContent = "آخر تحديث " + new Date(g).toLocaleTimeString("ar-AE-u-nu-latn", { hour:"2-digit", minute:"2-digit", timeZone:"Asia/Dubai" }); document.documentElement.classList.remove("stale"); document.dispatchEvent(new CustomEvent("tifo:fresh", { detail:g })); }
+  function stamp(g){ var el = $("#updated"); if (el && g) el.textContent = "آخر تحديث " + new Date(g).toLocaleTimeString("ar-AE-u-nu-latn", { hour:"2-digit", minute:"2-digit", hourCycle:"h23", timeZone:R.TZ || "Asia/Dubai" }); document.documentElement.classList.remove("stale"); document.dispatchEvent(new CustomEvent("tifo:fresh", { detail:g })); }
   // W1.1d: a failed refresh never blanks what the page already shows; it says so and retries (20 -> 40 -> 60 s)
   var fails = 0; function retry(fn){ fails++; var n = $("#netnote"); if (!n){ n = document.createElement("p"); n.id = "netnote"; n.className = "netnote"; (document.querySelector(".hero-in") || document.querySelector("main")).appendChild(n); } n.textContent = "ما قدرنا نحدّث، نحاول مرة ثانية…"; poll(fn, Math.min(60e3, 20e3 * fails)); }
   function ok(){ fails = 0; var n = $("#netnote"); if (n) n.remove(); }
@@ -69,7 +71,7 @@
       set("#daytitle", R.dayNav(uaeToday(dayOff), uaeToday(0)));
       var natIds = []; try { natIds = JSON.parse(localStorage.getItem("tifo.natids") || "{}")[country()] || []; } catch (e){}
       set("#day", R.dayList(ms, idx, { mine:mine(), country:country(), natIds:natIds, empty:"ما في مباريات في هاليوم." })); document.dispatchEvent(new CustomEvent("tifo:day", { detail:{ ms:ms, idx:idx, live:live, off:dayOff } }));
-      var lv = (live.matches || []); set("#livecount", lv.length ? '<i class="cardflip"></i>' + lv.length + " مباراة مباشرة الحين" : "");
+      var lv = (live.matches || []); set("#livecount", lv.length ? '<i class="cardflip"></i>' + (R.n ? R.n(lv.length, ["مباراة وحدة مباشرة الحين", "مباراتين مباشرة الحين", "مباريات مباشرة الحين", "مباراة مباشرة الحين"]) : lv.length + " مباريات مباشرة الحين") : "");
       if (dayOff === 0) stand(R.featured(ms));
       stamp(live.generated || day.generated);
       myCard(idx); countdown();
@@ -79,7 +81,7 @@
   var ST = null;
   function stand(m){
     var box = $("#stand"); if (!box || !m || !window.TifoStand) return;
-    set("#standcap", R.standCap(m)); var k = $("#standkick"); if (k) k.textContent = R.isLive(m) ? "مباشر الحين" : m.status === "finished" ? "انتهت" : "مباراة اليوم";
+    set("#standcap", R.standCap(m)); var k = $("#standkick"); if (k) k.textContent = R.kick ? R.kick(m) : (R.isLive(m) ? "مباشر الحين" : m.status === "finished" ? "انتهت" : "مباراة اليوم");
     if (!ST) ST = window.TifoStand.mount(box.querySelector("canvas"));
     ST.set(m);
   }
@@ -96,8 +98,10 @@
   // ---- competition: standings (live), fixtures, leaders
   function comp(){
     var cid = +B.dataset.comp;
-    return Promise.all([get("comp/" + cid + "/standings.json").catch(function(){ return null; }), get("comp/" + cid + "/fixtures.json").catch(function(){ return null; }), get("comp/" + cid + "/stats.json").catch(function(){ return null; }), get("live.json").catch(function(){ return { matches:[] }; })]).then(function(r){
-      var st = r[0], fx = r[1], stats = r[2], live = (r[3].matches || []).filter(function(m){ return m.comp === cid; });
+    // W2.11: after the first load a competition page polls only the table and live.json; fixtures and scorers come once
+    var first = !comp._fx;
+    return Promise.all([get("comp/" + cid + "/standings.json").catch(function(){ return null; }), first ? get("comp/" + cid + "/fixtures.json").catch(function(){ return null; }) : Promise.resolve(comp._fx), first ? get("comp/" + cid + "/stats.json").catch(function(){ return null; }) : Promise.resolve(null), get("live.json").catch(function(){ return { matches:[] }; })]).then(function(r){
+      if (r[1]) comp._fx = r[1]; var st = r[0], fx = r[1], stats = r[2], live = (r[3].matches || []).filter(function(m){ return m.comp === cid; });
       if (st){ var lt = R.liveTable(st, live); set("#table", (lt.is_live ? '<p class="note"><i class="cardflip"></i>الترتيب اللحظي: لو انتهت المباريات الحين</p>' : "") + R.standings(lt, { mine:mine() })); }
       if (fx){ var by = {}; live.forEach(function(m){ by[m.id] = m; }); fx.matches = fx.matches.map(function(m){ return by[m.id] || m; }); roundsUI(fx); }
       if (stats){ set("#goals", R.leaders(stats, "goals")); set("#assists", R.leaders(stats, "assists")); }
@@ -119,7 +123,7 @@
     (fx.matches || []).forEach(function(m){ var p = WI.picks[m.id]; if (!p) return; var h = by[m.home.id], a = by[m.away.id]; if (!h || !a) return;
       var hs = p === "H" ? 1 : 0, as = p === "A" ? 1 : 0; [[h, hs, as], [a, as, hs]].forEach(function(x){ var r = x[0]; r.played++; r.gf += x[1]; r.ga += x[2]; r.gd = r.gf - r.ga; r.pts += x[1] > x[2] ? 3 : x[1] === x[2] ? 1 : 0; }); });
     rows.sort(function(x, y){ return y.pts - x.pts || y.gd - x.gd || y.gf - x.gf || x.was - y.was; });
-    set("#wi-t", '<div class="tblwrap"><table class="st"><thead><tr><th>#</th><th style="text-align:start">الفريق</th><th>لعب</th><th>الفرق</th><th>نقاط</th></tr></thead><tbody>' + rows.map(function(r, i){ var d = r.was - (i + 1); return '<tr class="' + (mine() === r.team.id ? "mine" : "") + '"><td>' + (i + 1) + (d ? '<span class="mv ' + (d > 0 ? "up" : "dn") + '">' + (d > 0 ? "▲" : "▼") + Math.abs(d) + "</span>" : "") + '</td><td class="tm">' + R.logo(r.team, "sm") + " " + R.tname(r.team) + "</td><td>" + r.played + '</td><td><bdi dir="ltr">' + (r.gd > 0 ? "+" : "") + r.gd + '</bdi></td><td class="pts">' + r.pts + "</td></tr>"; }).join("") + "</tbody></table></div>");
+    set("#wi-t", '<div class="tblwrap"><table class="st"><thead><tr><th>#</th><th style="text-align:start">الفريق</th><th>لعب</th><th>الفارق</th><th>نقاط</th></tr></thead><tbody>' + rows.map(function(r, i){ var d = r.was - (i + 1); return '<tr class="' + (mine() === r.team.id ? "mine" : "") + '"><td>' + (i + 1) + (d ? '<span class="mv ' + (d > 0 ? "up" : "dn") + '">' + (d > 0 ? "▲" : "▼") + Math.abs(d) + "</span>" : "") + '</td><td class="tm">' + R.logo(r.team, "sm") + " " + R.tname(r.team) + "</td><td>" + r.played + '</td><td><bdi dir="ltr">' + (r.gd > 0 ? "+" : "") + r.gd + '</bdi></td><td class="pts">' + r.pts + "</td></tr>"; }).join("") + "</tbody></table></div>");
     if (!box._wired){ box._wired = true; box.addEventListener("click", function(e){ var b = e.target.closest("button"); if (!b) return; if (b.dataset.r){ WI.round = b.dataset.r; } else if (b.dataset.m){ WI.picks[b.dataset.m] = WI.picks[b.dataset.m] === b.dataset.v ? undefined : b.dataset.v; } whatif(WI.st, WI.fx); }); }
   }
   var curRound = null;
@@ -147,7 +151,8 @@
   function match(){
     return Promise.all([index(), get("match/" + ID + ".json")]).then(function(r){
       var idx = r[0], md = r[1];
-      MD = md; FULL = md; setTimeout(dist, 0); var pb = $("#p3dbtn"); if (pb) pb.hidden = !(md.lineups && md.lineups.home);
+      if (MD && md.generated && MD.generated === md.generated && MD._full){ var t0 = Date.parse(md.kickoff_utc); if (R.isLive(md) || (md.status === "scheduled" && t0 - Date.now() < 90 * 60e3)) poll(match, 20e3); return; }   // W2.11: nothing new
+      md._full = 1; MD = md; FULL = md; setTimeout(dist, 0); var pb = $("#p3dbtn"); if (pb) pb.hidden = !(md.lineups && md.lineups.home);
       set("#mh", R.matchHead(md)); set("#facts", R.matchFacts(md, idx)); set("#catchup", R.catchup(md)); set("#events", R.events(md)); set("#lineups", R.lineups(md)); set("#stats", R.stats(md)); set("#h2h", R.h2h(md)); document.dispatchEvent(new CustomEvent("tifo:match", { detail:md }));   // v3 shell: after the re-render
       stamp(md.generated); ok();
       var t = Date.parse(md.kickoff_utc), soon = md.status === "scheduled" && t - Date.now() < 90 * 60e3 && t > Date.now() - 3 * 3600e3;
@@ -158,7 +163,7 @@
   var ovT = null;
   function overlay(){ clearTimeout(ovT); ovT = setTimeout(function(){ if (!MD || !(R.isLive(MD) || MD.status === "scheduled")) return; if (document.hidden){ overlay(); return; }
     get("live.json").then(function(lv){ var m = (lv.matches || []).filter(function(x){ return String(x.id) === String(ID); })[0];
-      if (m && (JSON.stringify(m.score) !== JSON.stringify(MD.score) || m.minute !== MD.minute || m.status !== MD.status)){ ["score", "minute", "status", "status_detail", "penalties"].forEach(function(k){ if (k in m) MD[k] = m[k]; }); set("#mh", R.matchHead(MD)); document.dispatchEvent(new CustomEvent("tifo:match", { detail:MD })); }
+      if (m && (JSON.stringify(m.score) !== JSON.stringify(MD.score) || m.minute !== MD.minute || m.status !== MD.status || m.period_start !== MD.period_start)){ ["score", "minute", "status", "status_detail", "penalties", "period", "period_start", "period_base", "period_length"].forEach(function(k){ if (k in m) MD[k] = m[k]; }); set("#mh", R.matchHead(MD)); document.dispatchEvent(new CustomEvent("tifo:match", { detail:MD })); }
       stamp(lv.generated); }).catch(function(){}).then(overlay); }, 10e3); }
   // W1.1g: a live match whose data is more than 90 s old says so (the score stays)
   function weak(md){ var el = $("#weaknote"); var old = R.isLive(md) && md.generated && Date.now() - Date.parse(md.generated) > 90e3;
@@ -176,7 +181,9 @@
     function isFav(){ return favs().some(function(x){ return x.t === "team" && x.id === +ID; }); }
     function paint(){ if (!btn) return; var on = isFav(); btn.textContent = on ? (mine() === +ID ? "فريقي ✓" : "في مفضلتي ✓") : (favs().length ? "ضيفه لمفضلتي" : "هذا فريقي"); btn.classList.toggle("on", on); }
     if (btn){ btn.onclick = function(){ var f = favs(); if (isFav()){ f = f.filter(function(x){ return !(x.t === "team" && x.id === +ID); }); if (mine() === +ID){ var nx = f.filter(function(x){ return x.t === "team"; })[0]; setMine(nx ? nx.id : null, nx ? nx.n : ""); } } else { f.push({ t:"team", id:+ID, n:B.dataset.name }); if (!mine()) setMine(+ID, B.dataset.name); } setFavs(f); paint(); }; paint(); }
-    return get("team/" + ID + ".json").then(function(t){
+    // the team file can lag a live match; live.json (fresh every few seconds) wins for the matches it carries
+    return Promise.all([get("team/" + ID + ".json"), get("live.json").catch(function(){ return { matches:[] }; })]).then(function(r){
+      var t = r[0], by = {}; (r[1].matches || []).forEach(function(m){ by[m.id] = m; }); t.fixtures = (t.fixtures || []).map(function(m){ var l = by[m.id]; return l ? Object.assign({}, m, { status:l.status, score:l.score, minute:l.minute, period:l.period, period_start:l.period_start, period_base:l.period_base, period_length:l.period_length }) : m; });
       var f = R.teamFixtures(t);
       set("#next", f.next.length ? f.next.slice(0, 6).map(function(m){ return R.matchRow(m, { date:true }); }).join("") : '<p class="empty">ما في مباريات ياية منشورة.</p>');
       set("#past", f.past.length ? f.past.slice(0, 10).map(function(m){ return R.matchRow(m, { date:true }); }).join("") : '<p class="empty">ما في نتايج.</p>');
@@ -190,14 +197,18 @@
   var ics = $("#ics"); if (ics) ics.href = "webcal://" + location.host + "/v1/team/" + ID + ".ics";
   // ---- countdown to the national team's next match (62), on home and /uae/
   var CD = null;
+  // W2.4: the countdown follows the visitor's national team (window.NAT, iso2 -> team id), built once, then only the digits change
+  function natId(){ var c = country(); return (window.NAT || {})[c] || null; }
   function countdown(){
-    var el = $("#uaecd"); if (!el) return;
-    (CD ? Promise.resolve(CD) : get("team/5789.json").then(function(t){ CD = R.teamFixtures(t).next.filter(function(m){ return m.kickoff_utc && !m.time_tbd; })[0] || null; return CD; })).then(function(m){
-      if (!m){ el.innerHTML = ""; return; }
+    var el = $("#uaecd"); if (!el) return; var tid = PAGE === "team" ? +ID : natId(); if (!tid){ el.innerHTML = ""; return; }
+    (CD && CD._t === tid ? Promise.resolve(CD) : fetch("/tn/" + tid + ".json").then(function(r){ return r.ok ? r.json() : null; }).then(function(t){ var m = t && t.next; CD = m && m.kickoff_utc && !m.time_tbd ? m : null; if (CD) CD._t = tid; return CD; })).then(function(m){
+      if (!m || m.status === "finished" || Date.now() - Date.parse(m.kickoff_utc) > 3 * 3600e3){ el.innerHTML = ""; return; }
       if (R.isLive(m) || Date.parse(m.kickoff_utc) <= Date.now()){ el.innerHTML = '<a class="cd" href="/m/' + m.id + '/"><b>المنتخب يلعب الحين</b><span class="dg">مباشر</span></a>'; return; }
-      var tick = function(){ var d = Math.max(0, Date.parse(m.kickoff_utc) - Date.now()), dd = Math.floor(d / 864e5), hh = Math.floor(d / 36e5) % 24, mm = Math.floor(d / 6e4) % 60, ss = Math.floor(d / 1e3) % 60, p2 = function(n){ return n < 10 ? "0" + n : n; };
-        var opp = m.home.id === 5789 ? m.away : m.home;
-        el.innerHTML = '<a class="cd" href="/m/' + m.id + '/"><span><b>' + R.tname(m.home) + ' ضد ' + R.tname(m.away) + '</b><br><span class="small">' + R.esc(R.dayLabel(R.ymd(m.kickoff_uae))) + " " + R.hhmm(m.kickoff_uae) + '</span></span><span class="dg">' + (dd ? dd + " يوم " : "") + p2(hh) + ":" + p2(mm) + ":" + p2(ss) + "</span></a>"; };
+      var inHero = window.__feat && String(window.__feat.id) === String(m.id);
+      if (!el.querySelector(".dg") || el.dataset.m !== String(m.id) + inHero){ el.dataset.m = String(m.id) + inHero;
+        el.innerHTML = '<a class="cd" href="/m/' + m.id + '/"><span><b>' + (inHero ? "تبدا بعد" : R.tname(m.home) + " ضد " + R.tname(m.away)) + "</b>" + (inHero ? "" : '<br><span class="small">' + R.esc(R.dayLabel(R.ymd(m.kickoff_uae))) + " " + R.hhmm(m.kickoff_uae) + "</span>") + '</span><span class="dg"></span></a>'; }
+      var dg = el.querySelector(".dg"), tick = function(){ var d = Math.max(0, Date.parse(m.kickoff_utc) - Date.now()), dd = Math.floor(d / 864e5), hh = Math.floor(d / 36e5) % 24, mm = Math.floor(d / 6e4) % 60, ss = Math.floor(d / 1e3) % 60, p2 = function(n){ return n < 10 ? "0" + n : n; };
+        dg.textContent = (dd ? dd + " يوم " : "") + p2(hh) + ":" + p2(mm) + ":" + p2(ss); };
       tick(); clearInterval(el._t); el._t = setInterval(tick, 1000);
     }).catch(function(){});
   }
@@ -271,7 +282,7 @@
   function freeIn(comp){ var c = country(), e = BCD && BCD[c] && BCD[c][comp]; if (!e || !e.b || !e.b.length) return true; return e.b.some(function(b){ return b[1]; }); }   // unknown channel: keep it (W1.2b)
   (function(){ var box = $("#wwbox"); if (!box) return; var c = country(); if (c === "AE" || c === "xx") return;
     bcData().then(function(d){ var row = R.COUNTRIES.filter(function(x){ return x[0] === c; })[0], e = d[c] && d[c][box.dataset.comp]; if (!e || !e.b.length) { var n = box.querySelector("h2"); if (n) n.insertAdjacentHTML("afterend", '<p class="note">ما لقينا معلومة مؤكدة لـ' + (row ? row[1] : "بلدك") + '، وهذي القنوات في الإمارات.</p>'); return; }
-      box.innerHTML = '<section class="blk"><h2>وين تنقل في ' + (row ? row[1] : "بلدك") + '</h2><ul class="bc">' + e.b.map(function(b){ return "<li><b>" + R.esc(b[0]) + "</b>" + (b[1] ? ' <span class="ok">مجاني</span>' : "") + (b[2] ? ' <span class="num">' + b[2] + "</span> " + R.esc(b[3] || "") : "") + (b[4] ? ' <a class="src" href="' + R.esc(b[4]) + '" rel="noopener">المصدر</a>' : "") + "</li>"; }).join("") + "</ul>" + (e.q && e.q !== "high" ? '<p class="src">ثقة المعلومة: ' + (e.q === "medium" ? "متوسطة" : "قليلة") + "، تأكد من القناة قبل المباراة.</p>" : "") + "</section>"; }); })();
+      box.innerHTML = '<section class="blk"><h2>وين تنقل في ' + (row ? row[1] : "بلدك") + '</h2><ul class="bc">' + e.b.map(function(b){ return "<li><b>" + R.esc(b[0]) + "</b>" + (b[1] ? ' <span class="ok">مجاني</span>' : "") + (b[5] ? ' <span class="muted small">' + R.esc(b[5]) + "</span>" : "") + (b[2] ? ' <span class="num">' + b[2] + "</span> " + R.esc(b[3] || "") : "") + (b[4] ? ' <a class="src" href="' + R.esc(b[4]) + '" rel="noopener">المصدر</a>' : "") + "</li>"; }).join("") + "</ul>" + (e.q && e.q !== "high" ? '<p class="src">ثقة المعلومة: ' + (e.q === "medium" ? "متوسطة" : "قليلة") + "، تأكد من القناة قبل المباراة.</p>" : "") + "</section>"; }); })();
   function freeOnly(){ try { return localStorage.getItem("tifo.free") === "1"; } catch (e){ return false; } }
   var fb = $("#freeonly"); if (fb){ fb.setAttribute("aria-pressed", freeOnly()); fb.onclick = function(){ try { localStorage.setItem("tifo.free", freeOnly() ? "" : "1"); } catch (e){} fb.setAttribute("aria-pressed", freeOnly()); bcData().then(function(){ home(); }); }; if (freeOnly()) bcData(); }
   // 291: the coming round's odds as one image
@@ -307,7 +318,7 @@
     check(); setInterval(check, 30000); })();
   // 294: optional club colours from the first favourite
   function theme(){ var on = false; try { on = localStorage.getItem("tifo.theme") === "1"; } catch (e){} var f = favs().filter(function(x){ return x.t === "team"; })[0], c = f && (window.TC || {})[f.id];
-    var st = document.documentElement.style; if (on && c){ var h = c[0], n = parseInt(h.slice(1), 16), l = (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255; st.setProperty("--dune", l > 0.7 ? "#6E4000" : h); st.setProperty("--dune-soft", h + "26"); document.body.classList.add("clubtheme"); document.body.style.setProperty("--club2", c[1] || h); } else { st.removeProperty("--dune"); st.removeProperty("--dune-soft"); document.body.classList.remove("clubtheme"); } }
+    var st = document.documentElement.style; if (on && c){ var h = c[0], n = parseInt(h.slice(1), 16), l = (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255; st.setProperty("--club1", h); document.body.classList.add("clubtheme"); document.body.style.setProperty("--club2", c[1] || h); } else { st.removeProperty("--club1"); document.body.classList.remove("clubtheme"); } }   // W2.3: the club theme tints the key art only, never --dune
   theme(); document.addEventListener("click", function(e){ if (!e.target.closest("#themebtn")) return; try { localStorage.setItem("tifo.theme", localStorage.getItem("tifo.theme") === "1" ? "" : "1"); } catch (x){} theme(); });
   // 184 newsletter: form anywhere with .nlform; confirm/unsubscribe results via ?ok= / ?bye=
   (function(){ var m = $("#nlmsg"), q = null; try { q = new URLSearchParams(location.search); } catch (e){}
@@ -367,7 +378,7 @@
     try { var an = JSON.parse(el.dataset.an || "{}")[md] || []; an.forEach(function(a){ items.push("<li>ذكرى تأسيس " + '<a href="/t/' + a[0] + '/">' + R.esc(a[1]) + '</a> <span class="muted">(' + (yr - a[2]) + " سنة، من " + a[2] + ")</span></li>"); }); } catch (e){}
     function draw(){ if (items.length) el.innerHTML = '<section class="blk"><h2>اليوم في التقويم</h2><ul class="facts-l">' + items.join("") + "</ul></section>"; }
     get("players/birthdays/" + md + ".json").then(function(b){ (b.players || []).slice(0, 8).forEach(function(p){ var age = p.dob ? yr - +p.dob.slice(0, 4) : null; items.push("<li>عيد ميلاد " + (p.name_ar ? R.esc(p.name_ar) : '<span class="lat">' + R.esc(p.name) + "</span>") + (age ? ' <span class="muted">(' + age + " سنة)</span>" : "") + "</li>"); }); draw(); }).catch(draw); })();
-  function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio, daypage:daypage }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && ID === "5789") countdown(); }
+  function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio, daypage:daypage }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && Object.keys(window.NAT || {}).some(function(k){ return String(window.NAT[k]) === ID; })) countdown(); }
   tvFull();
   tabs(); run(); dist();
 })();

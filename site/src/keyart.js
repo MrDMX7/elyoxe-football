@@ -15,7 +15,7 @@
   function Art(canvas){
     this.c = canvas; this.x = canvas.getContext("2d"); this.cells = []; this.waves = []; this.run = false; this.bands = [];
     var self = this;
-    canvas.addEventListener("pointerdown", function(e){ var r = canvas.getBoundingClientRect(); self.wave((e.clientX - r.left) / self.cs, (e.clientY - r.top) / self.cs, 0.9); });
+    canvas.addEventListener("click", function(e){ var r = canvas.getBoundingClientRect(); self.wave((e.clientX - r.left) / self.cs, (e.clientY - r.top) / self.cs, 0.9); });
     window.addEventListener("resize", function(){ clearTimeout(self.rt); self.rt = setTimeout(function(){ if (self.c.clientWidth !== self.w){ self.layout(); self.paintBuf(); self.blit(1); } }, 150); });
   }
   // bands: [[colour, stripe colour], ...] from right to left
@@ -27,7 +27,7 @@
     else if (prev.score && m.score && (m.score.home !== prev.score.home || m.score.away !== prev.score.away)) this.wave(m.score.home > prev.score.home ? this.cols : 0, this.rows / 2, 1.6);
   };
   Art.prototype.layout = function(){
-    var c = this.c, w = c.clientWidth, h = c.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1); this.w = w;
+    var c = this.c, w = c.clientWidth, h = c.clientHeight, dpr = 1; this.w = w;   // W2.11: key art at DPR 1 (it sits under a scrim)
     c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); this.x.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.cs = w < 500 ? 12 : w < 1000 ? 14 : 18; this.cols = Math.ceil(w / this.cs); this.rows = Math.ceil(h / this.cs);
     var cols = this.cols, rows = this.rows, nb = this.bands.length || 1, seed = this.seed, cells = [];

@@ -22,7 +22,7 @@
       var pt = function(i, v){ return [c + r * v / 100 * Math.cos(ang(i)), c + r * v / 100 * Math.sin(ang(i))]; };
       var grid = [25, 50, 75, 100].map(function(v){ return '<polygon class="grid" points="' + PARTS.map(function(_, i){ return pt(i, v).join(","); }).join(" ") + '"/>'; }).join("");
       var lab = PARTS.map(function(p, i){ var q = pt(i, 118); return '<text x="' + q[0].toFixed(0) + '" y="' + (q[1] + 4).toFixed(0) + '" text-anchor="middle">' + p[1] + "</text>"; }).join("");
-      var ca = R.col(a.team), cb = R.col(b.team); if (ca === cb) cb = "#B07A3B";
+      var ca = R.colOn(a.team), cb = R.colOn(b.team); if (ca === cb) cb = "#F6F7F2";
       var poly = function(x, col){ return '<polygon class="pa" points="' + PARTS.map(function(p, i){ return pt(i, x.parts[p[0]] || 0).join(","); }).join(" ") + '" fill="' + col + '" stroke="' + col + '"/>'; };
       return '<div class="radar"><svg viewBox="0 0 ' + W + " " + W + '">' + grid + poly(a, ca) + poly(b, cb) + lab + '</svg></div><p class="legend"><span><i style="background:' + ca + '"></i>' + R.esc(a.name) + " " + a.overall + '</span><span><i style="background:' + cb + '"></i>' + R.esc(b.name) + " " + b.overall + "</span></p>";
     }

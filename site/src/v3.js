@@ -29,6 +29,9 @@
   var lead0 = R.leaders; R.leaders = function(stats){ if (stats && stats.lists) Object.keys(stats.lists).forEach(function(k){ (stats.lists[k] || []).forEach(function(r){ ar(r.player); }); }); return lead0.apply(R, arguments); };
   // squads (team pages): app.js re-renders #squad from fresh team json
   var squad0 = R.squad; R.squad = function(t){ ((t && t.squad) || []).forEach(function(g){ (g.players || []).forEach(ar); }); return squad0.apply(R, arguments); };
+  // W2.3: lineup squares in each club's readable colour
+  var lu0 = R.lineups; R.lineups = function(md){ var h = lu0.apply(R, arguments); if (!md || !md.home) return h; var hc = R.colOn(md.home.id), ac = R.colOn(md.away.id);
+    return h.replace('<div class="pitch">', '<div class="pitch" style="--hc:' + hc + ";--hi:" + R.inkOn(hc) + ";--ac:" + ac + ";--ai:" + R.inkOn(ac) + '">'); };
   ["lineups", "catchup", "matchFacts"].forEach(function(k){ var f = R[k]; R[k] = function(md){ return f.apply(R, [R.arNames(md)].concat([].slice.call(arguments, 1))); }; });
 
   // ---- events: same minute + same team substitutions on one line
@@ -47,6 +50,7 @@
     ev.forEach(function(e){ var last = rows[rows.length - 1];
       if (e.type === "sub" && last && last.sub && last.team === e.team && last.minute === e.minute && (last.added || 0) === (e.added || 0)){ last.list.push(e); return; }
       rows.push(e.type === "sub" ? { sub:true, team:e.team, minute:e.minute, added:e.added, list:[e] } : { e:e }); });
+    if (R.isLive(md)) rows.reverse();   // W2.6: while live, the newest event on top
     return '<ul class="ev">' + rows.map(function(r){
       var e = r.e;
       if (e && e.type === "half"){ var hl = { HT:"نهاية الشوط الأول", FT:"نهاية المباراة", AET:"نهاية الوقت الإضافي", EHT:"نهاية الشوط الإضافي الأول", Pen:"ركلات الترجيح" }[e.detail] || esc(e.detail); return '<li class="div">' + hl + (e.score ? ' <span class="num">' + sc(e.score) + "</span>" : "") + "</li>"; }
@@ -60,8 +64,8 @@
         var extra = e.assist ? '<span class="sub">صناعة ' + nm(e.assist) + "</span>" : "";
         body = '<span class="who">' + evIcon(e.type) + nm(e.player) + (/goal/.test(e.type) && e.score ? '<span class="gs">' + sc(e.score) + "</span>" : "") + (EV[e.type] ? '<span class="kind">' + EV[e.type] + "</span>" : "") + "</span>" + extra;
       }
-      var k = e && /goal/.test(e.type) ? " g" : "";
-      return team === "home" ? '<li class="' + k + '"><span class="h">' + body + '</span><span class="mn">' + mn + "</span><span></span></li>" : '<li class="' + k + '"><span></span><span class="mn">' + mn + "</span><span>" + body + "</span></li>";
+      var k = e && /goal/.test(e.type) ? " g" : "", eid = esc((e && e.event_id) || (r.list ? r.list.map(function(x){ return x.event_id || ""; }).join("+") : ""));
+      return team === "home" ? '<li class="' + k + '" data-eid="' + eid + '"><span class="h">' + body + '</span><span class="mn">' + mn + "</span><span></span></li>" : '<li class="' + k + '" data-eid="' + eid + '"><span></span><span class="mn">' + mn + "</span><span>" + body + "</span></li>";
     }).join("") + '</ul>' + (noSubs(md) ? '<p class="na">التبديلات ما وصلتنا من المصدر لهالمباراة</p>' : "") + '<p class="src"><a href="/laws/">ليش ألغى الحكم هدف أو صفّر بلنتي؟ قانون الكورة بالإماراتي</a></p>';
   };
 
@@ -72,7 +76,7 @@
       : s ? '<b class="dg">' + sc(s) + '</b><span class="st">' + R.statusText(m) + "</span>"
       : '<b class="dg">' + (m.time_tbd ? "—" : R.tt(m.kickoff_uae)) + '</b><span class="st">' + R.td(m.kickoff_uae) + "</span>";
     var mine = o.mine && (m.home.id === o.mine || m.away.id === o.mine);
-    return '<a class="rc' + (live ? " live" : "") + (mine ? " mine" : "") + '" href="' + R.nx("/m/" + m.id + "/") + '" data-mid="' + m.id + '" style="--hc:' + R.col(m.home.id, 0) + ";--ac:" + R.col(m.away.id, 0) + '">' +
+    return '<a class="rc' + (live ? " live" : "") + (mine ? " mine" : "") + '" href="' + R.nx("/m/" + m.id + "/") + '" data-mid="' + m.id + '" style="--hc:' + R.colOn(m.home.id) + ";--ac:" + R.colOn(m.away.id) + '">' +
       '<span class="cp">' + esc(o.comp || m.comp_name_ar || "") + "</span>" +
       '<span class="rt3"><span class="t' + (fin && s && s.home > s.away ? " win" : "") + '">' + R.logo(m.home, "md") + "<span>" + R.tname(m.home) + '</span></span><span class="mid">' + mid + '</span><span class="t' + (fin && s && s.away > s.home ? " win" : "") + '">' + R.logo(m.away, "md") + "<span>" + R.tname(m.away) + "</span></span></span></a>";
   };
@@ -90,17 +94,23 @@
     var fin = sorted.filter(function(m){ return m.status === "finished"; }).reverse();
     var arab = sorted.filter(function(m){ return (ARABC[cc[m.comp]] || AT[m.home.id] || AT[m.away.id] || [329, 10242, 11156, 10474].indexOf(m.comp) >= 0) && !R.isLive(m); });
     var ord = R.compOrder(index), big = function(a, b){ return (ord[a.comp] == null ? 99 : ord[a.comp]) - (ord[b.comp] == null ? 99 : ord[b.comp]); };
-    return { live:live.map(card).join(""), today:up.slice().sort(big).slice(0, 14).map(card).join("") + fin.slice(0, 6).map(card).join(""), arab:arab.slice(0, 16).map(card).join(""), n:{ live:live.length, up:up.length, arab:arab.length } };
+    // W2.5: the hero match is in no rail, and a match appears in one rail at most (live, then today, then Arab)
+    var used = {}; if (o.exclude) used[o.exclude] = 1; var take = function(list, n){ var out = []; list.forEach(function(m){ if (out.length < n && !used[m.id]){ used[m.id] = 1; out.push(m); } }); return out; };
+    var L = take(live, 20), T = take(up.slice().sort(big), 14).concat(take(fin, 6)), A = take(arab, 16);
+    return { live:L.map(card).join(""), today:T.map(card).join(""), arab:A.map(card).join(""), n:{ live:L.length, up:T.length, arab:A.length } };
   };
   // hero choice: live (UAE / Arab first) -> the visitor's team today -> tonight's biggest (UAE national, Arab national, UAE clubs, big European)
-  R.heroPick = function(ms, index, mine){
+  // W2.1 (388): one rule for the hero, at build time and in the browser, no hard-coded team:
+  // 1) my team live · 2) my team or my country's national team from 3 h before kickoff to 6 h after · 3) an Arab match live · 4) tonight's biggest
+  R.heroPick = function(ms, index, mine, nat){
     ms = (ms || []).filter(function(m){ return m.status !== "cancelled"; }); if (!ms.length) return null;
     var cc = {}; (index.competitions || []).forEach(function(c){ cc[c.id] = R.compCountry(c); });
-    var AT = (root && root.ARABT) || {};
-    var w = function(m){ var s = 0; if (R.isLive(m)) s += 1000; if (mine && (m.home.id === mine || m.away.id === mine)) s += 500; if (m.home.id === 5789 || m.away.id === 5789) s += 120;
-      if ([329, 10242, 11156, 290, 10197].indexOf(m.comp) >= 0) s += 80; if (R.UAE_COMPS.indexOf(m.comp) >= 0) s += 60; if ([525, 42].indexOf(m.comp) >= 0) s += 40; if (ARABC[cc[m.comp]]) s += 20;
-      if (m.status === "scheduled") s += 15; if (m.status === "finished") s -= 10; return s; };
-    return ms.slice().sort(function(a, b){ return w(b) - w(a) || (a.kickoff_utc || "").localeCompare(b.kickoff_utc || ""); })[0];
+    var AT = (root && root.ARABT) || {}, now = Date.now(), has = function(m, id){ return id && (m.home.id === id || m.away.id === id); };
+    var near = function(m){ var t = Date.parse(m.kickoff_utc); return R.isLive(m) || (t - now < 3 * 3600e3 && now - t < 8 * 3600e3); };
+    var arab = function(m){ return ARABC[cc[m.comp]] || AT[m.home.id] || AT[m.away.id] || [329, 10242, 11156, 10474].indexOf(m.comp) >= 0; };
+    var tier = function(m){ if (R.isLive(m) && has(m, mine)) return 4; if ((has(m, mine) || has(m, nat)) && near(m)) return 3; if (R.isLive(m) && arab(m)) return 2; return 1; };
+    var big = function(m){ var s = 0; if ([329, 10242, 11156, 290, 10197, 77].indexOf(m.comp) >= 0) s += 80; if (arab(m)) s += 40; if ([525, 42, 47, 87].indexOf(m.comp) >= 0) s += 30; if (R.isLive(m)) s += 25; if (m.status === "scheduled") s += 15; if (m.status === "finished") s -= 20; return s; };
+    return ms.slice().sort(function(a, b){ return tier(b) - tier(a) || big(b) - big(a) || (a.kickoff_utc || "").localeCompare(b.kickoff_utc || ""); })[0];
   };
   R.heroLine = function(m, index){
     if (!m) return "";
@@ -111,25 +121,52 @@
     return '<p class="hk">' + esc(cn) + (m.stage && /Gr(ou)?p/i.test(m.stage) ? "، " + esc(R.stageAr(m.stage)) : "") + "</p>" +
       '<div class="hl"><a class="htm h" href="' + R.nx("/t/" + m.home.id + "/") + '">' + R.logo(m.home, "xl") + "<span>" + R.tname(m.home) + '</span></a><a class="hsc' + (live ? " live" : "") + '" href="' + R.nx("/m/" + m.id + "/") + '">' + mid + '</a><a class="htm a" href="' + R.nx("/t/" + m.away.id + "/") + '">' + R.logo(m.away, "xl") + "<span>" + R.tname(m.away) + "</span></a></div>";
   };
+  // W4.8 feed: the live clock ticks between polls: period_base + time since period_start (frozen when period_start is null)
+  R.clock = function(ps, pb, pl){ var e = Math.max(0, Math.floor((Date.now() - Date.parse(ps)) / 60000)); pl = +pl || 45; pb = +pb || 0; return e < pl ? (pb + e + 1) + "'" : (pb + pl) + "+" + (e - pl + 1) + "'"; };
+  var min0 = R.minute; R.minute = function(m){ if (m && m.period_start && m.period_base != null && /^(1H|2H|ET1|ET2)$/.test(m.period || "")) return '<bdi dir="ltr" class="lmin" data-ps="' + esc(m.period_start) + '" data-pb="' + m.period_base + '" data-pl="' + (m.period_length || 45) + '">' + R.clock(m.period_start, m.period_base, m.period_length) + "</bdi>"; return min0(m); };
+  // W2.7: positions in Arabic (squads, player pages)
+  var POS = { GK:"حارس", G:"حارس", CB:"قلب دفاع", LB:"ظهير أيسر", RB:"ظهير أيمن", LWB:"ظهير أيسر", RWB:"ظهير أيمن", DM:"وسط دفاعي", CDM:"وسط دفاعي", CM:"وسط", LM:"وسط أيسر", RM:"وسط أيمن", AM:"وسط هجومي", CAM:"وسط هجومي", LW:"جناح أيسر", RW:"جناح أيمن", ST:"مهاجم", CF:"مهاجم", SS:"مهاجم ثاني", D:"مدافع", DF:"مدافع", M:"وسط", MF:"وسط", F:"مهاجم", FW:"مهاجم", GOALKEEPER:"حارس", KEEPER:"حارس", DEFENDER:"مدافع", MIDFIELDER:"وسط", FORWARD:"مهاجم", ATTACKER:"مهاجم" };
+  R.pos = function(p){ var k = String(p || "").split(",")[0].trim().toUpperCase(); return POS[k] || (/[\u0600-\u06FF]/.test(p) ? p : ""); };
+  R.PP = (root && root.PP) || null;
+  // W2.7: on team pages every fixture row carries its competition's crest
+  var mr0 = R.matchRow; R.matchRow = function(m, o){ var h = mr0.apply(R, arguments), team = (o && o.crest) || (root && root.document && root.document.body && root.document.body.dataset.page === "team");
+    return team && m && m.comp ? h.replace(/(<span class="t h[^"]*">)/, '$1<img class="clg" src="/lg/' + m.comp + '.png" alt="" loading="lazy" onerror="this.remove()">') : h; };
+  // W2.10: Arabic counts — 1 and 2 have their own forms, 3–10 take the plural, 11+ the singular; 0 hides the line
+  R.n = function(k, f){ k = +k || 0; if (!k) return ""; if (k === 1) return f[0]; if (k === 2) return f[1]; return k + " " + (k <= 10 ? f[2] : f[3]); };
+  // W2.10: one kicker for a match everywhere: مباشر الحين / انتهت / الليلة / اليوم 15:00 / بكرة / the weekday
+  R.kick = function(m){ if (!m) return "اليوم"; if (R.isLive(m)) return "مباشر الحين"; if (m.status === "finished") return "انتهت"; if (!m.kickoff_uae) return "الموعد ما تأكد";
+    var today = R.TZ ? R.ymd(new Date().toISOString()) : new Date(Date.now() + 4 * 3600e3).toISOString().slice(0, 10), d = R.ymd(m.kickoff_uae), diff = Math.round((Date.parse(d) - Date.parse(today)) / 864e5), hh = +R.hhmm(m.kickoff_uae).slice(0, 2);
+    if (diff <= 0) return hh >= 17 ? "الليلة" : "اليوم " + R.hhmm(m.kickoff_uae); if (diff === 1) return "بكرة"; return String(R.dayLabel(d)).split(" ")[0]; };
+  // W2.10: «لـال…» -> «لل…»
+  R.li = function(s){ return String(s).replace(/لـال/g, "لل").replace(/لـ ال/g, "لل"); };
   // 397: club names the feed has no Arabic for (names/clubs_ar.json via window.TAR)
   var TAR = (root && root.TAR) || {}; R.setClubNames = function(m){ TAR = m || {}; };
-  var tname0 = R.tname; R.tname = function(t){ return t && !t.name_ar && TAR[t.id] ? esc(TAR[t.id]) : tname0(t); };
+  var DUP = (root && root.DUP) || {}; R.setDup = function(m){ DUP = m || {}; };
+  var tname0 = R.tname; R.tname = function(t){ var n = t && !t.name_ar && TAR[t.id] ? esc(TAR[t.id]) : tname0(t); return t && DUP[t.id] ? n + " · " + esc(DUP[t.id]) : n; };   // W2.7: «النصر · السعودية»
   // 391: when «ليش هالنتيجة؟» is on the page, the catch-up keeps only what it doesn't say (red cards, a missed penalty, a comeback)
   var catch0 = R.catchup; R.catchup = function(md){ var h = catch0.apply(R, arguments); if (!R._hasWhy || !h) return h;
     var keep = (h.match(/<p>[^<]*<\/p>/g) || []).filter(function(p){ return /^<p>(طرد|بلنتي ضايع|ريمونتادا)/.test(p); });
     return keep.length ? '<div class="catchup mini">' + keep.join("") + "</div>" : ""; };
   // 392: the event squares leave the hero (they moved to التحليل as «خط المباراة»); 400: the score in scoreboard cells
   var cells = function(t){ return String(t).replace(/(\d)/g, '<i class="cell">$1</i>'); };
-  var head0 = R.matchHead; R.matchHead = function(md){ var h = head0.apply(R, arguments).replace(/<div class="timeline">[\s\S]*$/, "");
+  var vt = function(h){ var n = 0; return h.replace(/<img class="logo (lg|xl)" src="[^"]*\/logo\/(\d+)\.png"/g, function(m, c, id){ return n++ < 2 ? m + ' style="view-transition-name:crest-' + id + '"' : m; }); };
+  var head0 = R.matchHead; R.matchHead = function(md){ var h = vt(head0.apply(R, arguments).replace(/<div class="timeline">[\s\S]*$/, ""));
     return h.replace(/(<div class="sc"><span class="dg">)([^<]*)(<\/span>)/, function(_, a, t, b){ return a + cells(t) + b; }); };
-  var hl0 = R.heroLine; R.heroLine = function(){ return hl0.apply(R, arguments).replace(/(<b class="dg big">)([^<]*)(<\/b>)/, function(_, a, t, b){ return a + cells(t) + b; }); };
+  var hl0 = R.heroLine; R.heroLine = function(){ return vt(hl0.apply(R, arguments)).replace(/(<b class="dg big">)([^<]*)(<\/b>)/, function(_, a, t, b){ return a + cells(t) + b; }); };
   // 395: zones as a thin coloured edge on the row, not a filled square behind the rank
-  var st0 = R.standings; R.standings = function(){ return st0.apply(R, arguments).replace(/<td class="rk"><span style="background:([^;"]+);color:[^"]*">/g, '<td class="rk z" style="--z:$1"><span>'); };
+  var TIER = ["#F6F7F2", "#F6F7F2A6", "#F6F7F266", "#A7B6AF"];
+  var st0 = R.standings; R.standings = function(){ var h = st0.apply(R, arguments), order = [];
+    (h.match(/<td class="rk"><span style="background:[^;"]+/g) || []).forEach(function(x){ var c = x.split("background:")[1]; if (order.indexOf(c) < 0) order.push(c); });
+    var red = function(c){ var n = parseInt(String(c).replace("#", "").slice(0, 6), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255; return r > 150 && g < 110 && b < 110; };
+    var tierOf = function(c){ if (red(c)) return "rel"; var i = order.filter(function(x){ return !red(x); }).indexOf(c); return TIER[Math.min(i, TIER.length - 1)]; };
+    return h.replace(/<td class="rk"><span style="background:([^;"]+);color:[^"]*">/g, function(_, c){ var t = tierOf(c); return t === "rel" ? '<td class="rk z rel"><span>' : '<td class="rk z" style="--z:' + t + '"><span>'; })
+      .replace(/<span><i style="background:([^"]+)"><\/i>/g, function(_, c){ var t = tierOf(c); return t === "rel" ? '<span><i class="zrel"></i>' : '<span><i style="background:' + t + '"></i>'; }); };
   if (typeof module !== "undefined" && module.exports) module.exports = R;
   else {
     // app.js drives the home hero through R.featured + R.standCap + TifoStand; v3 swaps in its own pick and title treatment
     var mine = function(){ try { return +localStorage.getItem("tifo.mine") || null; } catch (e){ return null; } };
-    R.featured = function(ms){ return R.heroPick(ms, R._idx || {}, mine()); };
+    var nat = function(){ var c = null; try { c = localStorage.getItem("tifo.country"); } catch (e){} if (!c){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(x){ return x[2] === tz; })[0]; c = hit ? hit[0] : null; } catch (e){} } return c && root.NAT ? root.NAT[c] : null; };
+    R.featured = function(ms){ return R.heroPick(ms, R._idx || {}, mine(), nat()); };
     R.standCap = function(m){ return R.heroLine(m, R._idx); };
   }
 })(this);

@@ -62,11 +62,30 @@
   ],
   "صور للمشاركة": [
    "صورة ستوري للمباراة"
+  ],
+  "مباريات لا تُنسى": [
+   "مباريات ما تنتسى"
+  ],
+  "ملء الشاشة": [
+   "الشاشة كاملة"
+  ],
+  "الإحصائيات": [
+   "الأرقام"
+  ],
+  "التحليل": [
+   "الأرقام"
+  ],
+  "الفرق": [
+   "الفارق"
   ]
  },
  "dropped": {
   "heading:الأندية العربية في تصنيف أفريقيا": "W1.8 hidden: the source prints countries where the clubs should be",
   "control:إمارتك": "W1.3b: the distance-from-your-emirate row shows only for venues inside the UAE",
-  "heading:رحلة الموسم": "W1.8: an empty season-journey chart no longer becomes a tile (shown wherever the chart has data)"
+  "heading:رحلة الموسم": "W1.8: an empty season-journey chart no longer becomes a tile (shown wherever the chart has data)",
+  "heading:الخطط والتبديلات": "W2.1 (391): dropped; formations are in التشكيلة and subs in الأحداث",
+  "tab:التحليل": "W2.6: analysis merged into «الأرقام»",
+  "heading:هذا اليوم في كورة الإمارات": "data: shown only on dates that have an event in the history file (none for 28 September)",
+  "more-link:كل الأيام": "data: part of the this-day block, which shows only on dates with an event"
  }
 }

@@ -141,7 +141,9 @@ else if (cmd === "new"){
 else if (cmd === "gate"){
   // production gate: every template, up to N sampled pages that exist in both builds, old item by old item
   const OLD = path.resolve(SITE, arg("--old", "out_base")), NEW = path.resolve(SITE, arg("--new", "out")), N = +arg("--n", "20"), only = arg("--only", "");
-  const MAP = JSON.parse(fs.readFileSync(path.join(__dirname, "placement.json"), "utf8")), norm = s => clean(String(s)).replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
+  // W2.7: same-name clubs now carry « · country»; dates move with the calendar (data, not features)
+  const MAP = JSON.parse(fs.readFileSync(path.join(__dirname, "placement.json"), "utf8")), norm = s => clean(String(s)).replace(/ · [\u0600-\u06FF ]+?(?=( في |$))/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
+  const isDate = l => /^(الأحد|الاثنين|الثلاثاء|الأربعاء|الخميس|الجمعة|السبت) \d+ /.test(l);
   // player names moved to Arabic (names/players_ar.json): a Latin label found as its Arabic form counts as kept
   const LAT = {}; for (const nf of ["players_ar.json", "coaches_ar.json", "referees_ar.json", "clubs_ar.json"]) try { for (const v of Object.values(JSON.parse(fs.readFileSync(path.join(SITE, "../names/" + nf), "utf8")))) if (v.latin && v.ar) (LAT[v.latin] = LAT[v.latin] || []).push(v.ar); } catch (e){}
   (MAP.rename = MAP.rename || {}); for (const [l, a] of Object.entries(LAT)) MAP.rename[l] = (MAP.rename[l] || []).concat(a);
@@ -151,7 +153,7 @@ else if (cmd === "gate"){
     const step = Math.max(1, Math.floor(list.length / N)), sample = list.filter((_, i) => i % step === 0).slice(0, N), miss = {};
     for (const p of sample){
       const o = extract(fs.readFileSync(pageFile(OLD, p), "utf8")).items, n = extract(fs.readFileSync(pageFile(NEW, p), "utf8")).items;
-      for (const it of o){ if (it.shell) continue; const al = (MAP.rename[it.label] || []).concat([it.label]).map(norm);
+      for (const it of o){ if (it.shell || isDate(it.label)) continue; const al = (MAP.rename[it.label] || []).concat([it.label]).map(norm);
         const hit = n.find(x => (it.id && x.id === it.id) || al.includes(norm(x.label))) || MAP.dropped[it.label] || MAP.dropped[it.type + ":" + it.label]; if (!hit){ const key = it.type + ":" + it.label + (it.id ? "#" + it.id : ""); (miss[key] = miss[key] || []).push(p); } }
     }
     res[k] = { pages:list.length, sampled:sample.length, missing:Object.entries(miss).map(([m, ps]) => ({ item:m, n:ps.length, eg:ps[0] })) }; bad += res[k].missing.length;

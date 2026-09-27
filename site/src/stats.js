@@ -284,8 +284,12 @@
   S.legends = function(raw, ar){
     return raw.map(function(p){ var k = p.name_en || p.name, a = ar[k]; if (!a) return ""; return '<section class="blk legend" id="' + esc(String(k).toLowerCase().replace(/[^a-z]+/g, "-")) + '"><h2>' + esc(p.name_ar || k) + '<small class="lat">' + esc(k) + "</small></h2><p>" + esc(a.bio) + "</p><ul class=\"facts-l\">" + (a.facts || []).map(function(f){ return "<li>" + esc(f) + "</li>"; }).join("") + '</ul><p class="src">المصادر: ' + srcs(p.sources) + (p.fotmob_id ? ' · <a href="/p/' + p.fotmob_id + '/">صفحته في تيفو</a>' : "") + "</p></section>"; }).join("");
   };
+  // W2.1 (397): competition names in Arabic on /memorable/
+  function compAr(c){ c = String(c || ""); var y = (c.match(/^(\d{4}(?:[-–]\d{2})?)/) || [])[1] || "", n = (c.match(/^(\d+)(?:st|nd|rd|th) Arabian Gulf Cup/) || [])[1];
+    if (n) return "كأس الخليج " + n; var k = /World Cup qualification/.test(c) ? "تصفيات كأس العالم" : /Club World Cup/.test(c) ? "كأس العالم للأندية" : /FIFA World Cup/.test(c) ? "كأس العالم" : /Asian Cup/.test(c) ? "كأس آسيا" : /Champions League/.test(c) ? "دوري أبطال آسيا" : /Olympics/.test(c) ? "الألعاب الأولمبية" : "";
+    return k ? k + (y ? " " + y.replace("-", "/") : "") : (/[\u0600-\u06FF]/.test(c) ? c : ""); }
   S.memorable = function(raw, ar){
-    return raw.slice().sort(function(a, b){ return (b.date || "").localeCompare(a.date || ""); }).map(function(m){ var a = ar[m.id]; if (!a) return ""; return '<section class="blk mem"><h2>' + esc(a.title) + '<small class="num">' + esc(m.date) + '</small></h2><p class="score"><span class="lat">' + esc(m.home) + '</span> <b class="num">' + esc(m.score) + '</b> <span class="lat">' + esc(m.away) + "</span>" + (m.pens ? ' <span class="muted">(ترجيح ' + esc(m.pens) + ")</span>" : "") + '</p><p>' + esc(a.why) + '</p><p class="src">' + esc(m.competition || "") + " · المصادر: " + srcs(m.sources) + "</p></section>"; }).join("");
+    return raw.slice().sort(function(a, b){ return (b.date || "").localeCompare(a.date || ""); }).map(function(m){ var a = ar[m.id]; if (!a) return ""; return '<section class="blk mem"><h2>' + esc(a.title) + '<small class="num">' + esc(m.date) + '</small></h2><p class="score"><span class="lat">' + esc(m.home) + '</span> <b class="num">' + esc(m.score) + '</b> <span class="lat">' + esc(m.away) + "</span>" + (m.pens ? ' <span class="muted">(ترجيح ' + esc(m.pens) + ")</span>" : "") + '</p><p>' + esc(a.why) + '</p><p class="src">' + esc(compAr(m.competition)) + (compAr(m.competition) ? "، " : "") + "المصادر: " + srcs(m.sources) + "</p></section>"; }).join("");
   };
   S.thisday = function(events, ar, mmdd, n){
     var k = function(e){ return e["mm-dd"] + "-" + e.year + "-" + (e.text_en_neutral || "").slice(0, 30); };
@@ -299,7 +303,7 @@
   // ---- 7: where to watch in the UAE; 63: official highlights; 8: stadium guide
   S.watchWhere = function(b){
     if (!b || !b.broadcasters || !b.broadcasters.length) return "";
-    return '<ul class="bc">' + b.broadcasters.map(function(x){ return '<li><b>' + esc(x.name_ar || x.name_en) + "</b>" + (x.free ? ' <span class="ok">مجاني</span>' : "") + (x.package && /[\u0600-\u06FF]/.test(x.package) ? ' <span class="muted small">' + esc(x.package) + "</span>" : "") + (x.price_aed ? ' <span class="num">' + x.price_aed + "</span> درهم" : "") + (x.url ? ' <a class="src" href="' + esc(x.url) + '" rel="noopener">المصدر</a>' : "") + "</li>"; }).join("") + "</ul>" + (b.confidence && b.confidence !== "high" ? '<p class="src">المعلومة من الصحافة، ما لقينا إعلان رسمي للموسم.</p>' : "");
+    return '<ul class="bc">' + b.broadcasters.map(function(x){ return '<li><b>' + esc(x.name_ar || x.name_en) + "</b>" + (x.free ? ' <span class="ok">مجاني</span>' : "") + (x.package_ar || (x.package && /[\u0600-\u06FF]/.test(x.package)) ? ' <span class="muted small">' + esc(x.package_ar || x.package) + "</span>" : "") + (x.price_aed ? ' <span class="num">' + x.price_aed + "</span> درهم" : "") + (x.url ? ' <a class="src" href="' + esc(x.url) + '" rel="noopener">المصدر</a>' : "") + "</li>"; }).join("") + "</ul>" + (b.confidence && b.confidence !== "high" ? '<p class="src">المعلومة من الصحافة، ما لقينا إعلان رسمي للموسم.</p>' : "");
   };
   S.highlight = function(h, md){
     var ch = h && h.channels && h.channels.filter(function(c){ return c.search_url_template && c.posts_per_match_highlights !== false; })[0]; if (!ch) return "";
@@ -462,8 +466,8 @@
   var STG = { "1/64":"دور الـ128", "1/32":"دور الـ64", "1/16":"دور الـ32", "1/8":"دور الـ16", "1/4":"ربع النهائي", "1/2":"نص النهائي", "final":"النهائي" };
   S.bracket = function(st, sim){
     var b = st && st.bracket; if (!b || !b.length) return "";
-    var nm = function(t){ return t && (t.name_ar || (/^\d[A-Z]$/.test(t.name) ? "أول المجموعة " + t.name[1] : null) || t.name) || "—"; };
-    var fix = function(t){ return t && /^\d[A-Z]$/.test(t.name || "") ? (t.name[0] === "1" ? "أول" : "ثاني") + " المجموعة " + t.name[1] : nm(t); };
+    var POS = { "1":"أول", "2":"ثاني", "3":"ثالث" }, nm = function(t){ var g = t && /^(\d)([A-Z])$/.exec(t.name || ""); if (g) return (POS[g[1]] || g[1]) + " " + R.groupOrd(g[2]); var a = t && t.name_ar ? String(t.name_ar).replace(/المجموعة ([A-Z])\b/g, function(_, l){ return R.groupOrd(l); }) : ""; return a || (t && t.name) || "—"; };
+    var fix = function(t){ return t && /^\d[A-Z]$/.test(t.name || "") ? (t.name[0] === "1" ? "أول" : t.name[0] === "2" ? "ثاني" : "ثالث") + " " + R.groupOrd(t.name[1]) : nm(t); };
     return '<div class="bracket">' + b.map(function(stg){ return '<div class="bs"><h3>' + (STG[stg.stage] || esc(stg.stage)) + "</h3>" + stg.ties.map(function(t){ var a = t.aggregate || {}; return '<div class="tie' + (t.winner ? " done" : "") + '"><span>' + esc(fix(t.home)) + '</span><b class="num">' + (t.tbd ? "–" : (a.homeScore + " - " + a.awayScore)) + "</b><span>" + esc(fix(t.away)) + "</span>" + (t.matches && t.matches[0] ? '<a href="/m/' + t.matches[0] + '/">المباراة</a>' : "") + "</div>"; }).join("") + "</div>"; }).join("") + "</div>" + (sim ? S.tsim(sim) : "");
   };
   // 257 qualification calculator for group competitions (scenarios.json)
@@ -527,7 +531,8 @@
     if (ww) q.push(["وين تنقل مباراة " + H + " و" + A + "؟", "في الإمارات: " + ww + ". في باقي الدول العربية شوف قسم «وين تنقل» في الصفحة، ومعظم البطولات الأوروبية والآسيوية على beIN."]);
     if (stadName) q.push(["وين تنلعب المباراة؟", stadName + "."]);
     if (md.referee && md.referee.name) q.push(["منو حكم المباراة؟", md.referee.name + "."]);
-    var h = md.h2h && md.h2h.summary; if (h) q.push(["كم مرة تقابلوا؟", "فاز " + H + " " + h.home_wins + " مرات، و" + A + " " + h.away_wins + " مرات، وتعادلوا " + h.draws + " مرات في المواجهات المسجّلة."]);
+    var h = md.h2h && md.h2h.summary, T = function(k){ return k === 0 ? "ولا مرة" : R.n ? R.n(k, ["مرة وحدة", "مرتين", "مرات", "مرة"]) : k + " مرات"; };   // W2.10: counts agree
+    if (h) q.push(["كم مرة تقابلوا؟", "فاز " + H + " " + T(h.home_wins) + "، و" + A + " " + T(h.away_wins) + "، وتعادلوا " + T(h.draws) + " في المواجهات المسجّلة."]);
     return q;
   };
   // 187: win probability through the match (match.winprob [[minute, pH, pD, pA]]); kickoff on the right like the page reads
@@ -548,7 +553,7 @@
   S.firsts = function(md){
     var f = md.firsts; if (!f || !f.length) return "";
     var li = f.map(function(x){ var who = x.player ? '<span class="lat">' + esc(x.name) + "</span>" : "";
-      if (x.kind === "first_meeting") return "<li>أول مواجهة بين الفريقين في بياناتنا (من موسم 2010/11).</li>";
+      if (x.kind === "first_meeting") return "";   // W2.1 (391): «أوائل» is for milestones only
       if (!x.player) return "";
       if (x.kind === "first_goal_season") return "<li>أول هدف لـ" + who + " هالموسم.</li>";
       if (x.kind === "first_appearance_season") return "<li>أول مشاركة لـ" + who + " هالموسم.</li>";
@@ -647,7 +652,7 @@
   S.career = function(c){
     if (!c || !c.senior || !c.senior.length) return "";
     var row = function(x){ return '<tr><td class="tm">' + (T[x.team] ? tl(x.team) : '<span class="lat">' + esc(x.name) + "</span>") + (x.loan ? ' <span class="muted small">معار</span>' : "") + '</td><td class="small">' + (x.end ? '<bdi dir="ltr">' + esc((x.start || "").slice(0, 4)) + "–" + esc(x.end.slice(0, 4)) + "</bdi>" : "من " + esc((x.start || "").slice(0, 4))) + "</td><td>" + (x.apps ?? "") + "</td><td>" + (x.goals ?? "") + "</td></tr>"; };
-    return tb(["النادي", "السنوات", "مباريات", "أهداف"], c.senior.map(row).concat((c.national_team || []).map(function(x){ return row(Object.assign({}, x, { loan:false })); }))) + noteSrc("من سجل اللاعب في FotMob، كل البطولات.");
+    return tb(["النادي", "السنوات", "مباريات", "أهداف"], c.senior.filter(function(x){ return x.apps; }).map(row).concat((c.national_team || []).map(function(x){ return row(Object.assign({}, x, { loan:false })); }))) + noteSrc("من سجل اللاعب في FotMob، كل البطولات.");
   };
   S.form = function(f){
     if (!f || f.length < 3) return ""; var W = 320, H = 110, n = f.length, x = function(i){ return (W - 16 - i / (n - 1) * (W - 32)).toFixed(1); }, y = function(r){ return (H - 12 - (Math.max(5, Math.min(10, r)) - 5) / 5 * (H - 24)).toFixed(1); };

@@ -12,7 +12,13 @@
   R.esc = esc;
   R.setColors = function(m){ TC = m || {}; };
   R.col = function(id, i){ var c = TC[id]; return c ? (c[i || 0] || c[0]) : (i ? "#F6F7F2" : "#5C6660"); };
-  R.logo = function(t, cls){ if (!t || !t.id) return ""; return '<img class="logo' + (cls ? " " + cls : "") + '" src="/logo/' + t.id + '.png" alt="" loading="lazy" width="24" height="24" onerror="this.style.visibility=\'hidden\'">'; };
+  // W2.3: a club colour that reads on night pitch: c1, mixed toward chalk until it reaches 3:1 against #0A2620 (bands, bars, radar, lineup squares)
+  var ON = {}; function lumi(h){ var n = parseInt(h.slice(1, 7), 16), f = function(v){ v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(n >> 16 & 255) + 0.7152 * f(n >> 8 & 255) + 0.0722 * f(n & 255); }
+  function mix(h, k){ var n = parseInt(h.slice(1, 7), 16), m = function(v){ return Math.round(v + (246 - v) * k); }; var r = m(n >> 16 & 255), g = m(n >> 8 & 255), b = m(n & 255); return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1); }
+  R.colOn = function(id){ if (ON[id]) return ON[id]; var c = R.col(id, 0), L0 = lumi("#0A2620"), k = 0, x = c; while (k <= 1 && (lumi(x) + 0.05) / (L0 + 0.05) < 3){ k += 0.1; x = mix(c, k); } return (ON[id] = x); };
+  R.inkOn = function(h){ return lumi(h) > 0.35 ? "#0A2620" : "#F6F7F2"; };
+  // W2.11: rows get a 96px webp; hero crests the full png, eager and high priority
+  R.logo = function(t, cls){ if (!t || !t.id) return ""; var hero = /\b(lg|xl)\b/.test(cls || ""); return '<img class="logo' + (cls ? " " + cls : "") + '" src="/logo/' + (hero ? t.id + ".png" : "96/" + t.id + ".webp") + '" alt="" ' + (hero ? 'fetchpriority="high"' : 'loading="lazy"') + ' width="24" height="24" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=\'/logo/' + t.id + '.png\'}else this.style.visibility=\'hidden\'">'; };
   R.tname = function(t){ return t ? esc(t.name_ar || t.name) : ""; };
   // times: the build prints UAE time (kickoff_uae is "+04:00"); in the browser R.TZ is the visitor's country time zone (203)
   // and every <time class="tt|td"> is rewritten by R.localize(). kickoff_uae strings parse to the right instant anywhere.
@@ -67,7 +73,7 @@
   function sc(s){ return s.home + " - " + s.away; }
   R.chip = function(m, o){
     o = o || {}; var live = R.isLive(m);
-    if (live) return '<span class="chip live' + (R.hot(m) ? " hot" : "") + '"><small>' + R.minute(m) + (R.hot(m) ? " حامي" : "") + "</small>" + (m.score ? sc(m.score) : "0 - 0") + "</span>";
+    if (live) return '<span class="chip live"><small>' + R.minute(m) + "</small>" + (m.score ? sc(m.score) : "0 - 0") + "</span>";
     if (m.status === "finished" && m.score) return '<span class="chip">' + sc(m.score) + (m.penalties ? "<small>ترجيح " + sc(m.penalties) + "</small>" : m.status_detail === "AET" ? "<small>بعد الإضافي</small>" : "") + "</span>";
     if (m.status === "scheduled" || !m.status) return '<span class="chip up">' + (m.time_tbd ? "—" : R.tt(m.kickoff_uae)) + (o.date ? "<small>" + R.td(m.kickoff_uae) + "</small>" : "") + "</span>";
     return '<span class="chip off">' + R.statusText(m) + "</span>";
@@ -92,7 +98,8 @@
   R.compKey = function(index, id){ var c = (index.competitions || []).filter(function(c){ return c.id === id; })[0]; return c ? c.key : null; };
   var ORD = { A:"الأولى", B:"الثانية", C:"الثالثة", D:"الرابعة", E:"الخامسة", F:"السادسة", G:"السابعة", H:"الثامنة", I:"التاسعة", J:"العاشرة", "1":"الأولى", "2":"الثانية", "3":"الثالثة", "4":"الرابعة", "5":"الخامسة", "6":"السادسة", "7":"السابعة", "8":"الثامنة" };
   var KO = [[/^1\/64|round of 128/i, "دور الـ128"], [/^1\/32|round of 64/i, "دور الـ64"], [/^1\/16|round of 32/i, "دور الـ32"], [/^1\/8|round of 16|last 16/i, "دور الـ16"], [/^1\/4|quarter/i, "ربع النهائي"], [/^1\/2|semi/i, "نصف النهائي"], [/best.*(3rd|third)/i, "أفضل أصحاب المركز الثالث"], [/(3rd|third).*(place|play)/i, "مباراة المركز الثالث"], [/^final$|^the final$|^final\b/i, "النهائي"], [/play-?off/i, "الملحق"], [/^preliminary|^qualif/i, "التصفيات"]];
-  R.stageAr = function(s){ if (!s) return ""; s = String(s); var g = /Gr(?:ou)?p\.?\s*([A-Z0-9]+)\b/i.exec(s); if (g) return "المجموعة " + (ORD[g[1].toUpperCase()] || g[1]); if (/^Gr(?:ou)?p\.?$/i.test(s.trim())) return "المجموعة";
+  R.groupOrd = function(x, i){ x = String(x == null ? "" : x).replace(/^Gr(?:ou)?p\.?\s*/i, "").trim(); return "المجموعة " + (ORD[x.toUpperCase()] || (i != null ? ORD[String(i + 1)] || i + 1 : x)); };
+  R.stageAr = function(s){ if (!s) return ""; s = String(s); var g = /Gr(?:ou)?p\.?\s*([A-Za-z0-9]{1,2})\b/.exec(s) || /group\s*([A-Za-z0-9]{1,2})\b/i.exec(s); if (g) return "المجموعة " + (ORD[g[1].toUpperCase()] || g[1]); if (/^Gr(?:ou)?p\.?$/i.test(s.trim())) return "المجموعة";
     for (var i = 0; i < KO.length; i++) if (KO[i][0].test(s.trim())) return KO[i][1]; return s; };
   // the 22 Arab League countries (203, 199): time zone and name; "xx" = outside the Arab world (browser time zone)
   R.COUNTRIES = [["AE","الإمارات","Asia/Dubai"],["SA","السعودية","Asia/Riyadh"],["EG","مصر","Africa/Cairo"],["MA","المغرب","Africa/Casablanca"],["DZ","الجزائر","Africa/Algiers"],["TN","تونس","Africa/Tunis"],["IQ","العراق","Asia/Baghdad"],["JO","الأردن","Asia/Amman"],["KW","الكويت","Asia/Kuwait"],["QA","قطر","Asia/Qatar"],["BH","البحرين","Asia/Bahrain"],["OM","عُمان","Asia/Muscat"],["LB","لبنان","Asia/Beirut"],["SY","سوريا","Asia/Damascus"],["PS","فلسطين","Asia/Hebron"],["YE","اليمن","Asia/Aden"],["LY","ليبيا","Africa/Tripoli"],["SD","السودان","Africa/Khartoum"],["MR","موريتانيا","Africa/Nouakchott"],["SO","الصومال","Africa/Mogadishu"],["DJ","جيبوتي","Africa/Djibouti"],["KM","جزر القمر","Indian/Comoro"]];
@@ -123,7 +130,7 @@
     o = o || {}; if (!st || !st.groups || !st.groups.length) return '<p class="empty">ما في ترتيب لهالبطولة.</p>';
     return st.groups.map(function(g){
       var zones = {}; g.rows.forEach(function(r){ if (r.zone && r.zone.color) zones[r.zone.color] = zoneName(r.zone); });
-      return (g.name ? "<h3>" + esc(g.name_ar || R.stageAr(g.name)) + "</h3>" : "") + '<div class="tblwrap"><table class="st"><thead><tr><th>#</th><th style="text-align:start">الفريق</th><th>لعب</th><th class="hx">فاز</th><th class="hx">تعادل</th><th class="hx">خسر</th><th class="hx">له - عليه</th><th>الفرق</th><th>نقاط</th><th class="hx">آخر 5</th></tr></thead><tbody>' +
+      return (g.name ? "<h3>" + esc(String(g.name_ar || R.stageAr(g.name)).replace(/المجموعة ([A-J])\b/, function(_, l){ return R.groupOrd(l); })) + "</h3>" : "") + '<div class="tblwrap"><table class="st"><thead><tr><th>#</th><th style="text-align:start">الفريق</th><th>لعب</th><th class="hx">فاز</th><th class="hx">تعادل</th><th class="hx">خسر</th><th class="hx">له - عليه</th><th>الفارق</th><th>نقاط</th><th class="hx">آخر 5</th></tr></thead><tbody>' +
         g.rows.map(function(r){ var z = r.zone && r.zone.color; return '<tr class="' + (o.mine === r.team.id ? "mine " : "") + (r.live ? "live" : "") + '" data-tid="' + r.team.id + '"><td class="rk"><span' + (z ? ' style="background:' + esc(z) + ";color:" + ink(z) + '"' : "") + ">" + r.rank + '</span></td><td class="tm"><a href="/t/' + r.team.id + '/">' + R.logo(r.team, "sm") + R.tname(r.team) + "</a></td><td>" + r.played + '</td><td class="hx">' + r.won + '</td><td class="hx">' + r.drawn + '</td><td class="hx">' + r.lost + '</td><td class="hx">' + r.gf + " - " + r.ga + '</td><td><bdi dir="ltr">' + (r.gd > 0 ? "+" : "") + r.gd + '</bdi></td><td class="pts">' + r.pts + '</td><td class="hx">' + R.form(r.form) + "</td></tr>"; }).join("") +
         "</tbody></table></div>" + (Object.keys(zones).length ? '<div class="legend">' + Object.keys(zones).map(function(c){ return '<span><i style="background:' + esc(c) + '"></i>' + esc(zones[c]) + "</span>"; }).join("") + "</div>" : "");
     }).join("");
@@ -145,7 +152,9 @@
   };
   R.leaders = function(stats, key, n){
     var l = stats && stats.lists && stats.lists[key]; if (!l || !l.length) return '<p class="empty">للحين ما في أرقام.</p>';
-    return '<ol class="lead">' + l.slice(0, n || 20).map(function(p){ return '<li><span class="num muted">' + p.rank + '</span><span class="who">' + R.logo(p.team, "sm") + (p.player.id ? '<a class="lat" href="/p/' + p.player.id + '/">' + esc(p.player.name) + "</a>" : '<span class="lat">' + esc(p.player.name) + "</span>") + ' <span class="muted small">' + R.tname(p.team) + "</span></span><b>" + p.value + "</b></li>"; }).join("") + "</ol>";
+    // W2.7: players level on the value share a rank, fewer minutes first
+    l = l.slice().sort(function(a, b){ return (b.value - a.value) || ((a.minutes || 1e9) - (b.minutes || 1e9)); }); var rk = 0, last = null; l.forEach(function(p, i){ if (p.value !== last){ rk = i + 1; last = p.value; } p._rk = rk; });
+    return '<ol class="lead">' + l.slice(0, n || 20).map(function(p){ return '<li><span class="num muted">' + p._rk + '</span><span class="who">' + R.logo(p.team, "sm") + (p.player.id ? '<a class="lat" href="/p/' + p.player.id + '/">' + esc(p.player.name) + "</a>" : '<span class="lat">' + esc(p.player.name) + "</span>") + ' <span class="muted small">' + R.tname(p.team) + "</span></span><b>" + p.value + "</b></li>"; }).join("") + "</ol>";
   };
   // fixtures by round; opens on the next unplayed round
   R.rounds = function(fx){
@@ -214,7 +223,12 @@
     var items = []; (md.stats || []).forEach(function(s){ s.items.forEach(function(i){ if (STAT_AR[i.key] && !items.some(function(x){ return x.key === i.key; })) items.push(Object.assign({}, i)); }); });
     if ((md.events || []).length){ var cnt = function(side, re){ return (md.events || []).filter(function(e){ return e.team === side && re.test(e.type); }).length; };
       items.forEach(function(i){ if (i.key === "yellow_cards"){ i.home = cnt("home", /^yellow$/); i.away = cnt("away", /^yellow$/); } if (i.key === "red_cards"){ i.home = cnt("home", /^(red|second_yellow)$/); i.away = cnt("away", /^(red|second_yellow)$/); } }); }
+    if (md.coverage_events && md.coverage_events.cards === false) items = items.filter(function(i){ return !/cards$/.test(i.key); });   // the source sent no cards for this match
     items = items.filter(function(i){ return i.key === "BallPossesion" || (parseFloat(i.home) || 0) + (parseFloat(i.away) || 0) > 0; });
+    // W2.6: six key rows, the rest behind «كل الأرقام»
+    var KEY = ["BallPossesion", "expected_goals", "total_shots", "ShotsOnTarget", "big_chance", "corners"]; items.sort(function(a, b){ var x = KEY.indexOf(a.key), y = KEY.indexOf(b.key); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); });
+    var row = function(i){ var h = parseFloat(i.home) || 0, a = parseFloat(i.away) || 0, t = h + a || 1; return '<div class="stat"><span class="l">' + STAT_AR[i.key] + '</span><span class="v">' + esc(i.home) + '</span><span class="bar2"><i style="inline-size:' + (h / t * 100).toFixed(1) + '%"></i><i style="inline-size:' + (a / t * 100).toFixed(1) + '%"></i></span><span class="v">' + esc(i.away) + "</span></div>"; };
+    return items.slice(0, 6).map(row).join("") + (items.length > 6 ? '<details class="more-stats"><summary>كل الأرقام</summary>' + items.slice(6).map(row).join("") + "</details>" : "");
     // bars: home share from the right (RTL), away share to the left
     return items.map(function(i){ var h = parseFloat(i.home) || 0, a = parseFloat(i.away) || 0, t = h + a || 1; return '<div class="stat"><span class="l">' + STAT_AR[i.key] + '</span><span class="v">' + esc(i.home) + '</span><span class="bar2"><i style="inline-size:' + (h / t * 100).toFixed(1) + '%"></i><i style="inline-size:' + (a / t * 100).toFixed(1) + '%"></i></span><span class="v">' + esc(i.away) + "</span></div>"; }).join("");
   };
@@ -258,7 +272,7 @@
   var GROUP_AR = { keepers:"حراس المرمى", defenders:"الدفاع", midfielders:"الوسط", attackers:"الهجوم", coach:"الجهاز الفني" };
   R.squad = function(t){
     if (!t.squad || !t.squad.length) return '<p class="empty">ما في قائمة لاعبين.</p>';
-    return t.squad.filter(function(g){ return g.group !== "coach"; }).map(function(g){ return "<h3>" + (GROUP_AR[g.group] || esc(g.group)) + '</h3><div class="squad">' + g.players.map(function(p){ return '<div><span class="no">' + esc(p.number || "") + '</span><span class="lat">' + esc(p.name) + "</span>" + (p.country && p.country !== t.country && R.flag(p.country) ? ' <span class="flag" title="' + esc(p.country) + '">' + R.flag(p.country) + "</span>" : "") + (p.club && t.national ? ' <span class="muted small">' + esc(p.club) + "</span>" : "") + (p.injury ? ' <span class="muted small">مصاب</span>' : "") + '<span class="x">' + (p.goals ? p.goals + " هدف" : "") + (p.goals && p.assists ? "، " : "") + (p.assists ? p.assists + " صناعة" : "") + "</span></div>"; }).join("") + "</div>"; }).join("");
+    return t.squad.filter(function(g){ return g.group !== "coach"; }).map(function(g){ return "<h3>" + (GROUP_AR[g.group] || esc(g.group)) + '</h3><div class="squad">' + g.players.map(function(p){ return '<div><span class="no">' + esc(p.number || "") + "</span>" + ((R.PP || (root && root.PP) || {})[p.id] ? '<a class="lat" href="/p/' + p.id + '/">' + esc(p.name) + "</a>" : '<span class="lat">' + esc(p.name) + "</span>") + (p.position && R.pos ? ' <span class="muted small">' + esc(R.pos(p.position)) + "</span>" : "") + (p.age ? ' <span class="muted small num">' + p.age + "</span>" : "") + (p.country && p.country !== t.country && R.flag(p.country) ? ' <span class="flag" title="' + esc(p.country) + '">' + R.flag(p.country) + "</span>" : "") + (p.club && t.national ? ' <span class="muted small">' + esc(p.club) + "</span>" : "") + (p.injury ? ' <span class="muted small">مصاب</span>' : "") + '<span class="x">' + (p.goals ? p.goals + " هدف" : "") + (p.goals && p.assists ? "، " : "") + (p.assists ? p.assists + " صناعة" : "") + "</span></div>"; }).join("") + "</div>"; }).join("");
   };
   R.teamFixtures = function(t){
     var fx = (t.fixtures || []).slice().sort(function(a, b){ return (a.kickoff_utc || "").localeCompare(b.kickoff_utc || ""); });

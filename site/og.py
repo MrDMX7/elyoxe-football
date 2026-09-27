@@ -64,7 +64,7 @@ def render(j):
             d.text((x, 470), j[side], font=fit(d, j[side], KUFI, 44, 360), fill=CHALK, anchor="mm", direction="rtl", language="ar")
         big = j.get("score") or j.get("time") or ""
         d.text((W / 2, 360), big, font=DIG(150 if j.get("score") else 120), fill=CHALK, anchor="mm")
-        if j.get("sub"): d.text((W / 2, 470), j["sub"], font=KUFI(30), fill=DUNE, anchor="mm", direction="rtl", language="ar")
+        if j.get("sub"): d.text((W / 2, 470), j["sub"], font=KUFI(30), fill=CHALK, anchor="mm", direction="rtl", language="ar")
     else:
         lg = logo(os.path.join(CACHE, "logo", f"{j.get('home_id')}.png"), 170) if j.get("home_id") else None
         if lg: im.paste(lg, (int(W / 2 - lg.width / 2), 250), lg)
@@ -90,7 +90,7 @@ def render_sized(j, w, h):
             if lg: im.paste(lg, (int(x - lg.width / 2), ly), lg)
             d.text((x, ny), j[side], font=fit(d, j[side], KUFI, int(46 * u), w * 0.42), fill=CHALK, anchor="mm", direction="rtl", language="ar")
         d.text((w / 2, sy), j.get("score") or j.get("time") or "", font=DIG(sf), fill=CHALK, anchor="mm")
-        if j.get("sub"): d.text((w / 2, suby), j["sub"], font=KUFI(int(30 * u)), fill=DUNE, anchor="mm", direction="rtl", language="ar")
+        if j.get("sub"): d.text((w / 2, suby), j["sub"], font=KUFI(int(30 * u)), fill=CHALK, anchor="mm", direction="rtl", language="ar")
     else:
         lg = logo(os.path.join(CACHE, "logo", f"{j.get('home_id')}.png"), int(200 * u)) if j.get("home_id") else None
         if lg: im.paste(lg, (int(w / 2 - lg.width / 2), y + int(60 * u)), lg)

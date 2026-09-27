@@ -17,10 +17,19 @@
   var opener = null, scrim = $("#scrimall");
   // W1.9: an open sheet or panel owns one history entry, so the phone's back gesture closes it instead of leaving the page
   function anyOpen(){ return !!document.querySelector(".sheet:not([hidden]),.panel:not([hidden])"); }
-  function closeAll(fromPop){ var was = anyOpen(); $$(".sheet:not([hidden]),.panel:not([hidden])").forEach(function(s){ s.hidden = true; if (s.id === "panel") unpanel(); }); scrim.hidden = true; B.classList.remove("locked"); if (opener && opener.focus) opener.focus(); opener = null;
+  // W2.9: the page behind an open sheet is inert; closing slides out in 180 ms
+  function inert(on){ ["main", ".top", ".tabbar", ".foot", ".mini"].forEach(function(q){ var e = $(q); if (e) e.inert = on; }); }
+  function closeAll(fromPop){ var was = anyOpen(); $$(".sheet:not([hidden]),.panel:not([hidden])").forEach(function(s){ if (RM || fromPop === "now"){ s.hidden = true; if (s.id === "panel") unpanel(); return; } s.classList.add("out"); setTimeout(function(){ s.hidden = true; s.classList.remove("out"); var inn = s.firstElementChild; if (inn) inn.style.transform = ""; if (s.id === "panel") unpanel(); }, 180); }); scrim.hidden = true; B.classList.remove("locked"); inert(false); if (opener && opener.focus) opener.focus(); opener = null;
     if (was && fromPop !== true && history.state && history.state.tifoOv) try { history.back(); } catch (e){} }
-  function open(el, from){ var had = anyOpen(); closeAll(true); opener = from || document.activeElement; el.hidden = false; scrim.hidden = false; B.classList.add("locked"); var f = el.querySelector("button,a,[tabindex]"); if (f) setTimeout(function(){ f.focus({ preventScroll:true }); }, 30);
+  function open(el, from){ var had = anyOpen(); if (had) $$(".sheet:not([hidden]),.panel:not([hidden])").forEach(function(s){ s.hidden = true; if (s.id === "panel") unpanel(); }); opener = from || document.activeElement; el.hidden = false; el.classList.remove("out"); scrim.hidden = false; B.classList.add("locked"); inert(true);
+    var inn = el.firstElementChild; if (inn && !inn.querySelector(":scope > .grab")){ var g = document.createElement("i"); g.className = "grab"; g.setAttribute("aria-hidden", "true"); inn.insertBefore(g, inn.firstChild); } var f = el.querySelector("button,a,[tabindex]"); if (f) setTimeout(function(){ f.focus({ preventScroll:true }); }, 30);
     if (!(had && history.state && history.state.tifoOv)) try { history.pushState({ tifoOv:1 }, ""); } catch (e){} }
+  // W2.9: drag a sheet down by its grab bar or header to close it (80 px or a flick), transform only
+  (function(){ var drag = null;
+    document.addEventListener("pointerdown", function(e){ var h = e.target.closest(".grab, .sh-h, .pn-h"); if (!h || e.target.closest("button")) return; var inn = h.closest(".sh-in, .pn-in"); if (!inn || matchMedia("(min-width:880px)").matches) return; drag = { inn:inn, y0:e.clientY, t0:performance.now(), dy:0 }; inn.style.transition = "none"; }, { passive:true });
+    document.addEventListener("pointermove", function(e){ if (!drag) return; drag.dy = Math.max(0, e.clientY - drag.y0); drag.inn.style.transform = "translateY(" + drag.dy + "px)"; }, { passive:true });
+    document.addEventListener("pointerup", function(){ if (!drag) return; var d = drag; drag = null; d.inn.style.transition = ""; var v = d.dy / Math.max(1, performance.now() - d.t0);
+      if (d.dy > 80 || v > 0.6) closeAll(); else d.inn.style.transform = ""; }); })();
   window.addEventListener("popstate", function(){ if (anyOpen()) closeAll(true); var sb = $("#srchbox"); if (sb) sb.remove(); });
   // search closes on a tap outside it
   document.addEventListener("click", function(e){ var sb = $("#srchbox"); if (sb && !sb.contains(e.target) && !e.target.closest("#srch")) sb.remove(); });
@@ -56,7 +65,7 @@
   function goTab(k){ var b = $('.mtabs button[data-t="' + k + '"]'); if (b){ b.click(); var bar = $(".mtabs"); if (bar) window.scrollTo({ top:bar.getBoundingClientRect().top + window.scrollY - 60, behavior:RM ? "auto" : "smooth" }); } }
   (function deep(){
     var h = decodeURIComponent(location.hash.slice(1)); if (!h) return;
-    var alias = { goals:["num", "goals"], assists:["num", "assists"] }[h];
+    var alias = { goals:["num", "goals"], assists:["num", "assists"], ana:["stats"] }[h];
     if (alias){ goTab(alias[0]); var s = $('.seg button[data-t="' + alias[1] + '"]'); if (s) s.click(); return; }
     var t = $('[data-anchor="' + h + '"]'); if (t){ var p = t.closest("[data-pane]"); if (p) goTab(p.dataset.pane); setTimeout(function(){ panel(t.dataset.open, t); }, 60); }
   })();
@@ -100,16 +109,17 @@
   if (mini){ try { miniDraw(JSON.parse($("#msum").textContent)); } catch (e){}
     if ("IntersectionObserver" in window){ var mh = $("#mh"); new IntersectionObserver(function(es){ var on = !es[0].isIntersecting && es[0].boundingClientRect.top < 0; B.classList.toggle("mini-on", on); mini.setAttribute("aria-hidden", !on); }, { threshold:0 }).observe(mh); } }
   document.addEventListener("tifo:match", function(e){ var md = e.detail; if (R.arNames) R.arNames(md); miniDraw(md); if (art) art.set(md);
-    if (md.status !== "scheduled"){ var t = $('.mtabs [data-t="events"]'); if (t) t.textContent = "الأحداث"; var g = $('.hero-acts [data-go="events"]'); if (g){ g.dataset.go = "lineups"; g.href = "#lineups"; g.textContent = "التشكيلة"; } } });
+    if (md.status !== "scheduled"){ var st2 = $('.mtabs [data-t="stats"]'); if (st2) st2.hidden = false; var evb = $("#events"); if (evb) evb.hidden = false;
+      var t = $('.mtabs [data-t="events"]'); if (t) t.textContent = "الأحداث"; var g = $('.hero-acts [data-go="events"]'); if (g){ g.dataset.go = "lineups"; g.href = "#lineups"; g.textContent = "التشكيلة"; } } });
 
   // ---- home: rails from the same day data app.js just fetched
   document.addEventListener("tifo:day", function(e){
     var d = e.detail; R._idx = d.idx; if (d.off !== 0) return;
     var mine = null; try { mine = +localStorage.getItem("tifo.mine") || null; } catch (x){}
-    var all = d.ms, ids = {}; all.forEach(function(m){ ids[m.id] = 1; }); var r = R.homeRails(all.concat(((d.live || {}).matches || []).filter(function(m){ return !ids[m.id]; })), d.idx, { mine:mine });
+    var all = d.ms, ids = {}; all.forEach(function(m){ ids[m.id] = 1; }); var f0 = R.featured(all), r = R.homeRails(all.concat(((d.live || {}).matches || []).filter(function(m){ return !ids[m.id]; })), d.idx, { mine:mine, exclude:f0 && f0.id });
     [["r-live", r.live], ["r-today", r.today], ["r-arab", r.arab]].forEach(function(x){ var s = document.getElementById(x[0]); if (!s) return; var box = s.querySelector(".rail-s"); if (box.innerHTML !== x[1]){ box.innerHTML = x[1]; R.localize(box); } s.hidden = !x[1]; });
     var f = R.featured(all), go = $("#herogo"); if (f && go){ go.href = (R.isProto("/m/" + f.id + "/") ? "/next" : "") + "/m/" + f.id + "/"; }
-    setTimeout(function(){ var k = $("#standkick"); if (k && f && mine && (f.home.id === mine || f.away.id === mine) && !R.isLive(f)) k.textContent = "فريقك"; else if (k && f && f.status === "scheduled") k.textContent = "الليلة"; }, 0);
+    setTimeout(function(){ var k = $("#standkick"); if (k && f && mine && (f.home.id === mine || f.away.id === mine) && !R.isLive(f)) k.textContent = "فريقك · " + R.kick(f); else if (k && f) k.textContent = R.kick(f); }, 0);
     fold();
   });
   // the day list: 4 competitions, then «كل المباريات»
@@ -135,14 +145,14 @@
   if (!RM && "IntersectionObserver" in window){ var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } }); }, { rootMargin:"0px 0px -8% 0px" });
     $$(".rail, .daybox, .shelf3, [data-pane] > section.blk").forEach(function(el){ if (el.getBoundingClientRect().top < window.innerHeight) return; el.classList.add("fx"); io.observe(el); }); }
 
-  // 356: hero crests carry a view-transition name, so a crest morphs into the team page hero (same-origin navigations)
-  $$(".hero img.logo").forEach(function(img){ var m = (img.getAttribute("src") || "").match(/\/logo\/(\d+)\.png/); if (m && !$$(".hero img.logo").some(function(o){ return o !== img && o.getAttribute("src") === img.getAttribute("src"); })) img.style.viewTransitionName = "crest-" + m[1]; });
+  // 356: crest view-transition names are emitted by the renderers (v3.js), so a live re-render keeps them
   // 388: one match in the home hero — while the hero match is live, the national countdown leaves the hero for its rail card
   function cdPlace(){ var cd = $("#uaecd"), hero = $("#stand"); if (!cd || !hero) return; var f = R._idx && window.__feat, live = f && R.isLive(f);
     var a = cd.querySelector("a.cd"), mid = a && (a.getAttribute("href").match(/\/m\/(\d+)\//) || [])[1];
-    if (!live){ if (!hero.contains(cd)){ var acts = hero.querySelector(".hero-acts"); acts.parentNode.insertBefore(cd, acts); } cd.hidden = false; return; }
-    if (mid && f && String(f.id) === mid){ cd.hidden = true; return; }
-    var card = mid && $('.rc[data-mid="' + mid + '"]'); if (card){ if (!card.contains(cd)) card.appendChild(cd); cd.hidden = false; } else cd.hidden = true; }
+    // the hero keeps the countdown's reserved line either way (visibility, not display), so nothing below moves
+    if (!live){ if (!hero.contains(cd)){ var acts = hero.querySelector(".hero-acts"), ph0 = hero.querySelector(".cdph"); acts.parentNode.insertBefore(cd, acts); if (ph0) ph0.remove(); } cd.hidden = false; cd.style.visibility = ""; return; }
+    if (mid && f && String(f.id) === mid){ cd.style.visibility = "hidden"; return; }
+    var card = mid && $('.rc[data-mid="' + mid + '"]'); if (card){ if (!card.contains(cd)){ if (hero.contains(cd) && !hero.querySelector(".cdph")){ var ph = document.createElement("div"); ph.className = "cdph"; cd.parentNode.insertBefore(ph, cd); } card.appendChild(cd); } cd.hidden = false; cd.style.visibility = ""; } else cd.style.visibility = "hidden"; }
   document.addEventListener("tifo:day", function(e){ if (e.detail.off === 0){ window.__feat = R.featured(e.detail.ms); setTimeout(cdPlace, 0); } });
   if ($("#uaecd") && "MutationObserver" in window) new MutationObserver(function(){ cdPlace(); }).observe($("#uaecd"), { childList:true });
   // 403: «فريقك» empty state — a crest grid of the visitor's country's clubs; a tap makes it your team
@@ -162,6 +172,25 @@
   // W1.10: a cookieless visit ping (path, country, how long since the last visit on this phone); a 404 until the cards Lambda is redeployed is fine
   (function(){ try { var last = +localStorage.getItem("tifo.seen") || 0, now = Date.now(), d = (now - last) / 864e5, ret = !last ? "first" : d < 1 && new Date(last).toDateString() === new Date(now).toDateString() ? "day" : d <= 7 ? "week" : "old";
     localStorage.setItem("tifo.seen", now); fetch("/api/tifo/hit", { method:"POST", keepalive:true, headers:{ "content-type":"application/json" }, body:JSON.stringify({ path:location.pathname, country:localStorage.getItem("tifo.country") || "", ret:ret }) }).catch(function(){}); } catch (e){} })();
+  // W2.4 country engine (client): the visitor's country first in the crest grid and /competitions/, and المزيد's shortcuts become
+  // «دوري بلدك · منتخب بلدك · البطولة الشغالة»
+  (function(){ var cc = lsGet("tifo.country"); if (!cc){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : ""; } catch (e){} }
+    if (!cc || cc === "xx") return;
+    $$(".cts, main .body").forEach(function(box){ var kids = [].slice.call(box.children).filter(function(k){ return k.dataset && k.dataset.iso === cc; }); for (var i = kids.length - 1; i >= 0; i--) box.insertBefore(kids[i], box.firstChild); });
+    var ml = $("#more .mg .ml"); if (!ml) return; var L = window.CL || {}, N = window.NAT || {}, T = window.NOWT, a = ml.querySelectorAll("a");
+    if (L[cc] && a[0]){ a[0].href = "/c/" + L[cc][0] + "/"; a[0].textContent = L[cc][1]; }
+    if (N[cc] && a[1]){ a[1].href = "/t/" + N[cc] + "/"; a[1].textContent = "منتخب " + ((R.COUNTRIES.filter(function(c){ return c[0] === cc; })[0] || [])[1] || "بلدك"); }
+    if (T && a[2]){ a[2].href = "/c/" + T[0] + "/"; a[2].textContent = T[1]; } })();
+  // W2.6: a new event flashes chalk once; the bars get out of the way on a phone (top slides up under the mini-bar, bottom bar hides on scroll-down)
+  var seenEv = null;
+  document.addEventListener("tifo:match", function(){ var lis = $$("#events li[data-eid]"), ids = lis.map(function(l){ return l.dataset.eid; });
+    if (seenEv) lis.forEach(function(l){ if (l.dataset.eid && seenEv.indexOf(l.dataset.eid) < 0 && !RM) l.classList.add("fresh"); }); seenEv = ids; });
+  var lastY = window.scrollY; window.addEventListener("scroll", function(){ var y = window.scrollY; if (Math.abs(y - lastY) > 8){ B.classList.toggle("scdown", y > lastY && y > 200); lastY = y; } }, { passive:true });
+  // live clock: every ticking minute on the page moves each second (data from the last poll, no extra requests)
+  setInterval(function(){ $$(".lmin[data-ps]").forEach(function(el){ var v = R.clock(el.dataset.ps, el.dataset.pb, el.dataset.pl); if (el.textContent !== v) el.textContent = v; }); }, 1000);
+  // W2.7: the team hero's next match counts down, then says it's on
+  (function(){ var ko = $$("[data-ko]"); if (!ko.length) return; var t = setInterval(function(){ ko.forEach(function(el){ var d = Date.parse(el.dataset.ko) - Date.now(); if (!isFinite(d)) return;
+    if (d <= 0){ el.textContent = "المباراة"; return; } if (d > 36e5 * 48) return; var hh = Math.floor(d / 36e5), mm = Math.floor(d / 6e4) % 60, ss = Math.floor(d / 1e3) % 60, p2 = function(n){ return n < 10 ? "0" + n : n; }; el.textContent = hh + ":" + p2(mm) + ":" + p2(ss); }); }, 1000); })();
   // ================= owner items (2026-09-27): 355 goal moment · 357 match-state hero · 359 cinema · 360 goal sound ·
   // 370 live «لو خلصت الحين» · 373 player card · 376 lineup builder · 379 embed. Everything lives in the sheet, a tab or the hero.
   function lsGet(k){ try { return localStorage.getItem(k); } catch (e){ return null; } }
