@@ -147,8 +147,14 @@ def derbies(p, limit=4):
             p.store.fail("arab-derbies", f"{a}-{b}: FotMob match {mid} has no head-to-head block yet")
             continue                    # not marked: tried again next run, not in a week
         p.mark("arab_derby", f"{a}-{b}")
+        matches = list(h["matches"])
+        if m.get("status") == "finished" and m.get("score") and all(x.get("id") != m["id"] for x in matches):
+            # FotMob's head-to-head block lists the meetings before the match it hangs on: add that match itself
+            matches.insert(0, {"id": m["id"], "kickoff_utc": m.get("kickoff_utc"), "comp": m.get("comp"),
+                               "home": {k: m["home"].get(k) for k in ("id", "name", "name_ar", "logo")},
+                               "away": {k: m["away"].get(k) for k in ("id", "name", "name_ar", "logo")}, "score": m["score"]})
         wins = {str(a): 0, str(b): 0, "draws": 0}
-        for x in h["matches"]:
+        for x in matches:
             sc = x.get("score")
             if not sc:
                 continue
@@ -159,7 +165,8 @@ def derbies(p, limit=4):
                 if str(wnr) in wins:
                     wins[str(wnr)] += 1
         p.store.put_json(f"h2h/{a}-{b}.json", {"teams": [a, b], "name_ar": d["name_ar"], "generated": iso(p.now()),
-                                              "wins": wins, "matches": h["matches"], "via_match": mid,
+                                              "wins": wins, "matches": matches, "via_match": mid,
+                                              "check": _h2h_check(p, a, b, d.get("comp"), matches),
                                               "sources": [f"https://www.fotmob.com/match/{mid}",
                                                           f"https://www.fotmob.com/api/data/matchDetails?matchId={mid}"],
                                               "note": "all meetings FotMob lists for this pair (its depth, all competitions)"},
@@ -167,8 +174,29 @@ def derbies(p, limit=4):
     p.store.put_json("derbies.json", {"generated": iso(p.now()), "derbies": out}, cache="static")
 
 
+def _h2h_check(p, a, b, comp, matches):
+    """Cross-check against the league meetings in our own stored history (the same source, other endpoint)."""
+    if not comp:
+        return None
+    by_id = {x.get("id"): x for x in matches}
+    stored, missing, differ = 0, [], []
+    for rows in p.aux(f"history/{comp}").values():
+        for r in rows:
+            if {r["h"], r["a"]} != {a, b} or r.get("hs") is None:
+                continue
+            stored += 1
+            x = by_id.get(r["id"])
+            if not x:
+                missing.append(r["id"])
+            elif x.get("score") and [x["score"]["home"], x["score"]["away"]] != ([r["hs"], r["as"]] if x["home"]["id"] == r["h"]
+                                                                                 else [r["as"], r["hs"]]):
+                differ.append(r["id"])
+    return {"stored_league_meetings": stored, "missing_from_list": missing, "score_differs": differ,
+            "note": "league meetings in our FotMob season history (competition " + str(comp) + ") compared with this list"}
+
+
 def _last_meeting(p, a, b, comp):
-    best = None
+    best, upcoming = None, None
     comps = [comp] if comp else []
     comps += [c for c in (525, 9469, 526, 9468, 10474) if c not in comps]
     for cid in comps:
@@ -177,9 +205,12 @@ def _last_meeting(p, a, b, comp):
                 if {r["h"], r["a"]} == {a, b} and r.get("id") and (best is None or (r["ko"] or "") > best[0]):
                     best = (r["ko"] or "", r["id"])
         for m in p.fixtures(cid) or []:
-            if {m["home"]["id"], m["away"]["id"]} == {a, b} and m.get("id") and (best is None or (m.get("kickoff_utc") or "") > best[0]):
+            if {m["home"]["id"], m["away"]["id"]} == {a, b} and m.get("id") and m.get("status") == "finished" and \
+                    (best is None or (m.get("kickoff_utc") or "") > best[0]):
                 best = (m.get("kickoff_utc") or "", m["id"])
-    return best[1] if best else None
+            elif {m["home"]["id"], m["away"]["id"]} == {a, b} and m.get("id") and not upcoming:
+                upcoming = m["id"]      # a scheduled meeting only if none was played (FotMob may give it no h2h yet)
+    return best[1] if best else upcoming
 
 
 # ------------------------------------------------------------------ 210
