@@ -1,6 +1,6 @@
 """تيفو phase 5 — written and voiced content from the data (docs/ROADMAP.md phase 5).
 
-  python3 ai/gen.py [--samples] [--only summary,preview,podcast,daily5,commentary,digest,power] [--limit N]
+  python3 ai/gen.py [--samples] [--only summary,preview,podcast,daily5,commentary,digest,power,why,quick] [--limit N]
 
 What it makes (cache/ai/…, read by build.cjs; shown on the site only for kinds switched on in ai/approved.json):
   9  + 78   summary/{match}.json   finished UAE matches: an Emirati summary (4-6 sentences) + a stats thread for X (4-6 posts)
@@ -22,6 +22,8 @@ DATA = os.environ.get("TIFO_DATA", "https://d1n5aqaqkowltp.cloudfront.net")
 MODEL = os.environ.get("TIFO_MODEL", "gemini-3.5-flash")
 LEX = json.load(open(os.path.expanduser("~/workspace/content/video/_system/EMIRATI-LEXICON.json")))
 UAE_COMPS = [538, 11027, 9943, 11026]
+ARAB = {"AE", "SA", "EG", "MA", "DZ", "TN", "IQ", "JO", "KW", "QA", "BH", "OM", "LB", "SY", "PS", "YE", "LY", "SD", "MR", "SO", "DJ", "KM"}
+BIG5 = {47, 87, 55, 54, 53}
 
 def key():
     for line in open(os.path.expanduser("~/workspace/content-pipeline/.env")):
@@ -344,6 +346,68 @@ def do_power(comp):
     lines = {r["team_id"]: emirati(r["line"]).replace("بمعدل ", "بـ ") for r in out["rows"]}
     save("power", name, {"comp": comp, "week": wk, "title": emirati(out["title"]), "rows": [dict(r, line=lines.get(r["team_id"], "")) for r in rows], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
 
+# ---- 369 «ليش هالنتيجة؟» (why) and 372 «مباراة الليلة في 60 ثانية» (quick), approved 2026-09-27. Files:
+#   why/{match}.json   {id, comp, home, away, score:{home,away}, lines:[2 strings], sig, model, generated}
+#   quick/{match}.json {id, comp, home, away, kickoff_utc, lines:[4-6 strings], sig, model, generated}   (home/away = team ids)
+WHY_SYS = STYLE + NAT_RULE + """
+المهمة: «ليش هالنتيجة؟» لمباراة خلصت. اكتب lines: سطرين بالضبط، كل سطر جملة وحدة أقل من 150 حرف، تشرح ليش انتهت المباراة جذيه من الأرقام المرفقة بس
+(الاستحواذ، التسديدات، التسديدات على المرمى، الفرص المحققة، الأهداف المتوقعة إذا موجودة، الطرد، البلنتي، توقيت الأهداف).
+- كل سطر لازم فيه رقم واحد على الأقل من البيانات. مثال على الأسلوب: «سيطر الوحدة على الاستحواذ 61% بس ضيّع 3 فرص محققة».
+- كل سطر عن فريق واحد بجملة قصيرة. لا تربط الفريقين في نفس الجملة بـ«بس» أو «رغم» (مثل «X سيطر… بس سجّل Y…»)، خلّ كل فريق في سطره.
+- لا تفترض أي سبب مب ظاهر في الأرقام (تعب، معنويات، تكتيك، حكم)، ولا تكتب حشو أو مديح.
+- stats_home_away: الرقم الأول للمستضيف (home) والثاني للضيف (away).
+- الحدث own_goal: اللاعب سجل بالخطأ في مرمى فريقه، والهدف ينحسب للفريق المذكور في goal_for. قول «هدف عكسي من فلان لصالح الفريق».
+- انتبه لفريق كل لاعب (team) قبل ما تربطه بأي فريق.
+- لو ذكرت عدد التسديدات مع الأهداف، اكتبها عن الفريق بدون اسم الهداف وبدون «عقب» أو «من أصل»، بهالشكل بالضبط: «سجّل الشحانية هدفه الوحيد من 4 تسديدات على المرمى».
+"""
+WHY_SCHEMA = OBJ({"lines": ARR(S(170), 2)})
+def do_why(md):
+    ctx = match_facts(md)
+    if not ctx.get("stats_home_away"): return "no stats"
+    for e in ctx["events"]:   # own goals: name the side the goal counted for (the event's team is the scorer's own side)
+        if e["type"] == "own_goal": e["goal_for"] = ctx["away"] if e["team"] == ctx["home"] else ctx["home"]
+    sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+    if cached("why", str(md["id"]), sig): return "cached"
+    out = gemini(WHY_SYS, ctx, WHY_SCHEMA, temp=0.3, tokens=4000)
+    if not out: return "fail"
+    save("why", str(md["id"]), {"id": md["id"], "comp": md.get("comp"), "home": md["home"]["id"], "away": md["away"]["id"], "score": md.get("score"), "lines": [fix(grammar(emirati(l), nations(md["home"], md["away"]))) for l in out["lines"]], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
+
+QUICK_SYS = STYLE + NAT_RULE + """
+المهمة: «مباراة الليلة في 60 ثانية»: بطاقة سريعة قبل مباراة كبيرة. اكتب lines: من 4 لين 6 أسطر، كل سطر جملة وحدة أقل من 140 حرف:
+الموعد، وضع الفريقين في الترتيب وفورمتهم، المواجهات السابقة (h2h)، وتوقع تيفو بالنسب إذا موجود. بس هذي الأربعة، ولا شي غيرها.
+- كل سطر فيه رقم من البيانات. لو ما في توقع تيفو، لا تذكر أي توقع. سمّها «توقعات تيفو» دايماً.
+- الموعد اكتبه حرفياً كما في kickoff_label (مثلاً «الجمعة 16 أكتوبر، 17:05») مع «بتوقيت الإمارات»، وقول «الليلة» بس لو is_tonight صح.
+- المجموعة اكتبها كما في group_ar.
+- لو المعلومات ما تكفي لـ 6 أسطر، اكتب 4 بس. لا تكرر نفس المعلومة بصيغتين، ولا تكتب سطر بدون معلومة («عين الفريق على الفوز»).
+- ممنوع أي لغة مراهنات (أودز، رهان، ضمان، «أكيد بيفوز»، نصايح توقع). ممنوع الحشو.
+"""
+QUICK_SCHEMA = OBJ({"lines": ARR(S(160), 6)})
+AR_DAYS = ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"]; AR_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"]
+GROUP_AR = {"A": "المجموعة الأولى", "B": "المجموعة الثانية", "C": "المجموعة الثالثة", "D": "المجموعة الرابعة"}
+def label(iso):   # «الجمعة 16 أكتوبر، 17:05» (UAE time): the one date format of these cards
+    if len(iso) < 16: return ""
+    d = dt.date.fromisoformat(iso[:10]); return f"{AR_DAYS[d.weekday()]} {d.day} {AR_MONTHS[d.month - 1]}، {iso[11:16]}"
+FIX = [("بتبدأ", "بتبدا"), ("تبدأ", "تبدا"), ("يبدأ", "يبدا"), ("بيبدأ", "بيبدا")]
+def fix(t):
+    for a, b in FIX: t = t.replace(a, b)
+    return t
+def do_quick(m, table):
+    md = get(f"match/{m['id']}.json") or m
+    rows = {}
+    for g in (table or {}).get("groups", []):   # the group that holds either team (Gulf Cup has two)
+        for r in g.get("rows", []): rows[team_ar(r["team"])] = {"rank": r["rank"], "played": r["played"], "pts": r["pts"], "gd": r.get("gd"), "form": r.get("form"), "group_ar": GROUP_AR.get(str(g.get("name") or "").replace("Grp. ", "").replace("Group ", "").strip())}
+    H, A = team_ar(m["home"]), team_ar(m["away"])
+    ctx = {"competition": m.get("comp_name_ar") or md.get("comp_name_ar"), "home": H, "away": A, "kickoff_label": label(m.get("kickoff_uae") or ""),
+           "is_tonight": (m.get("kickoff_uae") or "")[:10] == (dt.datetime.utcnow() + dt.timedelta(hours=4)).strftime("%Y-%m-%d"),
+           "tifo_probabilities": {k: v for k, v in (m.get("probs") or md.get("probs") or {}).items() if k in ("home", "draw", "away")} or None, "home_table": rows.get(H), "away_table": rows.get(A),
+           "head_to_head": (md.get("h2h") or {}).get("summary")}
+    sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+    if cached("quick", str(m["id"]), sig): return "cached"
+    out = gemini(QUICK_SYS, ctx, QUICK_SCHEMA, temp=0.3, tokens=4000)
+    if not out: return "fail"
+    save("quick", str(m["id"]), {"id": m["id"], "comp": m.get("comp"), "home": m["home"]["id"], "away": m["away"]["id"], "kickoff_utc": m.get("kickoff_utc"), "lines": [fix(grammar(emirati(l), nations(m["home"], m["away"]))) for l in out["lines"]], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
+
+
 # ---- 301: «أهم 5 أشياء اليوم» on the home page (gated like every generated text)
 D5_SYS = STYLE + """
 المهمة: عندك مباريات اليوم (عربية أول) وأرقام على المحك. اكتب items: 5 أسطر بالضبط، كل سطر جملة وحدة أقل من 150 حرف،
@@ -369,7 +433,7 @@ def do_daily5():
     out = deep(out); out.update({"date": today, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("daily5", today, out); return "new"
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,podcast,daily5,commentary,digest,power"); ap.add_argument("--limit", type=int, default=40)
+    ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,podcast,daily5,commentary,digest,power,why,quick"); ap.add_argument("--limit", type=int, default=40)
     ap.add_argument("--no-audio", action="store_true"); ap.add_argument("--any-time", action="store_true", help="run podcast outside its Thursday window"); ap.add_argument("--days", type=int, default=10)
     a = ap.parse_args(); only = set(a.only.split(",")); now = dt.datetime.utcnow(); log = {}
     fx = {c: get(f"comp/{c}/fixtures.json") or {"matches": []} for c in UAE_COMPS}
@@ -430,6 +494,36 @@ def main():
         for r in (st538 or {}).get("groups", [{}])[0].get("rows", []): x = do_digest(r["team"]["id"], st538, "دوري أدنوك للمحترفين"); log["dig-" + x] = log.get("dig-" + x, 0) + 1
     if "power" in only:
         for c in POWER_SRC: log[f"power-{c}"] = do_power(c)
+    if "why" in only or "quick" in only:   # 369/372: every Arab league + the big five; 60 new items per kind per run (Gemini quota)
+        idx = get("index.json") or {"competitions": []}
+        leagues = [c for c in idx["competitions"] if c.get("kind") == "league" and (((c.get("country") or {}).get("iso2") in ARAB) or c["id"] in BIG5)]
+        fxs = {c["id"]: (get(f"comp/{c['id']}/fixtures.json") or {"matches": []}) for c in idx["competitions"]}
+        if "why" in only:
+            fin = [m for c in leagues for m in fxs[c["id"]]["matches"] if m.get("status") == "finished" and m.get("kickoff_utc") and (now - dt.datetime.fromisoformat(m["kickoff_utc"].replace("Z", ""))).days <= a.days]
+            n = 0
+            for m in sorted(fin, key=lambda m: m["kickoff_utc"], reverse=True):
+                if n >= 60: log["why-capped"] = True; break
+                md = detail(m["id"])
+                if not md or not md.get("stats"): log["why-nostats"] = log.get("why-nostats", 0) + 1; continue
+                r = do_why(md); log["why-" + r] = log.get("why-" + r, 0) + 1; n += r == "new"
+        if "quick" in only:
+            mow = ((get("arabs/match-of-week.json") or {}).get("pick") or {}).get("match")
+            pairs = {tuple(sorted(d["teams"])) for d in (get("derbies.json") or {}).get("derbies", [])} | {tuple(sorted(int(x) for x in k.split("-"))) for k in ((get("h2h/index.json") or {}).get("pairs") or {})}
+            _ = nations(); tabs = {}
+            def big(m):
+                if m["id"] == mow or tuple(sorted((m["home"]["id"], m["away"]["id"]))) in pairs: return True
+                if any(((_TEAMS.get(str(t["id"])) or {}).get("country") or {}).get("national") and ((_TEAMS.get(str(t["id"])) or {}).get("country") or {}).get("iso2") in ARAB for t in (m["home"], m["away"])): return True
+                if m["comp"] not in tabs: tabs[m["comp"]] = get(f"comp/{m['comp']}/standings.json")
+                g = ((tabs[m["comp"]] or {}).get("groups") or [{}])[0]; rk = {r["team"]["id"]: r["rank"] for r in g.get("rows", [])}
+                return rk.get(m["home"]["id"], 99) <= 4 and rk.get(m["away"]["id"], 99) <= 4
+            soon = [m for ms in fxs.values() for m in ms["matches"] if m.get("status") == "scheduled" and m.get("kickoff_utc") and 0 <= (dt.datetime.fromisoformat(m["kickoff_utc"].replace("Z", "")) - now).total_seconds() <= 48 * 3600]
+            n = 0; seen = set()
+            for m in sorted(soon, key=lambda m: m["kickoff_utc"]):
+                if m["id"] in seen or not big(m): continue
+                seen.add(m["id"])
+                if n >= 60: log["quick-capped"] = True; break
+                if m["comp"] not in tabs: tabs[m["comp"]] = get(f"comp/{m['comp']}/standings.json")
+                r = do_quick(m, tabs[m["comp"]]); log["quick-" + r] = log.get("quick-" + r, 0) + 1; n += r == "new"
     if "daily5" in only: log["daily5"] = do_daily5()
     print(json.dumps(log, ensure_ascii=False))
 
