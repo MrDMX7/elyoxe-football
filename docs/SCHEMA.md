@@ -67,7 +67,7 @@ The CloudFront cache policy honours each object's max-age (MinTTL 1 s). Unchange
 | `national/5789/qualifying.json` | the UAE's group table and that group's remaining fixtures per qualifying competition | with 290, 329, 10197, 10609 |
 | `national/uae-abroad.json` | UAE nationals at clubs outside the UAE, with their main-league season stats | daily |
 | `h2h/{a}-{b}.json`, `h2h/index.json` | full head-to-head list for each pair of current Pro League clubs (`a` < `b`) | weekly per pair |
-| `health.json` | per source and file: ok, error, time, last_ok; last run (mode, seconds, requests, written) | every run (poller) |
+| `health.json` | per source and file: ok, error, time, last_ok; last run (mode, seconds, requests, written). `source:fotmob` = the outage watch (failing for N min: last error) and `source-alert` = the last alert mail (see "Source outage alert") | every run (poller) |
 | `health-analytics.json` | the same for the analytics function | every 10 min |
 
 ## Objects
@@ -204,7 +204,7 @@ The team fields are `{id, name, name_ar, logo, short_name, country, national, pr
 | `goal-bands.json` | `bands: ["1-15","16-30","31-45+","46-60","61-75","76-90+","extra-time"]`, `teams: {id: {for: {...}, against: {...}, matches}}`. Stoppage time counts in its half's last band, and own goals credit the side that benefited |
 | `xg.json` | `rows: [{rank, team, played, xg_for, xg_against, xg_diff, xpts, pts, gf, ga, luck}]`. `xpts` uses independent Poisson goals with the match xG as means; `luck = pts − xpts` |
 | `shots.json` | `players: {id: {name, team, shots, goals, xg, list: [[match, minute, xg, result, x, y, xgot], ...]}}` |
-| `players.json` | `players: {id: {name, team, minutes, stats: {stat: {value, per90, pct}}}}`, plus `averages` and `min_minutes` (270). Built from FotMob's ~29 per-player season lists (goals, rating, accurate passes, tackles, ...) |
+| `players.json` | `players: {id: {name, team, minutes, stats: {stat: {value, per90, pct}}}}`, plus `averages` and `min_minutes` (270). Built from FotMob's ~29 per-player season lists (goals, rating, accurate passes, tackles, ...). Lists FotMob publishes **per 90** (title "… per 90": shots, shots on target, accurate passes, long balls, dribbles, tackles, interceptions, clearances, blocks, recoveries, defensive actions, saves, goals conceded, fouls) keep `value` = `per90` = the source rate and add `total` = rate × minutes / 90 (an estimate: the rate is rounded to 0.1). Before 2026-09-27 these were divided by minutes a second time |
 | `foreigners.json` | top 25 non-nationals by FotMob season rating, then goals + assists. Nationality comes from squads and lineups |
 
 The ledger fills as matches finish. A backfill cursor also fetches up to 6 already-finished matches per idle minute (UAE competitions first) until the current season is complete.
@@ -254,7 +254,7 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `match/{id}.json` → `firsts` | inside our data: `first_meeting` (no earlier meeting in FotMob history since 2010/11), `first_appearance_season`, `first_goal_season` (this season's stored matches) |
 | `…probs.scores`, `probs.expected_goals` | on every scheduled match with a rated pair: exact-score probabilities, a 6×6 grid [home goals 0–5][away goals 0–5] from the Poisson rates behind the W/D/L probabilities |
 | `player/{id}.json` → `form` | last 10 stored appearances, all competitions: `[[match, date, rating, minutes, goals, assists], ...]` |
-| `player/{id}/teammates.json` | top 30 teammates by matches together (stored lineups; written on a rolling cursor) |
+| `player/{id}/teammates.json` | top 30 teammates by matches together (stored lineups; rolling cursor, up to 3,000 players per run every 3 h, so every player with a stored lineup has one within two runs) |
 | `player/{id}/career.json` | FotMob career: `senior` / `national_team` clubs with dates, apps, goals, assists, loan. Written for league top-30 scorers/assisters and Arab players abroad, refreshed weekly |
 | `team/{id}/history.json` | every result since 2010/11 across the history competitions: `[date, comp, opponent, gf, ga, result, H/A, match]` (clubs in the analytics leagues, rolling cursor) |
 | `comp/{id}/seasons.json` | leagues: per season since 2010/11, the computed final table plus `goals_per_game`, `home_win_pct`, `draw_pct`, `title_margin`, `champion`; `avg_age`/`foreign_share_pct` for the current season |
@@ -264,15 +264,15 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `comp/{id}/bracket-sim.json` | knockout cups and continental competitions: Monte Carlo reach probabilities per round (Tifo club rating) and `ties` for two-legged rounds (aggregate, `needs.trailing_needs_to_win_by`, live flag) |
 | `comp/{id}/scenarios.json` → `arab_clubs` | AFC/CAF groups list their Arab clubs (group scenarios for every group with ≤ 8 games left) |
 | `comp/{id}/games-in-hand.json` | overdue (kickoff passed, not played) matches, games in hand, projected points with overdue games at expected points, adjusted rank |
-| `comp/{id}/local-minutes.json` | minutes by nationals vs foreigners per club and league (lineup nationality vs league country) |
+| `comp/{id}/local-minutes.json` | minutes by nationals vs foreigners per club and league (lineup nationality vs league country). `source_coverage` as in subs; `available: false` when no stored match has a lineup |
 | `comp/{id}/first-goal.json` | per team: record when scoring first / conceding first, comebacks |
 | `comp/{id}/dropped.json` | points dropped from winning positions and won from losing positions |
 | `comp/{id}/red-impact.json` | record when playing 11v10 / 10v11 after the first red card, and points gained or lost after it |
-| `comp/{id}/goal-types.json` | per team and player: header / right_foot / left_foot (+set_piece, +outside_box) / penalty / free_kick, with `coverage` (shot map or FotMob goal description; UAE goals are mostly untyped) |
+| `comp/{id}/goal-types.json` | per team and player: header / right_foot / left_foot (+set_piece, +outside_box) / penalty / free_kick, with `coverage` (shot map or FotMob goal description). `available: false` + `reason` when no goal has a type (538, 11027, 535, the North African, Iraqi and Kuwaiti leagues, AFC/CAF: FotMob gives neither shot map nor goal description there, only penalties) |
 | `comp/{id}/dependence.json` | share of team goals from the top scorer and top 2 |
-| `comp/{id}/subs.json` | substitutes' goals/assists and points added per player and per coach; result-changing sub goals |
+| `comp/{id}/subs.json` | substitutes' goals/assists and points added per player and per coach; result-changing sub goals. `source_coverage {matches, with_lineups, with_subs}`; `available: false` + `reason` when FotMob lists no substitutions for the competition |
 | `comp/{id}/xi.json` | starts per player, formations used, most common starting XI and the 11 most-used players |
-| `comp/{id}/workload.json` | minutes in the last 30 days and last 5 matches (all competitions) with `overload` (≥ 540 min in 30 days, or ≥ 450 min over 5 matches within 18 days) |
+| `comp/{id}/workload.json` | minutes in the last 30 days and last 5 matches (all competitions) with `overload` (≥ 540 min in 30 days, or ≥ 450 min over 5 matches within 18 days). `available: false` + `reason` when the league has no stored lineups |
 | `comp/{id}/signings.json` | this season's incoming transfers ranked by FotMob rating × min(1, minutes/900) at the new club |
 | `national/{id}/squad.json` | 22 Arab national teams: FotMob's current squad (latest call-up) with each player's club |
 | `callups/{club_id}.json` | the club's players currently in an Arab national squad |
@@ -288,10 +288,10 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `arabs/coefficients.json` | AFC association ranking and CAF association + club 5-year ranking (Wikipedia revision + the sources it cites; `arab` flag and Arabic country) |
 | `arabs/calendars.json` | per Arab league: first and last published match, breaks of 12+ days; national-team match windows |
 | `arabs/streaks.json` | running streaks (≥ 3) across the Arab leagues: unbeaten, winning, clean sheets, winless, losing |
-| `derbies.json`, `h2h/{a}-{b}.json` | the 12 big Arab derbies (derbies.yaml) with Arabic names, city and full FotMob head-to-head |
+| `derbies.json`, `h2h/{a}-{b}.json` | the 12 big Arab derbies (derbies.yaml) with Arabic names, city and full FotMob head-to-head: `{teams, name_ar, wins {a, b, draws}, matches [{id, kickoff_utc, comp, home, away, score}], via_match, sources [FotMob match page, matchDetails API URL], check {stored_league_meetings, missing_from_list, score_differs}}`. The list is FotMob's h2h block of the latest **finished** meeting plus that meeting itself (the block lists only earlier games); `check` compares it with the league meetings in our season history. A run with no h2h block is retried next run, not in a week |
 | `archive/index-all.json`, `archive/all/{season}.json` | every stored result by July–June season: `[id, date, comp, home, away, hs, as]` |
 | `guide/{iso2}.json` | per country: the next 3 days of covered matches with their broadcasters (research/tifo-2026-09-27/broadcast_by_country.json × fixtures) and `by_broadcaster` |
-| `comp/{id}/referees.json` → `foreign`, `home`, `away` | referee nationality vs the league's country; yellows, reds and penalties against the home/away side |
+| `comp/{id}/referees.json` → `foreign`, `home`, `away`, `available` | referee nationality vs the league's country; yellows, reds and penalties against the home/away side. `available: false` + `reason` where FotMob names no referee (530, 516, 544, 524, 529, 9468, 329 as of 2026-09-27) |
 | `national/{id}/team.json` | 22 Arab national teams: the full team object (squad with clubs, fixtures and results in every competition, coach, venue, FIFA rank), as `team/5789.json` |
 | `national/{id}/fifa.json` | FIFA ranking history since 1992 for each Arab national team (rank, points, confederation rank, Arab rank), plus FotMob's current rank |
 | `arabs/continental-history.json` | every AFC/CAF/Arab club-competition meeting of two Arab clubs FotMob has (since 2010/11, CAF since its first stored season), with a win/draw summary per country pair |
@@ -310,13 +310,13 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `coaches/{id}.json`, `coaches/h2h/{a}-{b}.json`, `coaches/index.json` | coaches of clubs in the analytics leagues and the Arab national teams: career rows (team, season, W/D/L, ppg) and coach-vs-coach results from stored lineups |
 | `arabs/happiness.json` | per club, last 7 days: points − expected points (pre-match Tifo probabilities), `mood` |
 | `arabs/twins.json` | for every club in the Arab leagues: the 3 nearest style twins (Arab leagues + big five) and the nearest big-five club |
-| `comp/{id}/finishing.json` | players with ≥ 10 shots: goals − xG (FotMob player xG, else a fitted proxy; `proxy` flag and `proxy_model`) |
+| `comp/{id}/finishing.json` | players with ≥ 10 shots: `{player, name, team, shots, goals, xg, luck, proxy}`, luck = goals − xG (FotMob player xG, else a fitted proxy; `proxy` flag and `proxy_model`). Shots = FotMob's shots per 90 × minutes / 90 |
 | `clubs/anniversaries.json` | founding dates by MM-DD (and year-only list): research/tifo-2026-09-27/arab_clubs.json + Wikidata (unique exact match in the same country) |
-| `draws/{comp}.json` | draw events: when a competition's groups or knockout pairings first appear or change (timestamp, groups, ties); the analytics function reruns the cup/continental simulations right after |
+| `draws/{comp}.json` | cups and group tournaments: `{comp, events: [{at, groups, ties}], current: {groups, ties}, baseline_at}`. `events` = when groups or knockout pairings changed after `baseline_at` (when we first saw the competition; a draw made before that is not an event); `current` = what the source shows now. Leagues get a file only once an event exists. The analytics function reruns the cup/continental simulations right after an event |
 | `calendar/year.json` | the next 12 months: finals, detected draws, league starts and breaks, national-team windows (`not_included`: transfer windows and awards) |
 | `comp/{id}/suspensions.json` | `suspended` (red card or yellow threshold reached in the team's last stored match) and `at_risk` (one yellow from a ban), with the competition's rules, confidence and sources (research/tifo-2026-09-27/suspension_rules.json) |
 | `comp/{id}/absences.json` | the coming round per team: `unavailable_from_match` (FotMob, near kickoff), `injured_in_squad`, `suspended` |
-| `match/{id}.json` → `referee_profile` | upcoming matches with a named referee: his season numbers in the competition and his stored matches with each of the two teams |
+| `match/{id}.json` → `referee_profile` | upcoming (scheduled) matches once FotMob names the referee (usually 1–2 days before kickoff; none named during the international break): his season numbers in the competition and his stored matches with each of the two teams. Gone once the match is live |
 | `comp/{id}/alltime-table.json` | Arab leagues: all-time table since 2010/11 (seasons, P/W/D/L, goals, points, titles in the computed tables) |
 | `team/{id}/records.json` | per club: biggest win and loss since 2010/11, longest winning/unbeaten/losing/scoring runs, most appearances and top scorers this season |
 | `comp/{id}/promoted.json` | this season's promoted clubs vs past newcomers (final rank and points, and `pts_after_same_games`) |
@@ -339,7 +339,11 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | UAE First Division | Not on FotMob (UAE list: 538, 11027, 9943, 11026), uaepl.ae, TheSportsDB or ESPN |
 | President's Cup 2026/27 | FotMob's latest season is 2025/26. The new draw is not published; the file shows last season until it is |
 | xG, shot map, momentum for UAE competitions | FotMob coverage for the Pro League is `ratings` and for the League Cup `lower`, so they have no xG, shot map or momentum. `xg.json`/`shots.json` for 538 say `available: false`. They exist for Saudi, Qatar and the European leagues (`xG` coverage) |
-| Referee on every match | Present on recent Pro League matches, sometimes empty (e.g. Gulf Cup games) |
+| Referee on every match | Present on recent Pro League matches, sometimes empty (e.g. Gulf Cup games). Never named for Egypt's Confederation Cup (9468), Morocco (530), Algeria (516), Tunisia (544), Iraq (524) and Kuwait (529) matches (infoBox Referee empty) |
+| Lineups, substitutions in some Arab leagues | FotMob has results and goal events only for Algeria (516), Iraq (524) and Kuwait (529): no lineups, subs or minutes, so subs, workload, local minutes and red-card impact there are empty (`available: false`). Tunisia (544) and Morocco (530) get a "simple" lineup (starters only, no substitutions) on some matches, sometimes after full time; ledger entries stored before it appeared are not re-fetched |
+| Goal type (body part) | Only from the shot map (xG coverage). The Pro League, League Cup, Qatar and the North African/Iraqi/Kuwaiti leagues give no `goalDescription` on goal events (checked match 5961821), so `goal-types` there has only penalties |
+| `arabs/tonight.json` in an international window | Empty by nature: it lists club matches abroad (big five, UEFA), and there are none in the window |
+| AFC/CAF `scenarios.json` → `arab_clubs` | Scenarios exist only for groups with ≤ 8 games left (3^8 outcomes), so continental groups get them in the last rounds only |
 | Referee stats scope | FotMob's `source_stats` can describe another competition (a Saudi Pro League match showed a referee's First Division numbers). Our own `referees.json` counts only stored matches |
 | Offside as an event | FotMob has no offside events, only VAR decisions (`var_outcome` offside / goal_disallowed_offside) and the `Offsides` team stat |
 | Disallowed goals without VAR | Not reported by the source |
@@ -358,6 +362,31 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | Coach tenure dates | FotMob gives coach history per season, not appointment dates. Pressure uses the current coach's games this season |
 | Distance for AFC away trips | Known only once that match's detail has been fetched (backfill), because the venue comes from the match detail |
 | Kickoff times for later Pro League rounds | FotMob has rounds 1–6 (42 matches). uaepl.ae has all 182 pairings, but rounds 7–26 have no dates yet (`date_tbd`) |
+
+## Analytics steps that were not ready
+
+A step in the analytics function whose inputs are not loaded yet returns `False` (the Arab clubs rating before the
+history is complete; happiness and continental history before that rating's aux data exists; transitions before any
+career pair; finishing before any table reaches 10 shots). It is retried after 30 minutes (`NOT_READY_RETRY`) instead of
+waiting its full cadence (6 h to 24 h) and publishing nothing or an empty file in between. `arabs/coaches.json` is
+refreshed hourly (was 6 h), because the club coach data fills in over several runs.
+
+## Source outage alert (poller, item 343)
+
+- Every poller run is classified from this run's FotMob-fed health items (`day:*`, `comp:*:fotmob`, `match:*`,
+  `team:*`, `names:fotmob`, `prev-season:*`, `players:*`) and from `sources/http.py`'s per-host ok/failed counters:
+  - **good:** any item succeeded
+  - **bad:** items failed and none succeeded. This covers errors, and also empty or malformed payloads, since those
+    are refused by the validators.
+  - **neutral:** it touched none, as in most idle minutes
+- **When mail goes out:**
+  - **Outage:** once the outage is `source_alert_minutes` old (15), one mail from `tifo@elyoxe.com` to
+    `hello@elyoxe.com` (SES ap-south-1).
+  - **Recovery:** one mail on the first good run after that.
+  - **Neutral runs:** they never start or end an outage.
+- **Failed sends:** a send that fails is retried the next run, at most 5 times.
+- **State:** `source_watch` in `state/poller.json`: `first_bad_at`, `alerted_at`, `last_error`, `send_failures`.
+- **Migration plan:** `docs/SOURCE-MIGRATION.md`.
 
 ## Prayer-time method
 
