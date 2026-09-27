@@ -39,7 +39,7 @@ def timeline(md):
     ev = sorted([e for e in md.get("events") or [] if e.get("type") in GOAL_T + RED_T and e.get("team") in ("home", "away")], key=_mm)
     h = a = 0; goals = []; reds = []; trailed = {"home": False, "away": False}; lead_changes = []
     for e in ev:
-        if e["type"] in RED_T: reds.append({"min": e.get("minute"), "side": e["team"], "pid": str((e.get("player") or {}).get("id") or "")}); continue
+        if e["type"] in RED_T: reds.append({"min": e.get("minute"), "side": e["team"], "type": e["type"], "pid": str((e.get("player") or {}).get("id") or "")}); continue
         if e["team"] == "home": h += 1
         else: a += 1
         goals.append({"min": e.get("minute"), "added": e.get("added"), "side": e["team"], "type": e["type"], "pid": str((e.get("player") or {}).get("id") or ""), "score": (h, a)})
@@ -81,6 +81,18 @@ def check_events(text, md, players=None):
             gs = [g["min"] for g in t["goals"] if side is None or g["side"] == side]
             if gs and m.group(1) in ("بعد", "عقب") and all(g <= r for g in gs): return f"goals before the red card ({r}') said after"
             if gs and m.group(1) == "قبل" and all(g > r for g in gs): return f"goals after the red card ({r}') said before"
+        # «طرد مباشر» only for a straight red; «إنذار ثاني/الأصفر الثاني» only for a second yellow
+        if re.search(r"طرد(?:ة)? مباشر|الطرد المباشر|(?:الكرت|البطاقة) (?:الأحمر|الحمراء) المباشر", s) and t["reds"] and all(r["type"] == "second_yellow" for r in t["reds"]):
+            return "straight red claimed but every red was a second yellow"
+        if re.search(r"(?:الإنذار|إنذار|الأصفر|أصفر) (?:الثاني|ثاني)|إنذارين", s) and t["reds"] and all(r["type"] == "red" for r in t["reds"]):
+            return "second yellow claimed but every red was straight"
+        # «هدف عكسي … لصالح X»: X must be the side it counted for (FotMob files the own goal under that side)
+        m = re.search(r"(?:هدف عكسي|في مرماه|بالخطأ في مرمى)[^.،]{0,70}?لصالح\s+(?:منتخب\s+)?(\S+(?:\s+\S+)?)", s)
+        if m:
+            og = [g for g in t["goals"] if g["type"] == "own_goal"]
+            if og:
+                named = H if m.group(1).startswith(H.split()[0]) or H.startswith(m.group(1).split()[0]) else A if m.group(1).startswith(A.split()[0]) or A.startswith(m.group(1).split()[0]) else None
+                if named and all(_team(md, g["side"]) != named for g in og): return f"own goal said for {named}"
         # the winning goal
         m = re.search(r"هدف (?:الفوز|الحسم|الانتصار)|الهدف الذهبي|الهدف الحاسم", s)
         if m and t["decisive"]:
