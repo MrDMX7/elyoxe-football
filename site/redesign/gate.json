@@ -1,0 +1,277 @@
+{
+ "academy": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "arabs": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "arabs-week": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "ask": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "break": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "comp": {
+  "pages": 46,
+  "sampled": 25,
+  "missing": []
+ },
+ "round": {
+  "pages": 491,
+  "sampled": 25,
+  "missing": []
+ },
+ "compare": {
+  "pages": 15,
+  "sampled": 15,
+  "missing": []
+ },
+ "power": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "calendars": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "cast": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "clashes": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "coach": {
+  "pages": 883,
+  "sampled": 25,
+  "missing": []
+ },
+ "coach-compare": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "coefficients": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "competitions": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "countdowns": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "derbies": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "explore": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "glossary": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "golden-boot": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "guide": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "h2h": {
+  "pages": 80,
+  "sampled": 25,
+  "missing": []
+ },
+ "home": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "lab": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "laws": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "legends": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "match": {
+  "pages": 5148,
+  "sampled": 25,
+  "missing": []
+ },
+ "kit": {
+  "pages": 28,
+  "sampled": 25,
+  "missing": []
+ },
+ "match-of-week": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "memorable": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "national": {
+  "pages": 22,
+  "sampled": 22,
+  "missing": []
+ },
+ "nations-h2h": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "newsletter": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "player": {
+  "pages": 4183,
+  "sampled": 25,
+  "missing": []
+ },
+ "poty": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "referee": {
+  "pages": 296,
+  "sampled": 25,
+  "missing": []
+ },
+ "stadium": {
+  "pages": 15,
+  "sampled": 15,
+  "missing": []
+ },
+ "stadiums": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "streaks": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "studio": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "team": {
+  "pages": 679,
+  "sampled": 25,
+  "missing": []
+ },
+ "poster": {
+  "pages": 679,
+  "sampled": 25,
+  "missing": []
+ },
+ "month": {
+  "pages": 60,
+  "sampled": 25,
+  "missing": []
+ },
+ "thisday": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "today": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "tomorrow": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "transfers": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "tv": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "national-uae": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "w": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "watch": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "week": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "worldcup-arabs": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ },
+ "year": {
+  "pages": 1,
+  "sampled": 1,
+  "missing": []
+ }
+}
