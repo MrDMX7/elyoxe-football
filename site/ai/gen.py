@@ -175,7 +175,10 @@ def do_summary(md):
     if cached("summary", str(md["id"]), sig): return "cached"
     out = gemini(SUM_SYS, ctx, SUM_SCHEMA, tokens=8000)
     if not out: return "fail"
-    out = deep(out, nations(md["home"], md["away"])); out.update({"id": md["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
+    out = deep(out, nations(md["home"], md["away"]))
+    bad = check_result(" ".join([out.get("headline", ""), out.get("summary", "")] + list(out.get("thread") or [])), md)
+    if bad: print(f"summary {md['id']} dropped: {bad}", file=sys.stderr); return "dropped"
+    out.update({"id": md["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("summary", str(md["id"]), out); return "new"
 
 # ---- 77: preview for a coming match
@@ -362,19 +365,56 @@ WHY_SYS = STYLE + NAT_RULE + """
 - stats_home_away: الرقم الأول للمستضيف (home) والثاني للضيف (away).
 - الحدث own_goal: اللاعب سجل بالخطأ في مرمى فريقه، والهدف ينحسب للفريق المذكور في goal_for. قول «هدف عكسي من فلان لصالح الفريق».
 - انتبه لفريق كل لاعب (team) قبل ما تربطه بأي فريق.
+- winner وloser فيهم الفايز والخسران وأهداف كل واحد (لو تعادل، draw صح). السطر الأول عن الفايز لو في فايز. لا تغيّر أي نتيجة.
+- لا تذكر عدد صفر كإنجاز («0 فرص»، «أكثر عن 0»، «كانت 0»). قول «ما صنع أي فرصة محققة».
 - لو ذكرت عدد التسديدات مع الأهداف، اكتبها عن الفريق بدون اسم الهداف وبدون «عقب» أو «من أصل»، بهالشكل بالضبط: «سجّل الشحانية هدفه الوحيد من 4 تسديدات على المرمى».
 """
 WHY_SCHEMA = OBJ({"lines": ARR(S(170), 2)})
+# deterministic checks on generated result text (369, summary): a named side's goal count and «فاز/خسر» must match the score
+ZERO = re.compile(r"(?:أكثر (?:عن|من) 0|\b0 (?:فرص|فرصة|تسديدة|تسديدات|أهداف|هدف)|(?:كانت|كان|وصلت) 0(?!\.)(?!\d))")
+def _goals_word(w):
+    return {"هدفين": 2, "هدفه الوحيد": 1, "هدف واحد": 1, "هدف وحيد": 1}.get(w) if not w.isdigit() else int(w)
+def check_result(text, md):
+    """None when the text agrees with the score, else the reason. Uses both sides' Arabic names."""
+    H, A = team_ar(md["home"]), team_ar(md["away"]); sc = md.get("score") or {}; g = {H: sc.get("home"), A: sc.get("away")}
+    if g[H] is None or g[A] is None or H == A: return None
+    win = H if g[H] > g[A] else A if g[A] > g[H] else None; lose = (A if win == H else H) if win else None
+    for n in (H, A):
+        N = re.escape(n)
+        for m in re.finditer(r"سج[ّ]?ل\s+(?:منتخب\s+)?" + N + r"\s+(\d+|هدفين|هدفه الوحيد|هدف واحد)", text):
+            if _goals_word(m.group(1)) != g[n]: return f"{n} goals {m.group(1)} != {g[n]}"
+        for m in re.finditer(r"(?:منتخب\s+)?" + N + r"\s+(?:\S+\s+){0,3}?(?:سج[ّ]?ل\s+)?(\d+) (?:أهداف|هدف)(?!\s*(?:متوقع|من))", text):
+            if int(m.group(1)) != g[n]: return f"{n} goals {m.group(1)} != {g[n]}"
+        if re.search(r"(?:^|[\s،.])(?:منتخب\s+)?" + N + r"\s+(?:\S+\s+){0,1}?فاز", text) and win != n: return f"{n} فاز but result {sc}"
+        if re.search(r"فاز\s+(?:منتخب\s+)?" + N + r"(?!\w)", text) and win != n: return f"فاز {n} but result {sc}"
+        if re.search(r"(?:^|[\s،.])(?:منتخب\s+)?" + N + r"\s+(?:\S+\s+){0,1}?خسر", text) and lose != n: return f"{n} خسر but result {sc}"
+    return None
+
 def do_why(md):
     ctx = match_facts(md)
     if not ctx.get("stats_home_away"): return "no stats"
     for e in ctx["events"]:   # own goals: name the side the goal counted for (the event's team is the scorer's own side)
         if e["type"] == "own_goal": e["goal_for"] = ctx["away"] if e["team"] == ctx["home"] else ctx["home"]
+    sc = md.get("score") or {}; gh, ga = sc.get("home"), sc.get("away")
+    if gh is None or ga is None: return "no score"
+    H, A = ctx["home"], ctx["away"]
+    ctx["result"] = {"draw": gh == ga, "winner": {"team": H if gh > ga else A, "goals": max(gh, ga)} if gh != ga else None, "loser": {"team": A if gh > ga else H, "goals": min(gh, ga)} if gh != ga else None,
+                     "draw_goals_each": gh if gh == ga else None}
     sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("why", str(md["id"]), sig): return "cached"
     out = gemini(WHY_SYS, ctx, WHY_SCHEMA, temp=0.3, tokens=4000)
     if not out: return "fail"
-    save("why", str(md["id"]), {"id": md["id"], "comp": md.get("comp"), "home": md["home"]["id"], "away": md["away"]["id"], "score": md.get("score"), "lines": [fix(grammar(emirati(l), nations(md["home"], md["away"]))) for l in out["lines"]], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
+    lines = [fix(grammar(emirati(l), nations(md["home"], md["away"]))) for l in out["lines"]]
+    lines = [l for l in lines if not ZERO.search(l)]
+    bad = next((r for r in (check_result(l, md) for l in lines) if r), None)
+    win = ctx["result"]["winner"] and ctx["result"]["winner"]["team"]
+    if not bad and win and lines and win not in lines[0] and len(lines) > 1 and win in lines[1]: lines.reverse()   # the winner first
+    if bad or len(lines) < 2 or (win and win not in lines[0]):
+        print(f"why {md['id']} dropped: {bad or 'zero-count or winner line'}", file=sys.stderr)
+        f = os.path.join(CACHE, "why", f"{md['id']}.json")
+        if os.path.exists(f): os.remove(f)
+        return "dropped"
+    save("why", str(md["id"]), {"id": md["id"], "comp": md.get("comp"), "home": md["home"]["id"], "away": md["away"]["id"], "score": md.get("score"), "lines": lines, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
 
 QUICK_SYS = STYLE + NAT_RULE + """
 المهمة: «مباراة الليلة في 60 ثانية»: بطاقة سريعة قبل مباراة كبيرة. اكتب lines: من 4 لين 6 أسطر، كل سطر جملة وحدة أقل من 140 حرف:
@@ -409,7 +449,7 @@ def do_quick(m, table):
     if cached("quick", str(m["id"]), sig): return "cached"
     out = gemini(QUICK_SYS, ctx, QUICK_SCHEMA, temp=0.3, tokens=4000)
     if not out: return "fail"
-    save("quick", str(m["id"]), {"id": m["id"], "comp": m.get("comp"), "home": m["home"]["id"], "away": m["away"]["id"], "kickoff_utc": m.get("kickoff_utc"), "lines": [fix(grammar(emirati(l), nations(m["home"], m["away"]))) for l in out["lines"]], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
+    save("quick", str(m["id"]), {"id": m["id"], "comp": m.get("comp"), "home": m["home"]["id"], "away": m["away"]["id"], "kickoff_utc": m.get("kickoff_utc"), "lines": [x for x in (fix(grammar(emirati(l), nations(m["home"], m["away"]))) for l in out["lines"]) if not ZERO.search(x)], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
 
 
 # ---- 301: «أهم 5 أشياء اليوم» on the home page (gated like every generated text)
