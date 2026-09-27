@@ -195,11 +195,23 @@ def round_ctx(fx, st, detail):
     nxt = [{"home": team_ar(m["home"]), "away": team_ar(m["away"]), "date": (m.get("kickoff_uae") or "")[:10]} for m in rounds.get(str(int(float(k)) + 1), [])]
     return k, {"round": k, "matches": ms, "table": table_ctx(st)[:14], "next_round": nxt}
 
+def mail_held(jf):
+    """341: tell the owner once per held week (SES ap-south-1, tifo@ -> hello@); the flag in the json stops repeats."""
+    ep = json.load(open(jf))
+    if not ep.get("held") or ep.get("held_mailed"): return
+    try:
+        import boto3
+        body = f"تيفو كاست أسبوع {ep.get('week')} ما انتشر.\n\nالسبب: {ep['held']}\n\nالحلقة في cache/ai/podcast/{ep.get('week')}.json، والموقع يعرض حلقة الأسبوع الماضي."
+        boto3.client("ses", region_name="ap-south-1").send_email(Source="تيفو <tifo@elyoxe.com>", Destination={"ToAddresses": ["hello@elyoxe.com"]},
+            Message={"Subject": {"Data": f"تيفو كاست {ep.get('week')}: الحلقة موقوفة", "Charset": "UTF-8"}, "Body": {"Text": {"Data": body, "Charset": "UTF-8"}}})
+        ep["held_mailed"] = dt.datetime.utcnow().isoformat() + "Z"; json.dump(ep, open(jf, "w"), ensure_ascii=False, indent=1)
+    except Exception as e: print("podcast held mail failed:", str(e)[:200], file=sys.stderr)
+
 def do_podcast(ctx, audio):
     wk = dt.date.today().strftime("%G-%V"); sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     jf, mp3 = os.path.join(CACHE, "podcast", wk + ".json"), os.path.join(CACHE, "podcast", wk + ".mp3")
     if cached("podcast", wk, sig):
-        if json.load(open(jf)).get("held"): return "held"   # this week failed a gate: no new script or TTS spend until next week
+        if json.load(open(jf)).get("held"): mail_held(jf); return "held"   # mails only if the first send failed   # this week failed a gate: no new script or TTS spend until next week
         if not audio or os.path.exists(mp3): return "cached"
     # Orus reads «الحين» as «الآن»: a Hamed line with it means a new script (2 retries), else no episode this week
     for attempt in range(3):
@@ -215,7 +227,7 @@ def do_podcast(ctx, audio):
     rec = {"week": wk, "title": emirati(out["title"]), "lines": lines, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}
     if leak: rec["held"] = f"«الحين» still in Hamed lines {leak} after 3 scripts; no audio this week"
     save("podcast", wk, rec)
-    if leak: print("podcast held:", rec["held"], file=sys.stderr); return "held"
+    if leak: print("podcast held:", rec["held"], file=sys.stderr); mail_held(jf); return "held"
     if audio:   # Gemini TTS (Orus = حامد, Aoede = مها): writes the mp3 next to the json and adds qa/voices
         from cast_voice import synth
         synth(jf)
@@ -223,7 +235,7 @@ def do_podcast(ctx, audio):
         if bad:   # a flagged line: this week's mp3 is set aside, the site keeps last week's episode
             os.replace(mp3, os.path.join(CACHE, "podcast", wk + ".held.mp3")) if os.path.exists(mp3) else None
             ep["held"] = f"TTS QA flagged lines {bad}; mp3 kept as {wk}.held.mp3, not published"; json.dump(ep, open(jf, "w"), ensure_ascii=False, indent=1)
-            print("podcast held:", ep["held"], file=sys.stderr); return "held"
+            print("podcast held:", ep["held"], file=sys.stderr); mail_held(jf); return "held"
     return "new"
 
 # ---- 196: written live commentary for UAE matches, one line per event (substitutions of one team in one minute = one line)
@@ -337,7 +349,7 @@ def do_daily5():
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,podcast,daily5,commentary,digest,power"); ap.add_argument("--limit", type=int, default=40)
-    ap.add_argument("--no-audio", action="store_true"); ap.add_argument("--days", type=int, default=10)
+    ap.add_argument("--no-audio", action="store_true"); ap.add_argument("--any-time", action="store_true", help="run podcast outside its Thursday window"); ap.add_argument("--days", type=int, default=10)
     a = ap.parse_args(); only = set(a.only.split(",")); now = dt.datetime.utcnow(); log = {}
     fx = {c: get(f"comp/{c}/fixtures.json") or {"matches": []} for c in UAE_COMPS}
     st538 = get("comp/538/standings.json"); facts = (get("comp/538/facts.json") or {}).get("matches", {}); fat = (get("comp/538/fatigue.json") or {}).get("teams", {})
@@ -370,6 +382,9 @@ def main():
             for k in ("home_table", "away_table"):
                 if ctx[k]: ctx[k] = {x: ctx[k].get(x) for x in ("rank", "played", "won", "drawn", "lost", "gf", "ga", "pts", "form")}
             r = do_preview(m, ctx); log["pre-" + r] = log.get("pre-" + r, 0) + 1
+    uae = now + dt.timedelta(hours=4)
+    if "podcast" in only and not a.any_time and not (uae.weekday() == 3 and 3 <= uae.hour < 6):   # 342: Thursday 03:00-06:00 UAE only, away from the films' TTS quota
+        only.discard("podcast"); log["podcast"] = "outside Thursday 03-06 UAE"
     if "podcast" in only:
         k, ctx = round_ctx(fx[538], st538, detail)
         if ctx:

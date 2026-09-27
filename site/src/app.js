@@ -4,6 +4,10 @@
   "use strict";
   var R = window.TR, B = document.body, PAGE = B.dataset.page, ID = B.dataset.id, V = "/v1/";
   var $ = function(s){ return document.querySelector(s); };
+  // 347: sampled error beacon (1 in 5 page views, at most 3 reports): message, file path and line only
+  (function(){ if (Math.random() > 0.2) return; var n = 0; function send(m, s, l, c){ if (n++ >= 3) return; try { fetch("/api/tifo/err", { method:"POST", keepalive:true, headers:{ "content-type":"application/json" }, body:JSON.stringify({ m:String(m || "").slice(0, 300), s:s || "", l:l || null, c:c || null, p:location.pathname, v:(document.querySelector('script[src*="/assets/app."]') || {}).src ? document.querySelector('script[src*="/assets/app."]').src.split("app.")[1].slice(0, 10) : "" }) }).catch(function(){}); } catch (e){} }
+    window.addEventListener("error", function(e){ if (e.filename && e.filename.indexOf(location.origin) !== 0) return; send(e.message, e.filename, e.lineno, e.colno); });
+    window.addEventListener("unhandledrejection", function(e){ var r = e.reason; send(r && r.message ? r.message : r, r && r.stack ? String(r.stack).split("\n")[1] : "", null, null); }); })();
   function get(p){ return fetch(V + p, { cache:"no-cache" }).then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); }); }
   function mine(){ try { return +localStorage.getItem("tifo.mine") || null; } catch (e){ return null; } }
   function setMine(id, name){ try { if (id) { localStorage.setItem("tifo.mine", id); localStorage.setItem("tifo.mine.name", name || ""); } else { localStorage.removeItem("tifo.mine"); } } catch (e){} }

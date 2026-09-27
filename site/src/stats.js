@@ -667,7 +667,7 @@
   // 196, 197, 231: approved generated text (ai/gen.py), each behind its approved.json key in build.cjs
   S.aiCommentary = function(c){
     if (!c || !c.lines || !c.lines.length) return "";
-    return '<ol class="comm">' + c.lines.slice().reverse().map(function(l){ return '<li><b class="num">' + (l.min != null ? l.min + "'" : "") + "</b><span>" + esc(l.text) + "</span></li>"; }).join("") + "</ol>" + noteSrc("كتبها تيفو من أحداث المباراة، والأحدث فوق.");
+    return '<ol class="comm">' + c.lines.slice().reverse().map(function(l){ return '<li><b class="num"><bdi dir="ltr">' + (l.min != null ? l.min + "'" : "") + "</bdi></b><span>" + esc(l.text) + "</span></li>"; }).join("") + "</ol>" + noteSrc("كتبها تيفو من أحداث المباراة، والأحدث فوق.");
   };
   S.aiDigest = function(d){
     if (!d || !d.paras || !d.paras.length) return "";
