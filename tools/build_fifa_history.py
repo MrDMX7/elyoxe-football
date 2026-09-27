@@ -41,7 +41,7 @@ def main():
     out = []
     find(nd, "dates", out)
     dates = [x for y in out[0] for x in y["dates"]]
-    rows, empty = [], []
+    rows, empty, by_team = [], [], {}
     for d in sorted(dates, key=lambda d: d["matchWindowEndDate"]):
         try:
             r = json.loads(get(API.format(d["id"]))).get("rankings") or []
@@ -53,18 +53,24 @@ def main():
             empty.append(d["id"])
             continue
         items = [x["rankingItem"] | {"conf": (x.get("tag") or {}).get("id")} for x in r]
+        arab = sorted([x for x in items if x.get("countryCode") in ARAB], key=lambda x: x["rank"])
+        for team in arab:
+            conf = sorted([x for x in items if x["conf"] == team["conf"]], key=lambda x: x["rank"])
+            by_team.setdefault(team["countryCode"], []).append({
+                "date": d["matchWindowEndDate"], "rank": team["rank"], "points": team.get("totalPoints"),
+                "confederation": team["conf"], "conf_rank": 1 + sum(1 for x in conf if x["rank"] < team["rank"]),
+                "conf_teams": len(conf), "arab_rank": 1 + sum(1 for x in arab if x["rank"] < team["rank"]), "arab_teams": len(arab)})
         uae = next((x for x in items if x.get("countryCode") == "UAE"), None)
         if not uae:
             continue
         afc = sorted([x for x in items if x["conf"] == "AFC"], key=lambda x: x["rank"])
-        arab = sorted([x for x in items if x.get("countryCode") in ARAB], key=lambda x: x["rank"])
         rows.append({"date": d["matchWindowEndDate"], "rank": uae["rank"], "points": uae.get("totalPoints"),
                      "afc_rank": 1 + sum(1 for x in afc if x["rank"] < uae["rank"]), "afc_teams": len(afc),
                      "arab_rank": 1 + sum(1 for x in arab if x["rank"] < uae["rank"]), "arab_teams": len(arab)})
         print(f"# {d['matchWindowEndDate']} UAE {uae['rank']}", file=sys.stderr)
     print(json.dumps({"team": 5789, "source": "FIFA ranking API (inside.fifa.com/api/ranking-overview), FIFA's AFC tag, "
                       "Arab League membership list in tools/build_fifa_history.py",
-                      "dates_without_data": empty, "history": rows}, ensure_ascii=False, indent=0))
+                      "dates_without_data": empty, "history": rows, "arab_teams": by_team}, ensure_ascii=False, indent=0))
 
 
 if __name__ == "__main__":

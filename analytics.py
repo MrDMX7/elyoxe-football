@@ -911,6 +911,26 @@ def arab_ratings(p):
     rat, history, preds = R.run(rows, params)
     cur = max((r["season"] for r in rows), default=None)
     p.aux("arab_ratings")["preds"] = {str(x["id"]): [round(v, 4) for v in x["p"]] for x in preds if x["season"] == cur}
+    # every pre-match prediction of the season with its outcome (the private accuracy report reads this)
+    p.aux("arab_ratings")["season_preds"] = [[x["id"], x["ko"], x.get("comp"), x["h"], x["a"], [round(v, 4) for v in x["p"]], x["outcome"]]
+                                             for x in preds if x["season"] == cur]
+    # club country (domestic league) for continental history / monthly bundles
+    comp_cc_ = {c["id"]: (c.get("country") or {}).get("iso2") for c in p.comps}
+    cc_map = {}
+    for r in sorted(rows, key=lambda r: r["ko"]):
+        cc = comp_cc_.get(r["comp"])
+        if cc:
+            cc_map[str(r["h"])] = cc
+            cc_map[str(r["a"])] = cc
+    p.aux("arab_ratings")["club_country"] = cc_map
+    months = {}
+    for tid, h in history.items():
+        mm = {}
+        for d_, r_, _m in h:
+            if d_:
+                mm[d_[:7]] = r_
+        months[str(tid)] = dict(list(sorted(mm.items()))[-24:])
+    p.aux("arab_ratings")["months"] = months
     import more
     more.upsets(p, preds)
     # a club's country = the country of the domestic league it played in most recently

@@ -169,6 +169,44 @@ Resources:
               MaximumEventAgeInSeconds: 300
       Tags: {product: elyoxe-football}
 
+  ReportLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/elyoxe-football-report
+      RetentionInDays: 30
+
+  # Private weekly accuracy report to the owner (never published): Monday 08:00 UAE.
+  Report:
+    Type: AWS::Serverless::Function
+    DependsOn: ReportLogs
+    Properties:
+      FunctionName: elyoxe-football-report
+      CodeUri: build/lambda/
+      Handler: report.handler
+      MemorySize: 256
+      Timeout: 60
+      Environment:
+        Variables:
+          BUCKET: !Ref DataBucket
+          REPORT_FROM: contact@elyoxe.com
+      Policies:
+        - S3ReadPolicy: {BucketName: !Ref DataBucket}
+        - Statement:
+            - Effect: Allow
+              Action: [ses:SendEmail]
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  ses:FromAddress: contact@elyoxe.com
+      Events:
+        Weekly:
+          Type: Schedule
+          Properties:
+            Name: elyoxe-football-report-weekly
+            Schedule: cron(0 4 ? * MON *)
+            Enabled: true
+      Tags: {product: elyoxe-football}
+
 Outputs:
   Bucket:
     Value: !Ref DataBucket

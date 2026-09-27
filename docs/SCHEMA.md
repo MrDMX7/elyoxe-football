@@ -292,6 +292,14 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `archive/index-all.json`, `archive/all/{season}.json` | every stored result by July–June season: `[id, date, comp, home, away, hs, as]` |
 | `guide/{iso2}.json` | per country: the next 3 days of covered matches with their broadcasters (research/tifo-2026-09-27/broadcast_by_country.json × fixtures) and `by_broadcaster` |
 | `comp/{id}/referees.json` → `foreign`, `home`, `away` | referee nationality vs the league's country; yellows, reds and penalties against the home/away side |
+| `national/{id}/team.json` | 22 Arab national teams: the full team object (squad with clubs, fixtures and results in every competition, coach, venue, FIFA rank), as `team/5789.json` |
+| `national/{id}/fifa.json` | FIFA ranking history since 1992 for each Arab national team (rank, points, confederation rank, Arab rank), plus FotMob's current rank |
+| `arabs/continental-history.json` | every AFC/CAF/Arab club-competition meeting of two Arab clubs FotMob has (since 2010/11, CAF since its first stored season), with a win/draw summary per country pair |
+| `arabs/coaches.json` | Arab-nationality head coaches of covered clubs and of the 22 national teams; `abroad` = coaching outside their own country |
+| `arabs/referees.json` | Arab-nationality referees of stored AFC/CAF/FIFA matches this season |
+| `arabs/friendlies.json` | club friendlies (FotMob 489) of clubs in the covered Arab leagues |
+| `team/{id}/month/YYYY-MM.json` | Arab-league clubs, current and previous month: results, W/D/L, top 5 performers (average match rating, goals, assists), Tifo rating at month start/end, table position at month start/end |
+| (private) weekly accuracy report | not in v1/: Lambda `elyoxe-football-report` e-mails the owner every Monday 08:00 UAE (hit rate, Brier vs base rates, calibration, biggest misses; report.py) |
 | `archive/index.json`, `archive/{id}.json` | memorable matches with full event data: derbies (competitions.yaml `derbies`), cup finals, Super Cups since 2016/17 |
 
 - **Competitions (`index.json`, `competitions.yaml`):** each has `country: {iso2, name_ar}`, or `null` plus `region` (gulf, arab, asia, africa, europe, world). `teams.json` and `team/{id}.json` (`country_info`) give each club its domestic country and each national team its own country (`national: true`).

@@ -50,6 +50,7 @@
     return Promise.all([index(), get("day/" + uaeToday(dayOff).replace(/-/g, "") + ".json").catch(function(){ return { matches:[] }; }), get("live.json").catch(function(){ return { matches:[] }; })]).then(function(r){
       var idx = r[0], day = r[1], live = r[2], by = {}; (live.matches || []).forEach(function(m){ by[m.id] = m; });
       var ms = (day.matches || []).map(function(m){ return by[m.id] || m; });
+      if (freeOnly() && BCD) ms = ms.filter(function(m){ return freeIn(String(m.comp)); });
       if (arabOnly()){ var AT = window.ARABT || {}, ar = {}; R.COUNTRIES.forEach(function(c){ ar[c[0]] = 1; }); var cc = {}; (idx.competitions || []).forEach(function(c){ cc[c.id] = R.compCountry(c); }); ms = ms.filter(function(m){ return ar[cc[m.comp]] || AT[m.home.id] || AT[m.away.id]; }); }
       set("#daytitle", R.dayNav(uaeToday(dayOff), uaeToday(0)));
       var natIds = []; try { natIds = JSON.parse(localStorage.getItem("tifo.natids") || "{}")[country()] || []; } catch (e){}
@@ -240,6 +241,14 @@
   (function(){ var d = $("#storydata"); if (!d) return; var snaps = JSON.parse(d.textContent), rows = {}; document.querySelectorAll(".stbl li").forEach(function(li){ rows[li.dataset.t] = li; });
     function show(k){ (snaps[k] || []).forEach(function(x, i){ var li = rows[x[0]]; if (!li) return; li.style.setProperty("--i", i); li.querySelector(".rk").textContent = i + 1; li.querySelector(".pt").textContent = x[1]; li.classList.toggle("moved", k > 0 && snaps[k - 1] && snaps[k - 1].findIndex(function(y){ return y[0] === x[0]; }) !== i); }); }
     if ("IntersectionObserver" in window){ var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting){ document.querySelectorAll(".step.on").forEach(function(s){ s.classList.remove("on"); }); e.target.classList.add("on"); show(+e.target.dataset.s); } }); }, { rootMargin:"-45% 0px -45% 0px" }); document.querySelectorAll(".step").forEach(function(s){ io.observe(s); }); } else show(snaps.length - 1); })();
+  // 204/205: where to watch in the visitor's country (research/broadcast_by_country.json); UAE list with a note when missing
+  var BCD = null; function bcData(){ return BCD ? Promise.resolve(BCD) : fetch("/assets/bc." + B.dataset.bc + ".json").then(function(r){ return r.json(); }).then(function(x){ BCD = x; return x; }).catch(function(){ return {}; }); }
+  function freeIn(comp){ var c = country(); return BCD && BCD[c] && BCD[c][comp] && BCD[c][comp].b.some(function(b){ return b[1]; }); }
+  (function(){ var box = $("#wwbox"); if (!box) return; var c = country(); if (c === "AE" || c === "xx") return;
+    bcData().then(function(d){ var row = R.COUNTRIES.filter(function(x){ return x[0] === c; })[0], e = d[c] && d[c][box.dataset.comp]; if (!e || !e.b.length) { var n = box.querySelector("h2"); if (n) n.insertAdjacentHTML("afterend", '<p class="note">ما لقينا معلومة مؤكدة لـ' + (row ? row[1] : "بلدك") + '، وهذي القنوات في الإمارات.</p>'); return; }
+      box.innerHTML = '<section class="blk"><h2>وين تنقل في ' + (row ? row[1] : "بلدك") + '</h2><ul class="bc">' + e.b.map(function(b){ return "<li><b>" + R.esc(b[0]) + "</b>" + (b[1] ? ' <span class="ok">مجاني</span>' : "") + (b[2] ? ' <span class="num">' + b[2] + "</span> " + R.esc(b[3] || "") : "") + (b[4] ? ' <a class="src" href="' + R.esc(b[4]) + '" rel="noopener">المصدر</a>' : "") + "</li>"; }).join("") + "</ul>" + (e.q && e.q !== "high" ? '<p class="src">ثقة المعلومة: ' + (e.q === "medium" ? "متوسطة" : "قليلة") + "، تأكد من القناة قبل المباراة.</p>" : "") + "</section>"; }); })();
+  function freeOnly(){ try { return localStorage.getItem("tifo.free") === "1"; } catch (e){ return false; } }
+  var fb = $("#freeonly"); if (fb){ fb.setAttribute("aria-pressed", freeOnly()); fb.onclick = function(){ try { localStorage.setItem("tifo.free", freeOnly() ? "" : "1"); } catch (e){} fb.setAttribute("aria-pressed", freeOnly()); bcData().then(function(){ home(); }); }; if (freeOnly()) bcData(); }
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && ID === "5789") countdown(); }
   tvFull();
   tabs(); run(); dist();

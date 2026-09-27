@@ -478,3 +478,205 @@ def guide(p):
                                                 "source": "research/tifo-2026-09-27/broadcast_by_country.json (checked "
                                                           + str((bc.get("_meta") or {}).get("checked")) + ") x FotMob fixtures"},
                          cache="warm")
+
+
+# ------------------------------------------------------------------ 295 national team folders
+def national_teams(p, limit=6):
+    """national/{id}/team.json (squad, fixtures/results, coach, venue, FIFA rank) and national/{id}/fifa.json
+    for the 22 Arab national teams; the UAE keeps its own richer files too."""
+    import json as _j, os as _o
+    try:
+        with open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "fifa_history.json"), encoding="utf-8") as f:
+            fh = _j.load(f).get("arab_teams") or {}
+    except OSError:
+        fh = {}
+    n = 0
+    for c in config.countries():
+        if not c.get("arab"):
+            continue
+        tid = c["fotmob_team"]
+        if n < limit and p.has_time(6) and p.due("natteam", 720, tid):
+            try:
+                t = p.fm.team(tid)
+                p.store.put_json(f"national/{tid}/team.json", {**t, "country_info": {"iso2": c["iso2"], "name_ar": c["name_ar"],
+                                                                                      "national": True},
+                                                               "generated": iso(p.now())}, cache="static")
+                p.aux("national_coaches")[str(tid)] = t.get("coach")
+                fr = t.get("fifa_ranking")
+                if fr and fr.get("updated"):
+                    p.aux("fifa_arab").setdefault(str(tid), {})[fr["updated"]] = fr
+            except ERRORS as e:
+                p.store.fail("national-teams", e)
+            p.mark("natteam", tid)
+            n += 1
+        hist = list(fh.get(c["fotmob_code"]) or [])
+        known = {r["date"] for r in hist}
+        for k, v in sorted((p.aux("fifa_arab").get(str(tid)) or {}).items()):
+            d = "-".join(reversed(k.split(".")))
+            if d not in known:
+                hist.append({"date": d, "rank": v.get("rank"), "points": v.get("points"), "source": "fotmob"})
+        if hist:
+            p.store.put_json(f"national/{tid}/fifa.json", {"team": tid, "iso2": c["iso2"], "name_ar": c["name_ar"],
+                                                           "history": sorted(hist, key=lambda r: r["date"]),
+                                                           "source": "FIFA ranking API (inside.fifa.com) + FotMob's current rank"},
+                             cache="static")
+
+
+# ------------------------------------------------------------------ 297 continental history
+def continental_history(p):
+    arab = {c["iso2"] for c in config.countries() if c.get("arab")}
+    cc = dict((p.aux("arab_ratings").get("club_country") or {}))
+    for k, v in p.aux("team_country").items():
+        if v and v.get("iso2"):
+            cc.setdefault(k, v["iso2"])
+    names = p.names["teams"]
+    rows = []
+    for cid in CONTINENTAL:
+        for season, rs in p.aux(f"history/{cid}").items():
+            for r in HI.finished(rs):
+                a, b = cc.get(str(r["h"])), cc.get(str(r["a"]))
+                if a in arab and b in arab:
+                    rows.append({"match": r["id"], "date": (r["ko"] or "")[:10], "comp": cid, "season": season,
+                                 "home": r["h"], "home_ar": names.get(str(r["h"])), "home_country": a,
+                                 "away": r["a"], "away_ar": names.get(str(r["a"])), "away_country": b,
+                                 "score": [r["hs"], r["as"]], "same_country": a == b})
+    rows.sort(key=lambda x: x["date"])
+    pairs = {}
+    for x in rows:
+        k = tuple(sorted((x["home_country"], x["away_country"])))
+        s = pairs.setdefault(f"{k[0]}-{k[1]}", {"matches": 0, k[0]: 0, k[1]: 0, "draws": 0}) if k[0] != k[1] else None
+        if s is not None:
+            s["matches"] += 1
+            if x["score"][0] == x["score"][1]:
+                s["draws"] += 1
+            else:
+                s[x["home_country"] if x["score"][0] > x["score"][1] else x["away_country"]] += 1
+    p.store.put_json("arabs/continental-history.json", {"generated": iso(p.now()), "matches": rows, "by_country_pair": pairs,
+                                                        "competitions": list(CONTINENTAL),
+                                                        "note": "every AFC/CAF/Arab club-competition meeting of two clubs from Arab "
+                                                                "countries that FotMob has (club country = its domestic league)"},
+                     cache="static")
+
+
+# ------------------------------------------------------------------ 298 coaches, 299 referees
+def coaches(p):
+    codes = arab_codes()
+    names = p.names["teams"]
+    out = []
+    for tid, c in p.aux("coaches").items():
+        co = (c or {}).get("coach") or {}
+        if co.get("country") in codes:
+            comps = p.st.get("team_comps", {}).get(tid, [])
+            out.append({"coach": co.get("id"), "name": co.get("name"), "nationality": codes[co["country"]], "team": int(tid),
+                        "team_ar": names.get(tid), "national_team": False, "comps": comps,
+                        "team_country": (p.team_country(int(tid)) or {}).get("iso2")})
+    for tid, co in p.aux("national_coaches").items():
+        if co and co.get("country") in codes:
+            out.append({"coach": co.get("id"), "name": co.get("name"), "nationality": codes[co["country"]], "team": int(tid),
+                        "team_ar": names.get(tid), "national_team": True})
+    out.sort(key=lambda x: (x["national_team"] is False, x["nationality"]["iso2"]))
+    p.store.put_json("arabs/coaches.json", {"generated": iso(p.now()), "coaches": out,
+                                            "abroad": [x for x in out if not x["national_team"] and x.get("team_country") != x["nationality"]["iso2"]],
+                                            "note": "current head coaches (FotMob team pages) of clubs in the analytics leagues and the 22 "
+                                                    "Arab national teams whose nationality is an Arab League country"}, cache="static")
+
+
+INTL = (525, 10622, 9469, 9470, 526, 9468, 10474, 77, 78, 10703, 289, 290, 329, 10197, 10608, 10609, 10242, 11156, 9571)
+
+
+def referees(p):
+    codes = arab_codes()
+    per = {}
+    for cid in INTL:
+        for e in p.ledger(cid)["matches"].values():
+            ref = e.get("referee") or {}
+            if ref.get("country") in codes:
+                r = per.setdefault(str(ref.get("id") or ref.get("name")), {"id": ref.get("id"), "name": ref.get("name"),
+                                                                            "nationality": codes[ref["country"]], "matches": []})
+                r["matches"].append({"match": e["id"], "comp": cid, "date": (e.get("ko") or "")[:10], "home": e["home"], "away": e["away"]})
+    rows = sorted(per.values(), key=lambda r: -len(r["matches"]))
+    p.store.put_json("arabs/referees.json", {"generated": iso(p.now()), "referees": rows,
+                                             "note": "Arab-nationality referees of stored AFC, CAF and FIFA matches this season "
+                                                     "(FotMob lists the referee only for part of the matches)"}, cache="static")
+
+
+# ------------------------------------------------------------------ 300 friendlies
+def friendlies(p):
+    arab = {c["iso2"] for c in config.countries() if c.get("arab")}
+    out = []
+    for tid, fx in p.aux("team_fx").items():
+        c = p.team_country(int(tid))
+        if not c or c.get("iso2") not in arab:
+            continue
+        for m in fx:
+            if m.get("comp") == 489:
+                out.append({**m, "club": int(tid), "club_country": c})
+    seen, uniq = set(), []
+    for m in sorted(out, key=lambda m: m.get("kickoff_utc") or ""):
+        if m["id"] not in seen:
+            seen.add(m["id"])
+            uniq.append(m)
+    p.store.put_json("arabs/friendlies.json", {"generated": iso(p.now()), "matches": uniq,
+                                               "note": "FotMob 'Club Friendlies' (489) on the team pages of clubs in the covered Arab "
+                                                       "leagues; pre-season camps show as friendly series abroad (venue in match files "
+                                                       "when fetched)"}, cache="static")
+
+
+# ------------------------------------------------------------------ 302 monthly club bundles
+def monthly(p, limit=60):
+    from compute import insights as IN
+    months_r = p.aux("arab_ratings").get("months") or {}
+    names = p.names["teams"]
+    now = p.now()
+    this_m = now.strftime("%Y-%m")
+    prev_m = (now.replace(day=1) - timedelta(days=1)).strftime("%Y-%m")
+    n = 0
+    for cid in ARAB_LEAGUES:
+        fx = p.fixtures(cid) or []
+        L = p.ledger(cid)["matches"]
+        bump = p.store.get_json(f"comp/{cid}/bump.json") or {}
+        round_month = {}
+        for m in fx:
+            if str(m.get("round") or "").isdigit() and m.get("kickoff_utc"):
+                round_month[int(m["round"])] = max(round_month.get(int(m["round"]), ""), m["kickoff_utc"][:7])
+        for tid in {m["home"]["id"] for m in fx} | {m["away"]["id"] for m in fx}:
+            for month in (prev_m, this_m):
+                if n >= limit or not p.has_time(5):
+                    return
+                res = [m for m in fx if (m.get("kickoff_utc") or "")[:7] == month and tid in (m["home"]["id"], m["away"]["id"])
+                       and m["status"] == S.FINISHED]
+                if not res:
+                    continue
+                perf = {}
+                for e in L.values():
+                    if (e.get("ko") or "")[:7] != month or tid not in (e["home"], e["away"]):
+                        continue
+                    for pid, pl in (e.get("players") or {}).items():
+                        if pl[2] == tid and pl[3]:
+                            x = perf.setdefault(pid, {"player": int(pid), "name": pl[0], "ratings": [], "goals": 0, "assists": 0})
+                            x["ratings"].append(pl[3])
+                    for g in e.get("goals") or []:
+                        if g["side"] in ("home", "away") and e[g["side"]] == tid:
+                            for k, pid in (("goals", g.get("player")), ("assists", g.get("assist"))):
+                                if pid and str(pid) in perf:
+                                    perf[str(pid)][k] += 1
+                top = sorted(({**{k: x for k, x in v.items() if k != "ratings"}, "matches": len(v["ratings"]),
+                               "avg_rating": round(sum(v["ratings"]) / len(v["ratings"]), 2)}
+                              for v in perf.values() if v["ratings"]), key=lambda v: -v["avg_rating"])[:5]
+                rm = months_r.get(str(tid)) or {}
+                before = [v for k, v in sorted(rm.items()) if k < month]
+                pos = bump.get("positions", {}).get(str(tid)) or []
+                rounds = bump.get("rounds") or []
+                start = [pos[i] for i, r in enumerate(rounds) if round_month.get(r, "9999") < month and i < len(pos)]
+                end = [pos[i] for i, r in enumerate(rounds) if round_month.get(r, "9999") <= month and i < len(pos)]
+                p.store.put_json(f"team/{tid}/month/{month}.json", {
+                    "team": tid, "team_ar": names.get(str(tid)), "comp": cid, "month": month, "generated": iso(now),
+                    "results": [{"match": m["id"], "date": m["kickoff_utc"][:10], "home": m["home"], "away": m["away"],
+                                 "score": m["score"], "comp": m["comp"]} for m in res],
+                    "record": {r: sum(1 for m in res if IN._res(*((m["score"]["home"], m["score"]["away"]) if m["home"]["id"] == tid
+                                                                   else (m["score"]["away"], m["score"]["home"]))) == r) for r in "WDL"},
+                    "top_performers": top,
+                    "rating": {"start": before[-1] if before else None, "end": rm.get(month)},
+                    "table_position": {"start": start[-1] if start else None, "end": end[-1] if end else None}},
+                    cache="static")
+                n += 1
