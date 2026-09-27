@@ -445,5 +445,30 @@
     var fx = (t.fixtures || []).slice().sort(function(a, b){ return (a.kickoff_utc || "9").localeCompare(b.kickoff_utc || "9"); });
     return '<div class="poster" style="--c1:' + R.col(t.id) + ";--c2:" + R.col(t.id, 1) + '"><div class="ph">' + R.logo(t, "lg") + "<h1>" + R.tname(t) + '</h1><span>مباريات الموسم</span></div><table><tbody>' + fx.map(function(m){ var h = m.home.id === t.id, o = h ? m.away : m.home; return "<tr><td>" + (m.kickoff_uae ? R.td(m.kickoff_uae, true) : "لم يحدد") + "</td><td>" + (m.kickoff_uae && !m.time_tbd ? R.tt(m.kickoff_uae) : "") + "</td><td>" + (h ? "ضد" : "في ملعب") + " " + R.tname(o) + '</td><td class="muted">' + esc(m.comp_name_ar || "") + "</td><td>" + (m.score ? '<b class="num">' + (h ? m.score.home + " - " + m.score.away : m.score.away + " - " + m.score.home) + "</b>" : "") + "</td></tr>"; }).join("") + '</tbody></table><p class="pf">tifo.elyoxe.com</p></div><p class="tools noprint"><button type="button" class="btn" onclick="window.print()">اطبع</button></p>';
   };
+
+  // 235 round story: the table before the round, then one step per result in kickoff order (app.js animates)
+  S.roundStory = function(fx, rk, ids){
+    var all = finished(fx), n = parseFloat(rk), before = all.filter(function(m){ return parseFloat(m.round) < n; }), inr = all.filter(function(m){ return m.round === rk; });
+    if (!inr.length || !ids || !ids.length) return "";
+    var snaps = [], acc = before.slice(); var snap = function(){ return tableFrom(acc, ids).map(function(r){ return [r.id, r.pts, r.gf - r.ga]; }); };
+    snaps.push(snap()); inr.forEach(function(m){ acc.push(m); snaps.push(snap()); });
+    var rows = snaps[0].map(function(x, i){ return '<li data-t="' + x[0] + '" style="--i:' + i + '"><span class="rk">' + (i + 1) + "</span>" + tl(x[0]) + '<b class="num pt">' + x[1] + "</b></li>"; }).join("");
+    var steps = '<div class="step" data-s="0"><p>قبل الجولة. انزل وشوف الترتيب يتغيّر مع كل نتيجة.</p></div>' + inr.map(function(m, i){ return '<div class="step" data-s="' + (i + 1) + '">' + R.matchRow(m, {}) + "</div>"; }).join("");
+    return '<div class="story"><ol class="stbl">' + rows + '</ol><div class="steps">' + steps + '</div></div><script type="application/json" id="storydata">' + JSON.stringify(snaps) + "</script>";
+  };
+  // 256 cup bracket (+ reach odds when the tournament sim exists)
+  var STG = { "1/64":"دور الـ128", "1/32":"دور الـ64", "1/16":"دور الـ32", "1/8":"دور الـ16", "1/4":"ربع النهائي", "1/2":"نص النهائي", "final":"النهائي" };
+  S.bracket = function(st, sim){
+    var b = st && st.bracket; if (!b || !b.length) return "";
+    var nm = function(t){ return t && (t.name_ar || (/^\d[A-Z]$/.test(t.name) ? "أول المجموعة " + t.name[1] : null) || t.name) || "—"; };
+    var fix = function(t){ return t && /^\d[A-Z]$/.test(t.name || "") ? (t.name[0] === "1" ? "أول" : "ثاني") + " المجموعة " + t.name[1] : nm(t); };
+    return '<div class="bracket">' + b.map(function(stg){ return '<div class="bs"><h3>' + (STG[stg.stage] || esc(stg.stage)) + "</h3>" + stg.ties.map(function(t){ var a = t.aggregate || {}; return '<div class="tie' + (t.winner ? " done" : "") + '"><span>' + esc(fix(t.home)) + '</span><b class="num">' + (t.tbd ? "–" : (a.homeScore + " - " + a.awayScore)) + "</b><span>" + esc(fix(t.away)) + "</span>" + (t.matches && t.matches[0] ? '<a href="/m/' + t.matches[0] + '/">المباراة</a>' : "") + "</div>"; }).join("") + "</div>"; }).join("") + "</div>" + (sim ? S.tsim(sim) : "");
+  };
+  // 257 qualification calculator for group competitions (scenarios.json)
+  S.groupCalc = function(sc){
+    if (!sc || !sc.groups || !sc.groups.length) return "";
+    return sc.groups.map(function(g){ var ids = Object.keys(g.teams); return "<h3>" + esc(R.stageAr(g.group)) + '</h3><div class="tblwrap"><table class="st"><thead><tr><th style="text-align:start">الفريق</th><th>أحسن مركز</th><th>أسوأ مركز</th><th>لو فاز</th><th>لو تعادل</th><th>لو خسر</th></tr></thead><tbody>' + ids.map(function(id){ var t = g.teams[id], nr = t.next_result || {}, f = function(x){ return x ? (x.best === x.worst ? x.best : x.best + "-" + x.worst) : "—"; };
+      return '<tr><td class="tm">' + tl(id) + "</td><td>" + t.best + "</td><td>" + t.worst + '</td><td><bdi dir="ltr">' + f(nr.W) + '</bdi></td><td><bdi dir="ltr">' + f(nr.D) + '</bdi></td><td><bdi dir="ltr">' + f(nr.L) + "</bdi></td></tr>"; }).join("") + "</tbody></table></div>"; }).join("") + noteSrc("كل الاحتمالات لباقي مباريات المجموعة. المراكز بين أحسن وأسوأ حالة.");
+  };
   if (typeof module !== "undefined" && module.exports) module.exports = S; else root.TS = S;
 })(this);

@@ -94,5 +94,15 @@
       return c;
     });
   }
-  window.TifoShare = { story:story, wallpaper:wallpaper, banner:banner, out:out };
+  // 250: any section as a square card (title + its first lines)
+  function card(title, lines){
+    var W = 1080, H = 1080, c = document.createElement("canvas"); c.width = W; c.height = H; var x = c.getContext("2d");
+    return fonts().then(function(){
+      x.fillStyle = NIGHT; x.fillRect(0, 0, W, H); var cl = [CHALK, PULSE, DUNE]; for (var i = 0; i < 27; i++){ x.fillStyle = cl[i % 3]; x.globalAlpha = .9; x.fillRect(i * 40, 0, 36, 36); } x.globalAlpha = 1;
+      text(x, title, W - 80, 170, fit(x, title, '800 64px "Noto Kufi Arabic"', W - 160), CHALK, "right");
+      var y = 280; lines.slice(0, 8).forEach(function(l){ x.fillStyle = NIGHT2; x.fillRect(70, y - 52, W - 140, 78); text(x, l, W - 100, y, fit(x, l, '400 36px "Readex Pro"', W - 220), CHALK, "right"); y += 92; });
+      footer(x, W, H); return window.TifoShare.out(c, "tifo-card.png");
+    });
+  }
+  window.TifoShare = { story:story, wallpaper:wallpaper, banner:banner, out:out, card:card };
 })();

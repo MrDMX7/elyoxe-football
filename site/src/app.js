@@ -231,6 +231,15 @@
   var sb2 = $("#secondbtn"), wl = null;
   if (sb2) sb2.onclick = function(){ var on = !document.body.classList.contains("second"); document.body.classList.toggle("second", on); sb2.textContent = on ? "سكّر الشاشة الثانية" : "الشاشة الثانية";
     if (on && navigator.wakeLock) navigator.wakeLock.request("screen").then(function(l){ wl = l; }).catch(function(){}); else if (wl){ wl.release(); wl = null; } };
+  // 250: a share button on every numbers section; the card is drawn from the section's title and first rows
+  document.querySelectorAll("section.blk > h2").forEach(function(h){ if (!window.TifoShare || h.querySelector(".shr")) return; var b = document.createElement("button"); b.type = "button"; b.className = "shr"; b.textContent = "شارك"; b.onclick = function(){
+    var sec = h.parentNode, lines = [].slice.call(sec.querySelectorAll("li, tbody tr, .th1, .fr, .wt")).slice(0, 8).map(function(e){ return e.innerText.replace(/\s+/g, " ").trim(); }).filter(Boolean);
+    if (!lines.length) lines = [sec.innerText.replace(/\s+/g, " ").slice(h.innerText.length, h.innerText.length + 160)];
+    window.TifoShare.card(h.firstChild.textContent.trim(), lines); }; h.appendChild(b); });
+  // 235 round story: the table re-sorts as each result lands (FLIP via --i row index)
+  (function(){ var d = $("#storydata"); if (!d) return; var snaps = JSON.parse(d.textContent), rows = {}; document.querySelectorAll(".stbl li").forEach(function(li){ rows[li.dataset.t] = li; });
+    function show(k){ (snaps[k] || []).forEach(function(x, i){ var li = rows[x[0]]; if (!li) return; li.style.setProperty("--i", i); li.querySelector(".rk").textContent = i + 1; li.querySelector(".pt").textContent = x[1]; li.classList.toggle("moved", k > 0 && snaps[k - 1] && snaps[k - 1].findIndex(function(y){ return y[0] === x[0]; }) !== i); }); }
+    if ("IntersectionObserver" in window){ var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting){ document.querySelectorAll(".step.on").forEach(function(s){ s.classList.remove("on"); }); e.target.classList.add("on"); show(+e.target.dataset.s); } }); }, { rootMargin:"-45% 0px -45% 0px" }); document.querySelectorAll(".step").forEach(function(s){ io.observe(s); }); } else show(snaps.length - 1); })();
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && ID === "5789") countdown(); }
   tvFull();
   tabs(); run(); dist();

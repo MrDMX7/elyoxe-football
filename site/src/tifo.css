@@ -454,3 +454,27 @@ body.second .stat{font-size:1.15rem}
 .poster td{padding:.3rem .25rem;border-block-end:1px solid #ddd}
 .poster .pf{text-align:center;font-family:var(--digits);margin-block-start:.6rem}
 @media print{body[data-page="poster"] .bar,body[data-page="poster"] .foot,.noprint{display:none!important}body[data-page="poster"]{background:#fff}.poster{margin:0;max-inline-size:none;border-block-start-width:.6rem}@page{size:A4;margin:10mm}}
+.shr{margin-inline-start:.5rem;border:1px solid var(--line);background:var(--chalk);font-size:.72rem;padding:0 .45rem;cursor:pointer;font-family:var(--text);font-weight:400}
+.story{display:grid;grid-template-columns:1fr;gap:1rem}
+.stbl{position:sticky;top:3.3rem;z-index:2;list-style:none;margin:0;padding:0;background:var(--concrete);block-size:calc(var(--n,14) * 1.9rem);min-block-size:14rem}
+.stbl li{position:absolute;inset-inline:0;top:calc(var(--i) * 1.9rem);block-size:1.85rem;display:flex;align-items:center;gap:.5rem;padding-inline:.3rem;border-block-end:1px dashed var(--line);transition:top .6s cubic-bezier(.22,.61,.36,1),background .6s}
+.stbl li.moved{background:var(--dune-soft)}
+.stbl .rk{inline-size:1.6rem;font-family:var(--digits);font-weight:700}
+.stbl .pt{margin-inline-start:auto}
+.steps .step{min-block-size:55vh;display:flex;align-items:center;opacity:.45;transition:opacity .3s}
+.steps .step.on{opacity:1}
+.steps .step > *{inline-size:100%}
+@media (min-width:860px){.story{grid-template-columns:1fr 1fr}.stbl{top:4rem}}
+@media (prefers-reduced-motion:reduce){.stbl li{transition:none}}
+.bracket{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(14rem,1fr);gap:1rem;overflow-x:auto}
+.bs .tie{display:grid;grid-template-columns:1fr auto 1fr;gap:.4rem;align-items:center;background:var(--chalk);border:1px solid var(--line);padding:.4rem;margin-block:.35rem;font-size:.85rem}
+.bs .tie a{grid-column:1/-1;font-size:.72rem;color:var(--stone)}
+.labsel{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.5rem;margin-block:1rem}
+.labsel select,.labsel input{padding:.4rem;border:2px solid var(--ink);background:var(--chalk)}
+.labsvg{inline-size:100%;block-size:auto;background:var(--chalk);border:1px solid var(--line)}
+.labsvg line{stroke:var(--stone)}.labsvg text{font-family:var(--text);font-size:11px;fill:var(--ink)}
+dl.gl dt{font-family:var(--kufi);font-weight:800;margin-block-start:1rem}
+dl.gl dd{margin:0;padding-block:.2rem .6rem;border-block-end:1px dashed var(--line)}
+dl.gl dt:target{background:var(--dune-soft)}
+.lesson{border-inline-start:.4rem solid var(--night);padding-inline-start:.8rem;margin-block:1.2rem}
+.lesson .ex{background:var(--chalk);border:1px solid var(--line);padding:.5rem .7rem}
