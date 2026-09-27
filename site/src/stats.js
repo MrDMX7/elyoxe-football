@@ -472,7 +472,7 @@
   };
 
   // 212 + 260: club history and trophy cabinet (research/arab_clubs.json); disputed counts shown with every source
-  var CUP_AR = { "Egypt Cup":"كأس مصر", "Egyptian Super Cup":"السوبر المصري", "CAF Champions League":"دوري أبطال أفريقيا", "CAF Confederation Cup":"كأس الكونفدرالية الأفريقية", "African Cup Winners' Cup":"كأس الكؤوس الأفريقية", "CAF Super Cup":"السوبر الأفريقي", "AFC Champions League":"دوري أبطال آسيا", "AFC Champions League Elite":"دوري أبطال آسيا للنخبة", "AFC Cup":"كأس الاتحاد الآسيوي", "Asian Cup Winners' Cup":"كأس الكؤوس الآسيوية", "King's Cup":"كأس الملك", "King Cup":"كأس الملك", "Crown Prince Cup":"كأس ولي العهد", "Saudi Super Cup":"كأس السوبر السعودي", "Arab Club Champions Cup":"البطولة العربية للأندية", "Throne Cup":"كأس العرش", "Emir Cup":"كأس الأمير", "Amir Cup":"كأس الأمير", "President's Cup":"كأس رئيس الدولة", "UAE President's Cup":"كأس رئيس الدولة", "Qatar Cup":"كأس قطر", "Algerian Cup":"كأس الجزائر", "Tunisian Cup":"كأس تونس", "Iraq FA Cup":"كأس العراق", "Kuwait Emir Cup":"كأس أمير الكويت", "Crown Prince Cup (Kuwait)":"كأس ولي العهد", "Jordan FA Cup":"كأس الأردن", "Sultan Qaboos Cup":"كأس السلطان قابوس", "King's Cup (Bahrain)":"كأس ملك البحرين", "League Cup":"كأس الرابطة", "Super Cup":"السوبر" };
+  var CUP_AR = { "Egypt Cup":"كأس مصر", "Egyptian Super Cup":"السوبر المصري", "CAF Champions League":"دوري أبطال أفريقيا", "CAF Confederation Cup":"كأس الكونفدرالية الأفريقية", "African Cup Winners' Cup":"كأس الكؤوس الأفريقية", "CAF Super Cup":"السوبر الأفريقي", "AFC Champions League":"دوري أبطال آسيا", "AFC Champions League Elite":"دوري أبطال آسيا للنخبة", "AFC Cup":"كأس الاتحاد الآسيوي", "Asian Cup Winners' Cup":"كأس الكؤوس الآسيوية", "King's Cup":"كأس الملك", "King Cup":"كأس الملك", "Crown Prince Cup":"كأس ولي العهد", "Saudi Super Cup":"كأس السوبر السعودي", "Arab Club Champions Cup":"البطولة العربية للأندية", "Throne Cup":"كأس العرش", "Emir Cup":"كأس الأمير", "Amir Cup":"كأس الأمير", "President's Cup":"كأس رئيس الدولة", "UAE President's Cup":"كأس رئيس الدولة", "Qatar Cup":"كأس قطر", "Algerian Cup":"كأس الجزائر", "Tunisian Cup":"كأس تونس", "Iraq FA Cup":"كأس العراق", "Kuwait Emir Cup":"كأس أمير الكويت", "Crown Prince Cup (Kuwait)":"كأس ولي العهد", "Jordan FA Cup":"كأس الأردن", "Sultan Qaboos Cup":"كأس السلطان قابوس", "King's Cup (Bahrain)":"كأس ملك البحرين", "League Cup":"كأس الرابطة", "Super Cup":"السوبر", "UAE League Cup":"كأس رابطة المحترفين", "UAE Super Cup":"كأس السوبر الإماراتي", "Arabian Gulf Cup":"كأس الخليج", "GCC Champions League":"دوري أبطال الخليج" };
   S.clubHistory = function(c){
     if (!c) return ""; var out = [], cnt = function(x){ if (!x) return ""; var alts = (x.alt || []).filter(function(a){ return a.count != null && a.count !== x.count; }); return '<b class="num">' + x.count + "</b>" + (alts.length ? ' <span class="muted small">(مصادر ثانية تقول ' + alts.map(function(a){ return '<a href="' + esc(a.source) + '" rel="noopener">' + a.count + "</a>"; }).join(" و") + ")</span>" : "") + ' <a class="src" href="' + esc(x.source) + '" rel="noopener">المصدر</a>'; };
     var shelf = [];
@@ -490,6 +490,42 @@
     if (!l || !l.players || !l.players.length) return "";
     var low = /low/.test(l.confidence || "");
     return (low ? '<p class="note">المصادر لهالقائمة قليلة أو مختلفة، فخذها كتقريب.</p>' : "") + '<ol class="lead">' + l.players.slice(0, 15).map(function(p){ return '<li><span class="num muted">' + p.rank + '</span><span class="who"><span>' + esc(p.name_ar || p.name_en) + '</span> <span class="muted small">' + esc((p.clubs || []).join("، ")) + (p.years ? ' <bdi dir="ltr">' + esc(p.years) + "</bdi>" : "") + "</span></span><b>" + p.goals + "</b></li>"; }).join("") + '</ol><p class="src">' + esc(l.era_scope ? "" : "") + "المصادر: " + (l.sources || []).slice(0, 3).map(function(u, i){ return '<a href="' + esc(u) + '" rel="noopener">' + (i + 1) + "</a>"; }).join(" ") + "، حتى " + esc(l.as_of || "") + ".</p>";
+  };
+
+  // 219: suspension rules (research/suspension_rules.json) + at-risk list when comp/{id}/suspensions.json exists
+  S.suspensions = function(r, sus){
+    var out = "";
+    if (sus && sus.players && sus.players.length){ var ban = sus.players.filter(function(p){ return p.suspended; }), risk = sus.players.filter(function(p){ return !p.suspended && p.at_risk; });
+      if (ban.length) out += "<h3>موقوفين الجولة الياية</h3>" + '<ol class="lead">' + ban.map(function(p){ return '<li><span class="num muted"></span><span class="who">' + R.logo(team(p.team), "sm") + pl(p.id, p.name) + ' <span class="muted">' + esc(p.reason_ar || (p.reason === "red" ? "طرد" : "إنذارات")) + "</span></span><b></b></li>"; }).join("") + "</ol>";
+      if (risk.length) out += "<h3>إنذار واحد ويوقف</h3>" + '<ol class="lead">' + risk.map(function(p){ return '<li><span class="num muted"></span><span class="who">' + R.logo(team(p.team), "sm") + pl(p.id, p.name) + ' <span class="muted">' + p.yellows + " إنذارات</span></span><b></b></li>"; }).join("") + "</ol>"; }
+    if (!r) return out;
+    if (!r.rules || !r.rules.length) return out + '<p class="note">ما لقينا لائحة رسمية لإيقافات هالبطولة.</p>';
+    var li = r.rules.map(function(x){ return "<li>كل " + (x.repeat_every || x.yellows) + " إنذارات = إيقاف " + x.ban_matches + " مباراة" + (x.until ? ' <span class="muted small">(لين ' + esc(x.until) + ")</span>" : "") + "</li>"; });
+    if (r.second_yellow_ban && r.second_yellow_ban.matches) li.push("<li>الإنذار الثاني في نفس المباراة (طرد) = إيقاف " + r.second_yellow_ban.matches + " مباراة.</li>");
+    if (r.red_ban && r.red_ban.min_matches) li.push("<li>الطرد المباشر = إيقاف " + r.red_ban.min_matches + " مباراة على الأقل.</li>");
+    return out + "<h3>قانون الإيقاف</h3><ul class=\"facts-l\">" + li.join("") + "</ul>" + (/low|medium/.test(r.confidence || "") ? '<p class="src">المصدر غير رسمي بالكامل، تأكد من لائحة البطولة.</p>' : "") + '<p class="src">المصادر: ' + srcs(r.sources) + "</p>";
+  };
+  // 232: official accounts (verified on the club's own site, the league page or YouTube's badge) + YouTube uploads embed
+  var OKV = { site_footer:1, league_page:1, yt_badge:1 };
+  function pickAcc(list){ list = (list || []).filter(function(a){ return OKV[a.verified_via]; }); return list.filter(function(a){ return a.verified_via === "site_footer"; })[0] || list[0]; }
+  S.accounts = function(e){
+    if (!e || !/high|medium/.test(e.confidence || "")) return "";
+    var L = [], w = e.website; if (w && w.status === "live" && w.url) L.push('<a class="btn" href="' + esc(w.url) + '" rel="noopener">الموقع الرسمي</a>');
+    var x = pickAcc(e.x), ig = pickAcc(e.instagram), yt = pickAcc(e.youtube);
+    if (x) L.push('<a class="btn" href="' + esc(x.url) + '" rel="noopener">إكس @' + esc(x.handle) + "</a>"); if (ig) L.push('<a class="btn" href="' + esc(ig.url) + '" rel="noopener">إنستقرام</a>'); if (yt) L.push('<a class="btn" href="' + esc(yt.url) + '" rel="noopener">يوتيوب</a>');
+    if (!L.length) return "";
+    var emb = yt && yt.channel_id ? '<div class="yt"><iframe loading="lazy" title="آخر فيديوهات النادي" src="https://www.youtube-nocookie.com/embed/videoseries?list=UU' + esc(yt.channel_id.slice(2)) + '" allowfullscreen></iframe></div>' : "";
+    return '<p class="tools">' + L.join("") + "</p>" + emb + noteSrc("الحسابات متحقق منها من موقع النادي أو صفحة الرابطة.");
+  };
+  // 331: questions and answers from our data only (static: UAE channels + the general beIN note)
+  S.faq = function(md, ww, stadName){
+    var q = [], H = md.home.name_ar || md.home.name, A = md.away.name_ar || md.away.name;
+    if (md.kickoff_uae) q.push(["متى مباراة " + H + " و" + A + "؟", R.dayLabel(R.ymd(md.kickoff_uae)) + " الساعة " + md.kickoff_uae.slice(11, 16) + " بتوقيت الإمارات، والموقع يعرضها بتوقيت بلدك."]);
+    if (ww) q.push(["وين تنقل مباراة " + H + " و" + A + "؟", "في الإمارات: " + ww + ". في باقي الدول العربية شوف قسم «وين تنقل» في الصفحة، ومعظم البطولات الأوروبية والآسيوية على beIN."]);
+    if (stadName) q.push(["وين تنلعب المباراة؟", stadName + "."]);
+    if (md.referee && md.referee.name) q.push(["منو حكم المباراة؟", md.referee.name + "."]);
+    var h = md.h2h && md.h2h.summary; if (h) q.push(["كم مرة تقابلوا؟", "فاز " + H + " " + h.home_wins + " مرات، و" + A + " " + h.away_wins + " مرات، وتعادلوا " + h.draws + " مرات في المواجهات المسجّلة."]);
+    return q;
   };
   if (typeof module !== "undefined" && module.exports) module.exports = S; else root.TS = S;
 })(this);

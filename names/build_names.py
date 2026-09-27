@@ -349,15 +349,22 @@ def slim_entity(qid, e):
 
 
 def team_qids(wd: WD, teams, cache: Path):
-    """FotMob team id -> set of candidate Wikidata QIDs (by name search)."""
-    f = cache / "team_qids.json"
+    """FotMob team id -> set of candidate Wikidata QIDs (by name search).
+    Also searches "<name> national football team" so that stats-only players
+    of a national side (no age, no nationality in the feed) match on P54."""
+    f = cache / "team_qids2.json"
     m = json.loads(f.read_text()) if f.exists() else {}
     for tid, t in teams.items():
         if tid in m:
             continue
-        j = get_json(WD_API, {"action": "wbsearchentities", "search": t["name"], "language": "en",
-                              "type": "item", "limit": 7, "format": "json"}, pause=wd.pause)
-        m[tid] = [h["id"] for h in (j or {}).get("search") or []]
+        ids = []
+        for q in (t["name"], f'{t["name"]} national football team'):
+            j = get_json(WD_API, {"action": "wbsearchentities", "search": q, "language": "en",
+                                  "type": "item", "limit": 7, "format": "json"}, pause=wd.pause)
+            ids += [h["id"] for h in (j or {}).get("search") or [] if h["id"] not in ids]
+        m[tid] = ids
+        if len(m) % 50 == 0:
+            f.write_text(json.dumps(m))
     f.write_text(json.dumps(m))
     return {k: set(v) for k, v in m.items()}
 
