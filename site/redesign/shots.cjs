@@ -6,7 +6,8 @@ const path = require("path"), fs = require("fs");
 const { chromium } = require("/root/workspace/automation/browse/node_modules/playwright-core");
 const ROOT = path.join(__dirname, "../out_next/next"), DST = "/root/.claude/jobs/abd28f85/tmp";
 const PAGES = { home:"/next/", match:"/next/m/1000020522/", live:"/next/m/6052085/", comp:"/next/c/uae-pro-league/", saudi:"/next/c/saudi-pro-league/", pl:"/next/c/premier-league/", comps:"/next/competitions/" };
-const W = [390, 880, 1440], tag = process.argv[2] && process.argv[2] !== "-" ? "_" + process.argv[2] : "", only = process.argv.slice(3);
+if (process.env.PAGES) for (const k of Object.keys(PAGES)) delete PAGES[k]; (process.env.PAGES || "").split(",").filter(Boolean).forEach(x => { PAGES[x] = "/next/c/" + x + "/"; });
+const W = process.env.W ? process.env.W.split(",").map(Number) : [390, 880, 1440], tag = process.argv[2] && process.argv[2] !== "-" ? "_" + process.argv[2] : "", only = process.argv.slice(3);
 const MIME = { ".html":"text/html; charset=utf-8", ".css":"text/css", ".js":"application/javascript", ".json":"application/json", ".png":"image/png", ".txt":"text/plain" };
 (async () => {
   const b = await chromium.launch({ executablePath:"/usr/bin/chromium", args:["--no-sandbox", "--disable-dev-shm-usage"] });
