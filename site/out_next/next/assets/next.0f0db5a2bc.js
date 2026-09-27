@@ -281,7 +281,7 @@
   var esc = R.esc, BASE = "/next/";
   R.BASE = BASE;
   // the prototype pages; links to them stay inside /next/, everything else goes to production
-  R.PROTO = { "/":1, "/m/1000020522/":1, "/m/6052085/":1, "/c/uae-pro-league/":1, "/c/saudi-pro-league/":1 };
+  R.PROTO = { "/":1, "/m/1000020522/":1, "/m/6052085/":1, "/c/uae-pro-league/":1, "/c/saudi-pro-league/":1, "/c/premier-league/":1, "/competitions/":1 };
   R.nx = function(href){ return R.PROTO[href] ? BASE.slice(0, -1) + href : href; };
   R.logo = function(t, cls){ if (!t || !t.id) return ""; return '<img class="logo' + (cls ? " " + cls : "") + '" src="' + BASE + "logo/" + t.id + '.png" alt="" loading="lazy" width="24" height="24" onerror="if(!this.dataset.f){this.dataset.f=1;this.src=\'/logo/' + t.id + '.png\'}else this.style.visibility=\'hidden\'">'; };
 
@@ -742,7 +742,7 @@
       if (R.isLive(m) || Date.parse(m.kickoff_utc) <= Date.now()){ el.innerHTML = '<a class="cd" href="/m/' + m.id + '/"><b>المنتخب يلعب الحين</b><span class="dg">مباشر</span></a>'; return; }
       var tick = function(){ var d = Math.max(0, Date.parse(m.kickoff_utc) - Date.now()), dd = Math.floor(d / 864e5), hh = Math.floor(d / 36e5) % 24, mm = Math.floor(d / 6e4) % 60, ss = Math.floor(d / 1e3) % 60, p2 = function(n){ return n < 10 ? "0" + n : n; };
         var opp = m.home.id === 5789 ? m.away : m.home;
-        el.innerHTML = '<a class="cd" href="/m/' + m.id + '/"><span><b>الإمارات ضد ' + R.tname(opp) + '</b><br><span class="small">' + R.esc(R.dayLabel(R.ymd(m.kickoff_uae))) + " " + R.hhmm(m.kickoff_uae) + '</span></span><span class="dg">' + (dd ? dd + " يوم " : "") + p2(hh) + ":" + p2(mm) + ":" + p2(ss) + "</span></a>"; };
+        el.innerHTML = '<a class="cd" href="/m/' + m.id + '/"><span><b>' + R.tname(m.home) + ' ضد ' + R.tname(m.away) + '</b><br><span class="small">' + R.esc(R.dayLabel(R.ymd(m.kickoff_uae))) + " " + R.hhmm(m.kickoff_uae) + '</span></span><span class="dg">' + (dd ? dd + " يوم " : "") + p2(hh) + ":" + p2(mm) + ":" + p2(ss) + "</span></a>"; };
       tick(); clearInterval(el._t); el._t = setInterval(tick, 1000);
     }).catch(function(){});
   }
@@ -991,14 +991,16 @@
   var hero = $(".hero"), art = null;
   if (hero && window.TifoArt){
     var cv = hero.querySelector("canvas");
-    if (hero.classList.contains("chero")){ try { art = window.TifoArt.mount(cv); art.paint(JSON.parse(hero.dataset.art || "[]"), 11); } catch (e){} }
+    if (hero.classList.contains("chero") && cv){ try { art = window.TifoArt.mount(cv); art.paint(JSON.parse(hero.dataset.art || "[]"), 11); } catch (e){} }
     if (hero.classList.contains("mhero")){ try { var ms = JSON.parse($("#msum").textContent); art = window.TifoArt.mount(cv); art.set(ms); } catch (e){} }
   }
   // parallax + fade: the art drifts at 0.35x scroll, the title fades as it leaves
   var hin = hero && hero.querySelector(".hero-in"), ticking = false;
   window.addEventListener("scroll", function(){ onScroll(); if (RM || !hero || ticking) return; ticking = true; requestAnimationFrame(function(){ ticking = false; var y = window.scrollY, h = hero.offsetHeight; if (y > h * 1.2) return;
-    var c = hero.querySelector("canvas"); if (c) c.style.transform = "translate3d(0," + (y * 0.35).toFixed(1) + "px,0)"; if (hin) hin.style.opacity = Math.max(0, 1 - y / (h * 0.85)).toFixed(3); }); }, { passive:true });
+    var c = hero.querySelector("canvas, .lgart, .lgwall"); if (c) c.style.transform = "translate3d(0," + (y * 0.35).toFixed(1) + "px,0)"; if (hin) hin.style.opacity = Math.max(0, 1 - y / (h * 0.85)).toFixed(3); }); }, { passive:true });
 
+  // depth: the league logo leans a few px toward the pointer (desktop only)
+  var lg = $(".lglogo"); if (lg && !RM && matchMedia("(pointer:fine)").matches) hero.addEventListener("pointermove", function(e){ var r = hero.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; lg.style.transform = "translate3d(" + (x * -14).toFixed(1) + "px," + (y * -10).toFixed(1) + "px,0) rotateY(" + (x * 8).toFixed(1) + "deg)"; });
   // ---- match: sticky mini score once the hero leaves; updated from app.js's poll
   var mini = $("#mini");
   function miniDraw(m){ if (!mini || !m) return; var live = R.isLive(m), s = m.score;

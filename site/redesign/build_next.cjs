@@ -12,7 +12,7 @@ const R = require("./src/rx.js"), S = require("../src/stats.js");
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const DATA = arg("--data", "https://tifo.elyoxe.com/v1").replace(/\/$/, ""), OUT = path.join(SITE, "out_next/next"), BASE = "/next/";
 const esc = R.esc, hash = s => crypto.createHash("sha1").update(s).digest("hex").slice(0, 10);
-const MATCHES = [1000020522, 6052085], COMPS = ["uae-pro-league", "saudi-pro-league"];
+const MATCHES = [1000020522, 6052085], COMPS = ["uae-pro-league", "saudi-pro-league", "premier-league"];
 
 async function get(p, tries = 3){
   for (let i = 0; i < tries; i++){
@@ -109,7 +109,7 @@ ${shareSheet}${moreSheet}
 }
 function write(rel, html){
   // links to the other prototype pages stay inside /next/
-  html = html.replace(/href="(\/(?:m\/(?:1000020522|6052085)|c\/(?:uae-pro-league|saudi-pro-league))\/)(#[^"]*)?"/g, (m, p, h) => `href="${BASE.slice(0, -1)}${p}${h || ""}"`);
+  html = html.replace(/href="(\/(?:m\/(?:1000020522|6052085)|c\/(?:uae-pro-league|saudi-pro-league|premier-league)|competitions))\/(#[^"]*)?"/g, (m, p, h) => `href="${BASE.slice(0, -1)}${p}/${h || ""}"`);
   const f = path.join(OUT, rel); fs.mkdirSync(path.dirname(f), { recursive:true }); fs.writeFileSync(f, html);
 }
 
@@ -120,6 +120,13 @@ function write(rel, html){
   const comps = index.competitions, today = new Date(Date.now() + 4 * 3600e3).toISOString().slice(0, 10);
   const teamsJson = await get("teams.json") || { teams:{} }; S.setTeams(teamsJson.teams || {});
   const colors = readJ(path.join(CACHE, "colors.json"), {}); R.setColors(colors);
+  // competition logos (redesign/league_logos.py: FotMob league crests, dark variant preferred, own cache) + their colours
+  try { require("child_process").execFileSync("python3", [path.join(HERE, "league_logos.py"), ...index.competitions.map(c => String(c.id))], { stdio:"ignore" }); } catch (e){ console.error("league_logos.py failed: mosaic fallback"); }
+  const LCOL = readJ(path.join(HERE, "cache/league_colors.json"), {}), LOGO = id => fs.existsSync(path.join(HERE, "cache/leaguelogo", id + ".png"));
+  fs.mkdirSync(path.join(OUT, "lg"), { recursive:true }); for (const c of index.competitions) if (LOGO(c.id)) fs.copyFileSync(path.join(HERE, "cache/leaguelogo", c.id + ".png"), path.join(OUT, "lg", c.id + ".png"));
+  // the glow colour: the most saturated of the two, else chalk (a white crest glows white)
+  const sat = h => { const n = parseInt(h.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b); return mx ? (mx - mn) / mx : 0; };
+  const glow = id => { const cs = (LCOL[id] || []).slice().sort((a, b) => sat(b) - sat(a)); return [cs[0] && sat(cs[0]) > .25 ? cs[0] : "#F6F7F2", cs[1] && sat(cs[1]) > .25 ? cs[1] : (cs[0] && sat(cs[0]) > .25 ? cs[0] : "#5C7A70")]; };
   const NAMES_AR = readJ(path.join(SITE, "../names/players_ar.json"), {}), nameOf = id => (NAMES_AR[id] || {}).ar || null;
   const APPROVED = readJ(path.join(SITE, "ai/approved.json"), {});
   const AI = k => { const d = path.join(CACHE, "ai", k), o = {}; if (fs.existsSync(d)) for (const f of fs.readdirSync(d)) if (f.endsWith(".json")) o[f.slice(0, -5)] = readJ(path.join(d, f), null); return o; };
@@ -168,6 +175,7 @@ function write(rel, html){
   patch('fetch("/assets/search." + sb0.dataset.v', 'fetch("' + BASE + 'assets/search." + sb0.dataset.v', "search");
   patch('fetch("/assets/bc." + B.dataset.bc', 'fetch("' + BASE + 'assets/bc." + B.dataset.bc', "bc");
   patch(/(set\("#day", R\.dayList\(ms, idx, \{[^;]*\}\)\);)/, '$1 document.dispatchEvent(new CustomEvent("tifo:day", { detail:{ ms:ms, idx:idx, live:live, off:dayOff } }));', "day event");
+  patch("'<a class=\"cd\" href=\"/m/' + m.id + '/\"><span><b>الإمارات ضد ' + R.tname(opp) + '</b>".replace(/\\"/g, '"'), "'<a class=\"cd\" href=\"/m/' + m.id + '/\"><span><b>' + R.tname(m.home) + ' ضد ' + R.tname(m.away) + '</b>".replace(/\\"/g, '"'), "countdown order (home first)");
   patch("MD = md; FULL = md;", 'MD = md; FULL = md; document.dispatchEvent(new CustomEvent("tifo:match", { detail:md }));', "match event");
   const js = [fs.readFileSync(path.join(SITE, "src/render.js"), "utf8"), fs.readFileSync(path.join(HERE, "src/rx.js"), "utf8"), fs.readFileSync(path.join(SITE, "src/share.js"), "utf8"), fs.readFileSync(path.join(HERE, "src/keyart.js"), "utf8"), app, fs.readFileSync(path.join(HERE, "src/next.js"), "utf8")].join("\n;\n");
   ASSET = { css:hash(css), js:hash(js) };
@@ -233,7 +241,9 @@ function write(rel, html){
       tot ? `<div><dt>الموسم</dt><dd><b class="num">${fin}</b> <small>من</small> <b class="num">${tot}</b> <small>مباراة</small></dd><i class="prog" style="--p:${(fin / tot * 100).toFixed(1)}%"></i></div>` : ""].join("");
     const artBands = JSON.stringify((ids.length ? ids : []).map(id => colors[id] || ["#5C6660", "#F6F7F2"]));
     const tools = `${nextR.length ? `<button type="button" class="sa" id="rpbtn">صورة توقعات الجولة ${esc(nextR[0].r)}</button>` : ""}${x.cards ? `<a class="sa" href="/c/${c.key}/compare/">قارن بين لاعبين أو فريقين</a>` : ""}${powK ? `<a class="sa" href="/c/${c.key}/power/">ترتيب القوة هالأسبوع</a>` : ""}`;
-    const body = `<section class="hero chero" data-slot="hero" data-art='${esc(artBands)}'><canvas aria-hidden="true"></canvas><div class="scrim"></div><div class="hero-in wrap">
+    const g = glow(c.id), hasLogo = LOGO(c.id);
+    const art = hasLogo ? `<div class="lgart" aria-hidden="true"><i class="bloom"></i><i class="bloom b2"></i><img class="lglogo" src="${BASE}lg/${c.id}.png" alt="" width="192" height="192"></div>` : `<canvas aria-hidden="true"></canvas>`;
+    const body = `<section class="hero chero${hasLogo ? " haslogo" : ""}" data-slot="hero" data-art='${esc(artBands)}' style="--g1:${g[0]};--g2:${g[1]}">${art}<div class="scrim"></div><div class="hero-in wrap">
 <p class="hk"><a href="/competitions/">البطولات</a>${c.country ? `، ${esc(c.country.name_ar)}` : ""}${liveN ? ` <span class="lv"><i class="cardflip"></i>${liveN} مباشر</span>` : ""}</p><h1>${esc(c.name_ar)}</h1><p class="season">الموسم <span class="num">${esc(c.season || "")}</span></p>${c.dormant ? '<p class="note">البطولة متوقفة أو خلصت هالموسم. هذي آخر نتايجها.</p>' : ""}
 <dl class="hfacts">${heroFacts}</dl><div class="hero-acts"><a class="cta" href="#fixtures" data-go="fixtures">${upcoming ? "مباريات الجولة" : "المباريات"}</a><button type="button" class="ghost" data-sheet="share">شارك</button></div></div></section>
 ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(nextR).replace(/</g, "\\u003c")}</script>` : ""}<div class="wrap body">` + tabsBar("c", tl) +
@@ -308,7 +318,7 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
     .map(l => `<a class="ed" href="${l[0]}">${tifoIcon(l[1])}<span class="tt2">${l[1]}</span><span class="tz">${l[2]}</span></a>`).join("");
   // crest grid: every running competition as a tile of its clubs' colours
   const run = comps.filter(c => !c.dormant);
-  const tileOf = c => { const d = compData[c.id] || {}; let tids = stIdsOf(d.st); if (!tids.length && d.fx && d.fx.matches) tids = [...new Set(d.fx.matches.flatMap(m => [m.home.id, m.away.id]))]; const cols = tids.slice(0, 12).map(id => (colors[id] || ["#123A31"])[0]); while (cols.length && cols.length < 12) cols.push(...cols.slice(0, 12 - cols.length));
+  const tileOf = c => { if (LOGO(c.id)){ const g = glow(c.id); return `<a class="ct lgt" href="/c/${c.key}/" style="--g1:${g[0]};--g2:${g[1]}"><span class="cl" aria-hidden="true"><img src="${BASE}lg/${c.id}.png" alt="" loading="lazy" width="96" height="96"></span><b>${esc(c.name_ar)}</b><small>${esc((c.country && c.country.name_ar) || { gulf:"الخليج", asia:"آسيا", europe:"أوروبا", arab:"العرب", africa:"أفريقيا", world:"العالم", national:"المنتخبات", uae:"الإمارات" }[c.scope] || "")}</small></a>`; } const d = compData[c.id] || {}; let tids = stIdsOf(d.st); if (!tids.length && d.fx && d.fx.matches) tids = [...new Set(d.fx.matches.flatMap(m => [m.home.id, m.away.id]))]; const cols = tids.slice(0, 12).map(id => (colors[id] || ["#123A31"])[0]); while (cols.length && cols.length < 12) cols.push(...cols.slice(0, 12 - cols.length));
     return `<a class="ct" href="/c/${c.key}/"><span class="cm" aria-hidden="true">${(cols.length ? cols : Array.from({ length:12 }, (_, i) => ["#1B4A3F", "#123A31", "#2A5A4E"][i % 3])).map(cl => `<i style="background:${cl}"></i>`).join("")}</span><b>${esc(c.name_ar)}</b><small>${esc((c.country && c.country.name_ar) || { gulf:"الخليج", asia:"آسيا", europe:"أوروبا", arab:"العرب", africa:"أفريقيا", world:"العالم", national:"المنتخبات", uae:"الإمارات" }[c.scope] || "")}</small></a>`; };
   const heroHtml = `<section class="hero hhero" data-slot="hero" id="stand"><canvas aria-hidden="true"></canvas><div class="scrim"></div><div class="hero-in wrap"><span class="kick" id="standkick">${heroM ? (R.isLive(heroM) ? "مباشر الحين" : heroM.status === "finished" ? "انتهت" : "الليلة") : "اليوم"}</span><div class="cap" id="standcap">${R.heroLine(heroM, index)}</div><div id="uaecd"></div>
 <div class="hero-acts">${heroM ? `<a class="cta" id="herogo" href="${R.nx("/m/" + heroM.id + "/")}">تابع المباراة</a>` : ""}<button type="button" class="ghost" data-sheet="share">شارك</button></div></div></section><div id="since" class="wrap"></div>`;
@@ -326,8 +336,13 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
     `<section class="rail edr" data-slot="rail"><div class="rail-h"><h2>من تيفو</h2></div><div class="rail-s" tabindex="0">${edCards.map(e => e.card).join("")}${bdays.replace('<div id="bdays"', '<div class="ed edb" id="bdays"')}${edLinks}</div>${edCards.map(e => e.vault).join("")}</section></div>`;
   write("index.html", page({ path:"/", page:"home", nav:"home", title:"تيفو — مباريات اليوم مباشر لكل العرب", desc:"نتايج المباريات مباشر بتوقيت بلدك: الدوريات العربية والمنتخبات والبطولات الكبيرة.", body }));
 
+  // ---- competitions list: grouped like the production page, every competition a logo tile
+  { const groups = [["uae", "الإمارات"], ["gulf", "الخليج"], ["arab", "العرب"], ["asia", "آسيا"], ["africa", "أفريقيا"], ["national", "المنتخبات"], ["europe", "أوروبا"], ["world", "العالم"]];
+    const body = `<section class="hero lhero" data-slot="hero"><div class="lgwall" aria-hidden="true">${comps.filter(c => LOGO(c.id)).slice(0, 24).map(c => `<img src="${BASE}lg/${c.id}.png" alt="" width="64" height="64">`).join("")}</div><div class="scrim"></div><div class="hero-in wrap"><p class="hk">تيفو</p><h1>البطولات</h1><p class="season">كل البطولات اللي نغطيها، <span class="num">${comps.length}</span> بطولة</p></div></section><div class="wrap body">` +
+      groups.map(g => { const cs = comps.filter(c => c.scope === g[0]); return cs.length ? `<section class="rail cgrid3" data-slot="grid"><div class="rail-h"><h2>${g[1]}</h2></div><div class="cts all">${cs.map(tileOf).join("")}</div></section>` : ""; }).join("") + "</div>";
+    write("competitions/index.html", page({ path:"/competitions/", page:"comps", nav:"comps", title:"كل البطولات | تيفو", desc:"كل البطولات اللي يغطيها تيفو.", body })); }
   // ---- crests actually referenced + the day's teams (client re-renders may show them)
-  const need = new Set(); for (const f of [["index.html"], ...COMPS.map(k => ["c", k, "index.html"]), ...MATCHES.map(id => ["m", String(id), "index.html"])]){ const p = path.join(OUT, ...f); if (fs.existsSync(p)) (fs.readFileSync(p, "utf8").match(/\/next\/logo\/(\d+)\.png/g) || []).forEach(s => need.add(s.match(/(\d+)\.png/)[1])); }
+  const need = new Set(); for (const f of [["index.html"], ["competitions", "index.html"], ...COMPS.map(k => ["c", k, "index.html"]), ...MATCHES.map(id => ["m", String(id), "index.html"])]){ const p = path.join(OUT, ...f); if (fs.existsSync(p)) (fs.readFileSync(p, "utf8").match(/\/next\/logo\/(\d+)\.png/g) || []).forEach(s => need.add(s.match(/(\d+)\.png/)[1])); }
   (day.matches || []).forEach(m => { need.add(String(m.home.id)); need.add(String(m.away.id)); });
   let nl = 0; for (const id of need){ const f = path.join(CACHE, "logo", id + ".png"); if (fs.existsSync(f)){ fs.copyFileSync(f, path.join(OUT, "logo", id + ".png")); nl++; } }
   const cells = [["#F6F7F2","#10A04B","#B07A3B"],["#F6F7F2","#B07A3B","#10A04B"],["#10A04B","#B07A3B","#F6F7F2"]].map((row, y) => row.map((c, x) => `<rect x="${4 + x * 8.5}" y="${4 + y * 8.5}" width="7" height="7" fill="${c}"/>`).join("")).join("");
