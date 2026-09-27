@@ -430,7 +430,7 @@ WHY_SYS = STYLE + NAT_RULE + """
 - كل سطر عن فريق واحد بجملة قصيرة. لا تربط الفريقين في نفس الجملة بـ«بس» أو «رغم» (مثل «X سيطر… بس سجّل Y…»)، خلّ كل فريق في سطره.
 - لا تفترض أي سبب مب ظاهر في الأرقام (تعب، معنويات، تكتيك، حكم)، ولا تكتب حشو أو مديح.
 - stats_home_away: الرقم الأول للمستضيف (home) والثاني للضيف (away).
-- الحدث own_goal: اللاعب سجل بالخطأ في مرمى فريقه، والهدف ينحسب للفريق المذكور في goal_for. قول «هدف عكسي من فلان لصالح الفريق».
+- الحدث own_goal: لاعب من scorer_team سجل بالخطأ في مرمى فريقه، والهدف ينحسب لـ goal_for. قول «هدف عكسي لصالح goal_for».
 - انتبه لفريق كل لاعب (team) قبل ما تربطه بأي فريق.
 - winner وloser فيهم الفايز والخسران وأهداف كل واحد (لو تعادل، draw صح). السطر الأول عن الفايز لو في فايز. لا تغيّر أي نتيجة.
 - لا تذكر عدد صفر كإنجاز («0 فرص»، «أكثر عن 0»، «كانت 0»). قول «ما صنع أي فرصة محققة».
@@ -493,8 +493,8 @@ def keep_lines(lines, rows, minimum, what):
 def do_why(md):
     ctx = match_facts(md)
     if not ctx.get("stats_home_away"): return "no stats"
-    for e in ctx["events"]:   # own goals: name the side the goal counted for (the event's team is the scorer's own side)
-        if e["type"] == "own_goal": e["goal_for"] = ctx["away"] if e["team"] == ctx["home"] else ctx["home"]
+    for e in ctx["events"]:   # own goals: FotMob files the event under the side it counted FOR (checked: 1000020522, 5868079)
+        if e["type"] == "own_goal": e["goal_for"] = e["team"]; e["scorer_team"] = ctx["away"] if e["team"] == ctx["home"] else ctx["home"]
     sc = md.get("score") or {}; gh, ga = sc.get("home"), sc.get("away")
     if gh is None or ga is None: return "no score"
     H, A = ctx["home"], ctx["away"]
