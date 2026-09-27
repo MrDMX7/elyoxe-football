@@ -35,6 +35,10 @@
   function evIcon(t){ if (t === "yellow") return '<i class="ico yellow"></i>'; if (t === "red" || t === "second_yellow") return '<i class="ico red"></i>'; if (/goal/.test(t)) return '<i class="ico goal"></i>'; if (t === "missed_penalty") return '<i class="ico miss"></i>'; return '<i class="ico sub"></i>'; }
   function sc(s){ return s.home + " - " + s.away; }
   function nm(p){ return p ? '<span class="lat">' + esc(p.name) + "</span>" : ""; }
+  // the source sends no substitutions for some competitions (Gulf Cup): say so in one quiet line instead of implying none were made
+  function noSubs(md){ var ce = md.coverage_events; if (ce && ce.subs === false) return true; if (ce && ce.subs === true) return false;
+    var mn = parseInt(md.minute, 10) || 0, late = md.status === "finished" || (R.isLive(md) && mn >= 60);
+    return late && md.lineups && md.lineups.home && !(md.events || []).some(function(e){ return e.type === "sub"; }); }
   R.events = function(md){
     R.arNames(md);
     var ev = md.events || []; if (!ev.length) return '<p class="empty">' + (md.status === "scheduled" ? "المباراة ما بدت." : "ما في أحداث مسجّلة.") + "</p>";
@@ -58,7 +62,7 @@
       }
       var k = e && /goal/.test(e.type) ? " g" : "";
       return team === "home" ? '<li class="' + k + '"><span class="h">' + body + '</span><span class="mn">' + mn + "</span><span></span></li>" : '<li class="' + k + '"><span></span><span class="mn">' + mn + "</span><span>" + body + "</span></li>";
-    }).join("") + '</ul><p class="src"><a href="/laws/">ليش ألغى الحكم هدف أو صفّر بلنتي؟ قانون الكورة بالإماراتي</a></p>';
+    }).join("") + '</ul>' + (noSubs(md) ? '<p class="na">التبديلات ما وصلتنا من المصدر لهالمباراة</p>' : "") + '<p class="src"><a href="/laws/">ليش ألغى الحكم هدف أو صفّر بلنتي؟ قانون الكورة بالإماراتي</a></p>';
   };
 
   // ---- rail card: a match as a key-art card (club colour bands on the outer edges)
