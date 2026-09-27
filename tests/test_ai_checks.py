@@ -74,3 +74,24 @@ def test_form_runs_must_exist_in_the_form_data():
     assert checks.check_history("وآخر فوز له كان بعد سلسلة خسارتين متتاليتين قبلها.", ev_in)
     assert checks.check_history("فاز بعد 4 خسارات متتالية.", ev_in) is None
     assert checks.check_history("فاز بعد 4 خسارات متتالية.", {})
+
+def test_leader_words_include_tasaddur_and_sadara():
+    rows = {"الإمارات": {"rank": 2, "pts": 3}, "البحرين": {"rank": 4, "pts": 0}, "الشارقة": {"rank": 5, "pts": 9}, "الجزيرة": {"rank": 1, "pts": 13}}
+    # Haiku v2, quick 6052085 and preview 1000020530
+    assert gen.check_table("البحرين في المركز 4 بـ 0 نقاط والإمارات تصدرت مع 3 نقاط بالمجموعة الثانية.", rows)
+    assert gen.check_table("الشارقة يملك 3 انتصارات في 5 مباريات وفي الصدارة النسبية بـ 9 نقاط.", rows)
+    assert gen.check_table("الجزيرة في الصدارة بـ 13 نقطة.", rows) is None
+    assert gen.check_table("الشارقة على بعد 4 نقاط من الصدارة.", rows) is None
+
+def test_own_goal_beneficiary():
+    # Haiku v2, 5868079: Luken Beitia's own goal (84') counted for Valencia
+    assert checks.check_events("فالنسيا ضيّع 3 فرص محققة، وتلقى هدف عكسي في الدقيقة 84 من لوكين بيتيا لصالح ريال سوسيداد.", RSO)
+    assert checks.check_events("فالنسيا سجّل هدف عكسي لصالح فالنسيا في الدقيقة 84.", RSO) is None
+    assert checks.check_events("الوحدة فاز بهدف عكسي لصالح الوحدة في الدقيقة 10.", WAH) is None
+
+def test_straight_red_vs_second_yellow():
+    # Haiku v2, 5802945: Weah's red was a second yellow
+    assert checks.check_events("مارسيليا خسر اللاعب تيموثي ويا بالطرد المباشر في الدقيقة 77.", PSG)
+    assert checks.check_events("انطرد تيموثي ويا بالإنذار الثاني في الدقيقة 77.", PSG) is None
+    STRAIGHT = dict(PSG, events=PSG["events"][:3] + [ev(77, "red", "home", 4, "Timothy Weah")])
+    assert checks.check_events("انطرد تيموثي ويا بالإنذار الثاني في الدقيقة 77.", STRAIGHT)
