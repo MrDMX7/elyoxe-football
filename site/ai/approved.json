@@ -5,5 +5,9 @@
   "preview": true,
   "podcast": true,
   "ask": true,
-  "daily5": false
+  "daily5": false,
+  "commentary": true,
+  "digest": true,
+  "power": true,
+  "dialects": false
 }
