@@ -428,3 +428,17 @@ body.comm .press{font-size:1.5rem;line-height:1.6}
 body.comm .press li{padding:.4rem;transition:background .3s}
 body.comm .press li.hot1{background:var(--dune-soft)}
 ul.md li{margin-block:.35rem}
+.fdr .fr{display:grid;grid-template-columns:minmax(6.5rem,9rem) 1fr;gap:.5rem;align-items:center;padding:.3rem 0;border-block-end:1px dashed var(--line)}
+.fds{display:flex;gap:2px}
+i.fd{font-style:normal;flex:1;min-inline-size:2.6rem;display:grid;place-items:center;font-size:.7rem;line-height:1.2;padding:.2rem .1rem;text-align:center}
+i.fd small{font-size:.58rem;opacity:.8}
+.legend i.fd{display:inline-grid;inline-size:1rem;min-inline-size:1rem;block-size:.8rem;padding:0}
+.fd.f1{background:#F1EBDD;color:#0E1512}.fd.f2{background:#DCD3C0;color:#0E1512}.fd.f3{background:#B8B2A6;color:#0E1512}.fd.f4{background:#6F7872;color:#fff}.fd.f5{background:#0E1512;color:#F6F7F2}
+.road{padding:.5rem 0;border-block-end:1px dashed var(--line)}
+.road .rh{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-block-end:.3rem}
+#arabonly[aria-pressed="true"]{background:var(--dune);border-color:var(--dune);color:#fff}
+body.second .bar,body.second .foot,body.second #facts,body.second .tiles,body.second .blk,body.second #catchup,body.second .tabs,body.second .probs,body.second .ai{display:none!important}
+body.second [data-pane="stats"]{display:block!important}
+body.second [data-pane]:not([data-pane="stats"]){display:none!important}
+body.second .board .sc .dg{font-size:6rem}
+body.second .stat{font-size:1.15rem}

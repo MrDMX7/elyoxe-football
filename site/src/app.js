@@ -50,6 +50,7 @@
     return Promise.all([index(), get("day/" + uaeToday(dayOff).replace(/-/g, "") + ".json").catch(function(){ return { matches:[] }; }), get("live.json").catch(function(){ return { matches:[] }; })]).then(function(r){
       var idx = r[0], day = r[1], live = r[2], by = {}; (live.matches || []).forEach(function(m){ by[m.id] = m; });
       var ms = (day.matches || []).map(function(m){ return by[m.id] || m; });
+      if (arabOnly()){ var AT = window.ARABT || {}, ar = {}; R.COUNTRIES.forEach(function(c){ ar[c[0]] = 1; }); var cc = {}; (idx.competitions || []).forEach(function(c){ cc[c.id] = R.compCountry(c); }); ms = ms.filter(function(m){ return ar[cc[m.comp]] || AT[m.home.id] || AT[m.away.id]; }); }
       set("#daytitle", R.dayNav(uaeToday(dayOff), uaeToday(0)));
       var natIds = []; try { natIds = JSON.parse(localStorage.getItem("tifo.natids") || "{}")[country()] || []; } catch (e){}
       set("#day", R.dayList(ms, idx, { mine:mine(), country:country(), natIds:natIds, empty:"ما في مباريات في هاليوم." }));
@@ -110,7 +111,8 @@
   function roundsUI(fx){
     var rr = R.rounds(fx), el = $("#rounds"); if (!el) return;
     if (curRound == null || rr.order.indexOf(curRound) < 0) curRound = fx.next_round && rr.by[fx.next_round] ? fx.next_round : (function(){ var k = rr.order.filter(function(k){ return rr.by[k].some(function(m){ return m.status !== "finished"; }); })[0]; return k || rr.order[rr.order.length - 1]; })();
-    el.innerHTML = '<div class="chips">' + rr.order.map(function(k){ return '<button type="button" data-r="' + R.esc(k) + '"' + (k === curRound ? ' aria-pressed="true"' : "") + ">" + (isNaN(parseFloat(k)) ? R.esc(k) : k) + "</button>"; }).join("") + '</div><div id="roundlist">' + (rr.by[curRound] ? R.roundList(rr.by[curRound], { mine:mine() }) : "") + "</div>";
+    var ck = (location.pathname.match(/^\/c\/([^/]+)\//) || [])[1];
+    el.innerHTML = (ck && !isNaN(parseFloat(curRound)) ? '<p class="small"><a href="/c/' + ck + "/r/" + R.esc(curRound) + '/">صفحة الجولة ' + R.esc(curRound) + "</a></p>" : "") + '<div class="chips">' + rr.order.map(function(k){ return '<button type="button" data-r="' + R.esc(k) + '"' + (k === curRound ? ' aria-pressed="true"' : "") + ">" + (isNaN(parseFloat(k)) ? R.esc(k) : k) + "</button>"; }).join("") + '</div><div id="roundlist">' + (rr.by[curRound] ? R.roundList(rr.by[curRound], { mine:mine() }) : "") + "</div>";
     var cur = el.querySelector('[aria-pressed="true"]'); if (cur) cur.scrollIntoView({ block:"nearest", inline:"center" });
     el.onclick = function(e){ var b = e.target.closest("button[data-r]"); if (!b) return; curRound = b.dataset.r; roundsUI(fx); };
   }
@@ -220,6 +222,15 @@
     var on = !document.body.classList.contains("comm"); document.body.classList.toggle("comm", on); b.textContent = on ? "سكّر وضع المعلّق" : "وضع المعلّق";
     clearInterval(window._commT); if (!on) return; var lis = p.querySelectorAll("li"), i = 0; lis.forEach(function(l){ l.classList.remove("hot1"); });
     window._commT = setInterval(function(){ lis.forEach(function(l){ l.classList.remove("hot1"); }); if (lis[i]) { lis[i].classList.add("hot1"); lis[i].scrollIntoView({ block:"center", behavior:"smooth" }); } i = (i + 1) % lis.length; }, 8000); });
+  // service worker (202)
+  if ("serviceWorker" in navigator) try { navigator.serviceWorker.register("/sw.js"); } catch (e){}
+  // «بس مباريات العرب» (234)
+  function arabOnly(){ try { return localStorage.getItem("tifo.arab") === "1"; } catch (e){ return false; } }
+  var ab = $("#arabonly"); if (ab){ ab.setAttribute("aria-pressed", arabOnly()); ab.onclick = function(){ try { localStorage.setItem("tifo.arab", arabOnly() ? "" : "1"); } catch (e){} ab.setAttribute("aria-pressed", arabOnly()); home(); }; }
+  // second screen (223): only the scoreboard, the match line and the numbers, big, screen kept awake
+  var sb2 = $("#secondbtn"), wl = null;
+  if (sb2) sb2.onclick = function(){ var on = !document.body.classList.contains("second"); document.body.classList.toggle("second", on); sb2.textContent = on ? "سكّر الشاشة الثانية" : "الشاشة الثانية";
+    if (on && navigator.wakeLock) navigator.wakeLock.request("screen").then(function(l){ wl = l; }).catch(function(){}); else if (wl){ wl.release(); wl = null; } };
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && ID === "5789") countdown(); }
   tvFull();
   tabs(); run(); dist();

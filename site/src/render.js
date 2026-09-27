@@ -220,7 +220,7 @@
     if (md.venue) f.push(["الملعب", esc(md.venue.name_ar || md.venue.name_en || md.venue.name)]);
     if (md.venue && md.venue.distance_km){ var EM = [["abu-dhabi","أبوظبي"],["dubai","دبي"],["sharjah","الشارقة"],["ajman","عجمان"],["umm-al-quwain","أم القيوين"],["ras-al-khaimah","رأس الخيمة"],["fujairah","الفجيرة"],["al-ain","العين"]];
       f.push(["المسافة من", '<span class="dist" data-km=\'' + esc(JSON.stringify(md.venue.distance_km)) + '\'><select class="emsel" aria-label="إمارتك">' + EM.map(function(e){ return '<option value="' + e[0] + '"' + (e[0] === "dubai" ? " selected" : "") + ">" + e[1] + "</option>"; }).join("") + '</select> <b class="num dk">' + Math.round(md.venue.distance_km.dubai) + '</b> كم <span class="muted small dt"></span></span>']); }
-    if (md.referee) f.push(["الحكم", '<span class="lat">' + esc(md.referee.name || md.referee) + "</span>"]);
+    if (md.referee) f.push(["الحكم", md.referee.id ? '<a class="lat" href="/r/' + md.referee.id + '/">' + esc(md.referee.name) + "</a>" : '<span class="lat">' + esc(md.referee.name || md.referee) + "</span>"]);
     if (md.attendance) f.push(["الحضور", '<span class="num">' + Number(md.attendance).toLocaleString("en-US") + "</span>"]);
     var tiles = "";
     if (md.prayer && md.prayer.clashes && md.prayer.clashes.length){
