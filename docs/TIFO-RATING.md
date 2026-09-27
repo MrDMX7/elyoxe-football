@@ -80,3 +80,13 @@ The model is slightly over-confident on the favourite at 0.5–0.8. A later vers
   - Best third-placed teams fill FotMob's `3BEF`-style bracket slots.
   - Knockout draws are settled 50/50.
   - The host (Saudi Arabia for both) gets home advantage.
+
+## Danger index (xG proxy for competitions without xG)
+
+- **Model:** `compute/danger.py`. It computes `xg_proxy = b0 + b1·shots on target + b2·big chances + b3·shots inside the box + b4·corners` per team and match.
+- **Fitting:** ordinary least squares against FotMob's own team xG on every stored match that has both. The model is refitted daily and published in `models/danger.json`.
+- **First fit (2026-09-27, 798 team-matches from the Saudi, Qatar, European and AFC ledgers):**
+  - intercept 0.040; shots on target 0.039; big chances 0.246; shots inside the box 0.081; corners −0.007
+  - R² against xG: **0.79**
+  - correlation with goals scored: proxy **0.586**, real xG 0.613
+- **Where it is used:** competitions with no source xG (the UAE Pro League) get `comp/{id}/xg.json` with `"proxy": true`, including the "fair table" (xPts and luck from the proxy).

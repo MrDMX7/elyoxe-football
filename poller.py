@@ -586,7 +586,9 @@ class Poller:
         self.store.put_json(f"comp/{cid}/referees.json", {**base, **SEASON.referees(L)}, cache="static")
         self.store.put_json(f"comp/{cid}/halftime.json", {**base, **SEASON.ht_table(L)}, cache="static")
         self.store.put_json(f"comp/{cid}/goal-bands.json", {**base, **SEASON.goal_bands(L)}, cache="static")
-        self.store.put_json(f"comp/{cid}/xg.json", {**base, **SEASON.xg_table(L)}, cache="static")
+        xt = SEASON.xg_table(L)
+        if xt.get("available"):        # no source xG: the analytics function writes the danger-index proxy table
+            self.store.put_json(f"comp/{cid}/xg.json", {**base, **xt, "proxy": False}, cache="static")
         sh = SEASON.shots(L)
         self.store.put_json(f"comp/{cid}/shots.json", {**base, **sh}, cache="static")
         try:
@@ -891,6 +893,7 @@ class Poller:
         steps = [
             ("history", 0, lambda: AN.history_step(self, limit=20)),
             ("records_book", 1440, self.records_books),
+            ("danger", 1440, lambda: AN.danger(self)),
             ("players", 0, self.player_tables_due),
             ("club_pages", 0, lambda: AN.club_pages(self)),
             ("coaches_fatigue", 0, lambda: AN.coaches_and_fatigue(self)),

@@ -10,6 +10,7 @@ from datetime import timedelta
 
 import config
 from compute import clubs as CL, extras as EX, facts as FA, history as HI, national as NA, players as PL
+from compute import danger as DG
 from compute import rating as R, season as SEASON, sim as SIM, tables as TB, tournament as TO
 from sources import schema as S
 from timeutil import iso, parse_utc
@@ -781,3 +782,29 @@ def records_book(p, cid):
         "hat_tricks": sorted(hat, key=lambda x: x["date"], reverse=True), "fastest_goals": fastest,
         "events_scope": f"hat-tricks and fastest goals: this season's stored match events ({p.ledger(cid).get('season')}); "
                         "results records: every season FotMob has"}, cache="static")
+
+
+# ------------------------------------------------------------------ danger index (xG proxy)
+def danger(p):
+    comps = [c["id"] for c in p.comps]
+    ledgers = {cid: p.ledger(cid)["matches"] for cid in comps}
+    model = DG.fit([L for L in ledgers.values()])
+    if not model:
+        p.store.fail("danger", "fewer than 200 team-matches with xG and stats in the ledgers yet")
+        return
+    p.aux("danger").clear()
+    p.aux("danger").update(model)
+    p.store.put_json("models/danger.json", {"generated": iso(p.now()), **model, "features": [f for f, _ in DG.FEATURES],
+                                            "method": DG.__doc__.strip()}, cache="static")
+    for cid, L in ledgers.items():
+        if not L or any(e.get("xg") for e in L.values()):
+            continue
+        prox = DG.with_proxy_xg(L, model)
+        xt = SEASON.xg_table(prox)
+        if xt.get("available"):
+            p.store.put_json(f"comp/{cid}/xg.json", {"comp": cid, "season": p.ledger(cid).get("season"),
+                                                     "generated": iso(p.now()), "matches_counted": len(L), **xt, "proxy": True,
+                                                     "proxy_note": "no source xG for this competition: xg_for/against are the "
+                                                                   "Tifo danger index (models/danger.json), fitted on leagues with xG"},
+                             cache="static")
+    p.store.ok("danger")

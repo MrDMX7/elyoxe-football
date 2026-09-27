@@ -152,3 +152,19 @@ def test_winprob_curve(fx):
     assert live[-1][0] == 30
     lh, la = W.rates((0.6, 0.25, 0.15))
     assert lh > la
+
+
+def test_danger_fit_recovers_linear_model():
+    from compute import danger as DG
+    L = {}
+    for i in range(150):
+        sot, bc, sib, co = i % 7, i % 3, (i % 11) + 2, i % 5
+        sot2, bc2, sib2, co2 = (i + 3) % 7, (i + 1) % 3, (i % 9) + 1, (i + 2) % 5
+        xg = lambda a, b, c, d: 0.05 + 0.04 * a + 0.25 * b + 0.08 * c  # noqa: E731
+        L[str(i)] = {"stats": {"ShotsOnTarget": [sot, sot2], "big_chance": [bc, bc2], "shots_inside_box": [sib, sib2],
+                               "corners": [co, co2], "expected_goals": [xg(sot, bc, sib, co), xg(sot2, bc2, sib2, co2)]},
+                     "score": {"home": bc, "away": bc2}}
+    m = DG.fit([L], min_rows=100)
+    assert m["r2_vs_xg"] > 0.99 and abs(m["coef"]["big_chances"] - 0.25) < 0.01
+    p = DG.with_proxy_xg({"x": {"stats": {k: v for k, v in L["5"]["stats"].items() if k != "expected_goals"}}}, m)
+    assert p["x"]["xg"]["home"] > 0
