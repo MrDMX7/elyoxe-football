@@ -185,6 +185,8 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   // 238, 327, 244: per-club files for the clubs in the analytics leagues
   const AN = new Set(); compData.forEach(({ x }) => { if (x["first-goal"] && x["first-goal"].teams) Object.keys(x["first-goal"].teams).forEach(k => AN.add(+k)); });
   const tfiles = await pool(tlist, 8, async id => AN.has(id) ? { rec:await get(`team/${id}/records.json`, 1), hist:await get(`team/${id}/history.json`, 1), cu:await get(`callups/${id}.json`, 1) } : {});
+  const TWINS = await get("arabs/twins.json", 1), months = [today.slice(0, 7), new Date(Date.parse(today.slice(0, 7) + "-01") - 864e5).toISOString().slice(0, 7)];
+  const tmonth = await pool(tlist, 8, async id => AN.has(id) ? Promise.all(months.map(m => get(`team/${id}/month/${m}.json`, 1))) : []);
   const xOf = (k, id) => { for (const { c, x } of compData) if (c.kind === "league" && x[k] && x[k].teams && x[k].teams[id]) return x[k]; return null; };
   let tcount = 0;
   const byTeam = new Map(); for (const m of matchSum.values()) for (const side of [m.home, m.away]) if (side && side.id){ if (!byTeam.has(side.id)) byTeam.set(side.id, { side, ms:[] }); byTeam.get(side.id).ms.push(m); }
@@ -209,6 +211,8 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     const acc = S.accounts(ACC[id]); if (acc) nums = S.sec("حسابات النادي الرسمية", "", acc) + nums;
     const ln = S.loans(t); if (ln) nums += S.sec("لاعبينه المعارين", "", ln);
     { const tf = tfiles[i] || {}, rc = S.teamRecords(tf.rec), hm = S.heatmap(tf.hist), cu = S.callups(tf.cu), xi = S.xiTeam(xOf("xi", id), id);
+      const tw = TWINS && TWINS.clubs && S.twins(TWINS.clubs[id]); if (tw) nums += S.sec("توأم فريقك", "أقرب الأندية في أسلوب اللعب", tw);
+      const ml = (tmonth[i] || []).filter(mo => mo && mo.results && mo.results.length); if (ml.length) nums = S.sec("تقرير الشهر", "", '<p class="tools">' + ml.map(mo => `<a class="btn" href="/t/${id}/month/${mo.month}/">${["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"][+mo.month.slice(5) - 1]}</a>`).join("") + "</p>") + nums;
       if (rc) nums += S.sec("سجل النادي", "من 2010", rc); if (hm) nums += S.sec("كل نتايجه موسم بموسم", "", hm); if (xi) nums += S.sec("التشكيلة المعتادة", "هالموسم", xi); if (cu) nums += S.sec("لاعبينه في المنتخبات", "", cu); }
     const tv2 = S.travel(t, t.fixtures); if (tv2) nums += S.sec("سافر مع فريقك", "مباريات آسيا برا الدولة", tv2);
     const co = S.coachesTeam(x538.coaches, id); if (co) nums += S.sec("مدربين النادي عبر التاريخ", "في الدوري", co);
@@ -233,6 +237,9 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     const html = page({ og:tog ? "t-" + id : null, path:`/t/${t.id}/`, page:"team", attrs:` data-id="${t.id}" data-name="${esc(t.name_ar || t.name)}"`, nav:t.id === 5789 ? "uae" : "", title:`${t.name_ar || t.name}: المباريات والنتايج واللاعبين | تيفو`, desc:`مواعيد مباريات ${t.name_ar || t.name} بتوقيت الإمارات، ونتايجه، وقائمة اللاعبين، وأرقامه، واشتراك تقويم يتحدّث بروحه.`, body });
     write(`t/${t.id}/index.html`, html); urls.push(`/t/${t.id}/`);
     if ((t.fixtures || []).length) write(`t/${t.id}/poster/index.html`, page({ path:`/t/${t.id}/poster/`, page:"poster", title:`جدول مباريات ${t.name_ar || t.name} للطباعة | تيفو`, desc:`جدول مباريات ${t.name_ar || t.name} للموسم كامل بتوقيت بلدك، جاهز للطباعة.`, body:S.poster(t) }));
+    (tmonth[i] || []).forEach(mo => { if (!mo || !mo.results || !mo.results.length) return; const [yy, mm] = mo.month.split("-").map(Number), mname = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"][mm - 1] + " " + yy;
+      write(`t/${t.id}/month/${mo.month}/index.html`, page({ path:`/t/${t.id}/month/${mo.month}/`, page:"poster", title:`${t.name_ar || t.name} في ${mname}: تقرير الشهر | تيفو`, desc:`نتايج ${t.name_ar || t.name} في ${mname}، وأحسن اللاعبين، والترتيب في بداية الشهر ونهايته.`, body:`<p class="crumbs"><a href="/t/${t.id}/">${R.tname(t)}</a></p><h1>${R.tname(t)} في ${mname}</h1>` + S.monthReport(mo) + '<p class="tools noprint"><button type="button" class="btn" onclick="print()">اطبعه</button></p>' }));
+      urls.push(`/t/${t.id}/month/${mo.month}/`); });
     if (t.id === 5789) write("uae/index.html", html.replace(`<link rel="canonical" href="${SITE}/t/5789/">`, `<link rel="canonical" href="${SITE}/uae/">`));
   });
 
@@ -240,6 +247,8 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   const pids = Object.keys(allPlayers);
   const uaeP = new Set(Object.keys((compX[538] && compX[538].players && compX[538].players.players) || {}));   // the pipeline writes player/{id}.json for the UAE league
   const pjs = await pool(pids, 8, id => uaeP.has(id) ? get(`player/${id}.json`, 1) : null);
+  const topP = new Set(); compData.forEach(({ stats }) => ["goals", "assists"].forEach(k => ((stats && stats.lists && stats.lists[k]) || []).slice(0, 30).forEach(r => r.player && topP.add(String(r.player.id)))));
+  const pcar = await pool(pids, 8, id => topP.has(id) ? get(`player/${id}/career.json`, 1) : null);
   let pcount = 0;
   pids.forEach((id, i) => {
     const ap = allPlayers[id] || {}, sv = k => ap.stats && ap.stats[k] ? ap.stats[k].value : null;
@@ -249,7 +258,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     const tt = { id:tm, name_ar:(S && teamsJson && teamsJson.teams[tm] && teamsJson.teams[tm].name_ar) || "" };
     const st = `<div class="pstats"><div><b>${p.goals ?? "—"}</b><span>أهداف</span></div><div><b>${p.assists ?? "—"}</b><span>صناعة</span></div><div><b>${p.minutes ?? "—"}</b><span>دقيقة</span></div><div><b>${p.rating != null ? Number(p.rating).toFixed(1) : "—"}</b><span>التقييم</span></div>${cl ? `<div><b>${cl.total}</b><span>نقاط جابها</span></div>` : ""}</div>`;
     const body = `<p class="crumbs"><a href="/t/${tm}/">${esc(tt.name_ar)}</a></p><h1 class="lat">${esc(p.name)}</h1><p class="season">${[p.position && `المركز <span class="lat">${esc(p.position.split(",")[0])}</span>`, p.number && `الرقم <span class="num">${esc(p.number)}</span>`, p.country && `<span class="flag">${esc(p.country)}</span>`].filter(Boolean).join("، ")}</p>` +
-      (card ? S.card(id, card).replace('class="tcard"', 'class="tcard big"') : "") + S.sec("موسمه", esc(p.season || ""), st) + (cx.similar ? (() => { const sm = S.similar(cx.similar, id); return sm ? S.sec("منو يلعب مثله؟", "", sm) : ""; })() : "") +
+      (card ? S.card(id, card).replace('class="tcard"', 'class="tcard big"') : "") + S.sec("موسمه", esc(p.season || ""), st) + (S.form(p.form) ? S.sec("فورمته", "آخر المباريات", S.form(p.form)) : "") + (S.career(pcar[i]) ? S.sec("مسيرته", "", S.career(pcar[i])) : "") + (cx.similar ? (() => { const sm = S.similar(cx.similar, id); return sm ? S.sec("منو يلعب مثله؟", "", sm) : ""; })() : "") +
       (cx.shots && cx.shots.available !== false && cx.shots.players && cx.shots.players[id] ? S.sec("خريطة تسديداته", "", S.shotmap(cx.shots.players[id])) : "") +
       (card ? `<p><a class="btn" href="/c/${(comps.find(cc => cc.id === (p.comp || 538)) || {}).key || "uae-pro-league"}/compare/?a=${id}">قارنه بلاعب ثاني</a></p>` : "");
     playerPages.add(String(id)); write(`p/${id}/index.html`, page({ path:`/p/${id}/`, page:"player", title:`${p.name}: أرقامه هالموسم | تيفو`, desc:`${p.name}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.`, body }));
@@ -334,11 +343,18 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   const refs = new Map(); compData.forEach(({ c, x }) => ((x.referees && x.referees.referees) || []).forEach(r => { if (!refs.has(r.id)) refs.set(r.id, Object.assign({ comp:c }, r)); }));
   for (const [rid, r] of refs){ write(`r/${rid}/index.html`, page({ path:`/r/${rid}/`, page:"ref", title:`الحكم ${r.name}: كروته وبلنتياته ومبارياته | تيفو`, desc:`سجل الحكم ${r.name} في ${r.comp.name_ar}: الإنذارات والطرد وضربات الجزاء بالمباراة، وكل مبارياته.`, body:`<p class="crumbs"><a href="/c/${r.comp.key}/#num">${esc(r.comp.name_ar)}</a></p><h1 class="lat">${esc(r.name)}</h1><p class="season">حكم${r.country ? ` <span class="flag">${esc(r.country)}</span>` : ""}</p>` + S.refPage(r, byIdM) })); urls.push(`/r/${rid}/`); }
   const coachRows = new Map(); compData.forEach(({ x }) => { const ct = x.coaches && x.coaches.teams; if (!ct) return; for (const [tid, t] of Object.entries(ct)){ (t.history || []).forEach(h => { const k = h.id || h.name; if (!coachRows.has(k)) coachRows.set(k, { name:h.name, rows:[] }); coachRows.get(k).rows.push(Object.assign({ team:+tid }, h)); }); if (t.current){ const k = t.current.id || t.current.name; if (!coachRows.has(k)) coachRows.set(k, { name:t.current.name, rows:[] }); coachRows.get(k).current = +tid; } } });
+  // 315/316: full careers (coaches/{id}.json) for every coach of the analytics leagues and Arab national teams, and coach-vs-coach records
+  const CIDX = await get("coaches/index.json", 1), CH2H = new Map();
+  if (CIDX && CIDX.coaches){ const cf = await pool(CIDX.coaches, 8, c => get(`coaches/${c.id}.json`, 1));
+    CIDX.coaches.forEach((c, i) => { const f = cf[i]; if (!f || !f.rows || !f.rows.length) return; const prev = coachRows.get(c.id) || coachRows.get(c.name); if (coachRows.has(c.name) && c.name !== c.id) coachRows.delete(c.name);
+      coachRows.set(c.id, { name:f.name, rows:f.rows.map(r => Object.assign({}, r)), current:f.current_team || (prev && prev.current) }); });
+    const hs = await pool(CIDX.h2h || [], 8, h => get(`coaches/h2h/${h.pair}.json`, 1));
+    hs.forEach(h => { if (!h || !h.coaches) return; const [a, b] = h.coaches; [[a, b], [b, a]].forEach(([me, op]) => { if (!CH2H.has(me)) CH2H.set(me, []); CH2H.get(me).push({ op, name:h.names[op], w:h.wins[me] || 0, d:h.wins.draws || 0, l:h.wins[op] || 0 }); }); }); }
   { const cj = {}; for (const [cid, co] of coachRows) if (co.rows.length) cj[cid] = { n:co.name, r:co.rows.map(r => [r.season, r.team, (teamsJson.teams[r.team] || {}).name_ar || "", r.won, r.drawn, r.lost]) };
     fs.writeFileSync(path.join(OUT, "assets/coaches.json"), JSON.stringify(cj));
     write("coach/compare/index.html", page({ path:"/coach/compare/", page:"coachcmp", title:"قارن بين مدربين | تيفو", desc:"قارن أي مدربين درّبوا في الدوري: المباريات والفوز ومعدل النقاط والأندية.", body:'<h1>قارن بين مدربين</h1><div class="cmpsel"><select id="ca" aria-label="المدرب الأول"></select><select id="cb" aria-label="المدرب الثاني"></select></div><div id="cout"></div>' })); urls.push("/coach/compare/"); }
   for (const [cid, co] of coachRows){ if (!co.rows.length) continue; co.rows.sort((a, b) => String(b.season).localeCompare(String(a.season)));
-    write(`coach/${cid}/index.html`, page({ path:`/coach/${cid}/`, page:"ref", title:`المدرب ${co.name}: مسيرته في الدوري | تيفو`, desc:`مسيرة المدرب ${co.name} في الدوري: الأندية والمواسم والفوز والتعادل والخسارة ومعدل النقاط.`, body:`<h1 class="lat">${esc(co.name)}</h1><p><a class="btn" href="/coach/compare/?a=${cid}">قارنه بمدرب ثاني</a></p>${co.current ? `<p class="season">يدرّب الحين <a href="/t/${co.current}/">${esc((teamsJson.teams[co.current] || {}).name_ar || "")}</a></p>` : ""}` + S.coachPage(co.name, co.rows) })); urls.push(`/coach/${cid}/`); }
+    write(`coach/${cid}/index.html`, page({ path:`/coach/${cid}/`, page:"ref", title:`المدرب ${co.name}: مسيرته التدريبية | تيفو`, desc:`مسيرة المدرب ${co.name}: الأندية والمواسم والفوز والتعادل والخسارة ومعدل النقاط.`, body:`<h1 class="lat">${esc(co.name)}</h1><p><a class="btn" href="/coach/compare/?a=${cid}">قارنه بمدرب ثاني</a></p>${co.current ? `<p class="season">يدرّب الحين <a href="/t/${co.current}/">${esc((teamsJson.teams[co.current] || {}).name_ar || "")}</a></p>` : ""}` + S.coachPage(co.name, co.rows) + (CH2H.has(cid) ? S.sec("ضد المدربين", "هالموسم", '<div class="tblwrap"><table class="st wrapn"><thead><tr><th style="text-align:start">المدرب</th><th>فوز</th><th>تعادل</th><th>خسارة</th></tr></thead><tbody>' + CH2H.get(cid).sort((a, b) => (b.w + b.d + b.l) - (a.w + a.d + a.l)).map(o => `<tr><td class="tm">${coachRows.has(o.op) ? `<a class="lat" href="/coach/${o.op}/">${esc(o.name || "")}</a>` : `<span class="lat">${esc(o.name || "")}</span>`}</td><td>${o.w}</td><td>${o.d}</td><td>${o.l}</td></tr>`).join("") + "</tbody></table></div>") : "") })); urls.push(`/coach/${cid}/`); }
   for (const { c, fx, x } of compData){ if (!fx || !fx.matches) continue; const rr = R.rounds(fx);
     for (const k of rr.order){ if (isNaN(parseFloat(k))) continue; const ms = rr.by[k], fin = ms.filter(m => m.status === "finished"), goals = fin.reduce((a, m) => a + (m.score ? m.score.home + m.score.away : 0), 0);
       const tor = x["team-of-round"] && x["team-of-round"].rounds && x["team-of-round"].rounds[k] ? S.teamOfRound({ rounds:{ [k]:x["team-of-round"].rounds[k] } }) : "";
@@ -407,7 +423,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
 
   // ---- Arab-world pages (build_arabs.cjs): national teams, Arabs abroad, derbies, clashes, streaks, guide, archive…
   const AW = await require("./build_arabs.cjs")({ get, pool, write, page, urls, R, S, esc, index, teamsJson, teamPages, playerPages, matchPages:new Set(mids), NAMES_AR, fs, path, OUT, CACHE, H2H, BC });
-  { const hf = path.join(OUT, "index.html"), hb = ["mow", "tonight", "streaks"].map(k => AW.home[k] || "").join(""); fs.writeFileSync(hf, fs.readFileSync(hf, "utf8").replace('<h2>البطولات</h2>', hb + (AW.home.days || "") + "<h2>البطولات</h2>")); }
+  { const hf = path.join(OUT, "index.html"), hb = ["brk", "mow", "tonight", "streaks"].map(k => AW.home[k] || "").join(""); fs.writeFileSync(hf, fs.readFileSync(hf, "utf8").replace('<h2>البطولات</h2>', hb + (AW.home.days || "") + "<h2>البطولات</h2>")); }
 
   // ---- search index (167): clubs, competitions, players, reference pages; loaded only when the visitor opens search
   { const items = []; const seen = new Set(); const add = (t, id, ar, la, u) => { const k = t + id; if (seen.has(k) || !(ar || la)) return; seen.add(k); items.push([t, ar || "", la || "", u]); };
