@@ -169,8 +169,8 @@
   };
   R.h2h = function(md){
     var h = md.h2h; if (!h || !h.summary) return '<p class="empty">ما في مواجهات سابقة مسجّلة.</p>';
-    var s = h.summary;
-    return '<div class="h2hsum"><div><b>' + s.home_wins + "</b>فوز " + R.tname(md.home) + "</div><div><b>" + s.draws + "</b>تعادل</div><div><b>" + s.away_wins + "</b>فوز " + R.tname(md.away) + "</div></div>" +
+    var s = h.summary, k = [md.home.id, md.away.id].sort(function(a, b){ return a - b; }).join("-");
+    return ((R.H2HK || (root && root.H2HK) || {})[k] ? '<p><a class="btn" href="/h2h/' + k + '/">كل مواجهاتهم</a></p>' : "") + '<div class="h2hsum"><div><b>' + s.home_wins + "</b>فوز " + R.tname(md.home) + "</div><div><b>" + s.draws + "</b>تعادل</div><div><b>" + s.away_wins + "</b>فوز " + R.tname(md.away) + "</div></div>" +
       (h.matches || []).slice(0, 10).map(function(m){ m.status = m.status || "finished"; return R.matchRow(m, {}); }).join("");
   };
   function band(t){ return '<span class="band" aria-hidden="true"><i style="background:' + R.col(t.id, 0) + '"></i><i style="background:' + R.col(t.id, 1) + '"></i></span>'; }

@@ -37,7 +37,7 @@ function page(o){
 <a href="/"${o.nav === "home" ? " aria-current" : ""}>اليوم</a><a href="/c/uae-pro-league/"${o.nav === "538" ? " aria-current" : ""}>دوري أدنوك</a><a href="/uae/"${o.nav === "uae" ? " aria-current" : ""}>المنتخب</a><a href="/c/gulf-cup/"${o.nav === "329" ? " aria-current" : ""}>كأس الخليج</a><a href="/competitions/"${o.nav === "comps" ? " aria-current" : ""}>البطولات</a></nav></div></header>
 <main class="wrap">${o.body}</main>
 <footer class="foot"><div class="wrap"><span>تيفو، من استوديو <a href="https://elyoxe.com/">Elyoxe</a>. كل المواعيد بتوقيت الإمارات.</span><span class="updated" id="updated"></span><span>البيانات من FotMob ورابطة المحترفين الإماراتية</span></div></footer>
-<script src="/assets/colors.__CV__.js"></script><script src="/assets/render.${ASSET_V}.js"></script>${o.page === "home" ? `<script src="/assets/stand.${ASSET_V}.js"></script>` : ""}<script src="/assets/app.${ASSET_V}.js"></script></body></html>`;
+<script src="/assets/colors.__CV__.js"></script><script src="/assets/render.${ASSET_V}.js"></script>${o.page === "home" ? `<script src="/assets/stand.${ASSET_V}.js"></script>` : ""}${o.page === "compare" ? `<script src="/assets/compare.${ASSET_V}.js"></script>` : ""}<script src="/assets/app.${ASSET_V}.js"></script></body></html>`;
 }
 const tabsHtml = (group, list) => `<div class="tabs" role="tablist" data-tabs="${group}">` + list.map((t, i) => `<button type="button" role="tab" data-t="${t[0]}" aria-selected="${i === 0}">${t[1]}</button>`).join("") + "</div>";
 const pane = (group, key, html, first) => `<section data-group="${group}" data-pane="${key}"${first ? "" : " hidden"}>${html}</section>`;
@@ -45,8 +45,8 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
 (async () => {
   const t0 = Date.now();
   fs.rmSync(OUT, { recursive:true, force:true }); fs.mkdirSync(path.join(OUT, "assets"), { recursive:true });
-  const css = fs.readFileSync(path.join(__dirname, "src/tifo.css"), "utf8"), rjs = fs.readFileSync(path.join(__dirname, "src/render.js"), "utf8"), ajs = fs.readFileSync(path.join(__dirname, "src/app.js"), "utf8"), sjs = fs.readFileSync(path.join(__dirname, "src/stand.js"), "utf8");
-  ASSET_V = hash(css + rjs + ajs + sjs);   // content-hashed file names: CloudFront's cache key ignores query strings
+  const css = fs.readFileSync(path.join(__dirname, "src/tifo.css"), "utf8"), rjs = fs.readFileSync(path.join(__dirname, "src/render.js"), "utf8"), ajs = fs.readFileSync(path.join(__dirname, "src/app.js"), "utf8"), sjs = fs.readFileSync(path.join(__dirname, "src/stand.js"), "utf8"), cmp = fs.readFileSync(path.join(__dirname, "src/compare.js"), "utf8");
+  ASSET_V = hash(css + rjs + ajs + sjs + cmp); fs.writeFileSync(path.join(OUT, `assets/compare.${ASSET_V}.js`), cmp);   // content-hashed file names: CloudFront's cache key ignores query strings
   fs.writeFileSync(path.join(OUT, `assets/tifo.${ASSET_V}.css`), css); fs.writeFileSync(path.join(OUT, `assets/render.${ASSET_V}.js`), rjs); fs.writeFileSync(path.join(OUT, `assets/app.${ASSET_V}.js`), ajs); fs.writeFileSync(path.join(OUT, `assets/stand.${ASSET_V}.js`), sjs);
   // the mark: a 3x3 tifo of cards (chalk, pulse, dune on night pitch)
   const cellsSvg = [["#F6F7F2","#10A04B","#B07A3B"],["#F6F7F2","#B07A3B","#10A04B"],["#10A04B","#B07A3B","#F6F7F2"]].map((row, y) => row.map((c, x) => `<rect x="${4 + x * 8.5}" y="${4 + y * 8.5}" width="7" height="7" fill="${c}"/>`).join("")).join("");
@@ -58,7 +58,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   const teamsJson = await get("teams.json"); S.setTeams(teamsJson && teamsJson.teams || {});
 
   // ---- 1. fetch: competitions (+ every analytics file the pipeline may have written), today, national
-  const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios"];
+  const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios", "shots", "fatigue", "coaches"];
   const compData = await pool(comps, 4, async c => {
     const [st, fx, stats] = await Promise.all([c.files && c.files.standings ? get(`comp/${c.id}/standings.json`) : null, get(`comp/${c.id}/fixtures.json`), get(`comp/${c.id}/stats.json`)]);
     const x = {}; await Promise.all(EXTRA.map(async k => { x[k] = await get(`comp/${c.id}/${k}.json`, 1); }));
@@ -66,7 +66,9 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   });
   const day = await get(`day/${today.replace(/-/g, "")}.json`) || { matches:[] };
   const [ratings, compare, fifa, qual, abroad, natRatings] = await Promise.all(["ratings/uae-clubs.json", "leagues/compare.json", "national/5789/fifa.json", "national/5789/qualifying.json", "national/uae-abroad.json", "ratings/national.json"].map(f => get(f, 1)));
-  const allPlayers = {}; compData.forEach(({ x }) => { if (x.players && x.players.players) Object.assign(allPlayers, x.players.players); if (x.cards && x.cards.players) for (const [id, c] of Object.entries(x.cards.players)) allPlayers[id] = Object.assign({ name:c.name, team:c.team }, allPlayers[id] || {}); });
+  const h2hIdx = await get("h2h/index.json", 1), h2hKeys = h2hIdx ? Object.keys(h2hIdx.pairs) : [];
+  const h2hData = await pool(h2hKeys, 8, k => get(`h2h/${k}.json`, 1)), H2H = {}; h2hKeys.forEach((k, i) => { if (h2hData[i]) H2H[k] = h2hData[i]; });
+  const allPlayers = {}; compData.forEach(({ c, x }) => { if (x.players && x.players.players) for (const [pid, pp] of Object.entries(x.players.players)) allPlayers[pid] = Object.assign({ comp:c.id }, pp); if (x.cards && x.cards.players) for (const [id, c] of Object.entries(x.cards.players)) allPlayers[id] = Object.assign({ name:c.name, team:c.team }, allPlayers[id] || {}); });
   S.setPlayers(allPlayers);
   for (const { st, fx } of compData){
     (fx && fx.matches || []).forEach(m => { matchSum.set(m.id, m); [m.home, m.away].forEach(t => { if (t && t.id) teamIds.add(t.id); }); });
@@ -85,7 +87,8 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   });
   try { require("child_process").execFileSync("python3", [path.join(__dirname, "logo_colors.py")], { stdio:"ignore" }); } catch (e){ console.error("logo_colors.py failed; neutral colours"); }
   let colors = {}; try { colors = JSON.parse(fs.readFileSync(path.join(CACHE, "colors.json"), "utf8")); } catch (e){}
-  R.setColors(colors); const cjs = "window.TC=" + JSON.stringify(colors) + ";"; COLOR_V = hash(cjs); fs.writeFileSync(path.join(OUT, `assets/colors.${COLOR_V}.js`), cjs);
+  R.setColors(colors); R.H2HK = {}; Object.keys(H2H).forEach(k => { R.H2HK[k] = 1; });
+  const cjs = "window.TC=" + JSON.stringify(colors) + ";window.H2HK=" + JSON.stringify(R.H2HK) + ";"; COLOR_V = hash(cjs); fs.writeFileSync(path.join(OUT, `assets/colors.${COLOR_V}.js`), cjs);
 
   // ---- 3. competition pages
   const factsByMatch = {}, probsByMatch = {}, compX = {};
@@ -99,18 +102,21 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     const vars = has.table && !st.composite ? S.tables(st, x.halftime, x.xg) : [];
     const tablePane = has.table ? (vars.length ? `<div class="tabs" data-tabs="tv"><button type="button" data-t="all" aria-selected="true">الكل</button>` + vars.map(v => `<button type="button" data-t="${v[0]}" aria-selected="false">${v[1]}</button>`).join("") + "</div>" + pane("tv", "all", `<div id="table">${R.standings(st)}</div>`, true) + vars.map(v => pane("tv", v[0], v[2])).join("") : `<div id="table">${R.standings(st)}</div>`) + (x.bump ? S.sec("رحلة الموسم", "", S.bump(x.bump)) : "") : "";
     // predictions (93, 20, 136)
-    const pred = [x.watch && fx ? S.sec("أحلى مباريات الجولة الياية", "", S.watch(x.watch, fx)) : "", x.sim && x.sim.teams ? S.sec("توقعات آخر الموسم", "", S.sim(x.sim, st)) : "", st && st.magic ? S.sec("كم يحتاج فريقك؟", "", S.magic(st)) : "", x["tournament-sim"] ? S.sec("من بيفوز بالبطولة؟", "", S.tsim(x["tournament-sim"])) : ""].join("");
+    const pred = [x.watch && fx ? S.sec("أحلى مباريات الجولة الياية", "", S.watch(x.watch, fx)) : "", S.whatif(fx, st) ? S.sec("شو لو؟", "", S.whatif(fx, st)) : "", x.sim && x.sim.teams ? S.sec("توقعات آخر الموسم", "", S.sim(x.sim, st)) : "", st && st.magic ? S.sec("كم يحتاج فريقك؟", "", S.magic(st)) : "", x["tournament-sim"] ? S.sec("من بيفوز بالبطولة؟", "", S.tsim(x["tournament-sim"])) : ""].join("");
     // the numbers (137, 135, 46, 124, 119, 129, 139, 52, 37, 142, 143, 96, 138, 141)
     const num = [
       ["cards", "بطاقات تيفو", S.cards(x.cards, 12)], ["clutch", "مين الحاسم؟", S.clutch(x.clutch)], ["tor", "تشكيلة الجولة", S.teamOfRound(x["team-of-round"])],
       ["foreign", "أفضل محترف أجنبي", S.foreigners(x.foreigners)], ["improved", "الأكثر تطوّر", S.improved(x.improved)], ["young", "المواهب الإماراتية تحت 23", S.young(x["young-uae"])],
       ["clock", "ساعة الأهداف", S.clock(x["minute-clock"])], ["late", "ملوك الدقايق الأخيرة", S.late(x["goal-bands"])],
       ["pressure", "ترمومتر المدربين", S.pressure(x.pressure)], ["style", "بصمة كل فريق", S.style(x.style)], ["fortress", "حصون الملاعب", S.fortress(x.fortress)],
+      ["fatigue", "مؤشر الإرهاق", S.fatigue(x.fatigue)], ["coaches", "أنجح المدربين في التاريخ", S.coachesLeague(x.coaches)],
       ["refs", "الحكام", S.referees(x.referees)], ["ages", "أعمار التشكيلات", S.ages(x["lineup-ages"])], ["rot", "مؤشر التدوير", S.rotation(x.rotation)],
       ["rating", "تصنيف تيفو للأندية", c.id === 538 ? S.ratingTable(ratings) : ""], ["world", "الدوري الإماراتي ضد العالم", c.id === 538 ? S.compare(compare, 538) : ""],
     ].filter(v => v[2]);
-    const numPane = num.length ? `<nav class="chips secnav">` + num.map(v => `<a href="#n-${v[0]}">${v[1]}</a>`).join("") + "</nav>" + num.map(v => S.sec(v[1], "", v[2], "n-" + v[0])).join("") : "";
-    const hist = (x.alltime ? S.sec("تاريخ الدوري", "من 1973", S.alltime(x.alltime)) : "") + (x.records && x.records.chases && x.records.chases.length ? S.sec("أرقام قياسية على المحك", "", S.records(x.records)) : "");
+    const cmpLink = x.cards ? `<p><a class="btn" href="/c/${c.key}/compare/">قارن بين لاعبين أو فريقين</a></p>` : "";
+    const numPane = num.length ? cmpLink + `<nav class="chips secnav">` + num.map(v => `<a href="#n-${v[0]}">${v[1]}</a>`).join("") + "</nav>" + num.map(v => S.sec(v[1], "", v[2], "n-" + v[0])).join("") : "";
+    const derb = c.id === 538 ? S.derbyList(h2hIdx, H2H) : "";
+    const hist = (x.alltime ? S.sec("تاريخ الدوري", "من 1973", S.alltime(x.alltime)) : "") + (derb ? S.sec("سجل المواجهات بين الأندية", "", derb) : "") + (x.records && x.records.chases && x.records.chases.length ? S.sec("أرقام قياسية على المحك", "", S.records(x.records)) : "");
     const tl = [has.table && ["table", "الترتيب"], ["fixtures", "المباريات"], pred && ["pred", "التوقعات"], numPane && ["num", "الأرقام"], has.stats && ["goals", "الهدافين"], has.stats && ["assists", "صناع الأهداف"], hist && ["hist", "التاريخ"]].filter(Boolean);
     const body = `<p class="crumbs"><a href="/competitions/">البطولات</a></p><h1>${esc(c.name_ar)}</h1><p class="season">الموسم <span class="num">${esc(c.season || "")}</span></p>${c.dormant ? '<p class="note">البطولة متوقفة أو خلصت هالموسم. هذي آخر نتايجها.</p>' : ""}` + tabsHtml("c", tl) +
       (has.table ? pane("c", "table", tablePane, true) : "") + pane("c", "fixtures", `<div id="rounds">${rounds || '<p class="empty">ما في مباريات منشورة.</p>'}</div>`, !has.table) +
@@ -118,6 +124,17 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
       (has.stats ? pane("c", "goals", `<div id="goals">${R.leaders(stats, "goals")}</div>`) + pane("c", "assists", `<div id="assists">${R.leaders(stats, "assists")}</div>`) : "") + (hist ? pane("c", "hist", hist) : "");
     write(`c/${c.key}/index.html`, page({ path:`/c/${c.key}/`, page:"comp", attrs:` data-comp="${c.id}"`, nav:String(c.id), title:`${c.name_ar}: الترتيب والمباريات والتوقعات ${c.season || ""} | تيفو`, desc:`ترتيب ${c.name_ar} ومواعيد المباريات بتوقيت الإمارات والنتايج المباشرة، وتوقعات آخر الموسم، والهدافين وبطاقات اللاعبين والأرقام.`, body }));
     urls.push(`/c/${c.key}/`);
+    if (x.cards){
+      write(`c/${c.key}/compare/index.html`, page({ path:`/c/${c.key}/compare/`, page:"compare", attrs:` data-comp="${c.id}"`, nav:String(c.id), title:`قارن بين لاعبين أو فريقين في ${c.name_ar} | تيفو`, desc:`قارن أي لاعبين في ${c.name_ar} على رادار واحد وأرقامهم في كل 90 دقيقة، أو قارن بين فريقين.`,
+        body:`<p class="crumbs"><a href="/c/${c.key}/">${esc(c.name_ar)}</a></p><h1>قارن</h1>` + tabsHtml("k", [["players", "لاعبين"], ["clubs", "فريقين"]]) + pane("k", "players", `<div class="cmpsel"><select id="pa" aria-label="اللاعب الأول"></select><select id="pb" aria-label="اللاعب الثاني"></select></div><div id="pout"><p class="empty">نحمّل الأرقام…</p></div>`, true) + pane("k", "clubs", `<div class="cmpsel"><select id="ta" aria-label="الفريق الأول"></select><select id="tb" aria-label="الفريق الثاني"></select></div><div id="tout"></div>`) }));
+      urls.push(`/c/${c.key}/compare/`);
+    }
+  }
+  // derby / head-to-head pages (38)
+  for (const [k, h] of Object.entries(H2H)){
+    const [a, b] = k.split("-"), na = (teamsJson.teams[a] || {}).name_ar || a, nb = (teamsJson.teams[b] || {}).name_ar || b;
+    write(`h2h/${k}/index.html`, page({ path:`/h2h/${k}/`, page:"h2h", title:`${na} و${nb}: كل المواجهات | تيفو`, desc:`سجل مواجهات ${na} و${nb}: كم فاز كل فريق وكم تعادلوا، وكل النتايج.`, body:`<p class="crumbs"><a href="/c/uae-pro-league/#hist">تاريخ الدوري</a></p><h1>${esc(na)} و${esc(nb)}</h1>` + S.h2hPage(h) }));
+    urls.push(`/h2h/${k}/`);
   }
 
   // ---- 4. home
@@ -149,6 +166,8 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     if (x538.pressure && x538.pressure.teams && x538.pressure.teams[id]){ const pr = { teams:{} }; pr.teams[id] = x538.pressure.teams[id]; nums += S.sec("الضغط على المدرب", "", S.pressure(pr)); }
     const tc = x538.cards ? S.cards(x538.cards, 11, c => c.team === id) : ""; if (tc) nums += S.sec("بطاقات تيفو للاعبين", "", tc);
     if (x538.clutch && x538.clutch.players){ const cl = S.clutch({ players:x538.clutch.players.filter(p => p.team === id) }); if (cl) nums += S.sec("مين الحاسم في الفريق؟", "", cl); }
+    const ln = S.loans(t); if (ln) nums += S.sec("لاعبينه المعارين", "", ln);
+    const co = S.coachesTeam(x538.coaches, id); if (co) nums += S.sec("مدربين النادي عبر التاريخ", "في الدوري", co);
     if (x538.fortress && x538.fortress.stadiums){ const fs2 = x538.fortress.stadiums.filter(s => s.team === id); if (fs2.length) nums += S.sec("حصن الملعب", "", S.fortress({ since:x538.fortress.since, stadiums:fs2 })); }
     // national team (144, 145, 59, 39)
     if (id === 5789){
@@ -177,13 +196,15 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   let pcount = 0;
   pids.forEach((id, i) => {
     const ap = allPlayers[id] || {}, sv = k => ap.stats && ap.stats[k] ? ap.stats[k].value : null;
-    const p = pjs[i] || { name:ap.name, team:ap.team, minutes:ap.minutes, goals:sv("goals"), assists:sv("goal_assist"), rating:sv("rating") }; if (!p || !p.name) return; pcount++;
+    const p = pjs[i] || { name:ap.name, team:ap.team, comp:ap.comp, minutes:ap.minutes, goals:sv("goals"), assists:sv("goal_assist"), rating:sv("rating") }; if (!p || !p.name) return; pcount++;
     const tm = p.team || allPlayers[id].team, cx = compX[p.comp || 538] || x538, card = cx.cards && cx.cards.players && cx.cards.players[id];
     const cl = cx.clutch && cx.clutch.players && cx.clutch.players.find(c => String(c.id) === id);
     const tt = { id:tm, name_ar:(S && teamsJson && teamsJson.teams[tm] && teamsJson.teams[tm].name_ar) || "" };
     const st = `<div class="pstats"><div><b>${p.goals ?? "—"}</b><span>أهداف</span></div><div><b>${p.assists ?? "—"}</b><span>صناعة</span></div><div><b>${p.minutes ?? "—"}</b><span>دقيقة</span></div><div><b>${p.rating != null ? Number(p.rating).toFixed(1) : "—"}</b><span>التقييم</span></div>${cl ? `<div><b>${cl.total}</b><span>نقاط جابها</span></div>` : ""}</div>`;
     const body = `<p class="crumbs"><a href="/t/${tm}/">${esc(tt.name_ar)}</a></p><h1 class="lat">${esc(p.name)}</h1><p class="season">${[p.position && `المركز <span class="lat">${esc(p.position.split(",")[0])}</span>`, p.number && `الرقم <span class="num">${esc(p.number)}</span>`, p.country && `<span class="flag">${esc(p.country)}</span>`].filter(Boolean).join("، ")}</p>` +
-      (card ? S.card(id, card).replace('class="tcard"', 'class="tcard big"') : "") + S.sec("موسمه", esc(p.season || ""), st) + (cx.similar ? (() => { const sm = S.similar(cx.similar, id); return sm ? S.sec("مين يلعب مثله؟", "", sm) : ""; })() : "");
+      (card ? S.card(id, card).replace('class="tcard"', 'class="tcard big"') : "") + S.sec("موسمه", esc(p.season || ""), st) + (cx.similar ? (() => { const sm = S.similar(cx.similar, id); return sm ? S.sec("مين يلعب مثله؟", "", sm) : ""; })() : "") +
+      (cx.shots && cx.shots.available !== false && cx.shots.players && cx.shots.players[id] ? S.sec("خريطة تسديداته", "", S.shotmap(cx.shots.players[id])) : "") +
+      (card ? `<p><a class="btn" href="/c/${(comps.find(cc => cc.id === (p.comp || 538)) || {}).key || "uae-pro-league"}/compare/?a=${id}">قارنه بلاعب ثاني</a></p>` : "");
     write(`p/${id}/index.html`, page({ path:`/p/${id}/`, page:"player", title:`${p.name}: أرقامه هالموسم | تيفو`, desc:`${p.name}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.`, body }));
     urls.push(`/p/${id}/`);
   });
@@ -196,7 +217,8 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
   for (const id of mids){
     const md = D.get(id) || matchSum.get(id), sum = matchSum.get(id), ttl = `${R.tname(md.home)} ${md.score ? md.score.home + "-" + md.score.away : "ضد"} ${R.tname(md.away)}`;
     const probs = md.status === "scheduled" ? (md.probs || sum.probs) : null, facts = md.status === "scheduled" ? factsByMatch[id] : null;
-    const pre = (probs ? S.probs(probs, md) : "") + (facts && facts.length ? S.sec("قبل المباراة", "", S.matchFacts(facts)) : "");
+    const fa = md.status === "scheduled" && md.comp === 538 && x538.fatigue ? S.fatigue(x538.fatigue, [md.home.id, md.away.id]) : "";
+    const pre = (probs ? S.probs(probs, md) : "") + (fa ? S.sec("ضغط المباريات", "", fa) : "") + (facts && facts.length ? S.sec("قبل المباراة", "", S.matchFacts(facts)) : "");
     const body = `<div id="mh">${R.matchHead(md)}</div><div id="facts">${R.matchFacts(md, index)}</div>${pre}` +
       tabsHtml("m", [["events", "الأحداث"], ["lineups", "التشكيلة"], ["stats", "الإحصائيات"], ["h2h", "المواجهات"]]) +
       pane("m", "events", `<div id="events">${R.events(md)}</div>`, true) + pane("m", "lineups", `<div id="lineups">${R.lineups(md)}</div>`) + pane("m", "stats", `<div id="stats">${R.stats(md)}</div>`) + pane("m", "h2h", `<div id="h2h">${R.h2h(md)}</div>`);
