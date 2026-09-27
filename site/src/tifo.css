@@ -385,3 +385,8 @@ body[data-page="tv"] img.logo{inline-size:2.2rem;block-size:2.2rem}
 /* studio (152) */
 .studio canvas{inline-size:100%;block-size:auto;display:block;border:2px solid var(--ink)}
 .studio .cmpsel{grid-template-columns:1fr 2fr}
+/* 3D lineup pitch (103) */
+.p3d{position:relative;margin-block:.6rem;background:var(--night)}
+.p3d canvas{display:block;inline-size:100%}
+.p3tip{position:absolute;inset-block-start:.6rem;inset-inline-start:.6rem;background:var(--chalk);color:var(--ink);border:2px solid var(--ink);padding:.35rem .6rem;font-size:.85rem;z-index:2;max-inline-size:70%}
+.p3tip b{font-family:var(--digits);font-size:1.1rem}

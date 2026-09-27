@@ -13,11 +13,16 @@ BUCKET=$(out Bucket); DIST=$(out DistributionId); DOM=$(out DistributionDomain)
 ALIASES=$(aws cloudfront get-distribution-config --id "$DIST" --query "DistributionConfig.Aliases.Quantity" --output text)
 FLAG=--preview; [ "$ALIASES" != "0" ] && FLAG=""
 node build.cjs $FLAG
+# guard: a flaky fetch can yield a partial build, and `sync --delete` would then wipe live pages. Refuse a build that
+# lost more than 15% of the last published page count.
+NOW=$(cat out/.pages 2>/dev/null || echo 0); LAST=$(cat cache/last_pages 2>/dev/null || echo 0)
+if [ "$LAST" -gt 0 ] && [ "$NOW" -lt $((LAST * 85 / 100)) ]; then echo "partial build: $NOW pages vs $LAST last time; not publishing" >&2; exit 7; fi
 # assets are content-hashed -> 1 year; logos 7 days; pages 60 s (live data comes from /v1 anyway)
 aws s3 sync out/assets "s3://$BUCKET/assets" --region $REGION --only-show-errors --cache-control "public,max-age=31536000,immutable"
 aws s3 sync out/logo "s3://$BUCKET/logo" --region $REGION --only-show-errors --cache-control "public,max-age=604800"
 sync_pages(){ aws s3 sync out "s3://$BUCKET" --region $REGION --only-show-errors --delete --exclude "assets/*" --exclude "logo/*" --cache-control "public,max-age=60"; }
 sync_pages || { echo "sync hiccup; retrying" >&2; sleep 5; sync_pages; }   # transient S3 stream errors on a few thousand small files
+echo "$NOW" > cache/last_pages
 aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/*" --query Invalidation.Id --output text >/dev/null
 for p in / /c/uae-pro-league/ /v1/index.json; do
   code=$(curl -s -o /dev/null -w '%{http_code}' --compressed "https://$DOM$p"); echo "$code https://$DOM$p"
