@@ -167,7 +167,7 @@ def grammar(t, nations=()):
 def emirati(t):
     if not isinstance(t, str): return t
     for a, b in LEX["phrases"].items(): t = t.replace(a, b)
-    for a, b in list(LEX["words"].items()) + list(FEM.items()) + [("مين", "منو"), ("كذا", "جذيه"), ("يرى", "يشوف"), ("أرى", "أشوف"), ("نرى", "نشوف"), ("بتقام", "بتستوي"), ("تقام", "تستوي"), ("يقام", "يستوي"), ("بيقام", "بيستوي")]:
+    for a, b in [(a, b) for a, b in list(LEX["words"].items()) + list(FEM.items()) if a not in ALLOWED] + [("مين", "منو"), ("كذا", "جذيه"), ("يرى", "يشوف"), ("أرى", "أشوف"), ("نرى", "نشوف"), ("بتقام", "بتستوي"), ("تقام", "تستوي"), ("يقام", "يستوي"), ("بيقام", "بيستوي")]:
         t = re.sub(r"(?<!\w)" + re.escape(a) + r"(?!\w)", b, t)
     return grammar(re.sub("[ً-ٍ]", "", t))
 def deep(x, nations=()):
