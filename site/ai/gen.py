@@ -65,7 +65,8 @@ def _provider():
         try: v = open(os.path.join(HERE, "provider.txt")).read().strip()
         except OSError: v = ""
     return v if v.split(":")[0] in ("claude", "gemini") else "gemini"
-PROVIDER = _provider();   # "claude", "claude:haiku", "claude:sonnet" or "gemini" CLAUDE_FAILS = [0]; CLAUDE_STOPPED = []; CALLS = []   # CALLS: (provider, seconds) per call, for timing reports
+PROVIDER = _provider()   # "claude", "claude:haiku", "claude:sonnet" or "gemini"
+CLAUDE_FAILS = [0]; CLAUDE_STOPPED = []; CALLS = []   # CALLS: (provider, seconds) per call, for timing reports
 def _jschema(g):   # the Gemini schema dialect (OBJECT/STRING…) as JSON Schema
     if not isinstance(g, dict): return g
     o = {k: _jschema(v) for k, v in g.items() if k != "type"}
@@ -504,6 +505,7 @@ def do_why(md):
     out = gemini(WHY_SYS, ctx, WHY_SCHEMA, temp=0.3, tokens=4000)
     if not out: return "fail"
     lines = [fix(grammar(emirati(l), nations(md["home"], md["away"]))) for l in out["lines"]]
+    for l in [l for l in lines if ZERO.search(l)]: print(f"why {md['id']}: zero-count line dropped: {l[:80]}", file=sys.stderr)
     lines = [l for l in lines if not ZERO.search(l)]
     bad = next((r for r in (check_result(l, md) for l in lines) if r), None)
     win = ctx["result"]["winner"] and ctx["result"]["winner"]["team"]
@@ -548,7 +550,9 @@ def do_quick(m, table):
     if cached("quick", str(m["id"]), sig): return "cached"
     out = gemini(QUICK_SYS, ctx, QUICK_SCHEMA, temp=0.3, tokens=4000)
     if not out: return "fail"
-    qlines = keep_lines([x for x in (fix(grammar(emirati(l), nations(m["home"], m["away"]))) for l in out["lines"]) if not ZERO.search(x)], table_rows(table), 4, f"quick {m['id']}")
+    qall = [fix(grammar(emirati(l), nations(m["home"], m["away"]))) for l in out["lines"]]
+    for x in [x for x in qall if ZERO.search(x)]: print(f"quick {m['id']}: zero-count line dropped: {x[:80]}", file=sys.stderr)
+    qlines = keep_lines([x for x in qall if not ZERO.search(x)], table_rows(table), 4, f"quick {m['id']}")
     if not qlines: return "dropped"
     save("quick", str(m["id"]), {"id": m["id"], "comp": m.get("comp"), "home": m["home"]["id"], "away": m["away"]["id"], "kickoff_utc": m.get("kickoff_utc"), "lines": qlines, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
 
