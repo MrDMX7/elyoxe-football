@@ -143,7 +143,7 @@ else if (cmd === "gate"){
   const OLD = path.resolve(SITE, arg("--old", "out_base")), NEW = path.resolve(SITE, arg("--new", "out")), N = +arg("--n", "20"), only = arg("--only", "");
   const MAP = JSON.parse(fs.readFileSync(path.join(__dirname, "placement.json"), "utf8")), norm = s => clean(String(s)).replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
   // player names moved to Arabic (names/players_ar.json): a Latin label found as its Arabic form counts as kept
-  const LAT = {}; try { for (const v of Object.values(JSON.parse(fs.readFileSync(path.join(SITE, "../names/players_ar.json"), "utf8")))) if (v.latin && v.ar) (LAT[v.latin] = LAT[v.latin] || []).push(v.ar); } catch (e){}
+  const LAT = {}; for (const nf of ["players_ar.json", "coaches_ar.json"]) try { for (const v of Object.values(JSON.parse(fs.readFileSync(path.join(SITE, "../names/" + nf), "utf8")))) if (v.latin && v.ar) (LAT[v.latin] = LAT[v.latin] || []).push(v.ar); } catch (e){}
   (MAP.rename = MAP.rename || {}); for (const [l, a] of Object.entries(LAT)) MAP.rename[l] = (MAP.rename[l] || []).concat(a);
   const byT = {}; for (const p of listPages(OLD)){ const k = tkey(p); if (!k || (only && !only.split(",").includes(k))) continue; if (fs.existsSync(pageFile(NEW, p))) (byT[k] = byT[k] || []).push(p); }
   const res = {}; let bad = 0;
