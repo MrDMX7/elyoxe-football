@@ -20,6 +20,7 @@
   R.arNames = function(md){
     if (!md || md._arn) return md; md._arn = 1;
     if (md.venue && !md.venue.name_ar && PN.venue) md.venue.name_ar = PN.venue;
+    if (md.referee && PN.ref && md.referee.name !== PN.ref){ md.referee.name_en = md.referee.name; md.referee.name = PN.ref; }
     (md.events || []).forEach(function(e){ ar(e.player); ar(e.assist); ar(e.player_out); });
     var L = md.lineups; if (L) ["home", "away"].forEach(function(s){ if (!L[s]) return; (L[s].starters || []).concat(L[s].subs || [], L[s].unavailable || [], L[s].coach ? [L[s].coach] : []).forEach(ar); });
     return md;
@@ -35,6 +36,10 @@
   function evIcon(t){ if (t === "yellow") return '<i class="ico yellow"></i>'; if (t === "red" || t === "second_yellow") return '<i class="ico red"></i>'; if (/goal/.test(t)) return '<i class="ico goal"></i>'; if (t === "missed_penalty") return '<i class="ico miss"></i>'; return '<i class="ico sub"></i>'; }
   function sc(s){ return s.home + " - " + s.away; }
   function nm(p){ return p ? '<span class="lat">' + esc(p.name) + "</span>" : ""; }
+  // the source sends no substitutions for some competitions (Gulf Cup): say so in one quiet line instead of implying none were made
+  function noSubs(md){ var ce = md.coverage_events; if (ce && ce.subs === false) return true; if (ce && ce.subs === true) return false;
+    var mn = parseInt(md.minute, 10) || 0, late = md.status === "finished" || (R.isLive(md) && mn >= 60);
+    return late && md.lineups && md.lineups.home && !(md.events || []).some(function(e){ return e.type === "sub"; }); }
   R.events = function(md){
     R.arNames(md);
     var ev = md.events || []; if (!ev.length) return '<p class="empty">' + (md.status === "scheduled" ? "المباراة ما بدت." : "ما في أحداث مسجّلة.") + "</p>";
@@ -49,8 +54,7 @@
       var body, team, mn;
       if (r.sub){
         team = r.team; mn = '<bdi dir="ltr">' + esc(r.minute) + (r.added ? "+" + esc(r.added) : "") + "'</bdi>";
-        body = '<span class="who">' + evIcon("sub") + '<span class="kind">' + (r.list.length > 1 ? r.list.length + " تبديلات" : "تبديل") + "</span></span>" +
-          '<span class="sub subs"><span class="in">دخل ' + r.list.map(function(x){ return nm(x.player); }).join("، ") + '</span><span class="out">طلع ' + r.list.map(function(x){ return nm(x.player_out); }).join("، ") + "</span></span>";
+        body = '<span class="sub subs"><span class="in"><i class="arr up" aria-label="دخل">↑</i>' + r.list.map(function(x){ return nm(x.player); }).join("، ") + '</span><span class="out"><i class="arr dn" aria-label="طلع">↓</i>' + r.list.map(function(x){ return nm(x.player_out); }).join("، ") + "</span></span>";
       } else {
         team = e.team; mn = '<bdi dir="ltr">' + esc(e.minute) + (e.added ? "+" + esc(e.added) : "") + "'</bdi>";
         var extra = e.assist ? '<span class="sub">صناعة ' + nm(e.assist) + "</span>" : "";
@@ -58,7 +62,7 @@
       }
       var k = e && /goal/.test(e.type) ? " g" : "";
       return team === "home" ? '<li class="' + k + '"><span class="h">' + body + '</span><span class="mn">' + mn + "</span><span></span></li>" : '<li class="' + k + '"><span></span><span class="mn">' + mn + "</span><span>" + body + "</span></li>";
-    }).join("") + '</ul><p class="src"><a href="/laws/">ليش ألغى الحكم هدف أو صفّر بلنتي؟ قانون الكورة بالإماراتي</a></p>';
+    }).join("") + '</ul>' + (noSubs(md) ? '<p class="na">التبديلات ما وصلتنا من المصدر لهالمباراة</p>' : "") + '<p class="src"><a href="/laws/">ليش ألغى الحكم هدف أو صفّر بلنتي؟ قانون الكورة بالإماراتي</a></p>';
   };
 
   // ---- rail card: a match as a key-art card (club colour bands on the outer edges)
@@ -107,6 +111,20 @@
     return '<p class="hk">' + esc(cn) + (m.stage && /Gr(ou)?p/i.test(m.stage) ? "، " + esc(R.stageAr(m.stage)) : "") + "</p>" +
       '<div class="hl"><a class="htm h" href="' + R.nx("/t/" + m.home.id + "/") + '">' + R.logo(m.home, "xl") + "<span>" + R.tname(m.home) + '</span></a><a class="hsc' + (live ? " live" : "") + '" href="' + R.nx("/m/" + m.id + "/") + '">' + mid + '</a><a class="htm a" href="' + R.nx("/t/" + m.away.id + "/") + '">' + R.logo(m.away, "xl") + "<span>" + R.tname(m.away) + "</span></a></div>";
   };
+  // 397: club names the feed has no Arabic for (names/clubs_ar.json via window.TAR)
+  var TAR = (root && root.TAR) || {}; R.setClubNames = function(m){ TAR = m || {}; };
+  var tname0 = R.tname; R.tname = function(t){ return t && !t.name_ar && TAR[t.id] ? esc(TAR[t.id]) : tname0(t); };
+  // 391: when «ليش هالنتيجة؟» is on the page, the catch-up keeps only what it doesn't say (red cards, a missed penalty, a comeback)
+  var catch0 = R.catchup; R.catchup = function(md){ var h = catch0.apply(R, arguments); if (!R._hasWhy || !h) return h;
+    var keep = (h.match(/<p>[^<]*<\/p>/g) || []).filter(function(p){ return /^<p>(طرد|بلنتي ضايع|ريمونتادا)/.test(p); });
+    return keep.length ? '<div class="catchup mini">' + keep.join("") + "</div>" : ""; };
+  // 392: the event squares leave the hero (they moved to التحليل as «خط المباراة»); 400: the score in scoreboard cells
+  var cells = function(t){ return String(t).replace(/(\d)/g, '<i class="cell">$1</i>'); };
+  var head0 = R.matchHead; R.matchHead = function(md){ var h = head0.apply(R, arguments).replace(/<div class="timeline">[\s\S]*$/, "");
+    return h.replace(/(<div class="sc"><span class="dg">)([^<]*)(<\/span>)/, function(_, a, t, b){ return a + cells(t) + b; }); };
+  var hl0 = R.heroLine; R.heroLine = function(){ return hl0.apply(R, arguments).replace(/(<b class="dg big">)([^<]*)(<\/b>)/, function(_, a, t, b){ return a + cells(t) + b; }); };
+  // 395: zones as a thin coloured edge on the row, not a filled square behind the rank
+  var st0 = R.standings; R.standings = function(){ return st0.apply(R, arguments).replace(/<td class="rk"><span style="background:([^;"]+);color:[^"]*">/g, '<td class="rk z" style="--z:$1"><span>'); };
   if (typeof module !== "undefined" && module.exports) module.exports = R;
   else {
     // app.js drives the home hero through R.featured + R.standCap + TifoStand; v3 swaps in its own pick and title treatment

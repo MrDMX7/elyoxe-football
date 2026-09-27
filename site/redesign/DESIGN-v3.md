@@ -99,6 +99,10 @@
    - Latin is the fallback, isolated with `.lat`.
 9. **Budgets.** Measured on the prototype: CSS 15.0 KB gzip (v2: 9.3 KB), JS 40.7 KB gzip in one file (v2: 34.1 KB across render/app/share/stand). That is +5.7 KB CSS and +6.6 KB JS, with no new frameworks. Only the key-art canvas animates, and only on load and in answer to something (a touch or a goal).
 
+10. **At most 2 accent colours on any screen besides club colours.** Chalk and night are the ground; pulse (live) and dune (my team / selected) are the only accents, and a screen rarely needs both.
+11. **One primary button per area.** A hero, a sheet or a tab has at most one filled button; everything else is a quiet text or ghost action without a thick border.
+12. **Motion only for key events:** a goal (the goal moment and score flip) and page entry (the stand's load-in, sections fading up once). The only loops are the live signals (the flipping live card and the soft pulse of a live match hero); nothing else moves on its own, and `prefers-reduced-motion` turns it all off.
+
 ## 4. Components
 - **Top bar.**
   - Brand mark on the right (RTL start), search, then «شارك» on pages that have a sheet.

@@ -9,6 +9,9 @@
   function hex(c){ c = (c || "#5C6660").replace("#", ""); if (c.length === 3) c = c.replace(/./g, "$&$&"); return [parseInt(c.slice(0, 2), 16), parseInt(c.slice(2, 4), 16), parseInt(c.slice(4, 6), 16)]; }
   function lum(a){ return (0.299 * a[0] + 0.587 * a[1] + 0.114 * a[2]) / 255; }
   function rgb(a, k){ return "rgb(" + Math.max(0, Math.min(255, a[0] * k | 0)) + "," + Math.max(0, Math.min(255, a[1] * k | 0)) + "," + Math.max(0, Math.min(255, a[2] * k | 0)) + ")"; }
+  // 387: calmer stand — each card ~35% toward night pitch and grey, the brightness spread halved, so the score stays the hero
+  function calm(c, k){ var g = (c[0] + c[1] + c[2]) / 3, n = [10, 38, 32], kk = 0.93 + (k - 0.93) * 0.5, out = [];
+    for (var i = 0; i < 3; i++){ var v = c[i] + (g - c[i]) * 0.3; v = v + (n[i] - v) * 0.35; out.push(v * kk); } return rgb(out, 1); }
   function Art(canvas){
     this.c = canvas; this.x = canvas.getContext("2d"); this.cells = []; this.waves = []; this.run = false; this.bands = [];
     var self = this;
@@ -32,7 +35,7 @@
     for (var y = 0; y < rows; y++) for (var x = 0; x < cols; x++){
       var bi = Math.min(nb - 1, Math.floor((cols - 1 - x) / cols * nb)), pal = this.bands[bi] || [hex("#5C6660"), hex("#F6F7F2")];
       var rel = (cols - 1 - x) - Math.floor(bi * cols / nb), stripe = (rel + y) % 7 < 2, base = pal[stripe ? 1 : 0], k = 0.82 + rnd() * 0.22;
-      cells.push({ x:x, y:y, col:rgb(base, lum(base) > 0.85 ? k * 0.9 : k), d:(cols - 1 - x) / cols * 0.9 + rnd() * 0.15 });
+      cells.push({ x:x, y:y, col:calm(base, k), d:(cols - 1 - x) / cols * 0.9 + rnd() * 0.15 });
     }
     this.cells = cells;
   };

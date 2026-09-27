@@ -24,7 +24,7 @@ const ALLP = [], OGJ = [];   // share-preview jobs for og.py (169)   // every pa
 const EARLY = [];   // pages written before the club colours were known: patched once COLOR_V exists
 const hash = s => crypto.createHash("sha1").update(s).digest("hex").slice(0, 10);
 
-let ASSET_V = "", COLOR_V = "", SEARCH_V = "", BC_V = "";
+let CC_V = "", ASSET_V = "", COLOR_V = "", SEARCH_V = "", BC_V = "";
 // v3 shell (redesign/DESIGN-v3.md): top bar + 5-item nav (bottom tab bar on phones), one «شارك وأدوات» sheet, the «المزيد» sheet,
 // the reader panel. v3 templates (o.v3) bring their own hero and .wrap; the others sit in a padded .wrap under the bar.
 const IC = {
@@ -76,12 +76,12 @@ ${G("سوّ بنفسك", [L("/studio/", "ستوديو التيفو"), L("/lab/",
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Noto+Kufi+Arabic:wght@800&family=Readex+Pro:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Noto+Kufi+Arabic:wght@800&family=Readex+Pro:wght@400;600&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="/assets/tifo.${ASSET_V}.css">${o.page === "match" ? '<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>' : ""}${(o.ld ? [].concat(o.ld) : []).map(l => `<script type="application/ld+json">${JSON.stringify(l).replace(/</g, "\\u003c")}</script>`).join("")}</head>
-<body class="v3" data-page="${o.page}" data-bc="${BC_V}"${o.attrs || ""}>
+<body class="v3" data-page="${o.page}" data-bc="${BC_V}"${o.page === "home" && CC_V ? ` data-cc="${CC_V}"` : ""}${o.attrs || ""}>
 <a class="skip" href="#main">تخطَّ للمحتوى</a>
 <header class="top" data-slot="nav"><div class="wrap"><a class="brand" href="/" aria-label="تيفو">${MARK}تيفو</a><nav class="pnav" aria-label="الأقسام">${navHtml}</nav><div class="acts"><button type="button" class="ib" id="srch" aria-label="بحث" data-v="__SV__">${IC.search}<span class="vh">بحث</span></button><button type="button" class="ib" data-sheet="share" aria-haspopup="dialog" aria-label="شارك">${IC.share}<span class="vh">شارك</span></button></div></div></header>
 <main id="main">${o.v3 ? o.body : `<div class="wrap body legacy">${o.body}</div>`}</main>
 <footer class="foot" data-slot="footer"><div class="wrap"><div class="fbrand">${MARK}<span>تيفو، من استوديو <a href="https://elyoxe.com/">Elyoxe</a>. المواعيد بتوقيت بلدك.</span></div>
-<div class="fl"><a href="/tv/">شاشة المجلس</a><a href="/studio/">ستوديو التيفو</a><a href="/week/">مباريات الأسبوع</a><a href="/legends/">الأساطير</a><a href="/memorable/">مباريات لا تُنسى</a><a href="/thisday/">هذا اليوم</a><a href="/laws/">قانون الكورة</a><a href="/watch/">وين تنقل</a><a href="/stadiums/">الملاعب</a><a href="/lab/">المختبر</a><a href="/academy/">الأكاديمية</a><a href="/glossary/">القاموس</a><a href="/w/">وضع المتابعة</a><a href="/countdowns/">كم باقي؟</a><a href="/newsletter/">النشرة</a></div>
+<div class="fcols">${[["مباريات", [["/", "اليوم"], ["/today/", "مباريات اليوم"], ["/tomorrow/", "مباريات بكرة"], ["/week/", "مباريات الأسبوع"], ["/countdowns/", "كم باقي؟"], ["/watch/", "وين تنقل"]]], ["بطولات", [["/competitions/", "كل البطولات"], ["/c/uae-pro-league/", "دوري أدنوك"], ["/national/", "المنتخبات"], ["/arabs/", "العرب"], ["/legends/", "الأساطير"], ["/memorable/", "مباريات لا تُنسى"], ["/thisday/", "هذا اليوم"]]], ["أدوات", [["/tv/", "شاشة المجلس"], ["/w/", "وضع المتابعة"], ["/studio/", "ستوديو التيفو"], ["/lab/", "المختبر"], ["/stadiums/", "الملاعب"]]], ["عن تيفو", [["/laws/", "قانون الكورة"], ["/academy/", "الأكاديمية"], ["/glossary/", "القاموس"], ["/cast/", "تيفو كاست"], ["/newsletter/", "النشرة"], ["https://elyoxe.com/", "Elyoxe"]]]].map(c => `<div><h3>${c[0]}</h3>${c[1].map(l => `<a href="${l[0]}">${l[1]}</a>`).join("")}</div>`).join("")}</div>
 <p class="small muted"><span class="updated" id="updated"></span> البيانات من FotMob ورابطة المحترفين الإماراتية</p></div></footer>
 <nav class="tabbar" aria-label="الأقسام" data-slot="nav">${navHtml}</nav>
 ${sheets}
@@ -139,6 +139,23 @@ function drawHtml(d){
   if (!gs.length && !ts.length) return "";
   return gs.map(g => `<h3>${esc(R.stageAr("Group " + g.name))}</h3><ul class="facts-l">${g.teams.map(id => `<li>${tlink(id)}</li>`).join("")}</ul>`).join("") + (ts.length ? '<ul class="facts-l">' + ts.map(t => `<li>${tlink(t.home || t[0])} ضد ${tlink(t.away || t[1])}</li>`).join("") + "</ul>" : "");
 }
+// 402: one line icon per editorial topic (single colour), instead of the repeated mosaic mark
+const EDI = {
+  trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8 20h8M9 17h6"/>',
+  whistle:'<circle cx="9" cy="14" r="5"/><path d="M13 11l8-4v3l-6 3M9 14h.01"/>',
+  cal:'<rect x="3" y="5" width="18" height="16"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+  tv:'<rect x="3" y="5" width="18" height="12"/><path d="M8 21h8M12 17v4"/>',
+  flag:'<path d="M5 21V4h11l-2 4 2 4H5"/>',
+  star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  fire:'<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-3 2-4 2-7 2 1 3 3 3 5"/>',
+  brush:'<path d="M4 20c3 0 5-2 5-5l9-9a2 2 0 0 0-3-3l-9 9c-3 0-5 2-5 5z"/>',
+  ball:'<circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 4.5h-5L8 10z"/>',
+  gift:'<rect x="4" y="9" width="16" height="12"/><path d="M2 9h20M12 9v12M12 9c-2-4-6-4-6-1s6 1 6 1 6 2 6-1-4-3-6 1"/>',
+};
+function edIcon(t){ const k = /أساطير/.test(t) ? "trophy" : /قانون/.test(t) ? "whistle" : /هذا اليوم|التقويم|أيام/.test(t) ? "cal" : /كاست|بودكاست/.test(t) ? "mic" : /شاشة|المجلس/.test(t) ? "tv" : /منتخب|فترة/.test(t) ? "flag" : /مباراة الأسبوع|أحلى|لا تُنسى/.test(t) ? "star" : /أقوى|تصنيف|أرقام/.test(t) ? "chart" : /سلاسل/.test(t) ? "fire" : /ستوديو/.test(t) ? "brush" : /ذكرى|مواليد/.test(t) ? "gift" : "ball";
+  return `<svg class="edi" viewBox="0 0 24 24" aria-hidden="true">${EDI[k]}</svg>`; }
 const vpane = (group, key, html, first) => `<section data-group="${group}" data-pane="${key}" data-slot="tab:${key}"${first ? "" : " hidden"}>${html}</section>`;
 
 (async () => {
@@ -174,12 +191,16 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   // 204: where to watch per visitor country, compacted for the client: {ISO:{comp:[[name_ar, free, price, currency, url]], ...}}
   { const bbc = readRes("broadcast_by_country.json"), out = {}; for (const [iso, v] of Object.entries(bbc)){ if (iso === "_meta" || !v.competitions) continue; out[iso] = { _c:v.currency || "" }; for (const [k, c] of Object.entries(v.competitions)){ const key = /^dom_/.test(k) ? String(v.own_league_key) : k; out[iso][key] = { b:(c.broadcasters || []).map(x => [x.name_ar || x.name_en, x.free ? 1 : 0, x.price, x.currency, x.url]), q:c.confidence || "" }; } }
     const bj = JSON.stringify(out); BC_V = hash(bj); fs.writeFileSync(path.join(OUT, `assets/bc.${BC_V}.json`), bj); }
+  let CLUB_AR = {}, REF_AR = {}; try { CLUB_AR = JSON.parse(fs.readFileSync(path.join(__dirname, "../names/clubs_ar.json"), "utf8")); } catch (e){} try { REF_AR = JSON.parse(fs.readFileSync(path.join(__dirname, "../names/referees_ar.json"), "utf8")); } catch (e){}
+  const TAR = {}; for (const [id, v] of Object.entries(CLUB_AR)) if (v.ar) TAR[id] = v.ar; R.setClubNames(TAR);
+  const refAr = r => r && r.id && REF_AR[r.id] && REF_AR[r.id].ar ? REF_AR[r.id].ar : null;
   const BC = readRes("broadcast.json"), HLT = readRes("highlights.json"), STAD = {}; ((readRes("stadiums.json").stadiums) || []).forEach(x => { STAD[x.id] = x; });
   const compData = await pool(comps, 3, async c => {
     const [st, fx, stats] = await Promise.all([c.files && c.files.standings ? get(`comp/${c.id}/standings.json`) : null, get(`comp/${c.id}/fixtures.json`), get(`comp/${c.id}/stats.json`)]);
     const x = {}; await pool(EXTRA, 3, async k => { x[k] = await get(`comp/${c.id}/${k}.json`, 2); });
     x.draws = c.kind === "league" ? null : await get(`draws/${c.id}.json`, 1);
     // files the pipeline marks `available: false` (with a reason) render as one quiet note, never as an empty block
+    if (x.referees && x.referees.referees) x.referees.referees.forEach(r => { if (r.id && REF_AR[r.id] && REF_AR[r.id].ar){ r.name_en = r.name; r.name = REF_AR[r.id].ar; } });
     x._na = []; for (const k of Object.keys(x)) if (x[k] && x[k].available === false){ x._na.push(k); x[k] = null; }
     return { c, st, fx, stats, x };
   });
@@ -219,7 +240,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   R.setColors(colors); R.H2HK = {}; Object.keys(H2H).forEach(k => { R.H2HK[k] = 1; });
   const ARABC = new Set(R.COUNTRIES.map(c => c[0])), ARABT = {};
   compData.forEach(({ c, st, fx }) => { const iso = R.compCountry(c); if (!(ARABC.has(iso) || [329, 10242, 11156, 10474].includes(c.id))) return; (fx && fx.matches || []).forEach(m => { ARABT[m.home.id] = 1; ARABT[m.away.id] = 1; }); (st && st.groups || []).forEach(g => g.rows.forEach(r => { ARABT[r.team.id] = 1; })); });
-  const cjs = "window.TC=" + JSON.stringify(colors) + ";window.H2HK=" + JSON.stringify(R.H2HK) + ";window.ARABT=" + JSON.stringify(ARABT) + ";"; COLOR_V = hash(cjs); fs.writeFileSync(path.join(OUT, `assets/colors.${COLOR_V}.js`), cjs);
+  const cjs = "window.TC=" + JSON.stringify(colors) + ";window.H2HK=" + JSON.stringify(R.H2HK) + ";window.ARABT=" + JSON.stringify(ARABT) + ";window.TAR=" + JSON.stringify(TAR) + ";"; COLOR_V = hash(cjs); fs.writeFileSync(path.join(OUT, `assets/colors.${COLOR_V}.js`), cjs);
 
   const stIdsOf = st => st && !st.composite && st.groups && st.groups[0] ? st.groups[0].rows.map(r => r.team.id) : [];
 
@@ -238,6 +259,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
     return `<a class="ct" href="/c/${c.key}/"><span class="cm" aria-hidden="true">${(cols.length ? cols : Array.from({ length:12 }, (_, i) => ["#1B4A3F", "#123A31", "#2A5A4E"][i % 3])).map(cl => `<i style="background:${cl}"></i>`).join("")}</span><b>${esc(c.name_ar)}</b><small>${sub}</small></a>`; };
   // Arabic player names (names/players_ar.json) on player-shaped nodes only (ids are player ids here, never clubs)
   const nameOf = id => (NAMES_AR[id] || {}).ar || null;
+  { const pn = {}; for (const [k, v] of Object.entries(NAMES_AR)) if (v.ar) pn[k] = v.ar; for (const [k, v] of Object.entries(COACH_AR)) if (v.ar) pn[k] = v.ar; R.setNames(pn); }   // the prerender uses the same Arabic names as the client
   for (const [pid, p] of Object.entries(allPlayers)) if (nameOf(pid) && !p.name_en){ p.name_en = p.name; p.name = nameOf(pid); }
   compData.forEach(({ x, stats }) => { if (x.cards && x.cards.players) for (const [id, cc] of Object.entries(x.cards.players)) if (nameOf(id)) cc.name = nameOf(id);
     if (stats && stats.lists) for (const l of Object.values(stats.lists)) (l || []).forEach(r => { if (r.player && nameOf(r.player.id)) r.player.name = nameOf(r.player.id); }); });
@@ -327,13 +349,15 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
   if (w538 && fx538) ED.push(S.sec("أحلى مباريات الجولة الياية في دوري أدنوك", "", S.watch(w538, fx538.fx)));
   const writeHome = () => {
     SEQ = 0; PALETTE = Object.values(colors).slice(0, 60);
+    { const cc = {}; compData.forEach(({ c, st }) => { const iso = c.country && c.country.iso2; if (!iso || c.kind !== "league" || cc[iso]) return; const ids = stIdsOf(st); if (ids.length) cc[iso] = ids.slice(0, 20).map(id => [id, (teamsJson.teams[id] || {}).name_ar || TAR[id] || (teamsJson.teams[id] || {}).name || ""]); });
+      const cj = JSON.stringify(cc); CC_V = hash(cj); fs.writeFileSync(path.join(OUT, `assets/cc.${CC_V}.json`), cj); }
     const heroM = R.heroPick(day.matches, index, null), rails = R.homeRails(day.matches, index, { arabT:ARABT });
     const edHtml = ED.join(""), bdays = (edHtml.match(/<div id="bdays"[^>]*><\/div>/) || [""])[0];
     const ed = blocks(edHtml).secs.filter(sc => sc.title);
     const edCards = ed.map(sc => { const more = (sc.sub.match(/<a [^>]*>[\s\S]*?<\/a>/) || [""])[0], key = "e" + (++SEQ), tz = teaser(sc);
-      return { card:`<button type="button" class="ed" data-open="${key}">${tifoIcon(sc.title)}<span class="tt2">${esc(sc.title)}</span>${tz ? `<span class="tz">${esc(tz)}</span>` : ""}${more ? `<span class="em">${more.replace(/<[^>]+>/g, "")}</span>` : ""}</button>`, vault:vault(key, sc) }; });
+      return { card:`<button type="button" class="ed" data-open="${key}">${edIcon(sc.title)}<span class="tt2">${esc(sc.title)}</span>${tz ? `<span class="tz">${esc(tz)}</span>` : ""}${more ? `<span class="em">${more.replace(/<[^>]+>/g, "")}</span>` : ""}</button>`, vault:vault(key, sc) }; });
     const edLinks = [["/legends/", "الأساطير", "مسيرة وأرقام أبرز لاعبين في تاريخ الكورة الإماراتية"], ["/memorable/", "مباريات لا تُنسى", "المباريات اللي صنعت تاريخ الكورة الإماراتية"], ["/cast/", "تيفو كاست", "الجولة بصوت إماراتي، كل أسبوع"], ["/laws/", "قانون الكورة", "ليش ألغى الحكم الهدف؟ بالإماراتي"], ["/tv/", "شاشة المجلس", "كل المباريات على تلفزيون المجلس"], ["/studio/", "ستوديو التيفو", "صمّم لافتة فريقك للمدرج"]]
-      .map(l => `<a class="ed" href="${l[0]}">${tifoIcon(l[1])}<span class="tt2">${l[1]}</span><span class="tz">${l[2]}</span></a>`).join("");
+      .map(l => `<a class="ed" href="${l[0]}">${edIcon(l[1])}<span class="tt2">${l[1]}</span><span class="tz">${l[2]}</span></a>`).join("");
     const heroHtml = `<section class="hero hhero" data-slot="hero" id="stand"><canvas aria-hidden="true"></canvas><div class="scrim"></div><div class="hero-in wrap"><span class="kick" id="standkick">${heroM ? (R.isLive(heroM) ? "مباشر الحين" : heroM.status === "finished" ? "انتهت" : "الليلة") : "اليوم"}</span><div class="cap" id="standcap">${R.heroLine(heroM, index)}</div><div id="uaecd"></div>
 <div class="hero-acts">${heroM ? `<a class="cta" id="herogo" href="/m/${heroM.id}/">تابع المباراة</a>` : ""}${heroM && APPROVED.quick && heroM.status === "scheduled" && AIQK[heroM.id] ? `<a class="ghost" href="/m/${heroM.id}/#quick">في 60 ثانية</a>` : ""}<button type="button" class="ghost" data-sheet="share">شارك</button></div></div></section><div id="since" class="wrap"></div>`;
     const dayBox = `<section class="daybox" id="matches" data-slot="list"><div class="rail-h"><h2>كل المباريات</h2><p class="livecount" id="livecount"></p></div>
@@ -471,13 +495,15 @@ ${nxt ? `<p class="tnext"><span>الياية</span> <a href="/m/${nxt.id}/">${R.
     const press = md.status === "scheduled" && uaeMatch ? S.pressSheet(md, cdata.st, cdata.stats, factsByMatch[id], cx.fatigue, D.get(id)) : "";
     const thread = APPROVED.thread && AIS[id] ? S.aiThread(AIS[id]) : "", comm = APPROVED.commentary ? S.aiCommentary(AICM[id]) : "";
     const opp = md.status === "scheduled" ? S.oppReport(md, cx, cdata.stats) : "";
-    const ww = md.status !== "finished" ? S.watchWhere(BC[md.comp]) : "", hl = md.status === "finished" ? S.highlight(HLT[md.comp], md) : "";
+    if (md.referee && refAr(md.referee)){ md.referee.name_en = md.referee.name; md.referee.name = refAr(md.referee); }
+    const ww = md.status !== "finished" ? S.watchWhere(BC[md.comp]) : "", hl = md.status === "finished" ? S.highlight(HLT[md.comp], md).replace(/ \((?:[^()]|\([^()]*\))*\)(?=<\/a>)/, m => { const ch = /bein/i.test(m) ? "بي إن سبورتس" : /AFC/.test(m) ? "قناة الاتحاد الآسيوي" : /Pro League/i.test(m) ? "قناة رابطة المحترفين" : /CAF/.test(m) ? "قناة الاتحاد الأفريقي" : /UEFA|Champions/i.test(m) ? "قناة اليويفا" : ""; return ch ? " على " + ch : ""; }) : "";
     const mdy = md.venue && STAD[md.venue.id] ? S.matchDay(md, STAD[md.venue.id]) : "";
     const sgrid = probs ? S.scoreGrid(probs, md) : "";
     const L2 = md.lineups; const tac = L2 && L2.home && L2.away ? (() => { const subs = side => (md.events || []).filter(e => e.type === "sub" && e.team === side), f = side => { const sb = subs(side); return `${R.tname(md[side])}: خطة <span class="num">${esc(L2[side].formation || "—")}</span>، ${sb.length} تبديلات${sb.length ? `، أولها الدقيقة <span class="num">${sb[0].minute}</span>` : ""}.`; }; return `<ul class="facts-l"><li>${f("home")}</li><li>${f("away")}</li></ul>`; })() : "";
     const replay = md.status === "finished" && (md.events || []).some(e => /goal|red|yellow/.test(e.type)) ? '<div class="replay"><label>اسحب لأي دقيقة: <b class="num" id="rpm">90</b></label><input type="range" id="rpr" min="0" max="' + ((md.events || []).some(e => e.minute > 90) ? 120 : 90) + '" value="' + ((md.events || []).some(e => e.minute > 90) ? 120 : 90) + '" aria-label="الدقيقة"><div class="rpsc"><span>' + R.tname(md.home) + '</span><b class="num" id="rps">' + (md.score ? md.score.home + " - " + md.score.away : "") + '</b><span>' + R.tname(md.away) + '</span></div><ul class="facts-l" id="rpe"></ul><script type="application/json" id="rpev">' + JSON.stringify((md.events || []).filter(e => /goal|red|yellow|second/.test(e.type)).map(e => [e.minute + (e.added ? e.added / 10 : 0), e.type, e.team, e.player && e.player.name, e.score ? [e.score.home, e.score.away] : null])).replace(/</g, "\\u003c") + "</script></div>" : "";
     // التحليل: win probability leads; commentary (196), AI summary/preview, opponent report, press sheet (with commentator mode), X thread … as tiles
-    const anaSecs = blocks([comm ? S.sec("التعليق", "", comm) : "", aiSum ? S.sec("الخلاصة بالذكاء الاصطناعي", "", aiSum) : "", aiPre, S.winprob(md) ? S.sec("فرص الفوز دقيقة بدقيقة", "", S.winprob(md)) : "", sgrid ? S.sec("أرجح النتايج بالضبط", "", sgrid) : "", opp ? S.sec("تقرير الفريقين", "", opp) : "", press ? S.sec("ورقة الصحفي", "", press) : "", thread ? S.sec("ثريد إكس", "", thread) : "", tac ? S.sec("الخطط والتبديلات", "", tac) : "", S.firsts(md) ? S.sec("أوائل", "", S.firsts(md)) : "", replay ? S.sec("إعادة المباراة", "", replay) : "", fa ? S.sec("ضغط المباريات", "", fa) : "", facts && facts.length ? S.sec("قبل المباراة", "", S.matchFacts(facts)) : "", mdy ? S.sec("رايح الملعب؟", "", mdy) : ""].join("")).secs;
+    const tlHtml = R.timeline(md);
+    const anaSecs = blocks([tlHtml ? S.sec("خط المباراة", "الأهداف والكروت دقيقة بدقيقة", tlHtml) : "", comm ? S.sec("التعليق", "", comm) : "", aiSum ? S.sec("الخلاصة بالذكاء الاصطناعي", "", aiSum) : "", aiPre, S.winprob(md) ? S.sec("فرص الفوز دقيقة بدقيقة", "", S.winprob(md)) : "", sgrid ? S.sec("أرجح النتايج بالضبط", "", sgrid) : "", opp ? S.sec("تقرير الفريقين", "", opp) : "", press ? S.sec("ورقة الصحفي", "", press) : "", thread ? S.sec("ثريد إكس", "", thread) : "", tac ? S.sec("الخطط والتبديلات", "", tac) : "", S.firsts(md) ? S.sec("أوائل", "", S.firsts(md)) : "", replay ? S.sec("إعادة المباراة", "", replay) : "", fa ? S.sec("ضغط المباريات", "", fa) : "", facts && facts.length ? S.sec("قبل المباراة", "", S.matchFacts(facts)) : "", mdy ? S.sec("رايح الملعب؟", "", mdy) : ""].join("")).secs;
     const li = anaSecs.findIndex(sc => sc.title === "فرص الفوز دقيقة بدقيقة"), anaLead = li >= 0 ? anaSecs.splice(li, 1)[0].full : "";
     const faqQ = S.faq(md, (BC[md.comp] && BC[md.comp].broadcasters || []).map(b => b.name_ar).join("، "), md.venue && (md.venue.name_ar || md.venue.name_en));
     const faqHtml = faqQ.length ? `<details class="faq wrap"><summary><h2>أسئلة عن المباراة</h2></summary><dl class="gl">${faqQ.map(q => `<dt>${esc(q[0])}</dt><dd>${esc(q[1])}</dd>`).join("")}</dl></details>` : "";
@@ -485,7 +511,8 @@ ${nxt ? `<p class="tnext"><span>الياية</span> <a href="/m/${nxt.id}/">${R.
     // 369 «ليش هالنتيجة؟» (finished: the first tab's lead) and 372 «مباراة الليلة في 60 ثانية» (before kickoff: a card)
     const why = APPROVED.why && md.status === "finished" && AIWHY[id] && (AIWHY[id].lines || []).length ? `<div class="why"><b>ليش هالنتيجة؟</b>${AIWHY[id].lines.map(l => `<p>${esc(l)}</p>`).join("")}</div>` : "";
     const quick = APPROVED.quick && sched && AIQK[id] && (AIQK[id].lines || []).length ? `<div class="quick" id="quick"><b>مباراة الليلة في 60 ثانية</b><ol>${AIQK[id].lines.map(l => `<li>${esc(l)}</li>`).join("")}</ol></div>` : "";
-    const eventsPane = why + quick + `<div id="catchup">${R.catchup(md)}</div><div id="ltable"></div>` + (hl ? `<p class="hlink">${hl}</p>` : "") + (sched ? `<div id="wwbox" data-comp="${md.comp}">${ww ? S.sec("وين تنقل في الإمارات", "", ww) : ""}</div>` + (probs ? S.probs(probs, md) : "") : "") +
+    R._hasWhy = !!why; const catchHtml = R.catchup(md); R._hasWhy = false;
+    const eventsPane = why + quick + `<div id="catchup">${catchHtml}</div><div id="ltable"></div>` + (hl ? `<p class="hlink">${hl}</p>` : "") + (sched ? `<div id="wwbox" data-comp="${md.comp}">${ww ? S.sec("وين تنقل في الإمارات", "", ww) : ""}</div>` + (probs ? S.probs(probs, md) : "") : "") +
       `<div id="events">${R.events(md)}</div>` + (!sched && md.status !== "finished" ? `<div id="wwbox" data-comp="${md.comp}">${ww ? S.sec("وين تنقل في الإمارات", "", ww) : ""}</div>` : "") + `<h3 class="sub-h">تفاصيل المباراة</h3><div id="facts">${R.matchFacts(md, index)}</div>`;
     const cname = md.comp_name_ar || R.compName(index, md.comp), ckey = R.compKey(index, md.comp);
     const tools = `<button type="button" class="sa" id="storybtn">صورة للستوري</button><button type="button" class="sa" id="secondbtn">الشاشة الثانية</button><button type="button" class="sa" id="cinebtn">وضع السينما</button>${md.lineups && md.lineups.home ? '<button type="button" class="sa" id="pcardbtn">بطاقة أداء لاعب</button>' : ""}<button type="button" class="sa" id="embedbtn" data-src="/embed/m/?id=${id}" data-h="260">ضمّن المباراة في موقعك</button><a class="sa" href="/tv/?m=${id}">على شاشة المجلس</a>${uaeMatchTop ? `<a class="sa" href="/m/${id}/kit/">عدّة صانع المحتوى</a>` : ""}`;
@@ -500,7 +527,7 @@ ${nxt ? `<p class="tnext"><span>الياية</span> <a href="/m/${nxt.id}/">${R.
       vpane("m", "stats", `<div id="stats">${R.stats(md)}</div>`) +
       vpane("m", "ana", (anaLead + (anaSecs.length ? shelf(anaSecs, { title:"التحليل كله" }) : "")) || '<p class="empty">التحليل ينزل مع قرب المباراة.</p>') +
       vpane("m", "h2h", `<div id="h2h">${R.h2h(md)}</div>`) + "</div>" + faqHtml;
-    const names = {}; if (md.venue && md.venue.name_ar) names.venue = md.venue.name_ar;
+    const names = {}; if (md.venue && md.venue.name_ar) names.venue = md.venue.name_ar; if (md.referee && md.referee.name_en) names.ref = md.referee.name;
     if (md.lineups) ["home", "away"].forEach(sd => { const co = md.lineups[sd] && md.lineups[sd].coach; if (coachAr(co)) names[co.id] = coachAr(co); });
     (md.events || []).forEach(e => [e.player, e.assist, e.player_out].forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); }));
     if (md.lineups) ["home", "away"].forEach(sd => md.lineups[sd] && [].concat(md.lineups[sd].starters || [], md.lineups[sd].subs || [], md.lineups[sd].unavailable || []).forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); }));
