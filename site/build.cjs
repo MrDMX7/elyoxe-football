@@ -105,7 +105,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     const pred = [x.watch && fx ? S.sec("أحلى مباريات الجولة الياية", "", S.watch(x.watch, fx)) : "", S.whatif(fx, st) ? S.sec("شو لو؟", "", S.whatif(fx, st)) : "", x.sim && x.sim.teams ? S.sec("توقعات آخر الموسم", "", S.sim(x.sim, st)) : "", st && st.magic ? S.sec("كم يحتاج فريقك؟", "", S.magic(st)) : "", x["tournament-sim"] ? S.sec("من بيفوز بالبطولة؟", "", S.tsim(x["tournament-sim"])) : ""].join("");
     // the numbers (137, 135, 46, 124, 119, 129, 139, 52, 37, 142, 143, 96, 138, 141)
     const num = [
-      ["cards", "بطاقات تيفو", S.cards(x.cards, 12)], ["clutch", "مين الحاسم؟", S.clutch(x.clutch)], ["tor", "تشكيلة الجولة", S.teamOfRound(x["team-of-round"])],
+      ["cards", "بطاقات تيفو", S.cards(x.cards, 12)], ["clutch", "منو الحاسم؟", S.clutch(x.clutch)], ["tor", "تشكيلة الجولة", S.teamOfRound(x["team-of-round"])],
       ["foreign", "أفضل محترف أجنبي", S.foreigners(x.foreigners)], ["improved", "الأكثر تطوّر", S.improved(x.improved)], ["young", "المواهب الإماراتية تحت 23", S.young(x["young-uae"])],
       ["clock", "ساعة الأهداف", S.clock(x["minute-clock"])], ["late", "ملوك الدقايق الأخيرة", S.late(x["goal-bands"])],
       ["pressure", "ترمومتر المدربين", S.pressure(x.pressure)], ["style", "بصمة كل فريق", S.style(x.style)], ["fortress", "حصون الملاعب", S.fortress(x.fortress)],
@@ -165,7 +165,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     if (row && row.last_season_same_round){ const l = row.last_season_same_round; nums += S.sec("هالموسم ضد الموسم الماضي", `بعد ${row.played} جولات`, `<div class="pstats"><div><b>${row.pts}</b><span>نقاطه الحين</span></div><div><b>${l.pts}</b><span>نفس الوقت الموسم الماضي</span></div><div><b><bdi dir="ltr">${row.pts - l.pts > 0 ? "+" : ""}${row.pts - l.pts}</bdi></b><span>الفرق</span></div><div><b>${row.gf} - ${row.ga}</b><span>أهدافه الحين</span></div><div><b>${l.gf} - ${l.ga}</b><span>الموسم الماضي</span></div></div>`); }
     if (x538.pressure && x538.pressure.teams && x538.pressure.teams[id]){ const pr = { teams:{} }; pr.teams[id] = x538.pressure.teams[id]; nums += S.sec("الضغط على المدرب", "", S.pressure(pr)); }
     const tc = x538.cards ? S.cards(x538.cards, 11, c => c.team === id) : ""; if (tc) nums += S.sec("بطاقات تيفو للاعبين", "", tc);
-    if (x538.clutch && x538.clutch.players){ const cl = S.clutch({ players:x538.clutch.players.filter(p => p.team === id) }); if (cl) nums += S.sec("مين الحاسم في الفريق؟", "", cl); }
+    if (x538.clutch && x538.clutch.players){ const cl = S.clutch({ players:x538.clutch.players.filter(p => p.team === id) }); if (cl) nums += S.sec("منو الحاسم في الفريق؟", "", cl); }
     const ln = S.loans(t); if (ln) nums += S.sec("لاعبينه المعارين", "", ln);
     const co = S.coachesTeam(x538.coaches, id); if (co) nums += S.sec("مدربين النادي عبر التاريخ", "في الدوري", co);
     if (x538.fortress && x538.fortress.stadiums){ const fs2 = x538.fortress.stadiums.filter(s => s.team === id); if (fs2.length) nums += S.sec("حصن الملعب", "", S.fortress({ since:x538.fortress.since, stadiums:fs2 })); }
@@ -202,7 +202,7 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
     const tt = { id:tm, name_ar:(S && teamsJson && teamsJson.teams[tm] && teamsJson.teams[tm].name_ar) || "" };
     const st = `<div class="pstats"><div><b>${p.goals ?? "—"}</b><span>أهداف</span></div><div><b>${p.assists ?? "—"}</b><span>صناعة</span></div><div><b>${p.minutes ?? "—"}</b><span>دقيقة</span></div><div><b>${p.rating != null ? Number(p.rating).toFixed(1) : "—"}</b><span>التقييم</span></div>${cl ? `<div><b>${cl.total}</b><span>نقاط جابها</span></div>` : ""}</div>`;
     const body = `<p class="crumbs"><a href="/t/${tm}/">${esc(tt.name_ar)}</a></p><h1 class="lat">${esc(p.name)}</h1><p class="season">${[p.position && `المركز <span class="lat">${esc(p.position.split(",")[0])}</span>`, p.number && `الرقم <span class="num">${esc(p.number)}</span>`, p.country && `<span class="flag">${esc(p.country)}</span>`].filter(Boolean).join("، ")}</p>` +
-      (card ? S.card(id, card).replace('class="tcard"', 'class="tcard big"') : "") + S.sec("موسمه", esc(p.season || ""), st) + (cx.similar ? (() => { const sm = S.similar(cx.similar, id); return sm ? S.sec("مين يلعب مثله؟", "", sm) : ""; })() : "") +
+      (card ? S.card(id, card).replace('class="tcard"', 'class="tcard big"') : "") + S.sec("موسمه", esc(p.season || ""), st) + (cx.similar ? (() => { const sm = S.similar(cx.similar, id); return sm ? S.sec("منو يلعب مثله؟", "", sm) : ""; })() : "") +
       (cx.shots && cx.shots.available !== false && cx.shots.players && cx.shots.players[id] ? S.sec("خريطة تسديداته", "", S.shotmap(cx.shots.players[id])) : "") +
       (card ? `<p><a class="btn" href="/c/${(comps.find(cc => cc.id === (p.comp || 538)) || {}).key || "uae-pro-league"}/compare/?a=${id}">قارنه بلاعب ثاني</a></p>` : "");
     write(`p/${id}/index.html`, page({ path:`/p/${id}/`, page:"player", title:`${p.name}: أرقامه هالموسم | تيفو`, desc:`${p.name}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.`, body }));

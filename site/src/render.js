@@ -28,7 +28,7 @@
   R.minute = function(m){ return m.status === "ht" ? "استراحة" : m.minute ? '<bdi dir="ltr">' + esc(m.minute) + "'</bdi>" : "مباشر"; };
   // a live match is "hot" (feature 35) from the 75th minute while it is level or one goal apart
   R.hot = function(m){ var mn = parseInt(m.minute, 10) || 0; return m.status === "live" && mn >= 75 && m.score && Math.abs(m.score.home - m.score.away) <= 1; };
-  // «وش فاتني؟» (34): the match so far in a few plain lines, from the events
+  // «شو فاتني؟» (34): the match so far in a few plain lines, from the events
   R.catchup = function(md){
     if (!(R.isLive(md) || md.status === "finished") || !md.score) return "";
     var H = md.home.name_ar || md.home.name, A = md.away.name_ar || md.away.name, s = md.score, lines = [], ev = md.events || [];
@@ -42,7 +42,7 @@
     var miss = ev.filter(function(e){ return e.type === "missed_penalty" && e.player; });
     if (miss.length) lines.push("بلنتي ضايع: " + miss.map(function(e){ return e.player.name + " " + e.minute + "'"; }).join("، ") + ".");
     if (md.halftime_score && md.status === "finished"){ var h = md.halftime_score; if ((h.home > h.away && s.home < s.away) || (h.away > h.home && s.away < s.home)) lines.push("ريمونتادا: كان متأخر بين الشوطين وقلبها."); }
-    return '<div class="catchup"><b>' + (R.isLive(md) ? "وش فاتك" : "الخلاصة") + "</b>" + lines.map(function(l){ return "<p>" + esc(l) + "</p>"; }).join("") + "</div>";
+    return '<div class="catchup"><b>' + (R.isLive(md) ? "شو فاتك" : "الخلاصة") + "</b>" + lines.map(function(l){ return "<p>" + esc(l) + "</p>"; }).join("") + "</div>";
   };
   R.statusText = function(m){
     switch (m.status){
