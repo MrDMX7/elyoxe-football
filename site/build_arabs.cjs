@@ -141,7 +141,7 @@ module.exports = async function(X){
     const mv = a => a.prev_rank && a.prev_rank !== a.rank ? (a.prev_rank > a.rank ? ' <span class="up">▲</span>' : ' <span class="dn">▼</span>') : "";
     const body = (afc.length ? sec("تصنيف الاتحاد الآسيوي للدول", "2026/27", tbl(["الدولة", "المركز في آسيا", "النقاط"], afc.map(a => `<tr><td class="tm">${esc(a.name_ar)}</td><td>${a.rank}${mv(a)}</td><td>${a.total.toFixed(1)}</td></tr>`)) + note(`المصدر: <a href="${esc(CF.sources.afc.url)}" rel="noopener">ويكيبيديا</a> ومراجعها.`)) : "") +
       (caf.length ? sec("تصنيف الاتحاد الأفريقي للدول", "آخر 5 مواسم", tbl(["الدولة", "المركز في أفريقيا", "النقاط"], caf.map(a => `<tr><td class="tm">${esc(a.name_ar)}</td><td>${a.rank}${mv(a)}</td><td>${a.total}</td></tr>`)) + note(`المصدر: <a href="${esc(CF.sources.caf.url)}" rel="noopener">ويكيبيديا</a> ومراجعها.`)) : "") +
-      (cc.length ? sec("الأندية العربية في تصنيف أفريقيا", "", tbl(["النادي", "المركز", "النقاط"], cc.map(a => `<tr><td class="tm">${esc(a.name_ar || a.club)}</td><td>${a.rank}</td><td>${a.total}</td></tr>`))) : "");
+      "";   // W1.8: the club table printed countries where the clubs should be; hidden until the source is fixed
     put("/coefficients/", "أقوى دوري عربي: تصنيف آسيا وأفريقيا", "ترتيب الدوريات العربية في تصنيف الاتحاد الآسيوي والأفريقي، ونقاط كل دولة.", "أقوى دوري عربي؟", "الجواب الرسمي: تصنيف الاتحادين القاريين من نتايج الأندية في البطولات القارية.", body, { crumbs:hubLink });
   }
   // 282 calendars + 322 the year ahead
@@ -192,8 +192,8 @@ module.exports = async function(X){
   const AX = F["archive/index-all"];
   if (AX && AX.seasons && AX.seasons.length){
     const ss = AX.seasons.slice().sort((a, b) => b.season.localeCompare(a.season));
-    put("/explore/", "أرشيف النتايج: كل مباراة من 2010", "دوّر في كل نتيجة مخزنة من موسم 2010/11: اختار الموسم والبطولة والفريق.", "أرشيف النتايج", "اختار الموسم، وبعدها البطولة أو الفريق.",
-      `<div class="cmpsel"><select id="exs" aria-label="الموسم">${ss.map(s => `<option value="${esc(s.season)}">${esc(s.season.replace("-", "/"))} (${s.matches})</option>`).join("")}</select><select id="exc" aria-label="البطولة"><option value="">كل البطولات</option></select><input id="ext" type="search" placeholder="اسم الفريق" aria-label="الفريق"></div><div id="exout"><p class="empty">نحمّل…</p></div><script type="application/json" id="excomps">${JSON.stringify(Object.fromEntries((index.competitions || []).map(c => [c.id, c.name_ar]))).replace(/</g, "\\u003c")}</script>`, { page:"explore" });
+    put("/explore/", "أرشيف النتايج: كل مباراة من 2020", "دوّر في كل نتيجة مخزنة من موسم 2020/21: اختار الموسم والبطولة والفريق.", "أرشيف النتايج", "اختار الموسم، وبعدها البطولة أو الفريق.",
+      `<div class="cmpsel"><select id="exs" aria-label="الموسم">${ss.filter(s => parseInt(s.season, 10) >= 2020).map(s => `<option value="${esc(s.season)}">${esc(s.season.replace("-", "/"))} (${s.matches})</option>`).join("")}</select><select id="exc" aria-label="البطولة"><option value="">كل البطولات</option></select><input id="ext" type="search" placeholder="اسم الفريق" aria-label="الفريق"></div><div id="exout"><p class="empty">نحمّل…</p></div><script type="application/json" id="excomps">${JSON.stringify(Object.fromEntries((index.competitions || []).map(c => [c.id, c.name_ar]))).replace(/</g, "\\u003c")}</script>`, { page:"explore" });
   }
   // 245 international break hub: every Arab national team's next and last match, shown on the home page while a window is on
   { const nx = natTeams.filter(t => t.next_match || t.last_result);

@@ -15,13 +15,21 @@
 
   // ---- sheets + panel: one open at a time, Esc / scrim / close button, focus returns to the opener
   var opener = null, scrim = $("#scrimall");
-  function closeAll(){ $$(".sheet:not([hidden]),.panel:not([hidden])").forEach(function(s){ s.hidden = true; if (s.id === "panel") unpanel(); }); scrim.hidden = true; B.classList.remove("locked"); if (opener && opener.focus) opener.focus(); opener = null; }
-  function open(el, from){ closeAll(); opener = from || document.activeElement; el.hidden = false; scrim.hidden = false; B.classList.add("locked"); var f = el.querySelector("button,a,[tabindex]"); if (f) setTimeout(function(){ f.focus({ preventScroll:true }); }, 30); }
+  // W1.9: an open sheet or panel owns one history entry, so the phone's back gesture closes it instead of leaving the page
+  function anyOpen(){ return !!document.querySelector(".sheet:not([hidden]),.panel:not([hidden])"); }
+  function closeAll(fromPop){ var was = anyOpen(); $$(".sheet:not([hidden]),.panel:not([hidden])").forEach(function(s){ s.hidden = true; if (s.id === "panel") unpanel(); }); scrim.hidden = true; B.classList.remove("locked"); if (opener && opener.focus) opener.focus(); opener = null;
+    if (was && fromPop !== true && history.state && history.state.tifoOv) try { history.back(); } catch (e){} }
+  function open(el, from){ var had = anyOpen(); closeAll(true); opener = from || document.activeElement; el.hidden = false; scrim.hidden = false; B.classList.add("locked"); var f = el.querySelector("button,a,[tabindex]"); if (f) setTimeout(function(){ f.focus({ preventScroll:true }); }, 30);
+    if (!(had && history.state && history.state.tifoOv)) try { history.pushState({ tifoOv:1 }, ""); } catch (e){} }
+  window.addEventListener("popstate", function(){ if (anyOpen()) closeAll(true); var sb = $("#srchbox"); if (sb) sb.remove(); });
+  // search closes on a tap outside it
+  document.addEventListener("click", function(e){ var sb = $("#srchbox"); if (sb && !sb.contains(e.target) && !e.target.closest("#srch")) sb.remove(); });
   document.addEventListener("click", function(e){
     var t = e.target.closest("[data-sheet]"); if (t){ e.preventDefault(); open($("#" + t.dataset.sheet), t); return; }
     if (e.target.closest("[data-close]") || e.target === scrim || (e.target.classList && (e.target.classList.contains("sheet") || e.target.classList.contains("panel")))) { closeAll(); return; }
     var o = e.target.closest("[data-open]"); if (o){ panel(o.dataset.open, o); return; }
     var g = e.target.closest("[data-go]"); if (g){ e.preventDefault(); goTab(g.dataset.go); return; }
+    var sg = e.target.closest("[data-seg]"); if (sg){ e.preventDefault(); var ab = $("#arabonly"); if (ab && ab.getAttribute("aria-pressed") !== "true") ab.click(); var mt = $("#matches"); if (mt) mt.scrollIntoView({ behavior:RM ? "auto" : "smooth" }); return; }
     // settings buttons inside المزيد open their own boxes (app.js): close the sheet first
     if (e.target.closest("#more #ctry, #srch")) { $$(".sheet:not([hidden])").forEach(function(s){ s.hidden = true; }); scrim.hidden = true; B.classList.remove("locked"); }
     // client-rendered links to a prototype page stay inside /next/
@@ -40,7 +48,7 @@
     var h2 = body.querySelector("h2"); $("#panelt").textContent = body.dataset.title || (h2 ? h2.firstChild.textContent : "");
     var sm = h2 && h2.querySelector("small"); $("#panels").innerHTML = sm ? sm.innerHTML : "";
     $("#panelb").appendChild(body); $("#panelb").scrollTop = 0;
-    if (from && from.dataset.anchor) try { history.replaceState(null, "", "#" + from.dataset.anchor); } catch (e){}
+    if (from && from.dataset.anchor) try { history.replaceState(history.state, "", "#" + from.dataset.anchor); } catch (e){}
   }
   function unpanel(){ if (cur){ cur.vault.appendChild(cur.body); cur = null; } }
 
@@ -147,6 +155,13 @@
         if (!f.some(function(x){ return x.t === "team" && x.id === id; })) f.unshift({ t:"team", id:id, n:n }); lsSet("tifo.favs", JSON.stringify(f)); lsSet("tifo.mine", String(id)); lsSet("tifo.mine.name", n); location.reload(); };
       var p = mineBox.querySelector(".mine-card p"); if (p) p.textContent = "اختار فريقك، ومبارياته تطلع لك هني أول شي."; mineBox.querySelector(".mine-card").appendChild(g); }).catch(function(){}); }
   if (mineBox && "MutationObserver" in window) new MutationObserver(mineEmpty).observe(mineBox, { childList:true });
+  // W1.1e: a page older than 2 minutes dims its live digits and says when it was built, until the first good poll
+  (function(){ var H = document.documentElement; if (!H.classList.contains("stale")) return; var hin = $(".hero-in"); if (!hin) return;
+    var n = document.createElement("p"); n.className = "stalen"; n.textContent = "آخر تحديث " + new Date(H.dataset.built).toLocaleTimeString("ar-AE-u-nu-latn", { hour:"2-digit", minute:"2-digit", timeZone:"Asia/Dubai" }); hin.appendChild(n);
+    document.addEventListener("tifo:fresh", function(){ n.remove(); }, { once:true }); })();
+  // W1.10: a cookieless visit ping (path, country, how long since the last visit on this phone); a 404 until the cards Lambda is redeployed is fine
+  (function(){ try { var last = +localStorage.getItem("tifo.seen") || 0, now = Date.now(), d = (now - last) / 864e5, ret = !last ? "first" : d < 1 && new Date(last).toDateString() === new Date(now).toDateString() ? "day" : d <= 7 ? "week" : "old";
+    localStorage.setItem("tifo.seen", now); fetch("/api/tifo/hit", { method:"POST", keepalive:true, headers:{ "content-type":"application/json" }, body:JSON.stringify({ path:location.pathname, country:localStorage.getItem("tifo.country") || "", ret:ret }) }).catch(function(){}); } catch (e){} })();
   // ================= owner items (2026-09-27): 355 goal moment · 357 match-state hero · 359 cinema · 360 goal sound ·
   // 370 live «لو خلصت الحين» · 373 player card · 376 lineup builder · 379 embed. Everything lives in the sheet, a tab or the hero.
   function lsGet(k){ try { return localStorage.getItem(k); } catch (e){ return null; } }
@@ -154,6 +169,8 @@
   // 360: goal sound, OFF by default; a short synthesized whistle (no audio file), toggled in المزيد
   var snd = $("#goalsnd"); if (snd){ snd.setAttribute("aria-pressed", lsGet("tifo.goalsnd") === "1"); snd.onclick = function(){ var on = lsGet("tifo.goalsnd") !== "1"; lsSet("tifo.goalsnd", on ? "1" : ""); snd.setAttribute("aria-pressed", on); if (on) whistle(); }; }
   var AC = null;
+  // W1.1h: browsers start audio suspended; the first tap wakes it when the goal sound is on
+  document.addEventListener("pointerdown", function(){ if (lsGet("tifo.goalsnd") !== "1") return; try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume(); } catch (e){} }, { once:true, passive:true });
   function whistle(){ if (lsGet("tifo.goalsnd") !== "1") return; try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); var t = AC.currentTime;
     [0, 0.32].forEach(function(d, i){ var o = AC.createOscillator(), g = AC.createGain(), lfo = AC.createOscillator(), lg = AC.createGain(); o.type = "sine"; o.frequency.value = i ? 2350 : 2150; lfo.frequency.value = 38; lg.gain.value = 90; lfo.connect(lg); lg.connect(o.frequency);
       g.gain.setValueAtTime(0, t + d); g.gain.linearRampToValueAtTime(0.18, t + d + 0.02); g.gain.setValueAtTime(0.18, t + d + (i ? 0.5 : 0.22)); g.gain.linearRampToValueAtTime(0, t + d + (i ? 0.56 : 0.26));
@@ -186,8 +203,8 @@
     var last = ev ? '<bdi dir="ltr">' + R.esc(ev.minute) + "'</bdi> " + ({ goal:"هدف", penalty_goal:"هدف من بلنتي", own_goal:"هدف في مرماه", yellow:"إنذار", red:"طرد", second_yellow:"طرد", sub:"تبديل", missed_penalty:"بلنتي ضايع" }[ev.type] || "") + (ev.player ? " · " + R.esc(ev.player.name) : "") : "";
     cine.querySelector(".ci").innerHTML = '<div class="ct3"><span>' + R.logo(md.home, "xl") + "<b>" + R.tname(md.home) + '</b></span><b class="cs dg">' + (md.score ? md.score.home + " - " + md.score.away : R.hhmm(md.kickoff_uae)) + "</b><span>" + R.logo(md.away, "xl") + "<b>" + R.tname(md.away) + '</b></span></div><p class="cm' + (live ? " live" : "") + '">' + (live ? R.minute(md) : R.statusText(md)) + "</p>" + (last ? '<p class="ce">' + last + "</p>" : ""); }
   var cb2 = $("#cinebtn"); if (cb2) cb2.onclick = function(){ closeAll(); cine = document.createElement("div"); cine.className = "cine"; cine.innerHTML = '<button type="button" class="x" aria-label="سكّر">سكّر</button><div class="ci"></div>'; document.body.appendChild(cine);
-    cine.querySelector(".x").onclick = function(){ if (document.fullscreenElement) document.exitFullscreen().catch(function(){}); cine.remove(); cine = null; };
-    try { cineDraw(window.__md || JSON.parse($("#msum").textContent)); } catch (e){} if (cine.requestFullscreen) cine.requestFullscreen().catch(function(){}); if (navigator.wakeLock) navigator.wakeLock.request("screen").catch(function(){}); };
+    var wlock = null; cine.querySelector(".x").onclick = function(){ if (document.fullscreenElement) document.exitFullscreen().catch(function(){}); if (wlock){ wlock.release().catch(function(){}); wlock = null; } cine.remove(); cine = null; };
+    try { cineDraw(window.__md || JSON.parse($("#msum").textContent)); } catch (e){} if (cine.requestFullscreen) cine.requestFullscreen().catch(function(){}); if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function(l){ wlock = l; }).catch(function(){}); };
   // 370: «لو خلصت الحين» — while live, the league table with this score, recomputed on every poll (first tab)
   var ST0 = null;
   function liveTable(md){ var box = $("#ltable"); if (!box) return; if (!R.isLive(md)){ box.innerHTML = ""; return; }
@@ -197,7 +214,8 @@
       var lo = Math.max(0, Math.min.apply(null, idx) - 2), hi = Math.min(rows.length, Math.max.apply(null, idx) + 3);
       box.innerHTML = '<div class="lt"><b>لو خلصت الحين</b><div class="tblwrap"><table class="st"><tbody>' + rows.slice(lo, hi).map(function(r, i){ var hot = ids.indexOf(r.team.id) >= 0; return '<tr class="' + (hot ? "hot" : "") + '"><td class="rk">' + (lo + i + 1) + '</td><td class="tm">' + R.logo(r.team, "sm") + " " + R.tname(r.team) + "</td><td>" + r.played + '</td><td class="pts">' + r.pts + "</td></tr>"; }).join("") + "</tbody></table></div></div>"; }).catch(function(){}); }
   document.addEventListener("tifo:match", function(e){ var md = e.detail; window.__md = md; scoreWatch(md); heroState(md); cineDraw(md); liveTable(md); });
-  if (PAGE === "match") try { var m0 = JSON.parse($("#msum").textContent); lastScore[m0.id] = m0.score ? { home:m0.score.home, away:m0.score.away } : { home:0, away:0 }; heroState(m0); } catch (e){}
+  // W1.1a: the prerendered summary never seeds the goal detector (opening a page after a goal must not fire «هدف»); the first fresh tifo:match seeds it
+  if (PAGE === "match") try { heroState(JSON.parse($("#msum").textContent)); } catch (e){}
   // the home hero's match: a goal there gets the same moment
   document.addEventListener("tifo:day", function(e){ if (e.detail.off !== 0) return; var f = R.featured(e.detail.ms); if (f && R.isLive(f)){ var p = lastScore[f.id]; if (p && f.score && (f.score.home > p.home || f.score.away > p.away)) goalMoment(f, f.score.home > p.home ? "home" : "away"); if (f.score) lastScore[f.id] = { home:f.score.home, away:f.score.away }; } });
 
@@ -230,7 +248,7 @@
     fetch("/v1/team/" + B.dataset.id + ".json").then(function(r){ return r.json(); }).then(function(t){ var sq = []; (t.squad || []).forEach(function(g){ if (g.group !== "coach") (g.players || []).forEach(function(p){ R.arNames && R.arNames({ lineups:{ home:{ starters:[p] } } }); sq.push({ id:p.id, name:p.name, no:p.number, g:g.group }); }); });
       var F = { "4-3-3":[1, 4, 3, 3], "4-4-2":[1, 4, 4, 2], "4-2-3-1":[1, 4, 2, 3, 1], "3-5-2":[1, 3, 5, 2] }, cur = "4-3-3";
       function draw(){ var rows = F[cur], slots = [], n = 0; rows.forEach(function(k, ri){ for (var i = 0; i < k; i++) slots.push([ri, i, k, n++]); });
-        box.innerHTML = '<div class="seg" role="group">' + Object.keys(F).map(function(f){ return '<button type="button" data-f="' + f + '" aria-pressed="' + (f === cur) + '">' + f + "</button>"; }).join("") + '</div><div class="xi">' + rows.map(function(k, ri){ return '<div class="xr">' + slots.filter(function(s){ return s[0] === ri; }).map(function(s){ return '<select data-s="' + s[3] + '" aria-label="اللاعب">' + '<option value="">—</option>' + sq.map(function(p){ return '<option value="' + p.id + '">' + R.esc(p.name) + "</option>"; }).join("") + "</select>"; }).join("") + "</div>"; }).reverse().join("") + '</div><p><button type="button" class="cta" id="xishare">شارك تشكيلتي</button></p>';
+        box.innerHTML = '<div class="seg" role="group">' + Object.keys(F).map(function(f){ return '<button type="button" data-f="' + f + '" aria-pressed="' + (f === cur) + '">' + f + "</button>"; }).join("") + '</div><div class="xi">' + rows.map(function(k, ri){ return '<div class="xr">' + slots.filter(function(s){ return s[0] === ri; }).map(function(s){ return '<select data-s="' + s[3] + '" aria-label="اللاعب">' + '<option value="">—</option>' + sq.filter(function(p){ return s[0] === 0 ? p.g === "keepers" : p.g !== "keepers"; }).map(function(p){ return '<option value="' + p.id + '">' + R.esc(p.name) + "</option>"; }).join("") + "</select>"; }).join("") + "</div>"; }).reverse().join("") + '</div><p><button type="button" class="cta" id="xishare">شارك تشكيلتي</button></p>';
         box.querySelector(".seg").onclick = function(e){ var b = e.target.closest("[data-f]"); if (b){ cur = b.dataset.f; draw(); } };
         $("#xishare").onclick = function(){ var sel = $$("select[data-s]", box).map(function(s){ var p = sq.filter(function(q){ return String(q.id) === s.value; })[0]; return p ? p.name : ""; });
           var W = 1080, H = 1350, c = document.createElement("canvas"); c.width = W; c.height = H; var x = c.getContext("2d"); x.fillStyle = "#0F3A2F"; x.fillRect(0, 0, W, H);

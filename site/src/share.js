@@ -23,10 +23,13 @@
   function fit(x, s, font, max){ var size = parseInt(font.match(/(\d+)px/)[1], 10); x.font = font; while (x.measureText(s).width > max && size > 20){ size -= 2; x.font = font.replace(/\d+px/, size + "px"); } return x.font; }
   function mark(x, X, Y, s){ var cl = [[CHALK, PULSE, DUNE], [CHALK, DUNE, PULSE], [PULSE, DUNE, CHALK]]; for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++){ x.fillStyle = cl[r][c]; x.fillRect(X + c * s * 1.2, Y + r * s * 1.2, s, s); } }
   function footer(x, W, H){ mark(x, W - 230, H - 130, 22); text(x, "تيفو", W - 330, H - 72, '800 64px "Noto Kufi Arabic"', CHALK, "right"); text(x, "tifo.elyoxe.com", 70, H - 78, '700 40px "Barlow Condensed"', "#B9C7C0", "left"); }
-  function out(canvas, name){
+  // W1.10: the image travels with a line of text and a link (WhatsApp drops `url` when files are attached, so the link rides in `text`);
+  // a cancelled share is just cancelled, a download happens only when the phone can't share files
+  function out(canvas, name, text){
+    text = text || (document.title.replace(/\s*\|\s*تيفو$/, "") + "\n" + location.origin + location.pathname + "?s=wa");
     return new Promise(function(ok){ canvas.toBlob(function(b){
       var f = new File([b], name, { type:"image/png" });
-      if (navigator.canShare && navigator.canShare({ files:[f] })) navigator.share({ files:[f] }).then(ok, function(){ dl(); ok(); }); else { dl(); ok(); }
+      if (navigator.canShare && navigator.canShare({ files:[f] })) navigator.share({ files:[f], text:text }).then(ok, function(e){ ok(); }); else { dl(); ok(); }
       function dl(){ var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 2000); }
     }, "image/png"); });
   }
@@ -59,7 +62,8 @@
       }
       if (md.venue && md.venue.name_ar) text(x, md.venue.name_ar, W / 2, H - 260, '400 34px "Readex Pro"', "#B9C7C0");
       footer(x, W, H);
-      return window.TifoShare.out(c, "tifo-" + md.id + ".png");
+      var H0 = md.home.name_ar || md.home.name, A0 = md.away.name_ar || md.away.name;
+      return window.TifoShare.out(c, "tifo-" + md.id + ".png", (md.score ? H0 + " " + md.score.home + " - " + md.score.away + " " + A0 : H0 + " ضد " + A0 + " " + R.hhmm(md.kickoff_uae)) + "\n" + location.origin + "/m/" + md.id + "/?s=wa");
     });
   }
   // phone wallpaper (1080x2340): the club's next matches on its own colours

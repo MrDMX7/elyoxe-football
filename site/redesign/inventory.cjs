@@ -152,7 +152,7 @@ else if (cmd === "gate"){
     for (const p of sample){
       const o = extract(fs.readFileSync(pageFile(OLD, p), "utf8")).items, n = extract(fs.readFileSync(pageFile(NEW, p), "utf8")).items;
       for (const it of o){ if (it.shell) continue; const al = (MAP.rename[it.label] || []).concat([it.label]).map(norm);
-        const hit = n.find(x => (it.id && x.id === it.id) || al.includes(norm(x.label))); if (!hit){ const key = it.type + ":" + it.label + (it.id ? "#" + it.id : ""); (miss[key] = miss[key] || []).push(p); } }
+        const hit = n.find(x => (it.id && x.id === it.id) || al.includes(norm(x.label))) || MAP.dropped[it.label] || MAP.dropped[it.type + ":" + it.label]; if (!hit){ const key = it.type + ":" + it.label + (it.id ? "#" + it.id : ""); (miss[key] = miss[key] || []).push(p); } }
     }
     res[k] = { pages:list.length, sampled:sample.length, missing:Object.entries(miss).map(([m, ps]) => ({ item:m, n:ps.length, eg:ps[0] })) }; bad += res[k].missing.length;
   }

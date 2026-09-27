@@ -116,7 +116,7 @@
   // ---- referees (37), lineup ages (142), rotation (143), coach pressure (96), style (138), fortress (141)
   S.referees = function(rf){
     if (!rf || !rf.referees || !rf.referees.length) return "";
-    return '<div class="tblwrap"><table class="st"><thead><tr><th style="text-align:start">الحكم</th><th>مباريات</th><th>إنذار بالمباراة</th><th>طرد</th><th>بلنتي</th></tr></thead><tbody>' + rf.referees.slice().sort(function(a, b){ return b.matches - a.matches; }).map(function(r){ var s = r.source_stats; return '<tr><td class="tm"><a class="lat" href="/r/' + r.id + '/">' + esc(r.name) + "</a></td><td>" + (s ? s.matches : r.matches) + "</td><td>" + (s ? s.yellow_per_match : r.yellow_per_match).toFixed(1) + "</td><td>" + (s ? s.red : r.red) + "</td><td>" + (s ? s.penalties : r.penalties) + "</td></tr>"; }).join("") + "</tbody></table></div>";
+    return '<div class="tblwrap"><table class="st"><thead><tr><th style="text-align:start">الحكم</th><th>مباريات</th><th>إنذار بالمباراة</th><th>طرد</th><th>بلنتي</th></tr></thead><tbody>' + rf.referees.slice().sort(function(a, b){ return b.matches - a.matches; }).map(function(r){ var s = r.source_stats && rf.comp != null && r.source_stats.scope_comp === rf.comp ? r.source_stats : null; return '<tr><td class="tm">' + (r.id ? '<a class="lat" href="/r/' + r.id + '/">' + esc(r.name) + "</a>" : '<span class="lat">' + esc(r.name) + "</span>") + "</td><td>" + (s ? s.matches : r.matches) + "</td><td>" + (s ? s.yellow_per_match : r.yellow_per_match).toFixed(1) + "</td><td>" + (s ? s.red : r.red) + "</td><td>" + (s ? s.penalties : r.penalties) + "</td></tr>"; }).join("") + "</tbody></table></div>";
   };
   S.ages = function(la){
     if (!la || !la.rounds) return ""; var k = Object.keys(la.rounds).filter(function(k){ return la.rounds[k] && la.rounds[k].all; }).sort(function(a, b){ return b - a; })[0], r = la.rounds[k]; if (!r) return "";
@@ -127,7 +127,7 @@
     return '<ol class="lead">' + rows.map(function(x, i){ var c = x.t.by_coach && Object.values(x.t.by_coach)[0]; return '<li><span class="num muted">' + (i + 1) + '</span><span class="who">' + tl(x.id) + (c ? ' <span class="muted small lat">' + esc(c.name) + "</span>" : "") + "</span><b>" + fx(x.t.avg_changes, 1) + "</b></li>"; }).join("") + "</ol>" + noteSrc("كم تغيير يسويه المدرب في تشكيلته الأساسية من مباراة للي بعدها، بالمتوسط.");
   };
   S.pressure = function(pr){
-    if (!pr || !pr.teams) return ""; var rows = Object.keys(pr.teams).map(function(id){ return { id:id, t:pr.teams[id] }; }).sort(function(a, b){ return b.t.index - a.t.index; });
+    if (!pr || !pr.teams) return ""; var rows = Object.keys(pr.teams).map(function(id){ return { id:id, t:pr.teams[id] }; }).filter(function(x){ return x.t && x.t.index != null; }); if (!rows.length) return ""; rows = rows.sort(function(a, b){ return b.t.index - a.t.index; });
     return '<div class="thermo">' + rows.map(function(x){ var v = x.t.index; return '<div class="th1"><span class="who">' + tl(x.id) + '</span><span class="tbar"><i style="inline-size:' + v + "%;background:" + (v >= 70 ? "var(--card-r)" : v >= 45 ? "var(--dune)" : "var(--pulse)") + '"></i></span><b class="num">' + v + '</b><small class="muted">' + fx(x.t.ppg, 1) + " نقطة بالمباراة، المتوقع " + fx(x.t.xppg, 1) + (x.t.winless_streak > 1 ? "، " + x.t.winless_streak + " بدون فوز" : "") + "</small></div>"; }).join("") + "</div>" + noteSrc("الضغط من 100: نقاط الفريق مقارنة باللي كان متوقع منه بتصنيفه، وسلسلة النتايج السلبية. كل ما زاد الرقم زاد الضغط على المدرب.");
   };
   S.style = function(sy){
@@ -280,7 +280,7 @@
   };
 
   // ---- phase 4 reference pages: legends (106), memorable (108), this day (40), laws (53)
-  function srcs(list){ return (list || []).slice(0, 3).map(function(u, i){ return '<a href="' + esc(u) + '" rel="noopener">' + (i + 1) + "</a>"; }).join(" "); }
+  function srcs(list){ return (list || []).map(function(u){ return typeof u === "string" ? u : u && u.url; }).filter(function(u){ return u && /^https?:/.test(u); }).slice(0, 3).map(function(u, i){ return '<a href="' + esc(u) + '" rel="noopener">' + (i + 1) + "</a>"; }).join(" "); }
   S.legends = function(raw, ar){
     return raw.map(function(p){ var k = p.name_en || p.name, a = ar[k]; if (!a) return ""; return '<section class="blk legend" id="' + esc(String(k).toLowerCase().replace(/[^a-z]+/g, "-")) + '"><h2>' + esc(p.name_ar || k) + '<small class="lat">' + esc(k) + "</small></h2><p>" + esc(a.bio) + "</p><ul class=\"facts-l\">" + (a.facts || []).map(function(f){ return "<li>" + esc(f) + "</li>"; }).join("") + '</ul><p class="src">المصادر: ' + srcs(p.sources) + (p.fotmob_id ? ' · <a href="/p/' + p.fotmob_id + '/">صفحته في تيفو</a>' : "") + "</p></section>"; }).join("");
   };
@@ -299,7 +299,7 @@
   // ---- 7: where to watch in the UAE; 63: official highlights; 8: stadium guide
   S.watchWhere = function(b){
     if (!b || !b.broadcasters || !b.broadcasters.length) return "";
-    return '<ul class="bc">' + b.broadcasters.map(function(x){ return '<li><b>' + esc(x.name_ar || x.name_en) + "</b>" + (x.free ? ' <span class="ok">مجاني</span>' : "") + (x.package ? ' <span class="muted small">' + esc(x.package) + "</span>" : "") + (x.price_aed ? ' <span class="num">' + x.price_aed + "</span> درهم" : "") + (x.url ? ' <a class="src" href="' + esc(x.url) + '" rel="noopener">المصدر</a>' : "") + "</li>"; }).join("") + "</ul>" + (b.confidence && b.confidence !== "high" ? '<p class="src">المعلومة من الصحافة، ما لقينا إعلان رسمي للموسم.</p>' : "");
+    return '<ul class="bc">' + b.broadcasters.map(function(x){ return '<li><b>' + esc(x.name_ar || x.name_en) + "</b>" + (x.free ? ' <span class="ok">مجاني</span>' : "") + (x.package && /[\u0600-\u06FF]/.test(x.package) ? ' <span class="muted small">' + esc(x.package) + "</span>" : "") + (x.price_aed ? ' <span class="num">' + x.price_aed + "</span> درهم" : "") + (x.url ? ' <a class="src" href="' + esc(x.url) + '" rel="noopener">المصدر</a>' : "") + "</li>"; }).join("") + "</ul>" + (b.confidence && b.confidence !== "high" ? '<p class="src">المعلومة من الصحافة، ما لقينا إعلان رسمي للموسم.</p>' : "");
   };
   S.highlight = function(h, md){
     var ch = h && h.channels && h.channels.filter(function(c){ return c.search_url_template && c.posts_per_match_highlights !== false; })[0]; if (!ch) return "";
@@ -316,9 +316,10 @@
     if (clubs.length) rows.push(["ملعب", clubs.join("، ")]);
     var addr = v(L.address_ar) || v(L.address_en); if (addr) rows.push(["العنوان", esc(addr)]);
     var gm = v(L.google_maps); if (gm) rows.push(["الخريطة", '<a href="' + esc(gm) + '" rel="noopener">افتحه في خرايط قوقل</a>']);
-    var metro = v(G.metro_official); if (metro) rows.push(["المترو", esc(enAr(metro))]);
-    var bus = (G.bus || []).map(v).filter(Boolean); if (bus.length) rows.push(["الباص", esc(bus.map(enAr).join("، "))]);
-    var park = v(G.parking); rows.push(["المواقف", park ? esc(enAr(park)) : '<span class="muted">ما في معلومة منشورة</span>']);
+    var AR = function(t){ t = t == null ? "" : String(enAr(t)); return /[\u0600-\u06FF]/.test(t) ? t : ""; };   // W1.7: raw Latin research notes never reach the page
+    var metro = AR(v(G.metro_official)); if (metro) rows.push(["المترو", esc(metro)]);
+    var bus = (G.bus || []).map(v).filter(Boolean).map(AR).filter(Boolean); if (bus.length) rows.push(["الباص", esc(bus.join("، "))]);
+    var park = AR(v(G.parking)); rows.push(["المواقف", park ? esc(park) : '<span class="muted">ما في معلومة منشورة</span>']);
     var pf = v(K.platform); if (pf){ var pn = String(pf.name || pf).split(/\s*[(+]/)[0]; rows.push(["التذاكر", pf.url ? '<a class="lat" href="' + esc(pf.url) + '" rel="noopener">' + esc(pn) + "</a>" : esc(pn)]); }
     var pr = v(K.price_range_aed); if (pr) rows.push(["أسعار التذاكر", '<span class="num">' + esc(typeof pr === "object" ? (pr.min + " - " + (pr.max || pr.max_on_sale)) : pr) + "</span> درهم"]);
     var fac = [["air_conditioned_stands", "مدرجات مكيّفة"], ["covered_seating", "مدرجات مظللة"], ["family_section", "قسم عائلات"], ["prayer_room", "مصلى"]].filter(function(f){ return v(F[f[0]]) === true; }).map(function(f){ return f[1]; });
@@ -364,17 +365,18 @@
   // ---- 221 opponent report for fans
   S.oppReport = function(md, cx, stats){
     var gb = cx["goal-bands"] && cx["goal-bands"].teams, sty = cx.style && cx.style.teams, side = function(t){ var out = [], g = gb && gb[t.id], y = sty && sty[t.id] && sty[t.id].style;
-      if (g){ var f = g["for"], a = g.against, bands = Object.keys(f), bf = bands.reduce(function(x, k){ return f[k] > f[x] ? k : x; }, bands[0]), ba = bands.reduce(function(x, k){ return a[k] > a[x] ? k : x; }, bands[0]); out.push("أكثر وقت يسجل فيه: الدقايق " + bf + " (" + f[bf] + " أهداف)."); out.push("أكثر وقت يستقبل فيه: الدقايق " + ba + " (" + a[ba] + " أهداف)."); }
+      if (g){ var f = g["for"], a = g.against, bands = Object.keys(f), bf = bands.reduce(function(x, k){ return f[k] > f[x] ? k : x; }, bands[0]), ba = bands.reduce(function(x, k){ return a[k] > a[x] ? k : x; }, bands[0]); if (f[bf] > 0) out.push("أكثر وقت يسجل فيه: الدقايق " + bf + " (" + f[bf] + " أهداف)."); if (a[ba] > 0) out.push("أكثر وقت يستقبل فيه: الدقايق " + ba + " (" + a[ba] + " أهداف)."); }
       if (y) out.push("يستحوذ " + fx(y.possession, 0) + "% ويسدد " + fx(y.shots, 1) + " بالمباراة" + (y.ppda != null ? "، وضغطه " + (y.ppda < 11 ? "عالي" : y.ppda < 15 ? "متوسط" : "خفيف") : "") + ".");
       var sc = stats && stats.lists && (stats.lists.goals || []).filter(function(p){ return p.team && p.team.id === t.id; })[0]; if (sc) out.push("أخطر لاعب: " + '<span class="lat">' + esc(sc.player.name) + "</span> (" + sc.value + " أهداف).");
       return out.length ? "<h3>" + R.tname(t) + '</h3><ul class="facts-l">' + out.map(function(x){ return "<li>" + x + "</li>"; }).join("") + "</ul>" : ""; };
-    var h = side(md.home) + side(md.away); return h ? h + noteSrc("من أرقام الفريقين هالموسم في الدوري.") : "";
+    var nat = (T[md.home.id] || {}).national || (T[md.away.id] || {}).national;
+    var h = side(md.home) + side(md.away); return h ? h + noteSrc(nat ? "من أرقام الفريقين في هالبطولة." : "من أرقام الفريقين هالموسم في الدوري.") : "";
   };
   // ---- 224 records that could fall tonight
   S.recordsTonight = function(list){ if (!list.length) return ""; return '<ul class="facts-l">' + list.map(function(x){ return '<li><a href="/m/' + x.m.id + '/">' + R.tname(x.m.home) + " و" + R.tname(x.m.away) + "</a>: " + esc(String(x.f.text_ar).replace(/\s*\(بيانات FotMob\)/g, "")) + "</li>"; }).join("") + "</ul>"; };
   // ---- 226 referee page, 227 coach page
   S.refPage = function(r, byId){
-    var s = r.source_stats, rows = [["مباريات هالموسم", r.matches], ["إنذار بالمباراة", fx(r.yellow_per_match, 1)], ["طرد", r.red], ["بلنتي", r.penalties], ["قرارات الفار", r["var"]]];
+    var s = r.source_stats && r.comp && r.source_stats.scope_comp === r.comp.id ? r.source_stats : null, rows = [["مباريات هالموسم", r.matches], ["إنذار بالمباراة", fx(r.yellow_per_match, 1)], ["طرد", r.red], ["بلنتي", r.penalties], ["قرارات الفار", r["var"]]];
     if (s && s.fouls_per_match) rows.push(["أخطاء بالمباراة", fx(s.fouls_per_match, 1) + " (معدل الدوري " + fx(s.fouls_league_avg_per_match, 1) + ")"]);
     return '<dl class="facts">' + rows.map(function(x){ return "<div><dt>" + x[0] + '</dt><dd class="num">' + x[1] + "</dd></div>"; }).join("") + "</dl><h2>مبارياته</h2>" + (r.match_ids || []).map(function(id){ var m = byId(id); return m ? R.matchRow(m, { date:true }) : ""; }).join("");
   };
@@ -435,7 +437,7 @@
     if (rb.biggest_wins && rb.biggest_wins.length) out += "<h3>أكبر فوز</h3><ol class=\"facts-l\">" + rb.biggest_wins.slice(0, 5).map(function(x){ return "<li>" + m(x) + "</li>"; }).join("") + "</ol>";
     if (rb.highest_scoring && rb.highest_scoring.length) out += "<h3>أكثر مباراة فيها أهداف</h3><ol class=\"facts-l\">" + rb.highest_scoring.slice(0, 5).map(function(x){ return "<li>" + m(x) + ' <span class="muted small">(' + x.goals + " أهداف)</span></li>"; }).join("") + "</ol>";
     var sk = rb.streaks || {}, SK = { winning:"أطول سلسلة انتصارات", unbeaten:"أطول سلسلة بدون خسارة", losing:"أطول سلسلة خسارات" };
-    Object.keys(SK).forEach(function(k){ if (sk[k] && sk[k].length) out += "<h3>" + SK[k] + '</h3><ol class="facts-l">' + sk[k].slice(0, 3).map(function(x){ return "<li>" + esc(x.team_ar) + ' <b class="num">' + x.length + "</b> مباريات" + (x.current ? ' <b class="rec">مستمرة</b>' : "") + "</li>"; }).join("") + "</ol>"; });
+    Object.keys(SK).forEach(function(k){ if (sk[k] && sk[k].length) out += "<h3>" + SK[k] + '</h3><ol class="facts-l">' + sk[k].filter(function(x){ return x.length != null; }).slice(0, 3).map(function(x){ return "<li>" + (x.team_ar ? esc(x.team_ar) : R.tname(team(x.team))) + ' <b class="num">' + x.length + "</b> مباريات" + (x.current ? ' <b class="rec">مستمرة</b>' : "") + "</li>"; }).join("") + "</ol>"; });
     var mg = rb.most_goals_in_season; if (mg) out += "<h3>أكثر أهداف في موسم</h3><p>" + esc(mg.team_ar) + ' <b class="num">' + mg.goals + "</b> هدف في موسم " + esc(mg.season) + "</p>";
     if (rb.hat_tricks && rb.hat_tricks.length) out += "<h3>الهاتريك</h3><ol class=\"facts-l\">" + rb.hat_tricks.slice(-8).reverse().map(function(x){ return '<li><a class="lat" href="/p/' + x.player + '/">' + esc(x.name) + '</a> <span class="muted small">' + esc(x.date) + '</span> <a href="/m/' + x.match + '/">المباراة</a></li>'; }).join("") + "</ol>";
     return out + noteSrc("من كل مباريات الدوري المسجّلة من " + esc(rb.since) + " (" + rb.matches + " مباراة).");
@@ -500,7 +502,8 @@
       if (risk.length) out += "<h3>إنذار واحد ويوقف</h3>" + '<ol class="lead">' + risk.map(function(p){ return '<li><span class="num muted"></span><span class="who">' + R.logo(team(p.team), "sm") + pl(p.id, p.name) + ' <span class="muted">' + p.yellows + " إنذارات</span></span><b></b></li>"; }).join("") + "</ol>"; }
     if (!r) return out;
     if (!r.rules || !r.rules.length) return out + '<p class="note">ما لقينا لائحة رسمية لإيقافات هالبطولة.</p>';
-    var li = r.rules.map(function(x){ return "<li>كل " + (x.repeat_every || x.yellows) + " إنذارات = إيقاف " + x.ban_matches + " مباراة" + (x.until ? ' <span class="muted small">(لين ' + esc(x.until) + ")</span>" : "") + "</li>"; });
+    var ar = function(t){ return t && /[\u0600-\u06FF]/.test(t) ? t : ""; };
+    var li = r.rules.filter(function(x){ return x.ban_matches != null && (x.repeat_every || x.yellows); }).map(function(x){ return "<li>" + (x.repeat_every ? "كل " + x.repeat_every + " إنذارات" : "عند الإنذار " + x.yellows) + " = إيقاف " + x.ban_matches + (x.ban_matches === 1 ? " مباراة" : x.ban_matches === 2 ? " مباراتين" : " مباريات") + (ar(x.until) ? ' <span class="muted small">(لين ' + esc(x.until) + ")</span>" : "") + "</li>"; });
     if (r.second_yellow_ban && r.second_yellow_ban.matches) li.push("<li>الإنذار الثاني في نفس المباراة (طرد) = إيقاف " + r.second_yellow_ban.matches + " مباراة.</li>");
     if (r.red_ban && r.red_ban.min_matches) li.push("<li>الطرد المباشر = إيقاف " + r.red_ban.min_matches + " مباراة على الأقل.</li>");
     return out + "<h3>قانون الإيقاف</h3><ul class=\"facts-l\">" + li.join("") + "</ul>" + (/low|medium/.test(r.confidence || "") ? '<p class="src">المصدر غير رسمي بالكامل، تأكد من لائحة البطولة.</p>' : "") + '<p class="src">المصادر: ' + srcs(r.sources) + "</p>";

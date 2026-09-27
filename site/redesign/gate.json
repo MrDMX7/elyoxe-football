@@ -9,11 +9,6 @@
   "sampled": 1,
   "missing": []
  },
- "arabs-week": {
-  "pages": 1,
-  "sampled": 1,
-  "missing": []
- },
  "ask": {
   "pages": 1,
   "sampled": 1,
@@ -135,12 +130,12 @@
   "missing": []
  },
  "match": {
-  "pages": 5148,
+  "pages": 5147,
   "sampled": 25,
   "missing": []
  },
  "kit": {
-  "pages": 27,
+  "pages": 26,
   "sampled": 25,
   "missing": []
  },
@@ -180,7 +175,7 @@
   "missing": []
  },
  "referee": {
-  "pages": 296,
+  "pages": 295,
   "sampled": 25,
   "missing": []
  },

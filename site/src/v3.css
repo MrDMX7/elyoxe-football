@@ -418,17 +418,17 @@ body[data-state="final"] .mhero .sc .st{color:var(--ink);font-weight:600}
 .lt tr.hot td{background:#F6F7F214;font-weight:700}
 /* 376 lineup builder, 379 embed code */
 .xi{display:grid;gap:.6rem;background:linear-gradient(#0F3A2F,#0A2620);padding:1rem .6rem;margin-block:.8rem;border:1px solid var(--line)}
-.xr{display:flex;justify-content:center;gap:.4rem;flex-wrap:wrap}
+.xr{display:flex;justify-content:center;gap:.3rem}.xr select{min-inline-size:0;flex:1 1 0}
 .xr select{max-inline-size:9.5rem;background:var(--surf);color:var(--ink);border:1px solid var(--line);padding:.35rem}
 .embc{inline-size:100%;background:var(--board);color:var(--ink);border:1px solid var(--line);font:12px/1.5 ui-monospace,monospace;direction:ltr;margin-block:.4rem}
 /* 358 floodlights on the lineup pitch */
 .v3 .pitch{background:radial-gradient(60% 45% at 0 0,#ffffff1f,transparent 70%),radial-gradient(60% 45% at 100% 0,#ffffff1f,transparent 70%),radial-gradient(60% 45% at 0 100%,#ffffff17,transparent 70%),radial-gradient(60% 45% at 100% 100%,#ffffff17,transparent 70%),repeating-linear-gradient(0deg,#0F3A2F 0 8%,#124233 8% 16%);box-shadow:inset 0 0 60px #0008}
 /* 361 skeletons shaped like the real content (client-filled slots) */
 @keyframes skel{0%{background-position:100% 0}100%{background-position:-100% 0}}
-.rmine #mine:empty{block-size:9rem;background:linear-gradient(90deg,var(--surf) 0,#18463B 50%,var(--surf) 100%) 0 0/200% 100%;animation:skel 1.4s linear infinite}
+.rmine #mine:empty{block-size:9rem;background:linear-gradient(90deg,var(--surf) 0,#18463B 50%,var(--surf) 100%) 0 0/200% 100%;animation:skel 1.4s linear 3}
 .v3 p.empty:only-child:not(:empty){position:relative}
-#tv > .empty,#pout > .empty,#kitct > .empty,#lplot > .empty,#cout:empty{block-size:10rem;color:transparent;background:linear-gradient(90deg,var(--surf) 0,#18463B 50%,var(--surf) 100%) 0 0/200% 100%;animation:skel 1.4s linear infinite}
-@media (prefers-reduced-motion:reduce){.rmine #mine:empty,#tv > .empty,#pout > .empty,#kitct > .empty,#lplot > .empty,#cout:empty{animation:none}}
+.skel{block-size:10rem;color:transparent;background:linear-gradient(90deg,var(--surf) 0,#18463B 50%,var(--surf) 100%) 0 0/200% 100%;animation:skel 1.4s linear 3}   /* W1.8: only placeholders shimmer, and only 3 times */
+@media (prefers-reduced-motion:reduce){.rmine #mine:empty,.skel{animation:none}}
 /* 356 view transitions: a crest morphs into the team page hero */
 @view-transition{navigation:auto}
 ::view-transition-group(*){animation-duration:.35s}
@@ -497,3 +497,18 @@ body.v3{background:repeating-linear-gradient(180deg,#ffffff00 0 64px,#ffffff08 6
 .rmine .mine-card{grid-auto-flow:row;grid-auto-columns:auto}
 /* 388 the national countdown inside a rail card */
 .rc #uaecd{margin:0;min-block-size:0;font-size:.72rem}.rc #uaecd .cd{display:flex;gap:.4rem;background:none;border:0;padding:0;margin:0;color:var(--tert)}.rc #uaecd .cd b,.rc #uaecd .cd br,.rc #uaecd .cd .small{display:none}.rc #uaecd .dg{font-size:.9rem;color:var(--ink)}
+
+/* ===== Wave 1 (audit 2026-09-27) ===== */
+/* W1.1e/g: stale or weak data is dimmed and dated, never hidden */
+.stale .hsc .dg,.stale .board .sc .dg,.stale .board .sc .st,.stale .hsc .st,.stale .kick,.stale .rc.live .mid,.stale .chip.live,.stale .mini .ms{opacity:.5}
+.stalen,.netnote{margin:.6rem 0 0;font-size:.78rem;color:var(--tert)}
+.netnote{color:var(--ink)}
+/* W1.5: what the old colour remap made invisible */
+.v3 .pl b{background:var(--ink);color:var(--bg)}
+.v3 .tl .played{background:var(--ink)}
+.v3 .tl .ev.goal{background:var(--ink);border-radius:50%;inline-size:.85rem;block-size:.85rem}
+.v3 .tabs button{margin-block-end:0;border-block-end:0}
+.v3 .tabs [aria-selected="true"]{box-shadow:inset 0 -3px 0 var(--dune)}
+.v3 .seg [aria-selected="true"],.v3 .seg [aria-pressed="true"]{box-shadow:none}
+.v3 .flag{font-size:.95em}
+.m.nolink{cursor:default}
