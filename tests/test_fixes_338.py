@@ -262,3 +262,32 @@ def test_careers_skips_one_bad_player(tmp_path, monkeypatch):
     MO.careers(p)
     assert "player/2/career.json" in p.store.written and "player/1/career.json" not in p.store.written
     assert p.store.health["careers"]["ok"] and "1" in p.store.health["careers"]["note"]
+
+
+def test_team_file_patched_after_full_time(tmp_path):
+    p = _poller(tmp_path)
+    p.now_fn = lambda: datetime(2026, 9, 27, 21, 40, tzinfo=timezone.utc)
+    fx = {"id": 6052085, "status": "live", "minute": "1", "score": {"home": 0, "away": 2}, "status_detail": None, "penalties": None}
+    p.store.put_json("team/5789.json", {"id": 5789, "fixtures": [dict(fx)]})
+    p.store.put_json("national/5789/team.json", {"id": 5789, "fixtures": [dict(fx, status="scheduled", score=None, minute=None)]})
+    p.store.put_json("match/6052085.json", {"id": 6052085, "status": "finished", "status_detail": "FT",
+                                            "score": {"home": 0, "away": 3}, "penalties": None})
+    p.st["schedule"] = {"6052085": {"ko": "2026-09-27T18:00:00Z", "comp": 329, "status": "finished", "h": 5824, "a": 5789}}
+    p.patch_team_files()                                               # the sweep finds it (finished < 24 h ago)
+    for path in ("team/5789.json", "national/5789/team.json"):
+        f = p.store.get_json(path)["fixtures"][0]
+        assert (f["status"], f["score"], f["minute"]) == ("finished", {"home": 0, "away": 3}, None)
+    assert "6052085" in p.st["team_settled"] and not p.st["team_patch"]
+
+
+def test_status_change_queues_team_patch_and_settle(tmp_path):
+    p = _poller(tmp_path)
+    p.now_fn = lambda: datetime(2026, 9, 27, 18, 1, tzinfo=timezone.utc)
+    m = {"id": 7, "comp": 329, "kickoff_utc": "2026-09-27T18:00:00Z", "status": "scheduled", "home": {"id": 1}, "away": {"id": 2}}
+    p.remember_schedule([m])
+    assert not p.st.get("team_patch")
+    p.remember_schedule([dict(m, status="live")])
+    assert "7" in p.st["team_patch"]
+    p.store.put_json("match/7.json", {"status": "live", "status_detail": None, "score": {"home": 1, "away": 0}, "penalties": None})
+    out = p.settle_fixtures([{"id": 7, "status": "scheduled", "minute": "1", "score": None, "period": "1H"}])[0]
+    assert out["status"] == "live" and out["score"] == {"home": 1, "away": 0} and out["minute"] is None and "period" not in out

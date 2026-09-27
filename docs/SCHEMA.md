@@ -198,7 +198,7 @@ The team fields are `{id, name, name_ar, logo, short_name, country, national, pr
 - **`squad`:** `[{group: keepers/defenders/midfielders/attackers, players: [{id, name, number, position, country, club, club_id, age, goals, assists, yellow, red, injury, abroad}]}]`.
   - `country` is the nationality (club squads).
   - In the national team `club`/`club_id` are the player's club, and `abroad` = the club is not a UAE Pro League/League Cup club.
-- **`fixtures`:** every competition, including friendlies.
+- **`fixtures`:** every competition, including friendlies. `minute` is always null here (a team file is a daily snapshot; the live minute is in `live.json` and `match/{id}.json`). When a tracked match changes status (kickoff, HT, FT), the poller patches that fixture's `status`, `status_detail`, `score` and `penalties` in both teams' `team/{id}.json` and `national/{id}/team.json` (`fixtures_patched_at`), and sweeps matches that finished in the last 24 h. A refresh from the source takes the status and score we already know when its snapshot lags.
 - **`transfers`:** `{in: [...], out: [...]}`, each `{player, position, date, from, to, free_agent, fee, fee_eur, loan, type, extension}`.
 
 ### Season aggregates (from the ledger of stored final match details)

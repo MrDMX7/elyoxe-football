@@ -566,6 +566,7 @@ def national_teams(p, limit=6):
         if n < limit and p.has_time(6) and p.due("natteam", 720, tid):
             try:
                 t = p.fm.team(tid)
+                t["fixtures"] = p.settle_fixtures(t.get("fixtures") or [])
                 p.store.put_json(f"national/{tid}/team.json", {**t, "country_info": {"iso2": c["iso2"], "name_ar": c["name_ar"],
                                                                                       "national": True},
                                                                "generated": iso(p.now())}, cache="static")
