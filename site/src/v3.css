@@ -64,7 +64,9 @@ img.logo.md{inline-size:2.1rem;block-size:2.1rem}
 .cta,.ghost{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-block-size:2.9rem;padding:.55rem 1.4rem;font-family:var(--kufi);font-weight:800;font-size:.95rem;cursor:pointer;border:2px solid var(--ink)}
 .cta{background:var(--ink);color:var(--bg)}.cta:hover{background:#fff;color:var(--bg)!important}
 .ghost{background:#0A262066;color:var(--ink)}.ghost:hover{background:#F6F7F21f}
-#uaecd:empty,#since:empty{display:none}
+#since:empty{display:none}
+.hero #uaecd{min-block-size:2.2rem}   /* reserved: the countdown fills it after load (no layout shift) */
+body:not([data-page="home"]):not([data-page="team"]) #uaecd:empty{display:none}
 #uaecd{margin-block-start:1rem;max-inline-size:34rem}
 .hero #uaecd .cd{display:inline-flex;gap:.7rem;align-items:baseline;background:none;border:0;padding:0;margin:0;color:var(--tert)}.hero #uaecd .cd b{font:600 .85rem var(--text);color:var(--tert)}.hero #uaecd .cd br,.hero #uaecd .cd .small{display:none}.hero #uaecd .cd .dg{font-size:1.25rem;color:var(--ink)}
 /* home: the hero sits inside the viewport with the first rail peeking */
@@ -358,3 +360,27 @@ body.second .mhero{min-block-size:100svh}
 .why p{margin:.25rem 0;font-size:clamp(1.05rem,.95rem + .6vw,1.35rem);line-height:1.7;font-weight:600}
 .quick{background:var(--surf);padding:.9rem 1rem;margin-block:0 1.2rem;border-block-start:3px solid var(--ink)}
 .quick ol{margin:0;padding-inline-start:1.2rem;display:grid;gap:.35rem;font-size:.95rem}
+/* stage 3: team hero */
+.thero{min-block-size:clamp(22rem,56svh,32rem)}
+.tid{display:flex;align-items:center;gap:clamp(.8rem,3vw,2rem)}
+.tid h1{margin:0}
+.tid .season{margin:.2rem 0 0;color:var(--tert)}
+.tnext{margin:1.1rem 0 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:.2rem .5rem;font-size:.95rem}
+.tnext span{font-family:var(--kufi);font-size:.75rem;color:var(--bg);background:var(--ink);padding:.05rem .45rem}
+.tnext a{font-weight:600;border-block-end:1px solid var(--line)}
+.cta.on{background:var(--dune);border-color:var(--dune);color:#fff}
+.v3 .th,.v3 .strip{display:none}
+/* stages 4-6: compact hero for the other pages */
+.phero{min-block-size:clamp(13rem,34svh,20rem)}
+.phero .hero-in{padding-block:calc(var(--topH) + 2.2rem) 1.3rem}
+.phero h1{font-size:clamp(1.7rem,1.1rem + 3.2vw,3.2rem)}
+.phero .season{color:var(--tert);margin:.2rem 0 0}
+.phero.haslogo .lgart{inline-size:min(40vw,9rem);inset-block-start:calc(var(--topH) + .2rem)}
+.phero.haslogo .hero-in{padding-block-start:calc(var(--topH) + min(40vw,9rem) + .6rem)}
+@media (min-width:880px){.phero.haslogo .lgart{inline-size:12rem;left:8%}.phero.haslogo .hero-in{padding-block-start:calc(var(--topH) + 2.5rem)}}
+.phero .scrim{background:linear-gradient(180deg,#0A2620d9 0%,#0A262080 40%,#0A2620e6 80%,#0A2620 100%)}
+.na{font-size:.8rem;color:var(--stone);margin-block:1.2rem 0}
+.v3 .pstats{border:1px solid var(--line)}
+.v3 .tcard.big{margin-block-end:1.6rem}
+/* the hero actions never re-wrap when the web fonts land (that re-wrap was a 0.2 layout shift) */
+@media (max-width:560px){.hero-acts{flex-wrap:nowrap}.hero-acts > *{flex:1 1 0;min-inline-size:0;padding-inline:.5rem;white-space:nowrap;font-size:.88rem}}

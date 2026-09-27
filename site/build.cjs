@@ -37,7 +37,24 @@ const IC = {
   share:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v8h14v-8"/></svg>',
 };
 const MARK = '<span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>';
+// stages 4-6: a v2 body gets a compact key-art hero from its leading crumbs + h1 + season line, and its action rows
+// (rows of buttons only) move into the page's single sheet. Link rows (pagers, "see also") stay in place.
+const NOHERO = new Set(["tv", "w", "poster", "none"]), SHELF_PATH = /^\/(arabs|year|worldcup-arabs|calendars)\/$|^\/national\/[a-z]{2}\/$/;
+function legacy(o){
+  let body = o.body, hero = "", tools = o.tools || "";
+  body = body.replace(/<p class="tools(?: noprint)?">((?:\s*<button\b[^>]*>[^<]*<\/button>)+)\s*<\/p>/g, (m, bs) => { tools += bs.replace(/class="btn"/g, 'class="sa"'); return ""; });
+  const m = NOHERO.has(o.page) ? null : body.match(/^\s*(<p class="crumbs">[\s\S]*?<\/p>)?\s*(<h1\b[^>]*>[\s\S]*?<\/h1>)\s*(<p class="season">[\s\S]*?<\/p>)?/);
+  if (m){
+    const bands = JSON.stringify(o.art || [["#123A31", "#1B4A3F"], ["#0F3129", "#2A5A4E"]]);
+    hero = `<section class="hero phero${o.lg ? " haslogo" : ""}" data-slot="hero" data-art='${esc(bands)}'${o.lg ? ` style="--g1:${o.lg[1]};--g2:${o.lg[2]}"` : ""}>${o.lg ? `<div class="lgart" aria-hidden="true"><i class="bloom"></i><img class="lglogo" src="/lg/${o.lg[0]}.png" alt="" width="192" height="192"></div>` : '<canvas aria-hidden="true"></canvas>'}<div class="scrim"></div><div class="hero-in wrap">${m[1] ? m[1].replace('class="crumbs"', 'class="hk"') : ""}${m[2]}${m[3] || ""}${o.heroExtra || ""}</div></section>`;
+    body = body.slice(m[0].length);
+  }
+  // hub pages with many sections: the sections become shelf tiles (DESIGN-v3 rule 6), the rest stays inline
+  if (SHELF_PATH.test(o.path || "")){ const b = blocks(body); if (b.secs.length >= 4){ SEQ = 0; body = b.rest + shelf(b.secs, { title:"كل الأقسام" }); } }
+  return { main:hero + `<div class="wrap body${hero ? "" : " legacy"}">${body}</div>`, tools };
+}
 function page(o){
+  if (!o.v3){ const l = legacy(o); o = Object.assign({}, o, { body:l.main, tools:l.tools, v3:true }); }
   const url = SITE + o.path, nk = /^\d+$/.test(o.nav || "") ? "comps" : o.nav === "uae" ? "nat" : o.nav;
   const nav = [["home", "/", "اليوم", IC.today], ["comps", "/competitions/", "البطولات", IC.comps], ["nat", "/national/", "المنتخبات", IC.nat], ["week", "/week/", "الأسبوع", IC.week]];
   const navHtml = nav.map(n => `<a href="${n[1]}"${nk === n[0] ? ' aria-current="page"' : ""}>${n[3]}<span>${n[2]}</span></a>`).join("") + `<button type="button" data-sheet="more" aria-haspopup="dialog">${IC.more}<span>المزيد</span></button>`;
@@ -52,7 +69,7 @@ ${G("اقرا وتعلّم", [L("/legends/", "الأساطير"), L("/memorable/
 ${G("سوّ بنفسك", [L("/studio/", "ستوديو التيفو"), L("/lab/", "المختبر"), L("/ask/", "اسأل تيفو"), L("/cast/", "تيفو كاست"), L("/newsletter/", "النشرة")])}</div></div>
 <div class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panelt" hidden><div class="pn-in"><div class="pn-h"><h2 id="panelt"></h2><span class="pn-sub" id="panels"></span><button type="button" class="x" data-close aria-label="سكّر">سكّر</button></div><div class="pn-b" id="panelb"></div></div></div>
 <div class="scrimall" id="scrimall" hidden></div>`;
-  const art = o.page === "home" || o.page === "match" || o.page === "comp";
+  const art = o.page !== "tv";
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>${esc(o.title)}</title><meta name="description" content="${esc(o.desc)}">${PREVIEW ? '<meta name="robots" content="noindex">' : `<link rel="canonical" href="${url}">`}
 <meta property="og:title" content="${esc(o.title)}"><meta property="og:description" content="${esc(o.desc)}"><meta property="og:url" content="${url}"><meta property="og:locale" content="ar_AE">${o.og ? `<meta property="og:image" content="${SITE}/og/${o.og}.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">` : ""}<meta name="theme-color" content="#0A2620">
@@ -105,6 +122,23 @@ function shelf(secs, o){
 }
 const tabsBar = (group, list) => `<div class="tabs mtabs" role="tablist" data-tabs="${group}" data-slot="tabs">` + list.map((t, i) => `<button type="button" role="tab" data-t="${t[0]}" aria-selected="${i === 0}">${t[1]}</button>`).join("") + "</div>";
 const segBar = (group, list) => `<div class="tabs seg" role="tablist" data-tabs="${group}">` + list.map((t, i) => `<button type="button" role="tab" data-t="${t[0]}" aria-selected="${i === 0}">${t[1]}</button>`).join("") + "</div>";
+// new pipeline files (2026-09-27): upsets, the Arab clubs rating, cup draws. Small renderers; each becomes a shelf tile
+const tlink = id => `<a class="tl" href="/t/${id}/">${R.logo({ id }, "sm")}<span>${esc((S_TEAMS[id] || {}).name_ar || "")}</span></a>`;
+let S_TEAMS = {};
+function upsetsHtml(u){
+  if (!u || !u.seasons) return ""; const all = []; for (const [se, list] of Object.entries(u.seasons)) (list || []).forEach(r => all.push(Object.assign({ season:se }, r)));
+  if (!all.length) return ""; all.sort((a, b) => a.p_win - b.p_win);
+  return '<ol class="facts-l">' + all.slice(0, 10).map(r => `<li>${tlink(r.winner)} فاز على ${tlink(r.loser)}${r.winner_home ? "" : " برا ملعبه"} وفرصته كانت <b class="num">${Math.round(r.p_win * 100)}%</b> <a class="muted small num" href="/m/${r.match}/">${esc(r.date || "")}</a></li>`).join("") + "</ol>";
+}
+function arabRankHtml(ar, ids){
+  if (!ar || !ar.teams || !ids || !ids.length) return ""; const mine = ar.teams.filter(t => ids.includes(t.team)); if (!mine.length) return "";
+  return '<div class="tblwrap"><table class="st"><thead><tr><th>عربياً</th><th style="text-align:start">النادي</th><th>التصنيف</th><th>آخر 5</th></tr></thead><tbody>' + mine.slice(0, 20).map(t => `<tr><td>${t.rank}</td><td class="tm">${tlink(t.team)}</td><td>${Math.round(t.rating)}</td><td><bdi dir="ltr">${t.change_5 > 0 ? "+" : ""}${Math.round(t.change_5 || 0)}</bdi></td></tr>`).join("") + "</tbody></table></div>";
+}
+function drawHtml(d){
+  const cur = d && d.current; if (!cur) return ""; const gs = (cur.groups || []).filter(g => (g.teams || []).length), ts = cur.ties || [];
+  if (!gs.length && !ts.length) return "";
+  return gs.map(g => `<h3>${esc(R.stageAr("Group " + g.name))}</h3><ul class="facts-l">${g.teams.map(id => `<li>${tlink(id)}</li>`).join("")}</ul>`).join("") + (ts.length ? '<ul class="facts-l">' + ts.map(t => `<li>${tlink(t.home || t[0])} ضد ${tlink(t.away || t[1])}</li>`).join("") + "</ul>" : "");
+}
 const vpane = (group, key, html, first) => `<section data-group="${group}" data-pane="${key}" data-slot="tab:${key}"${first ? "" : " hidden"}>${html}</section>`;
 
 (async () => {
@@ -124,7 +158,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   const index = await get("index.json"); if (!index) throw new Error("no index.json from " + DATA);
   const comps = index.competitions, today = new Date(Date.now() + 4 * 3600e3).toISOString().slice(0, 10);
   const urls = ["/", "/uae/", "/competitions/"], teamIds = new Set(), matchSum = new Map();
-  const teamsJson = await get("teams.json"); S.setTeams(teamsJson && teamsJson.teams || {});
+  const teamsJson = await get("teams.json"); S.setTeams(teamsJson && teamsJson.teams || {}); S_TEAMS = (teamsJson && teamsJson.teams) || {};
 
   // ---- 1. fetch: competitions (+ every analytics file the pipeline may have written), today, national
   const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios", "shots", "fatigue", "coaches", "transfers", "records-book", "seasons", "milestones", "upsets", "projections", "bracket-sim", "local-minutes", "suspensions", "first-goal", "dropped", "dependence", "xi", "signings", "absences", "alltime-table", "promoted", "late-goals", "champion-path", "games-in-hand"];
@@ -144,9 +178,13 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   const compData = await pool(comps, 3, async c => {
     const [st, fx, stats] = await Promise.all([c.files && c.files.standings ? get(`comp/${c.id}/standings.json`) : null, get(`comp/${c.id}/fixtures.json`), get(`comp/${c.id}/stats.json`)]);
     const x = {}; await pool(EXTRA, 3, async k => { x[k] = await get(`comp/${c.id}/${k}.json`, 2); });
+    x.draws = c.kind === "league" ? null : await get(`draws/${c.id}.json`, 1);
+    // files the pipeline marks `available: false` (with a reason) render as one quiet note, never as an empty block
+    x._na = []; for (const k of Object.keys(x)) if (x[k] && x[k].available === false){ x._na.push(k); x[k] = null; }
     return { c, st, fx, stats, x };
   });
   const day = await get(`day/${today.replace(/-/g, "")}.json`) || { matches:[] };
+  const arabRatings = await get("ratings/arab-clubs.json", 1);
   const [ratings, compare, fifa, qual, abroad, natRatings] = await Promise.all(["ratings/uae-clubs.json", "leagues/compare.json", "national/5789/fifa.json", "national/5789/qualifying.json", "national/uae-abroad.json", "ratings/national.json"].map(f => get(f, 1)));
   const h2hIdx = await get("h2h/index.json", 1), h2hKeys = h2hIdx ? Object.keys(h2hIdx.pairs) : [];
   const DERBIES = await get("derbies.json"); ((DERBIES && DERBIES.derbies) || []).forEach(d => { const k = String(d.h2h || "").replace(/^h2h\/|\.json$/g, ""); if (k && !h2hKeys.includes(k)) h2hKeys.push(k); });   // 209: the big Arab derbies get the same page
@@ -216,7 +254,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
     const nextR = (() => { if (!fx || !fx.matches) return []; const rr = R.rounds(fx), k = rr.order.find(k => rr.by[k].some(m => m.status === "scheduled" && m.probs)); return k ? rr.by[k].filter(m => m.status === "scheduled" && m.probs).map(m => ({ h:m.home.id, a:m.away.id, home:m.home.name_ar || m.home.name, away:m.away.name_ar || m.away.name, p:[m.probs.home, m.probs.draw, m.probs.away], ko:m.kickoff_uae, r:k })) : []; })();
     const powK = APPROVED.power ? Object.keys(AIPW).filter(k => k.startsWith(c.id + "-")).sort().pop() : null;
     const G = k => `<a href="/glossary/#${k}">شو يعني؟</a>`;
-    const predSecs = blocks([clockHtml ? S.sec("ساعة الموسم", "", clockHtml) : "", roadHtml ? S.sec("الطريق للقب", "", roadHtml) : "", fdrHtml ? S.sec("صعوبة المباريات الياية", G("difficulty"), fdrHtml) : "", x.watch && fx ? S.sec("أحلى مباريات الجولة الياية", "", S.watch(x.watch, fx)) : "", S.whatif(fx, st) ? S.sec("شو لو؟", "", S.whatif(fx, st)) : "", x.sim && x.sim.teams ? S.sec("توقعات آخر الموسم", G("simulator"), S.sim(x.sim, st)) : "", st && st.magic ? S.sec("كم يحتاج فريقك؟", G("magic-number"), S.magic(st)) : "", x["tournament-sim"] ? S.sec("من بيفوز بالبطولة؟", "", S.tsim(x["tournament-sim"])) : "", projHtml ? S.sec("كم بيسجل الهدافين لآخر الموسم؟", "", projHtml) : "", st && st.bracket && st.bracket.length ? S.sec("شجرة البطولة", "", S.bracket(st, null)) : "", x.scenarios ? S.sec("حاسبة التأهل", "", S.groupCalc(x.scenarios)) : "", S.absences(x.absences) ? S.sec("غيابات الجولة" + (x.absences.round ? " " + esc(x.absences.round) : ""), "", S.absences(x.absences)) : "", S.gihFile(x["games-in-hand"]) ? S.sec("المباريات المؤجلة", G("games-in-hand"), S.gihFile(x["games-in-hand"])) : ""].join("")).secs;
+    const predSecs = blocks([clockHtml ? S.sec("ساعة الموسم", "", clockHtml) : "", roadHtml ? S.sec("الطريق للقب", "", roadHtml) : "", fdrHtml ? S.sec("صعوبة المباريات الياية", G("difficulty"), fdrHtml) : "", x.watch && fx ? S.sec("أحلى مباريات الجولة الياية", "", S.watch(x.watch, fx)) : "", S.whatif(fx, st) ? S.sec("شو لو؟", "", S.whatif(fx, st)) : "", x.sim && x.sim.teams ? S.sec("توقعات آخر الموسم", G("simulator"), S.sim(x.sim, st)) : "", st && st.magic ? S.sec("كم يحتاج فريقك؟", G("magic-number"), S.magic(st)) : "", x["tournament-sim"] ? S.sec("من بيفوز بالبطولة؟", "", S.tsim(x["tournament-sim"])) : "", projHtml ? S.sec("كم بيسجل الهدافين لآخر الموسم؟", "", projHtml) : "", st && st.bracket && st.bracket.length ? S.sec("شجرة البطولة", "", S.bracket(st, null)) : "", x.scenarios ? S.sec("حاسبة التأهل", "", S.groupCalc(x.scenarios)) : "", S.absences(x.absences) ? S.sec("غيابات الجولة" + (x.absences.round ? " " + esc(x.absences.round) : ""), "", S.absences(x.absences)) : "", S.gihFile(x["games-in-hand"]) ? S.sec("المباريات المؤجلة", G("games-in-hand"), S.gihFile(x["games-in-hand"])) : "", drawHtml(x.draws) ? S.sec("القرعة", "", drawHtml(x.draws)) : ""].join("")).secs;
     const leadP = predSecs.findIndex(sc => sc.title === "توقعات آخر الموسم"), predLead = leadP >= 0 ? predSecs.splice(leadP, 1)[0].full : "";
     const num = [
       ["cards", "بطاقات تيفو", S.cards(x.cards, 12)], ["clutch", "منو الحاسم؟", S.clutch(x.clutch)], ["tor", "تشكيلة الجولة", S.teamOfRound(x["team-of-round"])],
@@ -228,18 +266,23 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
       ["refs", "الحكام", S.referees(x.referees)], ["ages", "أعمار التشكيلات", S.ages(x["lineup-ages"])], ["rot", "مؤشر التدوير", S.rotation(x.rotation)],
       ["fgoal", "منو يسجل أول؟", S.firstGoal(x["first-goal"])], ["dropped", "نقاط ضاعت ونقاط رجعت", S.dropped(x.dropped)], ["depend", "الاعتماد على الهداف", S.dependence(x.dependence)],
       ["late90", "أهداف بعد الدقيقة 90", S.lateGoals(x["late-goals"])], ["sign", "أحسن صفقات الموسم", S.signings(x.signings)], ["miles", "أرقام شخصية قريبة", S.milestones(x.milestones, ids)],
+      ["upsets", "أكبر المفاجآت", upsetsHtml(x.upsets)], ["arabr", "ترتيبهم بين الأندية العربية", arabRankHtml(arabRatings, ids)],
       ["rating", "تصنيف تيفو للأندية", c.id === 538 ? S.ratingTable(ratings) : ""], ["world", "الدوري الإماراتي ضد العالم", c.id === 538 ? S.compare(compare, 538) : ""],
     ].filter(v => v[2]);
     const GL = { cards:"tifo-card", clutch:"clutch", pressure:"pressure-index", style:"ppda", rot:"rotation", fatigue:"fatigue", rating:"tifo-rating" };
     const numSecs = num.map(v => blocks(S.sec(v[1], GL[v[0]] ? G(GL[v[0]]) : "", v[2], "n-" + v[0])).secs[0]);
+    const NA = { referees:"الحكام", "goal-bands":"توقيت الأهداف", shots:"التسديدات", xg:"الأهداف المتوقعة", "first-goal":"أول هدف" };
+    const naNote = x._na && x._na.length ? `<p class="na">ما عندنا بيانات عن ${x._na.map(k => NA[k] || k).join("، ")} في هالبطولة.</p>` : "";
     const numLead = has.stats ? segBar("lead", [["goals", "الهدافين"], ["assists", "صناع الأهداف"]]) + pane("lead", "goals", `<div id="goals">${R.leaders(stats, "goals")}</div>`, true) + pane("lead", "assists", `<div id="assists">${R.leaders(stats, "assists")}</div>`) : "";
     const derb = c.id === 538 ? S.derbyList(h2hIdx, H2H) : "";
     const histSecs = blocks((x["champion-path"] ? (h => h ? S.sec("طريق البطل", "", h) : "")(S.championPath(x["champion-path"])) : "") + (ATS[c.id] ? S.sec("الهدافين التاريخيين", "", S.alltimeScorers(ATS[c.id])) : "") + (h => h ? S.sec("الجدول التاريخي", "من " + esc((x["alltime-table"] || {}).since || ""), h) : "")(S.alltimeTable(x["alltime-table"])) + (h => h ? S.sec("الدوري موسم بموسم", "", h) : "")(S.seasons(x.seasons, c.season)) + (h => h ? S.sec("الصاعدين هالموسم", "", h) : "")(S.promoted(x.promoted)) + (x.alltime ? S.sec("تاريخ الدوري", "من 1973", S.alltime(x.alltime)) : "") + (derb ? S.sec("سجل المواجهات بين الأندية", "", derb) : "") + (x.records && x.records.chases && x.records.chases.length ? S.sec("أرقام قياسية على المحك", "", S.records(x.records)) : "") + (x["records-book"] ? S.sec("كتاب الأرقام القياسية", "من " + esc(x["records-book"].since || ""), S.recordsBook(x["records-book"])) : "")).secs;
     const tl = [has.table && ["table", "الترتيب"], ["fixtures", "المباريات"], (numLead || numSecs.length) && ["num", "الأرقام"], (predLead || predSecs.length) && ["pred", "التوقعات"], histSecs.length && ["hist", "التاريخ"]].filter(Boolean);
-    const lead = has.table && !st.composite ? st.groups[0].rows[0] : null;
+    const lead = has.table && !st.composite && st.groups.length === 1 ? st.groups[0].rows[0] : null;
     const upcoming = (fx && fx.matches || []).filter(m => m.status === "scheduled" && m.kickoff_utc).sort((a, b) => a.kickoff_utc.localeCompare(b.kickoff_utc))[0];
     const fin = (fx && fx.matches || []).filter(m => m.status === "finished").length, tot = (fx && fx.matches || []).length;
-    const heroFacts = [lead ? `<div><dt>المتصدر</dt><dd><a href="/t/${lead.team.id}/">${R.logo(lead.team, "sm")} ${R.tname(lead.team)}</a> <b class="num">${lead.pts}</b> <small>نقطة</small></dd></div>` : "",
+    const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة", "السابعة", "الثامنة"];
+    const gLead = has.table && st.groups.length > 1 ? st.groups.slice(0, 4).map((gr, gi) => { const r0 = gr.rows && gr.rows[0]; return r0 ? `<div><dt>متصدر المجموعة ${ORD[gi] || gi + 1}</dt><dd><a href="/t/${r0.team.id}/">${R.logo(r0.team, "sm")} ${R.tname(r0.team)}</a> <b class="num">${r0.pts}</b></dd></div>` : ""; }).join("") : "";
+    const heroFacts = [gLead, lead ? `<div><dt>المتصدر</dt><dd><a href="/t/${lead.team.id}/">${R.logo(lead.team, "sm")} ${R.tname(lead.team)}</a> <b class="num">${lead.pts}</b> <small>نقطة</small></dd></div>` : "",
       upcoming ? `<div><dt>الجولة الياية</dt><dd><b class="num">${esc(upcoming.round || "")}</b> ${R.td(upcoming.kickoff_uae, true)}</dd></div>` : "",
       tot ? `<div><dt>الموسم</dt><dd><b class="num">${fin}</b> <small>من</small> <b class="num">${tot}</b> <small>مباراة</small></dd><i class="prog" style="--p:${(fin / tot * 100).toFixed(1)}%"></i></div>` : ""].join("");
     const g = glow(c.id), hasLogo = LOGO(c.id), artBands = JSON.stringify(ids.map(id => colors[id] || ["#5C6660", "#F6F7F2"]));
@@ -250,7 +293,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
 <dl class="hfacts">${heroFacts}</dl><div class="hero-acts"><a class="cta" href="#fixtures" data-go="fixtures">${upcoming ? "مباريات الجولة" : "المباريات"}</a><button type="button" class="ghost" data-sheet="share">شارك</button></div></div></section>
 ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(nextR).replace(/</g, "\\u003c")}</script>` : ""}<div class="wrap body">` + tabsBar("c", tl) +
       (has.table ? vpane("c", "table", tableLead + tableShelf, true) : "") + vpane("c", "fixtures", `<div id="rounds">${rounds || '<p class="empty">ما في مباريات منشورة.</p>'}</div>`, !has.table) +
-      ((numLead || numSecs.length) ? vpane("c", "num", numLead + shelf(numSecs, { title:"الأرقام كلها" })) : "") + ((predLead || predSecs.length) ? vpane("c", "pred", predLead + shelf(predSecs, { title:"بعد في التوقعات" })) : "") + (histSecs.length ? vpane("c", "hist", shelf(histSecs, { title:"التاريخ والأرقام القياسية" })) : "") + "</div>";
+      ((numLead || numSecs.length) ? vpane("c", "num", numLead + shelf(numSecs, { title:"الأرقام كلها" }) + naNote) : "") + ((predLead || predSecs.length) ? vpane("c", "pred", predLead + shelf(predSecs, { title:"بعد في التوقعات" })) : "") + (histSecs.length ? vpane("c", "hist", shelf(histSecs, { title:"التاريخ والأرقام القياسية" })) : "") + "</div>";
     const names = {}; if (stats && stats.lists) Object.values(stats.lists).forEach(l => (l || []).forEach(r => { if (r.player && nameOf(r.player.id)) names[r.player.id] = nameOf(r.player.id); }));
     OGJ.push({ key:"c-" + c.id, home:c.name_ar, sub:"الترتيب والمباريات والتوقعات", hc:["#123A31", "#1B6F5A"] });
     write(`c/${c.key}/index.html`, page({ v3:true, og:"c-" + c.id, path:`/c/${c.key}/`, page:"comp", attrs:` data-comp="${c.id}"`, nav:"comps", tools, names, title:`${c.name_ar}: الترتيب والمباريات والتوقعات ${c.season || ""} | تيفو`, desc:`ترتيب ${c.name_ar} ومواعيد المباريات بتوقيت الإمارات والنتايج المباشرة، وتوقعات آخر الموسم، والهدافين وبطاقات اللاعبين والأرقام.`, body }));
@@ -267,13 +310,14 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
   const DZ = {}; ((DERBIES && DERBIES.derbies) || []).forEach(d => { DZ[String(d.h2h || "").replace(/^h2h\/|\.json$/g, "")] = d.name_ar; });
   for (const [k, h] of Object.entries(H2H)){
     const [a, b] = k.split("-"), na = (teamsJson.teams[a] || {}).name_ar || a, nb = (teamsJson.teams[b] || {}).name_ar || b;
-    write(`h2h/${k}/index.html`, page({ path:`/h2h/${k}/`, page:"h2h", title:`${na} و${nb}: كل المواجهات | تيفو`, desc:`سجل مواجهات ${na} و${nb}: كم فاز كل فريق وكم تعادلوا، وكل النتايج.`, body:`<p class="crumbs">${DZ[k] ? '<a href="/derbies/">الديربيات العربية</a>' : '<a href="/c/uae-pro-league/#hist">تاريخ الدوري</a>'}</p><h1>${DZ[k] ? esc(DZ[k]) : esc(na) + " و" + esc(nb)}</h1>` + S.h2hPage(h) }));
+    write(`h2h/${k}/index.html`, page({ art:[colors[a] || ["#5C6660"], colors[b] || ["#3D4A44"]], path:`/h2h/${k}/`, page:"h2h", title:`${na} و${nb}: كل المواجهات | تيفو`, desc:`سجل مواجهات ${na} و${nb}: كم فاز كل فريق وكم تعادلوا، وكل النتايج.`, body:`<p class="crumbs">${DZ[k] ? '<a href="/derbies/">الديربيات العربية</a>' : '<a href="/c/uae-pro-league/#hist">تاريخ الدوري</a>'}</p><h1>${DZ[k] ? esc(DZ[k]) : esc(na) + " و" + esc(nb)}</h1>` + S.h2hPage(h) }));
     urls.push(`/h2h/${k}/`);
   }
 
   // ---- 4. home (v3 fixed slots, DESIGN-v3.md §3.2): written last, once every editorial block (ED) is known
   const w538 = compX[538] && compX[538].watch, fx538 = compData.find(d => d.c.id === 538);
-  const ED = []; if (w538 && fx538) ED.push(S.sec("أحلى مباريات الجولة الياية في دوري أدنوك", "", S.watch(w538, fx538.fx)));
+  const ED = []; if (arabRatings && arabRatings.teams && arabRatings.teams.length) ED.push(S.sec("أقوى الأندية العربية", '<a href="/arabs/">عالم العرب</a>', arabRankHtml(arabRatings, arabRatings.teams.slice(0, 20).map(t => t.team))));
+  if (w538 && fx538) ED.push(S.sec("أحلى مباريات الجولة الياية في دوري أدنوك", "", S.watch(w538, fx538.fx)));
   const writeHome = () => {
     SEQ = 0; PALETTE = Object.values(colors).slice(0, 60);
     const heroM = R.heroPick(day.matches, index, null), rails = R.homeRails(day.matches, index, { arabT:ARABT });
@@ -354,13 +398,22 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
       const nc = S.natClubs(t); if (nc) nums += S.sec("لاعبي المنتخب في أنديتهم", "", nc);
     }
     const wkd = APPROVED.digest ? S.aiDigest(AIDG[id]) : "";
-    const tabs = [["next", "الياية"], ["past", "النتايج"], ["squad", "اللاعبين"], nums && ["nums", id === 5789 ? "المنتخب بالأرقام" : "بالأرقام"], wkd && ["week", "ملخص أسبوعك"]].filter(Boolean);
-    const body = `<div class="th"><div class="in">${R.logo(t, "lg")}<div><h1>${R.tname(t)}</h1>${sub ? `<p>${sub}</p>` : ""}</div></div>${R.teamStrip(t)}</div>
-<div class="btnrow"><button type="button" class="btn" id="mybtn">هذا فريقي</button><a class="btn" href="/v1/team/${t.id}.ics" id="ics">مبارياته في تقويم جوالك</a><button type="button" class="btn" id="wpbtn" hidden>خلفية للجوال</button><a class="btn" href="/t/${t.id}/poster/">بوستر الموسم للطباعة</a></div>${t.id === 5789 ? '<div id="uaecd"></div>' : ""}` +
-      tabsHtml("t", tabs) + pane("t", "next", `<div id="next">${f.next.slice(0, 6).map(m => R.matchRow(m, { date:true })).join("") || '<p class="empty">ما في مباريات ياية منشورة.</p>'}</div>`, true) +
-      pane("t", "past", `<div id="past">${f.past.slice(0, 10).map(m => R.matchRow(m, { date:true })).join("")}</div>`) + pane("t", "squad", `<div id="squad">${R.squad(t)}</div>`) + (nums ? pane("t", "nums", nums) : "") + (wkd ? pane("t", "week", wkd) : "");
+    // v3 team page (stage 3): club key art hero, 5 tabs at most, «بالأرقام» as a shelf, tools in the sheet
+    SEQ = 0; PALETTE = [colors[id] || ["#5C6660", "#F6F7F2"]];
+    const numSecs = nums ? blocks(nums).secs : [];
+    const tabs = [["next", "الياية"], ["past", "النتايج"], ["squad", "اللاعبين"], numSecs.length && ["nums", id === 5789 ? "المنتخب بالأرقام" : "بالأرقام"], wkd && ["week", "ملخص أسبوعك"]].filter(Boolean);
+    const nxt = f.next[0];
+    const tcol = colors[id] || ["#5C6660", "#F6F7F2"];
+    const body = `<section class="hero thero" data-slot="hero" data-art='${esc(JSON.stringify([tcol, [tcol[1] || tcol[0], tcol[0]]]))}' style="--g1:${tcol[0]}"><canvas aria-hidden="true"></canvas><div class="scrim"></div><div class="hero-in wrap">
+<div class="tid">${R.logo(t, "xl")}<div><h1>${R.tname(t)}</h1>${sub ? `<p class="season">${sub}</p>` : ""}</div></div>
+${nxt ? `<p class="tnext"><span>الياية</span> <a href="/m/${nxt.id}/">${R.tname(nxt.home)} ضد ${R.tname(nxt.away)}</a> ${R.td(nxt.kickoff_uae, true)} <b class="num">${nxt.time_tbd ? "" : R.tt(nxt.kickoff_uae)}</b></p>` : ""}${t.id === 5789 ? '<div id="uaecd"></div>' : ""}
+<div class="hero-acts"><button type="button" class="cta" id="mybtn">هذا فريقي</button><button type="button" class="ghost" data-sheet="share">شارك</button></div></div></section><div class="wrap body">` +
+      tabsBar("t", tabs) + vpane("t", "next", `<div id="next">${f.next.slice(0, 6).map(m => R.matchRow(m, { date:true })).join("") || '<p class="empty">ما في مباريات ياية منشورة.</p>'}</div>`, true) +
+      vpane("t", "past", `<div id="past">${f.past.slice(0, 10).map(m => R.matchRow(m, { date:true })).join("")}</div>`) + vpane("t", "squad", `<div id="squad">${R.squad(t)}</div>`) + (numSecs.length ? vpane("t", "nums", shelf(numSecs, { title:id === 5789 ? "المنتخب بالأرقام" : "النادي بالأرقام" })) : "") + (wkd ? vpane("t", "week", wkd) : "") + "</div>";
+    const tools = `<a class="sa" href="/v1/team/${t.id}.ics" id="ics">مبارياته في تقويم جوالك</a><button type="button" class="sa" id="wpbtn" hidden>خلفية للجوال</button><a class="sa" href="/t/${t.id}/poster/">بوستر الموسم للطباعة</a>`;
+    const names = {}; ((t.squad) || []).forEach(g => (g.players || []).forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); }));
     const tog = full.has(id); if (tog) OGJ.push({ key:"t-" + id, home:t.name_ar || t.name, home_id:id, hc:colors[id], sub:"المباريات والنتايج واللاعبين" });
-    const html = page({ og:tog ? "t-" + id : null, path:`/t/${t.id}/`, page:"team", attrs:` data-id="${t.id}" data-name="${esc(t.name_ar || t.name)}"`, nav:t.id === 5789 ? "uae" : "", title:`${t.name_ar || t.name}: المباريات والنتايج واللاعبين | تيفو`, desc:`مواعيد مباريات ${t.name_ar || t.name} بتوقيت الإمارات، ونتايجه، وقائمة اللاعبين، وأرقامه، واشتراك تقويم يتحدّث بروحه.`, body });
+    const html = page({ v3:true, og:tog ? "t-" + id : null, path:`/t/${t.id}/`, page:"team", tools, names, attrs:` data-id="${t.id}" data-name="${esc(t.name_ar || t.name)}"`, nav:t.id === 5789 ? "uae" : "", title:`${t.name_ar || t.name}: المباريات والنتايج واللاعبين | تيفو`, desc:`مواعيد مباريات ${t.name_ar || t.name} بتوقيت الإمارات، ونتايجه، وقائمة اللاعبين، وأرقامه، واشتراك تقويم يتحدّث بروحه.`, body });
     write(`t/${t.id}/index.html`, html); urls.push(`/t/${t.id}/`);
     if ((t.fixtures || []).length) write(`t/${t.id}/poster/index.html`, page({ path:`/t/${t.id}/poster/`, page:"poster", title:`جدول مباريات ${t.name_ar || t.name} للطباعة | تيفو`, desc:`جدول مباريات ${t.name_ar || t.name} للموسم كامل بتوقيت بلدك، جاهز للطباعة.`, body:S.poster(t) }));
     (tmonth[i] || []).forEach(mo => { if (!mo || !mo.results || !mo.results.length) return; const [yy, mm] = mo.month.split("-").map(Number), mname = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"][mm - 1] + " " + yy;
@@ -387,7 +440,7 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
       (card ? S.card(id, card).replace('class="tcard"', 'class="tcard big"') : "") + S.sec("موسمه", esc(p.season || ""), st) + (S.form(p.form) ? S.sec("فورمته", "آخر المباريات", S.form(p.form)) : "") + (S.career(pcar[i]) ? S.sec("مسيرته", "", S.career(pcar[i])) : "") + (cx.similar ? (() => { const sm = S.similar(cx.similar, id); return sm ? S.sec("منو يلعب مثله؟", "", sm) : ""; })() : "") +
       (cx.shots && cx.shots.available !== false && cx.shots.players && cx.shots.players[id] ? S.sec("خريطة تسديداته", "", S.shotmap(cx.shots.players[id])) : "") +
       (card ? `<p><a class="btn" href="/c/${(comps.find(cc => cc.id === (p.comp || 538)) || {}).key || "uae-pro-league"}/compare/?a=${id}">قارنه بلاعب ثاني</a></p>` : "");
-    playerPages.add(String(id)); write(`p/${id}/index.html`, page({ path:`/p/${id}/`, page:"player", title:`${p.name}: أرقامه هالموسم | تيفو`, desc:`${p.name}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.`, body }));
+    playerPages.add(String(id)); write(`p/${id}/index.html`, page({ art:colors[tm] ? [colors[tm], [colors[tm][1] || colors[tm][0], colors[tm][0]]] : null, path:`/p/${id}/`, page:"player", title:`${p.name}: أرقامه هالموسم | تيفو`, desc:`${p.name}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.`, body }));
     urls.push(`/p/${id}/`);
   });
 
@@ -453,7 +506,7 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
     urls.push(`/m/${id}/`);
     if (uaeMatch && (md.status === "scheduled" || Date.parse(md.kickoff_utc) > Date.now() - 3 * 864e5)){
       const nums = [probs ? `توقعات تيفو: ${Math.round(probs.home * 100)}% فوز ${md.home.name_ar}، ${Math.round(probs.draw * 100)}% تعادل، ${Math.round(probs.away * 100)}% فوز ${md.away.name_ar}.` : "", ...((factsByMatch[id] || []).map(f => String(f.text_ar).replace(/\s*\(بيانات FotMob\)/g, "")))].filter(Boolean);
-      write(`m/${id}/kit/index.html`, page({ path:`/m/${id}/kit/`, page:"kit", attrs:` data-id="${id}"`, title:`عدّة صانع المحتوى: ${R.tname(md.home)} و${R.tname(md.away)} | تيفو`, desc:`أرقام جاهزة للنسخ وصور للمشاركة وموعد المباراة في كل دولة عربية مع القناة الناقلة.`,
+      write(`m/${id}/kit/index.html`, page({ art:[colors[md.home.id] || ["#5C6660"], colors[md.away.id] || ["#3D4A44"]], path:`/m/${id}/kit/`, page:"kit", attrs:` data-id="${id}"`, title:`عدّة صانع المحتوى: ${R.tname(md.home)} و${R.tname(md.away)} | تيفو`, desc:`أرقام جاهزة للنسخ وصور للمشاركة وموعد المباراة في كل دولة عربية مع القناة الناقلة.`,
         body:`<p class="crumbs"><a href="/m/${id}/">المباراة</a></p><h1>عدّة صانع المحتوى</h1><p class="season">${R.tname(md.home)} و${R.tname(md.away)}</p><script type="application/json" id="msum">${JSON.stringify(Object.assign({}, sum, { events:undefined, lineups:undefined, stats:undefined, h2h:undefined })).replace(/</g, "\\u003c")}</script>` +
           S.sec("أرقام جاهزة للنسخ", "", nums.length ? '<ol class="thread">' + nums.map(n => `<li><p>${esc(n)}</p><button type="button" class="btn copy" data-copy="${esc(n)}">انسخ</button></li>`).join("") + "</ol>" : '<p class="empty">ما في أرقام للحين.</p>') +
           S.sec("صور للمشاركة", "", '<p class="tools"><button type="button" class="btn" id="storybtn">صورة ستوري للمباراة</button></p>') +
@@ -527,7 +580,7 @@ ${items}
   for (const { c, fx, x } of compData){ if (!fx || !fx.matches) continue; const rr = R.rounds(fx);
     for (const k of rr.order){ if (isNaN(parseFloat(k))) continue; const ms = rr.by[k], fin = ms.filter(m => m.status === "finished"), goals = fin.reduce((a, m) => a + (m.score ? m.score.home + m.score.away : 0), 0);
       const tor = x["team-of-round"] && x["team-of-round"].rounds && x["team-of-round"].rounds[k] ? S.teamOfRound({ rounds:{ [k]:x["team-of-round"].rounds[k] } }) : "";
-      write(`c/${c.key}/r/${k}/index.html`, page({ path:`/c/${c.key}/r/${k}/`, page:"ref", nav:String(c.id), title:`${c.name_ar}: الجولة ${k} ${c.season || ""} | تيفو`, desc:`نتايج ومواعيد الجولة ${k} من ${c.name_ar} بتوقيت بلدك، والأهداف وتشكيلة الجولة.`,
+      write(`c/${c.key}/r/${k}/index.html`, page({ lg:LOGO(c.id) ? [c.id].concat(glow(c.id)) : null, path:`/c/${c.key}/r/${k}/`, page:"ref", nav:String(c.id), title:`${c.name_ar}: الجولة ${k} ${c.season || ""} | تيفو`, desc:`نتايج ومواعيد الجولة ${k} من ${c.name_ar} بتوقيت بلدك، والأهداف وتشكيلة الجولة.`,
         body:`<p class="crumbs"><a href="/c/${c.key}/">${esc(c.name_ar)}</a></p><h1>الجولة ${esc(k)}</h1>` + (fin.length && stIds(c.id).length ? S.sec("قصة الجولة", "انزل وشوف", S.roundStory(fx, k, stIds(c.id))) : "") + (fin.length ? `<div class="pstats"><div><b>${fin.length}</b><span>مباراة خلصت</span></div><div><b>${goals}</b><span>هدف</span></div><div><b>${fin.length ? (goals / fin.length).toFixed(1) : 0}</b><span>بالمباراة</span></div></div>` : "") + R.roundList(ms) + (tor ? S.sec("تشكيلة الجولة", "", tor) : "") + `<p class="tools">${rr.order.indexOf(k) > 0 ? `<a class="btn" href="/c/${c.key}/r/${rr.order[rr.order.indexOf(k) - 1]}/">الجولة اللي قبل</a>` : ""}${rr.order.indexOf(k) < rr.order.length - 1 ? `<a class="btn" href="/c/${c.key}/r/${rr.order[rr.order.indexOf(k) + 1]}/">الجولة اللي بعد</a>` : ""}</p>` })); urls.push(`/c/${c.key}/r/${k}/`); } }
 
   // ---- 198: pages for the most-searched phrases
