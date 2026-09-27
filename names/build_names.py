@@ -178,6 +178,37 @@ def collect(cache: Path, match_days: int):
     return pool, teams
 
 
+def collect_referees(cache: Path):
+    """Referees named in the competition referee files (comp/{id}/referees.json)."""
+    pool = {}
+    index = get_json(f"{FEED}/index.json")
+    for c in index["competitions"]:
+        rj = get_json(f"{FEED}/comp/{c['id']}/referees.json") or {}
+        for r in rj.get("referees") or []:
+            if r.get("id") and r.get("name"):
+                pool.setdefault(str(r["id"]), {"name": r["name"], "teams": [], "country": r.get("country"), "ages": [], "comps": [c["id"]], "uae": c["id"] == UAE_LEAGUE})
+    log(f"collect referees: pool = {len(pool)}")
+    return pool, {}
+
+
+def collect_clubs(cache: Path):
+    """Clubs the feed has no Arabic name for (teams.json without name_ar, plus clubs seen only in fixtures)."""
+    pool = {}
+    teams = (get_json(f"{FEED}/teams.json") or {}).get("teams", {})
+    for tid, t in teams.items():
+        if not t.get("name_ar") and t.get("name"):
+            pool[str(tid)] = {"name": t["name"], "teams": [], "country": t.get("country"), "ages": [], "comps": [], "uae": False, "club": True}
+    index = get_json(f"{FEED}/index.json")
+    for c in index["competitions"]:
+        fj = get_json(f"{FEED}/comp/{c['id']}/fixtures.json") or {}
+        for m in fj.get("matches") or []:
+            for side in (m.get("home") or {}, m.get("away") or {}):
+                if side.get("id") and side.get("name") and not side.get("name_ar") and str(side["id"]) not in pool:
+                    pool[str(side["id"])] = {"name": side["name"], "teams": [], "country": (c.get("country") or {}).get("iso2"), "ages": [], "comps": [c["id"]], "uae": False, "club": True}
+    log(f"collect clubs: pool = {len(pool)}")
+    return pool, teams
+
+
 def collect_coaches(cache: Path):
     """Coaches the site names: coaches/index.json (with each coach file's country and clubs) + every team's current coach."""
     pool = {}
@@ -613,10 +644,17 @@ def gemini_call(key, text, n):
     return {}
 
 
+KIND = "players"
+CLUB_PROMPT = """You are an Arabic sports editor (beIN Sports, Kooora, Al Ittihad). Write each football CLUB's name in Arabic
+exactly as Arab sports media write it. Arab clubs: their real Arabic name ("Widad Temara" -> "وداد تمارة",
+"Raja Casablanca" -> "الرجاء الرياضي", "Al Ahly" -> "الأهلي"). Other clubs: the usual Arabic media form ("Bayern Munich" ->
+"بايرن ميونخ"). Arabic script only, no diacritics. Drop words like FC/SC/Club unless Arab media keep them."""
+
+
 def gemini_batch(key, items):
     lines = "\n".join(f'{it["id"]}\t{it["latin"]}\tnationality={it["nat"] or "unknown"}'
                       + (f'\tclub={it["club"]}' if it.get("club") else "") for it in items)
-    return gemini_call(key, PROMPT + "\n\nid\tname\thints\n" + lines, len(items))
+    return gemini_call(key, (CLUB_PROMPT if KIND == "clubs" else PROMPT) + "\n\nid\tname\thints\n" + lines, len(items))
 
 
 def resolve_gemini(todo, pool, teams, out, save, batch=50):
@@ -727,16 +765,19 @@ def main():
     ap.add_argument("--reuse-pool", action="store_true", help="use cached pool.json")
     ap.add_argument("--retry-generated", action="store_true")
     ap.add_argument("--limit", type=int, default=0)
-    ap.add_argument("--kind", choices=["players", "coaches"], default="players")
+    ap.add_argument("--kind", choices=["players", "coaches", "referees", "clubs"], default="players")
     ap.add_argument("--no-wikidata", action="store_true", help="skip the Wikidata pass (Gemini only; --retry-generated later)")
     a = ap.parse_args()
-    global OUT
-    if a.kind == "coaches":
-        OUT = HERE / "coaches_ar.json"
+    global OUT, KIND
+    KIND = a.kind
+    if a.kind != "players":
+        OUT = HERE / f"{a.kind}_ar.json"
     cache = Path(a.cache)
     cache.mkdir(parents=True, exist_ok=True)
 
-    if a.kind == "coaches":
+    if a.kind in ("referees", "clubs"):
+        pool, teams = (collect_referees if a.kind == "referees" else collect_clubs)(cache)
+    elif a.kind == "coaches":
         pool, teams = (json.loads((cache / "coach_pool.json").read_text()), json.loads((cache / "teams.json").read_text())) if a.reuse_pool and (cache / "coach_pool.json").exists() else collect_coaches(cache)
     elif a.reuse_pool and (cache / "pool.json").exists():
         pool = json.loads((cache / "pool.json").read_text())
