@@ -1,12 +1,12 @@
 """تيفو phase 5 — written and voiced content from the data (docs/ROADMAP.md phase 5).
 
-  python3 ai/gen.py [--samples] [--only summary,preview,round,podcast] [--limit N]
+  python3 ai/gen.py [--samples] [--only summary,preview,podcast,daily5] [--limit N]
 
 What it makes (cache/ai/…, read by build.cjs; shown on the site only for kinds switched on in ai/approved.json):
   9  + 78   summary/{match}.json   finished UAE matches: an Emirati summary (4-6 sentences) + a stats thread for X (4-6 posts)
   77        preview/{match}.json   UAE matches in the next 7 days: 5-line Emirati preview (strengths, weaknesses, key)
-  19        round/{comp}-{round}.json + .mp3   the last completed Pro League round, voiced by Zayd (Polly neural, ar-AE)
-  161       podcast/{yyyy-ww}.json + .mp3      the weekly Tifo Cast: Zayd and Hala talking the round through, ~5 min
+  161       podcast/{yyyy-ww}.json + .mp3      the weekly Tifo Cast: Hamed and Maha talking the round through, ~5 min
+  (19, the voiced round recap, was dropped by the owner on 2026-09-27: it duplicated Tifo Cast)
 
 Rules (the owner's): Emirati dialect from memory feedback_emirati_dialect + content/video/_system/EMIRATI-LEXICON.json,
 applied again after generation; no tanween; male singular address, no ج suffix; facts only from the data handed over.
@@ -164,23 +164,17 @@ def do_preview(m, ctx):
     out = deep(out); out.update({"id": m["id"], "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("preview", str(m["id"]), out); return "new"
 
-# ---- 19 + 161: the round, written for the ear, then voiced (Polly neural ar-AE: Zayd, Hala)
-ROUND_SYS = STYLE + """
-المهمة: نص صوتي لخلاصة جولة كاملة من دوري أدنوك، يقراه زايد (مذيع إماراتي) في حوالي دقيقتين (220 لين 300 كلمة).
-- يبدا بتحية قصيرة: «هلا والله، هذي خلاصة الجولة …».
-- يمر على كل مباراة بجملة أو جملتين: النتيجة، ومنو سجّل إذا مذكور، وأي شي لافت.
-- بعدها وضع الصدارة والقاع من الترتيب.
-- يختم بجملة عن الجولة الياية.
-- جمل قصيرة تنقال بسهولة، بدون أقواس ولا رموز.
-"""
-ROUND_SCHEMA = OBJ({"title": S(80), "script": S(2600)})
+# ---- 161: Tifo Cast, written for the ear, then voiced (audio: Polly for now, Gemini TTS once the owner picks the voices)
 POD_SYS = STYLE + """
-المهمة: حلقة «تيفو كاست» الأسبوعية، حوار بين زايد وهلا (صديقين يسولفون عن الجولة)، حوالي 5 دقايق (600 لين 750 كلمة).
-- زايد يبدا: «هلا والله، معاكم زايد» وهلا تسلّم. هلا تكلّم زايد بصيغة المذكر (عليك، لك)، وزايد يكلّم هلا بصيغة المؤنث بشكل طبيعي («عليج» مسموحة بس لما زايد يكلّم هلا).
+المهمة: حلقة «تيفو كاست» الأسبوعية، حوار بين حامد ومها (صديقين يسولفون عن الجولة)، حوالي 5 دقايق (600 لين 750 كلمة).
+- حامد يبدا: «هلا والله، معاكم حامد» ومها تسلّم.
+- الاثنين يكلّمون المستمع بصيغة المذكر المفرد (عليك، لك، شفت).
+- حامد ومها ينادون بعض بالاسم بس، وممنوع أي صيغة مؤنث للمخاطب في الحوار كله (لا «عليج» ولا «لج» ولا «رايج»). لو حامد يسأل مها، يقول مثلاً «شو رايك يا مها؟».
+- الأرقام تنكتب أرقام.
 - أقسام: نتايج الجولة، أحلى لحظة، لاعب الجولة (من التقييمات)، الترتيب وتوقعات تيفو، مباراة الجولة الياية اللي لازم تنشاف.
 - سطور قصيرة متبادلة (12 لين 24 سطر)، كل سطر أقل من 400 حرف. طنازة خفيفة مسموحة، بس لا تخترع أي معلومة.
 """
-POD_SCHEMA = OBJ({"title": S(80), "lines": ARR(OBJ({"who": {"type": "STRING", "enum": ["zayd", "hala"]}, "text": S(420)}), 24)})
+POD_SCHEMA = OBJ({"title": S(80), "lines": ARR(OBJ({"who": {"type": "STRING", "enum": ["hamed", "maha"]}, "text": S(420)}), 24)})
 
 def polly_mp3(chunks, out):
     import boto3
@@ -207,35 +201,18 @@ def round_ctx(fx, st, detail):
     nxt = [{"home": team_ar(m["home"]), "away": team_ar(m["away"]), "date": (m.get("kickoff_uae") or "")[:10]} for m in rounds.get(str(int(float(k)) + 1), [])]
     return k, {"round": k, "matches": ms, "table": table_ctx(st)[:14], "next_round": nxt}
 
-def do_round(k, ctx, audio):
-    sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]; name = f"538-{k}"
-    if cached("round", name, sig) and (not audio or os.path.exists(os.path.join(CACHE, "round", name + ".mp3"))): return "cached"
-    out = gemini(ROUND_SYS, ctx, ROUND_SCHEMA, temp=0.7, tokens=9000)
-    if not out: return "fail"
-    out = deep(out); out.update({"round": k, "sig": sig, "spoken": spoken(out["script"]), "model": MODEL, "voice": "Zayd", "generated": dt.datetime.utcnow().isoformat() + "Z"})
-    save("round", name, out)
-    if audio: polly_mp3([("Zayd", out["spoken"])], os.path.join(CACHE, "round", name + ".mp3"))
-    return "new"
-
 def do_podcast(ctx, audio):
     wk = dt.date.today().strftime("%G-%V"); sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("podcast", wk, sig) and (not audio or os.path.exists(os.path.join(CACHE, "podcast", wk + ".mp3"))): return "cached"
     out = gemini(POD_SYS, ctx, POD_SCHEMA, temp=0.8, tokens=12000)
     if not out: return "fail"
-    # the lexicon pass must not "fix" Zayd addressing Hala in the feminine
+    # both hosts address the listener in the masculine and each other by name only, so one lexicon pass fits every line
     lines = []
     for l in out["lines"]:
-        t = l["text"]
-        if l["who"] == "hala": t = emirati(t)
-        else:
-            t2 = t
-            for a, b in LEX["phrases"].items(): t2 = t2.replace(a, b)
-            for a, b in list(LEX["words"].items()) + [("مين", "منو"), ("كذا", "جذيه")]: t2 = re.sub(r"(?<!\w)" + re.escape(a) + r"(?!\w)", b, t2)
-            t = re.sub("[ً-ٍ]", "", t2)
-        lines.append({"who": l["who"], "text": t, "spoken": spoken(t)})
-    rec = {"week": wk, "title": emirati(out["title"]), "lines": lines, "sig": sig, "model": MODEL, "voices": {"zayd": "Zayd", "hala": "Hala"}, "generated": dt.datetime.utcnow().isoformat() + "Z"}
+        t = emirati(l["text"]); lines.append({"who": l["who"], "text": t, "spoken": spoken(t)})
+    rec = {"week": wk, "title": emirati(out["title"]), "lines": lines, "sig": sig, "model": MODEL, "voices": {"hamed": "Zayd", "maha": "Hala"}, "generated": dt.datetime.utcnow().isoformat() + "Z"}
     save("podcast", wk, rec)
-    if audio: polly_mp3([("Zayd" if l["who"] == "zayd" else "Hala", l["spoken"]) for l in lines], os.path.join(CACHE, "podcast", wk + ".mp3"))
+    if audio: polly_mp3([("Zayd" if l["who"] == "hamed" else "Hala", l["spoken"]) for l in lines], os.path.join(CACHE, "podcast", wk + ".mp3"))
     return "new"
 
 # ---- 301: «أهم 5 أشياء اليوم» on the home page (gated like every generated text)
@@ -263,7 +240,7 @@ def do_daily5():
     out = deep(out); out.update({"date": today, "sig": sig, "model": MODEL, "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("daily5", today, out); return "new"
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,round,podcast,daily5"); ap.add_argument("--limit", type=int, default=40)
+    ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,podcast,daily5"); ap.add_argument("--limit", type=int, default=40)
     ap.add_argument("--no-audio", action="store_true"); ap.add_argument("--days", type=int, default=10)
     a = ap.parse_args(); only = set(a.only.split(",")); now = dt.datetime.utcnow(); log = {}
     fx = {c: get(f"comp/{c}/fixtures.json") or {"matches": []} for c in UAE_COMPS}
@@ -297,22 +274,20 @@ def main():
             for k in ("home_table", "away_table"):
                 if ctx[k]: ctx[k] = {x: ctx[k].get(x) for x in ("rank", "played", "won", "drawn", "lost", "gf", "ga", "pts", "form")}
             r = do_preview(m, ctx); log["pre-" + r] = log.get("pre-" + r, 0) + 1
-    if "round" in only or "podcast" in only:
+    if "podcast" in only:
         k, ctx = round_ctx(fx[538], st538, detail)
         if ctx:
-            if "round" in only: log["round"] = do_round(k, ctx, not a.no_audio)
-            if "podcast" in only:
-                pc = dict(ctx); sim = get("comp/538/sim.json"); watch = get("comp/538/watch.json")
-                if sim: pc["title_odds"] = sorted([{"team": team_ar(next((r["team"] for r in (st538 or {}).get("groups", [{}])[0].get("rows", []) if str(r["team"]["id"]) == t), {})), "title_pct": round(v["title"] * 100)} for t, v in sim["teams"].items()], key=lambda x: -x["title_pct"])[:4]
-                if watch: pc["match_to_watch"] = max(watch["matches"].items(), key=lambda kv: kv[1]["score"])[0]
-                top = []
-                for m in [x for x in fx[538]["matches"] if x.get("round") == k]:
-                    d = detail(m["id"]) or {}
-                    for side in ("home", "away"):
-                        for p in ((d.get("lineups") or {}).get(side) or {}).get("starters") or []:
-                            if p.get("rating"): top.append({"name": p["name"], "team": team_ar(d[side]), "rating": p["rating"]})
-                pc["best_players"] = sorted(top, key=lambda x: -x["rating"])[:5]
-                log["podcast"] = do_podcast(pc, not a.no_audio)
+            pc = dict(ctx); sim = get("comp/538/sim.json"); watch = get("comp/538/watch.json")
+            if sim: pc["title_odds"] = sorted([{"team": team_ar(next((r["team"] for r in (st538 or {}).get("groups", [{}])[0].get("rows", []) if str(r["team"]["id"]) == t), {})), "title_pct": round(v["title"] * 100)} for t, v in sim["teams"].items()], key=lambda x: -x["title_pct"])[:4]
+            if watch: pc["match_to_watch"] = max(watch["matches"].items(), key=lambda kv: kv[1]["score"])[0]
+            top = []
+            for m in [x for x in fx[538]["matches"] if x.get("round") == k]:
+                d = detail(m["id"]) or {}
+                for side in ("home", "away"):
+                    for p in ((d.get("lineups") or {}).get(side) or {}).get("starters") or []:
+                        if p.get("rating"): top.append({"name": p["name"], "team": team_ar(d[side]), "rating": p["rating"]})
+            pc["best_players"] = sorted(top, key=lambda x: -x["rating"])[:5]
+            log["podcast"] = do_podcast(pc, not a.no_audio)
     if "daily5" in only: log["daily5"] = do_daily5()
     print(json.dumps(log, ensure_ascii=False))
 

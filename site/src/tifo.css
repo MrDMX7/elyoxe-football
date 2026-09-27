@@ -522,3 +522,6 @@ body.clubtheme .bar{border-block-end:.35rem solid var(--club2)}
 .exl li>span:last-child{grid-column:2 / -1;margin-block-start:-.2rem}.exl .sc{text-align:center;font-family:var(--digits);font-size:1.1rem}.exl .win{font-weight:700}
 .st.abt td,.st.abt th{white-space:nowrap}
 .st.wrapn td.tm{white-space:normal;min-inline-size:9rem}
+.cpath,.hmc{display:flex;flex-wrap:wrap;gap:2px}.cpath a,.hmc i{inline-size:12px;block-size:12px;display:block;background:var(--line)}
+.cpath .fW,.hmc .fW{background:var(--ink)}.cpath .fD,.hmc .fD{background:var(--stone);opacity:.55}.cpath .fL,.hmc .fL{background:var(--line)}
+.hm{display:grid;gap:.35rem}.hmr{display:grid;grid-template-columns:3.6rem 1fr 2.4rem;gap:.5rem;align-items:center}.hmc i{inline-size:8px;block-size:8px}
