@@ -639,7 +639,11 @@ class Poller:
             return
         now = iso(self.now())
         base = {"comp": cid, "season": self.ledger(cid).get("season"), "generated": now, "matches_counted": len(L)}
-        self.store.put_json(f"comp/{cid}/referees.json", {**base, **SEASON.referees(L, self.cc_of(cid))}, cache="static")
+        refs = SEASON.referees(L, self.cc_of(cid))
+        self.store.put_json(f"comp/{cid}/referees.json", {**base, **refs, "available": bool(refs.get("referees")),
+                                                          **({} if refs.get("referees") else
+                                                             {"reason": "FotMob names no referee for this competition's matches"})},
+                            cache="static")
         self.store.put_json(f"comp/{cid}/halftime.json", {**base, **SEASON.ht_table(L)}, cache="static")
         self.store.put_json(f"comp/{cid}/goal-bands.json", {**base, **SEASON.goal_bands(L)}, cache="static")
         xt = SEASON.xg_table(L)
