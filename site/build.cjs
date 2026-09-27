@@ -12,10 +12,10 @@ const OUT = path.resolve(__dirname, arg("--out", "out")), PREVIEW = args.include
 const SITE = "https://tifo.elyoxe.com", CACHE = path.join(__dirname, "cache");
 const esc = R.esc;
 
-async function get(p, tries = 3){
+async function get(p, tries = 4){
   for (let i = 0; i < tries; i++){
     try { const r = await fetch(DATA + "/" + p, { signal:AbortSignal.timeout(25000) }); if (r.status === 404 || r.status === 403) return null; if (!r.ok) throw new Error(r.status + " " + p); return await r.json(); }
-    catch (e){ if (i === tries - 1) { console.error("fetch failed", p, e.message); return null; } await new Promise(s => setTimeout(s, 800 * (i + 1))); }
+    catch (e){ if (i === tries - 1) { console.error("fetch failed", p, e.message); return null; } await new Promise(s => setTimeout(s, 1500 * (i + 1))); }
   }
 }
 async function pool(items, n, fn){ const out = new Array(items.length); let i = 0; await Promise.all(Array.from({ length:n }, async () => { while (i < items.length){ const k = i++; out[k] = await fn(items[k], k); } })); return out; }
@@ -59,9 +59,9 @@ const pane = (group, key, html, first) => `<section data-group="${group}" data-p
 
   // ---- 1. fetch: competitions (+ every analytics file the pipeline may have written), today, national
   const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios", "shots", "fatigue", "coaches"];
-  const compData = await pool(comps, 4, async c => {
+  const compData = await pool(comps, 3, async c => {
     const [st, fx, stats] = await Promise.all([c.files && c.files.standings ? get(`comp/${c.id}/standings.json`) : null, get(`comp/${c.id}/fixtures.json`), get(`comp/${c.id}/stats.json`)]);
-    const x = {}; await Promise.all(EXTRA.map(async k => { x[k] = await get(`comp/${c.id}/${k}.json`, 1); }));
+    const x = {}; await pool(EXTRA, 3, async k => { x[k] = await get(`comp/${c.id}/${k}.json`, 2); });
     return { c, st, fx, stats, x };
   });
   const day = await get(`day/${today.replace(/-/g, "")}.json`) || { matches:[] };
