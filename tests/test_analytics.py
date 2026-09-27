@@ -118,3 +118,20 @@ def test_scenarios_skipped_while_competition_is_live(tmp_path):
     p.st["schedule"] = {}
     AN.comp_tables(p, 329, st, [{"status": "scheduled", "home": {"id": 1}, "away": {"id": 2}}], "tournament")
     assert "comp/329/scenarios.json" in p.store.written
+
+
+def test_coaches_and_fatigue_written(tmp_path, fx):
+    import analytics as AN
+    import poller as P
+    from sources.fotmob import FotMob
+    from store import Store, LocalBackend
+    p = P.Poller(Store(LocalBackend(tmp_path)), role="analytics")
+    p.load()
+    st = FotMob().competition_from_raw({"id": 538}, fx("fotmob_league_538.json"), with_leaders=False)["standings"]
+    p.store.put_json("comp/538/standings.json", st)
+    tid = st["groups"][0]["rows"][0]["team"]["id"]
+    p.aux("coaches")[str(tid)] = {"coach": {"id": 1, "name": "C"}, "history": [{"season": "2026/2027", "won": 4, "ppg": 2.6}]}
+    p.aux("team_fx")[str(tid)] = [{"id": 9, "comp": 525, "kickoff_utc": "2026-09-20T16:00:00Z", "status": "finished",
+                                   "home": {"id": 8}, "away": {"id": tid}, "score": {"home": 1, "away": 1}}]
+    AN.coaches_and_fatigue(p)
+    assert "comp/538/coaches.json" in p.store.written and "comp/538/fatigue.json" in p.store.written

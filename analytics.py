@@ -134,6 +134,60 @@ def probs_for(p, m):
     return {"home": round(ph, 3), "draw": round(pd, 3), "away": round(pa, 3), "model": "tifo-elo v1"}
 
 
+# ------------------------------------------------------------------ club pages (coaches, all-competition fixtures)
+def club_pages(p, limit=6):
+    """Daily FotMob team page for every current Pro League club: current coach, coachHistory and the
+    all-competition fixture list (fatigue, AFC trips). Owned by this function (state/coaches.json,
+    state/team_fx.json); `limit` requests per run."""
+    clubs = sorted(int(k) for k, v in p.st.get("team_comps", {}).items() if LEAGUE in v)
+    n = 0
+    for tid in clubs:
+        if n >= limit or not p.has_time(8):
+            break
+        if not p.due("club_page", 1440, tid) and str(tid) in p.aux("coaches"):
+            continue
+        try:
+            t = p.fm.team(tid)
+            S.validate_team(t)
+        except ERRORS as e:
+            p.store.fail(f"club-page:{tid}", e)
+            p.mark("club_page", tid)
+            n += 1
+            continue
+        p.aux("coaches")[str(tid)] = {"coach": t.get("coach"), "history": t.get("coach_history")}
+        p.aux("team_fx")[str(tid)] = [{k: m.get(k) for k in ("id", "comp", "kickoff_utc", "status", "home", "away", "score")}
+                                      for m in t["fixtures"]]
+        p.mark("club_page", tid)
+        p.store.ok("club-pages")
+        n += 1
+
+
+def coaches_and_fatigue(p):
+    st = p.store.get_json(f"comp/{LEAGUE}/standings.json")
+    if not st:
+        return
+    now = p.now()
+    coaches, team_fx = p.aux("coaches"), p.aux("team_fx")
+    stadiums = {int(t): s for s in config.stadiums() for t in s.get("home_of") or []}
+    fat, ctab = {}, {}
+    for r in st["groups"][0]["rows"]:
+        tid = r["team"]["id"]
+        tf = team_fx.get(str(tid))
+        if tf is not None:
+            fat[str(tid)] = CL.fatigue(tf, now, stadiums.get(tid), p.st.get("venue_fm", {}), team_id=tid)
+        c = coaches.get(str(tid))
+        if c is not None:
+            ctab[str(tid)] = {"current": c.get("coach"), "history": c.get("history") or []}
+    if fat:
+        p.store.put_json(f"comp/{LEAGUE}/fatigue.json", {"comp": LEAGUE, "generated": iso(now), "teams": fat,
+                                                         "complete": len(fat) == len(st["groups"][0]["rows"])}, cache="static")
+    if ctab:
+        p.store.put_json(f"comp/{LEAGUE}/coaches.json", {"comp": LEAGUE, "generated": iso(now), "teams": ctab,
+                                                         "complete": len(ctab) == len(st["groups"][0]["rows"]),
+                                                         "note": "FotMob coachHistory: per coach and season, W/D/L and points per game"},
+                         cache="static")
+
+
 # ------------------------------------------------------------------ league analytics (538)
 def league(p):
     comp = config.competition(LEAGUE)
@@ -206,12 +260,6 @@ def league(p):
             coach_tables[str(tid)] = {"current": c.get("coach"), "history": c["history"]}
     p.store.put_json(f"comp/{LEAGUE}/pressure.json", {"comp": LEAGUE, "generated": iso(now), "teams": press,
                                                       "method": CL.__doc__.split("FATIGUE")[0].strip()}, cache="static")
-    if fat:
-        p.store.put_json(f"comp/{LEAGUE}/fatigue.json", {"comp": LEAGUE, "generated": iso(now), "teams": fat}, cache="static")
-    if coach_tables:
-        p.store.put_json(f"comp/{LEAGUE}/coaches.json", {"comp": LEAGUE, "generated": iso(now), "teams": coach_tables,
-                                                         "note": "FotMob coachHistory: per coach and season, W/D/L and points per game"},
-                         cache="static")
     p.store.put_json(f"comp/{LEAGUE}/fortress.json", {"comp": LEAGUE, "generated": iso(now),
                                                       **EX.fortress(lrows, config.stadiums(), window)}, cache="static")
     p.mark("league_analytics")

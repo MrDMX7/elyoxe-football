@@ -523,9 +523,6 @@ class Poller:
                             validate=S.validate_team, health_key=f"team:{tid}")
         self.store.ok(f"team:{tid}")
         self.aux("squads")[str(tid)] = t["squad"]
-        self.aux("coaches")[str(tid)] = {"coach": t.get("coach"), "history": t.get("coach_history")}
-        self.aux("team_fx")[str(tid)] = [{k: m.get(k) for k in ("id", "comp", "kickoff_utc", "status", "home", "away", "score")}
-                                         for m in t["fixtures"]]
         loans = [x for x in ((t.get("transfers") or {}).get("out") or []) if x.get("loan")]
         if loans:
             self.aux("loans_out")[str(tid)] = loans
@@ -871,6 +868,8 @@ class Poller:
         steps = [
             ("history", 0, lambda: AN.history_step(self, limit=12)),
             ("players", 0, self.player_tables_due),
+            ("club_pages", 0, lambda: AN.club_pages(self)),
+            ("coaches_fatigue", 0, lambda: AN.coaches_and_fatigue(self)),
             ("ratings", 60, lambda: AN.ratings(self)),
             ("league_analytics", 60, lambda: AN.league(self)),
             ("style", 1440, lambda: AN.style(self)),
