@@ -499,7 +499,8 @@ def check_table(text, rows):
             if r["rank"] is not None and int(m.group(1)) != r["rank"]: return f"{n} rank {m.group(1)} != {r['rank']}"
         for m in re.finditer(r"(?:برصيد\s+|بـ\s*|وعنده\s+|عنده\s+)?(\d+)\s+(?:نقاط|نقطة)|برصيد\s+(\d+)", win):
             v = int(m.group(1) or m.group(2))
-            if r["pts"] is not None and v != r["pts"] and not re.search(r"(?:فارق|بفارق|ب?ـ?\s*فرق)\s*$", win[:m.start()]): return f"{n} pts {v} != {r['pts']}"
+            gap = re.search(r"(?:فارق|بفارق|ب?ـ?\s*فرق|بعد|ورا|خلف)\s*$", win[:m.start()]) or re.match(r"\s*(?:عن|من|ورا|خلف)\s", win[m.end():])   # a gap, not a total
+            if r["pts"] is not None and v != r["pts"] and not gap: return f"{n} pts {v} != {r['pts']}"
         if re.search(r"نقطة وحدة", win) and r["pts"] not in (None, 1): return f"{n} pts 1 != {r['pts']}"
         if (re.search(r"(?<!عن )(?<!من )(?<!على )(?<!ورا )(?<!خلف )(?<!لـ)(?<!و)(?<!\w)(?:يتصدر|المتصدر|متصدر|تصد[ّ]?ر(?:ت)?|الصدارة)", win[:70]) or re.search(r"المتصدر\s*$|يتصدر\s*$|تصد[ّ]?ر(?:ت)?\s*$", pre)) and r["rank"] not in (None, 1): return f"{n} leader but rank {r['rank']}"
     return None
