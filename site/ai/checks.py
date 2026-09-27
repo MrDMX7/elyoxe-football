@@ -163,7 +163,7 @@ def check_history(text, evidence):
     """History claims pass only if the model's input had the kind of data behind them (and, for «أول فوز», the h2h agrees)."""
     ev = evidence if isinstance(evidence, dict) else {}
     blob = json.dumps(ev, ensure_ascii=False)
-    runs = check_runs(text, ev) or check_counts(text, ev)
+    runs = check_runs(text, ev) or check_counts(text, ev) or check_generic(text, ev)
     if runs: return runs
     for pat, keys in HIST:
         m = re.search(pat, text)
@@ -219,6 +219,21 @@ def check_counts(text, evidence):
         if re.match(r"\s*(?:متتالي|ورا بعض|على التوالي)", after): continue   # runs are check_runs' job
         r = CNT_W[w]
         if all(f.count(r) != n for f in forms): return f"«{m.group(0)}» but the form lists have {[f.count(r) for f in forms]}"
+    return None
+
+LABELS = ["الفريق الأول", "الفريق الثاني", "نقطة قوة", "نقطة ضعف", "نقطة الضعف", "نقطة القوة", "مفتاح المباراة", "توقع تيفو", "توقعات تيفو", "نتايج الأسبوع", "المباراة الياية"]
+def check_generic(text, evidence):
+    """Audit W1.3(a): home words at a neutral venue, «مب متوفرة», «فوزه رقم N», and a line that is only its own label."""
+    ev = evidence if isinstance(evidence, dict) else {}
+    if ev.get("neutral") and re.search(r"(?<!\w)(?:على |برا |خارج |في )?(?:أرضه|أرضها|جمهوره|جمهورها|جماهيره|ملعبه|ملعبها)(?!\w)", text):
+        return "home/away wording at a neutral venue"
+    if re.search(r"(?:مب|مش|غير|ما هي|مو) متوفر(?:ة)?", text): return "«مب متوفرة»"
+    if re.search(r"فوز(?:ه|ها)? رقم \d+", text): return "«فوزه رقم N»"
+    for lab in LABELS:
+        m = re.match(r"\s*" + re.escape(lab) + r"\s*[:：،-]?\s*(.*)$", text)
+        if m:
+            rest = m.group(1).strip(" .،")
+            if not rest or rest.startswith(lab) or len(rest.split()) < 4: return f"line repeats its label «{lab}»"
     return None
 
 LATIN_OK = {"VAR", "xG", "FotMob", "Tifo"}

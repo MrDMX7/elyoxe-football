@@ -257,7 +257,8 @@ def cached(kind, name, sig):
 # ---- 9 + 78: summary and stats thread for a finished match
 SUM_SYS = STYLE + NAT_RULE + """
 المهمة: عندك بيانات مباراة خلصت. اكتب:
-1) summary: ملخص من 4 لين 6 جمل بالإماراتي، يبدا بالنتيجة ومنو فاز، وبعدين كيف انسجلت الأهداف (منو ومتى)، وأبرز لاعب حسب التقييم، ورقم واحد مهم من الإحصائيات، وسطر أخير عن شو يعني هالنتيجة.
+1) summary: ملخص من 4 لين 6 جمل بالإماراتي عن قصة المباراة: النتيجة ومنو فاز، وبعدين الأهداف بالترتيب (منو ومتى)، ونقطة التحول (طرد، بلنتي، هدف قلب النتيجة)، وأبرز لاعب حسب التقييم، وسطر أخير عن شو يعني هالنتيجة.
+   الإحصائيات (الاستحواذ والتسديدات والفرص) مكانها «ليش هالنتيجة؟»، فلا تكثر منها هني: رقم إحصائي واحد بالكثير.
 2) thread: ثريد لإكس من 4 لين 6 تغريدات، كل وحدة أقل من 260 حرف، كل تغريدة فيها رقم من البيانات. الأولى فيها النتيجة. بدون هاشتاقات وبدون إيموجي زايد (وحدة بالكثير في التغريدة).
 3) headline: عنوان قصير (أقل من 70 حرف).
 """
@@ -282,9 +283,29 @@ def do_summary(md):
 PRE_SYS = STYLE + NAT_RULE + """
 المهمة: عندك بيانات مباراة ياية: ترتيب الفريقين وفورمتهم، ونسب توقعات تيفو، والمواجهات السابقة، وأرقام على المحك، وضغط المباريات.
 اكتب lines: 5 أسطر بالضبط، كل سطر جملة وحدة (أقل من 200 حرف):
+- venue_city مدينة المباراة. لو neutral صح، الملعب محايد: ولا فريق يلعب على أرضه، فلا تقول «أرضه» ولا «جمهوره» ولا «برا أرضه».
+- لا تكتب اسم البند نفسه كجملة («مفتاح المباراة: مفتاح المباراة…»)، ولا «مب متوفرة»، ولا «فوزه رقم 2».
 1) الفريق الأول: نقطة قوة من الأرقام.  2) الفريق الثاني: نقطة قوة من الأرقام.  3) نقطة ضعف أو قلق لواحد منهم.  4) مفتاح المباراة.  5) توقع تيفو بالنسب مقرّبة لأقرب رقم صحيح (بدون فواصل عشرية)، بدون ما تجزم. إذا النسب مب موجودة في البيانات، خل السطر الخامس عن فورمة الفريقين أو أرقام على المحك بدل النسب، ولا تقول إنها مب متوفرة.
 """
 PRE_SCHEMA = OBJ({"lines": ARR(S(220), 5)})
+_CFX = {}
+def venue_ctx(m):
+    """venue_city and neutral (audit W1.3a). A hosted tournament (≥60% of its known venues in one city) is neutral for both
+    national teams unless the venue is in the home side's own country (only the UAE is known for sure: venue.in_uae)."""
+    v = m.get("venue") or {}; comp = m.get("comp")
+    if comp not in _CFX: _CFX[comp] = (get(f"comp/{comp}/fixtures.json") or {}).get("matches", [])
+    cities = [((x.get("venue") or {}).get("city")) for x in _CFX[comp] if (x.get("venue") or {}).get("city")]
+    top = max(set(cities), key=cities.count) if cities else None
+    hosted = bool(top) and cities.count(top) >= 0.6 * len(cities) and len(cities) >= 4
+    city = v.get("city")
+    if hosted and city != top: city = top   # a lone venue that disagrees with the host city is FotMob's default, not the real one
+    nations()   # loads teams.json into _TEAMS
+    nat = [t for t in (m.get("home"), m.get("away")) if ((_TEAMS.get(str((t or {}).get("id"))) or {}).get("country") or {}).get("national")]
+    home_iso = ((_TEAMS.get(str((m.get("home") or {}).get("id"))) or {}).get("country") or {}).get("iso2")
+    at_home = home_iso == "AE" and bool(v.get("in_uae")) and not (hosted and city == top and v.get("city") != top)
+    neutral = len(nat) == 2 and hosted and not at_home
+    return {"venue_city": city, "neutral": neutral}
+
 def do_preview(m, ctx):
     sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("preview", str(m["id"]), sig): return "cached"
@@ -292,7 +313,9 @@ def do_preview(m, ctx):
     if not out: return "fail"
     out = deep(out, nations(m["home"], m["away"]))
     rows = {t: {"rank": (ctx.get(k) or {}).get("rank"), "pts": (ctx.get(k) or {}).get("pts")} for t, k in ((team_ar(m["home"]), "home_table"), (team_ar(m["away"]), "away_table")) if ctx.get(k)}
-    out["lines"] = keep_lines(out.get("lines") or [], rows, 4, f"preview {m['id']}", ctx)
+    nofacts = [l for l in out.get("lines") or [] if not re.search(r"\d", l)]   # the no-filler rule: every preview line carries a number
+    for l in nofacts: print(f"preview {m['id']}: line dropped (no number): {l[:80]}", file=sys.stderr)
+    out["lines"] = keep_lines([l for l in out.get("lines") or [] if l not in nofacts], rows, 3, f"preview {m['id']}", ctx)
     if not out["lines"]: return "dropped"
     out.update({"id": m["id"], "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("preview", str(m["id"]), out); return "new"
@@ -406,7 +429,9 @@ def do_commentary(md):
 
 # ---- 197: a club's week (UAE league clubs), facts only
 DIG_SYS = STYLE + """
-المهمة: نشرة أسبوعية لمشجع نادي واحد: title عنوان قصير، وparas 3 فقرات قصيرة (كل وحدة جملتين لين ثلاث):
+المهمة: ملخص أسبوع نادي واحد يقراه أي زاير للصفحة، مب مشجع النادي بس. اكتب عن النادي بصيغة الغايب وباسمه («الوحدة خسر من الجزيرة 1 - 0»)،
+وممنوع تخاطب القارئ كمشجع للنادي («فريقك»، «فريقنا»، «بتلعبونها»، «تلعبون»). اذكر اسم الخصم في كل نتيجة وفي المباراة الياية.
+title عنوان قصير، وparas 3 فقرات قصيرة (كل وحدة جملتين لين ثلاث):
 1) نتايج الأسبوع.  2) وين واقف في ترتيب الدوري والفورمة.  3) المباراة الياية وموعدها بتوقيت الإمارات.
 - league_table هو ترتيب الدوري. لو نتيجة الأسبوع من كأس، قول «في الدوري» صراحة لما تذكر المركز والنقاط، عشان ما يختلط الكأس بالدوري.
 - كل جملة فيها معلومة من البيانات المرفقة. لا تتوقع ولا تفترض شي مب فيها (مثل ذهاب وإياب أو نظام البطولة)، ولا تكتب جمل حشو أو تمنيات.
@@ -431,7 +456,9 @@ def do_digest(team_id, st, league_name):
     if cached("digest", str(team_id), sig): return "cached"
     out = gemini(DIG_SYS, ctx, DIG_SCHEMA, temp=0.3, tokens=6000, kind="digest")
     if not out: return "fail"
-    out = deep(out); out["paras"] = keep_lines([facts_only(x) for x in out["paras"]], table_rows(st), 2, f"digest {team_id}", ctx)
+    FAN = re.compile(r"فريقك|فريقنا|بتلعبون|تلعبون|نلعب|فريقكم|نادينا")
+    paras = [" ".join(x for x in re.split(r"(?<=[.!؟])\s+", facts_only(p)) if not FAN.search(x)) for p in out["paras"]]
+    out = deep(out); out["paras"] = keep_lines([p for p in (deep(x) for x in paras) if p], table_rows(st), 2, f"digest {team_id}", ctx)
     if not out["paras"]: return "dropped"
     out.update({"team": team_id, "week": wk, "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("digest", str(team_id), out); return "new"
 
@@ -465,7 +492,8 @@ def do_power(comp):
 #   why/{match}.json   {id, comp, home, away, score:{home,away}, lines:[2 strings], sig, model, generated}
 #   quick/{match}.json {id, comp, home, away, kickoff_utc, lines:[4-6 strings], sig, model, generated}   (home/away = team ids)
 WHY_SYS = STYLE + NAT_RULE + """
-المهمة: «ليش هالنتيجة؟» لمباراة خلصت. اكتب lines: سطرين بالضبط، كل سطر جملة وحدة أقل من 150 حرف، تشرح ليش انتهت المباراة جذيه من الأرقام المرفقة بس
+المهمة: «ليش هالنتيجة؟» لمباراة خلصت: الأرقام اللي ورا النتيجة، مب قصة المباراة (قصة الأهداف ومنو سجل ومتى موجودة في الخلاصة، فلا تسرد الهدافين ولا الدقايق إلا إذا الرقم نفسه هو السبب).
+اكتب lines: سطرين بالضبط، كل سطر جملة وحدة أقل من 150 حرف، تشرح ليش انتهت المباراة جذيه من الأرقام المرفقة بس
 (الاستحواذ، التسديدات، التسديدات على المرمى، الفرص المحققة، الأهداف المتوقعة إذا موجودة، الطرد، البلنتي، توقيت الأهداف).
 - كل سطر لازم فيه رقم واحد على الأقل من البيانات. مثال على الأسلوب: «سيطر الوحدة على الاستحواذ 61% بس ضيّع 3 فرص محققة».
 - كل سطر عن فريق واحد بجملة قصيرة. لا تربط الفريقين في نفس الجملة بـ«بس» أو «رغم» (مثل «X سيطر… بس سجّل Y…»)، خلّ كل فريق في سطره.
@@ -606,7 +634,7 @@ def do_quick(m, table):
     for g in (table or {}).get("groups", []):   # the group that holds either team (Gulf Cup has two)
         for r in g.get("rows", []): rows[team_ar(r["team"])] = {"rank": r["rank"], "played": r["played"], "pts": r["pts"], "gd": r.get("gd"), "form": r.get("form"), "group_ar": GROUP_AR.get(str(g.get("name") or "").replace("Grp. ", "").replace("Group ", "").strip())}
     H, A = team_ar(m["home"]), team_ar(m["away"])
-    ctx = {"competition": m.get("comp_name_ar") or md.get("comp_name_ar"), "home": H, "away": A, "kickoff_label": label(m.get("kickoff_uae") or ""),
+    ctx = {"competition": m.get("comp_name_ar") or md.get("comp_name_ar"), "home": H, "away": A, "kickoff_label": label(m.get("kickoff_uae") or ""), **venue_ctx(m),
            "is_tonight": (m.get("kickoff_uae") or "")[:10] == (dt.datetime.utcnow() + dt.timedelta(hours=4)).strftime("%Y-%m-%d"),
            "tifo_probabilities": {k: v for k, v in (m.get("probs") or md.get("probs") or {}).items() if k in ("home", "draw", "away")} or None, "home_table": rows.get(H), "away_table": rows.get(A),
            "head_to_head": (md.get("h2h") or {}).get("summary")}
@@ -679,8 +707,9 @@ def main():
             dd = (dt.datetime.fromisoformat(m["kickoff_utc"].replace("Z", "")) - now).days
             if dd < 0 or dd > 7: continue
             md = detail(m["id"]) or m
-            ctx = {"competition": m.get("comp_name_ar"), "home": team_ar(m["home"]), "away": team_ar(m["away"]), "kickoff_uae": m.get("kickoff_uae"),
-                   "tifo_probabilities": m.get("probs") or md.get("probs"), "home_table": rows.get(m["home"]["id"]), "away_table": rows.get(m["away"]["id"]),
+            crow = rows if m.get("comp") == 538 else {r["team"]["id"]: r for g in ((get(f"comp/{m.get('comp')}/standings.json") or {}).get("groups") or []) for r in g.get("rows", [])}
+            ctx = {"competition": m.get("comp_name_ar"), "home": team_ar(m["home"]), "away": team_ar(m["away"]), "kickoff_uae": m.get("kickoff_uae"), **venue_ctx(m),
+                   "tifo_probabilities": m.get("probs") or md.get("probs"), "home_table": crow.get(m["home"]["id"]), "away_table": crow.get(m["away"]["id"]),
                    "head_to_head": (md.get("h2h") or {}).get("summary"), "records_at_stake": [f.get("text_ar") for f in facts.get(str(m["id"]), [])],
                    "fatigue": {"home": fat.get(str(m["home"]["id"])), "away": fat.get(str(m["away"]["id"]))}}
             for k in ("home_table", "away_table"):
