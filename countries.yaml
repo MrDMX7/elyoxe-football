@@ -1,0 +1,31 @@
+# Countries for personalisation: ISO 3166-1 alpha-2 (England: ISO 3166-2 GB-ENG), Arabic and English
+# names, FotMob national-team id (men), FotMob 3-letter code, and the name used by the martj42
+# international results dataset. `arab: true` = Arab League member (22).
+countries:
+  - {iso2: AE, name_ar: الإمارات, name_en: United Arab Emirates, fotmob_team: 5789, fotmob_code: UAE, martj42: United Arab Emirates, arab: true}
+  - {iso2: SA, name_ar: السعودية, name_en: Saudi Arabia, fotmob_team: 7795, fotmob_code: KSA, martj42: Saudi Arabia, arab: true}
+  - {iso2: QA, name_ar: قطر, name_en: Qatar, fotmob_team: 5902, fotmob_code: QAT, martj42: Qatar, arab: true}
+  - {iso2: KW, name_ar: الكويت, name_en: Kuwait, fotmob_team: 5821, fotmob_code: KUW, martj42: Kuwait, arab: true}
+  - {iso2: BH, name_ar: البحرين, name_en: Bahrain, fotmob_team: 5901, fotmob_code: BHR, martj42: Bahrain, arab: true}
+  - {iso2: OM, name_ar: عُمان, name_en: Oman, fotmob_team: 5824, fotmob_code: OMA, martj42: Oman, arab: true}
+  - {iso2: IQ, name_ar: العراق, name_en: Iraq, fotmob_team: 5819, fotmob_code: IRQ, martj42: Iraq, arab: true}
+  - {iso2: YE, name_ar: اليمن, name_en: Yemen, fotmob_team: 5892, fotmob_code: YEM, martj42: Yemen, arab: true}
+  - {iso2: JO, name_ar: الأردن, name_en: Jordan, fotmob_team: 5816, fotmob_code: JOR, martj42: Jordan, arab: true}
+  - {iso2: SY, name_ar: سوريا, name_en: Syria, fotmob_team: 6320, fotmob_code: SYR, martj42: Syria, arab: true}
+  - {iso2: LB, name_ar: لبنان, name_en: Lebanon, fotmob_team: 5897, fotmob_code: LBN, martj42: Lebanon, arab: true}
+  - {iso2: PS, name_ar: فلسطين, name_en: Palestine, fotmob_team: 6333, fotmob_code: PLE, martj42: Palestine, arab: true}
+  - {iso2: EG, name_ar: مصر, name_en: Egypt, fotmob_team: 10255, fotmob_code: EGY, martj42: Egypt, arab: true}
+  - {iso2: SD, name_ar: السودان, name_en: Sudan, fotmob_team: 5805, fotmob_code: SDN, martj42: Sudan, arab: true}
+  - {iso2: LY, name_ar: ليبيا, name_en: Libya, fotmob_team: 6328, fotmob_code: LBY, martj42: Libya, arab: true}
+  - {iso2: TN, name_ar: تونس, name_en: Tunisia, fotmob_team: 6719, fotmob_code: TUN, martj42: Tunisia, arab: true}
+  - {iso2: DZ, name_ar: الجزائر, name_en: Algeria, fotmob_team: 6317, fotmob_code: ALG, martj42: Algeria, arab: true}
+  - {iso2: MA, name_ar: المغرب, name_en: Morocco, fotmob_team: 6262, fotmob_code: MAR, martj42: Morocco, arab: true}
+  - {iso2: MR, name_ar: موريتانيا, name_en: Mauritania, fotmob_team: 68374, fotmob_code: MTN, martj42: Mauritania, arab: true}
+  - {iso2: SO, name_ar: الصومال, name_en: Somalia, fotmob_team: 287978, fotmob_code: SOM, martj42: Somalia, arab: true}
+  - {iso2: DJ, name_ar: جيبوتي, name_en: Djibouti, fotmob_team: 121285, fotmob_code: DJI, martj42: Djibouti, arab: true}
+  - {iso2: KM, name_ar: جزر القمر, name_en: Comoros, fotmob_team: 230692, fotmob_code: COM, martj42: Comoros, arab: true}
+  - {iso2: GB-ENG, name_ar: إنجلترا, name_en: England, fotmob_code: ENG}
+  - {iso2: ES, name_ar: إسبانيا, name_en: Spain, fotmob_code: ESP}
+  - {iso2: IT, name_ar: إيطاليا, name_en: Italy, fotmob_code: ITA}
+  - {iso2: DE, name_ar: ألمانيا, name_en: Germany, fotmob_code: GER}
+  - {iso2: FR, name_ar: فرنسا, name_en: France, fotmob_code: FRA}

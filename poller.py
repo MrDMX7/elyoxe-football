@@ -519,6 +519,7 @@ class Poller:
             for g in t["squad"]:
                 for p in g["players"]:
                     p["abroad"] = bool(p.get("club_id")) and p["club_id"] not in uae_clubs
+        t["country_info"] = self.team_country(tid)
         self.store.put_json(f"team/{tid}.json", {**t, "generated": iso(self.now())}, cache="static",
                             validate=S.validate_team, health_key=f"team:{tid}")
         self.store.ok(f"team:{tid}")
@@ -773,6 +774,7 @@ class Poller:
             if m.get("has_table"):
                 files["standings"] = base + "standings.json"
             comps.append({"id": c["id"], "key": c["key"], "name_ar": c["name_ar"], "name_en": c["name_en"],
+                          "country": c.get("country"), "region": c.get("region"),
                           "name_ar_source": self.names["competitions"].get(str(c["id"])), "kind": c["kind"],
                           "scope": c["scope"], "season": m.get("season"), "matches": m.get("matches"),
                           "finished": m.get("finished"), "next_kickoff": m.get("next_kickoff"),
@@ -794,7 +796,14 @@ class Poller:
                                       "foreigners", "transfers"]},
         }, cache="hot")
         teams = {k: {"name": v[0], "name_ar": v[1] or self.names["teams"].get(k), "logo": S.LOGO.format(id=k),
-                     "comps": self.st.get("team_comps", {}).get(k, [])} for k, v in self.st.get("teams", {}).items()}
+                     "comps": self.st.get("team_comps", {}).get(k, []), "country": self.team_country(k)}
+                 for k, v in self.st.get("teams", {}).items()}
+        self.store.put_json("national/countries.json", {
+            "countries": [{**{k: c.get(k) for k in ("iso2", "name_ar", "name_en", "arab")},
+                           "team": c.get("fotmob_team"), "competitions": [x["id"] for x in self.comps
+                                                                           if (x.get("country") or {}).get("iso2") == c["iso2"]]}
+                          for c in config.countries()],
+            "note": "ISO 3166-1 alpha-2 (England GB-ENG); team = FotMob national-team id"}, cache="static")
         if teams:
             self.store.put_json("teams.json", {"generated": iso(self.now()), "teams": teams}, cache="static")
 
@@ -899,6 +908,17 @@ class Poller:
             except Exception as e:
                 self.store.fail(f"analytics:{key}", f"{type(e).__name__}: {e}")
                 self.mark(key)
+
+    def team_country(self, tid):
+        """National team -> its country; club -> the country of its first domestic competition."""
+        c = config.country_of_team(tid)
+        if c:
+            return {**c, "national": True}
+        for cid in self.st.get("team_comps", {}).get(str(tid), []):
+            cc = (self.comp_by_id.get(cid) or {}).get("country")
+            if cc:
+                return cc
+        return None
 
     def focus_team_ids(self):
         ids = list(config.focus_teams())

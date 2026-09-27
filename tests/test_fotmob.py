@@ -98,3 +98,13 @@ def test_every_configured_competition_has_arabic_name():
         assert c["name_ar"] and c["kind"] in ("league", "cup", "tournament", "supercup")
         if c["kind"] == "league" and c.get("magic", True):
             assert c.get("matches_per_team"), c["id"]
+
+
+def test_country_fields():
+    iso = {c["iso2"] for c in config.countries()}
+    for c in config.competitions():
+        assert "country" in c
+        assert (c["country"] and c["country"]["iso2"] in iso and c["country"]["name_ar"]) or c.get("region"), c["id"]
+    arab = [c for c in config.countries() if c.get("arab")]
+    assert len(arab) == 22 and all(c["fotmob_team"] for c in arab)
+    assert config.country_of_team(5789)["iso2"] == "AE"

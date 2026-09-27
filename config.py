@@ -63,3 +63,15 @@ def rating_params() -> dict:
 
 def derbies() -> list[tuple[int, int]]:
     return [tuple(sorted(map(int, p))) for p in _load("competitions.yaml").get("derbies") or []]
+
+
+def countries() -> list[dict]:
+    return _load("countries.yaml").get("countries", [])
+
+
+def country_of_team(tid) -> dict | None:
+    """National teams only: {iso2, name_ar, name_en} from countries.yaml."""
+    for c in countries():
+        if c.get("fotmob_team") == int(tid):
+            return {"iso2": c["iso2"], "name_ar": c["name_ar"], "name_en": c["name_en"]}
+    return None

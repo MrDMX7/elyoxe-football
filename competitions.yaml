@@ -25,8 +25,8 @@ settings:
   prematch_minutes: 75       # a match is "about to kick off" this long before kickoff
   budget_seconds: 50         # hard stop for one invocation (EventBridge fires every 60 s)
   backfill_per_run: 6        # finished-match details fetched per idle invocation until the ledger is complete
-  player_stats_comps: [538, 536, 535, 47, 87]   # per-player season lists (radar, similarity, foreigners): ~29 requests each, daily
-  compare_leagues: [538, 536, 535, 47, 87]      # league comparison (goals/match, age, foreign share, attendance)
+  player_stats_comps: [538, 536, 535, 530, 47, 87]   # per-player season lists (radar, similarity, foreigners): ~29 requests each, daily
+  compare_leagues: [538, 536, 535, 530, 516, 544, 524, 529, 519, 47, 87]      # league comparison (goals/match, age, foreign share, attendance)
 
 # Tifo rating (compute/rating.py). Fitted by tools/calibrate_rating.py on 2010/11-2021/22, scored out of
 # sample on 2022/23-2025/26: Brier 0.560 vs 0.653 for base rates (docs/TIFO-RATING.md).
@@ -55,6 +55,7 @@ focus_comps: [538, 11027]    # every team in these gets a daily team file (squad
 competitions:
   # ---------- UAE ----------
   - id: 538
+    country: {iso2: AE, name_ar: الإمارات}
     key: uae-pro-league
     name_ar: دوري أدنوك للمحترفين
     name_en: ADNOC Pro League
@@ -65,6 +66,7 @@ competitions:
     ids: {thesportsdb: 4678}
     verified: "2026-09-26 season 2026/2027, 42 matches published (35 played), 14 table rows, next 2026-10-16"
   - id: 11027
+    country: {iso2: AE, name_ar: الإمارات}
     key: uae-league-cup
     name_ar: كأس رابطة المحترفين
     name_en: ADNOC Pro League Cup (ADIB Cup)
@@ -74,6 +76,7 @@ competitions:
     ids: {thesportsdb: 5198}
     verified: "2026-09-26 season 2026/2027, 21 matches (7 played), group tables 14 rows, next 2026-10-01"
   - id: 9943
+    country: {iso2: AE, name_ar: الإمارات}
     key: uae-presidents-cup
     name_ar: كأس رئيس الدولة
     name_en: UAE President's Cup
@@ -81,6 +84,7 @@ competitions:
     scope: uae
     verified: "2026-09-26 latest season on FotMob is 2025/2026 (15 matches, all played); 2026/27 draw not published yet"
   - id: 11026
+    country: {iso2: AE, name_ar: الإمارات}
     key: uae-super-cup
     name_ar: كأس السوبر الإماراتي
     name_en: UAE Super Cup
@@ -90,6 +94,8 @@ competitions:
 
   # ---------- national teams ----------
   - id: 329
+    country: null
+    region: gulf
     key: gulf-cup
     name_ar: كأس الخليج العربي
     name_en: Arabian Gulf Cup
@@ -98,6 +104,8 @@ competitions:
     host: 7795               # Saudi Arabia (Jeddah): home advantage in the tournament simulator
     verified: "2026-09-26 season 2026, 15 matches (5 played), 2 groups x 4, next 2026-09-27, live today"
   - id: 290
+    country: null
+    region: asia
     key: asian-cup
     name_ar: كأس آسيا
     name_en: AFC Asian Cup
@@ -106,6 +114,8 @@ competitions:
     host: 7795               # Saudi Arabia hosts the 2027 Asian Cup
     verified: "2026-09-26 season 2027, 51 matches (0 played), 6 groups, 2027-01-07..2027-02-05 (many kickoff times TBD)"
   - id: 10609
+    country: null
+    region: asia
     key: asian-cup-qualification
     name_ar: تصفيات كأس آسيا
     name_en: AFC Asian Cup Qualification
@@ -113,6 +123,8 @@ competitions:
     scope: national
     verified: "2026-09-26 season 2025/2026, 72 matches (70 played), finished"
   - id: 10197
+    country: null
+    region: asia
     key: wc-qualification-afc
     name_ar: تصفيات كأس العالم - آسيا
     name_en: World Cup Qualification AFC
@@ -120,6 +132,8 @@ competitions:
     scope: national
     verified: "2026-09-26 season 2023/2025, 226 matches, finished; the 2030 cycle is not published yet"
   - id: 77
+    country: null
+    region: world
     key: world-cup
     name_ar: كأس العالم
     name_en: FIFA World Cup
@@ -127,6 +141,8 @@ competitions:
     scope: world
     verified: "2026-09-26 season 2026, 104 matches, finished"
   - id: 10242
+    country: null
+    region: arab
     key: arab-cup
     name_ar: كأس العرب
     name_en: FIFA Arab Cup
@@ -134,6 +150,8 @@ competitions:
     scope: arab
     verified: "2026-09-26 season 2025 Qatar, 32 matches, finished"
   - id: 11156
+    country: null
+    region: arab
     key: arab-cup-qualification
     name_ar: تصفيات كأس العرب
     name_en: FIFA Arab Cup Qualification
@@ -141,6 +159,8 @@ competitions:
     scope: arab
     verified: "2026-09-26 season 2025, 7 matches, finished"
   - id: 9571
+    country: null
+    region: asia
     key: afc-u23-asian-cup
     name_ar: كأس آسيا تحت 23 سنة
     name_en: AFC U23 Asian Cup
@@ -150,6 +170,8 @@ competitions:
 
   # ---------- Asian and Arab clubs ----------
   - id: 525
+    country: null
+    region: asia
     key: afc-champions-league-elite
     name_ar: دوري أبطال آسيا للنخبة
     name_en: AFC Champions League Elite
@@ -157,6 +179,8 @@ competitions:
     scope: asia
     verified: "2026-09-26 season 2026/2027, 128 matches (16 played), league phase 32 rows, next 2026-10-12"
   - id: 10622
+    country: null
+    region: asia
     key: afc-champions-league-elite-qualification
     name_ar: تصفيات دوري أبطال آسيا للنخبة
     name_en: AFC Champions League Elite Qualification
@@ -164,6 +188,8 @@ competitions:
     scope: asia
     verified: "2026-09-26 season 2026/2027, 4 matches, finished"
   - id: 9469
+    country: null
+    region: asia
     key: afc-champions-league-two
     name_ar: دوري أبطال آسيا 2
     name_en: AFC Champions League Two
@@ -171,6 +197,8 @@ competitions:
     scope: asia
     verified: "2026-09-26 season 2026/2027, 99 matches (19 played), 8 groups 32 rows, next 2026-10-13"
   - id: 9470
+    country: null
+    region: asia
     key: afc-challenge-league
     name_ar: دوري التحدي الآسيوي
     name_en: AFC Challenge League
@@ -178,6 +206,8 @@ competitions:
     scope: asia
     verified: "2026-09-26 season 2026/2027, 30 matches (0 played), 20 rows, next 2026-10-17"
   - id: 10474
+    country: null
+    region: arab
     key: arab-club-champions-cup
     name_ar: البطولة العربية للأندية
     name_en: Arab Club Champions Cup
@@ -185,6 +215,8 @@ competitions:
     scope: arab
     verified: "2026-09-26 latest season on FotMob is 2023 (dormant)"
   - id: 78
+    country: null
+    region: world
     key: club-world-cup
     name_ar: كأس العالم للأندية
     name_en: FIFA Club World Cup
@@ -192,6 +224,8 @@ competitions:
     scope: world
     verified: "2026-09-26 season 2025, 66 matches, finished"
   - id: 10703
+    country: null
+    region: world
     key: intercontinental-cup
     name_ar: كأس القارات للأندية
     name_en: FIFA Intercontinental Cup
@@ -201,6 +235,7 @@ competitions:
 
   # ---------- Gulf and Arab leagues ----------
   - id: 536
+    country: {iso2: SA, name_ar: السعودية}
     key: saudi-pro-league
     name_ar: دوري روشن السعودي
     name_en: Saudi Pro League
@@ -209,6 +244,7 @@ competitions:
     matches_per_team: 34
     verified: "2026-09-26 season 2026/2027, 306 matches (63 played), 18 rows, next 2026-10-09"
   - id: 9942
+    country: {iso2: SA, name_ar: السعودية}
     key: saudi-kings-cup
     name_ar: كأس الملك السعودي
     name_en: King's Cup (Saudi Arabia)
@@ -216,6 +252,7 @@ competitions:
     scope: gulf
     verified: "2026-09-26 season 2026/2027, 24 matches (16 played), next 2026-11-30"
   - id: 10074
+    country: {iso2: SA, name_ar: السعودية}
     key: saudi-super-cup
     name_ar: كأس السوبر السعودي
     name_en: Saudi Super Cup
@@ -223,6 +260,7 @@ competitions:
     scope: gulf
     verified: "2026-09-26 latest season 2024/2025 (3 matches)"
   - id: 535
+    country: {iso2: QA, name_ar: قطر}
     key: qatar-stars-league
     name_ar: دوري نجوم قطر
     name_en: Qatar Stars League
@@ -231,6 +269,7 @@ competitions:
     matches_per_team: 22
     verified: "2026-09-26 season 2026/2027, 66 matches published (24 played), 12 rows, next 2026-10-08"
   - id: 519
+    country: {iso2: EG, name_ar: مصر}
     key: egyptian-premier-league
     name_ar: الدوري المصري الممتاز
     name_en: Egyptian Premier League
@@ -241,6 +280,7 @@ competitions:
 
   # ---------- Europe ----------
   - id: 47
+    country: {iso2: GB-ENG, name_ar: إنجلترا}
     key: premier-league
     name_ar: الدوري الإنجليزي الممتاز
     name_en: Premier League
@@ -249,6 +289,7 @@ competitions:
     matches_per_team: 38
     verified: "2026-09-26 season 2026/2027, 380 matches (50 played), 20 rows, next 2026-10-10"
   - id: 87
+    country: {iso2: ES, name_ar: إسبانيا}
     key: laliga
     name_ar: الدوري الإسباني
     name_en: LaLiga
@@ -257,6 +298,7 @@ competitions:
     matches_per_team: 38
     verified: "2026-09-26 season 2026/2027, 380 matches (69 played), 20 rows, next 2026-10-09"
   - id: 55
+    country: {iso2: IT, name_ar: إيطاليا}
     key: serie-a
     name_ar: الدوري الإيطالي
     name_en: Serie A
@@ -265,6 +307,7 @@ competitions:
     matches_per_team: 38
     verified: "2026-09-26 season 2026/2027, 380 matches (50 played), 20 rows, next 2026-10-10"
   - id: 54
+    country: {iso2: DE, name_ar: ألمانيا}
     key: bundesliga
     name_ar: الدوري الألماني
     name_en: Bundesliga
@@ -273,6 +316,7 @@ competitions:
     matches_per_team: 34
     verified: "2026-09-26 season 2026/2027, 306 matches (36 played), 18 rows, next 2026-10-09"
   - id: 53
+    country: {iso2: FR, name_ar: فرنسا}
     key: ligue-1
     name_ar: الدوري الفرنسي
     name_en: Ligue 1
@@ -281,6 +325,8 @@ competitions:
     matches_per_team: 34
     verified: "2026-09-26 season 2026/2027, 306 matches (45 played), 18 rows, next 2026-10-09"
   - id: 42
+    country: null
+    region: europe
     key: champions-league
     name_ar: دوري أبطال أوروبا
     name_en: UEFA Champions League
@@ -288,6 +334,8 @@ competitions:
     scope: europe
     verified: "2026-09-26 season 2026/2027, 144 matches (18 played), league phase 36 rows, next 2026-10-13"
   - id: 73
+    country: null
+    region: europe
     key: europa-league
     name_ar: الدوري الأوروبي
     name_en: UEFA Europa League
@@ -295,9 +343,136 @@ competitions:
     scope: europe
     verified: "2026-09-26 season 2026/2027, 144 matches (18 played), 36 rows, next 2026-10-15"
   - id: 10216
+    country: null
+    region: europe
     key: conference-league
     name_ar: دوري المؤتمر الأوروبي
     name_en: UEFA Conference League
     kind: tournament
     scope: europe
     verified: "2026-09-26 season 2026/2027, 108 matches (0 played), 36 rows, next 2026-10-15"
+
+  # ---------- more Arab leagues and cups (verified 2026-09-27) ----------
+  # Not on FotMob at all: Jordan, Oman, Bahrain, Lebanon, Libya, Sudan, Syria, Palestine, Yemen leagues.
+  - id: 530
+    country: {iso2: MA, name_ar: المغرب}
+    key: botola-pro
+    name_ar: البطولة الاحترافية المغربية
+    name_en: Botola Pro
+    kind: league
+    scope: arab
+    matches_per_team: 30
+    verified: "2026-09-27 season 2026/2027, 15 matches published (4 played), 16 rows, next 2026-09-27"
+  - id: 11840
+    country: {iso2: MA, name_ar: المغرب}
+    key: morocco-throne-cup
+    name_ar: كأس العرش المغربي
+    name_en: Throne Cup
+    kind: cup
+    scope: arab
+    verified: "2026-09-27 latest season 2024/2025 (16 matches, played May-July 2026)"
+  - id: 516
+    country: {iso2: DZ, name_ar: الجزائر}
+    key: algeria-ligue-1
+    name_ar: الرابطة المحترفة الأولى الجزائرية
+    name_en: Algeria Ligue 1
+    kind: league
+    scope: arab
+    matches_per_team: 30
+    verified: "2026-09-27 season 2026/2027, 200 matches published (21 played), 16 rows, next 2026-10-06"
+  - id: 544
+    country: {iso2: TN, name_ar: تونس}
+    key: tunisia-ligue-1
+    name_ar: الرابطة المحترفة الأولى التونسية
+    name_en: Tunisia Ligue 1
+    kind: league
+    scope: arab
+    matches_per_team: 30
+    verified: "2026-09-27 season 2026/2027, 120 matches published (31 played), 16 rows, next 2026-10-10"
+  - id: 9941
+    country: {iso2: EG, name_ar: مصر}
+    key: egypt-cup
+    name_ar: كأس مصر
+    name_en: Egypt Cup
+    kind: cup
+    scope: arab
+    verified: "2026-09-27 latest season 2025/2026 (31 matches, finished)"
+  - id: 10314
+    country: {iso2: EG, name_ar: مصر}
+    key: egypt-super-cup
+    name_ar: كأس السوبر المصري
+    name_en: Egyptian Super Cup
+    kind: supercup
+    scope: arab
+    verified: "2026-09-27 latest season 2025/2026 (4 matches)"
+  - id: 524
+    country: {iso2: IQ, name_ar: العراق}
+    key: iraq-stars-league
+    name_ar: دوري نجوم العراق
+    name_en: Iraq Stars League
+    kind: league
+    scope: arab
+    matches_per_team: 38
+    verified: "2026-09-27 season 2026/2027, 380 matches (79 played), 20 rows, next 2026-10-08"
+  - id: 529
+    country: {iso2: KW, name_ar: الكويت}
+    key: kuwait-premier-league
+    name_ar: الدوري الكويتي الممتاز
+    name_en: Kuwait Premier League
+    kind: league
+    scope: gulf
+    matches_per_team: 22
+    verified: "2026-09-27 season 2026/2027, 132 matches (18 played), 12 rows, next 2026-10-09"
+  - id: 10721
+    country: {iso2: SA, name_ar: السعودية}
+    key: saudi-first-division
+    name_ar: دوري يلو السعودي
+    name_en: Saudi First Division
+    kind: league
+    scope: gulf
+    matches_per_team: 34
+    verified: "2026-09-27 season 2026/2027, 171 matches published (53 played), 18 rows, next 2026-10-08"
+  - id: 11018
+    country: {iso2: QA, name_ar: قطر}
+    key: amir-cup
+    name_ar: كأس أمير قطر
+    name_en: Amir of Qatar Cup
+    kind: cup
+    scope: gulf
+    verified: "2026-09-27 latest season 2025/2026 (19 matches)"
+  - id: 526
+    country: null
+    region: africa
+    key: caf-champions-league
+    name_ar: دوري أبطال أفريقيا
+    name_en: CAF Champions League
+    kind: tournament
+    scope: africa
+    verified: "2026-09-27 latest season on FotMob 2025/2026 (62 matches, finished); 2026/27 group stage not published yet"
+  - id: 9468
+    country: null
+    region: africa
+    key: caf-confederation-cup
+    name_ar: كأس الكونفدرالية الأفريقية
+    name_en: CAF Confederation Cup
+    kind: tournament
+    scope: africa
+    verified: "2026-09-27 season 2026/2027, 80 matches (47 played), next 2026-10-16"
+  - id: 289
+    country: null
+    region: africa
+    key: africa-cup-of-nations
+    name_ar: كأس أمم أفريقيا
+    name_en: Africa Cup of Nations
+    kind: tournament
+    scope: national
+    verified: "2026-09-27 season 2025 (Morocco), 52 matches, finished"
+  - id: 10608
+    country: null
+    region: africa
+    key: afcon-qualification
+    name_ar: تصفيات كأس أمم أفريقيا
+    name_en: Africa Cup of Nations Qualification
+    kind: tournament
+    scope: national
+    verified: "2026-09-27 season 2026/2027, 156 matches (36 played), 12 groups, next 2026-09-28"
