@@ -102,3 +102,17 @@ def test_form_counts_must_match():
     assert checks.check_history("الشارقة والفورمة تبع آخر 5 لقاءات فيها انتصارين وهزيمتين.", ev_in)
     assert checks.check_history("الشارقة فورمته في آخر 5: 3 انتصارات وخسارتين.", ev_in) is None
     assert gen.grammar("سجله 2 فوز و2 خسارة وتعادل") == "سجله فوزين وخسارتين وتعادل"
+
+def test_half_counts_ignore_deficits_scores_and_check_conceded():
+    # the 3 false positives of the 21:25 run (summary 1000020526, thread 1000020526, why 6150375)
+    assert checks.check_halves("هالفوز يعتبر مفاجئ لعجمان بعد ما كان متأخر بهدفين في الشوط الأول.", AJM)[0] is None
+    assert checks.check_halves("بهالفوز عجمان يقلب النتيجة من 0-2 إلى 3-2 في الشوط الثاني كامل", AJM)[0] is None
+    why, rest = checks.check_halves("سجل الدفاع الحسني الجديدي هدفين من 5 تسديدات على المرمى واستقبل 4 أهداف في الشوط الأول.", MEK)
+    assert why is None and gen.check_result(rest, MEK) is None
+    assert checks.check_halves("الدفاع الحسني الجديدي استقبل 3 أهداف في الشوط الأول.", MEK)[0]
+    assert checks.check_halves("عجمان سجل 3 أهداف في الشوط الثاني.", AJM)[0] is None
+    assert checks.check_halves("عجمان سجل هدفين في الشوط الثاني.", AJM)[0]
+
+def test_club_without_arabic_name_gets_one():
+    assert gen.team_ar({"id": 570488, "name": "Widad Temara", "name_ar": None}) == "وداد تمارة"   # names/clubs_ar.json
+    assert gen.team_ar({"id": 102124, "name": "Sharjah"}) == "الشارقة"                            # teams_ar.yaml

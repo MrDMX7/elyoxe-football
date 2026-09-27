@@ -201,7 +201,20 @@ def spoken(t):
     return re.sub(r"\d+", lambda m: say(m.group(0)), t)
 
 # ---- context builders: only facts from our files
-def team_ar(t): return (t or {}).get("name_ar") or (t or {}).get("name")
+def team_ar(t): return checks.club_ar(t) or (t or {}).get("name")   # name_ar → names/clubs_ar.json → teams_ar.yaml → Gemini (cached)
+def _translit(tid, latin):
+    """A club with no Arabic name anywhere: Gemini transliterates it once, cached into names/clubs_ar.json (source "generated")."""
+    out = gemini_api("اكتب اسم نادي كرة القدم هذا بالحروف العربية كما يكتبه الإعلام العربي. JSON بس.", {"club": latin}, OBJ({"ar": S(60)}), temp=0.1, tokens=200)
+    ar = (out or {}).get("ar", "").strip()
+    if not ar or re.search(r"[A-Za-z]", ar): return None
+    f = checks.CLUBS_FILE
+    try: cur = json.load(open(f))
+    except Exception: cur = {}
+    if tid not in cur:   # atomic write: the names pipeline writes this file too
+        cur[tid] = {"latin": latin, "ar": ar, "source": "generated", "qid": None, "checked": dt.date.today().isoformat()}
+        tmp = f + ".tmp"; json.dump(cur, open(tmp, "w"), ensure_ascii=False, indent=1); os.replace(tmp, f)
+    return ar
+checks.TRANSLIT = _translit
 def pname(p):   # a player's Arabic name (names/players_ar.json) when we have one, else FotMob's
     p = p or {}; return checks.names_ar().get(str(p.get("id"))) or p.get("name")
 def match_facts(md):
@@ -472,6 +485,7 @@ def check_result(text, md):
         for m in re.finditer(r"سج[ّ]?ل\s+(?:منتخب\s+)?" + N + r"\s+(\d+|هدفين|هدفه الوحيد|هدف واحد)", text):
             if _goals_word(m.group(1)) != g[n]: return f"{n} goals {m.group(1)} != {g[n]}"
         for m in re.finditer(r"(?:منتخب\s+)?" + N + r"\s+(?:\S+\s+){0,3}?(?:سج[ّ]?ل\s+)?(\d+) (?:أهداف|هدف)(?!\s*(?:متوقع|من))", text):
+            if re.search(r"استقبل|تلق[ّ]?ى|تلقت|دخل(?:ت)? مرماه|متأخر|تأخر", m.group(0)): continue   # conceded or a deficit, not goals scored
             if int(m.group(1)) != g[n]: return f"{n} goals {m.group(1)} != {g[n]}"
         if re.search(r"(?:^|[\s،.])(?:منتخب\s+)?" + N + r"\s+(?:\S+\s+){0,1}?فاز", text) and win != n: return f"{n} فاز but result {sc}"
         if re.search(r"فاز\s+(?:منتخب\s+)?" + N + r"(?!\w)", text) and win != n: return f"فاز {n} but result {sc}"

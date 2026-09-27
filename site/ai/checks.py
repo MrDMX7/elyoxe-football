@@ -19,7 +19,30 @@ def names_ar():
         except Exception: _NAMES["_"] = ""
     return _NAMES
 
-def _team(md, side): return (md.get(side) or {}).get("name_ar") or (md.get(side) or {}).get("name") or side
+# Arabic club names: FotMob's name_ar, else names/clubs_ar.json, else teams_ar.yaml, else TRANSLIT (gen.py sets it: a Gemini
+# transliteration cached into clubs_ar.json with source "generated"), else the Latin name
+CLUBS_FILE = os.path.join(os.path.dirname(NAMES_FILE), "clubs_ar.json"); YAML_FILE = os.path.join(os.path.dirname(NAMES_FILE), "..", "teams_ar.yaml")
+_CLUBS = {}; TRANSLIT = None
+def _clubs():
+    if not _CLUBS:
+        try: _CLUBS.update({k: v.get("ar") for k, v in json.load(open(CLUBS_FILE)).items() if isinstance(v, dict) and v.get("ar")})
+        except Exception: pass
+        try:
+            import yaml
+            for k, v in ((yaml.safe_load(open(YAML_FILE)) or {}).get("teams") or {}).items(): _CLUBS.setdefault(str(k), v)
+        except Exception: pass
+        _CLUBS.setdefault("_", "")
+    return _CLUBS
+def club_ar(t):
+    t = t or {}
+    if t.get("name_ar"): return t["name_ar"]
+    tid = str(t.get("id") or ""); hit = _clubs().get(tid)
+    if hit: return hit
+    if TRANSLIT and tid and t.get("name"):
+        ar = TRANSLIT(tid, t["name"])
+        if ar: _CLUBS[tid] = ar; return ar
+    return t.get("name") or ""
+def _team(md, side): return club_ar(md.get(side)) or side
 def _mm(e): return (e.get("minute") or 0) + (e.get("added") or 0) / 100   # 90+3 sorts after 90
 
 def match_players(md):
@@ -119,12 +142,18 @@ def check_events(text, md, players=None):
 def check_halves(text, md):
     """Checks «N أهداف في الشوط الأول/الثاني» per team against that half; returns (reason, text with those phrases removed)."""
     t = timeline(md); H, A = _team(md, "home"), _team(md, "away"); rest = text
-    for m in re.finditer(r"(\d+|هدفين|هدف واحد)\s+(?:أهداف|هدف)?\s*(?:في|بـ?|خلال)\s*ال?شوط\s+(الأول|الثاني)", text):
-        n = 2 if m.group(1) == "هدفين" else 1 if m.group(1) == "هدف واحد" else int(m.group(1))
-        before = text[max(0, m.start() - 60):m.start()]; side = "home" if before.rfind(H) > before.rfind(A) else "away" if before.rfind(A) >= 0 else None
-        half = [g for g in t["goals"] if (g["min"] <= 45) == (m.group(2) == "الأول") and (side is None or g["side"] == side)]
-        if len(half) != n: return f"{n} goals in the {m.group(2)} half, data has {len(half)}", text
+    # a goal noun must follow the number («3-2 في الشوط الثاني» is a score, not a count)
+    for m in re.finditer(r"(?:(\d+)\s+(?:أهداف|هدف)|(هدفين|هدف واحد|هدف وحيد))\s*(?:في|بـ?|خلال)\s*ال?شوط\s+(الأول|الثاني)", text):
+        n = int(m.group(1)) if m.group(1) else 2 if m.group(2) == "هدفين" else 1
+        near = text[max(0, m.start() - 25):m.start()]
         rest = rest.replace(m.group(0), "")
+        if re.search(r"متأخر|تأخر|متخلف|خسران|مغلوب", near): continue   # «متأخر بهدفين في الشوط الأول» is a deficit, not goals scored
+        conceded = bool(re.search(r"استقبل|تلقى|تلق[ّ]?ى|دخل(?:ت)? مرماه|استقبلت|تلقت", near))
+        before = text[max(0, m.start() - 80):m.start()]; hp, ap = before.rfind(H), before.rfind(A)
+        side = ("home" if hp > ap else "away") if max(hp, ap) >= 0 else None
+        if side and conceded: side = "away" if side == "home" else "home"   # goals conceded = the other side's goals
+        half = [g for g in t["goals"] if (g["min"] <= 45) == (m.group(3) == "الأول") and (side is None or g["side"] == side)]
+        if len(half) != n: return f"{n} goals {'conceded ' if conceded else ''}in the {m.group(3)} half, data has {len(half)}", text
     return None, rest
 
 HIST = [(r"أول فوز|أول انتصار", ("head_to_head", "h2h", "form", "firsts")), (r"أول مرة", ("firsts", "records_at_stake")),
