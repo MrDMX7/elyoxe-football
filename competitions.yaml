@@ -31,6 +31,10 @@ settings:
                   525, 10622, 9469, 9470, 526, 9468, 10474, 47, 87, 55, 54, 53, 42, 73, 10216, 78, 10703]
   # leagues that get the full 538 treatment (probabilities, season sim, facts, watchability, pressure, fatigue, fortress)
   analytics_leagues: [538, 536, 535, 529, 524, 519, 530, 516, 544, 10721, 47, 87, 55, 54, 53]
+  # Arab clubs rating (analytics.arab_ratings): tools/calibrate_arab.py, fit before 2022-07-01, test after
+  arab_rating: {k: 16, home: 60, regress: 0.2, d0: 0.30, ds: 400, newcomer: 1400, base: 1500}
+  arab_rating_calibration: {brier_test: 0.5908, brier_base_rate: 0.6524, n_test: 11332, matches_total: 37575,
+                            test_from: "2022-07-01", docs: docs/TIFO-RATING.md}
   records_comps: [538, 536, 535, 529, 524, 519, 530, 516, 544, 10721]
   compare_leagues: [538, 536, 535, 530, 516, 544, 524, 529, 519, 47, 87]      # league comparison (goals/match, age, foreign share, attendance)
 

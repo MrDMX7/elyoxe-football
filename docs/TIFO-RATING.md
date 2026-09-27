@@ -90,3 +90,16 @@ The model is slightly over-confident on the favourite at 0.5–0.8. A later vers
   - R² against xG: **0.79**
   - correlation with goals scored: proxy **0.586**, real xG 0.613
 - **Where it is used:** competitions with no source xG (the UAE Pro League) get `comp/{id}/xg.json` with `"proxy": true`, including the "fair table" (xPts and luck from the proxy).
+
+## Arab clubs rating (`ratings/arab-clubs.json`)
+
+- **What it is:** one Elo scale over every Arab league FotMob has, linked through the competitions where their clubs meet.
+  - Leagues: UAE, Saudi Pro League and First Division, Qatar, Kuwait, Iraq, Egypt, Morocco, Algeria, Tunisia, plus their cups.
+  - Linking competitions: AFC Champions League Elite/Two/Challenge, CAF Champions League/Confederation Cup, Arab Club Champions Cup.
+- **Seasons:** every competition runs on one July–June season clock for the between-season regression.
+- **Calibration (`tools/calibrate_arab.py`, 37,575 matches):** fit on matches before 2022-07-01 (scored from 2013-07), test after.
+  - Brier on the test set: **0.591** (n = 11,332), against 0.652 for base rates (home 0.440, draw 0.284, away 0.276).
+  - Parameters: K 16, home 60, regression 0.2, draw 0.30 × exp(−(d/400)²), newcomer 1400.
+- **Coverage:** since calibration, the production run also includes the big-five leagues and the UEFA and FIFA club competitions with the same parameters, so European clubs get probabilities too. Arab and European clubs meet only in the Club World Cup and Intercontinental Cup, so the cross-region scale is weakly linked.
+- **Top 100:** clubs whose most recent domestic league is in an Arab country and that played within 400 days.
+- **Not covered:** leagues FotMob lacks (Jordan, Oman, Bahrain, Lebanon, Libya, Sudan, Syria, Palestine, Yemen). Their clubs appear only through AFC/CAF matches, so they carry a rating but no country and are left out of the top 100.

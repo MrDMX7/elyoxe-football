@@ -450,7 +450,10 @@ def player_extras(p, cid, table, raw):
                 p.store.put_json(f"comp/{cid}/improved.json", {"comp": cid, "generated": now, "previous_season": prev.get("Name"),
                                                                **PL.improved(cur, prev_list)}, cache="static")
         except ERRORS as e:
-            p.store.fail(f"improved:{cid}", e)
+            if "403" in str(e) or "404" in str(e):
+                p.store.ok(f"improved:{cid}", note="no previous-season rating list on FotMob for this league")
+            else:
+                p.store.fail(f"improved:{cid}", e)
     squads = {k: v for k, v in p.aux("squads").items() if int(k) != NATIONAL}
     tabs = {int(k): v for k, v in p.aux("ptables").items()}
     if cid not in (47, 87, 55, 54, 53, 42):

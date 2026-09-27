@@ -51,8 +51,8 @@ def main():
     cut, burn = "2022-07-01", "2013-07-01"
     train = [r for r in rows if r["ko"] < cut]
     best = None
-    for k, home, regress, d0, ds, nc in itertools.product([16, 20, 24, 28], [40, 60, 80], [0.1, 0.2], [0.24, 0.27], [300, 400],
-                                                         [1400, 1450, 1500]):
+    for k, home, regress, d0, ds, nc in itertools.product([10, 13, 16], [50, 60, 70], [0.2, 0.3, 0.4], [0.27, 0.30], [400, 500],
+                                                         [1400]):
         p = {"k": k, "home": home, "regress": regress, "d0": d0, "ds": ds, "newcomer": nc}
         _, _, preds = R.run(train, p, predict_from=burn)
         b = R.brier(preds)
