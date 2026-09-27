@@ -56,7 +56,9 @@ STYLE = """اكتب باللهجة الإماراتية المحكية، مب ف
 - لا تكتب «رقم 1» أو «1 مرة»: قل «أول فوز»، «مرة وحدة»، «المتصدر».
 """
 
+GEMINI_OUT = []   # set on 402/429: the key is out of credit or quota; later calls return None at once instead of retrying
 def gemini(system, payload, schema, temp=0.6, tokens=4000):
+    if GEMINI_OUT: return None
     req = {"systemInstruction": {"parts": [{"text": system}]}, "contents": [{"role": "user", "parts": [{"text": json.dumps(payload, ensure_ascii=False)}]}],
            "generationConfig": {"temperature": temp, "maxOutputTokens": tokens, "responseMimeType": "application/json", "responseSchema": schema}}
     for i in range(3):
@@ -66,7 +68,9 @@ def gemini(system, payload, schema, temp=0.6, tokens=4000):
             out = json.loads(r.read())
             return json.loads(out["candidates"][0]["content"]["parts"][0]["text"])
         except Exception as e:
-            print("gemini retry", i, str(e)[:200], file=sys.stderr); time.sleep(4 * (i + 1))
+            print("gemini retry", i, str(e)[:200], file=sys.stderr)
+            if getattr(e, "code", None) in (402, 429): GEMINI_OUT.append(e.code); print(f"gemini {e.code}: stopping generated text for this run", file=sys.stderr); return None
+            time.sleep(4 * (i + 1))
     return None
 
 S = lambda n: {"type": "STRING", "maxLength": n}
@@ -525,6 +529,7 @@ def main():
                 if m["comp"] not in tabs: tabs[m["comp"]] = get(f"comp/{m['comp']}/standings.json")
                 r = do_quick(m, tabs[m["comp"]]); log["quick-" + r] = log.get("quick-" + r, 0) + 1; n += r == "new"
     if "daily5" in only: log["daily5"] = do_daily5()
+    if GEMINI_OUT: log["gemini_stopped"] = GEMINI_OUT[0]
     print(json.dumps(log, ensure_ascii=False))
 
 if __name__ == "__main__":
