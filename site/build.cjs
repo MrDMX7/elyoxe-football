@@ -12,9 +12,16 @@ const OUT = path.resolve(__dirname, arg("--out", "out")), PREVIEW = args.include
 const SITE = "https://tifo.elyoxe.com", CACHE = path.join(__dirname, "cache");
 const esc = R.esc;
 
+// QA 65: a club the feed has no Arabic for (Widad Temara) leaked its Latin name wherever a page reads name_ar || name
+// (the /week/ aria-label among them). Once names/clubs_ar.json is loaded, every fetched team object gets its name_ar.
+// Only under home/away/team/opponent, so a player whose id equals a club id is never renamed.
+let TAR_FILL = null;
+function fillAr(o, k){ if (!o || typeof o !== "object") return; if (Array.isArray(o)){ for (const x of o) fillAr(x, k); return; }
+  if (TAR_FILL && (k === "home" || k === "away" || k === "team" || k === "opponent") && o.id != null && !o.name_ar && TAR_FILL[o.id]) o.name_ar = TAR_FILL[o.id];
+  for (const kk in o) if (o[kk] && typeof o[kk] === "object") fillAr(o[kk], kk); }
 async function get(p, tries = 4){
   for (let i = 0; i < tries; i++){
-    try { const r = await fetch(DATA + "/" + p, { signal:AbortSignal.timeout(25000) }); if (r.status === 404 || r.status === 403) return null; if (!r.ok) throw new Error(r.status + " " + p); return await r.json(); }
+    try { const r = await fetch(DATA + "/" + p, { signal:AbortSignal.timeout(25000) }); if (r.status === 404 || r.status === 403) return null; if (!r.ok) throw new Error(r.status + " " + p); const j = await r.json(); fillAr(j); return j; }
     catch (e){ if (i === tries - 1) { console.error("fetch failed", p, e.message); return null; } await new Promise(s => setTimeout(s, 1500 * (i + 1))); }
   }
 }
@@ -266,6 +273,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
     BCBY = out; const bj = JSON.stringify(out); BC_V = hash(bj); fs.writeFileSync(path.join(OUT, `assets/bc.${BC_V}.json`), bj); }
   let CLUB_AR = {}, REF_AR = {}; try { CLUB_AR = JSON.parse(fs.readFileSync(path.join(__dirname, "../names/clubs_ar.json"), "utf8")); } catch (e){} try { REF_AR = JSON.parse(fs.readFileSync(path.join(__dirname, "../names/referees_ar.json"), "utf8")); } catch (e){}
   const TAR = {}; for (const [id, v] of Object.entries(CLUB_AR)) if (v.ar) TAR[id] = v.ar; R.setClubNames(TAR);
+  TAR_FILL = TAR; for (const [id, tm] of Object.entries((teamsJson && teamsJson.teams) || {})) if (tm && !tm.name_ar && TAR[id]) tm.name_ar = TAR[id];   // fetched before TAR existed
   const refAr = r => r && r.id && REF_AR[r.id] && REF_AR[r.id].ar ? REF_AR[r.id].ar : null;
   const BC = Object.fromEntries(Object.entries(readRes("broadcast.json")).filter(([k, e]) => !(e && e.disputed))),   // owner item 14: no disputed rows anywhere
     HLT = readRes("highlights.json"), STAD = {}; ((readRes("stadiums.json").stadiums) || []).forEach(x => { STAD[x.id] = x; });
