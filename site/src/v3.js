@@ -177,6 +177,22 @@
     var tierOf = function(c){ if (red(c)) return "rel"; var i = order.filter(function(x){ return !red(x); }).indexOf(c); return TIER[Math.min(i, TIER.length - 1)]; };
     return h.replace(/<td class="rk"><span style="background:([^;"]+);color:[^"]*">/g, function(_, c){ var t = tierOf(c); return t === "rel" ? '<td class="rk z rel"><span>' : '<td class="rk z" style="--z:' + t + '"><span>'; })
       .replace(/<span><i style="background:([^"]+)"><\/i>/g, function(_, c){ var t = tierOf(c); return t === "rel" ? '<span><i class="zrel"></i>' : '<span><i style="background:' + t + '"></i>'; }); };
+  // 417 «تيفو الأسبوع» on /week/: the week in up to 5 numbers (weekly.py -> /og/week-latest.json). The build prerenders it with links
+  // (the dead-link pass cleans any that have no page); the browser only draws it when the build had no file yet, and then without links.
+  // Scores keep the scoreboard chip; counts are plain numerals (rule 13).
+  var WMON = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+  function wdate(s){ var p = String(s || "").split("-"); return p.length === 3 ? '<span class="num">' + (+p[2]) + "</span> " + WMON[+p[1] - 1] : ""; }
+  function wunit(k, v){ var n = parseFloat(v); if (isNaN(n)) return ""; if (k === "top_scorer") return n === 1 ? "هدف" : n === 2 ? "هدفين" : n <= 10 ? "أهداف" : "هدف";
+    if (k === "streak") return n === 1 ? "مباراة" : n === 2 ? "مباراتين" : n <= 10 ? "مباريات" : "مباراة"; if (k === "leader_change") return n === 1 ? "نقطة" : n === 2 ? "نقطتين" : n <= 10 ? "نقاط" : "نقطة"; if (k === "arab_star") return "التقييم"; return ""; }
+  R.weekCard = function(j, o){ o = o || {}; var it = (j && j.items) || []; if (!it.length) return "";
+    var rows = it.slice(0, 5).map(function(x){ var score = x.kind === "biggest_win" && /^\d+\s*-\s*\d+$/.test(String(x.value || "")), u = wunit(x.kind, x.value);
+      var val = score ? '<b class="wkv sc"><bdi dir="ltr">' + esc(x.value) + "</bdi></b>" : x.kind === "arab_star" ? '<b class="wkv"><small>' + u + '</small> <span class="num">' + esc(x.value) + "</span></b>" : '<b class="wkv"><span class="num">' + esc(x.value) + "</span>" + (u ? " <small>" + u + "</small>" : "") + "</b>";
+      var href = o.links ? (x.match ? "/m/" + x.match + "/" : x.player ? "/p/" + x.player + "/" : x.team ? "/t/" + x.team + "/" : "") : "", tag = href ? "a" : "div";
+      return "<" + tag + ' class="wkr"' + (href ? ' href="' + href + '"' : "") + ">" + (x.team ? R.logo({ id:x.team }, "sm") : '<span class="wkdot" aria-hidden="true"></span>') + '<span class="wkt"><small>' + esc(x.label || "") + "</small><b>" + esc(x.text || "") + "</b>" + (x.sub ? "<span>" + esc(x.sub) + "</span>" : "") + "</span>" + val + "</" + tag + ">"; }).join("");
+    var star = it.some(function(x){ return x.kind === "arab_star"; });
+    return '<section class="blk wkcard" id="wkcard" data-week="' + esc(j.week || "") + '"><h2>تيفو الأسبوع<small>' + wdate(j.from) + " – " + wdate(j.to) + "</small></h2>" + rows +
+      '<p class="wkdl"><a href="/og/week-latest-story.png" download="tifo-week-' + esc(j.week || "") + '-story.png">صورة ستوري</a><a href="/og/week-latest-feed.png" download="tifo-week-' + esc(j.week || "") + '-feed.png">صورة بوست</a>' + (star ? '<a href="/og/arab-star-latest.png" download="tifo-arab-star-' + esc(j.week || "") + '.png">بطاقة نجم العرب</a>' : "") + "</p></section>"; };
+
   if (typeof module !== "undefined" && module.exports) module.exports = R;
   else {
     // app.js drives the home hero through R.featured + R.standCap + TifoStand; v3 swaps in its own pick and title treatment

@@ -493,4 +493,9 @@
 
   // W2.8: «كل الأرقام (N)» opens the rest of the tiles in place
   document.addEventListener("click", function(e){ var b = e.target.closest("[data-shall]"); if (!b) return; var m = b.previousElementSibling; if (m && m.classList.contains("shmore")){ m.hidden = false; b.remove(); var f = m.querySelector("button"); if (f) f.focus({ preventScroll:true }); } });
+
+  // ---- 417 «تيفو الأسبوع» on /week/: drawn here only when the build had no weekly file yet, or the file is a newer week than the page
+  (function(){ var pair = $("#wkpair"); if (!pair || !R.weekCard) return; var have = $("#wkcard");
+    fetch("/og/week-latest.json", { cache:"no-cache" }).then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); }).then(function(j){ if (!j || !(j.items || []).length || (have && have.dataset.week === j.week)) return;
+      var t = document.createElement("div"); t.innerHTML = R.weekCard(j, { links:false }); var card = t.firstElementChild; if (!card) return; if (have) have.replaceWith(card); else pair.appendChild(card); if (R.localize) R.localize(card); }).catch(function(){}); })();
 })();

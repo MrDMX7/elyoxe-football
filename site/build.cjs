@@ -836,7 +836,10 @@ ${items}
   ED.push(["brk", "mow", "tonight", "streaks"].map(k => AW.home[k] || "").join("") + (AW.home.days || ""));
   writeHome();
   // W4.2: /match-of-week/ is a pinned card on /week/ now
-  { const f = path.join(OUT, "week/index.html"); if (fs.existsSync(f)){ const h = fs.readFileSync(f, "utf8"); write("week/index.html", h.replace("<!--MOW-->", AW.mowWeek || "")); } }
+  // 417: «تيفو الأسبوع» sits beside it, prerendered from weekly.py's cache/week/week-latest.json when there is one (the page script
+  // draws it from /og/week-latest.json if a Thursday run lands between two builds, and draws nothing on a 404)
+  { const f = path.join(OUT, "week/index.html"); if (fs.existsSync(f)){ const h = fs.readFileSync(f, "utf8"); let wk = null; try { wk = JSON.parse(fs.readFileSync(path.join(CACHE, "week", "week-latest.json"), "utf8")); } catch (e){}
+      write("week/index.html", h.replace("<!--MOW-->", `<div class="wkpair" id="wkpair">${AW.mowWeek || ""}${wk ? R.weekCard(wk, { links:true }) : ""}</div>`)); } }
   // W4.3: /national/<cc>/'s content becomes the التاريخ tab of /t/<id>/ (ranks on top, every section a tile)
   for (const [tid, parts] of Object.entries(AW.natHist || {})){ const f = path.join(OUT, "t", tid, "index.html"); if (!fs.existsSync(f)) continue; const h = fs.readFileSync(f, "utf8"); if (!h.includes("<!--NATHIST-->")) continue;
     const bl = blocks(parts); bl.secs.forEach((s, i) => { s.id = s.id || "nh" + (i + 1); s.full = s.full.replace(/^<section class="blk"/, `<section class="blk" id="${s.id}"`); }); PALETTE = [colors[tid] || ["#5C6660", "#F6F7F2"]];
