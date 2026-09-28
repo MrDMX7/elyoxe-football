@@ -108,7 +108,7 @@
   // ---- match: sticky mini score once the hero leaves; updated from app.js's poll
   var mini = $("#mini");
   function miniDraw(m){ if (!mini || !m) return; var live = R.isLive(m), s = m.score;
-    mini.firstElementChild.innerHTML = '<span class="mt">' + R.logo(m.home, "sm") + "<b>" + R.tname(m.home) + '</b></span><span class="ms' + (live ? " live" : "") + '">' + (s ? '<b class="dg">' + s.home + " - " + s.away + "</b>" : '<b class="dg">' + R.tt(m.kickoff_uae) + "</b>") + "<small>" + (live ? R.minute(m) : m.status === "scheduled" ? R.td(m.kickoff_uae) : R.statusText(m)) + '</small></span><span class="mt a"><b>' + R.tname(m.away) + "</b>" + R.logo(m.away, "sm") + '</span><button type="button" class="ib" data-sheet="share" aria-label="شارك"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v8h14v-8"/></svg></button>'; R.localize(mini); }
+    mini.firstElementChild.innerHTML = '<span class="mt">' + R.logo(m.home, "sm") + "<b>" + R.tname(m.home) + '</b></span><span class="ms' + (live ? " live" : "") + '">' + (s ? '<b class="dg">' + s.home + " - " + s.away + "</b>" : '<b class="dg">' + R.tt(m.kickoff_uae) + "</b>") + "<small>" + (live ? R.minute(m) : m.status === "scheduled" ? R.td(m.kickoff_uae) : R.statusText(m)) + '</small></span><span class="mt a"><b>' + R.tname(m.away) + "</b>" + R.logo(m.away, "sm") + '</span>' + (PAGE === "match" ? '<button type="button" class="ib" data-cine aria-label="وضع السينما"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="12"/><path d="M8 21h8"/></svg></button>' : "") + '<button type="button" class="ib" data-sheet="share" aria-label="شارك"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v8h14v-8"/></svg></button>'; R.localize(mini); }
   if (mini){ try { miniDraw(JSON.parse($("#msum").textContent)); } catch (e){}
     if ("IntersectionObserver" in window){ var mh = $("#mh"); new IntersectionObserver(function(es){ var on = !es[0].isIntersecting && es[0].boundingClientRect.top < 0; B.classList.toggle("mini-on", on); mini.setAttribute("aria-hidden", !on); }, { threshold:0 }).observe(mh); } }
   document.addEventListener("tifo:match", function(e){ var md = e.detail; if (R.arNames) R.arNames(md); miniDraw(md); if (art) art.set(md);
@@ -178,17 +178,14 @@
     var n = document.createElement("p"); n.className = "stalen"; n.textContent = "آخر تحديث " + new Date(H.dataset.built).toLocaleTimeString("ar-AE-u-nu-latn", { hour:"2-digit", minute:"2-digit", timeZone:"Asia/Dubai" }); hin.appendChild(n);
     document.addEventListener("tifo:fresh", function(){ n.remove(); }, { once:true }); })();
   // W1.10: a cookieless visit ping (path, country, how long since the last visit on this phone); a 404 until the cards Lambda is redeployed is fine
-  (function(){ try { var last = +localStorage.getItem("tifo.seen") || 0, now = Date.now(), d = (now - last) / 864e5, ret = !last ? "first" : d < 1 && new Date(last).toDateString() === new Date(now).toDateString() ? "day" : d <= 7 ? "week" : "old";
+  (function(){ try { var last = +localStorage.getItem("tifo.seen") || 0, now = Date.now(), d = (now - last) / 864e5, ret = !last ? "first" : new Date(last).toDateString() === new Date(now).toDateString() ? "same_day" : d <= 7 ? "d1_7" : "d8p";   // the cards API's buckets
     localStorage.setItem("tifo.seen", now); localStorage.setItem("tifo.ret", ret); if (ret === "first") try { sessionStorage.setItem("tifo.first", "1"); } catch (e){} fetch("/api/tifo/hit", { method:"POST", keepalive:true, headers:{ "content-type":"application/json" }, body:JSON.stringify({ path:location.pathname, country:localStorage.getItem("tifo.country") || "", ret:ret }) }).catch(function(){}); } catch (e){} })();
   // W2.4 country engine (client): the visitor's country first in the crest grid and /competitions/, and المزيد's shortcuts become
   // «دوري بلدك · منتخب بلدك · البطولة الشغالة»
   (function(){ var cc = lsGet("tifo.country"); if (!cc){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : ""; } catch (e){} }
     if (!cc || cc === "xx") return;
     $$(".cts, main .body").forEach(function(box){ var kids = [].slice.call(box.children).filter(function(k){ return k.dataset && k.dataset.iso === cc; }); for (var i = kids.length - 1; i >= 0; i--) box.insertBefore(kids[i], box.firstChild); });
-    var ml = $("#more .mg .ml"); if (!ml) return; var L = window.CL || {}, N = window.NAT || {}, T = window.NOWT, a = ml.querySelectorAll("a");
-    if (L[cc] && a[0]){ a[0].href = "/c/" + L[cc][0] + "/"; a[0].textContent = L[cc][1]; }
-    if (N[cc] && a[1]){ a[1].href = "/t/" + N[cc] + "/"; a[1].textContent = "منتخب " + ((R.COUNTRIES.filter(function(c){ return c[0] === cc; })[0] || [])[1] || "بلدك"); }
-    if (T && a[2]){ a[2].href = "/c/" + T[0] + "/"; a[2].textContent = T[1]; } })();
+    /* W2.8: المزيد has fixed entries now; «منتخبك» lives on /national/ and the country's league leads /competitions/ */ })();
   // W2.6: a new event flashes chalk once; the bars get out of the way on a phone (top slides up under the mini-bar, bottom bar hides on scroll-down)
   var seenEv = null;
   document.addEventListener("tifo:match", function(){ var lis = $$("#events li[data-eid]"), ids = lis.map(function(l){ return l.dataset.eid; });
@@ -230,7 +227,7 @@
     var ww = $("#wwbox"); if (ww && m0.status === "scheduled"){ var p2 = document.createElement("p"); p2.className = "prayl in"; p2.textContent = line; ww.parentNode.insertBefore(p2, ww.nextSibling); } })();
   // the city choice for countries whose capital can be half an hour off (in المزيد)
   (function(){ var cc = lsGet("tifo.country"); if (!cc){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : ""; } catch (e){} }
-    var list = CITY[cc], ms = $("#more .mset"); if (!list || list.length < 2 || !ms) return; var sel = document.createElement("select"); sel.id = "prcity"; sel.setAttribute("aria-label", "مدينتك لأوقات الصلاة");
+    var list = CITY[cc], ms = $("#more .mswitch") || $("#more .mset"); if (!list || list.length < 2 || !ms) return; var sel = document.createElement("select"); sel.id = "prcity"; sel.setAttribute("aria-label", "مدينتك لأوقات الصلاة");
     sel.innerHTML = list.map(function(c){ return '<option value="' + c[0] + '"' + (c[0] === lsGet("tifo.city") ? " selected" : "") + ">" + c[0] + "</option>"; }).join(""); sel.onchange = function(){ lsSet("tifo.city", sel.value); }; ms.appendChild(sel); })();
   // W2.7: the team hero's next match counts down, then says it's on
   (function(){ var ko = $$(".tnm [data-ko]"); if (!ko.length) return;   /* only the team hero's digits: #kitct on /m/<id>/kit/ also carries data-ko */ var t = setInterval(function(){ ko.forEach(function(el){ var d = Date.parse(el.dataset.ko) - Date.now(); if (!isFinite(d)) return;
@@ -295,7 +292,9 @@
   function cineDraw(md){ if (!cine || !md) return; var live = R.isLive(md), ev = (md.events || []).filter(function(e){ return e.type !== "added_time" && e.type !== "half"; }).pop();
     var last = ev ? '<bdi dir="ltr">' + R.esc(ev.minute) + "'</bdi> " + ({ goal:"هدف", penalty_goal:"هدف من بلنتي", own_goal:"هدف في مرماه", yellow:"إنذار", red:"طرد", second_yellow:"طرد", sub:"تبديل", missed_penalty:"بلنتي ضايع" }[ev.type] || "") + (ev.player ? " · " + R.esc(ev.player.name) : "") : "";
     cine.querySelector(".ci").innerHTML = '<div class="ct3"><span>' + R.logo(md.home, "xl") + "<b>" + R.tname(md.home) + '</b></span><b class="cs dg">' + (md.score ? md.score.home + " - " + md.score.away : R.hhmm(md.kickoff_uae)) + "</b><span>" + R.logo(md.away, "xl") + "<b>" + R.tname(md.away) + '</b></span></div><p class="cm' + (live ? " live" : "") + '">' + (live ? R.minute(md) : R.statusText(md)) + "</p>" + (last ? '<p class="ce">' + last + "</p>" : ""); }
-  var cb2 = $("#cinebtn"); if (cb2) cb2.onclick = function(){ closeAll(); cine = document.createElement("div"); cine.className = "cine"; cine.innerHTML = '<button type="button" class="x" aria-label="سكّر">سكّر</button><div class="ci"></div>'; document.body.appendChild(cine);
+  // W2.8: cinema lives on the mini-bar now (any [data-cine] button opens it)
+  document.addEventListener("click", function(e){ if (e.target.closest("[data-cine]")) cineOpen(); });
+  function cineOpen(){ closeAll(); cine = document.createElement("div"); cine.className = "cine"; cine.innerHTML = '<button type="button" class="x" aria-label="سكّر">سكّر</button><div class="ci"></div>'; document.body.appendChild(cine);
     var wlock = null; cine.querySelector(".x").onclick = function(){ if (document.fullscreenElement) document.exitFullscreen().catch(function(){}); if (wlock){ wlock.release().catch(function(){}); wlock = null; } cine.remove(); cine = null; };
     try { cineDraw(window.__md || JSON.parse($("#msum").textContent)); } catch (e){} if (cine.requestFullscreen) cine.requestFullscreen().catch(function(){}); if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function(l){ wlock = l; }).catch(function(){}); };
   // 370: «لو خلصت الحين» — while live, the league table with this score, recomputed on every poll (first tab)
@@ -306,7 +305,11 @@
       var lt = R.liveTable({ groups:[g] }, [md]), rows = lt.groups[0].rows, ids = [md.home.id, md.away.id], idx = rows.map(function(r, i){ return ids.indexOf(r.team.id) >= 0 ? i : -1; }).filter(function(i){ return i >= 0; });
       var lo = Math.max(0, Math.min.apply(null, idx) - 2), hi = Math.min(rows.length, Math.max.apply(null, idx) + 3);
       box.innerHTML = '<div class="lt"><b>لو خلصت الحين</b><div class="tblwrap"><table class="st"><tbody>' + rows.slice(lo, hi).map(function(r, i){ var hot = ids.indexOf(r.team.id) >= 0; return '<tr class="' + (hot ? "hot" : "") + '"><td class="rk">' + (lo + i + 1) + '</td><td class="tm">' + R.logo(r.team, "sm") + " " + R.tname(r.team) + "</td><td>" + r.played + '</td><td class="pts">' + r.pts + "</td></tr>"; }).join("") + "</tbody></table></div></div>"; }).catch(function(){}); }
-  document.addEventListener("tifo:match", function(e){ var md = e.detail; window.__md = md; scoreWatch(md); heroState(md); cineDraw(md); liveTable(md); });
+  // owner item 6 (rule 12): a live hero takes one breath when a new minute or score arrives
+  var lastBeat = "";
+  function breathe(md){ if (!md || !R.isLive(md) || RM) return; var k = (md.score ? md.score.home + "-" + md.score.away : "") + "|" + md.minute; if (k === lastBeat) return; var first = !lastBeat; lastBeat = k; if (first) return;
+    var s = $(".mhero .scrim"); if (!s) return; s.classList.remove("breathe"); void s.offsetWidth; s.classList.add("breathe"); }
+  document.addEventListener("tifo:match", function(e){ var md = e.detail; window.__md = md; scoreWatch(md); heroState(md); cineDraw(md); liveTable(md); breathe(md); });
   // W1.1a: the prerendered summary never seeds the goal detector (opening a page after a goal must not fire «هدف»); the first fresh tifo:match seeds it
   if (PAGE === "match") try { heroState(JSON.parse($("#msum").textContent)); } catch (e){}
   // the home hero's match: a goal there gets the same moment
@@ -371,7 +374,7 @@
 
   // 379: embed code for other sites (league table / live match), iframe with a link back to Tifo
   var eb = $("#embedbtn"); if (eb) eb.onclick = function(){ var u = eb.dataset.src, code = '<iframe src="https://tifo.elyoxe.com' + u + '" width="100%" height="' + (eb.dataset.h || 420) + '" style="border:0" loading="lazy" title="تيفو"></iframe>';
-    var l = $("#secpicks"); l.innerHTML = '<p class="small muted">انسخ الكود وحطه في موقعك:</p><textarea class="embc" rows="4" readonly>' + R.esc(code) + '</textarea><button type="button" class="sa" id="embcopy">انسخ الكود</button>'; l.hidden = false;
+    var l = $("#embout") || $("#secpicks"); l.innerHTML = '<p class="small muted">انسخ الكود وحطه في موقعك:</p><textarea class="embc" rows="4" readonly>' + R.esc(code) + '</textarea><button type="button" class="sa" id="embcopy">انسخ الكود</button>'; l.hidden = false;
     $("#embcopy").onclick = function(){ (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(function(){ $("#embcopy").textContent = "انتسخ ✓"; }, function(){ l.querySelector("textarea").select(); }); }; };
 
 
@@ -392,7 +395,7 @@
     window.addEventListener("appinstalled", function(){ bip = null; no(); paint(); });
     if (go) go.onclick = function(){ if (!bip) return; bip.prompt(); (bip.userChoice || Promise.resolve({})).then(function(c){ if (c.outcome === "accepted") no(); closeAll(); }); bip = null; paint(); };
     paint(); if (ios && lsGet("tifo.ret") && lsGet("tifo.ret") !== "first") setTimeout(ask, 15e3);
-    var mb = $("#mybtn"); if (mb) mb.addEventListener("click", function(){ setTimeout(function(){ if (mb.classList.contains("on")) ask(true); }, 600); });
+    var mb = $("#mybtn"); if (mb) mb.addEventListener("click", function(){ setTimeout(function(){ if (mb.classList.contains("on") && !("PushManager" in window && "serviceWorker" in navigator)) ask(true); }, 600);   /* where push works, «هذا فريقي» offers the alerts sheet instead */ });
   })();
 
   // ---- W3.6 offline: the worker serves this page when a page you never opened can't load; it lists what this phone keeps
@@ -423,7 +426,7 @@
     e.preventDefault(); ts[n].focus(); ts[n].click(); rove(bar); });
 
   // ---- W4.6 404: search and today's matches
-  (function(){ var s = $("#srch404"); if (s) s.onclick = function(){ var b = $("#srch"); if (b) b.click(); };
+  (function(){ var s = $("#srch404"); if (s) s.onclick = function(e){ e.stopPropagation(); var b = $("#srch"); if (b) b.click(); };   /* the tap-outside closer must not see this tap */
     var d = $("#day404"); if (!d || !R.dayList) return; var ymd = new Date(Date.now() + 4 * 3600e3).toISOString().slice(0, 10).replace(/-/g, "");
     Promise.all([fetch("/v1/day/" + ymd + ".json").then(function(r){ return r.json(); }), fetch("/v1/index.json").then(function(r){ return r.json(); })]).then(function(r){ var ms = r[0].matches || []; if (!ms.length) return;
       d.innerHTML = "<h2>مباريات اليوم</h2>" + R.dayList(ms, r[1], {}); if (R.localize) R.localize(d); }).catch(function(){}); })();
@@ -446,4 +449,48 @@
     function live(){ if (!id) return; fetch("/v1/live.json", { cache:"no-cache" }).then(function(r){ return r.json(); }).then(function(l){ var m = (l.matches || []).filter(function(x){ return x.id === id; })[0]; if (!m){ if (Date.now() - ko < 3 * 36e5) setTimeout(live, 60e3); return; }
       var row = pin.querySelector('a.m[href="/m/' + id + '/"]'), t = document.createElement("div"); t.innerHTML = R.matchRow(m, {}); if (row && t.firstElementChild) row.replaceWith(t.firstElementChild); if (R.localize) R.localize(pin); if (R.isLive(m)) setTimeout(live, 20e3); }).catch(function(){ setTimeout(live, 60e3); }); }
     tick(); })();
+
+  // ---- owner item 9a: push per team (start · goal · end). The toggles live in a sheet on the team page; permission is asked on the first
+  // toggle tap (synchronously, Safari rejects it after an await), only after «هذا فريقي». No PushManager (iPhone outside the installed app):
+  // the link opens the install sheet instead. Removing the team or turning every toggle off unsubscribes it on the server.
+  (function(){ var pbtn = $("#pushbtn"), sheet = $("#pushs"), mb = $("#mybtn"); if (!pbtn || !sheet || PAGE !== "team") return; var TID = +B.dataset.id;
+    var ok = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window, iosNoPwa = /iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone;
+    var KEY = null; function key(){ return KEY ? Promise.resolve(KEY) : fetch("/api/tifo/push/key").then(function(r){ return r.json(); }).then(function(j){ KEY = j.publicKey; try { localStorage.setItem("tifo.pushkey", KEY); } catch (e){} return KEY; }); }
+    try { KEY = localStorage.getItem("tifo.pushkey"); } catch (e){}
+    function st(){ try { return JSON.parse(localStorage.getItem("tifo.push") || "{}"); } catch (e){ return {}; } } function save(s){ try { localStorage.setItem("tifo.push", JSON.stringify(s)); } catch (e){} }
+    function isFav(){ var f = []; try { f = JSON.parse(localStorage.getItem("tifo.favs") || "[]"); } catch (e){} return f.some(function(x){ return x.t === "team" && x.id === TID; }); }
+    function u8(k){ var p = "=".repeat((4 - k.length % 4) % 4), s = atob((k + p).replace(/-/g, "+").replace(/_/g, "/")), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+    function paint(){ var s = st(), ev = (s.teams || {})[TID] || []; $$(".ptg", sheet).forEach(function(b){ b.setAttribute("aria-pressed", ev.indexOf(b.dataset.ev) >= 0 ? "true" : "false"); });
+      pbtn.hidden = !isFav() || (!ok && !iosNoPwa); pbtn.textContent = ev.length ? "التنبيهات شغّالة" : "نبّهني بمبارياته"; }
+    function send(method, body){ return fetch("/api/tifo/push/sub", { method:method, headers:{ "content-type":"application/json" }, body:JSON.stringify(body), keepalive:true }); }
+    function sub(){ return Promise.race([navigator.serviceWorker.ready, new Promise(function(ok, no){ setTimeout(function(){ no(new Error("no worker")); }, 10000); })]).then(function(reg){ return reg.pushManager.getSubscription().then(function(s){ return s || key().then(function(k){ return reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:u8(k) }); }); }); }); }
+    function sync(){ var s = st(), ev = ((s.teams || {})[TID] || []).filter(function(x){ return !(B.classList.contains("nospoil") && x !== "start"); }), msg = $("#pushm");   // بدون حرق: no goal or result pushes
+      if (!ev.length) return navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(x){ if (x) send("DELETE", { team:TID, endpoint:x.endpoint }); }).catch(function(){});
+      return sub().then(function(x){ var j = x.toJSON(); return send("POST", { team:TID, events:ev, subscription:{ endpoint:j.endpoint, keys:j.keys } }); }).then(function(r){ if (msg) msg.textContent = r && r.ok !== false ? "تمام، بتوصلك التنبيهات." : "ما قدرنا نشغّلها الحين، جرّب بعد شوي."; })
+        .catch(function(){ if (msg) msg.textContent = "ما قدرنا نشغّلها. تأكد إن التنبيهات مسموحة لتيفو في إعدادات جوالك."; }); }
+    sheet.addEventListener("click", function(e){ var b = e.target.closest(".ptg"); if (!b) return;
+      if (Notification.permission === "default"){ var p = Notification.requestPermission(); if (p && p.then) p.then(function(r){ if (r === "granted") toggle(b); else { var m = $("#pushm"); if (m) m.textContent = "التنبيهات مقفولة. تقدر تسمح لها من إعدادات المتصفح."; } }); return; }
+      if (Notification.permission === "denied"){ var m = $("#pushm"); if (m) m.textContent = "التنبيهات مقفولة لتيفو. تقدر تسمح لها من إعدادات المتصفح."; return; }
+      toggle(b); });
+    function toggle(b){ var s = st(); s.teams = s.teams || {}; var ev = s.teams[TID] || [], k = b.dataset.ev, i = ev.indexOf(k); if (i >= 0) ev.splice(i, 1); else ev.push(k); if (ev.length) s.teams[TID] = ev; else delete s.teams[TID]; save(s); paint(); sync(); }
+    pbtn.onclick = function(){ if (!ok && iosNoPwa){ var ib = document.createElement("button"); ib.dataset.sheet = "inst"; ib.hidden = true; B.appendChild(ib); ib.click(); ib.remove(); return; } open(sheet, pbtn); };
+    if (mb) mb.addEventListener("click", function(){ setTimeout(function(){ paint(); var s = st();
+      if (!isFav() && (s.teams || {})[TID]){ delete s.teams[TID]; save(s); sync(); paint(); return; }   // no longer my team: stop its pushes
+      if (isFav() && ok && !(s.teams || {})[TID] && !sessionStorage.getItem("tifo.pushasked")){ try { sessionStorage.setItem("tifo.pushasked", "1"); sessionStorage.setItem("tifo.inst.asked", "1"); } catch (e){} open(sheet, pbtn); } }, 650); });
+    paint(); if (ok && !KEY && isFav() && "requestIdleCallback" in window) requestIdleCallback(function(){ key().catch(function(){}); }); })();
+
+  // ---- owner item 1: «فريقي» in the nav — my crest, opens my team; no team yet: the crest grid of my country in a sheet
+  (function(){ var links = $$('[data-nav="mine"]'); if (!links.length) return; var mid = +lsGet("tifo.mine") || 0;
+    function pick(g){ var cc = lsGet("tifo.country"); if (!cc || cc === "xx"){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : "AE"; } catch (e){ cc = "AE"; } }
+      fetch("/assets/cc." + B.dataset.cc + ".json").then(function(r){ return r.json(); }).then(function(m){ var list = m[cc] || m.AE || [];
+        g.innerHTML = list.map(function(t){ return '<button type="button" data-t="' + t[0] + '" data-n="' + R.esc(t[1]) + '">' + R.logo({ id:t[0] }, "md") + "<span>" + R.esc(t[1]) + "</span></button>"; }).join("");
+        g.onclick = function(e){ var b = e.target.closest("button[data-t]"); if (!b) return; var id = +b.dataset.t, n = b.dataset.n, f = []; try { f = JSON.parse(localStorage.getItem("tifo.favs") || "[]"); } catch (x){}
+          if (!f.some(function(x){ return x.t === "team" && x.id === id; })) f.unshift({ t:"team", id:id, n:n }); lsSet("tifo.favs", JSON.stringify(f)); lsSet("tifo.mine", String(id)); lsSet("tifo.mine.name", n); location.href = "/t/" + id + "/"; }; }).catch(function(){}); }
+    links.forEach(function(a){
+      if (mid){ a.href = "/t/" + mid + "/"; var svg = a.querySelector("svg"); if (svg){ var img = document.createElement("img"); img.className = "navcrest"; img.alt = ""; img.width = 22; img.height = 22; img.src = "/logo/96/" + mid + ".webp"; img.onerror = function(){ img.replaceWith(svg); }; svg.replaceWith(img); }
+        if (PAGE === "team" && +B.dataset.id === mid){ $$("[data-nav][aria-current]").forEach(function(x){ x.removeAttribute("aria-current"); }); a.setAttribute("aria-current", "page"); } }
+      else a.addEventListener("click", function(e){ e.preventDefault(); var g = $("#minegrid"), sh = $("#minesh"); if (!g || !sh){ location.href = a.href; return; } open(sh, a); if (!g.childElementCount) pick(g); }); }); })();
+
+  // W2.8: «كل الأرقام (N)» opens the rest of the tiles in place
+  document.addEventListener("click", function(e){ var b = e.target.closest("[data-shall]"); if (!b) return; var m = b.previousElementSibling; if (m && m.classList.contains("shmore")){ m.hidden = false; b.remove(); var f = m.querySelector("button"); if (f) f.focus({ preventScroll:true }); } });
 })();

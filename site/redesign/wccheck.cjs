@@ -1,0 +1,30 @@
+/* Batch C check (owner items 1, 9a, 9b, 11, 14, hit ping). node redesign/wccheck.cjs [dir] [tag] */
+"use strict";
+const path = require("path"), fs = require("fs");
+const { chromium } = require("/root/workspace/automation/browse/node_modules/playwright-core");
+const ROOT = path.resolve(process.argv[2] || "out"), TAG = process.argv[3] || "new", DST = "/root/.claude/jobs/abd28f85/tmp";
+const MIME = { ".html":"text/html; charset=utf-8", ".css":"text/css", ".js":"application/javascript", ".json":"application/json", ".png":"image/png", ".svg":"image/svg+xml", ".webp":"image/webp", ".woff2":"font/woff2" };
+(async () => {
+  const b = await chromium.launch({ executablePath:"/usr/bin/chromium", args:["--no-sandbox"] }), R = {}, api = [];
+  const ctx = await b.newContext({ viewport:{ width:390, height:844 }, serviceWorkers:"block", timezoneId:"Asia/Dubai" });
+  await ctx.route(/^https:\/\/tifo\.elyoxe\.com\/(?!v1\/|api\/)/, r => { let p = new URL(r.request().url()).pathname; if (p.endsWith("/")) p += "index.html"; let f = path.join(ROOT, p); if (!fs.existsSync(f)) f = path.join(ROOT, "404.html"); return r.fulfill({ status:200, body:fs.readFileSync(f), headers:{ "content-type":MIME[path.extname(f)] || "application/octet-stream" } }); });
+  await ctx.route(/^https:\/\/tifo\.elyoxe\.com\/api\//, r => { api.push([r.request().method(), new URL(r.request().url()).pathname, r.request().postData()]); return /push\/key/.test(r.request().url()) ? r.fulfill({ status:200, body:JSON.stringify({ publicKey:"BKgwbOBNhWNyAA0sXM0fbgB4ojdmTXXerUL5Od8tNl9BMVO8jmLTOgF3NDJ9NIYKRqyQckR9WHdkHPITkzqEBd0" }), headers:{ "content-type":"application/json" } }) : r.fulfill({ status:204, body:"" }); });
+  const pg = await ctx.newPage(), errs = []; pg.on("pageerror", e => errs.push(pg.url() + " " + e.message));
+  const T = async (name, fn) => { try { R[name] = await fn(); } catch (e){ R[name] = "ERR " + e.message.slice(0, 140); } };
+  const shot = (n, o) => pg.screenshot(Object.assign({ path:`${DST}/wc_${n}_${TAG}.png` }, o || {}));
+  const go = async (u, w) => { await pg.goto("https://tifo.elyoxe.com" + u, { waitUntil:"networkidle", timeout:90000 }); await pg.waitForTimeout(w || 1200); };
+  await go("/"); await pg.evaluate(() => { localStorage.clear(); localStorage.setItem("tifo.country", "AE"); localStorage.setItem("tifo.seen", String(Date.now() - 3 * 864e5)); });
+  await T("hitRet", async () => { api.length = 0; await go("/", 1500); const h = api.filter(a => a[1] === "/api/tifo/hit")[0]; return h ? JSON.parse(h[2]).ret : "no ping"; });
+  await T("navNoTeam", async () => { const a = await pg.$('.tabbar [data-nav="mine"]'); await a.click(); await pg.waitForTimeout(1200); await shot("nav_grid"); const n = await pg.$$eval("#minegrid button", l => l.length); await pg.click("#minegrid button"); await pg.waitForTimeout(1500); return n + " crests -> " + pg.url().replace("https://tifo.elyoxe.com", ""); });
+  await T("navTeam", async () => { await go("/", 1200); return await pg.$eval('.tabbar [data-nav="mine"]', a => a.getAttribute("href") + " img=" + !!a.querySelector("img.navcrest")); });
+  await ctx.grantPermissions(["notifications"], { origin:"https://tifo.elyoxe.com" });
+  await T("push", async () => { const tid = await pg.evaluate(() => +localStorage.getItem("tifo.mine")); await go("/t/" + tid + "/", 1500); const vis = await pg.$eval("#pushbtn", b => !b.hidden); await pg.click("#pushbtn"); await pg.waitForTimeout(500); await shot("push_sheet");
+    api.length = 0; await pg.click('.ptg[data-ev="goal"]'); await pg.waitForTimeout(2500); return { btn:vis, pressed:await pg.$eval('.ptg[data-ev="goal"]', b => b.getAttribute("aria-pressed")), msg:await pg.$eval("#pushm", e => e.textContent), calls:api.map(a => a[0] + " " + a[1] + " " + (a[2] || "").slice(0, 90)) }; });
+  await pg.keyboard.press("Escape");
+  await T("pick", async () => { await go("/m/6040358/", 1500); const box = await pg.$("#pick"); if (!box) return "no pick box"; await box.scrollIntoViewIfNeeded(); await pg.click('#pick [data-p="a"]'); await pg.waitForTimeout(300); await shot("pick"); await go("/m/6040358/", 1200);
+    return { pressed:await pg.$eval('#pick [data-p="a"]', b => b.getAttribute("aria-pressed")), msg:await pg.$eval("#pickm", e => e.textContent), stored:await pg.evaluate(() => localStorage.getItem("tifo.picks")) }; });
+  await T("pickFinished", async () => { await pg.evaluate(() => { const o = JSON.parse(localStorage.getItem("tifo.picks") || "{}"); o[6052085] = { p:"a", ko:"2026-09-27T15:00:00Z", h:1, a:2 }; localStorage.setItem("tifo.picks", JSON.stringify(o)); }); await go("/m/6052085/", 2500); await shot("pick_result"); return await pg.$eval(".pickres", e => e.textContent).catch(() => "none"); });
+  await T("tally", async () => { await go("/", 2500); return await pg.$eval(".rmine .picks", e => e.textContent).catch(() => "none"); });
+  await T("noBloom", async () => { await go("/c/uae-pro-league/", 800); return (await pg.$$(".bloom")).length; });
+  R.errors = errs.slice(0, 8); console.log(JSON.stringify(R, null, 1)); await b.close();
+})();

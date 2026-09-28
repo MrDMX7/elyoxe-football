@@ -54,7 +54,8 @@ body.v3{padding-block-end:calc(var(--tabH) + env(safe-area-inset-bottom))}
 .hero canvas{position:absolute;inset:0;opacity:.82;inline-size:100%;block-size:100%;z-index:-2;touch-action:pan-y;will-change:transform}
 .hero .scrim{position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,#0A2620cc 0%,#0A262059 24%,#0A262066 44%,#0A2620e6 72%,#0A2620 94%),radial-gradient(90% 60% at 50% 70%,#0A2620a6,#0A262000 70%)}
 .hero-in{position:relative;inline-size:100%;padding-block:calc(var(--topH) + 3.5rem) 1.6rem}
-.hhero{min-block-size:clamp(30rem,86svh,46rem)}
+.hhero{min-block-size:clamp(30rem,78svh,44rem)}   /* W2.5: the first rail («فريقك») peeks above the fold at 390x844 */
+@media (min-width:880px){.hhero{min-block-size:clamp(28rem,68svh,40rem)}}
 .hk{margin:0 0 .6rem;color:var(--tert);font-size:.88rem}
 .hk a{color:var(--tert);border-block-end:1px solid var(--line)}
 .kick{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--kufi);font-weight:800;font-size:.78rem;padding:.25rem .6rem;background:var(--ink);color:var(--bg);margin-block-end:.9rem}
@@ -75,7 +76,7 @@ img.logo.md{inline-size:2.1rem;block-size:2.1rem}
 .hero #uaecd{min-block-size:2.2rem}   /* reserved: the countdown fills it after load (no layout shift) */
 body:not([data-page="home"]):not([data-page="team"]) #uaecd:empty{display:none}
 #uaecd{margin-block-start:1rem;max-inline-size:34rem}
-.hero #uaecd .cd{display:inline-flex;gap:.7rem;align-items:baseline;background:none;border:0;padding:0;margin:0;color:var(--tert)}.hero #uaecd .cd b{font:600 .85rem var(--text);color:var(--tert)}.hero #uaecd .cd br,.hero #uaecd .cd .small{display:none}.hero #uaecd .cd .dg{font-size:1.25rem;color:var(--ink)}
+.hero #uaecd .cd{display:inline-flex;gap:.7rem;align-items:baseline;background:none;border:0;padding:0;margin:0;color:var(--tert)}.hero #uaecd .cd b{font:600 .85rem var(--font-text);color:var(--tert)}.hero #uaecd .cd br,.hero #uaecd .cd .small{display:none}.hero #uaecd .cd .dg{font-size:1.25rem;color:var(--ink)}
 /* home: the hero sits inside the viewport with the first rail peeking */
 @media (min-width:880px){.hhero .hero-in{padding-block-end:3rem}.hl{margin-inline:0}}
 
@@ -120,7 +121,7 @@ body:not([data-page="home"]):not([data-page="team"]) #uaecd:empty{display:none}
 .mtabs [aria-selected="true"]{color:var(--ink);border-block-end-color:var(--dune)}
 @media (min-width:880px){.mtabs button{font-size:1rem;padding-inline:1.2rem}}
 .seg{display:inline-flex;max-inline-size:100%;border:1px solid var(--line);margin-block:.2rem 1rem;overflow-x:auto;scrollbar-width:none;background:var(--surf-2);border-block-end:1px solid var(--line)}
-.seg button{background:none;border:0;border-inline-start:1px solid var(--line-2);margin:0;padding:.5rem 1rem;color:var(--stone);font-weight:600;font-size:.88rem;white-space:nowrap;cursor:pointer;font-family:var(--text)}
+.seg button{background:none;border:0;border-inline-start:1px solid var(--line-2);margin:0;padding:.5rem 1rem;color:var(--stone);font-weight:600;font-size:.88rem;white-space:nowrap;cursor:pointer;font-family:var(--font-text)}
 .seg button:first-child{border-inline-start:0}
 .seg [aria-selected="true"],.seg [aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .v3 #arabonly[aria-pressed="true"],.v3 #freeonly[aria-pressed="true"]{background:var(--ink);border-color:var(--line-2);color:var(--bg)}
@@ -133,7 +134,7 @@ section[data-pane]{animation:paneIn .28s ease both}
 .rail-h{display:flex;align-items:center;gap:.8rem;margin-block-end:.8rem}
 .rail-h h2{font-size:clamp(1.1rem,.9rem + .8vw,1.5rem);display:flex;align-items:center;gap:.5rem}
 .rail-h h2::before{display:none}
-.more-l{margin-inline-start:auto;font-size:.85rem;color:var(--tert);background:none;border:0;cursor:pointer;padding:0;font-family:var(--text)}
+.more-l{margin-inline-start:auto;font-size:.85rem;color:var(--tert);background:none;border:0;cursor:pointer;padding:0;font-family:var(--font-text)}
 .more-l:hover{color:var(--ink)}
 .rail-s{display:grid;grid-auto-flow:column;grid-auto-columns:min(78%,17.5rem);gap:.7rem;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin-inline:calc(var(--gutter) * -1);padding-inline:var(--gutter);scroll-padding-inline:var(--gutter);padding-block-end:.3rem}
 .rail-s::-webkit-scrollbar{display:none}
@@ -166,7 +167,7 @@ section[data-pane]{animation:paneIn .28s ease both}
 .rmine .favrow{background:var(--surf);padding:.7rem .8rem;border-block-start:3px solid var(--dune)}
 .rmine .favrow + .favrow{border-block-start:3px solid var(--dune);padding-block-start:.7rem}
 .rmine .favrow .h{font-family:var(--kufi);font-weight:800;display:flex;align-items:center;gap:.4rem}
-.rmine .favrow .h small{background:var(--dune);color:#fff;font:600 .75rem var(--text);padding:0 .35rem}
+.rmine .favrow .h small{background:var(--dune);color:#fff;font:600 .75rem var(--font-text);padding:0 .35rem}
 .rmine #themebtn{align-self:center;justify-self:start;border:1px solid var(--line);background:none;color:var(--tert)}
 
 /* ---- the day list (the match centre) */
@@ -233,7 +234,7 @@ section[data-pane]{animation:paneIn .28s ease both}
 .x{margin-inline-start:auto;background:none;border:1px solid var(--line);color:var(--ink);padding:.35rem .8rem;cursor:pointer;font-weight:600}
 .x:hover{background:var(--surf)}
 .sh-g,.mset{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(12rem,100%),1fr));gap:.5rem}
-.sa{display:flex;align-items:center;justify-content:flex-start;gap:.5rem;min-block-size:3rem;background:var(--surf);border:0;border-inline-start:3px solid var(--line);color:var(--ink);padding:.6rem .9rem;font:600 .92rem var(--text);cursor:pointer;text-align:start}
+.sa{display:flex;align-items:center;justify-content:flex-start;gap:.5rem;min-block-size:3rem;background:var(--surf);border:0;border-inline-start:3px solid var(--line);color:var(--ink);padding:.6rem .9rem;font:600 .92rem var(--font-text);cursor:pointer;text-align:start}
 .sa:hover{background:var(--raised-hi);border-inline-start-color:var(--ink)}
 .sa[aria-pressed="true"]{border-inline-start-color:var(--dune);background:#B07A3B2e}
 .v3 .spoil{border-width:0 0 0 0;border-inline-start:3px solid var(--line)}
@@ -333,8 +334,8 @@ body.second .mhero{min-block-size:100svh}
 /* ---- competition key art: the league's own logo, lit on night pitch (owner, 2026-09-27) */
 .chero.haslogo{background:radial-gradient(70% 90% at 18% 40%,color-mix(in srgb,var(--g1) 30%,transparent),transparent 70%),radial-gradient(60% 70% at 0% 100%,color-mix(in srgb,var(--g2) 26%,transparent),transparent 70%),radial-gradient(50% 60% at 100% 0%,color-mix(in srgb,var(--g2) 14%,transparent),transparent 70%),var(--bg)}
 .lgart{position:absolute;z-index:-2;inset-block-start:calc(var(--topH) + .5rem);left:50%;translate:-50% 0;inline-size:min(62vw,15rem);aspect-ratio:1;display:grid;place-items:center;perspective:900px;will-change:transform}
-.lgart .bloom{position:absolute;inset:-35%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--g1) 62%,transparent) 0,color-mix(in srgb,var(--g1) 20%,transparent) 38%,transparent 68%);filter:blur(24px)}
-.lgart .bloom.b2{inset:-10%;background:radial-gradient(circle,color-mix(in srgb,#fff 34%,transparent) 0,transparent 55%);filter:blur(18px)}
+
+
 .lglogo{position:relative;inline-size:78%;block-size:auto;filter:drop-shadow(0 18px 40px #000a) drop-shadow(0 0 22px color-mix(in srgb,var(--g1) 45%,transparent));transition:transform .5s cubic-bezier(.2,.7,.2,1);animation:logoIn 1.1s cubic-bezier(.2,.7,.2,1) both}
 .chero.haslogo .scrim{background:linear-gradient(180deg,#0A262000 0%,#0A262000 40%,#0A2620cc 72%,#0A2620 96%)}
 .chero.haslogo .hero-in{padding-block-start:calc(var(--topH) + min(62vw,15rem) + 1.5rem)}
@@ -344,7 +345,6 @@ body.second .mhero{min-block-size:100svh}
   .chero.haslogo .hero-in{padding-block-start:calc(var(--topH) + 4rem)}
   .chero.haslogo .scrim{background:linear-gradient(90deg,#0A262000 0%,#0A262000 40%,#0A262099 62%,#0A2620d9 100%),linear-gradient(180deg,#0A262000 60%,#0A2620 100%)}
 }
-@keyframes bloom{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.07)}}
 @keyframes logoIn{from{opacity:0;transform:scale(.94) translateY(10px)}to{opacity:1}}
 /* crest tiles with the league logo */
 .ct.lgt{background:radial-gradient(90% 80% at 50% 30%,color-mix(in srgb,var(--g1) 24%,transparent),transparent 72%),var(--surf)}
@@ -357,7 +357,7 @@ body.second .mhero{min-block-size:100svh}
 .lgwall{position:absolute;z-index:-2;inset:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(4.5rem,1fr));gap:1.6rem;padding:4.5rem 1rem 0;opacity:.35;place-items:center}
 .lgwall img{inline-size:3.2rem;block-size:3.2rem;object-fit:contain}
 .lhero .scrim{background:linear-gradient(180deg,#0A262066 0%,#0A2620cc 55%,#0A2620 92%)}
-@media (prefers-reduced-motion:reduce){.lgart .bloom,.lglogo{animation:none}.lglogo{transition:none}}
+@media (prefers-reduced-motion:reduce){.lglogo{animation:none}.lglogo{transition:none}}
 
 /* pages not yet re-staged (stage 3+): the v2 body in a padded column under the fixed bar */
 .legacy{padding-block-start:calc(var(--topH) + .8rem)}
@@ -405,7 +405,8 @@ body.second .mhero{min-block-size:100svh}
 /* 357 match-state hero */
 .mcd{display:block;margin-block-start:.4rem;font-size:.85rem;color:var(--tert)}
 .mcd .num{font-size:1.25rem;color:var(--ink)}
-body[data-state="live"] .mhero .scrim{animation:livepulse 3.2s ease-in-out infinite}
+/* owner item 6 (rule 12): one breath per data update instead of an endless pulse */
+body[data-state="live"] .mhero .scrim.breathe{animation:livepulse 1.6s ease-in-out 1}
 @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.86}}
 body[data-state="final"] .mhero .sc .st{color:var(--ink);font-weight:600}
 @media (prefers-reduced-motion:reduce){body[data-state="live"] .mhero .scrim{animation:none}}
@@ -461,7 +462,7 @@ body.v3{background:repeating-linear-gradient(180deg,#ffffff00 0 64px,#ffffff08 6
 .arr.up{color:var(--live-text)}.arr.dn{color:var(--stone)}
 .v3 ul.ev .subs .out{color:var(--stone)}
 /* 390 period separators: a thin chalk line with small centred text */
-.v3 ul.ev li.div{display:flex;align-items:center;gap:.7rem;background:none;border:0;padding:.6rem 0;margin:.2rem 0;font:600 .75rem var(--text);color:var(--stone)}
+.v3 ul.ev li.div{display:flex;align-items:center;gap:.7rem;background:none;border:0;padding:.6rem 0;margin:.2rem 0;font:600 .75rem var(--font-text);color:var(--stone)}
 .v3 ul.ev li.div::before,.v3 ul.ev li.div::after{content:"";flex:1;block-size:1px;background:var(--line)}
 /* 391 the trimmed catch-up */
 .catchup.mini{padding:.5rem .8rem;border-inline-start-width:2px}.catchup.mini p{font-size:.85rem;margin:0}
@@ -475,7 +476,6 @@ body.v3{background:repeating-linear-gradient(180deg,#ffffff00 0 64px,#ffffff08 6
 @media (max-width:879px){
   .chero.haslogo{min-block-size:0}
   .chero.haslogo .lgart{inline-size:5.6rem;left:auto;inset-inline-end:var(--gutter);translate:0 0;inset-block-start:calc(var(--topH) + 1.1rem)}
-  .chero.haslogo .lgart .bloom{inset:-30%}
   .chero.haslogo .hero-in{padding-block:calc(var(--topH) + 1.2rem) 1rem;padding-inline-end:calc(var(--gutter) + 6.4rem)}
   .chero h1{font-size:clamp(1.5rem,1rem + 3vw,2.2rem)}
   .chero .hfacts{gap:.4rem 1.2rem;margin-block-start:.7rem}.chero .hfacts div{min-inline-size:0}.chero .hfacts dd .num{font-size:1.1rem}
@@ -499,7 +499,7 @@ body.v3{background:repeating-linear-gradient(180deg,#ffffff00 0 64px,#ffffff08 6
 .edi{inline-size:1.7rem;block-size:1.7rem;fill:none;stroke:var(--tert);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-block-end:.2rem}
 /* 403 «فريقك» empty state: a crest grid of your country's clubs */
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(5.2rem,1fr));gap:.5rem;margin-block-start:.6rem;grid-column:1/-1}
-.mgrid button{display:grid;justify-items:center;gap:.3rem;background:var(--surf);border:0;color:var(--ink);padding:.6rem .3rem;cursor:pointer;font:600 .75rem var(--text)}
+.mgrid button{display:grid;justify-items:center;gap:.3rem;background:var(--surf);border:0;color:var(--ink);padding:.6rem .3rem;cursor:pointer;font:600 .75rem var(--font-text)}
 .mgrid button:hover{background:var(--raised-hi)}
 .rmine .mine-card{grid-auto-flow:row;grid-auto-columns:auto}
 /* 388 the national countdown inside a rail card */
@@ -563,7 +563,7 @@ body.clubtheme .hero .scrim{box-shadow:inset 0 -3px 0 var(--club1)}
 .tnm{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.8rem;margin-block-start:1rem;background:#0A262099;padding:.6rem .8rem;max-inline-size:28rem}
 .tnm .mid{text-align:center;display:grid;gap:.1rem}.tnm .mid b{font-size:1.4rem}.tnm .mid small{color:var(--tert);font-size:.78rem}
 .tkick{font-size:.85rem;color:var(--tert);margin:.3rem 0 0}.tkick a{border-block-end:1px solid var(--line)}
-.tform{display:flex;gap:3px;margin-block-start:.5rem}.tform i{inline-size:1rem;block-size:1rem;display:grid;place-items:center;font:700 .6rem var(--text);font-style:normal}
+.tform{display:flex;gap:3px;margin-block-start:.5rem}.tform i{inline-size:1rem;block-size:1rem;display:grid;place-items:center;font:700 .6rem var(--font-text);font-style:normal}
 .tform .W{background:var(--chalk);color:var(--night)}.tform .D{background:var(--stone);color:var(--night)}.tform .L{background:var(--inkbg);color:var(--ink)}
 .clg{inline-size:1rem;block-size:1rem;object-fit:contain;opacity:.8;margin-inline-end:.3rem;vertical-align:-2px}
 /* W2.9: sheets feel native */
@@ -642,8 +642,8 @@ input,select,textarea{font-size:max(16px,1em)}
 /* W3.7: فريقك follows you — suggested rows (no favourites yet) are not «my team», so no dune */
 .rmine .sugrow{background:var(--surf);padding:.7rem .8rem;border-block-start:3px solid var(--rule)}
 .rmine .sugrow .h{font-family:var(--kufi);font-weight:800;display:flex;align-items:center;gap:.4rem}
-.rmine .tg{font:600 .78rem var(--text);color:var(--tert);border:1px solid var(--rule);padding:0 .35rem}
-.rmine .nwd{font:600 .78rem var(--text);font-style:normal;color:var(--bg);background:var(--ink);padding:0 .35rem;margin-inline-start:auto}
+.rmine .tg{font:600 .78rem var(--font-text);color:var(--tert);border:1px solid var(--rule);padding:0 .35rem}
+.rmine .nwd{font:600 .78rem var(--font-text);font-style:normal;color:var(--bg);background:var(--ink);padding:0 .35rem;margin-inline-start:auto}
 .mlinks{display:flex;flex-wrap:wrap;gap:.3rem 1rem;margin:.1rem 0 .5rem;font-size:.82rem}.mlinks a{color:var(--tert);text-decoration:underline;text-underline-offset:.25em}
 .rkch{margin:.3rem 0 0;font-size:.8rem;color:var(--tert)}
 /* W3.9: /arabs/ as a section front — the live strip, 4 group cards, «كل الأقسام» folded */
@@ -691,7 +691,7 @@ input,select,textarea{font-size:max(16px,1em)}
 /* W4.1 /thisday/: today first, the year folded by month */
 .tdnow .tdnav{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-block-end:.6rem}
 .tdnow .tdnav h2{flex:1 1 auto;text-align:center}
-.tdnow .ib{inline-size:auto;padding-inline:.7rem;font:600 .85rem var(--text);color:var(--tert);background:none;border:1px solid var(--rule);min-block-size:2.75rem;cursor:pointer}
+.tdnow .ib{inline-size:auto;padding-inline:.7rem;font:600 .85rem var(--font-text);color:var(--tert);background:none;border:1px solid var(--rule);min-block-size:2.75rem;cursor:pointer}
 .tdm{border-block-end:1px solid var(--rule-2)}.tdm summary{cursor:pointer;padding-block:.8rem;font-family:var(--kufi);font-weight:800;min-block-size:2.75rem}
 .tdm[open] summary{color:var(--ink)}
 /* W4.4 round replay, h2h, referee */
@@ -710,12 +710,56 @@ input,select,textarea{font-size:max(16px,1em)}
 /* W4.3 /national/: منتخبك, the day's national matches, 22 flags */
 .natme #natmeb{min-block-size:11.75rem}.natflags a.me{outline:2px solid var(--ink);outline-offset:-2px}.natme-h{display:flex;align-items:center;gap:.5rem;color:var(--ink);font-family:var(--kufi);margin-block-end:.3rem}
 .natflags{display:grid;grid-template-columns:repeat(auto-fill,minmax(5.6rem,1fr));gap:.5rem;margin-block:1rem 1.5rem}
-.natflags a{display:grid;justify-items:center;gap:.35rem;background:var(--surf);padding:.7rem .3rem;color:var(--ink);font:600 .8rem var(--text);text-align:center;text-decoration:none;min-block-size:2.75rem}
+.natflags a{display:grid;justify-items:center;gap:.35rem;background:var(--surf);padding:.7rem .3rem;color:var(--ink);font:600 .8rem var(--font-text);text-align:center;text-decoration:none;min-block-size:2.75rem}
 .natflags a:hover{background:var(--raised-hi)}
 /* W4.2: merged pages */
-.mowpin{background:var(--surf);padding:.9rem;margin-block:1rem 1.5rem}.mowpin h2 small{font:600 .82rem var(--text);color:var(--tert);margin-inline-start:.6rem}
+.mowpin{background:var(--surf);padding:.9rem;margin-block:1rem 1.5rem}.mowpin h2 small{font:600 .82rem var(--font-text);color:var(--tert);margin-inline-start:.6rem}
 .v3 a.cd{border-inline-start:0}
 .gl .ex{margin:.4rem 0 0;font-size:.9rem;color:var(--tert)}.gl .ex b{color:var(--ink)}
 /* W4.7: below-the-fold sections and the footer skip rendering until they come near the screen */
 .v3 .foot{content-visibility:auto;contain-intrinsic-size:auto 640px}
 .v3 .body > section.blk + section.blk,.v3 [data-pane] > section.blk + section.blk{content-visibility:auto;contain-intrinsic-size:auto 480px}
+/* owner item 9a: push toggles */
+.calk{display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;align-items:center}.calk .lnk{font-size:.85rem;color:var(--tert)}
+.pushg{display:grid;gap:.5rem;margin-block:.4rem .8rem}
+.ptg{display:flex;justify-content:space-between;align-items:center;min-block-size:3rem;padding:0 1rem;background:var(--raised);border:1px solid var(--rule);color:var(--ink);font:600 .95rem var(--font-text);cursor:pointer;text-align:start}
+.ptg::after{content:"";inline-size:2.4rem;block-size:1.3rem;border:1px solid var(--rule-ctl);background:linear-gradient(90deg,var(--text-3) 0 45%,transparent 45%)}
+.ptg[aria-pressed="true"]::after{background:linear-gradient(90deg,transparent 55%,var(--ink) 55%)}
+/* owner item 9b: «منو بيفوز؟» — quiet chips, never a second primary */
+.pick h2 small{font:500 .78rem var(--font-text);color:var(--tert);margin-inline-start:.6rem}
+.pickb{display:grid;grid-template-columns:1fr auto 1fr;gap:.4rem;margin-block:.5rem}
+.pickb button{min-block-size:2.75rem;padding:0 .6rem;background:none;border:1px solid var(--rule);color:var(--ink);font:600 .9rem var(--font-text);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pickb button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 -3px 0 var(--ink)}
+.pickres{position:absolute;inset-block-start:calc(var(--topH) + .6rem);inset-inline-end:var(--gutter);margin:0;background:#0A2620cc;padding:.15rem .5rem;font-size:.8rem;color:var(--tert);z-index:2}
+.pickres.ok{color:var(--ink)}
+.rmine .picks{grid-column:1/-1;margin:.2rem 0 0;font-size:.85rem;color:var(--tert)}
+/* owner item 1: my crest in the nav */
+.navcrest{inline-size:22px;block-size:22px;object-fit:contain}
+#minesh .mgrid{margin-block:.6rem 1rem}
+/* W2.8: 6 featured tiles, the rest on demand; an odd last tile spans the row */
+@media (max-width:420px){.shelf3 > :last-child:nth-child(odd){grid-column:1/-1}}   /* two columns on a phone: no lonely half tile */
+.shall{margin-block:.8rem 0;inline-size:100%}
+.shmore{margin-block-start:.6rem}
+/* W3.8: شو على المحك */
+.stakes h2 small{font:500 .78rem var(--font-text);color:var(--tert);margin-inline-start:.6rem}
+.v3 tr.stk td{font-weight:800;color:var(--ink);background:var(--raised-hi)}
+/* owner item 5: the match page gets a sticky side column at 1240px+ */
+.mside{display:none}
+@media (min-width:1240px){
+  .m2col{display:grid;grid-template-columns:minmax(0,8fr) minmax(0,4fr);gap:2.4rem;align-items:start}
+  .m2col > .mcol{min-inline-size:0}
+  .mside{display:block;position:sticky;inset-block-start:calc(var(--topH) + 4.2rem);max-block-size:calc(100vh - var(--topH) - 5.2rem);overflow:auto;scrollbar-width:thin}
+  .mside .blk{margin-block:0 1.4rem}.mside h2{font-size:1rem}
+}
+.mxi{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.mxi h3{font-size:.9rem;margin:0 0 .3rem}.mxi h3 small{color:var(--tert);font-weight:600}
+.mxi ol{list-style:none;margin:0;padding:0;font-size:.82rem}.mxi li{display:flex;gap:.4rem;padding-block:.2rem;border-block-end:1px solid var(--rule-2)}.mxi li .num{inline-size:1.5rem;color:var(--tert)}
+/* W2.8: the match share sheet — a preview, 4 rows, quiet links */
+.shprev{display:block;inline-size:100%;block-size:auto;aspect-ratio:1200/630;max-block-size:11rem;object-fit:cover;object-position:center top;margin-block:.2rem .8rem;background:var(--sunken)}
+.shrows{display:grid;gap:.5rem}
+.shr{display:grid;gap:.15rem;align-content:center;min-block-size:3.4rem;padding:.55rem .9rem;background:var(--raised);border:1px solid var(--rule);color:var(--ink);font:inherit;text-align:start;cursor:pointer;text-decoration:none}
+button.shr:hover,a.shr:hover{background:var(--raised-hi)}
+.shr b{font-family:var(--kufi);font-weight:800;font-size:.98rem}.shr > span{font-size:.82rem;color:var(--tert)}
+.shc{display:flex;flex-wrap:wrap;gap:.4rem;margin-block-start:.25rem}
+.shc a,.shc button{min-block-size:2.5rem;display:inline-flex;align-items:center;padding:0 .8rem;border:1px solid var(--rule-ctl);background:none;color:var(--ink);font:600 .85rem var(--font-text);cursor:pointer;text-decoration:none}
+.shq{display:flex;flex-wrap:wrap;gap:.2rem 1rem;margin:.9rem 0 0;font-size:.85rem}
+.shq a,.shq button{background:none;border:0;padding:.4rem 0;color:var(--tert);font:inherit;text-decoration:underline;text-underline-offset:.25em;cursor:pointer}

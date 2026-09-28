@@ -13,11 +13,15 @@ const MIME = { ".html":"text/html; charset=utf-8", ".css":"text/css", ".js":"app
   await T("goal", async () => { await pg.evaluate(() => { const m = JSON.parse(JSON.stringify(window.__md)); m.score = { home:m.score.home + 1, away:m.score.away }; m.events = (m.events || []).concat([{ type:"goal", team:"home", minute:91, player:{ id:1, name:"تجربة" } }]); document.dispatchEvent(new CustomEvent("tifo:match", { detail:m })); }); await pg.waitForTimeout(350); await pg.screenshot({ path:DST + "/feat_goal.png" }); return !!(await pg.$(".goalfx, .gtext")); });
   await pg.waitForTimeout(1600);
   await T("pcard", async () => { await pg.click('.hero [data-sheet="share"]'); await pg.click("#pcardbtn"); await pg.waitForTimeout(300); await pg.screenshot({ path:DST + "/feat_pcard_list.png" }); return await pg.$$eval("#secpicks [data-pc]", x => x.length); });
-  await T("embed", async () => { await pg.click("#embedbtn"); return (await pg.$eval("#secpicks textarea", t => t.value)).slice(0, 60); });
-  await T("cinema", async () => { await pg.click("#cinebtn"); await pg.waitForTimeout(400); await pg.screenshot({ path:DST + "/feat_cinema.png" }); const ok = !!(await pg.$(".cine .cs")); await pg.click(".cine .x"); return ok; });
+  await pg.keyboard.press("Escape"); await pg.waitForTimeout(300);
+  // W2.8: cinema moved to the mini-bar ([data-cine]); the embed code lives on the kit page for UAE matches (else in the sheet's quiet links)
+  await T("cinema", async () => { await pg.evaluate(() => document.querySelector("[data-cine]").click()); await pg.waitForTimeout(400); await pg.screenshot({ path:DST + "/feat_cinema.png" }); const ok = !!(await pg.$(".cine .cs")); await pg.click(".cine .x"); return ok; });
   await T("sizedImgs", async () => { await pg.click('.hero [data-sheet="share"]'); return await pg.$$eval('#share a[href*="/og/m-"]', a => a.map(x => x.getAttribute("href"))); });
   await pg.keyboard.press("Escape");
   await T("search", async () => { await pg.click("#srch"); const out = {}; for (const q of ["العبن", "الزعيم", "الامبراطور", "برشلونه", "الشارقة"]){ await pg.fill("#sq", q); await pg.waitForTimeout(700); out[q] = await pg.$$eval("#sr li", l => l.slice(0, 3).map(x => x.textContent.slice(0, 20))); } return out; });
+  await pg.goto("https://tifo.elyoxe.com/m/1000020522/", { waitUntil:"networkidle", timeout:90000 }); await pg.waitForTimeout(800);
+  await T("embed", async () => { const kit = await pg.$eval("#share .shq", q => (q.querySelector('a[href$="/kit/"]') || {}).href || ""); if (kit){ await pg.goto(kit, { waitUntil:"networkidle" }); await pg.click("#embedbtn"); return "kit: " + (await pg.$eval("#embout textarea", t => t.value)).slice(0, 50); }
+    await pg.click('.hero [data-sheet="share"]'); await pg.click("#embedbtn"); return "sheet: " + (await pg.$eval("#secpicks textarea", t => t.value)).slice(0, 50); });
   await pg.goto("https://tifo.elyoxe.com/t/102122/", { waitUntil:"networkidle", timeout:90000 });
   await T("xi", async () => { await pg.click('.mtabs button[data-t="squad"]'); await pg.click("#xibtn"); await pg.waitForTimeout(1500); await pg.click('.xs[data-s="1"]'); await pg.waitForTimeout(300); await pg.click(".xpick [data-p]"); await pg.waitForTimeout(300); await pg.screenshot({ path:DST + "/feat_xi.png" }); return (await pg.$$eval(".xpitch .xs", s => s.length)) + " squares, " + (await pg.$$eval(".xpitch .xs.on", s => s.length)) + " picked"; });
   await pg.goto("https://tifo.elyoxe.com/c/uae-pro-league/compare/", { waitUntil:"networkidle", timeout:90000 }); await pg.waitForTimeout(1200);

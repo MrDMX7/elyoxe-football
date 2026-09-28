@@ -16,7 +16,7 @@
   // ---- country (203, 199): time zone + what comes first; guessed from the browser's time zone, changeable in the header
   function country(){ try { var c = localStorage.getItem("tifo.country"); if (c) return c; } catch (e){} var tz = ""; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e){} var hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; return hit ? hit[0] : "xx"; }
   function applyCountry(){ var c = country(), row = R.COUNTRIES.filter(function(x){ return x[0] === c; })[0]; try { R.TZ = row ? row[2] : Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e){ R.TZ = "Asia/Dubai"; }
-    var b = $("#ctry"); if (b) b.textContent = row ? row[1] : "بلدك"; R.localize(document); }
+    var b = $("#ctry"); if (b) b.textContent = "بلدك: " + (row ? row[1] : "—") + " · غيّر"; R.localize(document); }
   applyCountry();
   var cb = $("#ctry"); if (cb) cb.onclick = function(){ var box = $("#ctrybox"); if (box){ box.remove(); return; }
     box = document.createElement("div"); box.id = "ctrybox"; box.className = "ctrybox"; var cur = country();
@@ -111,15 +111,15 @@
   // finished since the last visit (the visit that started this session). The visitor's national team joins when it has something today.
   // No favourites: the national team and the league of the visitor's country, above the crest grid.
   var LASTV = (function(){ var l = 0; try { var s = sessionStorage.getItem("tifo.lv"); if (s != null) return +s; l = +localStorage.getItem("tifo.lastvisit") || 0; sessionStorage.setItem("tifo.lv", String(l)); localStorage.setItem("tifo.lastvisit", Date.now()); } catch (e){} return l; })();
-  var TN = {}, RKD = {};   // rank moves are worked out once per page load (the home poll re-renders this card every 20 s)
+  var TN = {}, RKD = {}, PKC = null;   // rank moves are worked out once per page load (the home poll re-renders this card every 20 s)
   function tn(id){ return TN[id] || (TN[id] = fetch("/tn/" + id + ".json").then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; })); }
   function myCard(idx, ms, live){
     var el = $("#mine"); if (!el) return; var teams = favs().filter(function(x){ return x.t === "team"; }).slice(0, 6), fb = !teams.length, cc = country(), nid = (window.NAT || {})[cc];
     if (nid && !teams.some(function(x){ return x.id === nid; })) teams.push({ id:nid, nat:1 });
     if (!teams.length){ el.innerHTML = '<div class="mine-card"><div class="h">مفضلتي</div><p class="small" style="margin:0">افتح صفحة أي نادي واضغط «هذا فريقي»، وضيف كم فريق تبا، ومبارياته تطلع لك أول شي هنا.</p></div>'; return; }
     var by = {}; (ms || []).concat((live && live.matches) || []).forEach(function(m){ by[m.id] = Object.assign({}, by[m.id] || {}, m); });
-    Promise.all(teams.map(function(x){ return tn(x.id); })).then(function(rs){
-      var now = Date.now(), rows = [];
+    Promise.all(teams.map(function(x){ return tn(x.id); }).concat([PKC || (PKC = PK.catchUp())])).then(function(rs){
+      rs = rs.slice(0, teams.length); var now = Date.now(), rows = [];
       rs.forEach(function(t, i){ if (!t) return; var nat = teams[i].nat, seen = {}, c = [];
         [t.last, t.next].concat((ms || []).filter(function(m){ return m.home.id === t.id || m.away.id === t.id; })).forEach(function(m){ if (!m || seen[m.id]) return; seen[m.id] = 1; c.push(by[m.id] ? Object.assign({}, m, by[m.id]) : m); });
         var ko = function(m){ return Date.parse(m.kickoff_utc) || 0; };
@@ -141,7 +141,7 @@
         if (comp){ var lm = (ms || []).filter(function(m){ return m.comp === comp.id; }).sort(function(a, b){ return R.isLive(b) - R.isLive(a); })[0];
           rows.push({ k:3, i:99, h:'<div class="sugrow"><a class="h" href="/c/' + comp.key + '/">' + '<img class="logo" src="/lg/' + comp.id + '.png" alt="" loading="lazy" onerror="this.remove()">' + " " + R.esc(comp.name_ar) + ' <span class="tg">دوري بلدك</span></a>' + (lm ? R.matchRow(by[lm.id] || lm, { date:false }) : '<p class="small muted">الترتيب والمباريات الياية</p>') + "</div>" }); } }
       rows.sort(function(a, b){ return a.k - b.k || a.i - b.i; });
-      var html = '<div class="mine-card">' + rows.map(function(r){ return r.h; }).join("") + (fb ? '<p class="small" style="margin:0">اختار فريقك، ومبارياته تطلع لك هني أول شي.</p>' : '<button type="button" class="btn copy" id="themebtn">ألوان فريقي على الموقع</button>') + "</div>";
+      var tl = PK.tally(), html = '<div class="mine-card">' + rows.map(function(r){ return r.h; }).join("") + (tl.k ? '<p class="picks">توقعاتك: صح <b class="num">' + tl.n + '</b> من <b class="num">' + tl.k + "</b></p>" : "") + (fb ? '<p class="small" style="margin:0">اختار فريقك، ومبارياته تطلع لك هني أول شي.</p>' : '<button type="button" class="btn copy" id="themebtn">ألوان فريقي على الموقع</button>') + "</div>";
       if (el._h === html) return; el._h = html; el.innerHTML = html; R.localize(el);
     });
   }
@@ -156,6 +156,24 @@
         cards.forEach(function(c){ if (+c.dataset.m !== +id) return; var p = +c.dataset.p, x = c.querySelector(".atg"); if (!x) return; x.textContent = [g[p] ? (g[p] > 1 ? g[p] + " أهداف" : "هدف") : "", a[p] ? (a[p] > 1 ? a[p] + " صناعة" : "صناعة") : ""].filter(Boolean).join(" · "); }); }).catch(function(){}); }))
         .then(function(){ poll(arabs, Object.keys(ids).length ? 30e3 : 120e3); }); }).catch(function(){ poll(arabs, 120e3); });
   }
+
+  // ---- owner item 9b: «منو بيفوز؟» — picks live in localStorage {mid: {p, ko, h, a, r}}; r = 1 right, 0 wrong, once the result is known
+  var PK = { all:function(){ try { return JSON.parse(localStorage.getItem("tifo.picks") || "{}"); } catch (e){ return {}; } }, save:function(o){ try { localStorage.setItem("tifo.picks", JSON.stringify(o)); } catch (e){} },
+    res:function(m){ return m && m.status === "finished" && m.score ? (m.score.home > m.score.away ? "h" : m.score.home < m.score.away ? "a" : "d") : null; },
+    settle:function(m){ var o = PK.all(), p = o[m.id], r = PK.res(m); if (!p || p.r != null || !r) return p; p.r = p.p === r ? 1 : 0; o[m.id] = p; PK.save(o); return p; },
+    tally:function(){ var o = PK.all(), n = 0, k = 0; Object.keys(o).forEach(function(id){ if (o[id].r != null){ k++; n += o[id].r; } }); return { n:n, k:k }; },
+    // results for picks past kickoff + 2.5 h, from the match file, at most 3 per page load
+    catchUp:function(){ var o = PK.all(), due = Object.keys(o).filter(function(id){ return o[id].r == null && Date.now() - Date.parse(o[id].ko) > 2.5 * 36e5; }).slice(0, 3);
+      return Promise.all(due.map(function(id){ return get("match/" + id + ".json").then(function(m){ PK.settle(m); if (m.status === "cancelled" || m.status === "postponed"){ var x = PK.all(); delete x[id]; PK.save(x); } }).catch(function(){}); })); } };
+  (function(){ var box = $("#pick"); if (!box) return; var id = +box.dataset.mid, ko = Date.parse(box.dataset.kick), btns = [].slice.call(box.querySelectorAll("[data-p]")), msg = $("#pickm");
+    function gone(){ return Date.now() >= ko; } function paint(){ var p = PK.all()[id]; btns.forEach(function(b){ b.setAttribute("aria-pressed", p && p.p === b.dataset.p ? "true" : "false"); }); if (msg) msg.textContent = p ? "توقعك: " + (p.p === "d" ? "تعادل" : btns.filter(function(b){ return b.dataset.p === p.p; })[0].textContent) + ". نشوف بعد النهاية." : ""; }
+    if (gone()){ box.hidden = true; return; } paint();
+    box.addEventListener("click", function(e){ var b = e.target.closest("[data-p]"); if (!b || gone()) return; var o = PK.all(); o[id] = { p:b.dataset.p, ko:box.dataset.kick, h:+box.dataset.h, a:+box.dataset.a }; PK.save(o); paint(); });
+    document.addEventListener("tifo:match", function(e){ if (e.detail && e.detail.status !== "scheduled"){ box.hidden = true; var sk = $("#stakes"); if (sk) sk.hidden = true; } });
+    setTimeout(function(){ if (gone()) box.hidden = true; }, Math.max(0, Math.min(ko - Date.now(), 2147483000))); })();
+  // on a finished match page: settle the pick and say it in the hero (absolutely placed, so nothing moves)
+  document.addEventListener("tifo:match", function(e){ var m = e.detail; if (!m || m.status !== "finished" || $(".pickres")) return; var p = PK.settle(m); if (!p || p.r == null) return; var hin = $(".mhero .hero-in"); if (!hin) return;
+    var n = document.createElement("p"); n.className = "pickres" + (p.r ? " ok" : ""); n.textContent = p.r ? "توقعك طلع صح" : "توقعك طلع غلط"; hin.appendChild(n); });
 
   // ---- competition: standings (live), fixtures, leaders
   function comp(){

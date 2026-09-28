@@ -24,6 +24,14 @@ self.addEventListener("activate", e => { e.waitUntil((async () => {
 })()); });
 async function put(name, req, res){ const c = await caches.open(name); await c.put(req, res); const lim = LIMIT[name]; if (!lim) return; const ks = await c.keys(); for (let i = 0; i < ks.length - lim; i++) await c.delete(ks[i]); }   // keys come back oldest first
 const LIVE = /^\/v1\/(live\.json|match\/|day\/)/;
+// push (W3.6 + owner item 9a): payload {title, body, url, tag, team}; a push is always shown, even when the payload is not JSON
+self.addEventListener("push", e => { let d = {}; try { d = e.data ? e.data.json() : {}; } catch (err){ try { d = { body:e.data.text() }; } catch (x){} }
+  e.waitUntil(self.registration.showNotification(d.title || "تيفو", { body:d.body || "", tag:d.tag || "tifo", renotify:!!d.tag, lang:"ar", dir:"rtl", icon:"/icons/icon-192.png", badge:"/icons/icon-192.png", data:{ url:d.url || "/", team:d.team || null } })); });
+self.addEventListener("notificationclick", e => { e.notification.close(); let u = "/";
+  try { const x = new URL((e.notification.data && e.notification.data.url) || "/", self.location.origin); if (x.origin === self.location.origin) u = x.pathname + x.search + x.hash; } catch (err){}
+  e.waitUntil((async () => { const all = await self.clients.matchAll({ type:"window", includeUncontrolled:true }), path = u.split(/[?#]/)[0];
+    for (const c of all){ try { if (new URL(c.url).pathname === path && "focus" in c) return c.focus(); } catch (err){} }
+    return self.clients.openWindow(u); })()); });
 self.addEventListener("fetch", e => {
   const u = new URL(e.request.url); if (e.request.method !== "GET" || u.origin !== location.origin || u.pathname.startsWith("/api/") || u.pathname.startsWith("/og/") || u.pathname === "/sw.json") return;
   if (u.pathname.startsWith("/assets/") || u.pathname.startsWith("/logo/") || u.pathname.startsWith("/lg/")){

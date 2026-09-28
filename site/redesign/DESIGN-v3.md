@@ -101,7 +101,11 @@
 
 10. **At most 2 accent colours on any screen besides club colours.** Chalk and night are the ground; pulse (live) and dune (my team / selected) are the only accents, and a screen rarely needs both.
 11. **One primary button per area.** A hero, a sheet or a tab has at most one filled button; everything else is a quiet text or ghost action without a thick border.
-12. **Motion only for key events:** a goal (the goal moment and score flip) and page entry (the stand's load-in, sections fading up once). The only loops are the live signals (the flipping live card and the soft pulse of a live match hero); nothing else moves on its own, and `prefers-reduced-motion` turns it all off.
+12. **Motion only for key events:** a goal (the goal moment and score flip) and page entry (the stand's load-in, sections fading up once). The only loop is the flipping live card; a live match hero takes **one breath per data update** (the scrim dims once when a new minute or score arrives, then rests), never an endless pulse. Nothing else moves on its own, and `prefers-reduced-motion` turns it all off. (Owner decision 2026-09-28.)
+13. **Art direction (owner decision 2026-09-28).**
+    - **The mosaic** (the stand of card squares) appears only in heroes, in the goal moment, and in share images. Never as a section background, a divider or a loader.
+    - **Pitch lines are the only ornament:** the halfway line, the centre circle, the penalty arc (the shelf heading's arc), the box. No blobs, blooms, glows or gradients used as decoration; the magenta league-logo bloom is gone.
+    - **Scoreboard digits** (the boxed split-flap cells and score chips) are for scores and kick-off times only. Counts, ranks and stats are plain numerals (Barlow Condensed without the box). Known leftovers to convert: the boxed values in leaderboards (`ol.lead li b`) and the boxed pitch numbers in the lineup builder.
 
 ## 4. Components
 - **Top bar.**

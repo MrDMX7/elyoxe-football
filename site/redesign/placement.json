@@ -152,6 +152,21 @@
   ],
   "حسابات النادي الرسمية": [
    "الحسابات الرسمية"
+  ],
+  "الأرقام كلها": [
+   "الأرقام"
+  ],
+  "على شاشة المجلس": [
+   "تلفزيون المجلس"
+  ],
+  "صورة جاهزة: ستوري 1080×1920": [
+   "ستوري"
+  ],
+  "صورة جاهزة: بوست 1080×1350": [
+   "بوست"
+  ],
+  "صورة جاهزة: إكس 1600×900": [
+   "إكس"
   ]
  },
  "dropped": {
@@ -184,6 +199,23 @@
   "national|tile:آخر نتيجة": "W4.3: the last result is the النتايج tab",
   "national|tile:المباراة الياية": "W4.3: the next match is the الياية tab",
   "national|heading:آخر نتيجة": "W4.3: the last result is the النتايج tab",
-  "national|heading:المباراة الياية": "W4.3: the next match is the الياية tab"
+  "national|heading:المباراة الياية": "W4.3: the next match is the الياية tab",
+  "nav:الأسبوع": "owner item 1 (2026-09-28): «فريقي» replaced «الأسبوع» in the nav; /week/ stays in المزيد (مباريات الأسبوع) and the footer",
+  "watch|heading:دوري التحدي الآسيوي": "owner item 14: the AFC Challenge League's only UAE row (beIN) is marked disputed and is no longer shown",
+  "heading:اختصارات": "W2.8 (owner item 3): المزيد is one flat list of exactly 14 entries now; the group headings are gone",
+  "heading:الشاشات": "W2.8 (owner item 3): المزيد is one flat list of exactly 14 entries now; the group headings are gone",
+  "heading:اقرا وتعلّم": "W2.8 (owner item 3): المزيد is one flat list of exactly 14 entries now; the group headings are gone",
+  "heading:سوّ بنفسك": "W2.8 (owner item 3): المزيد is one flat list of exactly 14 entries now; the group headings are gone",
+  "tool:كأس الخليج": "W2.8: out of المزيد; /c/gulf-cup/ stays linked from /competitions/ and the home competitions grid",
+  "comp|tile:ترتيبهم بين الأندية العربية": "W2.8: merged into the «تصنيف تيفو للأندية» tile (both club ratings in one)",
+  "comp|heading:ترتيبهم بين الأندية العربية": "W2.8: merged into the «تصنيف تيفو للأندية» tile (an h3 inside it)",
+  "home|heading:مباريات العرب": "W2.5 (owner item 2): rail:arab dropped; the day list below has the «العرب» filter",
+  "home|tool:كل مباريات العرب": "W2.5: rail:arab dropped; the day list's «العرب» filter does the same",
+  "match|button:وضع السينما": "W2.8: cinema moved to the mini-bar (the screen icon next to شارك)",
+  "match|button:ضمّن المباراة في موقعك": "W2.8: on UAE matches the embed code is on /m/<id>/kit/ (linked as «للصحفيين وصنّاع المحتوى»); elsewhere it stays in the sheet's quiet links",
+  "match|tool:على شاشة المجلس": "W2.8: now «تلفزيون المجلس» inside the sheet's «شاشة كبيرة» row",
+  "match|tool:صورة جاهزة: ستوري 1080×1920": "W2.8: now «ستوري» inside the sheet's «صورة النتيجة» row",
+  "match|tool:صورة جاهزة: بوست 1080×1350": "W2.8: now «بوست» inside the sheet's «صورة النتيجة» row",
+  "match|tool:صورة جاهزة: إكس 1600×900": "W2.8: now «إكس» inside the sheet's «صورة النتيجة» row"
  }
 }
