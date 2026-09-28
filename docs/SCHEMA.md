@@ -67,7 +67,7 @@ The CloudFront cache policy honours each object's max-age (MinTTL 1 s). Unchange
 | `teams.json` | every team seen: name, name_ar, logo, competitions | every run |
 | `national/5789/qualifying.json` | the UAE's group table and that group's remaining fixtures per qualifying competition | with 290, 329, 10197, 10609 |
 | `national/uae-abroad.json` | UAE nationals at clubs outside the UAE, with their main-league season stats | daily |
-| `h2h/{a}-{b}.json`, `h2h/index.json` | full head-to-head list for each pair of current Pro League clubs (`a` < `b`) | weekly per pair |
+| `h2h/{a}-{b}.json`, `h2h/index.json` | full head-to-head list for each pair of current Pro League clubs (`a` < `b`), read from their latest finished meeting plus that meeting itself (FotMob's block lists only earlier games) | weekly per pair; retried next run when the block is empty |
 | `health.json` | per source and file: ok, error, time, last_ok; last run (mode, seconds, requests, written). `source:fotmob` = the outage watch (failing for N min: last error) and `source-alert` = the last alert mail (see "Source outage alert") | every run (poller) |
 | `health-analytics.json` | the same for the analytics function | every 10 min |
 

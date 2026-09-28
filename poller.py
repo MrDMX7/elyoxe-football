@@ -873,10 +873,16 @@ class Poller:
         if len(clubs) < 2:
             return
         pairs = [(a, b) for i, a in enumerate(clubs) for b in clubs[i + 1:]]
-        known = {}
-        for m in (self.fixture_cache.get(538) or []) + (self.aux("prev_season").get("538") or {}).get("matches", []):
+        known, fin = {}, {}
+        for m in (self.fixtures(538) or []) + (self.aux("prev_season").get("538") or {}).get("matches", []):
             if m.get("id"):
-                known.setdefault(tuple(sorted((m["home"]["id"], m["away"]["id"]))), m["id"])
+                k = tuple(sorted((m["home"]["id"], m["away"]["id"])))
+                known.setdefault(k, m["id"])
+                if m.get("status") == S.FINISHED and (m.get("kickoff_utc") or "") > (fin.get(k) or ("", 0))[0]:
+                    fin[k] = (m.get("kickoff_utc") or "", m["id"])
+        # the latest FINISHED meeting: FotMob's h2h block lists the meetings before the match it hangs on, so an
+        # older via-match missed the newest games (Wahda-Ain stopped at 2025-02-27); that match is added itself
+        known.update({k: v[1] for k, v in fin.items()})
         n = 0
         for a, b in pairs:
             if n >= limit or not self.has_time(5):
@@ -893,9 +899,15 @@ class Poller:
                 continue
             h = d.get("h2h")
             n += 1
+            if not h or not h.get("matches"):
+                continue                    # not marked: tried again next run
             self.mark("h2h", f"{a}-{b}")
-            if not h:
-                continue
+            h = {**h, "matches": list(h["matches"])}
+            if d.get("status") == S.FINISHED and d.get("score") and all(x.get("id") != d["id"] for x in h["matches"]):
+                h["matches"].insert(0, {"id": d["id"], "kickoff_utc": d.get("kickoff_utc"), "comp": d.get("comp"),
+                                        "home": {k: d["home"].get(k) for k in ("id", "name", "name_ar", "logo")},
+                                        "away": {k: d["away"].get(k) for k in ("id", "name", "name_ar", "logo")},
+                                        "score": d["score"]})
             per = {str(a): 0, str(b): 0, "draws": 0}
             for x in h["matches"]:
                 sc = x.get("score")
