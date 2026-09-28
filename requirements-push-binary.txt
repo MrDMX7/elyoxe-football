@@ -1,0 +1,3 @@
+# web push (push.py), aarch64 binary wheels (with their dependencies)
+cryptography>=47
+aiohttp

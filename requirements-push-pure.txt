@@ -1,0 +1,9 @@
+# web push (push.py), pure Python, installed with --no-deps (http-ece has no wheel)
+pywebpush==2.5.0
+http-ece==1.2.1
+py-vapid==1.9.4
+requests
+urllib3
+idna
+certifi
+charset-normalizer
