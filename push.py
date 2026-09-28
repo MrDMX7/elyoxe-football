@@ -105,8 +105,14 @@ def events_to_send(d, full, sent, now):
             out.append(("start", "start", None))
     evs = full.get("events") or []
     var = [e for e in evs if e.get("type") == "var" and e.get("var_outcome") in DISALLOWED]
+    cur = d.get("score") or full.get("score") or {}
     for e in evs:
         if e.get("type") not in GOAL_TYPES or not e.get("event_id"):
+            continue
+        es = e.get("score") or {}
+        # 6040346, 2026-09-28 20:17Z: the feed listed a «<TBD>» away goal at 49' making 2-2 while the match stood 2-1,
+        # and it was pushed. A goal the match score doesn't have yet waits (not marked, so the next pass retries).
+        if cur and es and any((es.get(k) or 0) > (cur.get(k) or 0) for k in ("home", "away")):
             continue
         key = goal_key(d.get("id"), e)
         # marks written before goal_key used the event_id, which ends in the player id: match it without that

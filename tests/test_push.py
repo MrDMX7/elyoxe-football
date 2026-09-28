@@ -61,6 +61,17 @@ def test_scorer_filled_later_is_the_same_goal_and_never_a_placeholder():
     assert PUSH.payload("goal", d, 5789, dict(GOAL, player=None), {})["body"] == "هدف الإمارات في الدقيقة 23'"
 
 
+def test_goal_the_score_does_not_have_waits():
+    # 6040346, 2026-09-28: a «<TBD>» away goal at 49' with score 2-2 while the match stood 2-1
+    real = dict(GOAL, minute=49, score={"home": 2, "away": 1}, event_id="x-goal-49-0-1311408")
+    ghost = dict(GOAL, minute=49, team="away", player={"id": None, "name": "<TBD>"}, score={"home": 2, "away": 2},
+                 event_id="x-goal-49-0-0")
+    d = _d(events=[real, ghost], score=(2, 1))
+    assert [k for k, *_ in PUSH.events_to_send(d, d, {"start"}, NOW)] == ["goal:6052086-home-49-2-1"]
+    d2 = _d(events=[real, ghost], score=(2, 2))                                    # the score catches up: it goes
+    assert [k for k, *_ in PUSH.events_to_send(d2, d2, {"start", "goal:6052086-home-49-2-1"}, NOW)] == ["goal:6052086-away-49-2-2"]
+
+
 class _Table:
     """DynamoDB table stand-in: conditional put on (pk, sk), query, delete."""
     class _Exc(Exception):
