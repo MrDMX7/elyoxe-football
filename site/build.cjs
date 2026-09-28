@@ -298,6 +298,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   // coaches (names/coaches_ar.json) and stadiums (stadiums.yaml fotmob_name/name_en + research stadiums.json) in Arabic; Latin stays the fallback
   let COACH_AR = {}; try { COACH_AR = JSON.parse(fs.readFileSync(path.join(__dirname, "../names/coaches_ar.json"), "utf8")); } catch (e){}
   const coachAr = co => co && co.id && COACH_AR[co.id] && COACH_AR[co.id].ar ? COACH_AR[co.id].ar : null;
+  S.setCoaches(COACH_AR);
   const VENUE_AR = {}; { const norm = v => String(v || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     try { let cur = {}; for (const l of fs.readFileSync(path.join(__dirname, "../stadiums.yaml"), "utf8").split("\n")){ const m = l.match(/^\s*-?\s*(id|name_en|name_ar|fotmob_name):\s*(.+?)\s*(#.*)?$/); if (!m) continue; if (m[1] === "id"){ cur = {}; } cur[m[1]] = m[2]; if (cur.name_ar){ if (cur.name_en) VENUE_AR[norm(cur.name_en)] = cur.name_ar; if (cur.fotmob_name) VENUE_AR[norm(cur.fotmob_name)] = cur.name_ar; } } } catch (e){}
     ((readRes("stadiums.json").stadiums) || []).forEach(x => { if (x.name_ar && x.name_ar.value && x.name_en && x.name_en.value) VENUE_AR[norm(x.name_en.value)] = VENUE_AR[norm(x.name_en.value)] || x.name_ar.value; });

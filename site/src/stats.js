@@ -5,9 +5,11 @@
 (function(root){
   "use strict";
   var R = (typeof module !== "undefined" && module.exports) ? require("./render.js") : root.TR;
-  var S = {}, T = {}, P = {}, esc = R.esc;
+  var S = {}, T = {}, P = {}, C = {}, esc = R.esc;
   S.setTeams = function(m){ T = m || {}; };
   S.setPlayers = function(m){ P = m || {}; };
+  S.setCoaches = function(m){ C = m || {}; };   // names/coaches_ar.json; Latin stays the fallback (QA 35/45)
+  function coachA(a){ var ar = C[a.id] && C[a.id].ar; return "<a" + (ar ? "" : ' class="lat"') + ' href="/coach/' + esc(a.id) + '/">' + esc(ar || a.name) + "</a>"; }
   function team(id){ var t = T[id] || {}; return { id:+id, name:t.name, name_ar:t.name_ar || t.name || "" }; }
   function tl(id, cls){ var t = team(id); return '<a class="tl" href="/t/' + t.id + '/">' + R.logo(t, cls || "sm") + "<span>" + R.tname(t) + "</span></a>"; }
   function pname(id, fallback){ var p = P[id]; return p && p.name ? p.name : fallback || ""; }
@@ -248,13 +250,13 @@
   S.coachesTeam = function(c, id){
     var t = c && c.teams && c.teams[id]; if (!t || !t.history || !t.history.length) return "";
     var rows = coachAgg(t.history, 538).filter(function(a){ return a.g >= 5; }).sort(function(a, b){ return b.ppg - a.ppg; });
-    return '<ol class="lead">' + rows.map(function(a, i){ var cur = t.current && t.current.name === a.name; return '<li><span class="num muted">' + (i + 1) + '</span><span class="who"><a class="lat" href="/coach/' + esc(a.id) + '/">' + esc(a.name) + "</a>" + (cur ? ' <b class="rec">الحالي</b>' : "") + ' <span class="muted">' + a.g + " مباراة: " + a.w + " فوز، " + a.d + " تعادل، " + a.l + " خسارة (" + esc(a.seasons[0]) + (a.seasons.length > 1 ? " لين " + esc(a.seasons[a.seasons.length - 1]) : "") + ")</span></span><b>" + a.ppg.toFixed(2) + "</b></li>"; }).join("") + "</ol>" + noteSrc("نقاط بالمباراة لكل مدرب درّب النادي في الدوري، لمن درّب 5 مباريات أو أكثر.");
+    return '<ol class="lead">' + rows.map(function(a, i){ var cur = t.current && t.current.name === a.name; return '<li><span class="num muted">' + (i + 1) + '</span><span class="who">' + coachA(a) + (cur ? ' <b class="rec">الحالي</b>' : "") + ' <span class="muted">' + a.g + " مباراة: " + a.w + " فوز، " + a.d + " تعادل، " + a.l + " خسارة (" + esc(a.seasons[0]) + (a.seasons.length > 1 ? " لين " + esc(a.seasons[a.seasons.length - 1]) : "") + ")</span></span><b>" + a.ppg.toFixed(2) + "</b></li>"; }).join("") + "</ol>" + noteSrc("نقاط بالمباراة لكل مدرب درّب النادي في الدوري، لمن درّب 5 مباريات أو أكثر.");
   };
   S.coachesLeague = function(c){
     if (!c || !c.teams) return ""; var all = [];
     Object.keys(c.teams).forEach(function(id){ coachAgg(c.teams[id].history, 538).forEach(function(a){ a.team = id; all.push(a); }); });
     all = all.filter(function(a){ return a.g >= 30; }).sort(function(a, b){ return b.ppg - a.ppg; }).slice(0, 12);
-    return all.length ? '<ol class="lead">' + all.map(function(a, i){ return '<li><span class="num muted">' + (i + 1) + '</span><span class="who"><a class="lat" href="/coach/' + esc(a.id) + '/">' + esc(a.name) + "</a> " + R.logo(team(a.team), "sm") + ' <span class="muted">' + R.tname(team(a.team)) + "، " + a.g + " مباراة</span></span><b>" + a.ppg.toFixed(2) + "</b></li>"; }).join("") + "</ol>" + noteSrc("أعلى معدل نقاط بالمباراة لمدرب مع نادي في الدوري، لمن درّب 30 مباراة أو أكثر مع نفس النادي.") : "";
+    return all.length ? '<ol class="lead">' + all.map(function(a, i){ return '<li><span class="num muted">' + (i + 1) + '</span><span class="who">' + coachA(a) + " " + R.logo(team(a.team), "sm") + ' <span class="muted">' + R.tname(team(a.team)) + "، " + a.g + " مباراة</span></span><b>" + a.ppg.toFixed(2) + "</b></li>"; }).join("") + "</ol>" + noteSrc("أعلى معدل نقاط بالمباراة لمدرب مع نادي في الدوري، لمن درّب 30 مباراة أو أكثر مع نفس النادي.") : "";
   };
 
   // ---- phase 5 blocks (only rendered when ai/approved.json allows the kind)
