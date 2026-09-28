@@ -115,6 +115,7 @@ Resources:
           BUCKET: !Ref DataBucket
           ALERT_FROM: tifo@elyoxe.com      # source outage alert (poller.source_watch): one mail per outage + one on recovery
           ALERT_TO: hello@elyoxe.com
+          PUSH_FUNCTION: elyoxe-football-push   # web push: one async invoke per batch of new events (push.plan)
       Policies:
         - S3CrudPolicy: {BucketName: !Ref DataBucket}
         - Statement:
@@ -124,6 +125,9 @@ Resources:
               Condition:
                 StringEquals:
                   ses:FromAddress: tifo@elyoxe.com
+            - Effect: Allow
+              Action: [lambda:InvokeFunction]
+              Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:elyoxe-football-push"
       EventInvokeConfig:                 # an overrun minute is dropped, not queued and replayed later
         MaximumEventAgeInSeconds: 60
         MaximumRetryAttempts: 0
@@ -163,6 +167,7 @@ Resources:
           ANALYTICS_BUDGET: "280"
           ALERT_FROM: tifo@elyoxe.com      # live-feed watchdog (a poller that stopped running while a match is live)
           ALERT_TO: hello@elyoxe.com
+          VAPID_PUBLIC_PARAM: /elyoxe/tifo/vapid_public   # published as /v1/push.json
       Policies:
         - S3CrudPolicy: {BucketName: !Ref DataBucket}
         - Statement:
@@ -172,6 +177,9 @@ Resources:
               Condition:
                 StringEquals:
                   ses:FromAddress: tifo@elyoxe.com
+            - Effect: Allow
+              Action: [ssm:GetParameter]
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/elyoxe/tifo/vapid_public"
       EventInvokeConfig:
         MaximumEventAgeInSeconds: 300
         MaximumRetryAttempts: 0
@@ -185,6 +193,41 @@ Resources:
             RetryPolicy:
               MaximumRetryAttempts: 0
               MaximumEventAgeInSeconds: 300
+      Tags: {product: elyoxe-football}
+
+  PushLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/elyoxe-football-push
+      RetentionInDays: 14
+
+  # Web push sender (owner approved the grants 2026-09-28): invoked async by the poller with new kickoff/goal/full-time
+  # events; reads TIFOPUSH#<team> subscriptions from the cards table, claims each (match, event) with a conditional put,
+  # sends with the VAPID key, deletes 404/410 subscriptions. No schedule, no retries (a retry could double-send).
+  Push:
+    Type: AWS::Serverless::Function
+    DependsOn: PushLogs
+    Properties:
+      FunctionName: elyoxe-football-push
+      CodeUri: build/lambda/
+      Handler: push.handler
+      MemorySize: 256
+      Timeout: 300
+      Environment:
+        Variables:
+          PUSH_TABLE: cards
+          VAPID_PRIVATE_PARAM: /elyoxe/tifo/vapid_private
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:Query, dynamodb:PutItem, dynamodb:DeleteItem]
+              Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/cards"
+            - Effect: Allow
+              Action: [ssm:GetParameter]
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/elyoxe/tifo/vapid_private"
+      EventInvokeConfig:
+        MaximumEventAgeInSeconds: 600
+        MaximumRetryAttempts: 0
       Tags: {product: elyoxe-football}
 
   ReportLogs:
