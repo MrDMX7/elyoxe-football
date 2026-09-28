@@ -43,8 +43,24 @@ def _score(sc):
     return f"{sc['home']} - {sc['away']}" if sc else "-"
 
 
+# FotMob sends a goal first with the scorer as «<TBD>» (player id 0) and fills the name about a minute later.
+# Seen live 2026-09-28 on 6040346: the first push read «سجّل <TBD>», and the named event got a new event_id
+# (…-goal-38-0-0 -> …-goal-38-0-854041), so the same goal was pushed twice.
+PLACEHOLDERS = ("", "<tbd>", "tbd", "unknown")
+
+
+def _known(pl):
+    return bool(pl and pl.get("id") and str(pl.get("name") or "").strip().lower() not in PLACEHOLDERS)
+
+
+def goal_key(mid, e):
+    """A goal's identity without its scorer: team, minute and the score it made."""
+    sc = e.get("score") or {}
+    return f"goal:{mid}-{e.get('team')}-{_minute(e)}-{sc.get('home')}-{sc.get('away')}"
+
+
 def player_ar(pl, names_ar):
-    if not pl:
+    if not _known(pl):
         return None
     x = (names_ar or {}).get(str(pl.get("id")))
     return (x or {}).get("ar") if isinstance(x, dict) else x or pl.get("name")
@@ -61,12 +77,13 @@ def payload(kind, d, team, e=None, names_ar=None):
                 "body": (d.get("comp_name_ar") or "").strip() or "النتيجة النهائية"}
     sc = e.get("score") or d.get("score")
     who = player_ar(e.get("player"), names_ar)
+    side = _name(d.get(e.get("team"))) if e.get("team") in ("home", "away") else ""
     if e["type"] == "own_goal":
         body = f"هدف عكسي{f' من {who}' if who else ''} في الدقيقة {_minute(e)}'"
-    elif e["type"] == "penalty_goal":
-        body = f"سجّل {who or 'اللاعب'} من ركلة جزاء في الدقيقة {_minute(e)}'"
-    else:
-        body = f"سجّل {who or 'اللاعب'} في الدقيقة {_minute(e)}'"
+    elif who:
+        body = f"سجّل {who}{' من ركلة جزاء' if e['type'] == 'penalty_goal' else ''} في الدقيقة {_minute(e)}'"
+    else:            # scorer not known yet: the team, never a placeholder
+        body = f"هدف {side}{' من ركلة جزاء' if e['type'] == 'penalty_goal' else ''} في الدقيقة {_minute(e)}'".replace("هدف  ", "هدف ")
     return {**base, "title": f"هدف! {h} {_score(sc)} {a}", "body": body}
 
 
@@ -91,8 +108,10 @@ def events_to_send(d, full, sent, now):
     for e in evs:
         if e.get("type") not in GOAL_TYPES or not e.get("event_id"):
             continue
-        key = f"goal:{e['event_id']}"
-        if key in sent:
+        key = goal_key(d.get("id"), e)
+        # marks written before goal_key used the event_id, which ends in the player id: match it without that
+        stem = f"goal:{e['event_id']}".rsplit("-", 1)[0] + "-"
+        if key in sent or any(k.startswith(stem) for k in sent):
             continue
         if _age_min(e.get("first_seen"), now) > FRESH_MINUTES:
             continue

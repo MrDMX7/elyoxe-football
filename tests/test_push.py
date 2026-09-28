@@ -34,7 +34,7 @@ def test_goal_payload_shape_arabic_western_digits():
 def test_events_to_send_new_only_fresh_and_not_disallowed():
     d = _d(events=[GOAL])
     keys = [k for k, _, _ in PUSH.events_to_send(d, d, set(), NOW)]
-    assert keys == ["start", "goal:6052086-goal-23-0-1084245"]
+    assert keys == ["start", "goal:6052086-home-23-1-0"]
     assert PUSH.events_to_send(d, d, set(keys), NOW) == []                          # dedupe: nothing twice
     old = dict(GOAL, first_seen="2026-09-30T17:00:00Z")                             # history (deploy/backfill)
     assert [k for k, *_ in PUSH.events_to_send(_d(events=[old]), _d(events=[old]), {"start"}, NOW)] == []
@@ -43,6 +43,22 @@ def test_events_to_send_new_only_fresh_and_not_disallowed():
     assert [k for k, *_ in PUSH.events_to_send(dv, dv, {"start"}, NOW)] == []      # VAR took it back: nothing
     fin = _d("finished", events=[GOAL])
     assert [k for k, *_ in PUSH.events_to_send(fin, fin, {"start", "goal:6052086-goal-23-0-1084245"}, NOW)] == ["end"]
+
+
+def test_scorer_filled_later_is_the_same_goal_and_never_a_placeholder():
+    # 6040346, 2026-09-28: «<TBD>» (player id 0) at 19:40:56Z, the name at 19:41:50Z with a new event_id
+    tbd = dict(GOAL, player={"id": 0, "name": "<TBD>"}, event_id="6052086-goal-23-0-0")
+    d = _d(events=[tbd])
+    keys = [k for k, *_ in PUSH.events_to_send(d, d, {"start"}, NOW)]
+    assert keys == ["goal:6052086-home-23-1-0"]
+    named = dict(GOAL, first_seen="2026-09-30T18:29:00Z")
+    dn = _d(events=[named])
+    assert PUSH.events_to_send(dn, dn, {"start", *keys}, NOW) == []                 # one push per goal
+    assert PUSH.events_to_send(dn, dn, {"start", "goal:6052086-goal-23-0-0"}, NOW) == []   # marks from the old key format
+    body = PUSH.payload("goal", d, 5789, tbd, {})["body"]
+    assert body == "هدف الإمارات في الدقيقة 23'" and "TBD" not in body
+    assert PUSH.payload("goal", d, 5789, dict(tbd, type="penalty_goal"), {})["body"] == "هدف الإمارات من ركلة جزاء في الدقيقة 23'"
+    assert PUSH.payload("goal", d, 5789, dict(GOAL, player=None), {})["body"] == "هدف الإمارات في الدقيقة 23'"
 
 
 class _Table:
@@ -100,7 +116,7 @@ def test_plan_marks_state_and_invokes_once(tmp_path):
     calls = []
     d = _d(events=[GOAL])
     jobs = PUSH.plan(p, d, d, invoke=calls.append)
-    assert [j["key"] for j in jobs] == ["start", "goal:6052086-goal-23-0-1084245"] and len(calls) == 1
+    assert [j["key"] for j in jobs] == ["start", "goal:6052086-home-23-1-0"] and len(calls) == 1
     assert calls[0]["jobs"][1]["payloads"]["5902"]["title"] == "هدف! الإمارات 1 - 0 قطر"
     assert PUSH.plan(p, d, d, invoke=calls.append) == [] and len(calls) == 1          # next pass: no second invoke
 
@@ -108,7 +124,7 @@ def test_plan_marks_state_and_invokes_once(tmp_path):
         raise RuntimeError("throttled")
     d2 = _d(events=[GOAL, dict(GOAL, minute=30, event_id="6052086-goal-30-0-1", score={"home": 2, "away": 0})], score=(2, 0))
     assert PUSH.plan(p, d2, d2, invoke=boom) == []                                  # not marked: retried next pass
-    assert [j["key"] for j in PUSH.plan(p, d2, d2, invoke=calls.append)] == ["goal:6052086-goal-30-0-1"]
+    assert [j["key"] for j in PUSH.plan(p, d2, d2, invoke=calls.append)] == ["goal:6052086-home-30-2-0"]
 
 
 def test_undeliverable_keys_are_deleted_network_errors_kept(monkeypatch):
