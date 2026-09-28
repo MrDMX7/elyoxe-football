@@ -109,3 +109,13 @@ def test_plan_marks_state_and_invokes_once(tmp_path):
     d2 = _d(events=[GOAL, dict(GOAL, minute=30, event_id="6052086-goal-30-0-1", score={"home": 2, "away": 0})], score=(2, 0))
     assert PUSH.plan(p, d2, d2, invoke=boom) == []                                  # not marked: retried next pass
     assert [j["key"] for j in PUSH.plan(p, d2, d2, invoke=calls.append)] == ["goal:6052086-goal-30-0-1"]
+
+
+def test_undeliverable_keys_are_deleted_network_errors_kept(monkeypatch):
+    subs = [_sub(5789, 1), _sub(5789, 2)]
+    t = _Table(subs)
+    monkeypatch.setattr(PUSH, "_subs", lambda table, team: subs)
+    res = {"h1": "gone", "h2": "error: ConnectionError: reset"}
+    job = {"match": 1, "key": "end", "kind": "end", "urgency": "normal", "payloads": {"5789": {"team": 5789}}}
+    PUSH.run_jobs([job], t, send=lambda s, d, u: res[s["sk"]])
+    assert t.deleted == [("TIFOPUSH#5789", "h1")]

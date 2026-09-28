@@ -61,6 +61,56 @@ def status_of(st: dict) -> tuple[str, str | None, str | None]:
     return S.SCHEDULED, None, None
 
 
+_KO_KEYS = [(r"^(1/64|1/32|1/16|1/8|1/4|1/2)$", None), (r"^(final)$", "final"), (r"^(bronze|3rd place( final)?|third place.*)$", "3rd"),
+            (r"^quarter-?finals?$", "1/4"), (r"^semi-?finals?$", "1/2"), (r"^(8th finals|round of 16)$", "1/8"),
+            (r"^(16th finals|round of 32)$", "1/16"), (r"^(1st preliminary round)$", "prelim-1"),
+            (r"^(2nd preliminary round)$", "prelim-2"), (r"^(preliminary round)$", "prelim"),
+            (r"^(qualifying round|play-?off( round)?s?)$", "playoff")]
+ROUND_AR = {"1/64": "دور الـ128", "1/32": "دور الـ64", "1/16": "دور الـ32", "1/8": "دور الـ16", "1/4": "ربع النهائي",
+            "1/2": "نص النهائي", "final": "النهائي", "3rd": "مباراة المركز الثالث", "prelim-1": "الدور التمهيدي الأول",
+            "prelim-2": "الدور التمهيدي الثاني", "prelim": "الدور التمهيدي", "playoff": "الملحق"}
+
+
+def round_key(r):
+    """FotMob round labels -> one key per round: matchdays "1", "2" ...; knockouts 1/16 ... 1/2, final, 3rd;
+    prelim-1, prelim-2, prelim, playoff. "Group Stage - Round 3" -> "3", "Quarter-finals" -> "1/4",
+    "8th Finals" -> "1/8", "3rd Place Final"/"bronze" -> "3rd". No spaces, so it is safe in a URL."""
+    if r in (None, ""):
+        return None
+    t = str(r).strip()
+    if t.isdigit():
+        return t
+    low = t.lower()
+    m = re.match(r"^(?:group stage\s*-\s*)?(?:round|matchday|group stage round)\s*(\d+)$", low)
+    if m:
+        return m.group(1)
+    for pat, key in _KO_KEYS:
+        if re.match(pat, low):
+            return key or low
+    return re.sub(r"\s+", "-", low)
+
+
+def round_ar(key):
+    if not key:
+        return None
+    return f"الجولة {key}" if key.isdigit() else ROUND_AR.get(key)
+
+
+def placeholder_ar(name):
+    """Bracket placeholders FotMob leaves in English: "Winner SF 1" -> «الفايز من نص النهائي 1»."""
+    m = re.match(r"^(Winner|Loser)\s+(SF|QF|R16|R32)\s*(\d+)$", str(name or "").strip(), re.I)
+    if not m:
+        return None
+    stage = {"SF": "نص النهائي", "QF": "ربع النهائي", "R16": "دور الـ16", "R32": "دور الـ32"}[m.group(2).upper()]
+    return f"{'الفايز' if m.group(1).lower() == 'winner' else 'الخاسر'} من {stage} {m.group(3)}"
+
+
+def _placeholder(ref, tbd):
+    """A TBD bracket slot ("Winner SF 1", FotMob gives it a fake team id): Arabic name, no logo, flagged."""
+    ar = placeholder_ar(ref.get("name")) if tbd else None
+    return {**ref, "name_ar": ar, "logo": None, "placeholder": True} if ar else ({**ref, "placeholder": True} if tbd else ref)
+
+
 PERIODS = (("1H", "firstHalfStarted", "firstHalfEnded", 0), ("2H", "secondHalfStarted", "secondHalfEnded", 45),
            ("ET1", "firstExtraHalfStarted", None, 90), ("ET2", "secondExtraHalfStarted", None, 105))
 
@@ -103,7 +153,7 @@ class FotMob(Source):
     # ---------- helpers ----------
     def _team(self, tid, name):
         tid = S._int(tid)
-        return S.team_ref(tid, name, self.names.get("teams", {}).get(str(tid)))
+        return S.team_ref(tid, name, self.names.get("teams", {}).get(str(tid)) if tid else placeholder_ar(name))
 
     def _match(self, *, mid, comp, status_block, home, away, round_=None, stage=None, season=None,
                home_score=None, away_score=None, pens=None, time_tbd=False):
@@ -114,7 +164,7 @@ class FotMob(Source):
             score = score_of((status_block or {}).get("scoreStr"), home_score, away_score)
         return {
             "id": S._int(mid), "comp": S._int(comp), "season": season,
-            "round": None if round_ in (None, "") else str(round_), "stage": stage or None,
+            "round": round_key(round_), "round_ar": round_ar(round_key(round_)), "stage": stage or None,
             **kickoff_pair(ko), "time_tbd": bool(time_tbd or (status_block or {}).get("matchTimeTbd")),
             "status": status, "status_detail": detail, "minute": minute,
             "score": score, "penalties": pens,
@@ -187,7 +237,7 @@ class FotMob(Source):
                 "short_name": det.get("shortName"), "country": det.get("country"), "season": season,
                 "latest_season": det.get("latestSeason"), "seasons": (raw.get("allAvailableSeasons") or [])[:10],
                 "color": det.get("leagueColor"), "has_table": standings is not None,
-                "next_round": ((fx.get("fixtureInfo") or {}).get("activeRound") or {}).get("roundId"),
+                "next_round": round_key(((fx.get("fixtureInfo") or {}).get("activeRound") or {}).get("roundId")),
                 "source": self.name,
             },
             "matches": matches, "standings": standings, "leaders": leaders,
@@ -254,14 +304,14 @@ class FotMob(Source):
                 ties = []
                 for mu in rd.get("matchups") or []:
                     ties.append({
-                        "home": self._team(mu.get("homeTeamId"), mu.get("homeTeam")),
-                        "away": self._team(mu.get("awayTeamId"), mu.get("awayTeam")),
+                        "home": _placeholder(self._team(mu.get("homeTeamId"), mu.get("homeTeam")), mu.get("tbdTeam1")),
+                        "away": _placeholder(self._team(mu.get("awayTeamId"), mu.get("awayTeam")), mu.get("tbdTeam2")),
                         "tbd": bool(mu.get("tbdTeam1") or mu.get("tbdTeam2")),
                         "matches": [S._int(x.get("matchId")) for x in mu.get("matches") or []],
                         "aggregate": mu.get("aggregatedResult"),
                         "winner": S._int((mu.get("aggregatedWinner") or {}).get("id")) if isinstance(mu.get("aggregatedWinner"), dict) else S._int(mu.get("aggregatedWinner")),
                     })
-                bracket.append({"stage": rd.get("stage"), "ties": ties})
+                bracket.append({"stage": round_key(rd.get("stage")), "stage_ar": round_ar(round_key(rd.get("stage"))), "ties": ties})
         return {"comp": cid, "season": season, "composite": len(groups) > 1 or bool(data.get("composite")),
                 "groups": groups, "legend": legend, "bracket": bracket,
                 "order": "source", "source": self.name}
@@ -409,7 +459,7 @@ class FotMob(Source):
                     "player": None, "assist": None, "player_out": None, "score": None, "detail": None}
             p = e.get("player") or {}
             if p.get("name"):
-                base["player"] = {"id": p.get("id"), "name": p.get("name")}
+                base["player"] = {"id": S._int(p.get("id")) or None, "name": p.get("name")}
             if t == "Goal":
                 if e.get("isPenaltyShootoutEvent"):
                     typ = "shootout_goal" if not e.get("penShootoutMiss") else "shootout_miss"
@@ -436,9 +486,9 @@ class FotMob(Source):
                 typ = "sub"
                 sw = e.get("swap") or []
                 if len(sw) >= 1:
-                    base["player"] = {"id": S._int(sw[0].get("id")), "name": sw[0].get("name")}
+                    base["player"] = {"id": S._int(sw[0].get("id")) or None, "name": sw[0].get("name")}
                 if len(sw) >= 2:
-                    base["player_out"] = {"id": S._int(sw[1].get("id")), "name": sw[1].get("name")}
+                    base["player_out"] = {"id": S._int(sw[1].get("id")) or None, "name": sw[1].get("name")}
                 base["detail"] = "injury" if e.get("injuredPlayerOut") else None
             elif t == "Half":
                 typ = "half"
@@ -471,7 +521,7 @@ class FotMob(Source):
     def _player(self, p):
         perf = p.get("performance") or {}
         vl, hl = p.get("verticalLayout") or {}, p.get("horizontalLayout") or {}
-        return {"id": p.get("id"), "name": p.get("name"), "number": p.get("shirtNumber"),
+        return {"id": S._int(p.get("id")) or None, "name": p.get("name"), "number": p.get("shirtNumber"),   # FotMob sends id 0 for a player it has no page for
                 "position_id": p.get("positionId") if p.get("positionId") is not None else p.get("usualPlayingPositionId"),
                 "role": {0: "GK", 1: "DF", 2: "MF", 3: "FW"}.get(p.get("usualPlayingPositionId")),
                 "country": p.get("countryCode"), "captain": bool(p.get("isCaptain")), "age": p.get("age"),

@@ -47,12 +47,15 @@ def league_strength(p):
 
 
 # ------------------------------------------------------------------ 306 match of the week
+MOTW_V = 2     # scoring version: a new version re-picks this week
+
+
 def match_of_week(p):
     now = p.now()
     y, w, wd = now.astimezone(UAE).isocalendar()        # the UAE week (Monday 00:00 UAE), not the UTC one
     cur = p.store.get_json("arabs/match-of-week.json") or {}
     pick_ko = parse_utc(((cur.get("pick") or {}).get("kickoff_utc")))
-    if cur.get("week") == f"{y}-W{w:02d}" and pick_ko and pick_ko > now:
+    if cur.get("week") == f"{y}-W{w:02d}" and pick_ko and pick_ko > now and cur.get("method_v") == MOTW_V:
         return                  # this week's pick is still ahead; a pick that has kicked off is replaced by the next one
     derbies = {tuple(sorted(d["teams"])) for d in config.arab_derbies()}
     national_ids = {c["fotmob_team"] for c in config.countries() if c.get("arab")}
@@ -60,6 +63,10 @@ def match_of_week(p):
     comps = [c["id"] for c in p.comps]
     for cid in comps:
         watch = (p.store.get_json(f"comp/{cid}/watch.json") or {}).get("matches", {}) if cid in AN.analytics_leagues() else {}
+        rank = {}          # team -> (rank, group size): a clash near the top of a table weighs more (stakes)
+        for g in ((p.store.get_json(f"comp/{cid}/standings.json") or {}).get("groups") or []) if p.fixtures(cid) else []:
+            for r in g.get("rows") or []:
+                rank[r["team"]["id"]] = (r.get("rank") or 99, len(g["rows"]))
         for m in p.fixtures(cid) or []:
             ko = parse_utc(m.get("kickoff_utc"))
             if not ko or m["status"] != S.SCHEDULED or not (now <= ko <= now + timedelta(days=7)):
@@ -76,16 +83,30 @@ def match_of_week(p):
                 0.3 if cid in AR.CONTINENTAL or cid in (329, 290, 289, 10242) else 0.0
             derby = tuple(sorted((h, a))) in derbies
             both_arab = ((h in national_ids or is_arab_team(p, h)) and (a in national_ids or is_arab_team(p, a)))
-            score = round((wscore if wscore is not None else 50 * close) * 0.6 + 20 * derby + 25 * stage + 10 * both_arab, 1)
+            national = h in national_ids or a in national_ids
+            # «مواجهة عربية» = two Arab sides from DIFFERENT countries (two national teams, or clubs of two countries);
+            # a domestic league game is not one
+            ch, ca = (p.team_country(h) or {}).get("iso2"), (p.team_country(a) or {}).get("iso2")
+            cross = both_arab and (national or (ch and ca and ch != ca))
+            stakes = 0.0
+            if h in rank and a in rank and rank[h][1] > 1:
+                n_ = rank[h][1]
+                stakes = max(0.0, 1 - (rank[h][0] + rank[a][0] - 2) / (2 * (n_ - 1)))
+            score = round((wscore if wscore is not None else 50 * close) * 0.6 + 20 * derby + 25 * stage + 12 * cross
+                          + 15 * (h in national_ids and a in national_ids) + 10 * stakes, 1)
             cands.append({"match": m["id"], "comp": cid, "comp_name_ar": m.get("comp_name_ar"), "kickoff_utc": m["kickoff_utc"],
                           "home": m["home"], "away": m["away"], "probs": pr or None, "watchability": wscore, "derby": derby,
-                          "stage_bonus": stage, "arab_vs_arab": both_arab, "score": score})
+                          "stage_bonus": stage, "arab_vs_arab": bool(cross), "national_teams": national,
+                          "stakes": round(stakes, 2), "score": score})
     cands.sort(key=lambda c: -c["score"])
-    p.store.put_json("arabs/match-of-week.json", {"week": f"{y}-W{w:02d}", "generated": iso(now), "pick": cands[0] if cands else None,
+    p.store.put_json("arabs/match-of-week.json", {"week": f"{y}-W{w:02d}", "method_v": MOTW_V, "generated": iso(now),
+                                                  "pick": cands[0] if cands else None,
                                                   "shortlist": cands[1:6],
                                                   "method": "0.6 x watchability (or 50 x closeness) + 20 derby + 25 x stage "
-                                                            "(final 1, semi 0.7, quarter 0.5, other continental/national 0.3) + 10 Arab-vs-Arab; "
-                                                            "picked on Monday for the next 7 days"}, cache="static")
+                                                            "(final 1, semi 0.7, quarter 0.5, other continental/national 0.3) + 12 Arab-vs-Arab "
+                                                            "(two countries) + 15 when both sides are Arab national teams "
+                                                            "+ 10 x stakes (both near the top of their table); "
+                                                            "the UAE week, next 7 days, replaced once the pick has kicked off"}, cache="static")
 
 
 # ------------------------------------------------------------------ 307 golden boot, 308 player of the season, 309 per-90

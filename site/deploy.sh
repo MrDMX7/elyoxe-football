@@ -24,7 +24,7 @@ sync_assets(){ aws s3 sync out/assets "s3://$BUCKET/assets" --region $REGION --o
 sync_logos(){ aws s3 sync out/logo "s3://$BUCKET/logo" --region $REGION --only-show-errors --cache-control "public,max-age=604800"; }
 sync_assets || { echo "assets sync hiccup; retrying" >&2; sleep 5; sync_assets; }   # one retry, as for the pages: a single S3 blip failed the 23:25 run
 sync_logos || { echo "logo sync hiccup; retrying" >&2; sleep 5; sync_logos; }
-sync_pages(){ aws s3 sync out "s3://$BUCKET" --region $REGION --only-show-errors --delete --exclude "assets/*" --exclude "logo/*" --exclude "next/*" --cache-control "public,max-age=60"; }
+sync_pages(){ aws s3 sync out "s3://$BUCKET" --region $REGION --only-show-errors --delete --exclude "assets/*" --exclude "logo/*" --exclude "next/*" --exclude "google*.html" --cache-control "public,max-age=60"; }
 sync_pages || { echo "sync hiccup; retrying" >&2; sleep 5; sync_pages; }   # transient S3 stream errors on a few thousand small files
 echo "$NOW" > cache/last_pages
 # W4.7: pages, /og/, /tn/ and sw.js are served with max-age=60 (CachingOptimized honours it) and /assets/ is content-hashed, so the cache

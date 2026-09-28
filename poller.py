@@ -41,6 +41,7 @@ from timeutil import now_utc, parse_utc, iso, uae_date, UAE  # noqa: E402
 HTTP = Http()                     # module level: a warm Lambda container keeps the source cache
 _NAMES = {"stamp": None, "data": None}
 NATIONAL = 5789
+ARAB_NATIONAL = {c["fotmob_team"] for c in config.countries() if c.get("arab") and c.get("fotmob_team")}
 NOT_READY_RETRY = 30             # minutes: an analytics step whose inputs were not ready runs again this soon
 CONVERT_ERRORS = (FetchError, S.Invalid, KeyError, TypeError, ValueError, IndexError, AttributeError)
 
@@ -101,7 +102,8 @@ class Poller:
         print(msg)
 
     def tracked(self, m):
-        return m.get("comp") in self.comp_ids or NATIONAL in ((m.get("home") or {}).get("id"), (m.get("away") or {}).get("id"))
+        """Covered competitions, plus every match of an Arab national team (friendlies included: QA #11/#71)."""
+        return m.get("comp") in self.comp_ids or bool(ARAB_NATIONAL & {(m.get("home") or {}).get("id"), (m.get("away") or {}).get("id")})
 
     def fixtures(self, cid):
         """The competition's current normalized fixtures (this run's refresh, else the published file)."""
@@ -193,8 +195,31 @@ class Poller:
             return None
         return self.venues.resolve(m, fv, un)
 
+    def note_time_tbd(self, fixtures):
+        """Team pages carry FotMob's matchTimeTbd flag, league pages do not (the Asian Cup's placeholder 18:00):
+        remember which scheduled matches have no confirmed hour (aux time_tbd_<role>, read by enrich)."""
+        tb = self.aux(f"time_tbd_{self.role}")
+        for m in fixtures or []:
+            if m.get("id") and m.get("status") == S.SCHEDULED:
+                if m.get("time_tbd"):
+                    tb[str(m["id"])] = m.get("kickoff_utc")
+                else:
+                    tb.pop(str(m["id"]), None)
+
+    def _time_tbd(self, m):
+        if not m.get("id") or m.get("status") != S.SCHEDULED:
+            return False
+        k = str(m["id"])
+        for role in ("poller", "analytics"):
+            v = self.aux(f"time_tbd_{role}").get(k)
+            if v is not None and v == m.get("kickoff_utc"):
+                return True
+        return False
+
     def enrich(self, m, full=False):
         m = dict(m)
+        if not m.get("time_tbd") and self._time_tbd(m):
+            m["time_tbd"] = True
         m["comp_name_ar"] = self.comp_name_ar(m.get("comp"))
         if m.get("status") == S.SCHEDULED and m.get("comp") in self.probs_comps:
             pr = AN.probs_for(self, m)
@@ -335,6 +360,35 @@ class Poller:
         if d["status"] == S.FINISHED and d.get("comp") in self.comp_ids:
             self.add_ledger(d)
         return d
+
+    def minimal_match_files(self, matches, days=7, limit=40):
+        """match/<id>.json for every scheduled match in the next `days` days that has no detail yet (QA #14): the
+        fixture summary + head-to-head from h2h/<a>-<b>.json, `minimal: true`. A page opened early can then poll it
+        and go live; the real detail (prematch, live) replaces it."""
+        now = self.now()
+        done = self.st.setdefault("mfile", {})
+        for k in [k for k, v in done.items() if _age_min(v, now) > 60 * 24]:
+            del done[k]                                  # kickoff passed a day ago
+        n = 0
+        for m in matches:
+            ko = parse_utc(m.get("kickoff_utc"))
+            mid = m.get("id")
+            if not mid or m.get("status") != S.SCHEDULED or not ko or not (now <= ko <= now + timedelta(days=days)):
+                continue
+            if str(mid) in self.st.get("detail_at", {}) or done.get(str(mid)) == m["kickoff_utc"] or n >= limit:
+                continue
+            a, b = sorted((m["home"]["id"], m["away"]["id"])) if m["home"]["id"] and m["away"]["id"] else (None, None)
+            pair = self.store.get_json(f"h2h/{a}-{b}.json") if a else None
+            h2h = None
+            if pair and pair.get("matches"):
+                w = pair.get("wins") or {}
+                h2h = {"summary": {"home_wins": w.get(str(m["home"]["id"]), 0), "draws": w.get("draws", 0),
+                                   "away_wins": w.get(str(m["away"]["id"]), 0)}, "matches": pair["matches"]}
+            doc = {**m, "minimal": True, "coverage": None, "periods": {}, "events": [], "lineups": None, "stats": [],
+                   "xg": None, "shotmap": None, "momentum": None, "highlights": None, "h2h": h2h, "generated": iso(now)}
+            self.store.put_json(f"match/{mid}.json", doc, cache="hot" if self._near_kickoff(m) else "warm")
+            done[str(mid)] = m["kickoff_utc"]
+            n += 1
 
     def _near_kickoff(self, d):
         """Scheduled but within kickoff - prematch_minutes .. kickoff + 15 min: cache like a live file (20 s), so the
@@ -492,8 +546,12 @@ class Poller:
             self.st.setdefault("teams", {})[str(t["id"])] = [t["name"], t.get("name_ar")]
         # fixtures
         enriched = [self.enrich(m) for m in matches]
+        open_rounds = sorted({str(m["round"]) for m in enriched if m.get("round") and m.get("status") not in (S.FINISHED, S.CANCELLED, S.AWARDED)},
+                             key=lambda r: (not r.isdigit(), int(r) if r.isdigit() else 0, r))
         fx = {"comp": cid, "season": season, "generated": iso(now), "source": source,
               "next_round": data["competition"].get("next_round"), "matches": enriched,
+              # rounds with a match still to play, dated or not (uaepl.ae rounds 7-26 have no kickoff yet)
+              "open_rounds": open_rounds, "rounds_left": len(open_rounds),
               "note": "FotMob fixtures; entries with id=null and ext_id uaepl:* are official uaepl.ae fixtures FotMob has not published yet"
               if comp.get("uaepl") else None}
         self.fixture_cache[cid] = enriched
@@ -530,6 +588,10 @@ class Poller:
             if tr:
                 self.store.put_json(f"comp/{cid}/transfers.json", {**tr, "generated": iso(now)}, cache="static")
         self.comp_meta(comp, data, matches, source)
+        try:
+            self.minimal_match_files(enriched)
+        except Exception as e:
+            self.store.fail("match:minimal", f"{cid}: {type(e).__name__}: {e}")
         self.write_team_calendars(cid)
         if cid in ICS_COMPS:
             self.write_comp_ics(cid, enriched)
@@ -675,6 +737,7 @@ class Poller:
         except CONVERT_ERRORS as e:
             self.store.fail(f"team:{tid}", e)
             return
+        self.note_time_tbd(t["fixtures"])
         t["fixtures"] = self.settle_fixtures([self.enrich(m) for m in t["fixtures"]])
         if t.get("national"):
             uae_clubs = {int(k) for k, v in self.st.get("team_comps", {}).items() if 538 in v or 11027 in v}
@@ -755,6 +818,10 @@ class Poller:
                                             cache="static")
             if ms["status"] == S.FINISHED:
                 done[mid] = iso(self.now())
+                focus = set(self.focus_team_ids())
+                for tid in (sc["h"], sc["a"]):
+                    if tid in focus:
+                        self.st.setdefault("due", {})[f"team:{tid}"] = None     # squad goals etc.: full refresh next run
 
     # ------------------------------------------------------------------ ledger and aggregates
     def ledger(self, cid):
@@ -873,16 +940,22 @@ class Poller:
         if len(clubs) < 2:
             return
         pairs = [(a, b) for i, a in enumerate(clubs) for b in clubs[i + 1:]]
-        known = {}
-        for m in (self.fixture_cache.get(538) or []) + (self.aux("prev_season").get("538") or {}).get("matches", []):
+        known, fin = {}, {}
+        for m in (self.fixtures(538) or []) + (self.aux("prev_season").get("538") or {}).get("matches", []):
             if m.get("id"):
-                known.setdefault(tuple(sorted((m["home"]["id"], m["away"]["id"]))), m["id"])
+                k = tuple(sorted((m["home"]["id"], m["away"]["id"])))
+                known.setdefault(k, m["id"])
+                if m.get("status") == S.FINISHED and (m.get("kickoff_utc") or "") > (fin.get(k) or ("", 0))[0]:
+                    fin[k] = (m.get("kickoff_utc") or "", m["id"])
+        # the latest FINISHED meeting: FotMob's h2h block lists the meetings before the match it hangs on, so an
+        # older via-match missed the newest games (Wahda-Ain stopped at 2025-02-27); that match is added itself
+        known.update({k: v[1] for k, v in fin.items()})
         n = 0
         for a, b in pairs:
             if n >= limit or not self.has_time(5):
                 break
-            if not self.due("h2h", 7 * 1440, f"{a}-{b}"):
-                continue
+            if not self.due("h2h", 7 * 1440, f"{a}-{b}") and f"{a}-{b}" in self.st.get("h2h_v2", {}):
+                continue                    # files written before the via match / upcoming split are rebuilt once
             mid = known.get((a, b))
             if not mid:
                 continue
@@ -893,9 +966,18 @@ class Poller:
                 continue
             h = d.get("h2h")
             n += 1
+            if not h or not h.get("matches"):
+                continue                    # not marked: tried again next run
             self.mark("h2h", f"{a}-{b}")
-            if not h:
-                continue
+            h = {**h, "matches": list(h["matches"])}
+            if d.get("status") == S.FINISHED and d.get("score") and all(x.get("id") != d["id"] for x in h["matches"]):
+                h["matches"].insert(0, {"id": d["id"], "kickoff_utc": d.get("kickoff_utc"), "comp": d.get("comp"),
+                                        "home": {k: d["home"].get(k) for k in ("id", "name", "name_ar", "logo")},
+                                        "away": {k: d["away"].get(k) for k in ("id", "name", "name_ar", "logo")},
+                                        "score": d["score"]})
+            played, upcoming = AR.split_h2h(h["matches"])
+            h = {**h, "matches": played}
+            self.st.setdefault("h2h_v2", {})[f"{a}-{b}"] = 1
             per = {str(a): 0, str(b): 0, "draws": 0}
             for x in h["matches"]:
                 sc = x.get("score")
@@ -908,7 +990,7 @@ class Poller:
                     if str(w) in per:
                         per[str(w)] += 1
             self.store.put_json(f"h2h/{a}-{b}.json", {"teams": [a, b], "generated": iso(self.now()),
-                                                     "wins": per, "matches": h["matches"], "via_match": mid,
+                                                     "wins": per, "matches": h["matches"], "upcoming": upcoming, "via_match": mid,
                                                      "note": "all meetings FotMob lists for this pair (its depth, all competitions)"},
                                 cache="static")
             self.st.setdefault("h2h_index", {})[f"{a}-{b}"] = len(h["matches"])
@@ -1095,6 +1177,9 @@ class Poller:
             if comp.get("kind") == "league" and self.due("prev", 1440, comp["id"]):
                 self.prev_season(comp)
         self.repolls()
+        if not live and self.due("dormant_check", 60) and self.has_time(10):
+            self.recheck_dormant()
+            self.mark("dormant_check")
         try:
             self.patch_team_files()
         except Exception as e:
@@ -1122,6 +1207,19 @@ class Poller:
                     self.store.fail(f"insights:{cid}", f"{type(e).__name__}: {e}")
                     self.mark("insights", cid)
 
+    NATIONAL_COMPS = (329, 290, 10609, 10197, 77, 10242, 11156, 114)
+
+    def national_trigger(self):
+        """The national step (Elo, Gulf Cup / Asian Cup simulations, archives, nations h2h) is daily; a national-team
+        match that just finished must not wait a day (the Gulf Cup sim still gave eliminated teams a chance). When the
+        number of finished matches in the national competitions changes, run it now."""
+        fin = {str(c): sum(1 for m in self.fixtures(c) or [] if m.get("status") == S.FINISHED) for c in self.NATIONAL_COMPS}
+        seen = self.an_state.setdefault("national_fin", {})
+        if seen and seen != fin:
+            self.dues().pop("national", None)
+            self.note("national step due now: " + ", ".join(k for k in fin if fin[k] != seen.get(k)))
+        self.an_state["national_fin"] = fin
+
     def draw_triggers(self):
         done = self.an_state.setdefault("draw_done", {})
         for cid, at in (self.st.get("draw_trigger") or {}).items():
@@ -1145,6 +1243,7 @@ class Poller:
         steps = [
             ("live_watchdog", 0, lambda: self.live_watchdog(self.store.get_json("live.json") or {})),
             ("push_key", 1440, lambda: PUSH.publish_key(self)),
+            ("national_trigger", 0, self.national_trigger),
             ("history", 0, lambda: AN.history_step(self, limit=20)),
             ("records_book", 1440, self.records_books),
             ("danger", 1440, lambda: AN.danger(self)),
@@ -1338,6 +1437,20 @@ class Poller:
             if cc:
                 return cc
         return None
+
+    def recheck_dormant(self):
+        """A competition flagged dormant is refreshed only daily, so one bad source answer (no fixtures, 47 and 329 on
+        2026-09-28) kept it «stopped» for a day. Hourly: a dormant competition whose last good fixture list has a
+        kickoff from 3 days ago to 30 days ahead is set back to active and refreshed on the next run."""
+        now = self.now()
+        for cid_s, dormant in list(self.st.get("dormant", {}).items()):
+            if not dormant:
+                continue
+            kos = [parse_utc(m.get("kickoff_utc")) for m in self.fixtures(int(cid_s)) or [] if m.get("kickoff_utc")]
+            if any(k and now - timedelta(days=3) <= k <= now + timedelta(days=30) for k in kos):
+                self.st["dormant"][cid_s] = False
+                self.st.setdefault("due", {})[f"comp:{cid_s}"] = None
+                self.note(f"comp {cid_s}: fixtures in the window, no longer dormant")
 
     def arab_club_ids(self):
         """Clubs of the Arab leagues (club_squad_comps) other than the focus teams, stalest first."""

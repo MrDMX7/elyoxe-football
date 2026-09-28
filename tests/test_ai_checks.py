@@ -139,3 +139,18 @@ def test_meta_phrases_and_24h_times():
     assert gen.grammar("يوم 2 أكتوبر 2026 الساعة 5:15 عصرا بتوقيت الإمارات") == "يوم 2 أكتوبر 2026 الساعة 17:15 بتوقيت الإمارات"
     assert gen.grammar("الساعة 9:30 مساءً") == "الساعة 21:30"
     assert gen.grammar("الساعة 19:45") == "الساعة 19:45"
+
+def test_qa_0928_day_word_and_forbidden_forms():
+    import datetime as dt
+    now = dt.datetime(2026, 9, 28, 10)
+    assert [gen.day_word(x, now) for x in ("2026-09-28T20:00:00+04:00", "2026-09-28T15:00:00+04:00", "2026-09-29T17:00:00+04:00", "2026-10-02T17:00:00+04:00")] == ["الليلة", "اليوم", "بكرة", "الجمعة"]
+    assert gen.emirati("ووش على المحك، ومين سجل، وش صار") == "وشو على المحك، ومنو سجل، شو صار"
+    assert checks.check_history("مين كان مسيطر دقيقة بدقيقة", {})
+    assert checks.check_history("منو كان مسيطر دقيقة بدقيقة", {}) is None
+
+def test_numbers_must_come_from_the_input():
+    e = {"home_table": {"rank": 1, "pts": 6, "gf": 6, "ga": 0, "form": ["W", "W"]}, "tifo_probabilities": {"home": 0.426, "draw": 0.257, "away": 0.317}, "kickoff_label": "الجمعة 16 أكتوبر، 17:05"}
+    assert checks.check_numbers("منتخب الإمارات سجل 7 أهداف", e)          # QA: invented goals
+    assert checks.check_numbers("بنسبة 55%", e)                           # invented odds
+    for ok in ("سجل 6 أهداف وما استقبل", "يونايتد 42.6% والتعادل 26%", "فاز 2 من 2", "الجمعة 16 أكتوبر، 17:05"):
+        assert checks.check_numbers(ok, e) is None

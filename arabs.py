@@ -128,6 +128,9 @@ def derbies(p, limit=4):
         entry = {"teams": [a, b], "name_ar": d["name_ar"], "city_ar": d.get("city_ar"), "country": d.get("country"),
                  "comp": d.get("comp"), "h2h": f"h2h/{a}-{b}.json"}
         out.append(entry)
+        v2 = p.an_state.setdefault("derby_v2", {})
+        if f"{a}-{b}" not in v2:        # written before the file carried the via match / split upcoming: rebuild once
+            p.dues().pop(f"arab_derby:{a}-{b}", None)
         if limit <= 0 or not p.has_time(6) or not p.due("arab_derby", 7 * 1440, f"{a}-{b}"):
             continue
         mid = _last_meeting(p, a, b, d.get("comp"))
@@ -135,6 +138,7 @@ def derbies(p, limit=4):
             entry["h2h"] = None
             entry["missing"] = "no stored meeting to read the head-to-head from (club not in a covered league)"
             p.mark("arab_derby", f"{a}-{b}")
+            v2[f"{a}-{b}"] = "no-meeting"
             continue
         try:
             m = p.fm.match(mid)
@@ -145,14 +149,18 @@ def derbies(p, limit=4):
         h = m.get("h2h")
         if not h or not h.get("matches"):
             p.store.fail("arab-derbies", f"{a}-{b}: FotMob match {mid} has no head-to-head block yet")
-            continue                    # not marked: tried again next run, not in a week
+            p.dues()[f"arab_derby:{a}-{b}"] = iso(p.now() - timedelta(days=6))     # again in a day, not a week
+            v2.setdefault(f"{a}-{b}", "no-h2h")
+            continue
         p.mark("arab_derby", f"{a}-{b}")
+        v2[f"{a}-{b}"] = "ok"
         matches = list(h["matches"])
         if m.get("status") == "finished" and m.get("score") and all(x.get("id") != m["id"] for x in matches):
             # FotMob's head-to-head block lists the meetings before the match it hangs on: add that match itself
             matches.insert(0, {"id": m["id"], "kickoff_utc": m.get("kickoff_utc"), "comp": m.get("comp"),
                                "home": {k: m["home"].get(k) for k in ("id", "name", "name_ar", "logo")},
                                "away": {k: m["away"].get(k) for k in ("id", "name", "name_ar", "logo")}, "score": m["score"]})
+        matches, upcoming = split_h2h(matches)
         wins = {str(a): 0, str(b): 0, "draws": 0}
         for x in matches:
             sc = x.get("score")
@@ -165,13 +173,28 @@ def derbies(p, limit=4):
                 if str(wnr) in wins:
                     wins[str(wnr)] += 1
         p.store.put_json(f"h2h/{a}-{b}.json", {"teams": [a, b], "name_ar": d["name_ar"], "generated": iso(p.now()),
-                                              "wins": wins, "matches": matches, "via_match": mid,
+                                              "wins": wins, "matches": matches, "upcoming": upcoming, "via_match": mid,
                                               "check": _h2h_check(p, a, b, d.get("comp"), matches),
                                               "sources": [f"https://www.fotmob.com/match/{mid}",
                                                           f"https://www.fotmob.com/api/data/matchDetails?matchId={mid}"],
                                               "note": "all meetings FotMob lists for this pair (its depth, all competitions)"},
                          cache="static")
+    v2 = p.an_state.get("derby_v2", {})
+    for e in out:               # derbies.json never points at a file that does not exist
+        st = v2.get("-".join(map(str, e["teams"])))
+        if st in ("no-meeting", "no-h2h") and e.get("h2h"):
+            e["h2h"] = None
+            e["missing"] = ("no stored meeting to read the head-to-head from (club not in a covered league)" if st == "no-meeting"
+                            else "FotMob has no head-to-head for this pair yet (retried daily)")
     p.store.put_json("derbies.json", {"generated": iso(p.now()), "derbies": out}, cache="static")
+
+
+def split_h2h(matches):
+    """-> (played with a score, newest first; upcoming meetings, soonest first). FotMob's block can carry the next
+    fixture too: it is not a result."""
+    played = sorted([x for x in matches if x.get("score")], key=lambda x: x.get("kickoff_utc") or "", reverse=True)
+    upcoming = sorted([{**x, "status": "scheduled"} for x in matches if not x.get("score")], key=lambda x: x.get("kickoff_utc") or "")
+    return played, upcoming
 
 
 def _h2h_check(p, a, b, comp, matches):
@@ -295,6 +318,7 @@ def national_hub(p, limit=6):
         nxt = min((m for m in fx if m["status"] == S.SCHEDULED and parse_utc(m.get("kickoff_utc")) and parse_utc(m["kickoff_utc"]) > now),
                   key=lambda m: m["kickoff_utc"], default=None)
         last = max((m for m in fx if m["status"] == S.FINISHED and m.get("kickoff_utc")), key=lambda m: m["kickoff_utc"], default=None)
+        nxt, last = _fresh(p, nxt), _fresh(p, last)
         groups = []
         for cid in QUALIFYING:
             st = p.store.get_json(f"comp/{cid}/standings.json") if p.has_time(3) else None
@@ -316,6 +340,15 @@ def national_hub(p, limit=6):
                                              "note": "FIFA rank from FotMob (the national team's page); Tifo rating = national Elo "
                                                      "(ratings/national.json); groups = current tables of covered qualifying competitions"},
                      cache="static")
+
+
+def _fresh(p, m):
+    """A match from a (daily) team-page snapshot, overlaid with our tracked fixture when we have one: the page had
+    Tunisia v Botswana with the sides swapped after FotMob corrected it (QA #20/#41)."""
+    if not m or m.get("comp") not in p.comp_ids:
+        return m
+    f = next((x for x in p.fixtures(m["comp"]) or [] if x.get("id") == m.get("id")), None)
+    return {**m, **{k: f.get(k) for k in ("kickoff_utc", "status", "score", "home", "away")}} if f else m
 
 
 # ------------------------------------------------------------------ 279 tonight
@@ -566,10 +599,12 @@ def national_teams(p, limit=6):
         if n < limit and p.has_time(6) and p.due("natteam", 720, tid):
             try:
                 t = p.fm.team(tid)
+                p.note_time_tbd(t.get("fixtures"))
                 t["fixtures"] = p.settle_fixtures(t.get("fixtures") or [])
-                p.store.put_json(f"national/{tid}/team.json", {**t, "country_info": {"iso2": c["iso2"], "name_ar": c["name_ar"],
-                                                                                      "national": True},
-                                                               "generated": iso(p.now())}, cache="static")
+                doc = {**t, "country_info": {"iso2": c["iso2"], "name_ar": c["name_ar"], "national": True}, "generated": iso(p.now())}
+                p.store.put_json(f"national/{tid}/team.json", doc, cache="static")
+                if tid != 5789:         # the UAE's team/5789.json is the poller's richer file; the other 21 get the same path
+                    p.store.put_json(f"team/{tid}.json", doc, cache="static")   # (squad, friendlies included) for team pages
                 p.aux("national_coaches")[str(tid)] = t.get("coach")
                 fr = t.get("fifa_ranking")
                 if fr and fr.get("updated"):

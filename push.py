@@ -171,15 +171,20 @@ def _vapid():
 def _send_one(sub, data, urgency, session=None):
     """-> 'ok' | 'gone' | 'error: ...'."""
     from pywebpush import webpush, WebPushException
+    key = _vapid()          # outside the try: a problem on OUR side must never read as "this subscription is broken"
     try:
         webpush({"endpoint": sub["endpoint"], "keys": {"p256dh": sub["p256dh"], "auth": sub["auth"]}},
-                data=json.dumps(data, ensure_ascii=False), vapid_private_key=_vapid(), vapid_claims={"sub": SUBJECT},
+                data=json.dumps(data, ensure_ascii=False), vapid_private_key=key, vapid_claims={"sub": SUBJECT},
                 ttl=600, headers={"Urgency": urgency}, timeout=10, requests_session=session)
         return "ok"
     except WebPushException as e:
         code = getattr(e.response, "status_code", None)
+        if code is None and "encrypt" in str(e).lower():
+            return "gone"               # keys that cannot encrypt: a fake or broken subscription, never deliverable
         return "gone" if code in (404, 410) else f"error: HTTP {code}: {str(e)[:120]}"
-    except Exception as e:
+    except (ValueError, TypeError) as e:  # p256dh not a P-256 point / auth malformed: encryption fails before any request
+        return "gone"
+    except Exception as e:              # network trouble: keep the subscription
         return f"error: {type(e).__name__}: {str(e)[:120]}"
 
 
@@ -241,6 +246,7 @@ def run_jobs(jobs, table, send=None, subs_override=None):
 def handler(event, context):
     import boto3
     table = boto3.resource("dynamodb", region_name=REGION).Table(TABLE)
+    _vapid()                # fail before any event is claimed if the key cannot be loaded
     res = run_jobs(event.get("jobs") or [], table, subs_override=event.get("test_subscriptions"))
     print(json.dumps({"push": res}, ensure_ascii=False))
     return res
