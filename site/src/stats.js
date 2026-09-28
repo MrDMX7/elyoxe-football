@@ -323,6 +323,7 @@
     return '<a class="btn" href="' + esc(ch.search_url_template.replace("{q}", encodeURIComponent(q))) + '" rel="noopener" target="_blank">شوف الملخص الرسمي (' + esc(ch.name) + ")</a>";
   };
   function v(f){ return f && f.value != null && f.value !== "" ? f.value : null; }
+  function va(f){ return f && f.value_ar ? f.value_ar : v(f); }   // QA 31: research notes carry value_ar next to the English value
   function priceAr(p){ if (p && typeof p === "object"){ var a = p.min, z = p.max || p.max_on_sale; return a != null && z != null && +a !== +z ? a + " - " + z : String(a != null ? a : z); } return String(p); }   // QA 31: «20 درهم», not «20 - 20»
   function enAr(t){ return String(t).replace(/Parking available \(paid\/free not published\)/i, "في مواقف، وما منشور إذا مجانية أو بفلوس").replace(/Free parking/i, "مواقف مجانية").replace(/(\d+)\s*minutes?\s*walking distance/i, "$1 دقايق مشي").replace(/^Nearest station:?\s*/i, "أقرب محطة: ").replace(/^Metro:\s*no.*$/i, "ما في مترو قريب").replace(/^Metro:\s*yes,?\s*/i, "مترو: ").replace(/^Bus:\s*yes,?\s*about\s*([\d.]+)\s*km/i, "باص على بعد حوالي $1 كم").replace(/^Bus:\s*no.*$/i, "ما في باص قريب").replace(/^Parking:\s*/i, "مواقف: "); }
   S.stadium = function(x, T2){
@@ -334,9 +335,9 @@
     var addr = v(L.address_ar) || v(L.address_en); if (addr) rows.push(["العنوان", esc(addr)]);
     var gm = v(L.google_maps); if (gm) rows.push(["الخريطة", '<a href="' + esc(gm) + '" rel="noopener">افتحه في خرايط قوقل</a>']);
     var AR = function(t){ t = t == null ? "" : String(enAr(t)); return /[\u0600-\u06FF]/.test(t) ? t : ""; };   // W1.7: raw Latin research notes never reach the page
-    var metro = AR(v(G.metro_official)); if (metro) rows.push(["المترو", esc(metro)]);
-    var bus = (G.bus || []).map(v).filter(Boolean).map(AR).filter(Boolean); if (bus.length) rows.push(["الباص", esc(bus.join("، "))]);
-    var park = AR(v(G.parking)); rows.push(["المواقف", park ? esc(park) : '<span class="muted">ما في معلومة منشورة</span>']);
+    var metro = AR(va(G.metro_official)); if (metro) rows.push(["المترو", esc(metro)]);
+    var bus = (G.bus || []).map(va).filter(Boolean).map(AR).filter(Boolean); if (bus.length) rows.push(["الباص", esc(bus.join("، "))]);
+    var park = AR(va(G.parking)); rows.push(["المواقف", park ? esc(park) : '<span class="muted">ما في معلومة منشورة</span>']);
     var pf = v(K.platform); if (pf){ var pn = String(pf.name || pf).split(/\s*[(+]/)[0]; rows.push(["التذاكر", pf.url ? '<a class="lat" href="' + esc(pf.url) + '" rel="noopener">' + esc(pn) + "</a>" : esc(pn)]); }
     var pr = v(K.price_range_aed); if (pr) rows.push(["أسعار التذاكر", '<span class="num">' + esc(priceAr(pr)) + "</span> درهم"]);
     var fac = [["air_conditioned_stands", "مدرجات مكيّفة"], ["covered_seating", "مدرجات مظللة"], ["family_section", "قسم عائلات"], ["prayer_room", "مصلى"]].filter(function(f){ return v(F[f[0]]) === true; }).map(function(f){ return f[1]; });
@@ -353,8 +354,8 @@
     var pf = v(K.platform); if (pf) rows.push('<li>التذاكر: ' + (pf.url ? '<a class="lat" href="' + esc(pf.url) + '" rel="noopener">' + esc(String(pf.name || "").split(/\s*[(+]/)[0]) + "</a>" : esc(pf.name)) + (v(K.price_range_aed) ? ' <span class="muted small">(' + esc(priceAr(v(K.price_range_aed))) + " درهم)</span>" : "") + "</li>");
     var fe = v(K.free_entry); if (fe) rows.push("<li>الدخول مجاني للأطفال والنساء وكبار المواطنين حسب الرابطة، والتذاكر تنصرف من أكشاك الملعب يوم المباراة.</li>");
     // QA 31: a note still in English after enAr() is left out (no English sentences in the Arabic page)
-    var park = v(G.parking), parkAr = park ? enAr(park) : ""; rows.push("<li>المواقف: " + (parkAr && /[\u0600-\u06FF]/.test(parkAr) && !/[A-Za-z]{4,}\s+[A-Za-z]{3,}/.test(parkAr) ? esc(parkAr) : '<span class="muted">ما في معلومة منشورة</span>') + "</li>");
-    var metro = v(G.metro_official), metroAr = metro ? enAr(metro) : ""; if (metroAr && /[\u0600-\u06FF]/.test(metroAr) && !/[A-Za-z]{4,}\s+[A-Za-z]{3,}/.test(metroAr)) rows.push("<li>" + esc(metroAr) + "</li>");
+    var park = va(G.parking), parkAr = park ? enAr(park) : ""; rows.push("<li>المواقف: " + (parkAr && /[\u0600-\u06FF]/.test(parkAr) && !/[A-Za-z]{4,}\s+[A-Za-z]{3,}/.test(parkAr) ? esc(parkAr) : '<span class="muted">ما في معلومة منشورة</span>') + "</li>");
+    var metro = va(G.metro_official), metroAr = metro ? enAr(metro) : ""; if (metroAr && /[\u0600-\u06FF]/.test(metroAr) && !/[A-Za-z]{4,}\s+[A-Za-z]{3,}/.test(metroAr)) rows.push("<li>" + esc(metroAr) + "</li>");
     return '<ul class="facts-l md">' + rows.join("") + '</ul><p><a href="/s/' + esc(x.id) + '/">دليل الملعب كامل</a></p>';
   };
   // ---- 175: travel with your club (continental away matches)
