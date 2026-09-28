@@ -284,6 +284,10 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
     x._na = []; for (const k of Object.keys(x)) if (x[k] && x[k].available === false){ x._na.push(k); x[k] = null; }
     return { c, st, fx, stats, x };
   });
+  // 2026-09-28: a fixtures file that failed to fetch dropped its competition's matches in silence, and `sync --delete` then took
+  // all 78 UAE match pages off the site (under the 15% page guard in deploy.sh). A competition the index counts matches for must bring them.
+  { const lost = compData.filter(({ c, fx }) => (c.matches || 0) > 0 && !(fx && fx.matches && fx.matches.length)).map(({ c }) => c.id);
+    if (lost.length){ console.error(`fixtures missing for competition ${lost.join(", ")}: not building, the live site keeps its last good build`); process.exit(3); } }
   const day = await get(`day/${today.replace(/-/g, "")}.json`) || { matches:[] };
   const arabRatings = await get("ratings/arab-clubs.json", 1);
   const [ratings, compare, fifa, qual, abroad, natRatings] = await Promise.all(["ratings/uae-clubs.json", "leagues/compare.json", "national/5789/fifa.json", "national/5789/qualifying.json", "national/uae-abroad.json", "ratings/national.json"].map(f => get(f, 1)));
