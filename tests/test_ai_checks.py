@@ -147,3 +147,10 @@ def test_qa_0928_day_word_and_forbidden_forms():
     assert gen.emirati("ووش على المحك، ومين سجل، وش صار") == "وشو على المحك، ومنو سجل، شو صار"
     assert checks.check_history("مين كان مسيطر دقيقة بدقيقة", {})
     assert checks.check_history("منو كان مسيطر دقيقة بدقيقة", {}) is None
+
+def test_numbers_must_come_from_the_input():
+    e = {"home_table": {"rank": 1, "pts": 6, "gf": 6, "ga": 0, "form": ["W", "W"]}, "tifo_probabilities": {"home": 0.426, "draw": 0.257, "away": 0.317}, "kickoff_label": "الجمعة 16 أكتوبر، 17:05"}
+    assert checks.check_numbers("منتخب الإمارات سجل 7 أهداف", e)          # QA: invented goals
+    assert checks.check_numbers("بنسبة 55%", e)                           # invented odds
+    for ok in ("سجل 6 أهداف وما استقبل", "يونايتد 42.6% والتعادل 26%", "فاز 2 من 2", "الجمعة 16 أكتوبر، 17:05"):
+        assert checks.check_numbers(ok, e) is None

@@ -221,6 +221,33 @@ def check_counts(text, evidence):
         if all(f.count(r) != n for f in forms): return f"«{m.group(0)}» but the form lists have {[f.count(r) for f in forms]}"
     return None
 
+def input_numbers(evidence):
+    """Every number the model was given: raw values, probabilities as percents, and the W/D/L counts of each form list."""
+    out = set()
+    def walk(o):
+        if isinstance(o, bool): return
+        if isinstance(o, (int, float)):
+            out.add(round(float(o), 1)); out.add(float(round(o)))
+            if 0 < o < 1: out.add(float(round(o * 100))); out.add(round(o * 100, 1))
+            if o < 0: out.add(float(abs(round(o))))
+        elif isinstance(o, str):
+            for m in re.finditer(r"\d+(?:\.\d+)?", o): out.add(round(float(m.group(0)), 1))
+        elif isinstance(o, dict):
+            for v in o.values(): walk(v)
+        elif isinstance(o, list):
+            if o and all(x in ("W", "D", "L") for x in o):
+                for r in "WDL": out.add(float(o.count(r)))
+                out.add(float(len(o)))
+            for v in o: walk(v)
+    walk(evidence); return out
+def check_numbers(text, evidence):
+    """Preview/quick: every number in the line must be one the model was given (catches invented goals and made-up odds)."""
+    have = input_numbers(evidence)
+    for m in re.finditer(r"(?<![\d:.])(\d+(?:\.\d+)?)(?![\d:])", text):
+        v = round(float(m.group(1)), 1)
+        if v not in have and float(round(v)) not in have: return f"number {m.group(1)} is not in the input"
+    return None
+
 LABELS = ["الفريق الأول", "الفريق الثاني", "نقطة قوة", "نقطة ضعف", "نقطة الضعف", "نقطة القوة", "مفتاح المباراة", "توقع تيفو", "توقعات تيفو", "نتايج الأسبوع", "المباراة الياية"]
 def check_generic(text, evidence):
     """Audit W1.3(a): home words at a neutral venue, «مب متوفرة», «فوزه رقم N», and a line that is only its own label."""

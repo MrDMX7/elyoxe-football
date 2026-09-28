@@ -340,6 +340,8 @@ def do_preview(m, ctx):
         t = (out.get(k) or "").strip()
         if not t: continue
         if not re.search(r"\d", t): print(f"preview {m['id']}: {k} dropped (no number): {t[:80]}", file=sys.stderr); continue   # the no-filler rule
+        bad = checks.check_numbers(t, ctx) or (None if ctx.get("tifo_probabilities") or "%" not in t else "a percentage with no Tifo odds in the input")
+        if bad: print(f"preview {m['id']}: {k} dropped ({bad}): {t[:80]}", file=sys.stderr); continue
         if keep_lines([t], rows, 1, f"preview {m['id']} {k}", ctx): items.append({"key": k, "label": labels[k], "text": t})
     if len(items) < 3: return "dropped"
     out = {"items": items, "lines": [i["text"] for i in items]}
@@ -679,7 +681,8 @@ def do_quick(m, table):
     if not out: return "fail"
     qall = [fix(grammar(emirati(l), nations(m["home"], m["away"]))) for l in out["lines"]]
     for x in [x for x in qall if ZERO.search(x)]: print(f"quick {m['id']}: zero-count line dropped: {x[:80]}", file=sys.stderr)
-    qlines = keep_lines([x for x in qall if not ZERO.search(x)], table_rows(table), 4, f"quick {m['id']}", ctx)
+    for x in [x for x in qall if checks.check_numbers(x, ctx)]: print(f"quick {m['id']}: line dropped ({checks.check_numbers(x, ctx)}): {x[:80]}", file=sys.stderr)
+    qlines = keep_lines([x for x in qall if not ZERO.search(x) and not checks.check_numbers(x, ctx)], table_rows(table), 4, f"quick {m['id']}", ctx)
     if not qlines: return "dropped"
     save("quick", str(m["id"]), {"id": m["id"], "comp": m.get("comp"), "home": m["home"]["id"], "away": m["away"]["id"], "kickoff_utc": m.get("kickoff_utc"), "day_word": ctx.get("day_word"),
                                      "title": f"مباراة {ctx.get('day_word')} في 60 ثانية" if ctx.get("day_word") else "المباراة في 60 ثانية", "lines": qlines, "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
