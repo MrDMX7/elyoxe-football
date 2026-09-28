@@ -369,6 +369,16 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | Distance for AFC away trips | Known only once that match's detail has been fetched (backfill), because the venue comes from the match detail |
 | Kickoff times for later Pro League rounds | FotMob has rounds 1–6 (42 matches). uaepl.ae has all 182 pairings, but rounds 7–26 have no dates yet (`date_tbd`) |
 
+## Web push (per team: kickoff, goal, full time)
+
+- **Subscriptions:** the cards stack's `/api/tifo/push/sub` writes them to DynamoDB `cards` (ap-south-1), `pk TIFOPUSH#<team_id>`, `sk` = sha256(endpoint)[:32], `{team, endpoint, p256dh, auth, events: [start|goal|end], created, ttl}`.
+- **`/v1/push.json`:** `{publicKey, events, subscribe}`: the VAPID public key (SSM `/elyoxe/tifo/vapid_public`), published daily by the analytics function once its role may read that parameter (`VAPID_PUBLIC_PARAM`). The same key is at `/api/tifo/push/key`.
+- **Detection (poller, `push.plan` in `fetch_detail`):** `start` when a match is live within 20 min of the first-half start; one `goal:<event_id>` per goal event (goal, own goal, penalty) first seen in the last 10 min and not taken back by a VAR `goal_disallowed*` decision for that side; `end` within 60 min of full time. Older events (a deploy, a backfill) are never pushed.
+- **Payload:** `{title, body, url: "/m/<id>/", tag: "m-<id>", team}` in Arabic, Western digits. Goal: «هدف! الإمارات 1 - 0 قطر» / «سجّل X في الدقيقة 23'» (own goal «هدف عكسي من X…», penalty «… من ركلة جزاء …»; player names from `names/players_ar.json`, else FotMob's); kickoff «بدت المباراة» / «الإمارات - قطر»; end «انتهت: الإمارات 2 - 1 قطر» / competition name.
+- **Sending:** the poller makes one asynchronous invoke per batch of new events to `elyoxe-football-push` (`push.handler`), which queries both teams' subscriptions, sends once per endpoint (a fan of both teams gets one push) with pywebpush, VAPID (`mailto:hello@elyoxe.com`), TTL 600 s and `Urgency: high` for goals, deletes a subscription on 404/410 and logs any other error.
+- **Dedupe:** `push_sent` in poller.json (no second invoke for a handed-over event) and a conditional put of `TIFOPUSHSENT#<match>` / `<event key>` in the same table before sending (at most once per event, across retries; TTL 3 days). The push function has retries off.
+- **Packaging:** `requirements-push-binary.txt` (cryptography, aiohttp: aarch64 wheels) and `requirements-push-pure.txt` (pywebpush 2.5.0, http-ece, which has no wheel, py-vapid 1.9.4 …, installed `--no-deps`).
+
 ## Live-feed watchdog and source backoff (audit W1.12)
 
 - **Poller:** in live mode, each run compares now with its last `live.json` write (`live_written_at` in poller.json).

@@ -51,7 +51,7 @@ if [ "${1:-}" = "--check" ]; then live_checks; exit 0; fi
 # 2. bundle: our modules + aarch64 wheels for the arm64 runtime (boto3 comes with the runtime)
 rm -rf build/lambda && mkdir -p build/lambda
 cp -r sources compute build/lambda/
-cp poller.py analytics.py arabs.py more.py report.py extra2.py store.py config.py timeutil.py competitions.yaml stadiums.yaml teams_ar.yaml countries.yaml derbies.yaml alltime.yaml fifa_history.json coefficients.json build/lambda/
+cp poller.py analytics.py arabs.py more.py report.py extra2.py push.py store.py config.py timeutil.py competitions.yaml stadiums.yaml teams_ar.yaml countries.yaml derbies.yaml alltime.yaml fifa_history.json coefficients.json build/lambda/
 for B in broadcast_by_country.json arab_clubs.json suspension_rules.json; do   # another agent's research (read only)
   [ -f "/root/workspace/research/tifo-2026-09-27/$B" ] && cp "/root/workspace/research/tifo-2026-09-27/$B" build/lambda/
 done
@@ -60,9 +60,16 @@ find build/lambda -name "__pycache__" -type d -prune -exec rm -rf {} +
 "$PY" -m pip install -q --disable-pip-version-check --target build/lambda \
   --platform manylinux2014_aarch64 --implementation cp --python-version 3.13 --only-binary=:all: \
   -r requirements.txt
+# web push (push.py): cryptography/cffi as aarch64 wheels; pywebpush, http-ece (sdist only) and the rest are pure
+# Python, installed without dependency resolution so pip never needs a wheel for another platform
+"$PY" -m pip install -q --disable-pip-version-check --target build/lambda \
+  --platform manylinux2014_aarch64 --platform manylinux_2_28_aarch64 --implementation cp --python-version 3.13 \
+  --only-binary=:all: -r requirements-push-binary.txt
+"$PY" -m pip install -q --disable-pip-version-check --target build/lambda --no-deps -r requirements-push-pure.txt
 "$PY" - <<'EOF'
 import sys; sys.path.insert(0, "build/lambda")
-import poller, yaml, bs4, tzdata  # noqa: F401  (import check of the bundle itself)
+import poller, yaml, bs4, tzdata, push  # noqa: F401  (import check of the bundle itself)
+import pywebpush, http_ece, py_vapid, requests  # noqa: F401
 print("bundle imports ok")
 EOF
 

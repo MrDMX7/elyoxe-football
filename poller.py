@@ -25,6 +25,7 @@ import analytics as AN  # noqa: E402
 import arabs as AR  # noqa: E402
 import more as MO  # noqa: E402
 import extra2 as X2  # noqa: E402
+import push as PUSH  # noqa: E402
 from compute import insights as IN  # noqa: E402
 import config  # noqa: E402
 from compute import winprob as WP  # noqa: E402
@@ -317,6 +318,11 @@ class Poller:
             except Exception as e:
                 self.store.fail("winprob", f"{mid}: {e}")
         full["coverage_events"] = coverage_events(d)
+        if d["status"] in S.LIVE_STATUSES or d["status"] == S.FINISHED:
+            try:
+                PUSH.plan(self, full, full)
+            except Exception as e:           # a push problem must never cost the live file
+                self.store.fail("push", f"{mid}: {type(e).__name__}: {e}")
         if d["status"] == S.FINISHED:
             self.plan_repoll(d, full, why)
             self.st.setdefault("cov_checked", {})[str(mid)] = d.get("kickoff_utc")
@@ -1111,6 +1117,7 @@ class Poller:
         """`only`: a replacement step list (tests)."""
         steps = [
             ("live_watchdog", 0, lambda: self.live_watchdog(self.store.get_json("live.json") or {})),
+            ("push_key", 1440, lambda: PUSH.publish_key(self)),
             ("history", 0, lambda: AN.history_step(self, limit=20)),
             ("records_book", 1440, self.records_books),
             ("danger", 1440, lambda: AN.danger(self)),
