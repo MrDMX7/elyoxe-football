@@ -111,7 +111,7 @@ def collect(today):
     for kind, word, minimum in (("winning", "فوز ورا فوز", 5), ("unbeaten", "بدون خسارة", 3)):
         s = (sk.get(kind) or [None])[0]
         if s and s.get("length", 0) >= minimum:
-            items.append({"kind": "streak", "label": "سلسلة شغالة", "value": str(s["length"]), "text": f"{club({'id': s['team'], 'name_ar': s.get('team_ar')})}: {s['length']} مباريات {word}",
+            items.append({"kind": "streak", "label": "سلسلة شغالة", "value": str(s["length"]), "text": f"{club({'id': s['team'], 'name_ar': s.get('team_ar')})}: {s['length']} {og.count_word(s['length'], 'match')} {word}",
                           "sub": (s.get("country") or {}).get("name_ar", ""), "team": s["team"]}); break
     # 5) league leader change (computed tables, cross-checked with the published standings)
     for c in comps:
@@ -139,10 +139,14 @@ def _date_label(d0, d1):
     a, b = dt.date.fromisoformat(d0), dt.date.fromisoformat(d1)
     return f"{a.day} {MONTHS[a.month - 1]} - {b.day} {MONTHS[b.month - 1]} {b.year}" if a.month != b.month else f"{a.day} - {b.day} {MONTHS[b.month - 1]} {b.year}"
 
-UNITS = {"top_scorer": "أهداف", "arab_star": "التقييم", "streak": "مباريات", "leader_change": "نقطة"}
+UNITS = {"top_scorer": "goal", "streak": "match", "leader_change": "point"}   # count nouns through og.count_word; arab_star's value is a rating
+def unit_for(it):
+    k = UNITS.get(it["kind"])
+    if k: return og.count_word(it["value"], k) if str(it["value"]).isdigit() else None
+    return "التقييم" if it["kind"] == "arab_star" and "." in str(it["value"]) else None
 def render_week(data, w, h):
     im = Image.new("RGB", (w, h), og.NIGHT); d = ImageDraw.Draw(im); u = w / 1080
-    band = int(h * (0.16 if h > 1500 else 0.13)); og.stand(d, 0, 0, w, band, int(40 * u), [og.NIGHT2, og.DUNE], [og.NIGHT2, og.PULSE], "week" + data["week"])
+    band = int(h * (0.16 if h > 1500 else 0.13)); og.stand(d, 0, 0, w, band, int(40 * u), [og.NIGHT2, og.DUNE], [og.NIGHT2, og.CHALK], "week" + data["week"])
     d.rectangle([0, band, w, h], fill=og.NIGHT)
     y = band + int(95 * u)
     d.text((w / 2, y), "تيفو الأسبوع", font=og.KUFI(int(84 * u)), fill=og.CHALK, anchor="mm", direction="rtl", language="ar")
@@ -157,7 +161,7 @@ def render_week(data, w, h):
         d.text((tx, cy - int(42 * u)), it["label"], font=og.KUFI(int(32 * u)), fill=og.DUNE, anchor="rm", direction="rtl", language="ar")
         d.text((tx, cy + int(8 * u)), it["text"], font=og.fit(d, it["text"], og.TXT, int(38 * u), maxw), fill=og.CHALK, anchor="rm", direction="rtl", language="ar")
         if it.get("sub"): d.text((tx, cy + int(52 * u)), it["sub"], font=og.TXT(int(26 * u)), fill=(185, 199, 192), anchor="rm", direction="rtl", language="ar")
-        unit = UNITS.get(it["kind"])
+        unit = unit_for(it)
         d.text((x0 + int(130 * u), cy - (int(14 * u) if unit else 0)), it["value"], font=og.DIG(int(110 * u)), fill=og.CHALK, anchor="mm")
         if unit: d.text((x0 + int(130 * u), cy + int(50 * u)), unit, font=og.TXT(int(24 * u)), fill=(185, 199, 192), anchor="mm", direction="rtl", language="ar")
     fy = h - int(80 * u); og.mark(d, w - int(160 * u), fy - int(28 * u), int(18 * u))
@@ -174,7 +178,9 @@ def render_star(it, week):
     d.text((w / 2, 830), name, font=og.fit(d, name, og.KUFI, 92, w - 140), fill=og.CHALK, anchor="mm", direction="rtl", language="ar")
     club_line = "، ".join(x for x in (it["text"].split(" (")[1].rstrip(")") if " (" in it["text"] else "", it.get("sub")) if x)
     d.text((w / 2, 920), club_line, font=og.TXT(40), fill=(185, 199, 192), anchor="mm", direction="rtl", language="ar")
-    stats = [(f"{it['rating']:.1f}" if it.get("rating") else None, "التقييم"), (str(it.get("goals", "")) if it.get("goals") is not None else None, "أهداف"), (str(it.get("assists", "")) if it.get("assists") is not None else None, "صناعة")]
+    stats = [(f"{it['rating']:.1f}" if it.get("rating") else None, "التقييم"),
+             (str(it["goals"]) if it.get("goals") is not None else None, og.count_word(it.get("goals") or 0, "goal")),
+             (str(it["assists"]) if it.get("assists") is not None else None, og.count_word(it.get("assists") or 0, "assist"))]
     stats = [s for s in stats if s[0]]
     for i, (v, lab) in enumerate(stats):
         x = w - (i + 0.5) * (w - 160) / len(stats) - 80

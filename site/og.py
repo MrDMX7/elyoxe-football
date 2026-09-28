@@ -21,6 +21,13 @@ KUFI = lambda s: font("kufi.ttf", s, b"ExtraBold")
 DIG = lambda s: font("barlow.ttf", s)
 TXT = lambda s: font("readex.ttf", s, b"Regular")
 
+# counted nouns in Arabic: 1 singular, 2 dual, 3-10 plural, 11+ singular (0 takes the plural). One helper for every label.
+COUNT_WORDS = {"goal": ("هدف", "هدفين", "أهداف"), "assist": ("تمريرة حاسمة", "تمريرتين حاسمتين", "تمريرات حاسمة"),
+               "match": ("مباراة", "مباراتين", "مباريات"), "point": ("نقطة", "نقطتين", "نقاط")}
+def count_word(n, kind):
+    one, two, few = COUNT_WORDS[kind]; n = int(n)
+    return one if n == 1 or n >= 11 else two if n == 2 else few
+
 def hexrgb(h):
     h = (h or "#5C6660").lstrip("#"); return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
 
@@ -117,7 +124,7 @@ def main():
     wk = os.path.join(CACHE, "week")   # «تيفو الأسبوع» (weekly.py, Thursdays): out/ is rebuilt every hour, so copy the week's files in on each build
     if os.path.isdir(wk):
         for f in os.listdir(wk):
-            if f.endswith((".png", ".json")) and not f.startswith("players_"): shutil.copyfile(os.path.join(wk, f), os.path.join(OUT, "og", f))
+            if f.endswith((".png", ".json")) and not f.startswith("players_"): shutil.copy2(os.path.join(wk, f), os.path.join(OUT, "og", f))
     print(f"og: {len(jobs)} images ({new} new)")
 
 if __name__ == "__main__":
