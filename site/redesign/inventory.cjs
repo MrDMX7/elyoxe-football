@@ -142,7 +142,7 @@ else if (cmd === "gate"){
   // production gate: every template, up to N sampled pages that exist in both builds, old item by old item
   const OLD = path.resolve(SITE, arg("--old", "out_base")), NEW = path.resolve(SITE, arg("--new", "out")), N = +arg("--n", "20"), only = arg("--only", "");
   // W2.7: same-name clubs now carry « · country»; dates move with the calendar (data, not features)
-  const MAP = JSON.parse(fs.readFileSync(path.join(__dirname, "placement.json"), "utf8")), norm = s => clean(String(s)).replace(/ · [\u0600-\u06FF ]+?(?=( في |$))/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
+  const MAP = JSON.parse(fs.readFileSync(path.join(__dirname, "placement.json"), "utf8")), norm = s => clean(String(s).replace(/\u00a0/g, " ")).replace(/ · [\u0600-\u06FF ]+?(?=( في |$))/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
   const isDate = l => /^(الأحد|الاثنين|الثلاثاء|الأربعاء|الخميس|الجمعة|السبت) \d+ /.test(l);
   // player names moved to Arabic (names/players_ar.json): a Latin label found as its Arabic form counts as kept
   const LAT = {}; for (const nf of ["players_ar.json", "coaches_ar.json", "referees_ar.json", "clubs_ar.json"]) try { for (const v of Object.values(JSON.parse(fs.readFileSync(path.join(SITE, "../names/" + nf), "utf8")))) if (v.latin && v.ar) (LAT[v.latin] = LAT[v.latin] || []).push(v.ar); } catch (e){}

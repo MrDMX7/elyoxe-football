@@ -167,6 +167,12 @@
   ],
   "صورة جاهزة: إكس 1600×900": [
    "إكس"
+  ],
+  "محسن مصباح": [
+   "محسن مصبح"
+  ],
+  "الشغالة الحين": [
+   "مباريات المنتخبات اليوم"
   ]
  },
  "dropped": {
@@ -216,6 +222,7 @@
   "match|tool:على شاشة المجلس": "W2.8: now «تلفزيون المجلس» inside the sheet's «شاشة كبيرة» row",
   "match|tool:صورة جاهزة: ستوري 1080×1920": "W2.8: now «ستوري» inside the sheet's «صورة النتيجة» row",
   "match|tool:صورة جاهزة: بوست 1080×1350": "W2.8: now «بوست» inside the sheet's «صورة النتيجة» row",
-  "match|tool:صورة جاهزة: إكس 1600×900": "W2.8: now «إكس» inside the sheet's «صورة النتيجة» row"
+  "match|tool:صورة جاهزة: إكس 1600×900": "W2.8: now «إكس» inside the sheet's «صورة النتيجة» row",
+  "week|mount:#wwbox": "QA 2026-09-28: the pinned match's channel box is prerendered now (it holds «وين تنقل في الإمارات»), so it is no longer an empty mount"
  }
 }

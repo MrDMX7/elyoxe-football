@@ -31,9 +31,12 @@
     function players(){
       var a = cards[pa.value], b = cards[pb.value]; if (!a || !b) return;
       var sa = (pl[pa.value] || {}).stats || {}, sb = (pl[pb.value] || {}).stats || {};
+      // QA 50: a player with minutes and no entry for a stat has 0 of it (FotMob lists only non-zero values)
+      var z = function(s, who){ var out = {}; P90.forEach(function(k){ out[k[0]] = s[k[0]] || ((pl[who] || {}).minutes > 0 ? { per90:0, value:0 } : null); }); Object.keys(s).forEach(function(k){ if (!(k in out)) out[k] = s[k]; }); return out; };
+      sa = z(sa, pa.value); sb = z(sb, pb.value);
       // 377: a verdict from the numbers — who leads in how many of the per-90 lines and the six card parts
       var wa = 0, wb = 0; P90.forEach(function(k){ var x = sa[k[0]] && sa[k[0]].per90, y = sb[k[0]] && sb[k[0]].per90; if (x != null && y != null && x !== y){ if (x > y) wa++; else wb++; } }); PARTS.forEach(function(p){ var x = a.parts[p[0]], y = b.parts[p[0]]; if (x != null && y != null && x !== y){ if (x > y) wa++; else wb++; } });
-      var tot = wa + wb, verdict = !tot ? "" : wa === wb ? "متعادلين: كل واحد أحسن في " + wa + " من " + tot + " أرقام." : (wa > wb ? a.name : b.name) + " أحسن في " + Math.max(wa, wb) + " من " + tot + " أرقام، و" + (wa > wb ? b.name : a.name) + " في " + Math.min(wa, wb) + ".";
+      var tot = wa + wb, rq = tot >= 3 && tot <= 10 ? "أرقام" : "رقم", verdict = !tot ? "" : wa === wb ? "متعادلين: كل واحد أحسن في " + wa + " من " + tot + " " + rq + "." : (wa > wb ? a.name : b.name) + " أحسن في " + Math.max(wa, wb) + " من " + tot + " " + rq + "، و" + (wa > wb ? b.name : a.name) + " في " + Math.min(wa, wb) + ".";
       $("#pout").innerHTML = (verdict ? '<p class="verdict"><b>الحكم بالأرقام</b> ' + R.esc(verdict) + "</p>" : "") + radar(a, b) + "<h3>كل 90 دقيقة</h3>" + P90.map(function(k){ var x = sa[k[0]], y = sb[k[0]]; return line(k[1], x && x.per90, y && y.per90, 1, f1); }).join("") + line("الدقايق", (pl[pa.value] || {}).minutes, (pl[pb.value] || {}).minutes, 1, f0);
       try { history.replaceState(null, "", "?a=" + pa.value + "&b=" + pb.value + location.hash); } catch (e){}
     }

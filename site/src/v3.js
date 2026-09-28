@@ -109,7 +109,7 @@
   R.heroPick = function(ms, index, mine, nat){
     ms = (ms || []).filter(function(m){ return m.status !== "cancelled"; }); if (!ms.length) return null;
     var cc = {}; (index.competitions || []).forEach(function(c){ cc[c.id] = R.compCountry(c); });
-    var AT = (root && root.ARABT) || {}, now = Date.now(), has = function(m, id){ return id && (m.home.id === id || m.away.id === id); };
+    var AT = R.ARABT || (root && root.ARABT) || {}, now = Date.now(), has = function(m, id){   /* QA 19: the build sets R.ARABT, so its pick matches the browser's */ return id && (m.home.id === id || m.away.id === id); };
     var near = function(m){ var t = Date.parse(m.kickoff_utc); return R.isLive(m) || (t - now < 3 * 3600e3 && now - t < 8 * 3600e3); };
     var arab = function(m){ return ARABC[cc[m.comp]] || AT[m.home.id] || AT[m.away.id] || [329, 10242, 11156, 10474].indexOf(m.comp) >= 0; };
     var tier = function(m){ if (R.isLive(m) && has(m, mine)) return 4; if ((has(m, mine) || has(m, nat)) && near(m)) return 3; if (R.isLive(m) && arab(m)) return 2; return 1; };
@@ -155,10 +155,13 @@
   // 397: club names the feed has no Arabic for (names/clubs_ar.json via window.TAR)
   var TAR = (root && root.TAR) || {}; R.setClubNames = function(m){ TAR = m || {}; };
   var DUP = (root && root.DUP) || {}; R.setDup = function(m){ DUP = m || {}; };
-  var tname0 = R.tname; R.tname = function(t){ var n = t && !t.name_ar && TAR[t.id] ? esc(TAR[t.id]) : tname0(t); return t && DUP[t.id] ? n + " · " + esc(DUP[t.id]) : n; };   // W2.7: «النصر · السعودية»
+  var tname0 = R.tname; R.tname = function(t){ var sl = t && !t.name_ar && R.slotAr && R.slotAr(t.name); if (sl) return esc(sl); var n = t && !t.name_ar && TAR[t.id] ? esc(TAR[t.id]) : tname0(t); return t && DUP[t.id] ? n + "\u00a0·\u00a0" + esc(DUP[t.id]) : n; };   /* QA 101: no-break spaces keep «·» with its country */   // W2.7: «النصر · السعودية»
   // 391: when «ليش هالنتيجة؟» is on the page, the catch-up keeps only what it doesn't say (red cards, a missed penalty, a comeback)
   var catch0 = R.catchup; R.catchup = function(md){ var h = catch0.apply(R, arguments); if (!R._hasWhy || !h) return h;
-    var keep = (h.match(/<p>[^<]*<\/p>/g) || []).filter(function(p){ return /^<p>(طرد|بلنتي ضايع|ريمونتادا)/.test(p); });
+    // QA 81: a kept line the why text already tells (the missed penalty, the red card, the minute) goes too
+    var wt = typeof R._hasWhy === "string" ? R._hasWhy : "", told = function(p){ if (!wt) return false; var t = p.replace(/<[^>]+>/g, ""), mn = (t.match(/(\d+)/) || [])[1];
+      return (/بلنتي/.test(t) && /بلنتي|ركلة جزاء/.test(wt)) || (/طرد/.test(t) && /طرد|الأحمر|بعشرة/.test(wt)) || (/ريمونتادا/.test(t) && /ريمونتادا|قلب/.test(wt)) || (mn && new RegExp("(^|[^0-9])" + mn + "([^0-9]|$)").test(wt) && /دقيقة|د\s*\d/.test(wt)); };
+    var keep = (h.match(/<p>[^<]*<\/p>/g) || []).filter(function(p){ return /^<p>(طرد|بلنتي ضايع|ريمونتادا)/.test(p) && !told(p); });
     return keep.length ? '<div class="catchup mini">' + keep.join("") + "</div>" : ""; };
   // 392: the event squares leave the hero (they moved to التحليل as «خط المباراة»); 400: the score in scoreboard cells
   var cells = function(t){ return String(t).replace(/(\d)/g, '<i class="cell">$1</i>'); };
@@ -177,6 +180,14 @@
     var tierOf = function(c){ if (red(c)) return "rel"; var i = order.filter(function(x){ return !red(x); }).indexOf(c); return TIER[Math.min(i, TIER.length - 1)]; };
     return h.replace(/<td class="rk"><span style="background:([^;"]+);color:[^"]*">/g, function(_, c){ var t = tierOf(c); return t === "rel" ? '<td class="rk z rel"><span>' : '<td class="rk z" style="--z:' + t + '"><span>'; })
       .replace(/<span><i style="background:([^"]+)"><\/i>/g, function(_, c){ var t = tierOf(c); return t === "rel" ? '<span><i class="zrel"></i>' : '<span><i style="background:' + t + '"></i>'; }); };
+  // QA 70/75/79/88: one Arabic counting helper: 0 → the zero phrase, 1 → singular, 2 → dual, 3–10 → «N plural», 11+ → «N singular»
+  R.cnt = function(n, f, zero){ n = +n || 0; if (!n) return zero != null ? zero : "0 " + f[3]; return R.n(n, f); };
+  // QA 70/78: «الليلة» only for today from 17:00, «اليوم» earlier today, «بكرة», else the weekday (the rule in gen.py day_word), in the viewer's zone
+  var WD = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+  R.dayWord = function(ko, now){ var t = Date.parse(ko); if (!t) return "اليوم"; var tz = R.TZ || "Asia/Dubai", ymd = function(ms){ return new Date(ms).toLocaleDateString("en-CA", { timeZone:tz }); }, n = now || Date.now();
+    var h = +new Date(t).toLocaleTimeString("en-GB", { timeZone:tz, hour:"2-digit", hourCycle:"h23" }).slice(0, 2);
+    if (ymd(t) === ymd(n)) return h >= 17 ? "الليلة" : "اليوم"; if (ymd(t) === ymd(n + 864e5)) return "بكرة";
+    return WD[+new Date(new Date(t).toLocaleDateString("en-CA", { timeZone:tz }) + "T12:00:00Z").getUTCDay()]; };
   // 417 «تيفو الأسبوع» on /week/: the week in up to 5 numbers (weekly.py -> /og/week-latest.json). The build prerenders it with links
   // (the dead-link pass cleans any that have no page); the browser only draws it when the build had no file yet, and then without links.
   // Scores keep the scoreboard chip; counts are plain numerals (rule 13).

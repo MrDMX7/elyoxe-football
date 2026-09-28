@@ -7,7 +7,7 @@
   var $ = function(s, r){ return (r || document).querySelector(s); }, $$ = function(s, r){ return [].slice.call((r || document).querySelectorAll(s)); };
   if (window.PN && R.setNames) R.setNames(window.PN);
   if (window.TAR && R.setClubNames) R.setClubNames(window.TAR);
-  R._hasWhy = !!document.querySelector(".why");   // 391
+  R._hasWhy = (function(){ var w = document.querySelector(".why"); return w ? w.textContent || " " : false; })();   // 391 (QA 81: its text, to skip lines it already tells)
 
   // ---- top bar: transparent over the hero, solid once the page moves
   var top = $(".top"); function onScroll(){ if (top) top.classList.toggle("solid", window.scrollY > 40); }
@@ -24,23 +24,20 @@
   function open(el, from){ var had = anyOpen(); if (had) $$(".sheet:not([hidden]),.panel:not([hidden])").forEach(function(s){ s.hidden = true; if (s.id === "panel") unpanel(); }); opener = from || document.activeElement; el.hidden = false; el.classList.remove("out"); scrim.hidden = false; B.classList.add("locked"); inert(true);
     var inn = el.firstElementChild; if (inn && !inn.querySelector(":scope > .grab")){ var g = document.createElement("i"); g.className = "grab"; g.setAttribute("aria-hidden", "true"); inn.insertBefore(g, inn.firstChild); } var f = el.querySelector("button,a,[tabindex]"); if (f) setTimeout(function(){ f.focus({ preventScroll:true }); }, 30);
     if (!(had && history.state && history.state.tifoOv)) try { history.pushState({ tifoOv:1 }, ""); } catch (e){} }
+  window.TifoSheet = { open:open, close:closeAll };   // app.js opens the country picker and search through the same system
   // W2.9: drag a sheet down by its grab bar or header to close it (80 px or a flick), transform only
   (function(){ var drag = null;
     document.addEventListener("pointerdown", function(e){ var h = e.target.closest(".grab, .sh-h, .pn-h"); if (!h || e.target.closest("button")) return; var inn = h.closest(".sh-in, .pn-in"); if (!inn || matchMedia("(min-width:880px)").matches) return; drag = { inn:inn, y0:e.clientY, t0:performance.now(), dy:0 }; inn.style.transition = "none"; }, { passive:true });
     document.addEventListener("pointermove", function(e){ if (!drag) return; drag.dy = Math.max(0, e.clientY - drag.y0); drag.inn.style.transform = "translateY(" + drag.dy + "px)"; }, { passive:true });
     document.addEventListener("pointerup", function(){ if (!drag) return; var d = drag; drag = null; d.inn.style.transition = ""; var v = d.dy / Math.max(1, performance.now() - d.t0);
       if (d.dy > 80 || v > 0.6) closeAll(); else d.inn.style.transform = ""; }); })();
-  window.addEventListener("popstate", function(){ if (anyOpen()) closeAll(true); var sb = $("#srchbox"); if (sb) sb.remove(); });
-  // search closes on a tap outside it
-  document.addEventListener("click", function(e){ var sb = $("#srchbox"); if (sb && !sb.contains(e.target) && !e.target.closest("#srch")) sb.remove(); });
+  window.addEventListener("popstate", function(){ if (anyOpen()) closeAll(true); });
   document.addEventListener("click", function(e){
     var t = e.target.closest("[data-sheet]"); if (t){ e.preventDefault(); if (window.TifoShare && window.TifoShare.preload) window.TifoShare.preload(); open($("#" + t.dataset.sheet), t); return; }
     if (e.target.closest("[data-close]") || e.target === scrim || (e.target.classList && (e.target.classList.contains("sheet") || e.target.classList.contains("panel")))) { closeAll(); return; }
     var o = e.target.closest("[data-open]"); if (o){ panel(o.dataset.open, o); return; }
     var g = e.target.closest("[data-go]"); if (g){ e.preventDefault(); goTab(g.dataset.go); return; }
     var sg = e.target.closest("[data-seg]"); if (sg){ e.preventDefault(); var ab = $("#arabonly"); if (ab && ab.getAttribute("aria-pressed") !== "true") ab.click(); var mt = $("#matches"); if (mt) mt.scrollIntoView({ behavior:RM ? "auto" : "smooth" }); return; }
-    // settings buttons inside المزيد open their own boxes (app.js): close the sheet first
-    if (e.target.closest("#more #ctry, #srch")) { $$(".sheet:not([hidden])").forEach(function(s){ s.hidden = true; }); scrim.hidden = true; B.classList.remove("locked"); }
     // client-rendered links to a prototype page stay inside /next/
     var a = e.target.closest("a[href^='/']"); if (a && R.isProto && R.isProto(a.getAttribute("href"))) { e.preventDefault(); location.href = "/next" + a.getAttribute("href"); }
   }, true);
@@ -80,7 +77,7 @@
   if (sp) sp.onclick = function(){
     if (!spl.hidden){ spl.hidden = true; return; }
     var items = $$("[data-open]").map(function(t){ return [t.dataset.open, (t.querySelector(".tt2") || t).textContent.trim()]; });
-    $$("[data-pane] section.blk > h2, .daybox > .rail-h h2").forEach(function(h, i){ var s = h.closest("section"); if (!s.closest(".vault")){ s.dataset.pick = "p" + i; items.push(["@p" + i, h.firstChild.textContent.trim()]); } });
+    $$("[data-pane] section.blk > h2, .daybox > .rail-h h2" + ($("[data-pane]") ? "" : ", main section.blk > h2")).forEach(function(h, i){   /* QA 49: hub pages with no tabs offer their sections too */ if (h.closest(".mowpin, .foot, .sheet, .panel")) return; var s = h.closest("section"); if (!s.closest(".vault")){ s.dataset.pick = "p" + i; items.push(["@p" + i, h.firstChild.textContent.trim()]); } });
     spl.innerHTML = items.length ? items.map(function(x){ return '<button type="button" data-pick="' + x[0] + '">' + R.esc(x[1]) + "</button>"; }).join("") : '<p class="muted small">ما في أقسام في هالصفحة.</p>'; spl.hidden = false;
   };
   if (spl) spl.onclick = function(e){ var b = e.target.closest("button[data-pick]"); if (!b || !window.TifoShare) return; var k = b.dataset.pick, sec;
@@ -164,10 +161,12 @@
   document.addEventListener("tifo:day", function(e){ if (e.detail.off === 0){ window.__feat = R.featured(e.detail.ms); setTimeout(cdPlace, 0); } });
   if ($("#uaecd") && "MutationObserver" in window) new MutationObserver(function(){ cdPlace(); }).observe($("#uaecd"), { childList:true });
   // 403: «فريقك» empty state — a crest grid of the visitor's country's clubs; a tap makes it your team
+  // QA 22: a country whose league we don't track gets its national team (and the competitions link), never the UAE clubs
+  function ccList(m, cc){ if (m[cc] && m[cc].length) return m[cc]; var nid = (window.NAT || {})[cc], row = R.COUNTRIES.filter(function(c){ return c[0] === cc; })[0]; return nid ? [[nid, "منتخب " + (row ? row[1] : "بلدك")]] : (cc === "xx" ? m.AE || [] : []); }
   var mineBox = $("#mine");
   function mineEmpty(){ if (!mineBox || !B.dataset.cc || mineBox.querySelector(".favrow") || mineBox.querySelector(".mgrid")) return; if (!mineBox.querySelector(".mine-card")) return;
     var cc = lsGet("tifo.country"); if (!cc){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : "AE"; } catch (e){ cc = "AE"; } } if (cc === "xx") cc = "AE";
-    fetch("/assets/cc." + B.dataset.cc + ".json").then(function(r){ return r.json(); }).then(function(m){ var list = m[cc] || m.AE || []; if (!list.length) return;
+    fetch("/assets/cc." + B.dataset.cc + ".json").then(function(r){ return r.json(); }).then(function(m){ var list = ccList(m, cc); if (!list.length) return;
       var g = document.createElement("div"); g.className = "mgrid"; g.innerHTML = list.map(function(t){ return '<button type="button" data-t="' + t[0] + '" data-n="' + R.esc(t[1]) + '">' + R.logo({ id:t[0] }, "md") + "<span>" + R.esc(t[1]) + "</span></button>"; }).join("");
       g.onclick = function(e){ var b = e.target.closest("button[data-t]"); if (!b) return; var id = +b.dataset.t, n = b.dataset.n; var f = []; try { f = JSON.parse(localStorage.getItem("tifo.favs") || "[]"); } catch (x){}
         if (!f.some(function(x){ return x.t === "team" && x.id === id; })) f.unshift({ t:"team", id:id, n:n }); lsSet("tifo.favs", JSON.stringify(f)); lsSet("tifo.mine", String(id)); lsSet("tifo.mine.name", n); location.reload(); };
@@ -175,7 +174,7 @@
   if (mineBox && "MutationObserver" in window) new MutationObserver(mineEmpty).observe(mineBox, { childList:true });
   // W1.1e: a page older than 2 minutes dims its live digits and says when it was built, until the first good poll
   (function(){ var H = document.documentElement; if (!H.classList.contains("stale")) return; var hin = $(".hero-in"); if (!hin) return;
-    var n = document.createElement("p"); n.className = "stalen"; n.textContent = "آخر تحديث " + new Date(H.dataset.built).toLocaleTimeString("ar-AE-u-nu-latn", { hour:"2-digit", minute:"2-digit", timeZone:"Asia/Dubai" }); hin.appendChild(n);
+    var n = document.createElement("p"); n.className = "stalen"; n.textContent = "آخر تحديث " + new Date(H.dataset.built).toLocaleTimeString("ar-AE-u-nu-latn", { hour:"2-digit", minute:"2-digit", hourCycle:"h23", timeZone:R.TZ || "Asia/Dubai" }); hin.appendChild(n);
     document.addEventListener("tifo:fresh", function(){ n.remove(); }, { once:true }); })();
   // W1.10: a cookieless visit ping (path, country, how long since the last visit on this phone); a 404 until the cards Lambda is redeployed is fine
   (function(){ try { var last = +localStorage.getItem("tifo.seen") || 0, now = Date.now(), d = (now - last) / 864e5, ret = !last ? "first" : new Date(last).toDateString() === new Date(now).toDateString() ? "same_day" : d <= 7 ? "d1_7" : "d8p";   // the cards API's buckets
@@ -194,10 +193,12 @@
   // live clock: every ticking minute on the page moves each second (data from the last poll, no extra requests)
   setInterval(function(){ $$(".lmin[data-ps]").forEach(function(el){ var v = R.clock(el.dataset.ps, el.dataset.pb, el.dataset.pl); if (el.textContent !== v) el.textContent = v; }); }, 1000);
   // W3.4: channels for the visitor's country (the prerender shows the UAE's)
-  (function(){ var cc = lsGet("tifo.country"); if (!cc){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : ""; } catch (e){} }
-    if (!cc || cc === "AE" || cc === "xx" || !B.dataset.bc) return;
-    fetch("/assets/bc." + B.dataset.bc + ".json").then(function(r){ return r.json(); }).then(function(bc){ var m = bc[cc] || {}, map = {}; Object.keys(m).forEach(function(k){ var e = m[k]; if (e && e.b && e.b.length) map[k] = [e.b[0][0], e.b.some(function(x){ return x[1]; }) ? 1 : 0]; }); R.CHN = map;
-      $$(".chn[data-comp]").forEach(function(el){ var c = map[el.dataset.comp]; if (!c){ el.remove(); return; } el.innerHTML = R.esc(c[0]) + (c[1] ? " <b>مجاني</b>" : ""); }); }).catch(function(){}); })();
+  // (QA 25/58: it runs again on a country switch, and the UAE map comes back when the visitor switches to the UAE)
+  function chanLoad(){ var cc = lsGet("tifo.country"); if (!cc){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : ""; } catch (e){} }
+    var paint = function(map){ R.CHN = map; $$(".chn[data-comp]").forEach(function(el){ var c = map[el.dataset.comp]; if (!c){ el.hidden = true; return; } el.hidden = false; el.innerHTML = R.esc(c[0]) + (c[1] ? " <b>مجاني</b>" : ""); }); };
+    if (!cc || cc === "AE" || cc === "xx" || !B.dataset.bc){ if (window.CHN_AE && R.CHN !== window.CHN_AE) paint(window.CHN_AE); return; }
+    fetch("/assets/bc." + B.dataset.bc + ".json").then(function(r){ return r.json(); }).then(function(bc){ var m = bc[cc] || {}, map = {}; Object.keys(m).forEach(function(k){ var e = m[k]; if (e && e.b && e.b.length) map[k] = [e.b[0][0], e.b.some(function(x){ return x[1]; }) ? 1 : 0]; }); paint(map); }).catch(function(){}); }
+  chanLoad(); document.addEventListener("tifo:country", chanLoad);
   // W3.5: prayer during a match, in the visitor's city: «العشاء في الرياض 19:52 · حوالي الدقيقة 20» (hero + before kickoff)
   var CITY = { AE:[["أبوظبي", 24.4539, 54.3773], ["دبي", 25.2048, 55.2708], ["العين", 24.2075, 55.7447]], SA:[["الرياض", 24.7136, 46.6753], ["جدة", 21.4858, 39.1925], ["مكة", 21.3891, 39.8579], ["الدمام", 26.4207, 50.0888]], EG:[["القاهرة", 30.0444, 31.2357], ["الإسكندرية", 31.2001, 29.9187]],
     MA:[["الرباط", 34.0209, -6.8416], ["الدار البيضاء", 33.5731, -7.5898]], DZ:[["الجزائر", 36.7538, 3.0588], ["وهران", 35.6971, -0.6308], ["قسنطينة", 36.365, 6.6147]], TN:[["تونس", 36.8065, 10.1815]], IQ:[["بغداد", 33.3152, 44.3661], ["البصرة", 30.5085, 47.7804], ["أربيل", 36.1911, 44.0092]],
@@ -224,14 +225,18 @@
       return AR[k] + " في " + ci[0] + " " + hh + " · " + when; } } return ""; }
   (function(){ if (PAGE !== "match") return; var m0; try { m0 = JSON.parse($("#msum").textContent); } catch (e){ return; } var line = prayLine(m0); if (!line) return;
     var slot = $("#prayl"); if (slot) slot.textContent = line; else { var hin = $(".mhero .hero-in"); if (hin){ var p = document.createElement("p"); p.className = "prayl"; p.textContent = line; hin.insertBefore(p, hin.querySelector(".hero-acts")); } }
-    var ww = $("#wwbox"); if (ww && m0.status === "scheduled"){ var p2 = document.createElement("p"); p2.className = "prayl in"; p2.textContent = line; ww.parentNode.insertBefore(p2, ww.nextSibling); } })();
+    /* QA 28/103: one prayer mention per page — the visitor's city in the hero; the stadium tile (a different city, named) steps aside */
+    B.classList.add("hasprayl"); })();
   // the city choice for countries whose capital can be half an hour off (in المزيد)
   (function(){ var cc = lsGet("tifo.country"); if (!cc){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : ""; } catch (e){} }
     var list = CITY[cc], ms = $("#more .mswitch") || $("#more .mset"); if (!list || list.length < 2 || !ms) return; var sel = document.createElement("select"); sel.id = "prcity"; sel.setAttribute("aria-label", "مدينتك لأوقات الصلاة");
     sel.innerHTML = list.map(function(c){ return '<option value="' + c[0] + '"' + (c[0] === lsGet("tifo.city") ? " selected" : "") + ">" + c[0] + "</option>"; }).join(""); sel.onchange = function(){ lsSet("tifo.city", sel.value); }; ms.appendChild(sel); })();
   // W2.7: the team hero's next match counts down, then says it's on
-  (function(){ var ko = $$(".tnm [data-ko]"); if (!ko.length) return;   /* only the team hero's digits: #kitct on /m/<id>/kit/ also carries data-ko */ var t = setInterval(function(){ ko.forEach(function(el){ var d = Date.parse(el.dataset.ko) - Date.now(); if (!isFinite(d)) return;
-    if (d <= 0){ el.textContent = "المباراة"; return; } if (d > 36e5 * 48) return; var hh = Math.floor(d / 36e5), mm = Math.floor(d / 6e4) % 60, ss = Math.floor(d / 1e3) % 60, p2 = function(n){ return n < 10 ? "0" + n : n; }; el.textContent = hh + ":" + p2(mm) + ":" + p2(ss); }); }, 1000); })();
+  // QA 89: one countdown only (the national-team hero already has #uaecd), and at kickoff the card follows the live score
+  (function(){ var ko = $$(".tnm [data-ko]"); if (!ko.length || $("#uaecd")) return;   /* only the team hero's digits: #kitct on /m/<id>/kit/ also carries data-ko */ var lastLive = 0; var t = setInterval(function(){ ko.forEach(function(el){ var d = Date.parse(el.dataset.ko) - Date.now(); if (!isFinite(d)) return;
+    if (d <= 0){ if (Date.now() - lastLive < 30e3) return; lastLive = Date.now(); var a = el.closest(".tnm"), id = a && +(String(a.getAttribute("href")).match(/\d+/) || [0])[0];
+      fetch("/v1/live.json", { cache:"no-cache" }).then(function(r){ return r.json(); }).then(function(l){ var m = (l.matches || []).filter(function(x){ return x.id === id; })[0]; if (!m){ if (d < -3 * 36e5) clearInterval(t); return; }
+        el.innerHTML = m.score ? '<bdi dir="ltr">' + m.score.home + " - " + m.score.away + "</bdi>" : R.hhmm(m.kickoff_uae); var sm = a.querySelector("small"); if (sm) sm.textContent = R.isLive(m) ? R.minute(m).replace(/<[^>]+>/g, "") : R.statusText(m).replace(/<[^>]+>/g, ""); if (m.status === "finished") clearInterval(t); }).catch(function(){}); return; } if (d > 36e5 * 48) return; var hh = Math.floor(d / 36e5), mm = Math.floor(d / 6e4) % 60, ss = Math.floor(d / 1e3) % 60, p2 = function(n){ return n < 10 ? "0" + n : n; }; el.textContent = hh + ":" + p2(mm) + ":" + p2(ss); }); }, 1000); })();
   // ================= owner items (2026-09-27): 355 goal moment · 357 match-state hero · 359 cinema · 360 goal sound ·
   // 370 live «لو خلصت الحين» · 373 player card · 376 lineup builder · 379 embed. Everything lives in the sheet, a tab or the hero.
   function lsGet(k){ try { return localStorage.getItem(k); } catch (e){ return null; } }
@@ -283,20 +288,25 @@
     B.dataset.state = st; var box = $("#mh .sc"); if (!box) return;
     if (st === "pre" && md.kickoff_utc && !md.time_tbd){ if (!cdEl || !box.contains(cdEl)){ cdEl = box.querySelector(".mcd"); if (!cdEl){ cdEl = document.createElement("span"); cdEl.className = "mcd"; box.appendChild(cdEl); } }
       var tick = function(){ var d = Date.parse(md.kickoff_utc) - Date.now(); if (d <= 0){ cdEl.textContent = "على وشك تبدا"; return; } var dd = Math.floor(d / 864e5), hh = Math.floor(d / 36e5) % 24, mm = Math.floor(d / 6e4) % 60, ss = Math.floor(d / 1e3) % 60, p2 = function(n){ return n < 10 ? "0" + n : n; };
-        cdEl.innerHTML = "تبدا بعد " + '<bdi dir="ltr" class="num">' + (dd ? dd + "d " : "") + p2(hh) + ":" + p2(mm) + ":" + p2(ss) + "</bdi>"; };
+        cdEl.innerHTML = "تبدا بعد " + (dd ? R.n(dd, ["يوم", "يومين", "أيام", "يوم"]) + " و" : "") + '<bdi dir="ltr" class="num">' + p2(hh) + ":" + p2(mm) + ":" + p2(ss) + "</bdi>"; };   /* QA 98: no Latin «d» */
       tick(); clearInterval(cdT); cdT = setInterval(tick, 1000); }
     else { clearInterval(cdT); if (cdEl) cdEl.remove(); cdEl = null; }
   }
   // 359: cinema mode — full screen: score, minute and the last event, for a TV or a phone on its side
   var cine = null;
   function cineDraw(md){ if (!cine || !md) return; var live = R.isLive(md), ev = (md.events || []).filter(function(e){ return e.type !== "added_time" && e.type !== "half"; }).pop();
-    var last = ev ? '<bdi dir="ltr">' + R.esc(ev.minute) + "'</bdi> " + ({ goal:"هدف", penalty_goal:"هدف من بلنتي", own_goal:"هدف في مرماه", yellow:"إنذار", red:"طرد", second_yellow:"طرد", sub:"تبديل", missed_penalty:"بلنتي ضايع" }[ev.type] || "") + (ev.player ? " · " + R.esc(ev.player.name) : "") : "";
+    var last = ev ? '<bdi dir="ltr">' + R.esc(ev.minute) + (ev.added ? "+" + R.esc(ev.added) : "") + "'</bdi> " + ({ goal:"هدف", penalty_goal:"هدف من بلنتي", own_goal:"هدف في مرماه", yellow:"إنذار", red:"طرد", second_yellow:"طرد", sub:"تبديل", missed_penalty:"بلنتي ضايع" }[ev.type] || "") + (ev.player ? " · " + R.esc(ev.player.name) : "") : "";
     cine.querySelector(".ci").innerHTML = '<div class="ct3"><span>' + R.logo(md.home, "xl") + "<b>" + R.tname(md.home) + '</b></span><b class="cs dg">' + (md.score ? md.score.home + " - " + md.score.away : R.hhmm(md.kickoff_uae)) + "</b><span>" + R.logo(md.away, "xl") + "<b>" + R.tname(md.away) + '</b></span></div><p class="cm' + (live ? " live" : "") + '">' + (live ? R.minute(md) : R.statusText(md)) + "</p>" + (last ? '<p class="ce">' + last + "</p>" : ""); }
   // W2.8: cinema lives on the mini-bar now (any [data-cine] button opens it)
   document.addEventListener("click", function(e){ if (e.target.closest("[data-cine]")) cineOpen(); });
   function cineOpen(){ closeAll(); cine = document.createElement("div"); cine.className = "cine"; cine.innerHTML = '<button type="button" class="x" aria-label="سكّر">سكّر</button><div class="ci"></div>'; document.body.appendChild(cine);
-    var wlock = null; cine.querySelector(".x").onclick = function(){ if (document.fullscreenElement) document.exitFullscreen().catch(function(){}); if (wlock){ wlock.release().catch(function(){}); wlock = null; } cine.remove(); cine = null; };
-    try { cineDraw(window.__md || JSON.parse($("#msum").textContent)); } catch (e){} if (cine.requestFullscreen) cine.requestFullscreen().catch(function(){}); if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function(l){ wlock = l; }).catch(function(){}); };
+    // QA 59: cinema owns a history entry (back closes it), and Escape or leaving fullscreen close it too; every path releases the wake lock
+    var wlock = null, shut = function(fromPop){ if (!cine) return; if (document.fullscreenElement) document.exitFullscreen().catch(function(){}); if (wlock){ wlock.release().catch(function(){}); wlock = null; } cine.remove(); cine = null;
+      document.removeEventListener("fullscreenchange", fsOut); document.removeEventListener("keydown", esc2); window.removeEventListener("popstate", pop); if (!fromPop && history.state && history.state.tifoCine) try { history.back(); } catch (e){} },
+      fsOut = function(){ if (!document.fullscreenElement && cine && cine._fs) shut(); }, esc2 = function(e){ if (e.key === "Escape") shut(); }, pop = function(){ shut(true); };
+    cine.querySelector(".x").onclick = function(){ shut(); }; document.addEventListener("fullscreenchange", fsOut); document.addEventListener("keydown", esc2); window.addEventListener("popstate", pop);
+    try { history.pushState({ tifoCine:1 }, ""); } catch (e){}
+    try { cineDraw(window.__md || JSON.parse($("#msum").textContent)); } catch (e){} if (cine.requestFullscreen) cine.requestFullscreen().then(function(){ if (cine) cine._fs = true; }).catch(function(){}); if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function(l){ wlock = l; }).catch(function(){}); };
   // 370: «لو خلصت الحين» — while live, the league table with this score, recomputed on every poll (first tab)
   var ST0 = null;
   function liveTable(md){ var box = $("#ltable"); if (!box) return; if (!R.isLive(md)){ box.innerHTML = ""; return; }
@@ -438,8 +448,8 @@
       var f = fl.querySelector('[data-cc="' + cc + '"]'); if (f) f.classList.add("me"); }).catch(function(){ if (me) me.hidden = true; });
     var nb = $("#natnowb"); if (!nb) return; var ids = nb.dataset.ids.split(",").map(Number);
     (function tick(){ fetch("/v1/live.json", { cache:"no-cache" }).then(function(r){ return r.json(); }).then(function(l){ var by = {}; (l.matches || []).forEach(function(m){ by[m.id] = m; }); var any = false;
-      ids.forEach(function(id){ var m = by[id], row = nb.querySelector('[href="/m/' + id + '/"]'); if (!m || !row) return; any = any || R.isLive(m); var tmp = document.createElement("div"); tmp.innerHTML = R.matchRow(m, { date:false }); var nr = tmp.firstElementChild; if (nr && nr.getAttribute("aria-label") !== row.getAttribute("aria-label")) row.replaceWith(nr); });   /* only a real change (score, minute, status) redraws a row */
-      if (R.localize) R.localize(nb); setTimeout(tick, any ? 20e3 : 120e3); }).catch(function(){ setTimeout(tick, 120e3); }); })(); })();
+      ids.forEach(function(id){ var m = by[id], row = nb.querySelector('[data-mid="' + id + '"]'); if (!m || !row) return; any = any || R.isLive(m);   /* QA 42: rows without a page (no href) update too */ var tmp = document.createElement("div"); tmp.innerHTML = R.matchRow(m, { date:false }); var nr = tmp.firstElementChild; if (nr && nr.getAttribute("aria-label") !== row.getAttribute("aria-label")) row.replaceWith(nr); });   /* only a real change (score, minute, status) redraws a row */
+      var hh = $("#natnowh"); if (hh) hh.textContent = any ? "الشغالة الحين" : "مباريات المنتخبات اليوم"; if (R.localize) R.localize(nb); setTimeout(tick, any ? 20e3 : 120e3); }).catch(function(){ setTimeout(tick, 120e3); }); })(); })();
 
   // ---- W4.2 /week/: the pinned «مباراة الأسبوع» counts down to kickoff, then its row follows the live score
   (function(){ var pin = $("#mow"), cd = $("#mowcd"); if (!pin || !cd || !pin.dataset.kick || !R.n) return; var ko = Date.parse(pin.dataset.kick), a = pin.querySelector('a.m[href^="/m/"]'), id = a ? +(a.getAttribute("href").match(/\d+/) || [0])[0] : 0;
@@ -482,7 +492,7 @@
   // ---- owner item 1: «فريقي» in the nav — my crest, opens my team; no team yet: the crest grid of my country in a sheet
   (function(){ var links = $$('[data-nav="mine"]'); if (!links.length) return; var mid = +lsGet("tifo.mine") || 0;
     function pick(g){ var cc = lsGet("tifo.country"); if (!cc || cc === "xx"){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : "AE"; } catch (e){ cc = "AE"; } }
-      fetch("/assets/cc." + B.dataset.cc + ".json").then(function(r){ return r.json(); }).then(function(m){ var list = m[cc] || m.AE || [];
+      fetch("/assets/cc." + B.dataset.cc + ".json").then(function(r){ return r.json(); }).then(function(m){ var list = ccList(m, cc);
         g.innerHTML = list.map(function(t){ return '<button type="button" data-t="' + t[0] + '" data-n="' + R.esc(t[1]) + '">' + R.logo({ id:t[0] }, "md") + "<span>" + R.esc(t[1]) + "</span></button>"; }).join("");
         g.onclick = function(e){ var b = e.target.closest("button[data-t]"); if (!b) return; var id = +b.dataset.t, n = b.dataset.n, f = []; try { f = JSON.parse(localStorage.getItem("tifo.favs") || "[]"); } catch (x){}
           if (!f.some(function(x){ return x.t === "team" && x.id === id; })) f.unshift({ t:"team", id:id, n:n }); lsSet("tifo.favs", JSON.stringify(f)); lsSet("tifo.mine", String(id)); lsSet("tifo.mine.name", n); location.href = "/t/" + id + "/"; }; }).catch(function(){}); }
@@ -498,4 +508,13 @@
   (function(){ var pair = $("#wkpair"); if (!pair || !R.weekCard) return; var have = $("#wkcard");
     fetch("/og/week-latest.json", { cache:"no-cache" }).then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); }).then(function(j){ if (!j || !(j.items || []).length || (have && have.dataset.week === j.week)) return;
       var t = document.createElement("div"); t.innerHTML = R.weekCard(j, { links:false }); var card = t.firstElementChild; if (!card) return; if (have) have.replaceWith(card); else pair.appendChild(card); if (R.localize) R.localize(card); }).catch(function(){}); })();
+
+  // QA 70/78: the 60-second card's day word follows the viewer's clock and zone (a page built last night still says the right thing)
+  $$("[data-kick]").forEach(function(el){ if (el.tagName !== "B" || !R.dayWord) return; el.textContent = "مباراة " + R.dayWord(el.dataset.kick) + " في 60 ثانية"; });
+
+  // QA 54: «بدون حرق» on or off re-sends every team's alerts (goal and result alerts pause while it is on), from any page
+  document.addEventListener("tifo:nospoil", function(e){ if (!("serviceWorker" in navigator) || !("PushManager" in window)) return; var s = {}; try { s = JSON.parse(localStorage.getItem("tifo.push") || "{}"); } catch (x){} var teams = s.teams || {}; if (!Object.keys(teams).length) return;
+    navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(sub){ if (!sub) return; var j = sub.toJSON();
+      Object.keys(teams).forEach(function(tid){ var ev = (teams[tid] || []).filter(function(x){ return !(e.detail && x !== "start"); });
+        fetch("/api/tifo/push/sub", { method:ev.length ? "POST" : "DELETE", headers:{ "content-type":"application/json" }, keepalive:true, body:JSON.stringify(ev.length ? { team:+tid, events:ev, subscription:{ endpoint:j.endpoint, keys:j.keys } } : { team:+tid, endpoint:j.endpoint }) }).catch(function(){}); }); }).catch(function(){}); });
 })();

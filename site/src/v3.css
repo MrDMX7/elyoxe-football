@@ -105,7 +105,7 @@ body:not([data-page="home"]):not([data-page="team"]) #uaecd:empty{display:none}
 /* ---- match mini-bar: sticky compact score when the hero has left */
 .mini{visibility:hidden;position:fixed;inset-block-start:var(--topH);inset-inline:0;z-index:25;background:#061B16f2;border-block-end:1px solid var(--line-2);transform:translateY(-110%);transition:transform .22s ease;}
 .mini-on .mini{transform:none;visibility:visible}
-.mini .wrap{display:grid;grid-template-columns:1fr auto 1fr auto;align-items:center;gap:.6rem;block-size:3rem}
+.mini .wrap{display:grid;grid-template-columns:1fr auto 1fr;grid-auto-flow:column;grid-auto-columns:auto;align-items:center;gap:.6rem;block-size:3rem}
 .mini .mt{display:flex;align-items:center;gap:.45rem;min-inline-size:0;font-family:var(--kufi);font-weight:800;font-size:.9rem}
 .mini .mt b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mini .mt.a{justify-content:flex-end}
@@ -207,7 +207,7 @@ section[data-pane]{animation:paneIn .28s ease both}
 .ed,.sht{position:relative;display:grid;align-content:start;gap:.45rem;text-align:start;background:var(--surf);border:0;color:var(--ink);padding:.9rem .9rem 1rem;cursor:pointer;font:inherit;min-block-size:9rem;transition:background-color .2s,transform .2s}
 .ed:hover,.sht:hover{background:var(--raised-hi)}
 .ed:focus-visible,.sht:focus-visible{outline:3px solid var(--dune);outline-offset:2px}
-.ti{display:grid;grid-template-columns:repeat(3,.55rem);gap:2px;margin-block-end:.2rem}
+.ti{display:block;inline-size:1.7rem;block-size:1.7rem;color:var(--tert);margin-block-end:.2rem}.ti svg{inline-size:100%;block-size:100%}
 .ti i{display:block;inline-size:.55rem;block-size:.55rem}
 .tt2{font-family:var(--kufi);font-weight:800;font-size:.98rem;line-height:1.45}
 .tz{font-size:.8rem;color:var(--tert);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
@@ -332,11 +332,11 @@ body.second .mhero{min-block-size:100svh}
 .v3 .ok{background:none;color:var(--ink);border:1px solid var(--ink)}
 
 /* ---- competition key art: the league's own logo, lit on night pitch (owner, 2026-09-27) */
-.chero.haslogo{background:radial-gradient(70% 90% at 18% 40%,color-mix(in srgb,var(--g1) 30%,transparent),transparent 70%),radial-gradient(60% 70% at 0% 100%,color-mix(in srgb,var(--g2) 26%,transparent),transparent 70%),radial-gradient(50% 60% at 100% 0%,color-mix(in srgb,var(--g2) 14%,transparent),transparent 70%),var(--bg)}
+.chero.haslogo{background:var(--bg)}   /* rule 13 (QA 24/38/66): no colour washes behind the league logo */
 .lgart{position:absolute;z-index:-2;inset-block-start:calc(var(--topH) + .5rem);left:50%;translate:-50% 0;inline-size:min(62vw,15rem);aspect-ratio:1;display:grid;place-items:center;perspective:900px;will-change:transform}
 
 
-.lglogo{position:relative;inline-size:78%;block-size:auto;filter:drop-shadow(0 18px 40px #000a) drop-shadow(0 0 22px color-mix(in srgb,var(--g1) 45%,transparent));transition:transform .5s cubic-bezier(.2,.7,.2,1);animation:logoIn 1.1s cubic-bezier(.2,.7,.2,1) both}
+.lglogo{position:relative;inline-size:78%;block-size:auto;filter:drop-shadow(0 12px 24px #0008);transition:transform .5s cubic-bezier(.2,.7,.2,1);animation:logoIn 1.1s cubic-bezier(.2,.7,.2,1) both}
 .chero.haslogo .scrim{background:linear-gradient(180deg,#0A262000 0%,#0A262000 40%,#0A2620cc 72%,#0A2620 96%)}
 .chero.haslogo .hero-in{padding-block-start:calc(var(--topH) + min(62vw,15rem) + 1.5rem)}
 @media (min-width:880px){
@@ -347,9 +347,9 @@ body.second .mhero{min-block-size:100svh}
 }
 @keyframes logoIn{from{opacity:0;transform:scale(.94) translateY(10px)}to{opacity:1}}
 /* crest tiles with the league logo */
-.ct.lgt{background:radial-gradient(90% 80% at 50% 30%,color-mix(in srgb,var(--g1) 24%,transparent),transparent 72%),var(--surf)}
+.ct.lgt{background:var(--surf)}
 .cl{display:grid;place-items:center;block-size:5.2rem;position:relative;overflow:hidden}
-.cl::before{content:"";position:absolute;inset:18% 30%;border-radius:50%;background:color-mix(in srgb,var(--g1) 40%,transparent);filter:blur(16px)}
+.cl::before{content:none}
 .cl img{position:relative;block-size:4rem;inline-size:auto;max-inline-size:85%;object-fit:contain;filter:drop-shadow(0 6px 14px #0008)}
 .cts.all{grid-auto-flow:row;grid-template-rows:none;grid-template-columns:repeat(auto-fill,minmax(min(9.5rem,46%),1fr));overflow:visible;margin-inline:0;padding-inline:0}
 /* competitions list hero: a slow wall of logos */
@@ -775,3 +775,31 @@ a.wkr:hover .wkt b{text-decoration:underline;text-underline-offset:.25em}
 .wkv.sc{font-family:var(--digits);background:var(--board);color:var(--ink);padding:.1rem .55rem}
 .wkdot{inline-size:24px;block-size:24px;background:var(--rule)}
 .wkdl{display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;margin:.8rem 0 0;font-size:.85rem}.wkdl a{color:var(--tert);text-decoration:underline;text-underline-offset:.25em}
+/* QA 0/21: the country picker and search live in real sheets now */
+#srchbox input{inline-size:100%;font-size:max(16px,1rem);min-block-size:3rem;padding:.6rem .8rem;background:var(--raised);color:var(--ink);border:1px solid var(--rule-ctl)}
+#srchsh .sh-in{min-block-size:min(70svh,32rem)}
+#ctrybody .cgrid{gap:.4rem;margin-block:.4rem .8rem}#ctrybody .cgrid button{min-block-size:2.75rem;background:var(--raised);color:var(--ink);border:1px solid var(--rule);font:inherit}
+#ctrybody .cgrid button[aria-pressed="true"]{background:none;box-shadow:inset 0 -3px 0 var(--mine);border-color:var(--ink)}
+.grp-sub{margin:.5rem 0 .1rem;font-size:.8rem;color:var(--tert);font-weight:600}
+body.hasprayl .tile.pray{display:none}
+/* QA 37: from 880px the league title stops before the logo (the logo sits at the inline end of the hero) */
+@media (min-width:880px){.chero.haslogo .hero-in{padding-inline-end:max(0px,calc(7vw + clamp(15rem,30vw,25rem) + 1.5rem - (100vw - min(100vw,var(--wide))) / 2))}}
+/* QA 52: the ask form is input · send · mic on one row */
+.v3 .ask{grid-template-columns:1fr auto auto;align-items:stretch}
+.mic{inline-size:2.9rem;min-block-size:2.9rem;display:grid;place-items:center;background:none;border:1px solid var(--rule-ctl);color:var(--ink);cursor:pointer}
+.sfrm{display:flex;gap:.4rem}.sfrm .mic{flex:none}
+/* QA 60: before the script picks the visitor's country, the list already shows the UAE's latest 30 (no jump for most visitors) */
+.trl:not(.js) li:not([data-c="AE"]),.trl:not(.js) li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"] ~ li[data-c="AE"]{display:none}
+.pl.tor .rt0{font:700 .95rem var(--digits);color:var(--ink)}.pl.tor a{color:var(--ink);font-size:.78rem;text-decoration:none;text-shadow:0 1px 2px #000}
+/* QA 68: up/down arrows are chalk and stone (pulse = live, red = cards) */
+.v3 .up,.v3 .lk-up{color:var(--ink)}.v3 .dn,.v3 .lk-dn{color:var(--stone)}
+/* QA 69 (rule 5): a selected segment is chalk text with a dune underline, not a filled block */
+.v3 .seg [aria-selected="true"],.v3 .seg [aria-pressed="true"]{background:none;color:var(--ink);box-shadow:inset 0 -3px 0 var(--mine)}
+.pickb button[aria-pressed="true"]{box-shadow:inset 0 -3px 0 var(--mine)}
+.fds i.fd{word-break:keep-all;overflow-wrap:normal}
+/* QA 104: 44px tap targets in the /arabs/ group cards */
+.agl{gap:0}.agl a{display:flex;align-items:center;min-block-size:2.75rem}
+/* QA 100: late content keeps its space (compare, offline list, the 404's day list) */
+#cout{min-block-size:24rem}#offl{min-block-size:12rem}#day404{min-block-size:18rem}
+/* QA 101: the goal-moment word sits over the score, not the home name */
+.gtext{inset-block-end:auto;inset-block-start:calc(var(--topH) + 1rem)}
