@@ -83,7 +83,8 @@ The CloudFront cache policy honours each object's max-age (MinTTL 1 s). Unchange
   // round keys (no spaces, safe in URLs): matchdays "1", "2" ... ("Group Stage - Round 3" -> "3"); knockouts
   // "1/64" ... "1/8" ("8th Finals"), "1/4" ("Quarter-finals"), "1/2", "final", "3rd" ("bronze", "3rd Place Final"),
   // "prelim-1", "prelim-2", "prelim", "playoff" ("Qualifying Round"); round_ar is the Arabic label.
-  // Bracket placeholders ("Winner SF 1", no id) carry name_ar «الفايز من نص النهائي 1».
+  // Bracket slots still to be decided have "placeholder": true (FotMob gives them fake ids); "Winner SF 1" carries
+  // name_ar «الفايز من نص النهائي 1» and no logo.
   "kickoff_utc": "2026-10-16T13:05:00Z", "kickoff_uae": "2026-10-16T17:05:00+04:00",
   "time_tbd": false, "date_tbd": false,
   "status": "scheduled",          // scheduled | live | ht | finished | postponed | cancelled | abandoned | awarded | unknown

@@ -119,6 +119,8 @@ class Store:
                 self.refused.append(path)
                 self.fail(hk, f"not written, kept last good: {e}")
                 return False
+        if health_key:
+            self.ok(hk)             # a file that once failed validation must not stay «failing» after it succeeds again
         body = gz(dumps(obj))
         basis = body if heartbeat or not isinstance(obj, dict) or "generated" not in obj else \
             dumps({k: v for k, v in obj.items() if k != "generated"})

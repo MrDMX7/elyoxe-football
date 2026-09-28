@@ -105,6 +105,12 @@ def placeholder_ar(name):
     return f"{'الفايز' if m.group(1).lower() == 'winner' else 'الخاسر'} من {stage} {m.group(3)}"
 
 
+def _placeholder(ref, tbd):
+    """A TBD bracket slot ("Winner SF 1", FotMob gives it a fake team id): Arabic name, no logo, flagged."""
+    ar = placeholder_ar(ref.get("name")) if tbd else None
+    return {**ref, "name_ar": ar, "logo": None, "placeholder": True} if ar else ({**ref, "placeholder": True} if tbd else ref)
+
+
 PERIODS = (("1H", "firstHalfStarted", "firstHalfEnded", 0), ("2H", "secondHalfStarted", "secondHalfEnded", 45),
            ("ET1", "firstExtraHalfStarted", None, 90), ("ET2", "secondExtraHalfStarted", None, 105))
 
@@ -298,8 +304,8 @@ class FotMob(Source):
                 ties = []
                 for mu in rd.get("matchups") or []:
                     ties.append({
-                        "home": self._team(mu.get("homeTeamId"), mu.get("homeTeam")),
-                        "away": self._team(mu.get("awayTeamId"), mu.get("awayTeam")),
+                        "home": _placeholder(self._team(mu.get("homeTeamId"), mu.get("homeTeam")), mu.get("tbdTeam1")),
+                        "away": _placeholder(self._team(mu.get("awayTeamId"), mu.get("awayTeam")), mu.get("tbdTeam2")),
                         "tbd": bool(mu.get("tbdTeam1") or mu.get("tbdTeam2")),
                         "matches": [S._int(x.get("matchId")) for x in mu.get("matches") or []],
                         "aggregate": mu.get("aggregatedResult"),

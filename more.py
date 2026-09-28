@@ -379,6 +379,8 @@ def careers(p, limit=25):
             p.note(f"careers: skipped {pid} ({type(e).__name__}: {e})")
             n += 1
         p.mark("career", pid)
+    if n and not skipped and (p.store.health.get("careers") or {}).get("ok", True):
+        p.store.ok("careers")           # clears an old failure once a run fetched careers without one
     if skipped and (p.store.health.get("careers") or {}).get("ok", True):
         p.store.ok("careers", note=f"skipped {len(skipped)} player(s) with unreadable career data: "
                                   + ", ".join(map(str, skipped[:10])))
