@@ -15,7 +15,13 @@ Stopped at the coordinator's request because the phone battery was draining. The
 - **QA 35/45, coaches:** `S.coachesTeam`/`S.coachesLeague` now take Arabic names from names/coaches_ar.json (`S.setCoaches`), which covers all 100 league coaches. The fix went out in wsync's `5a8c02b` sync commit.
 - **QA 65, «Widad Temara»:** `get()` fills `name_ar` from names/clubs_ar.json into every team object under home/away/team/opponent, and teams.json gets the same fill. Every page that reads `name_ar || name` is covered (`31db9b6`).
 - **Pipeline 14:00 verification, done:** team/5789.json has the 3-0 win at Bahrain on 27 Sep (#44), comp/329/tournament-sim.json was generated 09:55Z, after the last result, and team/6719.json exists.
-- **424 push test restarted** on the live match Tunisia v Botswana (6040346, 23:00 UAE): subscription for 6719/5887 at 19:12Z, and the listener runs to the end. Run teardown after.
+- **424 push test, live on Tunisia v Botswana (6040346, 23:00 UAE):** subscription for 6719/5887 at 19:12Z, via `tools/push_e2e.py`. Delivery works: the first goal arrived ~18 s after the source had it. The test found three bugs, all fixed and deployed with `./deploy.sh`:
+  1. **`<TBD>` as the scorer:** FotMob sends the goal first with player `<TBD>` (id 0/null). The body is now «هدف بوتسوانا في الدقيقة 38'» (`fb8aa54`).
+  2. **Two alerts per goal:** the event_id ends in the player id, so the named copy got a new key. The key is now `goal_key` (team + minute + score), and old-format marks are matched by stem (`fb8aa54`). Live proof: the 60' goal went out once, and there was no second alert when the name arrived.
+  3. **Ghost goal:** at 20:17Z the feed listed an away goal at 49' making 2-2 while the match stood 2-1, and it was pushed. It was gone from the feed minutes later. A goal whose score is ahead of the match score now waits (`5b5ec09`).
+- **Search Console:** sitemap.xml «Success», 10,443 discovered. **Rich Results (426)** on /m/1000020522/: 3 valid items, and only the optional `offers` is missing.
+- **QA 31 (stadium notes):** research/tifo-2026-09-27/stadiums.json has `value_ar` next to 29 English notes and `address_ar` for 12 stadiums, and says «آل» at the source. The guide prefers `value_ar` (`0a51fc4`). It's live from the 00:25 build.
+- **Player names:** build_names.py had only ever been run by hand. It added 1,387 new players (`9faa546`), and the nightly job `tifo-names` at 02:40 now keeps it current (automation/phone `dd6dc21`). Not changed: some Wikidata Algerian names come surname first («لعربي كمال»), and a FotMob rename keeps the old Arabic («Sayed Dhiya» → «سيد سعيد»).
 
 ## QA 2026-09-28 (docs/QA-2026-09-28.json): site-side status
 
