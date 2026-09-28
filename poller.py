@@ -471,6 +471,13 @@ class Poller:
             return
         season = data["competition"].get("season")
         matches = data["matches"]
+        if not matches:
+            # FotMob sometimes answers with the table but no fixture list (47, 2026-09-28 04:00): keep the last good
+            # list for everything derived from it (bump chart, calendars, ledger) instead of blanking it
+            prev = (self.store.get_json(f"comp/{cid}/fixtures.json") or {}).get("matches") or []
+            if prev:
+                matches = prev
+                self.note(f"comp {cid}: source returned no fixtures, kept the last good {len(prev)}")
         if comp.get("uaepl") and source == "fotmob":
             matches = self.merge_uaepl(comp, matches)
         self.remember_schedule(matches)
@@ -524,6 +531,8 @@ class Poller:
                 self.store.put_json(f"comp/{cid}/transfers.json", {**tr, "generated": iso(now)}, cache="static")
         self.comp_meta(comp, data, matches, source)
         self.write_team_calendars(cid)
+        if cid in ICS_COMPS:
+            self.write_comp_ics(cid, enriched)
         self.mark("comp", cid)
 
     def detect_draw(self, cid, st):
@@ -646,8 +655,18 @@ class Poller:
                   for m in matches if m.get("venue")}
         names = {c["id"]: c["name_ar"] for c in self.comps}
         text = ICS.team_calendar({"id": tid, "name": name, "name_ar": name_ar or self.names["teams"].get(str(tid))},
-                                 matches, names, seqs, venues)
+                                 matches, names, seqs, venues, channels=_channels("AE"))
         self.store.put_text(f"team/{tid}.ics", text, "text/calendar; charset=utf-8", cache="static")
+
+    def write_comp_ics(self, cid, matches):
+        """comp/<id>.ics: the whole competition (UAE competitions), same events as the team feeds."""
+        seqs = ICS.bump_sequences(matches, self.st.setdefault("ics_seq", {}))
+        venues = {str(m.get("id") or m.get("ext_id")): (m.get("venue") or {}).get("name_ar") or (m.get("venue") or {}).get("name_en")
+                  for m in matches if m.get("venue")}
+        names = {c["id"]: c["name_ar"] for c in self.comps}
+        text = ICS.team_calendar({"id": cid, "name": names.get(cid)}, matches, names, seqs, venues,
+                                 channels=_channels("AE"), title=f"{names.get(cid) or cid} · تيفو")
+        self.store.put_text(f"comp/{cid}.ics", text, "text/calendar; charset=utf-8", cache="static")
 
     def refresh_team(self, tid):
         try:
@@ -1140,7 +1159,7 @@ class Poller:
             ("draw_triggers", 0, self.draw_triggers),
             ("national_teams", 0, lambda: AR.national_teams(self)),
             ("abroad_per90", 60, lambda: X2.abroad_per90(self)),
-            ("match_of_week", 720, lambda: X2.match_of_week(self)),
+            ("match_of_week", 60, lambda: X2.match_of_week(self)),
             ("golden_boot", 360, lambda: X2.golden_boot_and_poty(self)),
             ("continental_odds", 360, lambda: X2.continental_odds(self)),
             ("champion_path", 1440, lambda: X2.champion_path(self)),
@@ -1374,6 +1393,27 @@ class Poller:
 
 REPOLL_MINUTES = (30, 60, 180, 1440)   # after full time, for matches whose feed lacks subs or cards (1440: FotMob
                                        # added Gulf Cup cards a day later, 2026-09-27)
+
+
+ICS_COMPS = (538, 11027, 9943, 11026)       # comp/<id>.ics for the UAE competitions
+_CHANNELS = {}
+
+
+def _channels(iso2):
+    """{comp_id: "القناة في الإمارات: …"} from broadcast_by_country.json (bundled research file)."""
+    if iso2 not in _CHANNELS:
+        out = {}
+        try:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "broadcast_by_country.json"), encoding="utf-8") as f:
+                bc = (json.load(f).get(iso2) or {}).get("competitions") or {}
+            for k, v in bc.items():
+                names = [b.get("name_ar") or b.get("name_en") for b in (v.get("broadcasters") or []) if b.get("name_ar") or b.get("name_en")]
+                if k.isdigit() and names:
+                    out[int(k)] = "القناة في الإمارات: " + "، ".join(names[:3])
+        except (OSError, ValueError):
+            pass
+        _CHANNELS[iso2] = out
+    return _CHANNELS[iso2]
 
 
 def coverage_events(d):

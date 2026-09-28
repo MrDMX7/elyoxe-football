@@ -59,10 +59,17 @@ def bump_sequences(matches, seq_state: dict) -> dict:
     return out
 
 
-def team_calendar(team: dict, matches: list[dict], comp_names: dict, seqs: dict, venues: dict | None = None) -> str:
+SITE = "https://tifo.elyoxe.com"
+ALARM_MINUTES = 30
+
+
+def team_calendar(team: dict, matches: list[dict], comp_names: dict, seqs: dict, venues: dict | None = None,
+                  channels: dict | None = None, title: str | None = None) -> str:
+    """channels: {comp_id: "القناة ..."} for one country (a static feed cannot know the viewer's country: the UAE's).
+    Every event links to its match page (URL + in the description) and timed, upcoming ones carry a 30-minute alarm."""
     name = team.get("name_ar") or team.get("name")
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", f"PRODID:{PRODID}", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
-             f"X-WR-CALNAME:{_esc('مباريات ' + name)}", "X-WR-TIMEZONE:Asia/Dubai",
+             f"X-WR-CALNAME:{_esc(title or ('مباريات ' + name))}", "X-WR-TIMEZONE:Asia/Dubai",
              "REFRESH-INTERVAL;VALUE=DURATION:PT6H", "X-PUBLISHED-TTL:PT6H"]
     for m in sorted(matches, key=lambda m: m.get("kickoff_utc") or m.get("date_uae") or "9999"):
         key = str(m.get("id") or m.get("ext_id"))
@@ -85,12 +92,23 @@ def team_calendar(team: dict, matches: list[dict], comp_names: dict, seqs: dict,
             nd = (datetime.strptime(d, "%Y%m%d") + timedelta(days=1)).strftime("%Y%m%d")
             lines += [f"DTSTART;VALUE=DATE:{d}", f"DTEND;VALUE=DATE:{nd}"]
             desc += " · الموعد لم يُحدَّد بعد"
+        ch = (channels or {}).get(m.get("comp"))
+        if ch and m.get("status") not in ("finished", "postponed", "cancelled"):
+            desc += f"\n{ch}"
+        url = f"{SITE}/m/{m['id']}/" if m.get("id") else None
+        if url:
+            desc += f"\n{url}"
         lines += [f"SUMMARY:{_esc(summary)}", f"DESCRIPTION:{_esc(desc)}"]
+        if url:
+            lines.append(f"URL:{url}")
         v = (venues or {}).get(key)
         if v:
             lines.append(f"LOCATION:{_esc(v)}")
         if m.get("status") in ("postponed", "cancelled"):
             lines.append("STATUS:CANCELLED")
+        elif ko and not m.get("time_tbd") and m.get("status") == "scheduled":
+            lines += ["BEGIN:VALARM", "ACTION:DISPLAY", f"TRIGGER:-PT{ALARM_MINUTES}M",
+                      f"DESCRIPTION:{_esc(summary + ' بعد ' + str(ALARM_MINUTES) + ' دقيقة')}", "END:VALARM"]
         lines.append("END:VEVENT")
     lines.append("END:VCALENDAR")
     return "\r\n".join(_fold(x) for x in lines) + "\r\n"

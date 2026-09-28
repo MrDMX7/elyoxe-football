@@ -62,7 +62,8 @@ The CloudFront cache policy honours each object's max-age (MinTTL 1 s). Unchange
 | `comp/{id}/players.json` | per-player season stats, per-90 values, league percentiles (radar) | daily, for `player_stats_comps` (538, 536, 535) |
 | `comp/{id}/foreigners.json` | best non-national players of the league | daily, same competitions |
 | `team/{id}.json` | Team: squad, all fixtures, transfers, venue | daily for focus teams (UAE national team + every club in 538/11027) |
-| `team/{id}.ics` | iCalendar feed of the team's matches | with every competition refresh; daily for focus teams |
+| `team/{id}.ics` | iCalendar feed of the team's matches: each event has `URL` (the match page, also in the description), the UAE channel (`broadcast_by_country.json`, a static feed cannot know the viewer's country) and, for timed upcoming matches, a 30-minute `VALARM` | with every competition refresh; daily for focus teams |
+| `comp/{id}.ics` | the same feed for a whole competition (538, 11027, 9943, 11026) | with every competition refresh |
 | `teams.json` | every team seen: name, name_ar, logo, competitions | every run |
 | `national/5789/qualifying.json` | the UAE's group table and that group's remaining fixtures per qualifying competition | with 290, 329, 10197, 10609 |
 | `national/uae-abroad.json` | UAE nationals at clubs outside the UAE, with their main-league season stats | daily |
@@ -225,7 +226,7 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `comp/538/sim.json` | 10k-season Monte Carlo: `teams: {id: {exp_pts, positions: [P(1st)...], title, ranks_1_2, ranks_3_3, ranks_4_4, relegation}}`, `fixtures_check` |
 | `comp/{id}/scenarios.json` | any group or league with ≤ 8 games left: every W/D/L combination → per team best/worst position and `next_result: {W,D,L: {best, worst}}` |
 | `comp/{id}/live-table.json` | while live (poller, 20 s): the table re-ranked with the newest live scores (`rank_before` = source rank) |
-| `comp/{id}/bump.json` | leagues: `positions: {team: [position after round 1, 2, ...]}` (computed order) |
+| `comp/{id}/bump.json` | leagues: `positions: {team: [position after round 1, 2, ...]}` (computed order). Never replaced by an empty chart: when the source answers with a table but no fixture list, the last good fixtures are used |
 | `comp/{id}/tournament-sim.json` | 329, 290: `teams: {id: {group_positions, reach_1/8 ... reach_final, reach_winner}}` |
 | `comp/538/facts.json` | per upcoming match (21 days): items `{team, kind (unbeaten/winning/winless/losing/scoring/clean_sheets/home_unbeaten/away_unbeaten/weekday/h2h), current, record, record_at_stake, text_ar}`. Records are qualified «منذ 2010/2011 (بيانات FotMob)» |
 | `comp/538/watch.json` | watchability per upcoming match: `{score 0-100, closeness, derby, stakes, form}` |
@@ -306,7 +307,7 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `arabs/friendlies.json` | club friendlies (FotMob 489) of clubs in the covered Arab leagues |
 | `team/{id}/month/YYYY-MM.json` | Arab-league clubs, current and previous month: results, W/D/L, top 5 performers (average match rating, goals, assists), Tifo rating at month start/end, table position at month start/end |
 | (private) weekly accuracy report | not in v1/: Lambda `elyoxe-football-report` e-mails the owner every Monday 08:00 UAE (hit rate, Brier vs base rates, calibration, biggest misses; report.py) |
-| `arabs/match-of-week.json` | the week's pick (Monday, next 7 days) among matches with an Arab club or national team, plus a shortlist; score = 0.6×watchability + derby + stage + Arab-vs-Arab |
+| `arabs/match-of-week.json` | the week's pick among upcoming matches (next 7 days) with an Arab club or national team, plus a shortlist; score = 0.6×watchability + derby + stage + Arab-vs-Arab. `week` is the UAE week (Monday 00:00 UAE); checked hourly, and once the pick has kicked off it is replaced by the best remaining upcoming match |
 | `arabs/golden-boot.json` | league goals by Arab nationals (Arab leagues + big five), raw and weighted by league strength; weight = 10^((mean Tifo club rating of the league − 1500)/800), `league_strength` included |
 | `arabs/poty.json` | Arab player of the season race: weight × ((rating − 6)×10 + 4×goals + 3×assists) × min(1, minutes/1800), with `rank_history` (weekly, last 12 weeks) |
 | `arabs/abroad.json` → `per90` | per-90 values (goals, assists, shots, shots on target, big chances created, passes, dribbles, tackles, interceptions, recoveries) for the compare page |

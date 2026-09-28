@@ -291,3 +291,25 @@ def test_status_change_queues_team_patch_and_settle(tmp_path):
     p.store.put_json("match/7.json", {"status": "live", "status_detail": None, "score": {"home": 1, "away": 0}, "penalties": None})
     out = p.settle_fixtures([{"id": 7, "status": "scheduled", "minute": "1", "score": None, "period": "1H"}])[0]
     assert out["status"] == "live" and out["score"] == {"home": 1, "away": 0} and out["minute"] is None and "period" not in out
+
+
+def test_ics_has_url_channel_and_alarm():
+    from compute import ics as ICS
+    ms = [{"id": 1000021961, "comp": 538, "round": "7", "status": "scheduled", "kickoff_utc": "2026-10-16T13:05:00Z",
+           "home": {"name": "Al-Dhafra", "name_ar": "الظفرة"}, "away": {"name": "United FC", "name_ar": "يونايتد"}},
+          {"id": 5, "comp": 538, "status": "finished", "kickoff_utc": "2026-09-01T13:05:00Z", "score": {"home": 1, "away": 0},
+           "home": {"name": "A"}, "away": {"name": "B"}}]
+    seqs = ICS.bump_sequences(ms, {})
+    txt = ICS.team_calendar({"name": "x"}, ms, {538: "دوري أدنوك"}, seqs, channels={538: "القناة في الإمارات: أبوظبي الرياضية"})
+    flat = txt.replace("\r\n ", "")
+    assert "URL:https://tifo.elyoxe.com/m/1000021961/" in flat and "القناة في الإمارات: أبوظبي الرياضية" in flat
+    assert flat.count("BEGIN:VALARM") == 1 and "TRIGGER:-PT30M" in flat                  # upcoming only
+    assert all(len(line.encode()) <= 75 for line in txt.split("\r\n"))
+
+
+def test_bump_never_written_empty(tmp_path):
+    import analytics as AN
+    p = _poller(tmp_path)
+    st = {"groups": [{"rows": [{"team": {"id": 1}}]}]}
+    AN.comp_tables(p, 47, st, [], "league")
+    assert "comp/47/bump.json" not in p.store.written

@@ -8,7 +8,7 @@ import arabs as AR
 import config
 from compute import danger as DG, extras as EX, history as HI, rating as R
 from sources import schema as S
-from timeutil import iso, parse_utc
+from timeutil import iso, parse_utc, UAE
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ERRORS = (Exception,)
@@ -49,10 +49,11 @@ def league_strength(p):
 # ------------------------------------------------------------------ 306 match of the week
 def match_of_week(p):
     now = p.now()
-    y, w, wd = now.isocalendar()
+    y, w, wd = now.astimezone(UAE).isocalendar()        # the UAE week (Monday 00:00 UAE), not the UTC one
     cur = p.store.get_json("arabs/match-of-week.json") or {}
-    if cur.get("week") == f"{y}-W{w:02d}" and wd != 1:
-        return
+    pick_ko = parse_utc(((cur.get("pick") or {}).get("kickoff_utc")))
+    if cur.get("week") == f"{y}-W{w:02d}" and pick_ko and pick_ko > now:
+        return                  # this week's pick is still ahead; a pick that has kicked off is replaced by the next one
     derbies = {tuple(sorted(d["teams"])) for d in config.arab_derbies()}
     national_ids = {c["fotmob_team"] for c in config.countries() if c.get("arab")}
     cands = []

@@ -368,7 +368,9 @@ def comp_tables(p, cid, st, matches, kind):
     """bump (leagues), scenarios (any group with <= 8 games left). Called from refresh_comp."""
     now = iso(p.now())
     if kind == "league" and st and len(st["groups"]) == 1:
-        p.store.put_json(f"comp/{cid}/bump.json", {"comp": cid, "generated": now, **TB.bump(matches)}, cache="static")
+        b = TB.bump(matches)
+        if b["rounds"]:             # never replace a season chart with an empty one (keep last good)
+            p.store.put_json(f"comp/{cid}/bump.json", {"comp": cid, "generated": now, **b}, cache="static")
     if not st or p.comp_due_minutes(cid) == 2:
         return          # scenarios enumerate up to 3^8 outcomes: never inside a live competition's 2-minute refresh
     groups = []
