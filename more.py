@@ -53,7 +53,8 @@ def comp_insights(p, cid):
         p.store.put_json(f"comp/{cid}/xi.json", {**base, "teams": IN.xi(L)}, cache="static")
         cc = p.cc_of(cid)
         if cc and cc != "INT":
-            p.store.put_json(f"comp/{cid}/local-minutes.json", {**base, "country_code": cc, **IN.local_minutes(L, cc),
+            lm_ = IN.local_minutes(L, cc)
+            p.store.put_json(f"comp/{cid}/local-minutes.json", {**base, "country_code": cc, **lm_,
                                                                "available": lu > 0, "source_coverage": cov,
                                                                **({} if lu else {"reason": "FotMob publishes no lineups for this "
                                                                                  "competition's matches"}),
@@ -90,7 +91,12 @@ def comp_insights(p, cid):
         if cur and ages:
             n = sum(v.get("n", 0) for v in sq.values())
             seasons[cur]["avg_age"] = round(sum(ages) / len(ages), 1)
-            seasons[cur]["foreign_share_pct"] = round(100 * sum(v.get("foreign", 0) for v in sq.values()) / n, 1) if n else None
+            seasons[cur]["foreign_squad_pct"] = round(100 * sum(v.get("foreign", 0) for v in sq.values()) / n, 1) if n else None
+        if cur and L and p.cc_of(cid) not in (None, "INT"):
+            # share of league MINUTES by non-nationals (lineups), what the site's label says; headcount is foreign_squad_pct
+            lg_ = IN.local_minutes(L, p.cc_of(cid))["league"]
+            tot_ = lg_["national"] + lg_["foreign"]
+            seasons[cur]["foreign_share_pct"] = round(100 * lg_["foreign"] / tot_, 1) if tot_ else None
         p.store.put_json(f"comp/{cid}/seasons.json", {"comp": cid, "generated": now, "seasons": seasons,
                                                      "note": "tables computed from FotMob results (points, goal difference, goals for); "
                                                              "the official order can differ on tie-breaks, deductions or play-offs; "
@@ -427,8 +433,11 @@ def birthdays(p):
         days.setdefault(dob[5:10], []).append({"player": int(pid), "name": teams.get(pid) or (names.get(pid) or {}).get("latin"),
                                                "name_ar": (names.get(pid) or {}).get("ar"), "dob": dob,
                                                "source": "wikidata" if (names.get(pid) or {}).get("qid") and wd.get(names[pid]["qid"]) == dob else "fotmob"})
-    for md, xs in days.items():
-        p.store.put_json(f"players/birthdays/{md}.json", {"date": md, "players": sorted(xs, key=lambda x: x["dob"])}, cache="static")
+    d0 = date(2024, 1, 1)                   # a leap year: all 366 days, empty ones as an empty list (no 404)
+    for i in range(366):
+        md = (d0 + timedelta(days=i)).strftime("%m-%d")
+        p.store.put_json(f"players/birthdays/{md}.json", {"date": md, "players": sorted(days.get(md) or [], key=lambda x: x["dob"])},
+                         cache="static")
     p.mark("birthdays")
 
 

@@ -14,10 +14,11 @@ providers, write one adapter that returns these shapes.
 ## Conventions
 
 - **Ids:** FotMob's numeric ids (int) are canonical for competitions, teams, players and matches. `competitions.yaml` maps other providers (`ids:`); teams have `teams_ar.yaml` (uaepl slugs). A uaepl.ae fixture that FotMob has not published yet has `id: null` and `ext_id: "uaepl:<uuid>"`.
+- **Tracked matches:** every match of a competition in competitions.yaml, plus every match of the 22 Arab national teams (friendlies included, since 2026-09-28).
 - **Time:** always two fields.
   - `kickoff_utc` is `2026-10-16T13:05:00Z`, taken from FotMob `status.utcTime`.
   - `kickoff_uae` is `2026-10-16T17:05:00+04:00`.
-  - `time_tbd: true` means the date is known but the hour isn't. Asian Cup group games are like this.
+  - `time_tbd: true` means the date is known but the hour isn't. Asian Cup group games are like this. FotMob flags it only on team pages (`matchTimeTbd`), not on league pages, so the flag seen on any team page is carried to every copy of that match (day, fixtures, match file) while the kickoff is unchanged.
   - `date_tbd: true` means neither is known (uaepl.ae rounds 7–26).
 - **FotMob's other clock:** strings like `26.09.2026 17:57:03` (period starts, the day feed's `time`) are **Europe/Oslo wall-clock time with daylight saving**.
   - That is UTC+2 from late March to late October and **UTC+1 in winter**. `10.01.2027 15:00` = 14:00Z.
@@ -67,7 +68,7 @@ The CloudFront cache policy honours each object's max-age (MinTTL 1 s). Unchange
 | `teams.json` | every team seen: name, name_ar, logo, competitions | every run |
 | `national/5789/qualifying.json` | the UAE's group table and that group's remaining fixtures per qualifying competition | with 290, 329, 10197, 10609 |
 | `national/uae-abroad.json` | UAE nationals at clubs outside the UAE, with their main-league season stats | daily |
-| `h2h/{a}-{b}.json`, `h2h/index.json` | full head-to-head list for each pair of current Pro League clubs (`a` < `b`), read from their latest finished meeting plus that meeting itself (FotMob's block lists only earlier games) | weekly per pair; retried next run when the block is empty |
+| `h2h/{a}-{b}.json`, `h2h/index.json` | full head-to-head list for each pair of current Pro League clubs (`a` < `b`), read from their latest finished meeting plus that meeting itself (FotMob's block lists only earlier games). `matches` = results only (newest first); a future meeting the source lists is in `upcoming` (`status: "scheduled"`), never in `matches` | weekly per pair; retried next run when the block is empty; files from before 2026-09-28 rebuilt once |
 | `health.json` | per source and file: ok, error, time, last_ok; last run (mode, seconds, requests, written). `source:fotmob` = the outage watch (failing for N min: last error) and `source-alert` = the last alert mail (see "Source outage alert") | every run (poller) |
 | `health-analytics.json` | the same for the analytics function | every 10 min |
 
@@ -78,7 +79,11 @@ The CloudFront cache policy honours each object's max-age (MinTTL 1 s). Unchange
 ```jsonc
 {
   "id": 1000021961, "ext_id": null, "comp": 538, "comp_name_ar": "دوري أدنوك للمحترفين",
-  "season": "2026/2027", "round": "6", "stage": null, "group_id": null,
+  "season": "2026/2027", "round": "6", "round_ar": "الجولة 6", "stage": null, "group_id": null,
+  // round keys (no spaces, safe in URLs): matchdays "1", "2" ... ("Group Stage - Round 3" -> "3"); knockouts
+  // "1/64" ... "1/8" ("8th Finals"), "1/4" ("Quarter-finals"), "1/2", "final", "3rd" ("bronze", "3rd Place Final"),
+  // "prelim-1", "prelim-2", "prelim", "playoff" ("Qualifying Round"); round_ar is the Arabic label.
+  // Bracket placeholders ("Winner SF 1", no id) carry name_ar «الفايز من نص النهائي 1».
   "kickoff_utc": "2026-10-16T13:05:00Z", "kickoff_uae": "2026-10-16T17:05:00+04:00",
   "time_tbd": false, "date_tbd": false,
   "status": "scheduled",          // scheduled | live | ht | finished | postponed | cancelled | abandoned | awarded | unknown
@@ -226,7 +231,7 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `comp/538/sim.json` | 10k-season Monte Carlo: `teams: {id: {exp_pts, positions: [P(1st)...], title, ranks_1_2, ranks_3_3, ranks_4_4, relegation}}`, `fixtures_check` |
 | `comp/{id}/scenarios.json` | any group or league with ≤ 8 games left: every W/D/L combination → per team best/worst position and `next_result: {W,D,L: {best, worst}}` |
 | `comp/{id}/live-table.json` | while live (poller, 20 s): the table re-ranked with the newest live scores (`rank_before` = source rank) |
-| `comp/{id}/bump.json` | leagues: `positions: {team: [position after round 1, 2, ...]}` (computed order). Never replaced by an empty chart: when the source answers with a table but no fixture list, the last good fixtures are used |
+| `comp/{id}/bump.json` | leagues: `positions: {team: [position after round 1, 2, ...]}` (computed order; the latest round uses the official table's ranks when every team has played that many games, `last_round_order: "source table"`). Never replaced by an empty chart: when the source answers with a table but no fixture list, the last good fixtures are used |
 | `comp/{id}/tournament-sim.json` | 329, 290: `teams: {id: {group_positions, reach_1/8 ... reach_final, reach_winner}}` |
 | `comp/538/facts.json` | per upcoming match (21 days): items `{team, kind (unbeaten/winning/winless/losing/scoring/clean_sheets/home_unbeaten/away_unbeaten/weekday/h2h), current, record, record_at_stake, text_ar}`. Records are qualified «منذ 2010/2011 (بيانات FotMob)» |
 | `comp/538/watch.json` | watchability per upcoming match: `{score 0-100, closeness, derby, stakes, form}` |
@@ -264,7 +269,7 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `player/{id}/teammates.json` | top 30 teammates by matches together (stored lineups; rolling cursor, up to 3,000 players per run every 3 h, so every player with a stored lineup has one within two runs) |
 | `player/{id}/career.json` | FotMob career: `senior` / `national_team` clubs with dates, apps, goals, assists, loan. Written for league top-30 scorers/assisters and Arab players abroad, refreshed weekly |
 | `team/{id}/history.json` | every result since 2010/11 across the history competitions: `[date, comp, opponent, gf, ga, result, H/A, match]` (clubs in the analytics leagues, rolling cursor) |
-| `comp/{id}/seasons.json` | leagues: per season since 2010/11, the computed final table plus `goals_per_game`, `home_win_pct`, `draw_pct`, `title_margin`, `champion`; `avg_age`/`foreign_share_pct` for the current season |
+| `comp/{id}/seasons.json` | leagues: per season since 2010/11, the computed final table plus `goals_per_game`, `home_win_pct`, `draw_pct`, `title_margin`, `champion`; for the current season `avg_age`, `foreign_share_pct` (share of league MINUTES played by non-nationals, from lineups) and `foreign_squad_pct` (headcount in squads) |
 | `comp/{id}/milestones.json` | players within 5 goals or 10 apps of 50/100/150/200/250/300 for a club or the national team (FotMob career) |
 | `comp/{id}/upsets.json` | per season: wins by a side whose pre-match win probability was < 20% (Tifo rating, predicted before the match) |
 | `comp/{id}/projections.json` | top scorers and assisters projected to the season end at their current per-match rate |
@@ -283,7 +288,7 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `comp/{id}/signings.json` | this season's incoming transfers ranked by FotMob rating × min(1, minutes/900) at the new club |
 | `national/{id}/squad.json` | 22 Arab national teams: FotMob's current squad (latest call-up) with each player's club |
 | `callups/{club_id}.json` | the club's players currently in an Arab national squad |
-| `players/birthdays/MM-DD.json` | players born on that day: FotMob dates of birth + Wikidata P569 for players in `names/players_ar.json` with a QID |
+| `players/birthdays/MM-DD.json` | players born on that day: FotMob dates of birth + Wikidata P569 for players in `names/players_ar.json` with a QID. All 366 days exist (`players: []` on a day with none) |
 | `transfers/latest.json` | incoming moves at clubs in the Arab leagues, last 60 days, newest first |
 | `arabs/abroad.json` | Arab nationals who played in the big five or UEFA club competitions this season: nationality (ISO2 + Arabic), club, apps, minutes, goals, assists, average rating, league season stats |
 | `arabs/day/YYYYMMDD.json` | Arab players' appearances abroad that UAE day: minutes, goals, assists, rating, match |
@@ -295,7 +300,7 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `arabs/coefficients.json` | AFC association ranking and CAF association + club 5-year ranking (Wikipedia revision + the sources it cites; `arab` flag and Arabic country) |
 | `arabs/calendars.json` | per Arab league: first and last published match, breaks of 12+ days; national-team match windows |
 | `arabs/streaks.json` | running streaks (≥ 3) across the Arab leagues: unbeaten, winning, clean sheets, winless, losing |
-| `derbies.json`, `h2h/{a}-{b}.json` | the 12 big Arab derbies (derbies.yaml) with Arabic names, city and full FotMob head-to-head: `{teams, name_ar, wins {a, b, draws}, matches [{id, kickoff_utc, comp, home, away, score}], via_match, sources [FotMob match page, matchDetails API URL], check {stored_league_meetings, missing_from_list, score_differs}}`. The list is FotMob's h2h block of the latest **finished** meeting plus that meeting itself (the block lists only earlier games); `check` compares it with the league meetings in our season history. A run with no h2h block is retried next run, not in a week |
+| `derbies.json`, `h2h/{a}-{b}.json` | the 12 big Arab derbies (derbies.yaml) with Arabic names, city and full FotMob head-to-head: `{teams, name_ar, wins {a, b, draws}, matches [{id, kickoff_utc, comp, home, away, score}], via_match, sources [FotMob match page, matchDetails API URL], check {stored_league_meetings, missing_from_list, score_differs}}`. The list is FotMob's h2h block of the latest **finished** meeting plus that meeting itself (the block lists only earlier games); `check` compares it with the league meetings in our season history; `upcoming` holds future meetings (never in `matches`). A pair whose source has no h2h block is retried daily and `derbies.json` then has `h2h: null` + `missing` (never a link to a file that does not exist) |
 | `archive/index-all.json`, `archive/all/{season}.json` | every stored result by July–June season: `[id, date, comp, home, away, hs, as]` |
 | `guide/{iso2}.json` | per country: the next 3 days of covered matches with their broadcasters (research/tifo-2026-09-27/broadcast_by_country.json × fixtures) and `by_broadcaster`. Each item has `channel_known`; a match of this country's own national team or clubs in a competition the research has no row for is still listed, with `broadcasters: []`, `channel_known: false` and `channel_ar: «القناة: ما تأكدنا»` |
 | `comp/{id}/referees.json` → `foreign`, `home`, `away`, `available` | referee nationality vs the league's country; yellows, reds and penalties against the home/away side. `available: false` + `reason` where FotMob names no referee (530, 516, 544, 524, 529, 9468, 329 as of 2026-09-27) |
@@ -307,7 +312,7 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 | `arabs/friendlies.json` | club friendlies (FotMob 489) of clubs in the covered Arab leagues |
 | `team/{id}/month/YYYY-MM.json` | Arab-league clubs, current and previous month: results, W/D/L, top 5 performers (average match rating, goals, assists), Tifo rating at month start/end, table position at month start/end |
 | (private) weekly accuracy report | not in v1/: Lambda `elyoxe-football-report` e-mails the owner every Monday 08:00 UAE (hit rate, Brier vs base rates, calibration, biggest misses; report.py) |
-| `arabs/match-of-week.json` | the week's pick among upcoming matches (next 7 days) with an Arab club or national team, plus a shortlist; score = 0.6×watchability + derby + stage + Arab-vs-Arab. `week` is the UAE week (Monday 00:00 UAE); checked hourly, and once the pick has kicked off it is replaced by the best remaining upcoming match |
+| `arabs/match-of-week.json` | the week's pick among upcoming matches (next 7 days) with an Arab club or national team, plus a shortlist; score = 0.6×watchability + 20 derby + 25×stage + 12 `arab_vs_arab` (two Arab sides from different countries: national teams or clubs of two countries, never a domestic game) + 15 when both are Arab national teams + 10×`stakes` (both near the top of their table); `method_v` re-picks the week when the scoring changes. `week` is the UAE week (Monday 00:00 UAE); checked hourly, and once the pick has kicked off it is replaced by the best remaining upcoming match |
 | `arabs/golden-boot.json` | league goals by Arab nationals (Arab leagues + big five), raw and weighted by league strength; weight = 10^((mean Tifo club rating of the league − 1500)/800), `league_strength` included |
 | `arabs/poty.json` | Arab player of the season race: weight × ((rating − 6)×10 + 4×goals + 3×assists) × min(1, minutes/1800), with `rank_history` (weekly, last 12 weeks) |
 | `arabs/abroad.json` → `per90` | per-90 values (goals, assists, shots, shots on target, big chances created, passes, dribbles, tackles, interceptions, recoveries) for the compare page |
@@ -337,6 +342,11 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 - **Lineup players:** they carry `role` (GK/DF/MF/FW), `age`, `minutes_on/off`, and `xy`/`xy_h` (0–1 pitch fractions as FotMob draws the vertical and horizontal lineups) for a 3D pitch.
 - **Shots:** they carry `goal_y`/`goal_z` (where the ball crossed the goal line), `on_goal {x, y}` and `keeper_id`.
 - **Squad players:** they carry `dob`, `height` and `market_value_eur`.
+- **Player ids:** FotMob sends id 0 for a player it has no page for; it is published as `null` (no false joins).
+- **`comp/{id}/fixtures.json`:** also `open_rounds` (round keys with a match still to play, dated or not) and `rounds_left` (the UAE league has rounds 7–26 undated: `rounds_left` 21 at round 6, not 1).
+- **Dormant:** `index.json` → `dormant` is rechecked hourly against the last good fixtures (one source answer without fixtures no longer marks a running competition «stopped» for a day).
+- **Upcoming match files:** a scheduled match in the next 7 days with no detail yet gets `match/{id}.json` built from its fixture: the summary, `minimal: true`, empty `events`/`stats`, `lineups: null` and `h2h` from `h2h/{a}-{b}.json`. The prematch and live details replace it.
+- **National teams:** `team/{id}.json` is also written for the 21 other Arab national teams (the same object as `national/{id}/team.json`: squad, every fixture including friendlies). `arabs/national.json` next/last matches take home/away, status and score from our tracked fixtures when we have the match. A finished match in a national competition re-runs the national step (Elo, Gulf Cup/Asian Cup simulations, archives) within 10 minutes instead of daily, and a finished match of a focus team refreshes its team file.
 
 ## Not available (checked 2026-09-26)
 

@@ -369,6 +369,15 @@ def comp_tables(p, cid, st, matches, kind):
     now = iso(p.now())
     if kind == "league" and st and len(st["groups"]) == 1:
         b = TB.bump(matches)
+        rows = st["groups"][0]["rows"]
+        if b["rounds"] and rows and all((r.get("played") or 0) == len(b["rounds"]) for r in rows):
+            # the latest point uses the official table (tie-breaks the computed order does not know: head-to-head,
+            # fair play), so the chart ends where the table above it stands
+            for r in rows:
+                pos = b["positions"].get(str(r["team"]["id"]))
+                if pos and r.get("rank"):
+                    pos[-1] = r["rank"]
+            b["last_round_order"] = "source table"
         if b["rounds"]:             # never replace a season chart with an empty one (keep last good)
             p.store.put_json(f"comp/{cid}/bump.json", {"comp": cid, "generated": now, **b}, cache="static")
     if not st or p.comp_due_minutes(cid) == 2:
@@ -569,6 +578,8 @@ def league_squads_step(p, limit=2):
                     p.aux("injuries")[tid_s] = injured
                 players = [x for g in sq for x in g["players"]]
                 league_country = p.cc_of(cid)
+                if not league_country:
+                    continue                # league country not known yet: counting now would call everyone local
                 store.setdefault(str(cid), {})[tid_s] = {
                     "n": len(players), "ages": [x["age"] for x in players if x.get("age")],
                     "foreign": sum(1 for x in players if x.get("country") and league_country and x["country"] != league_country)}

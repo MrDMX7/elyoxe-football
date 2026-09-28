@@ -324,3 +324,19 @@ def test_arab_club_squads_weekly_idle_only(tmp_path):
     assert set(ids) == {101, 102}                          # not the big five, not the focus (538) clubs
     p.dues()["team:102"] = "2026-09-01T00:00:00Z"
     assert p.arab_club_ids()[0] == 101                     # never refreshed first
+
+
+def test_minimal_match_file_for_upcoming(tmp_path):
+    p = _poller(tmp_path)
+    p.now_fn = lambda: datetime(2026, 9, 28, 8, 0, tzinfo=timezone.utc)
+    p.store.put_json("h2h/1-2.json", {"wins": {"1": 3, "2": 1, "draws": 2}, "matches": [{"id": 9, "score": {"home": 1, "away": 0}}]})
+    m = {"id": 77, "status": "scheduled", "kickoff_utc": "2026-09-29T17:30:00Z", "home": {"id": 2}, "away": {"id": 1}}
+    far = dict(m, id=78, kickoff_utc="2026-10-20T17:30:00Z")
+    p.minimal_match_files([m, far])
+    d = p.store.get_json("match/77.json")
+    assert d["minimal"] and d["events"] == [] and d["h2h"]["summary"] == {"home_wins": 1, "draws": 2, "away_wins": 3}
+    assert p.store.get_json("match/78.json") is None
+    p.st["detail_at"] = {"77": "x"}
+    p.store.written.clear()
+    p.minimal_match_files([dict(m, kickoff_utc="2026-09-29T18:00:00Z")])
+    assert "match/77.json" not in p.store.written          # never over a real detail
