@@ -39,11 +39,13 @@ id,latin,ar,source,team
 743720,Charles Pickel,شارليس بيكيل,wikidata,الشارقة
 1350066,Cheickna Doumbia,شيكنا دومبيا,wikidata,الشارقة
 925642,Cho Yu-Min,تشو يو مين,wikidata,الشارقة
+1515130,Clinton Nsiala,كلينتون نسيالا,generated,الشارقة
 1830381,David Gondim,ديفيد غونديم,generated,الشارقة
 496648,Diney Borges,ديني بورغيس,generated,الشارقة
 1837620,Fahd Jassim,فهد جاسم,generated,الشارقة
 1830389,Hamdan Al Hammadi,حمدان الحمادي,generated,الشارقة
 263685,Igor Coronado,إيغور كورونادو,wikidata,الشارقة
+1636512,João Pedro Chermont,جواو بيدرو شيرمونت,generated,الشارقة
 1084245,Julimar,جوليمار,generated,الشارقة
 1363804,Khaled Tawhid,خالد توحيد,wikidata,الشارقة
 736081,Kodjo Laba,كودجو لابا,wikidata,الشارقة
@@ -139,7 +141,6 @@ id,latin,ar,source,team
 1639608,David Petrović,ديفيد بيتروفيتش,wikidata,النصر
 1458867,Felipe Motta,فيليبي موتا,generated,النصر
 1094909,Gláuber,غلاوبر,wikidata,النصر
-1228449,Gustavo Alex,غوستافو أليكس,generated,النصر
 915139,Hussain Mahdi,حسين مهدي,wikidata,النصر
 1830478,Jamal Khalifa,جمال خليفة,generated,النصر
 1826272,Jawad Mussa,جواد موسى,generated,النصر
@@ -166,6 +167,7 @@ id,latin,ar,source,team
 1830421,Suhail Mohammad,سهيل محمد,generated,النصر
 1816326,Wesley Delgado,ويسلي ديلغادو,generated,النصر
 1826275,Zaid Osama,زيد أسامة,generated,النصر
+1228449,Gustavo Alex,غوستافو أليكس,generated,النصر + المنتخب
 1055270,Issam Faiz,عصام فايز,generated,النصر + المنتخب
 1138102,Zayed Sultan,زايد سلطان,wikidata,النصر + المنتخب
 619460,Abdulla Kazim,عبد الله كاظم,wikidata,الوحدة
@@ -341,6 +343,7 @@ id,latin,ar,source,team
 1334842,Jahnoah Markelo,جاهنواه ماركيلو,generated,شباب الأهلي
 668727,Jorge Fernandes,جورج فيرنانديز,generated,شباب الأهلي
 1694848,João Marcelo,جواو مارسيلو,generated,شباب الأهلي
+1556281,Juan Alvina,خوان ألفينا,wikidata,شباب الأهلي
 1560056,Kauan Santos,كوان سانتوس,generated,شباب الأهلي
 173075,Khaled Al Senaani,خالد السناني,generated,شباب الأهلي
 1458813,Mateus Henrique,ماتيوس هنريكي,generated,شباب الأهلي
@@ -430,6 +433,7 @@ id,latin,ar,source,team
 1837614,Khalid Ali,خالد علي,wikidata,يونايتد
 618635,Khalil Ibrahim,خليل إبراهيم,wikidata,يونايتد
 1104103,Kouame Kouadio,كوامي كواديو,generated,يونايتد
+469701,Mahmoud Dahoud,محمود داوود,wikidata,يونايتد
 625159,Majid Surour,ماجد سرور,generated,يونايتد
 1129466,Mohammed Yousuf Ghulam,محمد يوسف غلام,wikidata,يونايتد
 1021591,Moustapha Name,مصطفى نيم,wikidata,يونايتد
