@@ -48,7 +48,7 @@
       if (md.score){ text(x, String(md.score.home), W / 2 + 130, 960, '700 230px "Barlow Condensed"', live ? "#5BE08F" : CHALK); text(x, "-", W / 2, 940, '700 160px "Barlow Condensed"', "#B9C7C0"); text(x, String(md.score.away), W / 2 - 130, 960, '700 230px "Barlow Condensed"', live ? "#5BE08F" : CHALK); }
       else text(x, R.hhmm(md.kickoff_uae), W / 2, 930, '700 170px "Barlow Condensed"', CHALK);
       var st = live ? "مباشر " + (md.minute || "") + "'" : md.status === "finished" ? "انتهت" : R.dayLabel(R.ymd(md.kickoff_uae));
-      text(x, st, W / 2, 1180, '800 46px "Noto Kufi Arabic"', live ? "#5BE08F" : DUNE);
+      text(x, st, W / 2, 1180, '800 46px "Noto Kufi Arabic"', live ? "#5BE08F" : CHALK);   /* QA 68: dune is «my team» only */
       var y = 1300;
       if (md.status === "finished" || live){
         (md.events || []).filter(function(e){ return /goal/.test(e.type) && e.player; }).slice(0, 8).forEach(function(e){ var s = e.team === "home" ? e.minute + "'  " + e.player.name : e.player.name + "  " + e.minute + "'"; text(x, s, e.team === "home" ? W - 90 : 90, y, '400 36px "Readex Pro"', CHALK, e.team === "home" ? "right" : "left", "ltr"); y += 56; });
@@ -58,7 +58,7 @@
         text(x, "فوز " + (md.home.name_ar || "") + " " + Math.round(p.home * 100) + "%", W - 90, y + 100, '400 36px "Readex Pro"', CHALK, "right");
         text(x, "فوز " + (md.away.name_ar || "") + " " + Math.round(p.away * 100) + "%", 90, y + 100, '400 36px "Readex Pro"', CHALK, "left");
         text(x, "تعادل " + Math.round(p.draw * 100) + "%", W / 2, y + 160, '400 36px "Readex Pro"', "#B9C7C0");
-        text(x, "توقعات تيفو", W / 2, y + 240, '800 34px "Noto Kufi Arabic"', DUNE);
+        text(x, "توقعات تيفو", W / 2, y + 240, '800 34px "Noto Kufi Arabic"', "#B9C7C0");
       }
       if (md.venue && md.venue.name_ar) text(x, md.venue.name_ar, W / 2, H - 260, '400 34px "Readex Pro"', "#B9C7C0");
       footer(x, W, H);
@@ -79,7 +79,7 @@
         x.fillStyle = NIGHT2; x.fillRect(70, y, W - 140, 170);
         text(x, (home ? "ضد " : "في ملعب ") + (opp.name_ar || opp.name), W - 110, y + 75, fit(x, opp.name_ar || opp.name, '800 44px "Noto Kufi Arabic"', 560), CHALK, "right");
         text(x, (m.comp_name_ar || ""), W - 110, y + 135, '400 30px "Readex Pro"', "#B9C7C0", "right");
-        text(x, R.hhmm(m.kickoff_uae), 110, y + 85, '700 70px "Barlow Condensed"', DUNE, "left");
+        text(x, R.hhmm(m.kickoff_uae), 110, y + 85, '700 70px "Barlow Condensed"', CHALK, "left");
         var dp = R.dayParts(R.ymd(m.kickoff_uae)); text(x, dp.date, 110, y + 140, '400 30px "Readex Pro"', "#B9C7C0", "left");
         y += 200;
       });

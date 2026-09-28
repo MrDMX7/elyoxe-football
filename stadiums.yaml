@@ -30,7 +30,7 @@ stadiums:
     sources: [fotmob matchDetails 5898781, 5961838, 1000020528; fotmob team venue; uaepl.ae fixtures]
   - id: al-maktoum-stadium
     name_en: Al Maktoum Stadium
-    name_ar: استاد ال مكتوم
+    name_ar: استاد آل مكتوم
     fotmob_name: Al Maktoum Stadium
     city: Dubai
     emirate: dubai
@@ -40,7 +40,7 @@ stadiums:
     sources: [fotmob matchDetails 5898782, 5961819, 5961825; fotmob team venue; uaepl.ae fixtures]
   - id: al-nahyan-stadium
     name_en: Al Nahyan Stadium
-    name_ar: استاد ال نهيان
+    name_ar: استاد آل نهيان
     fotmob_name: Al Nahyan Stadium
     city: Abu Dhabi
     emirate: abu-dhabi
@@ -72,7 +72,7 @@ stadiums:
     sources: [fotmob matchDetails n/a; fotmob team venue]
   - id: hamdan-bin-rashid-al-maktoum-stadium
     name_en: Hamdan Bin Rashid Al Maktoum Stadium
-    name_ar: استاد حمدان بن راشد ال مكتوم
+    name_ar: استاد حمدان بن راشد آل مكتوم
     fotmob_name: Hamdan Bin Rashid Stadium
     city: Hatta
     emirate: dubai

@@ -8,8 +8,10 @@
    outright (offline), never on a timeout, or a slow stadium connection would freeze the score. /og/ is never cached.
    Offline: a navigation that fails with nothing cached gets /offline/ (tifo-off, filled on install).
    Kill switch: on activate the worker reads /sw.json and unregisters itself (and clears its caches) when it says {"off":true}. */
-const V = "__V__", A = "tifo-assets-" + V, CREST = "tifo-crest", PAGES = "tifo-pages", DATA = "tifo-data";
-const LIMIT = { [CREST]:300, [PAGES]:60, [DATA]:40 };
+// QA 15: one unversioned asset cache. /assets/ names carry their content hash, so a deploy adds files instead of dropping the ones
+// the 60 cached pages still point at (an offline page kept its CSS/JS only until the next deploy); the newest 160 are kept.
+const V = "__V__", A = "tifo-assets", CREST = "tifo-crest", PAGES = "tifo-pages", DATA = "tifo-data";
+const LIMIT = { [A]:160, [CREST]:300, [PAGES]:60, [DATA]:40 };
 // W3.6: the offline page (and the assets it links) is kept apart from the 60-page cache so it is never trimmed away
 const OFF = "tifo-off";
 self.addEventListener("install", e => { self.skipWaiting(); e.waitUntil((async () => { try {
@@ -18,7 +20,10 @@ self.addEventListener("install", e => { self.skipWaiting(); e.waitUntil((async (
 } catch (err){} })()); });
 self.addEventListener("activate", e => { e.waitUntil((async () => {
   try { const r = await fetch("/sw.json", { cache:"no-store" }); if (r.ok && (await r.json()).off){ for (const k of await caches.keys()) if (k.startsWith("tifo-")) await caches.delete(k); await self.registration.unregister(); return; } } catch (err){}
-  for (const k of await caches.keys()) if ((k.startsWith("tifo-assets-") && k !== A) || /^tifo-2-/.test(k)) await caches.delete(k);   // tifo-2-* = the pre-split single cache
+  for (const k of await caches.keys()){
+    if (k.startsWith("tifo-assets-")){ try { const old = await caches.open(k), a = await caches.open(A); for (const q of await old.keys()){ if (!(await a.match(q))){ const r = await old.match(q); if (r) await a.put(q, r); } } } catch (err){} await caches.delete(k); }   // the per-version caches before QA 15 fold into the one cache
+    else if (/^tifo-2-/.test(k)) await caches.delete(k);   // tifo-2-* = the pre-split single cache
+  }
   if (self.registration.navigationPreload) try { await self.registration.navigationPreload.enable(); } catch (err){}
   await self.clients.claim();
 })()); });
@@ -26,7 +31,7 @@ async function put(name, req, res){ const c = await caches.open(name); await c.p
 const LIVE = /^\/v1\/(live\.json|match\/|day\/)/;
 // push (W3.6 + owner item 9a): payload {title, body, url, tag, team}; a push is always shown, even when the payload is not JSON
 self.addEventListener("push", e => { let d = {}; try { d = e.data ? e.data.json() : {}; } catch (err){ try { d = { body:e.data.text() }; } catch (x){} }
-  e.waitUntil(self.registration.showNotification(d.title || "تيفو", { body:d.body || "", tag:d.tag || "tifo", renotify:!!d.tag, lang:"ar", dir:"rtl", icon:"/icons/icon-192.png", badge:"/icons/icon-192.png", data:{ url:d.url || "/", team:d.team || null } })); });
+  e.waitUntil(self.registration.showNotification(d.title || "تيفو", { body:d.body || "", tag:d.tag || "tifo", renotify:!!d.tag, lang:"ar", dir:"rtl", icon:"/icons/icon-192.png", badge:"/icons/badge-96.png", data:{ url:d.url || "/", team:d.team || null } })); });
 self.addEventListener("notificationclick", e => { e.notification.close(); let u = "/";
   try { const x = new URL((e.notification.data && e.notification.data.url) || "/", self.location.origin); if (x.origin === self.location.origin) u = x.pathname + x.search + x.hash; } catch (err){}
   e.waitUntil((async () => { const all = await self.clients.matchAll({ type:"window", includeUncontrolled:true }), path = u.split(/[?#]/)[0];
@@ -45,7 +50,8 @@ self.addEventListener("fetch", e => {
   e.respondWith((async () => {
     const net = (async () => { const pre = e.request.mode === "navigate" && e.preloadResponse ? await e.preloadResponse : null; const r = pre || await fetch(e.request); if (r.ok) e.waitUntil(put(name, e.request, r.clone())); return r; })();
     e.waitUntil(net.catch(() => {}));   // a response that lands after the budget still refreshes the cache
-    const slow = new Promise(ok => setTimeout(ok, 4000)).then(() => caches.match(e.request)).then(hit => hit || net);
-    return Promise.race([net.catch(() => caches.match(e.request).then(hit => { if (hit) return hit; if (e.request.mode === "navigate") return caches.match("/offline/").then(o => { if (o) return o; throw new Error("offline"); }); throw new Error("offline"); })), slow]);
+    const fallback = () => caches.match(e.request).then(hit => { if (hit) return hit; if (e.request.mode === "navigate") return caches.match("/offline/").then(o => { if (o) return o; throw new Error("offline"); }); throw new Error("offline"); });
+    const slow = new Promise(ok => setTimeout(ok, 4000)).then(() => caches.match(e.request)).then(hit => hit || net.catch(fallback));   // QA 53: a connection that dies after 4 s still gets the offline page
+    return Promise.race([net.catch(fallback), slow]);
   })());
 });

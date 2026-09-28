@@ -414,7 +414,7 @@ audio{inline-size:100%;margin-block:.4rem}
 .ask input{padding:.55rem;border:2px solid var(--ink);background:var(--raised)}
 ul.bc{list-style:none;margin:0;padding:0}
 ul.bc li{padding:.35rem 0;border-block-end:1px dashed var(--line)}
-blockquote{margin:.5rem 0;padding:.4rem .7rem;border-inline-start:3px solid var(--dune);font-size:.85rem;color:var(--stone);background:var(--raised)}
+blockquote{margin:.5rem 0;padding:.4rem .7rem;border-inline-start:3px solid var(--rule);font-size:.85rem;color:var(--stone);background:var(--raised)}
 .ctrybox{position:fixed;inset-inline:0;top:3.2rem;z-index:30;margin-inline:auto;max-inline-size:32rem;background:var(--raised);border:2px solid var(--ink);padding:.8rem}
 .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(7rem,1fr));gap:.3rem}
 .cgrid button{border:1px solid var(--line);background:var(--ground);padding:.35rem;cursor:pointer}

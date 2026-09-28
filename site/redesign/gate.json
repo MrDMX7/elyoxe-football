@@ -27,21 +27,10 @@
  "comp": {
   "pages": 46,
   "sampled": 20,
-  "missing": [
-   {
-    "item": "heading:الموسم بالرسم",
-    "n": 1,
-    "eg": "/c/premier-league/"
-   },
-   {
-    "item": "tile:رحلة الموسم",
-    "n": 1,
-    "eg": "/c/premier-league/"
-   }
-  ]
+  "missing": []
  },
  "round": {
-  "pages": 491,
+  "pages": 486,
   "sampled": 20,
   "missing": []
  },
@@ -131,7 +120,7 @@
   "missing": []
  },
  "h2h": {
-  "pages": 80,
+  "pages": 81,
   "sampled": 20,
   "missing": []
  },
