@@ -23,6 +23,7 @@
     box.innerHTML = '<p class="small">اختار بلدك: المواعيد تطلع بتوقيته، ومبارياته أول شي.</p><div class="cgrid">' + R.COUNTRIES.map(function(c){ return '<button type="button" data-c="' + c[0] + '"' + (c[0] === cur ? ' aria-pressed="true"' : "") + ">" + c[1] + "</button>"; }).join("") + '<button type="button" data-c="xx"' + (cur === "xx" ? ' aria-pressed="true"' : "") + ">برا الوطن العربي</button></div>";
     box.onclick = function(e){ var t = e.target.closest("button[data-c]"); if (!t) return; try { localStorage.setItem("tifo.country", t.dataset.c); } catch (x){} box.remove(); applyCountry(); if (PAGE === "home") home(); };
     document.body.appendChild(box); };
+  function natHref(iso){ var id = (window.NAT || {})[String(iso).toUpperCase()]; return id ? "/t/" + id + "/" : "/national/" + String(iso).toLowerCase() + "/"; }   // W4.3
   // ---- search (167): one small index, loaded on first open; Arabic normalised (أ إ آ ا، ة ه، ى ي) and Latin both matched
   var SIDX = null, sb0 = $("#srch");
   // 363: forgiving search — hamza / ta marbuta / alef maqsura folded, tatweel and doubled letters collapsed (مبخووت), club nicknames,
@@ -71,7 +72,9 @@
   // W1.1d: a failed refresh never blanks what the page already shows; it says so and retries (20 -> 40 -> 60 s)
   var fails = 0; function retry(fn){ fails++; var n = $("#netnote"); if (!n){ n = document.createElement("p"); n.id = "netnote"; n.className = "netnote"; (document.querySelector(".hero-in") || document.querySelector("main")).appendChild(n); } n.textContent = "ما قدرنا نحدّث، نحاول مرة ثانية…"; poll(fn, Math.min(60e3, 20e3 * fails)); }
   function ok(){ fails = 0; var n = $("#netnote"); if (n) n.remove(); }
-  function tabs(root){ (root || document).querySelectorAll(".tabs[data-tabs]").forEach(function(t){ t.addEventListener("click", function(e){ var b = e.target.closest("button[data-t]"); if (!b) return; t.querySelectorAll("button").forEach(function(x){ x.setAttribute("aria-selected", x === b ? "true" : "false"); }); document.querySelectorAll("[data-pane]").forEach(function(p){ if (p.dataset.group === t.dataset.tabs) p.hidden = p.dataset.pane !== b.dataset.t; }); try { history.replaceState(null, "", "#" + b.dataset.t); } catch (e){} }); var h = location.hash.slice(1), b = h && t.querySelector('button[data-t="' + h + '"]'); if (b) b.click(); }); }
+  function tabs(root){ (root || document).querySelectorAll(".tabs[data-tabs]").forEach(function(t){ t.addEventListener("click", function(e){ var b = e.target.closest("button[data-t]"); if (!b) return; t.querySelectorAll("button").forEach(function(x){ x.setAttribute("aria-selected", x === b ? "true" : "false"); }); document.querySelectorAll("[data-pane]").forEach(function(p){ if (p.dataset.group !== t.dataset.tabs) return; p.hidden = p.dataset.pane !== b.dataset.t;
+        var lz = !p.hidden && p.querySelector(":scope > template.lazyp"); if (lz){ p.replaceChild(lz.content.cloneNode(true), lz); if (R.localize) R.localize(p); } });   /* W4.7: a lazy pane is stamped on first open */
+      try { history.replaceState(null, "", "#" + b.dataset.t); } catch (e){} }); var h = location.hash.slice(1), b = h && t.querySelector('button[data-t="' + h + '"]'); if (b) b.click(); }); }
   var timer = null; function poll(fn, ms){ clearTimeout(timer); timer = setTimeout(function(){ if (document.hidden){ poll(fn, ms); return; } fn(); }, ms); }
   document.addEventListener("visibilitychange", function(){ if (!document.hidden && timer){ clearTimeout(timer); run(); } });
 
@@ -211,7 +214,7 @@
     return Promise.all([index(), get("match/" + ID + ".json")]).then(function(r){
       var idx = r[0], md = r[1];
       if (MD && md.generated && MD.generated === md.generated && MD._full){ var t0 = Date.parse(md.kickoff_utc); if (R.isLive(md) || (md.status === "scheduled" && t0 - Date.now() < 90 * 60e3)) poll(match, 20e3); return; }   // W2.11: nothing new
-      md._full = 1; MD = md; FULL = md; setTimeout(dist, 0); var pb = $("#p3dbtn"); if (pb) pb.hidden = !(md.lineups && md.lineups.home);
+      md._full = 1; MD = md; FULL = md; setTimeout(dist, 0); var pb = $("#p3dbtn"); if (pb) pb.hidden = !(md.lineups && md.lineups.home) || (navigator.deviceMemory && navigator.deviceMemory <= 3);   // W4.7: no 3D on phones with 3 GB or less
       set("#mh", R.matchHead(md)); set("#facts", R.matchFacts(md, idx)); set("#catchup", R.catchup(md)); set("#events", R.events(md)); set("#lineups", R.lineups(md)); set("#stats", R.stats(md)); set("#h2h", R.h2h(md)); document.dispatchEvent(new CustomEvent("tifo:match", { detail:md }));   // v3 shell: after the re-render
       stamp(md.generated); ok();
       var t = Date.parse(md.kickoff_utc), soon = md.status === "scheduled" && t - Date.now() < 90 * 60e3 && t > Date.now() - 3 * 3600e3;
@@ -279,14 +282,20 @@
 
   // ---- majlis TV (22) and matches side by side (131): /tv/ and /tv/?m=id,id
   function tv(){
-    var pins = []; try { pins = (new URLSearchParams(location.search).get("m") || "").split(",").filter(Boolean).map(Number); } catch (e){}
+    var pins = [], mineMode = false; try { var sq = new URLSearchParams(location.search); pins = (sq.get("m") || "").split(",").filter(Boolean).map(Number); mineMode = sq.get("mine") === "1"; } catch (e){}
     var box = $("#tv"); if (!box) return Promise.resolve();
-    var load = pins.length ? Promise.all(pins.map(function(id){ return get("match/" + id + ".json").catch(function(){ return null; }); })) : Promise.all([get("day/" + uaeToday(0).replace(/-/g, "") + ".json").catch(function(){ return { matches:[] }; }), get("live.json").catch(function(){ return { matches:[] }; })]).then(function(r){ var by = {}; (r[1].matches || []).forEach(function(m){ by[m.id] = m; }); return (r[0].matches || []).map(function(m){ return by[m.id] || m; }).sort(function(a, b){ return (R.isLive(b) - R.isLive(a)) || (a.kickoff_utc || "").localeCompare(b.kickoff_utc || ""); }); });
+    // W4.2: /tv/?mine=1 is the old وضع المتابعة: each of your teams' live, next or last match, big
+    if (mineMode){ var h1 = $("main h1"); if (h1 && h1.textContent !== "وضع المتابعة"){ h1.textContent = "وضع المتابعة"; document.title = "وضع المتابعة | تيفو"; } }
+    var myT = favs().filter(function(x){ return x.t === "team"; }).slice(0, 4);
+    if (mineMode && !myT.length){ box.className = "tvgrid"; box.innerHTML = '<p class="empty">اختار فريقك من صفحة النادي («هذا فريقي»)، وبعدها افتح هالشاشة.</p>'; return Promise.resolve(); }
+    var load = mineMode ? Promise.all([Promise.all(myT.map(function(x){ return fetch("/tn/" + x.id + ".json").then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }); })), get("live.json").catch(function(){ return { matches:[] }; })]).then(function(r){ var lv = r[1].matches || [], seen = {};
+        return r[0].map(function(tn, i){ if (!tn) return null; var id = myT[i].id, l = lv.filter(function(m){ return m.home.id === id || m.away.id === id; })[0]; return l || tn.next || tn.last; }).filter(function(m){ if (!m || seen[m.id]) return false; seen[m.id] = 1; return true; }); })
+      : pins.length ? Promise.all(pins.map(function(id){ return get("match/" + id + ".json").catch(function(){ return null; }); })) : Promise.all([get("day/" + uaeToday(0).replace(/-/g, "") + ".json").catch(function(){ return { matches:[] }; }), get("live.json").catch(function(){ return { matches:[] }; })]).then(function(r){ var by = {}; (r[1].matches || []).forEach(function(m){ by[m.id] = m; }); return (r[0].matches || []).map(function(m){ return by[m.id] || m; }).sort(function(a, b){ return (R.isLive(b) - R.isLive(a)) || (a.kickoff_utc || "").localeCompare(b.kickoff_utc || ""); }); });
     return load.then(function(ms){
-      ms = ms.filter(Boolean); box.className = "tvgrid" + (pins.length ? " pin" : "");
+      ms = ms.filter(Boolean); box.className = "tvgrid" + (pins.length || mineMode ? " pin" : "");
       box.innerHTML = ms.length ? ms.map(function(m){ var live = R.isLive(m), big = m.score ? m.score.home + " - " + m.score.away : R.hhmm(m.kickoff_uae);
         var ev = pins.length ? "<ul>" + (m.events || []).filter(function(e){ return /goal|red|second_yellow/.test(e.type) && e.player; }).reverse().map(function(e){ return "<li>" + e.minute + "' " + (/goal/.test(e.type) ? "⚽ " : "🟥 ") + R.esc(e.player.name) + " (" + R.tname(e.team === "home" ? m.home : m.away) + ")</li>"; }).join("") + "</ul>" : "";
-        return '<a class="tvt' + (live ? " live" : "") + '" href="/m/' + m.id + '/"><span class="cmp">' + R.esc(m.comp_name_ar || "") + '</span><span class="row"><span class="tn">' + R.logo(m.home) + R.tname(m.home) + '</span><span class="big">' + big + '</span><span class="tn a">' + R.logo(m.away) + R.tname(m.away) + '</span></span><span class="st">' + (live ? R.minute(m) + (R.hot(m) ? " حامي" : "") : R.statusText(m)) + "</span>" + ev + "</a>"; }).join("") : '<p class="empty">ما في مباريات اليوم.</p>';
+        return '<a class="tvt' + (live ? " live" : "") + '" href="/m/' + m.id + '/"><span class="cmp">' + R.esc(m.comp_name_ar || "") + '</span><span class="row"><span class="tn">' + R.logo(m.home) + R.tname(m.home) + '</span><span class="big">' + big + '</span><span class="tn a">' + R.logo(m.away) + R.tname(m.away) + '</span></span><span class="st">' + (live ? R.minute(m) + (R.hot(m) ? " حامي" : "") : mineMode && m.status === "scheduled" ? R.td(m.kickoff_uae, true) : R.statusText(m)) + "</span>" + ev + "</a>"; }).join("") : '<p class="empty">ما في مباريات اليوم.</p>';
       stamp(new Date().toISOString()); poll(tv, 20e3);
     });
   }
@@ -427,7 +436,7 @@
     function show(){ var x = D.m[a.value] && D.m[a.value][b.value], A = D.n[a.value], Bn = D.n[b.value], o = $("#nhout");
       if (a.value === b.value){ o.innerHTML = '<p class="empty">اختار منتخبين مختلفين.</p>'; return; }
       if (!x){ o.innerHTML = '<p class="empty">ما تقابل ' + A + " و" + Bn + " في بياناتنا.</p>"; return; }
-      o.innerHTML = '<div class="h2hsum"><div><b>' + x.w + "</b>فوز " + A + "</div><div><b>" + x.d + "</b>تعادل</div><div><b>" + x.l + "</b>فوز " + Bn + '</div></div><p>تقابلوا <b class="num">' + x.p + '</b> مرة، والأهداف <bdi dir="ltr" class="num">' + x.gf + "-" + x.ga + "</bdi> لـ" + A + (x.last ? '. آخر مواجهة <span class="num">' + x.last + "</span>" : "") + '.</p><p class="tools"><a class="btn" href="/national/' + a.value.toLowerCase() + '/">منتخب ' + A + '</a><a class="btn" href="/national/' + b.value.toLowerCase() + '/">منتخب ' + Bn + "</a></p>"; }
+      o.innerHTML = '<div class="h2hsum"><div><b>' + x.w + "</b>فوز " + A + "</div><div><b>" + x.d + "</b>تعادل</div><div><b>" + x.l + "</b>فوز " + Bn + '</div></div><p>تقابلوا <b class="num">' + x.p + '</b> مرة، والأهداف <bdi dir="ltr" class="num">' + x.gf + "-" + x.ga + "</bdi> لـ" + A + (x.last ? '. آخر مواجهة <span class="num">' + x.last + "</span>" : "") + '.</p><p class="tools"><a class="btn" href="' + natHref(a.value) + '">منتخب ' + A + '</a><a class="btn" href="' + natHref(b.value) + '">منتخب ' + Bn + "</a></p>"; }
     a.onchange = b.onchange = show; show(); })();
   (function(){ var s = $("#gsel"), box = $("#guide"), fr = $("#gfree"); if (!s || !box) return;
     function free(){ box.querySelectorAll(".gm").forEach(function(g){ g.hidden = fr.checked && !g.querySelector(".free"); }); }

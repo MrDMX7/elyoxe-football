@@ -27,7 +27,9 @@ sync_logos || { echo "logo sync hiccup; retrying" >&2; sleep 5; sync_logos; }
 sync_pages(){ aws s3 sync out "s3://$BUCKET" --region $REGION --only-show-errors --delete --exclude "assets/*" --exclude "logo/*" --exclude "next/*" --cache-control "public,max-age=60"; }
 sync_pages || { echo "sync hiccup; retrying" >&2; sleep 5; sync_pages; }   # transient S3 stream errors on a few thousand small files
 echo "$NOW" > cache/last_pages
-aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/*" --query Invalidation.Id --output text >/dev/null
+# W4.7: pages, /og/, /tn/ and sw.js are served with max-age=60 (CachingOptimized honours it) and /assets/ is content-hashed, so the cache
+# refreshes on its own; only the worker and the home page are purged, instead of evicting every crest and card each hour
+aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/sw.js" "/" --query Invalidation.Id --output text >/dev/null
 for p in / /c/uae-pro-league/ /v1/index.json; do
   code=$(curl -s -o /dev/null -w '%{http_code}' --compressed "https://$DOM$p"); echo "$code https://$DOM$p"
 done

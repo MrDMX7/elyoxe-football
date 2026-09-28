@@ -43,7 +43,7 @@ export function mount(el, md){
   el.innerHTML = ""; el.classList.add("p3d");
   const tip = document.createElement("div"); tip.className = "p3tip"; tip.hidden = true; el.appendChild(tip);
   const W = el.clientWidth, H = Math.min(560, Math.max(380, W * 1.15));
-  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false }); renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.setSize(W, H);
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false }); renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));   // W4.7: DPR 1.5 at most renderer.setSize(W, H);
   renderer.setClearColor(0x0a2620); el.appendChild(renderer.domElement);
   const scene = new THREE.Scene(); scene.fog = new THREE.Fog(0x0a2620, 110, 230);
   scene.add(new THREE.HemisphereLight(0xffffff, 0x0a2620, 1.1)); const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(-30, 60, 40); scene.add(sun);
@@ -51,9 +51,11 @@ export function mount(el, md){
   const grass = new THREE.Mesh(new THREE.PlaneGeometry(Wd, L), new THREE.MeshStandardMaterial({ map:grassTexture() })); grass.rotation.x = -Math.PI / 2; scene.add(grass);
   scene.add(goal(-L / 2), goal(L / 2));
   // the stands: rows of fan cards in each club's colours behind its goal (the tifo idea, in 3D)
-  const standRow = (z, id, flip) => { const g = new THREE.Group(), geo = new THREE.BoxGeometry(1.6, 1.6, 0.2); const mats = [new THREE.MeshStandardMaterial({ color:col(id, 0) }), new THREE.MeshStandardMaterial({ color:col(id, 1) })];
-    for (let r = 0; r < 6; r++) for (let c = -22; c <= 22; c++){ const m = new THREE.Mesh(geo, mats[(c + r) % 7 < 2 ? 1 : 0]); m.position.set(c * 1.8, 1 + r * 1.9, z + (flip ? -r * 1.4 : r * 1.4)); m.rotation.x = flip ? 0.35 : -0.35; g.add(m); }
-    scene.add(g); };
+  // W4.7: 540 fan cards drawn as two InstancedMeshes per stand (4 draw calls instead of 540)
+  const standRow = (z, id, flip) => { const geo = new THREE.BoxGeometry(1.6, 1.6, 0.2), mats = [new THREE.MeshStandardMaterial({ color:col(id, 0) }), new THREE.MeshStandardMaterial({ color:col(id, 1) })], pos = [[], []];
+    for (let r = 0; r < 6; r++) for (let c = -22; c <= 22; c++) pos[(c + r) % 7 < 2 ? 1 : 0].push([c * 1.8, 1 + r * 1.9, z + (flip ? -r * 1.4 : r * 1.4)]);
+    const d = new THREE.Object3D(); d.rotation.x = flip ? 0.35 : -0.35;
+    pos.forEach((ps, k) => { if (!ps.length) return; const im = new THREE.InstancedMesh(geo, mats[k], ps.length); ps.forEach((p, i) => { d.position.set(p[0], p[1], p[2]); d.updateMatrix(); im.setMatrixAt(i, d.matrix); }); im.instanceMatrix.needsUpdate = true; scene.add(im); }); };
   standRow(L / 2 + 8, md.home.id, false); standRow(-L / 2 - 8, md.away.id, true);
   const L0 = md.lineups || {}, cards = [];
   [[L0.home, md.home, false], [L0.away, md.away, true]].forEach(([side, team, away]) => {
@@ -82,11 +84,16 @@ export function mount(el, md){
     tip.hidden = false;
   });
   let alive = true, raf = 0;
-  const loop = () => { if (!alive) return; cards.forEach(c => { c.rotation.y = Math.atan2(camera.position.x - c.position.x, camera.position.z - c.position.z); }); ctl.update(); renderer.render(scene, camera); raf = requestAnimationFrame(loop); };
+  // W4.7: one slow orbit, then the scene only renders while someone moves it (no idle 60 fps)
+  const orbitEnd = performance.now() + 60000 / 0.35; let still = 0, busy = false;
+  ctl.addEventListener("start", () => { busy = true; }); ctl.addEventListener("end", () => { busy = false; });
+  ctl.addEventListener("change", () => { if (!raf && alive){ still = 0; raf = requestAnimationFrame(loop); } });
+  const loop = () => { raf = 0; if (!alive) return; if (ctl.autoRotate && performance.now() > orbitEnd) ctl.autoRotate = false; cards.forEach(c => { c.rotation.y = Math.atan2(camera.position.x - c.position.x, camera.position.z - c.position.z); }); ctl.update(); renderer.render(scene, camera);
+    still = ctl.autoRotate || busy ? 0 : still + 1; if (still < 45) raf = requestAnimationFrame(loop); };
   // intro: drop from above into the broadcast view (skipped with reduced motion)
   if (!RM){ const from = new THREE.Vector3(0, 140, 10), to = camera.position.clone(), t0 = performance.now(); camera.position.copy(from); const step = now => { const k = Math.min(1, (now - t0) / 1400), e = 1 - Math.pow(1 - k, 3); camera.position.lerpVectors(from, to, e); if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
   loop();
-  const ro = new ResizeObserver(() => { const w = el.clientWidth, h = Math.min(560, Math.max(380, w * 1.15)); renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }); ro.observe(el);
+  const ro = new ResizeObserver(() => { const w = el.clientWidth, h = Math.min(560, Math.max(380, w * 1.15)); renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); if (!raf && alive){ still = 0; raf = requestAnimationFrame(loop); } }); ro.observe(el);
   const io = new IntersectionObserver(([en]) => { if (!en.isIntersecting){ alive = false; cancelAnimationFrame(raf); } else if (!alive){ alive = true; loop(); } }); io.observe(el);
   return { dispose(){ alive = false; cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); renderer.dispose(); } };
 }

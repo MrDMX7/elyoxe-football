@@ -8,6 +8,10 @@
   var R = (typeof module !== "undefined" && module.exports) ? require("./render.js") : root.TR;
   var esc = R.esc, BASE = "/";
   R.BASE = BASE;
+  // W4.7: share.js (the canvas cards) loads on first use; until then callers get a stand-in whose methods load it and return a promise
+  if (root && root.document && !root.TifoShare){ var me = root.document.currentScript, ssrc = me && me.src ? me.src.replace(/\/v3\.([^/]+)\.js(\?.*)?$/, "/share.$1.js") : "";
+    if (ssrc && ssrc !== me.src){ var spr = null, sload = function(){ return spr || (spr = new Promise(function(ok, no){ var s = root.document.createElement("script"); s.src = ssrc; s.onload = function(){ ok(root.TifoShare); }; s.onerror = function(){ spr = null; no(new Error("share.js")); }; root.document.head.appendChild(s); })); };
+      var stand = { lazy:true, preload:function(){ sload().catch(function(){}); } }; ["story", "wallpaper", "banner", "out", "card", "listCard"].forEach(function(k){ stand[k] = function(){ var a = arguments; return sload().then(function(T){ return T[k].apply(T, a); }); }; }); root.TifoShare = stand; } }
   // the prototype pages; links to them stay inside /next/, everything else goes to production
   R.PROTO = {};
   R.isProto = function(){ return false; };

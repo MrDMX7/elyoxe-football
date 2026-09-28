@@ -77,6 +77,81 @@
   ],
   "الفرق": [
    "الفارق"
+  ],
+  "منتخب المغرب": [
+   "المغرب"
+  ],
+  "منتخب الجزائر": [
+   "الجزائر"
+  ],
+  "منتخب مصر": [
+   "مصر"
+  ],
+  "منتخب السعودية": [
+   "السعودية"
+  ],
+  "منتخب الأردن": [
+   "الأردن"
+  ],
+  "منتخب الإمارات": [
+   "الإمارات"
+  ],
+  "منتخب العراق": [
+   "العراق"
+  ],
+  "منتخب تونس": [
+   "تونس"
+  ],
+  "منتخب سوريا": [
+   "سوريا"
+  ],
+  "منتخب فلسطين": [
+   "فلسطين"
+  ],
+  "منتخب عُمان": [
+   "عُمان"
+  ],
+  "منتخب قطر": [
+   "قطر"
+  ],
+  "منتخب ليبيا": [
+   "ليبيا"
+  ],
+  "منتخب البحرين": [
+   "البحرين"
+  ],
+  "منتخب جزر القمر": [
+   "جزر القمر"
+  ],
+  "منتخب السودان": [
+   "السودان"
+  ],
+  "منتخب الكويت": [
+   "الكويت"
+  ],
+  "منتخب موريتانيا": [
+   "موريتانيا"
+  ],
+  "منتخب لبنان": [
+   "لبنان"
+  ],
+  "منتخب اليمن": [
+   "اليمن"
+  ],
+  "منتخب جيبوتي": [
+   "جيبوتي"
+  ],
+  "منتخب الصومال": [
+   "الصومال"
+  ],
+  "‹ أمس": [
+   "أمس"
+  ],
+  "بكرة ›": [
+   "بكرة"
+  ],
+  "حسابات النادي الرسمية": [
+   "الحسابات الرسمية"
   ]
  },
  "dropped": {
@@ -92,6 +167,23 @@
   "arabs|control:الدولة": "W3.9: the country filter moved with the Europe table to /arabs/europe/",
   "arabs|heading:العرب في أوروبا هالموسم": "W3.9: the 92-row Europe table moved to /arabs/europe/ (with the golden boot); the «اللاعبين برا» card links it",
   "arabs|tile:العرب في أوروبا هالموسم": "W3.9: moved to /arabs/europe/",
-  "home|mount:#since": "W3.7: «من آخر زيارة» (#since) is absorbed into the «فريقك» slot (results since the last visit get «يديد», rank moves show under the club)"
+  "home|mount:#since": "W3.7: «من آخر زيارة» (#since) is absorbed into the «فريقك» slot (results since the last visit get «يديد», rank moves show under the club)",
+  "tool:الأكاديمية": "W4.2: /academy/ merged into /glossary/ (each worked example sits under its term); the menu keeps القاموس",
+  "academy|heading:أكاديمية تيفو": "W4.2: the lesson is now the «مثال» under its term on /glossary/",
+  "academy|heading:1. تصنيف تيفو: منو أقوى فريق؟": "W4.2: the lesson is now the «مثال» under its term on /glossary/",
+  "academy|heading:2. نسب الفوز: مب توقع أكيد": "W4.2: the lesson is now the «مثال» under its term on /glossary/",
+  "academy|heading:3. محاكي الموسم": "W4.2: the lesson is now the «مثال» under its term on /glossary/",
+  "academy|heading:4. الأهداف المتوقعة والحظ": "W4.2: the lesson is now the «مثال» under its term on /glossary/",
+  "academy|heading:5. الضغط: الرقم الأقل أقوى": "W4.2: the lesson is now the «مثال» under its term on /glossary/",
+  "academy|heading:6. منو الحاسم؟": "W4.2: the lesson is now the «مثال» under its term on /glossary/",
+  "academy|heading:7. صعوبة المباريات": "W4.2: the lesson is now the «مثال» under its term on /glossary/",
+  "calendars|heading:كل الأقسام": "W4.2: /calendars/ now has two shelves, «السنة الياية» (merged from /year/) and «روزنامة الدوريات العربية»",
+  "year|heading:كل الأقسام": "W4.2: /year/ is the «السنة الياية» shelf on /calendars/",
+  "national|tool:المباريات والنتايج": "W4.3: /national/<cc>/ is the التاريخ tab of the team page itself",
+  "national|heading:كل الأقسام": "W4.3: the sections are the «تاريخ المنتخب» shelf in التاريخ",
+  "national|tile:آخر نتيجة": "W4.3: the last result is the النتايج tab",
+  "national|tile:المباراة الياية": "W4.3: the next match is the الياية tab",
+  "national|heading:آخر نتيجة": "W4.3: the last result is the النتايج tab",
+  "national|heading:المباراة الياية": "W4.3: the next match is the الياية tab"
  }
 }

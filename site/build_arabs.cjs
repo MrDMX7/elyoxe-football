@@ -39,10 +39,17 @@ module.exports = async function(X){
   const CMP = { "Friendly":"ودية", "FIFA World Cup":"كأس العالم", "FIFA World Cup qualification":"تصفيات كأس العالم", "African Cup of Nations":"كأس أمم أفريقيا", "African Cup of Nations qualification":"تصفيات كأس أمم أفريقيا", "AFC Asian Cup":"كأس آسيا", "AFC Asian Cup qualification":"تصفيات كأس آسيا", "Arab Cup":"كأس العرب", "Arab Cup qualification":"تصفيات كأس العرب", "Gulf Cup":"كأس الخليج", "FIFA Arab Cup":"كأس العرب", "Confederations Cup":"كأس القارات", "Olympic Games":"الألعاب الأولمبية", "West Asian Championship":"بطولة غرب آسيا", "African Nations Championship":"بطولة أفريقيا للمحليين", "CECAFA Cup":"كأس سيكافا", "UNCAF Cup":"كأس أونكاف" };
   const compAr = c => CMP[c] ? CMP[c] : `<span class="lat">${esc(c || "")}</span>`;
   const res = r => ({ W:"فوز", D:"تعادل", L:"خسارة" })[r] || "";
+  const natHist = {}, natUrl = iso => { const t = natTeams.find(x => x.iso2 === String(iso).toUpperCase()); return t && teamPages.has(t.team) ? `/t/${t.team}/` : `/national/${String(iso).toLowerCase()}/`; };
   if (natTeams.length){
-    const rows = natTeams.map(t => `<tr><td class="tm"><a class="tl" href="/national/${t.iso2.toLowerCase()}/">${tlogo(t.team)}<span>${esc(t.name_ar)}</span></a></td><td>${t.arab_rank || ""}</td><td>${t.tifo_world_rank || ""}</td><td>${t.fifa && t.fifa.rank ? t.fifa.rank : ""}</td></tr>`);
-    put("/national/", "المنتخبات العربية: التصنيف والنتايج والتاريخ", "كل المنتخبات العربية الـ22: تصنيف تيفو وفيفا، وآخر نتيجة والمباراة الياية، وكل تاريخها الدولي.", "المنتخبات العربية", "الـ22 منتخب مرتبين بتصنيف تيفو للمنتخبات.",
-      tbl(["المنتخب", "عربياً", "تيفو عالمياً", "فيفا"], rows) + note('<a href="/glossary/#tifo-rating">تصنيف تيفو</a> للمنتخبات من كل النتايج الدولية. تصنيف فيفا يظهر للمنتخبات اللي عندنا رقمها الحالي.') + '<p class="tools"><a class="btn" href="/nations-h2h/">مواجهات المنتخبات العربية</a>' + (WC && WC.teams ? '<a class="btn" href="/worldcup-arabs/">العرب في كأس العالم</a>' : "") + "</p>");
+    const rows = natTeams.map(t => `<tr><td class="tm"><a class="tl" href="${natUrl(t.iso2)}">${tlogo(t.team)}<span>${esc(t.name_ar)}</span></a></td><td>${t.arab_rank || ""}</td><td>${t.tifo_world_rank || ""}</td><td>${t.fifa && t.fifa.rank ? t.fifa.rank : ""}</td></tr>`);
+    put("/national/", "المنتخبات العربية: التصنيف والنتايج والتاريخ", "كل المنتخبات العربية الـ22: تصنيف تيفو وفيفا، وآخر نتيجة والمباراة الياية، وكل تاريخها الدولي.", "المنتخبات العربية", "",
+      `<section class="blk natme" id="natme"><h2>منتخبك</h2><div id="natmeb"><p class="muted skel">نجيب منتخب بلدك…</p></div></section>` +
+      (() => { const td = new Date(Date.now() + 4 * 3600e3).toISOString().slice(0, 10), seen = new Set(), ms = [];
+        natTeams.forEach(t => [t.last_result, t.next_match].forEach(m => { if (m && m.id && !seen.has(m.id) && new Date(Date.parse(m.kickoff_utc) + 4 * 3600e3).toISOString().slice(0, 10) === td){ seen.add(m.id); ms.push(m); } }));
+        ms.sort((a, b) => (R.isLive(b) - R.isLive(a)) || a.kickoff_utc.localeCompare(b.kickoff_utc));
+        return ms.length ? `<section class="blk natnow" id="natnow"><h2>الشغالة الحين</h2><div id="natnowb" data-ids="${ms.map(m => m.id).join(",")}">${ms.map(m => mrow(m, { date:false })).join("")}</div></section>` : ""; })() +
+      `<div class="natflags" data-ids="${natTeams.map(t => t.team).join(",")}">${natTeams.map(t => `<a href="${natUrl(t.iso2)}" data-cc="${t.iso2}">${tlogo(t.team).replace('class="logo sm"', 'class="logo md"')}<span>${esc(t.name_ar)}</span></a>`).join("")}</div>` +
+      sec("الترتيب بتصنيف تيفو", "", tbl(["المنتخب", "عربياً", "تيفو عالمياً", "فيفا"], rows)) + note('<a href="/glossary/#tifo-rating">تصنيف تيفو</a> للمنتخبات من كل النتايج الدولية. تصنيف فيفا يظهر للمنتخبات اللي عندنا رقمها الحالي.') + '<p class="tools"><a class="btn" href="/nations-h2h/">مواجهات المنتخبات العربية</a>' + (WC && WC.teams ? '<a class="btn" href="/worldcup-arabs/">العرب في كأس العالم</a>' : "") + "</p>");
     natTeams.forEach((t, i) => {
       const { ar, ff, sq } = nat[i], iso = t.iso2.toLowerCase(), parts = [];
       const st = [t.arab_rank && `<div><b>${t.arab_rank}</b><span>عربياً بتصنيف تيفو</span></div>`, t.tifo_world_rank && `<div><b>${t.tifo_world_rank}</b><span>عالمياً بتصنيف تيفو</span></div>`, t.fifa && t.fifa.rank && `<div><b>${t.fifa.rank}</b><span>تصنيف فيفا</span></div>`, ar && ar.played && `<div><b>${ar.played}</b><span>مباراة دولية</span></div>`].filter(Boolean);
@@ -56,13 +63,15 @@ module.exports = async function(X){
       }
       const row = H2HM && H2HM.matrix && H2HM.matrix[t.iso2];
       if (row){ const rr = Object.entries(row).sort((a, b) => b[1].p - a[1].p);
-        parts.push(sec("ضد المنتخبات العربية", "", tbl(["المنتخب", "لعب", "فوز", "تعادل", "خسارة", "الأهداف"], rr.map(([k, v]) => `<tr><td class="tm"><a href="/national/${k.toLowerCase()}/">${esc(CN[k] || k)}</a></td><td>${v.p}</td><td>${v.w}</td><td>${v.d}</td><td>${v.l}</td><td><bdi dir="ltr">${v.gf}-${v.ga}</bdi></td></tr>`)) + note('<a href="/nations-h2h/">قارن أي منتخبين</a>'))); }
+        parts.push(sec("ضد المنتخبات العربية", "", tbl(["المنتخب", "لعب", "فوز", "تعادل", "خسارة", "الأهداف"], rr.map(([k, v]) => `<tr><td class="tm"><a href="${natUrl(k)}">${esc(CN[k] || k)}</a></td><td>${v.p}</td><td>${v.w}</td><td>${v.d}</td><td>${v.l}</td><td><bdi dir="ltr">${v.gf}-${v.ga}</bdi></td></tr>`)) + note('<a href="/nations-h2h/">قارن أي منتخبين</a>'))); }
       const wc = WC && WC.teams && WC.teams[t.iso2];
       if (wc && wc.summary) parts.push(sec("في كأس العالم", "", `<p>شارك في <b class="num">${wc.summary.tournaments}</b> نسخ: <b class="num">${wc.summary.won}</b> فوز و<b class="num">${wc.summary.drawn}</b> تعادل و<b class="num">${wc.summary.lost}</b> خسارة.</p><p><a class="btn" href="/worldcup-arabs/#${t.iso2}">كل مبارياته في كأس العالم</a></p>`));
       if (ff && ff.history && ff.history.length > 2) parts.push(sec("تصنيف فيفا", "من 1992", S.fifa(ff)));
       if (sq && sq.players && sq.players.length){ const G = { keepers:"الحراس", defenders:"الدفاع", midfielders:"الوسط", attackers:"الهجوم" }, by = {};
         sq.players.forEach(p => { (by[p.group] = by[p.group] || []).push(p); });
         parts.push(sec("آخر قائمة", "", Object.keys(G).filter(k => by[k]).map(k => `<h3>${G[k]}</h3><ul class="sq">` + by[k].map(p => `<li>${pn(p.id, p.name)} <span class="muted small">${p.club_id ? tname(p.club_id, null, p.club) : esc(p.club || "")}${p.age ? "، " + p.age + " سنة" : ""}</span></li>`).join("") + "</ul>").join(""))); }
+      // W4.3: this content is the التاريخ tab of /t/<id>/ now (the last result and next match are its first two tabs); the old URL points there
+      if (teamPages.has(t.team) && X.stub){ natHist[t.team] = parts.filter(p => !/<h2>(آخر نتيجة|المباراة الياية)/.test(p)).join(""); X.stub(`/national/${iso}/`, `/t/${t.team}/#hist`, `منتخب ${t.name_ar}`); return; }
       const link = teamPages.has(t.team) ? `<p class="tools"><a class="btn" href="/t/${t.team}/">المباريات والنتايج</a></p>` : "";
       put(`/national/${iso}/`, `منتخب ${t.name_ar}: التصنيف والنتايج والتاريخ`, `منتخب ${t.name_ar}: تصنيف تيفو وفيفا، وآخر النتايج، وسجله ضد المنتخبات العربية، وكأس العالم، وآخر قائمة.`, `منتخب ${esc(t.name_ar)}`, "", link + parts.join(""), { crumbs:'<a href="/national/">المنتخبات العربية</a>' });
     });
@@ -112,16 +121,18 @@ module.exports = async function(X){
   const CO = F["arabs/coaches"]; if (CO && CO.coaches && CO.coaches.length) hub.push(sec("مدربين عرب", "", '<ul class="facts-l">' + CO.coaches.map(c => `<li><span class="lat">${esc(c.name)}</span> <span class="muted">(${cname(c.nationality)})</span>: ${c.national_team ? "منتخب " : ""}${tname(c.team, c.team_ar)}</li>`).join("") + "</ul>" + ((CO.abroad || []).length ? "<h3>برا بلدانهم</h3><ul class=\"facts-l\">" + CO.abroad.map(c => `<li><span class="lat">${esc(c.name)}</span> <span class="muted">(${cname(c.nationality)})</span>: ${tname(c.team, c.team_ar)}</li>`).join("") + "</ul>" : "")));
   const RF = F["arabs/referees"]; if (RF && RF.referees && RF.referees.length) hub.push(sec("حكام عرب في البطولات القارية", "هالموسم", tbl(["الحكم", "الدولة", "مباريات"], RF.referees.slice().sort((a, b) => b.matches.length - a.matches.length).map(r => `<tr><td class="tm"><span class="lat">${esc(r.name)}</span></td><td>${cname(r.nationality)}</td><td>${r.matches.length}</td></tr>`))));
   const FR = F["arabs/friendlies"]; if (FR && FR.matches && FR.matches.length) hub.push(sec("ودّيات الأندية العربية", "", FR.matches.slice().sort((a, b) => b.kickoff_utc.localeCompare(a.kickoff_utc)).slice(0, 20).map(m => mrow(m)).join("")));
-  const links = [["/arabs/week/", "نجوم الأسبوع", wk && wk.star], ["/golden-boot/", "الحذاء الذهبي العربي", 1], ["/poty/", "أحسن لاعب عربي", 1], ["/national/", "المنتخبات العربية", natTeams.length], ["/nations-h2h/", "مواجهات المنتخبات", H2HM], ["/worldcup-arabs/", "العرب في كأس العالم", WC], ["/derbies/", "الديربيات العربية", F.derbies], ["/clashes/", "مواجهات الأندية العربية", 1], ["/match-of-week/", "مباراة الأسبوع", F["arabs/match-of-week"]], ["/streaks/", "السلاسل", F["arabs/streaks"]], ["/coefficients/", "أقوى دوري عربي", F["arabs/coefficients"]], ["/calendars/", "روزنامة الدوريات", F["arabs/calendars"]], ["/year/", "السنة الياية", F["calendar/year"]], ["/transfers/", "الانتقالات", F["transfers/latest"]], ["/break/", "فترة المنتخبات", 1], ["/guide/", "دليل القنوات", 1], ["/explore/", "أرشيف النتايج", F["archive/index-all"]]];
-  const linkRow = () => '<div class="comps">' + links.filter(l => fs.existsSync(path.join(OUT, l[0].slice(1), "index.html"))).map(l => `<a href="${l[0]}"><span>${l[1]}</span></a>`).join("") + "</div>";
+  const links = [["/arabs/week/", "نجوم الأسبوع", wk && wk.star], ["/golden-boot/", "الحذاء الذهبي العربي", 1], ["/poty/", "أحسن لاعب عربي", 1], ["/national/", "المنتخبات العربية", natTeams.length], ["/nations-h2h/", "مواجهات المنتخبات", H2HM], ["/worldcup-arabs/", "العرب في كأس العالم", WC], ["/derbies/", "الديربيات العربية", F.derbies], ["/clashes/", "مواجهات الأندية العربية", 1], ["/week/#mow", "مباراة الأسبوع", F["arabs/match-of-week"]], ["/streaks/", "السلاسل", F["arabs/streaks"]], ["/coefficients/", "أقوى دوري عربي", F["arabs/coefficients"]], ["/calendars/", "روزنامة الدوريات", F["arabs/calendars"]], ["/calendars/#year", "السنة الياية", F["calendar/year"]], ["/transfers/", "الانتقالات", F["transfers/latest"]], ["/break/", "فترة المنتخبات", 1], ["/guide/", "دليل القنوات", 1], ["/explore/", "أرشيف النتايج", F["archive/index-all"]]];
+  const linkRow = () => '<div class="comps">' + links.filter(l => fs.existsSync(path.join(OUT, l[0].split("#")[0].slice(1), "index.html"))).map(l => `<a href="${l[0]}"><span>${l[1]}</span></a>`).join("") + "</div>";
 
   // ---- 306 match of the week (+ broadcasters by country via #wwbox), home block
-  const MW = F["arabs/match-of-week"];
+  const MW = F["arabs/match-of-week"]; let mowWeek = "";
   if (MW && MW.pick){
-    const pk = MW.pick, m = Object.assign({ id:pk.match, status:"scheduled" }, pk), why = [pk.derby && "ديربي", pk.arab_vs_arab && "مواجهة عربية", pk.stage_bonus >= 0.5 && "دور حاسم"].filter(Boolean).join("، ");
+    const pk = MW.pick, m = Object.assign({ id:pk.match, status:"scheduled" }, pk, (X.msum && X.msum(pk.match)) || {}),   /* the fixture's own status and score win over the Monday pick */ why = [pk.derby && "ديربي", pk.arab_vs_arab && "مواجهة عربية", pk.stage_bonus >= 0.5 && "دور حاسم"].filter(Boolean).join("، ");
     const body = `<div class="mow">${mrow(m)}<p class="muted">${esc(pk.comp_name_ar || cmpName(pk.comp))}${why ? "، " + why : ""}</p>${pk.probs ? S.probs(pk.probs, m) : ""}</div><div id="wwbox" data-comp="${pk.comp}">${X.BC && X.BC[pk.comp] && S.watchWhere(X.BC[pk.comp]) ? sec("وين تنقل في الإمارات", "", S.watchWhere(X.BC[pk.comp])) : ""}</div>` + (MW.shortlist && MW.shortlist.length ? sec("مرشحة بعدها", "", MW.shortlist.filter(x => x.match !== pk.match).map(x => mrow(Object.assign({ id:x.match, status:"scheduled" }, x))).join("")) : "") + note("نختارها كل اثنين من مباريات الأسبوع الياي اللي فيها نادي أو منتخب عربي: المتعة، والديربي، والدور، والمواجهة العربية.");
-    put("/match-of-week/", "مباراة الأسبوع", "مباراة الأسبوع اللي تستاهل ما تفوتك، وموعدها بتوقيت بلدك ووين تنقل.", "مباراة الأسبوع", "", body, { crumbs:hubLink, page:"mow" });
-    home.mow = sec("مباراة الأسبوع", '<a href="/match-of-week/">ليش اخترناها؟</a>', mrow(m));
+    // W4.2: a pinned card at the top of /week/ (kickoff counting down, the row goes live), /match-of-week/ points there
+    if (X.stub){ mowWeek = `<section class="blk mowpin" id="mow" data-kick="${esc(m.kickoff_utc || "")}"><h2>مباراة الأسبوع<small id="mowcd"></small></h2>${body}</section>`; X.stub("/match-of-week/", "/week/#mow", "مباراة الأسبوع"); }
+    else put("/match-of-week/", "مباراة الأسبوع", "مباراة الأسبوع اللي تستاهل ما تفوتك، وموعدها بتوقيت بلدك ووين تنقل.", "مباراة الأسبوع", "", body, { crumbs:hubLink, page:"mow" });
+    home.mow = sec("مباراة الأسبوع", `<a href="${X.stub ? "/week/#mow" : "/match-of-week/"}">ليش اخترناها؟</a>`, mrow(m));
   }
   // 209 derbies: every derby with its FotMob head-to-head, the full page is /h2h/{k}/
   const DB = F.derbies;
@@ -158,10 +169,10 @@ module.exports = async function(X){
     put("/coefficients/", "أقوى دوري عربي: تصنيف آسيا وأفريقيا", "ترتيب الدوريات العربية في تصنيف الاتحاد الآسيوي والأفريقي، ونقاط كل دولة.", "أقوى دوري عربي؟", "الجواب الرسمي: تصنيف الاتحادين القاريين من نتايج الأندية في البطولات القارية.", body, { crumbs:hubLink });
   }
   // 282 calendars + 322 the year ahead
-  const CA = F["arabs/calendars"];
+  const CA = F["arabs/calendars"]; let calBody = "", yrBody = "";
   if (CA && CA.leagues){
     const body = Object.entries(CA.leagues).map(([id, l]) => sec(esc(l.name_ar), cname(l.country), `<dl class="facts"><div><dt>أول مباراة</dt><dd>${dmy(l.first_match)}</dd></div><div><dt>آخر مباراة منشورة</dt><dd>${dmy(l.last_published_match)}</dd></div><div><dt>مباريات منشورة</dt><dd>${num(l.matches_published)}</dd></div></dl>` + (l.breaks.length ? "<h3>التوقفات</h3><ul class=\"facts-l\">" + l.breaks.map(b => `<li>من ${dmy(b.from)} لين ${dmy(b.to)} <span class="muted">(${b.days} يوم)</span></li>`).join("") + "</ul>" : ""))).join("");
-    put("/calendars/", "روزنامة الدوريات العربية", "متى يبدا ويخلص كل دوري عربي، ومتى التوقفات، من المباريات المنشورة.", "روزنامة الدوريات العربية", "من المباريات المنشورة للحين، والتوقف = 12 يوم وأكثر بدون مباريات.", body, { crumbs:hubLink });
+    calBody = body;
   }
   const YR = F["calendar/year"];
   if (YR && YR.events && YR.events.length){
@@ -169,8 +180,12 @@ module.exports = async function(X){
     ev.forEach(e => { const k = e.date.slice(0, 7); (by[k] = by[k] || []).push(e); });
     const lab = e => e.kind === "final" ? (e.match && matchPages.has(e.match) ? `<a href="/m/${e.match}/">نهائي ${esc(e.name_ar || cmpName(e.comp))}</a>` : `نهائي ${esc(e.name_ar || cmpName(e.comp))}`) : e.kind === "international_window" ? "فترة المنتخبات" : e.kind === "league_break" ? `توقف ${cmpName(e.comp) || esc(e.name_ar || "")}` : e.kind === "league_start" ? `بداية ${cmpName(e.comp) || esc(e.name_ar || "")}` : e.kind === "draw" ? `قرعة ${cmpName(e.comp) || esc(e.name_ar || "")}` : esc(e.name_ar || e.kind);
     const body = Object.keys(by).map(k => { const [y, m] = k.split("-").map(Number); return `<section class="blk"><h2>${month[m - 1]} <span class="num">${y}</span></h2><ul class="yl">` + by[k].map(e => `<li class="k-${e.kind}"><span class="muted small">${dm(e.date)}${e.to && e.to !== e.date ? " لين " + dm(e.to) : ""}</span> ${lab(e)}</li>`).join("") + "</ul></section>"; }).join("") + note("من المباريات المنشورة. فترات الانتقالات ومواعيد الجوائز مب فيها، لأننا ما لقينا لها مصدر نقدر نتحقق منه.");
-    put("/year/", "السنة الياية في الكورة العربية", "النهائيات وفترات المنتخبات وتوقفات الدوريات في الـ12 شهر الياية.", "السنة الياية", "", body, { crumbs:hubLink });
+    yrBody = body;
   }
+  // W4.2: /year/ is the first half of /calendars/ now
+  if (calBody || yrBody){ const sh = (h, t) => { const bl = X.blocks ? X.blocks(h) : null; return bl && bl.secs.length && X.shelf ? bl.rest + X.shelf(bl.secs, { title:t }) : h; };
+    put("/calendars/", "الروزنامة: السنة الياية ومواعيد الدوريات العربية", "النهائيات وفترات المنتخبات وتوقفات الدوريات في الـ12 شهر الياية، ومتى يبدا ويخلص كل دوري عربي.", "الروزنامة", "", (yrBody ? `<div id="year"></div>` + sh(yrBody, "السنة الياية") : "") + (calBody ? `<div id="leagues"></div><p class="muted">من المباريات المنشورة للحين، والتوقف = 12 يوم وأكثر بدون مباريات.</p>` + sh(calBody, "روزنامة الدوريات العربية") : ""), { crumbs:hubLink });
+    if (yrBody && X.stub) X.stub("/year/", "/calendars/#year", "السنة الياية"); }
   // 263 transfers (last 60 days, Arab leagues)
   const TR = F["transfers/latest"];
   if (TR && TR.transfers && TR.transfers.length){
@@ -223,12 +238,12 @@ module.exports = async function(X){
   const euroOk = euroH ? put("/arabs/europe/", "العرب في أوروبا هالموسم", "كل لاعب عربي لعب في الدوريات الخمس الكبيرة أو بطولات أوروبا هالموسم: المباريات والأهداف والصناعة والتقييم، والحذاء الذهبي العربي.", "العرب في أوروبا", "", gb10 + euroH, { crumbs:hubLink }) : false;
   const wk7 = natTeams.filter(t => t.next_match && Date.parse(t.next_match.kickoff_utc) - Date.now() < 7 * 864e5 && Date.parse(t.next_match.kickoff_utc) > Date.now() - 3 * 3600e3).length;
   const nf = (n, f) => n === 1 ? f[0] : n === 2 ? f[1] : n % 100 >= 3 && n % 100 <= 10 ? f[2] : f[3];   // Arabic number agreement: 1 · 2 · 3–10 · 11+
-  const card = (t, n, lbl, ls) => `<div class="agc"><h3>${t}</h3><p class="agn"><b class="num">${n}</b><span>${lbl}</span></p><div class="agl">${ls.filter(l => fs.existsSync(path.join(OUT, l[0].slice(1), "index.html"))).map(l => `<a href="${l[0]}">${l[1]}</a>`).join("")}</div></div>`;
+  const card = (t, n, lbl, ls) => `<div class="agc"><h3>${t}</h3><p class="agn"><b class="num">${n}</b><span>${lbl}</span></p><div class="agl">${ls.filter(l => fs.existsSync(path.join(OUT, l[0].split("#")[0].slice(1), "index.html"))).map(l => `<a href="${l[0]}">${l[1]}</a>`).join("")}</div></div>`;
   const groups = '<div class="agrid">' + [
     card("اللاعبين برا", AB2 && AB2.players ? sum(AB2.players, "goals") : 0, nf(AB2 && AB2.players ? sum(AB2.players, "goals") : 0, ["هدف للعرب في أوروبا هالموسم", "هدفين للعرب في أوروبا هالموسم", "أهداف للعرب في أوروبا هالموسم", "هدف للعرب في أوروبا هالموسم"]), [["/arabs/europe/", "العرب في أوروبا"], ["/arabs/week/", "نجوم الأسبوع"], ["/golden-boot/", "الحذاء الذهبي"], ["/poty/", "أحسن لاعب عربي"]]),
     card("المنتخبات", wk7 || natTeams.length, wk7 ? nf(wk7, ["منتخب عربي يلعب هالأسبوع", "منتخبين عربيين يلعبون هالأسبوع", "منتخبات عربية تلعب هالأسبوع", "منتخب عربي يلعب هالأسبوع"]) : nf(natTeams.length, ["منتخب عربي", "منتخبين عربيين", "منتخبات عربية", "منتخب عربي"]), [["/national/", "المنتخبات العربية"], ["/break/", "فترة المنتخبات"], ["/nations-h2h/", "مواجهات المنتخبات"], ["/worldcup-arabs/", "العرب في كأس العالم"]]),
-    card("الأندية والديربيات", DRB && DRB.derbies ? DRB.derbies.length : 0, nf(DRB && DRB.derbies ? DRB.derbies.length : 0, ["ديربي عربي نتابعه", "ديربيين عربيين نتابعهم", "ديربيات عربية نتابعها", "ديربي عربي نتابعه"]), [["/derbies/", "الديربيات"], ["/match-of-week/", "مباراة الأسبوع"], ["/clashes/", "مواجهات الأندية"], ["/coefficients/", "أقوى دوري عربي"]]),
-    card("الانتقالات والروزنامة", TRF && TRF.transfers ? TRF.transfers.length : 0, nf(TRF && TRF.transfers ? TRF.transfers.length : 0, ["انتقال", "انتقالين", "انتقالات", "انتقال"]) + " في آخر " + ((TRF && TRF.days) || 60) + " يوم", [["/transfers/", "الانتقالات"], ["/calendars/", "روزنامة الدوريات"], ["/year/", "السنة الياية"], ["/explore/", "أرشيف النتايج"]])].join("") + "</div>";
+    card("الأندية والديربيات", DRB && DRB.derbies ? DRB.derbies.length : 0, nf(DRB && DRB.derbies ? DRB.derbies.length : 0, ["ديربي عربي نتابعه", "ديربيين عربيين نتابعهم", "ديربيات عربية نتابعها", "ديربي عربي نتابعه"]), [["/derbies/", "الديربيات"], ["/week/#mow", "مباراة الأسبوع"], ["/clashes/", "مواجهات الأندية"], ["/coefficients/", "أقوى دوري عربي"]]),
+    card("الانتقالات والروزنامة", TRF && TRF.transfers ? TRF.transfers.length : 0, nf(TRF && TRF.transfers ? TRF.transfers.length : 0, ["انتقال", "انتقالين", "انتقالات", "انتقال"]) + " في آخر " + ((TRF && TRF.days) || 60) + " يوم", [["/transfers/", "الانتقالات"], ["/calendars/", "الروزنامة"], ["/explore/", "أرشيف النتايج"]])].join("") + "</div>";
   if (euroOk) links.unshift(["/arabs/europe/", "العرب في أوروبا", 1]);
   const fold = `<details class="allsec"><summary>كل الأقسام</summary>${linkRow()}</details>`;
   put("/arabs/", "العرب: المحترفين برا والمنتخبات والديربيات", "كل شي عن الكورة العربية: اللاعبين العرب في أوروبا، ونجم الأسبوع، والمنتخبات، والديربيات، والانتقالات.", "العرب", "", tonH + starH + groups + (() => { const hb = X.blocks ? X.blocks(hub.join("")) : null; return hb && hb.secs.length && X.shelf ? hb.rest + X.shelf(hb.secs, { title:"أكثر عن العرب" }) : hub.join(""); })() + fold, { page:"arabs" });
@@ -243,5 +258,5 @@ module.exports = async function(X){
     if (!fs.existsSync(f)){ try { const r = await fetch(`https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png`); if (r.ok) fs.writeFileSync(f, Buffer.from(await r.arrayBuffer())); } catch (e){} }
     if (fs.existsSync(f)) fs.copyFileSync(f, o);
   });
-  return { home, search };
+  return { home, search, natHist, mowWeek };
 };

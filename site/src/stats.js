@@ -653,7 +653,7 @@
   };
   S.callups = function(c){
     if (!c || !c.callups || !c.callups.length) return "";
-    return '<ul class="facts-l">' + c.callups.map(function(p){ return "<li>" + pl(p.player, p.name) + (p.iso2 ? ' مع <a href="/national/' + p.iso2.toLowerCase() + '/">منتخب ' + esc(p.name_ar || "") + "</a>" : "") + "</li>"; }).join("") + "</ul>";
+    return '<ul class="facts-l">' + c.callups.map(function(p){ return "<li>" + pl(p.player, p.name) + (p.iso2 ? ' مع <a href="' + ((S.NATU && S.NATU[p.iso2]) || "/national/" + p.iso2.toLowerCase() + "/") + '">منتخب ' + esc(p.name_ar || "") + "</a>" : "") + "</li>"; }).join("") + "</ul>";
   };
   // 275 career (player/{id}/career.json) and 237 form (player.form: last 10 [match, date, rating, minutes, goals, assists])
   S.career = function(c){

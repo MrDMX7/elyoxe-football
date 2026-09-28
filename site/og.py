@@ -107,12 +107,12 @@ def main():
         cf = os.path.join(CACHE, "og", f"{j['key']}-{h}.png")
         if not os.path.exists(cf):
             render(j).save(cf, optimize=True); new += 1
-        shutil.copyfile(cf, os.path.join(OUT, "og", f"{j['key']}.png"))
+        shutil.copy2(cf, os.path.join(OUT, "og", f"{j['key']}.png"))   # W4.7: keep the cache mtime so s3 sync skips unchanged cards
         for sz in j.get("sizes") or []:
             if sz not in SIZES: continue
             cs = os.path.join(CACHE, "og", f"{j['key']}-{sz}-{h}.png")
             if not os.path.exists(cs): render_sized(j, *SIZES[sz]).save(cs, optimize=True); new += 1
-            shutil.copyfile(cs, os.path.join(OUT, "og", f"{j['key']}-{sz}.png"))
+            shutil.copy2(cs, os.path.join(OUT, "og", f"{j['key']}-{sz}.png"))
     os.remove(os.path.join(OUT, "og", "jobs.json"))
     print(f"og: {len(jobs)} images ({new} new)")
 

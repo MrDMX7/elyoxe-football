@@ -34,7 +34,7 @@
   // search closes on a tap outside it
   document.addEventListener("click", function(e){ var sb = $("#srchbox"); if (sb && !sb.contains(e.target) && !e.target.closest("#srch")) sb.remove(); });
   document.addEventListener("click", function(e){
-    var t = e.target.closest("[data-sheet]"); if (t){ e.preventDefault(); open($("#" + t.dataset.sheet), t); return; }
+    var t = e.target.closest("[data-sheet]"); if (t){ e.preventDefault(); if (window.TifoShare && window.TifoShare.preload) window.TifoShare.preload(); open($("#" + t.dataset.sheet), t); return; }
     if (e.target.closest("[data-close]") || e.target === scrim || (e.target.classList && (e.target.classList.contains("sheet") || e.target.classList.contains("panel")))) { closeAll(); return; }
     var o = e.target.closest("[data-open]"); if (o){ panel(o.dataset.open, o); return; }
     var g = e.target.closest("[data-go]"); if (g){ e.preventDefault(); goTab(g.dataset.go); return; }
@@ -64,8 +64,10 @@
   // ---- tabs: deep links (#num, #n-cards, old #goals/#assists), data-go buttons
   function goTab(k){ var b = $('.mtabs button[data-t="' + k + '"]'); if (b){ b.click(); var bar = $(".mtabs"); if (bar) window.scrollTo({ top:bar.getBoundingClientRect().top + window.scrollY - 60, behavior:RM ? "auto" : "smooth" }); } }
   (function deep(){
-    var h = decodeURIComponent(location.hash.slice(1)); if (!h) return;
+    var h = ""; try { h = decodeURIComponent(location.hash.slice(1)); } catch (e){} if (!h || !/^[\w-]+$/.test(h)) return;   // an odd hash must never break the page script
     if (h === "story" && $("#storybtn")){ setTimeout(function(){ open($("#share"), $("#storybtn")); }, 300); return; }   // W3.7: «صورة للستوري» from فريقك
+    if (h === "nums" && !$('.mtabs button[data-t="nums"]') && $('.mtabs button[data-t="hist"]')) h = "hist";   // W4.3: a national team's numbers live in التاريخ
+    if (/^[\w-]+$/.test(h) && $('.mtabs button[data-t="' + h + '"]')){ goTab(h); return; }   // any tab by its key (#hist, #squad, #past…)
     var alias = { goals:["num", "goals"], assists:["num", "assists"], ana:["stats"] }[h];
     if (alias){ goTab(alias[0]); var s = $('.seg button[data-t="' + alias[1] + '"]'); if (s) s.click(); return; }
     var t = $('[data-anchor="' + h + '"]'); if (t){ var p = t.closest("[data-pane]"); if (p) goTab(p.dataset.pane); setTimeout(function(){ panel(t.dataset.open, t); }, 60); }
@@ -231,7 +233,7 @@
     var list = CITY[cc], ms = $("#more .mset"); if (!list || list.length < 2 || !ms) return; var sel = document.createElement("select"); sel.id = "prcity"; sel.setAttribute("aria-label", "مدينتك لأوقات الصلاة");
     sel.innerHTML = list.map(function(c){ return '<option value="' + c[0] + '"' + (c[0] === lsGet("tifo.city") ? " selected" : "") + ">" + c[0] + "</option>"; }).join(""); sel.onchange = function(){ lsSet("tifo.city", sel.value); }; ms.appendChild(sel); })();
   // W2.7: the team hero's next match counts down, then says it's on
-  (function(){ var ko = $$("[data-ko]"); if (!ko.length) return; var t = setInterval(function(){ ko.forEach(function(el){ var d = Date.parse(el.dataset.ko) - Date.now(); if (!isFinite(d)) return;
+  (function(){ var ko = $$(".tnm [data-ko]"); if (!ko.length) return;   /* only the team hero's digits: #kitct on /m/<id>/kit/ also carries data-ko */ var t = setInterval(function(){ ko.forEach(function(el){ var d = Date.parse(el.dataset.ko) - Date.now(); if (!isFinite(d)) return;
     if (d <= 0){ el.textContent = "المباراة"; return; } if (d > 36e5 * 48) return; var hh = Math.floor(d / 36e5), mm = Math.floor(d / 6e4) % 60, ss = Math.floor(d / 1e3) % 60, p2 = function(n){ return n < 10 ? "0" + n : n; }; el.textContent = hh + ":" + p2(mm) + ":" + p2(ss); }); }, 1000); })();
   // ================= owner items (2026-09-27): 355 goal moment · 357 match-state hero · 359 cinema · 360 goal sound ·
   // 370 live «لو خلصت الحين» · 373 player card · 376 lineup builder · 379 embed. Everything lives in the sheet, a tab or the hero.
@@ -425,4 +427,23 @@
     var d = $("#day404"); if (!d || !R.dayList) return; var ymd = new Date(Date.now() + 4 * 3600e3).toISOString().slice(0, 10).replace(/-/g, "");
     Promise.all([fetch("/v1/day/" + ymd + ".json").then(function(r){ return r.json(); }), fetch("/v1/index.json").then(function(r){ return r.json(); })]).then(function(r){ var ms = r[0].matches || []; if (!ms.length) return;
       d.innerHTML = "<h2>مباريات اليوم</h2>" + R.dayList(ms, r[1], {}); if (R.localize) R.localize(d); }).catch(function(){}); })();
+
+  // ---- W4.3 /national/: «منتخبك» (the visitor's national team: last result and next match), the day's national matches kept live, then the 22
+  (function(){ var fl = $(".natflags"); if (!fl) return; var cc = lsGet("tifo.country"); if (!cc){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : ""; } catch (e){} }
+    var nid = (window.NAT || {})[cc], me = $("#natme"), mb = $("#natmeb");
+    if (!nid){ if (me) me.hidden = true; } else fetch("/tn/" + nid + ".json").then(function(r){ return r.json(); }).then(function(t){ mb.innerHTML = '<a class="natme-h" href="/t/' + nid + '/">' + R.logo(t, "md") + "<b>" + R.tname(t) + "</b></a>" + (t.last ? R.matchRow(t.last, { date:true }) : "") + (t.next ? R.matchRow(t.next, { date:true }) : ""); if (R.localize) R.localize(mb);
+      var f = fl.querySelector('[data-cc="' + cc + '"]'); if (f) f.classList.add("me"); }).catch(function(){ if (me) me.hidden = true; });
+    var nb = $("#natnowb"); if (!nb) return; var ids = nb.dataset.ids.split(",").map(Number);
+    (function tick(){ fetch("/v1/live.json", { cache:"no-cache" }).then(function(r){ return r.json(); }).then(function(l){ var by = {}; (l.matches || []).forEach(function(m){ by[m.id] = m; }); var any = false;
+      ids.forEach(function(id){ var m = by[id], row = nb.querySelector('[href="/m/' + id + '/"]'); if (!m || !row) return; any = any || R.isLive(m); var tmp = document.createElement("div"); tmp.innerHTML = R.matchRow(m, { date:false }); var nr = tmp.firstElementChild; if (nr && nr.getAttribute("aria-label") !== row.getAttribute("aria-label")) row.replaceWith(nr); });   /* only a real change (score, minute, status) redraws a row */
+      if (R.localize) R.localize(nb); setTimeout(tick, any ? 20e3 : 120e3); }).catch(function(){ setTimeout(tick, 120e3); }); })(); })();
+
+  // ---- W4.2 /week/: the pinned «مباراة الأسبوع» counts down to kickoff, then its row follows the live score
+  (function(){ var pin = $("#mow"), cd = $("#mowcd"); if (!pin || !cd || !pin.dataset.kick || !R.n) return; var ko = Date.parse(pin.dataset.kick), a = pin.querySelector('a.m[href^="/m/"]'), id = a ? +(a.getAttribute("href").match(/\d+/) || [0])[0] : 0;
+    function tick(){ var d = ko - Date.now(); if (d > 0){ var dd = Math.floor(d / 864e5), hh = Math.floor(d / 36e5) % 24, mm = Math.floor(d / 6e4) % 60;
+        cd.textContent = "تبدا بعد " + [R.n(dd, ["يوم", "يومين", "أيام", "يوم"]), R.n(hh, ["ساعة", "ساعتين", "ساعات", "ساعة"]), dd ? "" : R.n(mm, ["دقيقة", "دقيقتين", "دقايق", "دقيقة"])].filter(Boolean).join(" و"); setTimeout(tick, 30e3); }
+      else { cd.textContent = ""; live(); } }
+    function live(){ if (!id) return; fetch("/v1/live.json", { cache:"no-cache" }).then(function(r){ return r.json(); }).then(function(l){ var m = (l.matches || []).filter(function(x){ return x.id === id; })[0]; if (!m){ if (Date.now() - ko < 3 * 36e5) setTimeout(live, 60e3); return; }
+      var row = pin.querySelector('a.m[href="/m/' + id + '/"]'), t = document.createElement("div"); t.innerHTML = R.matchRow(m, {}); if (row && t.firstElementChild) row.replaceWith(t.firstElementChild); if (R.localize) R.localize(pin); if (R.isLive(m)) setTimeout(live, 20e3); }).catch(function(){ setTimeout(live, 60e3); }); }
+    tick(); })();
 })();
