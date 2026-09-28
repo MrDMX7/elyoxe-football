@@ -228,6 +228,8 @@ def check_generic(text, evidence):
     if ev.get("neutral") and re.search(r"(?<!\w)(?:على |برا |خارج |في )?(?:أرضه|أرضها|جمهوره|جمهورها|جماهيره|ملعبه|ملعبها)(?!\w)", text):
         return "home/away wording at a neutral venue"
     if re.search(r"(?:مب|مش|غير|ما هي|مو) متوفر(?:ة)?", text): return "«مب متوفرة»"
+    m = re.search(r"(?<!\w)(وش|ووش|مين)(?!\w)", text)
+    if m: return f"forbidden form «{m.group(1)}»"
     m = re.search(r"(?:مسجل |حسب |في |ب)ال?بيانات|نظافة شبك", text)
     if m: return f"talks about the data («{m.group(0)}»)"
     if re.search(r"فوز(?:ه|ها)? رقم \d+", text): return "«فوزه رقم N»"

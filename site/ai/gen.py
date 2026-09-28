@@ -188,7 +188,7 @@ def grammar(t, nations=()):
 def emirati(t):
     if not isinstance(t, str): return t
     for a, b in LEX["phrases"].items(): t = t.replace(a, b)
-    for a, b in [(a, b) for a, b in list(LEX["words"].items()) + list(FEM.items()) if a not in ALLOWED] + [("مين", "منو"), ("كذا", "جذيه"), ("يرى", "يشوف"), ("أرى", "أشوف"), ("نرى", "نشوف"), ("بتقام", "بتستوي"), ("تقام", "تستوي"), ("يقام", "يستوي"), ("بيقام", "بيستوي")]:
+    for a, b in [(a, b) for a, b in list(LEX["words"].items()) + list(FEM.items()) if a not in ALLOWED] + [("مين", "منو"), ("ومين", "ومنو"), ("وش", "شو"), ("ووش", "وشو"), ("كذا", "جذيه"), ("يرى", "يشوف"), ("أرى", "أشوف"), ("نرى", "نشوف"), ("بتقام", "بتستوي"), ("تقام", "تستوي"), ("يقام", "يستوي"), ("بيقام", "بيستوي")]:
         t = re.sub(r"(?<!\w)" + re.escape(a) + r"(?!\w)", b, t)
     return grammar(re.sub("[ً-ٍ]", "", t))
 def deep(x, nations=()):
@@ -277,7 +277,7 @@ SUM_SYS = STYLE + NAT_RULE + """
 3) headline: عنوان قصير (أقل من 70 حرف).
 """
 SUM_SCHEMA = OBJ({"headline": S(80), "summary": S(900), "thread": ARR(S(270), 6)})
-PROMPT_V = {"why": 2, "summary": 2}   # bump to regenerate a kind after a prompt change (2026-09-27: why = numbers, summary = story)
+PROMPT_V = {"why": 3, "summary": 2}   # why 3 (2026-09-28): leaves out what the catch-up box already shows   # bump to regenerate a kind after a prompt change (2026-09-27: why = numbers, summary = story)
 def do_summary(md):
     ctx = match_facts(md); sig = hashlib.sha1(json.dumps([PROMPT_V["summary"], ctx], sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("summary", str(md["id"]), sig): return "cached"
@@ -297,12 +297,16 @@ def do_summary(md):
 # ---- 77: preview for a coming match
 PRE_SYS = STYLE + NAT_RULE + """
 المهمة: عندك بيانات مباراة ياية: ترتيب الفريقين وفورمتهم، ونسب توقعات تيفو، والمواجهات السابقة، وأرقام على المحك، وضغط المباريات.
-اكتب lines: 5 أسطر بالضبط، كل سطر جملة وحدة (أقل من 200 حرف):
+اكتب خمس خانات، كل وحدة جملة وحدة (أقل من 200 حرف) وفيها رقم من البيانات، وكل خانة بمحتواها هي بس:
+strength_home نقطة قوة للفريق المستضيف (home) من الأرقام، strength_away نقطة قوة للضيف (away) من الأرقام، concern نقطة ضعف أو قلق لواحد منهم،
+key مفتاح المباراة، prediction توقع تيفو بالنسب (مقرّبة لأقرب رقم صحيح بدون ما تجزم)، ولو النسب مب موجودة خلها عن فورمة الفريقين.
+لا تبدا الجملة باسم الخانة («مفتاح المباراة…»، «نقطة القوة…»)، الجملة نفسها تكفي.
 - venue_city مدينة المباراة. لو neutral صح، الملعب محايد: ولا فريق يلعب على أرضه، فلا تقول «أرضه» ولا «جمهوره» ولا «برا أرضه».
 - لا تكتب اسم البند نفسه كجملة («مفتاح المباراة: مفتاح المباراة…»)، ولا «مب متوفرة»، ولا «فوزه رقم 2».
-1) الفريق الأول: نقطة قوة من الأرقام.  2) الفريق الثاني: نقطة قوة من الأرقام.  3) نقطة ضعف أو قلق لواحد منهم.  4) مفتاح المباراة.  5) توقع تيفو بالنسب مقرّبة لأقرب رقم صحيح (بدون فواصل عشرية)، بدون ما تجزم. إذا النسب مب موجودة في البيانات، خل السطر الخامس عن فورمة الفريقين أو أرقام على المحك بدل النسب، ولا تقول إنها مب متوفرة.
 """
-PRE_SCHEMA = OBJ({"lines": ARR(S(220), 5)})
+PRE_KEYS = ("strength_home", "strength_away", "concern", "key", "prediction")
+PRE_SCHEMA = OBJ({k: S(220) for k in PRE_KEYS})
+PROMPT_V_PREVIEW = 2   # 2026-09-28: keyed fields, so each label sits on its own text (QA)
 _CFX = {}
 def venue_ctx(m):
     """venue_city and neutral (audit W1.3a). A hosted tournament (≥60% of its known venues in one city) is neutral for both
@@ -322,16 +326,23 @@ def venue_ctx(m):
     return {"venue_city": city, "neutral": neutral}
 
 def do_preview(m, ctx):
-    sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+    """preview/{match}.json: items [{key, label, text}] in PRE_KEYS order (dropped ones left out) and lines (the same texts, for old readers)."""
+    sig = hashlib.sha1(json.dumps([PROMPT_V_PREVIEW, ctx], sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
     if cached("preview", str(m["id"]), sig): return "cached"
     out = gemini(PRE_SYS, ctx, PRE_SCHEMA, temp=0.5, kind="preview")
     if not out: return "fail"
     out = deep(out, nations(m["home"], m["away"]))
     rows = {t: {"rank": (ctx.get(k) or {}).get("rank"), "pts": (ctx.get(k) or {}).get("pts")} for t, k in ((team_ar(m["home"]), "home_table"), (team_ar(m["away"]), "away_table")) if ctx.get(k)}
-    nofacts = [l for l in out.get("lines") or [] if not re.search(r"\d", l)]   # the no-filler rule: every preview line carries a number
-    for l in nofacts: print(f"preview {m['id']}: line dropped (no number): {l[:80]}", file=sys.stderr)
-    out["lines"] = keep_lines([l for l in out.get("lines") or [] if l not in nofacts], rows, 3, f"preview {m['id']}", ctx)
-    if not out["lines"]: return "dropped"
+    H, A = team_ar(m["home"]), team_ar(m["away"])
+    labels = {"strength_home": f"قوة {H}", "strength_away": f"قوة {A}", "concern": "نقطة القلق", "key": "مفتاح المباراة", "prediction": "توقع تيفو" if ctx.get("tifo_probabilities") else "الفورمة"}
+    items = []
+    for k in PRE_KEYS:
+        t = (out.get(k) or "").strip()
+        if not t: continue
+        if not re.search(r"\d", t): print(f"preview {m['id']}: {k} dropped (no number): {t[:80]}", file=sys.stderr); continue   # the no-filler rule
+        if keep_lines([t], rows, 1, f"preview {m['id']} {k}", ctx): items.append({"key": k, "label": labels[k], "text": t})
+    if len(items) < 3: return "dropped"
+    out = {"items": items, "lines": [i["text"] for i in items]}
     out.update({"id": m["id"], "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"})
     save("preview", str(m["id"]), out); return "new"
 
@@ -514,6 +525,7 @@ WHY_SYS = STYLE + NAT_RULE + """
 - كل سطر عن فريق واحد بجملة قصيرة. لا تربط الفريقين في نفس الجملة بـ«بس» أو «رغم» (مثل «X سيطر… بس سجّل Y…»)، خلّ كل فريق في سطره.
 - لا تفترض أي سبب مب ظاهر في الأرقام (تعب، معنويات، تكتيك، حكم)، ولا تكتب حشو أو مديح.
 - stats_home_away: الرقم الأول للمستضيف (home) والثاني للضيف (away).
+- الكاتش أب تحت هالبلوك يعرض البلنتي الضايع والطرد، فلا تذكرهم إلا إذا هم السبب المباشر للنتيجة (مثلاً طرد قبل هدف الفوز أو بلنتي ضايع في مباراة انتهت تعادل أو بفارق هدف).
 - الحدث own_goal: لاعب من scorer_team سجل بالخطأ في مرمى فريقه، والهدف ينحسب لـ goal_for. قول «هدف عكسي لصالح goal_for».
 - انتبه لفريق كل لاعب (team) قبل ما تربطه بأي فريق.
 - winner وloser فيهم الفايز والخسران وأهداف كل واحد (لو تعادل، draw صح). السطر الأول عن الفايز لو في فايز. لا تغيّر أي نتيجة.
@@ -628,7 +640,7 @@ QUICK_SYS = STYLE + NAT_RULE + """
 المهمة: «مباراة الليلة في 60 ثانية»: بطاقة سريعة قبل مباراة كبيرة. اكتب lines: من 4 لين 6 أسطر، كل سطر جملة وحدة أقل من 140 حرف:
 الموعد، وضع الفريقين في الترتيب وفورمتهم، المواجهات السابقة (h2h)، وتوقع تيفو بالنسب إذا موجود. بس هذي الأربعة، ولا شي غيرها.
 - كل سطر فيه رقم من البيانات. لو ما في توقع تيفو، لا تذكر أي توقع. سمّها «توقعات تيفو» دايماً.
-- الموعد اكتبه حرفياً كما في kickoff_label (مثلاً «الجمعة 16 أكتوبر، 17:05») مع «بتوقيت الإمارات»، وقول «الليلة» بس لو is_tonight صح.
+- الموعد اكتبه حرفياً كما في kickoff_label (مثلاً «الجمعة 16 أكتوبر، 17:05») مع «بتوقيت الإمارات». لليوم استعمل day_word بالضبط («الليلة» أو «اليوم» أو «بكرة» أو اسم اليوم)، ولا تقول «الليلة» إلا إذا day_word هي «الليلة».
 - المجموعة اكتبها كما في group_ar.
 - لو المعلومات ما تكفي لـ 6 أسطر، اكتب 4 بس. لا تكرر نفس المعلومة بصيغتين، ولا تكتب سطر بدون معلومة («عين الفريق على الفوز»).
 - ممنوع أي لغة مراهنات (أودز، رهان، ضمان، «أكيد بيفوز»، نصايح توقع). ممنوع الحشو.
@@ -643,6 +655,14 @@ FIX = [("بتبدأ", "بتبدا"), ("تبدأ", "تبدا"), ("يبدأ", "ي�
 def fix(t):
     for a, b in FIX: t = t.replace(a, b)
     return t
+AR_WEEKDAY = ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"]
+def day_word(ko_uae, now=None):
+    """«الليلة» (today from 17:00 UAE), «اليوم», «بكرة», else the weekday: the quick card's title and its lines use it (QA 2026-09-28)."""
+    if len(ko_uae) < 16: return ""
+    now = now or (dt.datetime.utcnow() + dt.timedelta(hours=4)); d = dt.date.fromisoformat(ko_uae[:10]); h = int(ko_uae[11:13])
+    if d == now.date(): return "الليلة" if h >= 17 else "اليوم"
+    if d == now.date() + dt.timedelta(days=1): return "بكرة"
+    return AR_WEEKDAY[d.weekday()]
 def do_quick(m, table):
     md = get(f"match/{m['id']}.json") or m
     rows = {}
@@ -650,7 +670,7 @@ def do_quick(m, table):
         for r in g.get("rows", []): rows[team_ar(r["team"])] = {"rank": r["rank"], "played": r["played"], "pts": r["pts"], "gd": r.get("gd"), "form": r.get("form"), "group_ar": GROUP_AR.get(str(g.get("name") or "").replace("Grp. ", "").replace("Group ", "").strip())}
     H, A = team_ar(m["home"]), team_ar(m["away"])
     ctx = {"competition": m.get("comp_name_ar") or md.get("comp_name_ar"), "home": H, "away": A, "kickoff_label": label(m.get("kickoff_uae") or ""), **venue_ctx(m),
-           "is_tonight": (m.get("kickoff_uae") or "")[:10] == (dt.datetime.utcnow() + dt.timedelta(hours=4)).strftime("%Y-%m-%d"),
+           "day_word": day_word(m.get("kickoff_uae") or ""),
            "tifo_probabilities": {k: v for k, v in (m.get("probs") or md.get("probs") or {}).items() if k in ("home", "draw", "away")} or None, "home_table": rows.get(H), "away_table": rows.get(A),
            "head_to_head": (md.get("h2h") or {}).get("summary")}
     sig = hashlib.sha1(json.dumps(ctx, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
@@ -661,7 +681,8 @@ def do_quick(m, table):
     for x in [x for x in qall if ZERO.search(x)]: print(f"quick {m['id']}: zero-count line dropped: {x[:80]}", file=sys.stderr)
     qlines = keep_lines([x for x in qall if not ZERO.search(x)], table_rows(table), 4, f"quick {m['id']}", ctx)
     if not qlines: return "dropped"
-    save("quick", str(m["id"]), {"id": m["id"], "comp": m.get("comp"), "home": m["home"]["id"], "away": m["away"]["id"], "kickoff_utc": m.get("kickoff_utc"), "lines": qlines, "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
+    save("quick", str(m["id"]), {"id": m["id"], "comp": m.get("comp"), "home": m["home"]["id"], "away": m["away"]["id"], "kickoff_utc": m.get("kickoff_utc"), "day_word": ctx.get("day_word"),
+                                     "title": f"مباراة {ctx.get('day_word')} في 60 ثانية" if ctx.get("day_word") else "المباراة في 60 ثانية", "lines": qlines, "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"}); return "new"
 
 
 # ---- 301: «أهم 5 أشياء اليوم» on the home page (gated like every generated text)
