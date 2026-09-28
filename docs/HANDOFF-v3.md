@@ -9,6 +9,14 @@ Stopped at the coordinator's request because the phone battery was draining. The
 - **Production:** the last deploy from main at `2c9401d` finished at about 13:10 UAE with every check at 200.
 - **Nothing running:** no build, deploy or Chromium process is left from this session.
 
+## Resumed 2026-09-28 23:00 UAE (laptop session, driving the Fold over Tailscale)
+- **Hourly rebuild back on:** removed the `#PAUSED-2026-09-28-battery` prefix from the crontab line and reinstalled it. The phone was at 100% and charging.
+- **The /m/1000020530/ 404 was all 78 UAE match pages.** Leagues 538 (42), 11027 (21) and 9943 (15) had no page on production, and /c/uae-pro-league/ had no match links at all. The 13:10 build had no fixtures for them: `get()` returns null on a failed fetch, the build went on without those competitions, and `sync --delete` removed their pages. 78 of 10,449 pages is under deploy.sh's 15% guard. **Fix `0a8a7e4`:** if a competition the index counts matches for has empty fixtures, the build exits 3 and the live site keeps its last good build. Pages come back with the 23:25 run.
+- **QA 35/45, coaches:** `S.coachesTeam`/`S.coachesLeague` now take Arabic names from names/coaches_ar.json (`S.setCoaches`), which covers all 100 league coaches. The fix went out in wsync's `5a8c02b` sync commit.
+- **QA 65, «Widad Temara»:** `get()` fills `name_ar` from names/clubs_ar.json into every team object under home/away/team/opponent, and teams.json gets the same fill. Every page that reads `name_ar || name` is covered (`31db9b6`).
+- **Pipeline 14:00 verification, done:** team/5789.json has the 3-0 win at Bahrain on 27 Sep (#44), comp/329/tournament-sim.json was generated 09:55Z, after the last result, and team/6719.json exists.
+- **424 push test restarted** on the live match Tunisia v Botswana (6040346, 23:00 UAE): subscription for 6719/5887 at 19:12Z, and the listener runs to the end. Run teardown after.
+
 ## QA 2026-09-28 (docs/QA-2026-09-28.json): site-side status
 
 The QA list numbers bugs 0–104 (the order of `bugs[]`). "Fixed" means the change is in the code and deployed.
