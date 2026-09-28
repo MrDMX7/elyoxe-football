@@ -167,7 +167,7 @@ section[data-pane]{animation:paneIn .28s ease both}
 .rmine .favrow{background:var(--surf);padding:.7rem .8rem;border-block-start:3px solid var(--dune)}
 .rmine .favrow + .favrow{border-block-start:3px solid var(--dune);padding-block-start:.7rem}
 .rmine .favrow .h{font-family:var(--kufi);font-weight:800;display:flex;align-items:center;gap:.4rem}
-.rmine .favrow .h small{background:var(--dune);color:#fff;font:600 .75rem var(--font-text);padding:0 .35rem}
+.rmine .favrow .h small{background:var(--dune);color:#fff;font:600 .78rem var(--font-text);padding:0 .35rem}
 .rmine #themebtn{align-self:center;justify-self:start;border:1px solid var(--line);background:none;color:var(--tert)}
 
 /* ---- the day list (the match centre) */
@@ -462,7 +462,7 @@ body.v3{background:repeating-linear-gradient(180deg,#ffffff00 0 64px,#ffffff08 6
 .arr.up{color:var(--live-text)}.arr.dn{color:var(--stone)}
 .v3 ul.ev .subs .out{color:var(--stone)}
 /* 390 period separators: a thin chalk line with small centred text */
-.v3 ul.ev li.div{display:flex;align-items:center;gap:.7rem;background:none;border:0;padding:.6rem 0;margin:.2rem 0;font:600 .75rem var(--font-text);color:var(--stone)}
+.v3 ul.ev li.div{display:flex;align-items:center;gap:.7rem;background:none;border:0;padding:.6rem 0;margin:.2rem 0;font:600 .78rem var(--font-text);color:var(--stone)}
 .v3 ul.ev li.div::before,.v3 ul.ev li.div::after{content:"";flex:1;block-size:1px;background:var(--line)}
 /* 391 the trimmed catch-up */
 .catchup.mini{padding:.5rem .8rem;border-inline-start-width:2px}.catchup.mini p{font-size:.85rem;margin:0}
@@ -499,7 +499,7 @@ body.v3{background:repeating-linear-gradient(180deg,#ffffff00 0 64px,#ffffff08 6
 .edi{inline-size:1.7rem;block-size:1.7rem;fill:none;stroke:var(--tert);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-block-end:.2rem}
 /* 403 «فريقك» empty state: a crest grid of your country's clubs */
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(5.2rem,1fr));gap:.5rem;margin-block-start:.6rem;grid-column:1/-1}
-.mgrid button{display:grid;justify-items:center;gap:.3rem;background:var(--surf);border:0;color:var(--ink);padding:.6rem .3rem;cursor:pointer;font:600 .75rem var(--font-text)}
+.mgrid button{display:grid;justify-items:center;gap:.3rem;background:var(--surf);border:0;color:var(--ink);padding:.6rem .3rem;cursor:pointer;font:600 .78rem var(--font-text)}
 .mgrid button:hover{background:var(--raised-hi)}
 .rmine .mine-card{grid-auto-flow:row;grid-auto-columns:auto}
 /* 388 the national countdown inside a rail card */
@@ -563,7 +563,7 @@ body.clubtheme .hero .scrim{box-shadow:inset 0 -3px 0 var(--club1)}
 .tnm{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.8rem;margin-block-start:1rem;background:#0A262099;padding:.6rem .8rem;max-inline-size:28rem}
 .tnm .mid{text-align:center;display:grid;gap:.1rem}.tnm .mid b{font-size:1.4rem}.tnm .mid small{color:var(--tert);font-size:.78rem}
 .tkick{font-size:.85rem;color:var(--tert);margin:.3rem 0 0}.tkick a{border-block-end:1px solid var(--line)}
-.tform{display:flex;gap:3px;margin-block-start:.5rem}.tform i{inline-size:1rem;block-size:1rem;display:grid;place-items:center;font:700 .6rem var(--font-text);font-style:normal}
+.tform{display:flex;gap:3px;margin-block-start:.5rem}.tform i{inline-size:1.3rem;block-size:1.3rem;display:grid;place-items:center;font:700 .78rem var(--font-text);font-style:normal}
 .tform .W{background:var(--chalk);color:var(--night)}.tform .D{background:var(--stone);color:var(--night)}.tform .L{background:var(--inkbg);color:var(--ink)}
 .clg{inline-size:1rem;block-size:1rem;object-fit:contain;opacity:.8;margin-inline-end:.3rem;vertical-align:-2px}
 /* W2.9: sheets feel native */

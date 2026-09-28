@@ -477,7 +477,7 @@
     if (mb) mb.addEventListener("click", function(){ setTimeout(function(){ paint(); var s = st();
       if (!isFav() && (s.teams || {})[TID]){ delete s.teams[TID]; save(s); sync(); paint(); return; }   // no longer my team: stop its pushes
       if (isFav() && ok && !(s.teams || {})[TID] && !sessionStorage.getItem("tifo.pushasked")){ try { sessionStorage.setItem("tifo.pushasked", "1"); sessionStorage.setItem("tifo.inst.asked", "1"); } catch (e){} open(sheet, pbtn); } }, 650); });
-    paint(); if (ok && !KEY && isFav() && "requestIdleCallback" in window) requestIdleCallback(function(){ key().catch(function(){}); }); })();
+    paint(); if (ok){ var warm = function(){ if (!KEY) key().catch(function(){}); navigator.serviceWorker.ready.catch(function(){}); }; if ("requestIdleCallback" in window) requestIdleCallback(warm); else setTimeout(warm, 1500); } })();   /* nothing to wait for between the permission and the subscription */
 
   // ---- owner item 1: «فريقي» in the nav — my crest, opens my team; no team yet: the crest grid of my country in a sheet
   (function(){ var links = $$('[data-nav="mine"]'); if (!links.length) return; var mid = +lsGet("tifo.mine") || 0;
