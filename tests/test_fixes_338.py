@@ -313,3 +313,14 @@ def test_bump_never_written_empty(tmp_path):
     st = {"groups": [{"rows": [{"team": {"id": 1}}]}]}
     AN.comp_tables(p, 47, st, [], "league")
     assert "comp/47/bump.json" not in p.store.written
+
+
+def test_arab_club_squads_weekly_idle_only(tmp_path):
+    p = _poller(tmp_path)
+    p.st["team_comps"] = {"101": [536], "102": [519], "103": [47], "102117": [538]}
+    done = []
+    p.refresh_team = lambda tid: (done.append(tid), p.mark("team", tid))
+    ids = p.arab_club_ids()
+    assert set(ids) == {101, 102}                          # not the big five, not the focus (538) clubs
+    p.dues()["team:102"] = "2026-09-01T00:00:00Z"
+    assert p.arab_club_ids()[0] == 101                     # never refreshed first

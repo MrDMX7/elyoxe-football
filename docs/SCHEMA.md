@@ -61,7 +61,7 @@ The CloudFront cache policy honours each object's max-age (MinTTL 1 s). Unchange
 | `comp/{id}/shots.json` | per-player season shot list (or `available: false`) | same |
 | `comp/{id}/players.json` | per-player season stats, per-90 values, league percentiles (radar) | daily, for `player_stats_comps` (538, 536, 535) |
 | `comp/{id}/foreigners.json` | best non-national players of the league | daily, same competitions |
-| `team/{id}.json` | Team: squad, all fixtures, transfers, venue | daily for focus teams (UAE national team + every club in 538/11027) |
+| `team/{id}.json` | Team: squad, all fixtures, transfers, venue | daily for focus teams (UAE national team + every club in 538/11027); weekly for every other club of the Arab leagues (`club_squad_comps`: 536, 535, 529, 524, 519, 530, 516, 544, 10721), 3 per idle poller minute, never while a match is live |
 | `team/{id}.ics` | iCalendar feed of the team's matches: each event has `URL` (the match page, also in the description), the UAE channel (`broadcast_by_country.json`, a static feed cannot know the viewer's country) and, for timed upcoming matches, a 30-minute `VALARM` | with every competition refresh; daily for focus teams |
 | `comp/{id}.ics` | the same feed for a whole competition (538, 11027, 9943, 11026) | with every competition refresh |
 | `teams.json` | every team seen: name, name_ar, logo, competitions | every run |

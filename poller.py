@@ -1069,6 +1069,14 @@ class Poller:
                 break
             if self.due("team", c.get("squads_minutes", 1440), tid):
                 self.refresh_team(tid)
+        if not live:        # W4.5: squads for every club in the Arab leagues, weekly, a few per idle minute
+            n = 0
+            for tid in self.arab_club_ids():
+                if n >= c.get("club_squads_per_run", 3) or not self.has_time(12):
+                    break
+                if self.due("team", c.get("club_squads_minutes", 7 * 1440), tid):
+                    self.refresh_team(tid)
+                    n += 1
         # upcoming UAE-relevant details (injuries, venue) once an hour for the next 48 h
         for mid, s in sorted(self.st.get("schedule", {}).items(), key=lambda kv: kv[1]["ko"] or ""):
             if not self.has_time(10):
@@ -1330,6 +1338,14 @@ class Poller:
             if cc:
                 return cc
         return None
+
+    def arab_club_ids(self):
+        """Clubs of the Arab leagues (club_squad_comps) other than the focus teams, stalest first."""
+        comps = set(self.cfg.get("club_squad_comps", []))
+        focus = set(self.focus_team_ids())
+        ids = [int(k) for k, v in self.st.get("team_comps", {}).items() if comps & set(v) and int(k) not in focus]
+        due = self.dues()
+        return sorted(ids, key=lambda t: due.get(f"team:{t}") or "")
 
     def focus_team_ids(self):
         ids = list(config.focus_teams())
