@@ -225,7 +225,7 @@ def spoken(t):
 def team_ar(t): return checks.club_ar(t) or (t or {}).get("name")   # name_ar → names/clubs_ar.json → teams_ar.yaml → Gemini (cached)
 def _translit(tid, latin):
     """A club with no Arabic name anywhere: Gemini transliterates it once, cached into names/clubs_ar.json (source "generated")."""
-    out = gemini_api("اكتب اسم نادي كرة القدم هذا بالحروف العربية كما يكتبه الإعلام العربي. JSON بس.", {"club": latin}, OBJ({"ar": S(60)}), temp=0.1, tokens=200)
+    out = gemini_api("اكتب اسم نادي كرة القدم هذا بالحروف العربية كما يكتبه الإعلام العربي. JSON بس.", {"club": latin}, OBJ({"ar": S(60)}), temp=0.1, tokens=2000)
     ar = (out or {}).get("ar", "").strip()
     if not ar or re.search(r"[A-Za-z]", ar): return None
     f = checks.CLUBS_FILE

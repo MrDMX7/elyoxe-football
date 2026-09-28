@@ -52,6 +52,12 @@ def main():
     mw = get("arabs/match-of-week.json"); week_html = ""
     if mw and mw.get("match"):
         m = mw["match"]; week_html = f'<h3 style="margin:14px 0 6px">مباراة الأسبوع العربية</h3><p><a href="{SITE}/m/{m["id"]}/" style="color:#0A2620"><b>{e(tn(m["home"]))} و{e(tn(m["away"]))}</b></a></p>'
+    # «تيفو الأسبوع» (417): the feed image weekly.py made this week (Thursday 15:00), linked to /week/
+    iso = dt.date.today().isocalendar(); wkf = os.path.join(HERE, "..", "site", "cache", "week", f"week-{iso[0]}-{iso[1]:02d}.json")
+    if os.path.exists(wkf):
+        wk = json.load(open(wkf))["week"]
+        week_html = (f'<p style="margin:14px 0"><a href="{SITE}/week/"><img src="{SITE}/og/week-{wk}-feed.png" width="600" alt="تيفو الأسبوع: أرقام الأسبوع في الكورة العربية" '
+                     f'style="display:block;width:100%;max-width:600px;height:auto;border:0"></a></p>') + week_html
     appr = json.load(open(os.path.join(HERE, "..", "site", "ai", "approved.json")))
     cast = f'<p><a href="{SITE}/cast/">اسمع حلقة تيفو كاست هالأسبوع</a></p>' if appr.get("podcast") else ""
     ses = boto3.client("sesv2", region_name="ap-south-1"); subs = []

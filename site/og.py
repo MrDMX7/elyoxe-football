@@ -114,6 +114,10 @@ def main():
             if not os.path.exists(cs): render_sized(j, *SIZES[sz]).save(cs, optimize=True); new += 1
             shutil.copy2(cs, os.path.join(OUT, "og", f"{j['key']}-{sz}.png"))
     os.remove(os.path.join(OUT, "og", "jobs.json"))
+    wk = os.path.join(CACHE, "week")   # «تيفو الأسبوع» (weekly.py, Thursdays): out/ is rebuilt every hour, so copy the week's files in on each build
+    if os.path.isdir(wk):
+        for f in os.listdir(wk):
+            if f.endswith((".png", ".json")) and not f.startswith("players_"): shutil.copyfile(os.path.join(wk, f), os.path.join(OUT, "og", f))
     print(f"og: {len(jobs)} images ({new} new)")
 
 if __name__ == "__main__":
