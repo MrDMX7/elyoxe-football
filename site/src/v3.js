@@ -141,9 +141,9 @@
     if (m && m.home && m.away && /^<a /.test(h)){ var hn = m.home.name_ar || m.home.name || "", an = m.away.name_ar || m.away.name || "", s = m.score, mn = String(m.minute || "").replace(/'/g, ""), st = R.isLive(m) ? "مباشر" + (mn ? " " + ((R.periodAr && R.periodAr(mn)) || "الدقيقة " + mn) : "") : m.status === "finished" ? "انتهت" : m.status === "scheduled" ? (m.time_tbd ? "الموعد مب محدد" : "الساعة " + R.hhmm(m.kickoff_uae)) : "";
       var lbl = s && m.status !== "scheduled" ? hn + " " + s.home + "، " + an + " " + s.away : hn + " ضد " + an; h = h.replace(/^<a /, '<a aria-label="' + esc(lbl + (st ? "، " + st : "")) + '" '); }
     return team && m && m.comp ? h.replace(/(<span class="t h[^"]*">)/, '$1<img class="clg" src="/lg/' + m.comp + '.png" alt="" loading="lazy" onerror="this.remove()">') : h; };
-  // W3.4: the visitor's channel on every upcoming or live row: the first broadcaster in their country (+ «مجاني»); UAE in the prerender
+  // W3.4: the visitor's channel on every upcoming or live row: the first broadcaster in their country (+ «مشفرة» when none of its broadcasters is free; owner 2026-09-30: never «مجاني»); UAE in the prerender
   R.CHN = (root && root.CHN_AE) || {};
-  R.chan = function(m){ if (!m || m.status === "finished" || !m.comp) return ""; var c = R.CHN[m.comp]; if (!c) return ""; return '<span class="chn" data-comp="' + m.comp + '">' + esc(c[0]) + (c[1] ? ' <b>مجاني</b>' : "") + "</span>"; };
+  R.chan = function(m){ if (!m || m.status === "finished" || !m.comp) return ""; var c = R.CHN[m.comp]; if (!c) return ""; return '<span class="chn" data-comp="' + m.comp + '">' + esc(c[0]) + (c[1] ? "" : ' <b>مشفرة</b>') + "</span>"; };
   // W2.10: Arabic counts — 1 and 2 have their own forms, 3–10 take the plural, 11+ the singular; 0 hides the line
   R.n = function(k, f){ k = +k || 0; if (!k) return ""; if (k === 1) return f[0]; if (k === 2) return f[1]; return k + " " + (k <= 10 ? f[2] : f[3]); };
   // W2.10: one kicker for a match everywhere: مباشر الحين / انتهت / الليلة / اليوم 15:00 / بكرة / the weekday

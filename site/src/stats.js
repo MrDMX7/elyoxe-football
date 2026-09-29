@@ -322,7 +322,7 @@
   // ---- 7: where to watch in the UAE; 63: official highlights; 8: stadium guide
   S.watchWhere = function(b){
     if (!b || !b.broadcasters || !b.broadcasters.length) return "";
-    return '<ul class="bc">' + b.broadcasters.map(function(x){ return '<li><b>' + esc(x.name_ar || x.name_en) + "</b>" + (x.free ? ' <span class="ok">مجاني</span>' : "") + (x.package_ar || (x.package && /[\u0600-\u06FF]/.test(x.package)) ? ' <span class="muted small">' + esc(x.package_ar || x.package) + "</span>" : "") + (x.price_aed ? ' <span class="num">' + x.price_aed + "</span> درهم" : "") + (x.url ? ' <a class="src" href="' + esc(x.url) + '" rel="noopener">المصدر</a>' : "") + "</li>"; }).join("") + "</ul>" + (b.confidence && b.confidence !== "high" ? '<p class="src">المعلومة من الصحافة، ما لقينا إعلان رسمي للموسم.</p>' : "");
+    return '<ul class="bc">' + b.broadcasters.map(function(x){ return '<li><b>' + esc(x.name_ar || x.name_en) + "</b>" + (x.free ? "" : ' <span class="enc">مشفرة</span>') + (x.package_ar || (x.package && /[\u0600-\u06FF]/.test(x.package)) ? ' <span class="muted small">' + esc(x.package_ar || x.package) + "</span>" : "") + (x.price_aed ? ' <span class="num">' + x.price_aed + "</span> درهم" : "") + (x.url ? ' <a class="src" href="' + esc(x.url) + '" rel="noopener">المصدر</a>' : "") + "</li>"; }).join("") + "</ul>" + (b.confidence && b.confidence !== "high" ? '<p class="src">المعلومة من الصحافة، ما لقينا إعلان رسمي للموسم.</p>' : "");
   };
   S.highlight = function(h, md){
     var ch = h && h.channels && h.channels.filter(function(c){ return c.search_url_template && c.posts_per_match_highlights !== false; })[0]; if (!ch) return "";

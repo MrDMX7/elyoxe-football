@@ -92,7 +92,7 @@
     if (!g || !g.matches || !g.matches.length) return '<p class="empty">ما لقينا مباريات منقولة في الأيام الياية.</p>';
     var days = {}, order = []; g.matches.slice().sort(function(a, b){ return a.kickoff_utc.localeCompare(b.kickoff_utc); }).forEach(function(m){ var d = R.ymd(R.TZ ? m.kickoff_utc : (m.kickoff_uae || m.kickoff_utc)); if (!days[d]){ days[d] = []; order.push(d); } days[d].push(m); });
     return order.map(function(d){ return "<h3>" + esc(R.dayLabel(d)) + "</h3>" + days[d].map(function(m){ var mm = { id:m.match, comp:m.comp, kickoff_utc:m.kickoff_utc, kickoff_uae:m.kickoff_uae, status:m.status, score:m.score, home:m.home, away:m.away };
-      return '<div class="gm">' + R.matchRow(mm, {}) + '<p class="bc"><span class="muted small">' + esc(m.comp_name_ar || "") + "</span> " + (m.broadcasters || []).map(function(b){ return "<b>" + esc(b.name_ar || b.name_en) + "</b>" + (b.free ? ' <span class="free">مجاني</span>' : ""); }).join("، ") + "</p></div>"; }).join(""); }).join("");
+      return '<div class="gm">' + R.matchRow(mm, {}) + '<p class="bc"><span class="muted small">' + esc(m.comp_name_ar || "") + "</span> " + (m.broadcasters || []).map(function(b){ return "<b>" + esc(b.name_ar || b.name_en) + "</b>" + (b.free ? "" : ' <span class="enc">مشفرة</span>'); }).join("، ") + "</p></div>"; }).join(""); }).join("");
   };
   R.compOrder = function(index){ var o = {}; (index.competitions || []).forEach(function(c, i){ o[c.id] = i; }); return o; };
   R.compName = function(index, id){ var c = (index.competitions || []).filter(function(c){ return c.id === id; })[0]; return c ? c.name_ar : ""; };

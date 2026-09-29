@@ -218,7 +218,7 @@ module.exports = async function(X){
   // 281 TV guide per country: prerendered for the UAE, the client swaps to the visitor's country (/v1/guide/{iso}.json)
   const gAE = await get("guide/AE.json");
   put("/guide/", "دليل القنوات: مباريات الأيام الياية ووين تنقل في بلدك", "مباريات الثلاث أيام الياية وقنواتها في كل دولة عربية، بتوقيت بلدك.", "دليل القنوات", "مباريات الثلاث أيام الياية والقنوات اللي تنقلها في بلدك.",
-    `<div class="cmpsel"><select id="gsel" aria-label="الدولة">${R.COUNTRIES.map(c => `<option value="${c[0]}"${c[0] === "AE" ? " selected" : ""}>${c[1]}</option>`).join("")}</select><label class="chk"><input type="checkbox" id="gfree"> المجاني بس</label></div><div id="guide">${R.guide(gAE)}</div>` + note("القنوات من بحث تيفو في مواقع الناقلين والأخبار، وممكن تتغيّر. تأكد من دليل قناتك."), { page:"guide" });
+    `<div class="cmpsel"><select id="gsel" aria-label="الدولة">${R.COUNTRIES.map(c => `<option value="${c[0]}"${c[0] === "AE" ? " selected" : ""}>${c[1]}</option>`).join("")}</select></div><div id="guide">${R.guide(gAE)}</div>` + note("القنوات من بحث تيفو في مواقع الناقلين والأخبار، وممكن تتغيّر. تأكد من دليل قناتك."), { page:"guide" });
   // 284 explore every stored result (archive/all/{season}.json, fetched on demand)
   const AX = F["archive/index-all"];
   if (AX && AX.seasons && AX.seasons.length){

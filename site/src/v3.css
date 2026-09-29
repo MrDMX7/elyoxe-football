@@ -803,3 +803,5 @@ body.hasprayl .tile.pray{display:none}
 #cout{min-block-size:24rem}#offl{min-block-size:12rem}#day404{min-block-size:18rem}
 /* QA 101: the goal-moment word sits over the score, not the home name */
 .gtext{inset-block-end:auto;inset-block-start:calc(var(--topH) + 1rem)}
+/* owner 2026-09-30: a paid channel is marked «مشفرة», quietly (no «مجاني» anywhere) */
+.v3 .enc{font-size:.75rem;font-weight:500;color:var(--tert);border:1px solid var(--rule);padding:0 .35rem;margin-inline-start:.2rem}

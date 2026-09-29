@@ -132,14 +132,14 @@
   function fold(){ if (!dayEl || !unf) return; var n = dayEl.querySelectorAll(".comp-block").length; unf.hidden = n <= 4 || !dayEl.classList.contains("fold"); }
   if (unf) unf.onclick = function(){ dayEl.classList.remove("fold"); fold(); };
   fold();
-  // one segmented control for the day filter: الكل · العرب · المجاني في بلدك (app.js owns the two toggles)
+  // one segmented control for the day filter: الكل · العرب (the free-only toggle was removed 2026-09-30; fb stays null-safe for cached pages)
   var sa = $("#segall"), ab = $("#arabonly"), fb = $("#freeonly");
-  function segSync(){ if (!sa) return; setTimeout(function(){ sa.setAttribute("aria-pressed", !(ab.getAttribute("aria-pressed") === "true" || fb.getAttribute("aria-pressed") === "true")); }, 0); }
+  function segSync(){ if (!sa) return; setTimeout(function(){ sa.setAttribute("aria-pressed", !(ab.getAttribute("aria-pressed") === "true" || (fb && fb.getAttribute("aria-pressed") === "true"))); }, 0); }
   if (sa){
-    ab.addEventListener("click", function(){ if (fb.getAttribute("aria-pressed") === "true") fb.click(); }, true);
-    fb.addEventListener("click", function(){ if (ab.getAttribute("aria-pressed") === "true") ab.click(); }, true);
-    [ab, fb].forEach(function(b){ b.addEventListener("click", segSync); });
-    sa.onclick = function(){ if (ab.getAttribute("aria-pressed") === "true") ab.click(); if (fb.getAttribute("aria-pressed") === "true") fb.click(); segSync(); };
+    ab.addEventListener("click", function(){ if (fb && fb.getAttribute("aria-pressed") === "true") fb.click(); }, true);
+    if (fb) fb.addEventListener("click", function(){ if (ab.getAttribute("aria-pressed") === "true") ab.click(); }, true);
+    [ab, fb].filter(Boolean).forEach(function(b){ b.addEventListener("click", segSync); });
+    sa.onclick = function(){ if (ab.getAttribute("aria-pressed") === "true") ab.click(); if (fb && fb.getAttribute("aria-pressed") === "true") fb.click(); segSync(); };
     segSync();
   }
 
@@ -200,7 +200,7 @@
   // W3.4: channels for the visitor's country (the prerender shows the UAE's)
   // (QA 25/58: it runs again on a country switch, and the UAE map comes back when the visitor switches to the UAE)
   function chanLoad(){ var cc = lsGet("tifo.country"); if (!cc){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : ""; } catch (e){} }
-    var paint = function(map){ R.CHN = map; $$(".chn[data-comp]").forEach(function(el){ var c = map[el.dataset.comp]; if (!c){ el.hidden = true; return; } el.hidden = false; el.innerHTML = R.esc(c[0]) + (c[1] ? " <b>مجاني</b>" : ""); }); };
+    var paint = function(map){ R.CHN = map; $$(".chn[data-comp]").forEach(function(el){ var c = map[el.dataset.comp]; if (!c){ el.hidden = true; return; } el.hidden = false; el.innerHTML = R.esc(c[0]) + (c[1] ? "" : " <b>مشفرة</b>"); }); };
     if (!cc || cc === "AE" || cc === "xx" || !B.dataset.bc){ if (window.CHN_AE && R.CHN !== window.CHN_AE) paint(window.CHN_AE); return; }
     fetch("/assets/bc." + B.dataset.bc + ".json").then(function(r){ return r.json(); }).then(function(bc){ var m = bc[cc] || {}, map = {}; Object.keys(m).forEach(function(k){ var e = m[k]; if (e && e.b && e.b.length) map[k] = [e.b[0][0], e.b.some(function(x){ return x[1]; }) ? 1 : 0]; }); paint(map); }).catch(function(){}); }
   chanLoad(); document.addEventListener("tifo:country", chanLoad);
