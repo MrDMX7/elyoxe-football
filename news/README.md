@@ -8,7 +8,12 @@ python -m news.run [--local DIR] [--no-llm]      # the Fold runs it every 15 min
 ```
 
 1. **read** (`readers.py`): 11 RSS feeds, a rotating slice of 39 Arabic Google News queries, 20 official YouTube channels
-   (`sources.yaml`). X is not wired yet (no paid API; a browser reader on the Fold is the plan).
+   (`sources.yaml`), and 26 X accounts. X has no paid API here: `xreader.js` runs on the **laptop** (Task Scheduler «Tifo X
+   reader», every 30 min, `xreader-task.vbs` = no console window), Edge parked off-screen with the @Elyoxe session
+   (`automation/browse/profiles/x-reader/x-cookies.json`, exported from the Fold with `--export-cookies`), 5 accounts a run,
+   read-only, and uploads `state/news/x-inbox.json`. It moved off the Fold the same day it was built: a browser every 30 min
+   drained the phone's battery (owner 2026-09-30). Laptop off = the news carries on without X. If X logs the session out,
+   the log says `NOT SIGNED IN`: sign in again in the Fold's screen browser and re-export.
 2. **link** (`entities.py`): teams, players, coaches from the site's own data. Strong names link alone, weak surnames only
    next to their club, the clubs that share a name (النصر ×3) only with a nisba or a league cue, a country is a national
    team only after «منتخب» or at the headline start. `aliases.yaml` adds short forms. Every rule has a live mistake in
