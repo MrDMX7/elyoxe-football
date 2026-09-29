@@ -1012,6 +1012,25 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   write("404.html", page({ path:"/404", page:"none", title:"الصفحة مب موجودة | تيفو", desc:"", body:'<h1>الصفحة مب موجودة</h1><p class="muted">يمكن الرابط تغيّر. دوّر عن اللي تباه، أو شوف مباريات اليوم.</p><p><button type="button" class="cta" id="srch404">دوّر في تيفو</button> <a class="ghost" href="/">مباريات اليوم</a></p><div id="day404"></div>' }));
   // 425: site/static/* is copied to the out/ root unchanged (Search Console's google<token>.html lives there), keeping its mtime
   { const SD = path.join(__dirname, "static"); try { for (const f of fs.readdirSync(SD)){ if (f === "README" || f.startsWith(".")) continue; const src = path.join(SD, f); if (fs.statSync(src).isFile()) cpKeep(src, path.join(OUT, f)); } } catch (e){} }
+  // 459: the owner's numbers at an unlisted address (noindex, never in the sitemap, the search index or IndexNow), rebuilt
+  // with every build from the /api/tifo/hit counters (cards table, TIFOHIT#<UAE day>). XX = a time zone outside the Arab
+  // countries (or none); crawlers are not counted since 2026-09-29 (shell.js). A failed query skips the page, never the build.
+  if (!PREVIEW) try {
+    const DASH = "o-f6546fa79ce5872b", dayAt = i => new Date(Date.now() + 4 * 36e5 - i * 864e5).toISOString().slice(0, 10), days = [...Array(14)].map((_, i) => dayAt(i));
+    const q = `SELECT pk, sk, n FROM cards WHERE pk IN [${days.map(d => `'TIFOHIT#${d}'`).join(",")}]`; let items = [], tok = null;
+    do { const r = JSON.parse(require("child_process").execFileSync("aws", ["dynamodb", "execute-statement", "--region", "ap-south-1", "--statement", q, "--output", "json"].concat(tok ? ["--next-token", tok] : []), { env:Object.assign({}, process.env, { PYTHONWARNINGS:"ignore" }), timeout:60000 }).toString());
+      items = items.concat(r.Items || []); tok = r.NextToken; } while (tok);
+    const D = {}; for (const it of items){ (D[it.pk.S.slice(8)] = D[it.pk.S.slice(8)] || {})[it.sk.S] = +((it.n && it.n.N) || 0); }
+    const sum = (ds, pre) => { const o = {}; ds.forEach(d => Object.entries(D[d] || {}).forEach(([k, n]) => { if (k.startsWith(pre)) o[k.slice(pre.length)] = (o[k.slice(pre.length)] || 0) + n; })); return Object.entries(o).sort((a, b) => b[1] - a[1]); };
+    const nf = n => Number(n || 0).toLocaleString("en-US"), CN = Object.fromEntries(R.COUNTRIES.map(x => [x[0], x[1]])), w7 = days.slice(1, 8);
+    const tbl = (head, rows) => `<div class="tblwrap"><table class="st"><thead><tr>${head.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
+    const dayRows = days.map((d, i) => { const x = D[d] || {}; return `<tr><td>${i ? `<span class="num">${+d.slice(8)}</span> ${MON_AR[+d.slice(5, 7) - 1]}` : "اليوم (للحين)"}</td><td class="num">${nf(x.N)}</td><td class="num">${nf((x.N || 0) - (x["C#XX"] || 0))}</td><td class="num">${nf(x["C#AE"])}</td><td class="num">${nf(x["RET#first"])}</td><td class="num">${nf((x["RET#same_day"] || 0) + (x["RET#d1_7"] || 0) + (x["RET#d8p"] || 0))}</td></tr>`; });
+    const fam = sum(w7, "P#").slice(0, 12).map(([k, n]) => `<tr><td class="lat">${esc(k)}</td><td class="num">${nf(n)}</td></tr>`), cc = sum(w7, "C#").slice(0, 10).map(([k, n]) => `<tr><td>${k === "XX" ? "بلد غير عربي أو ما عرفناه" : esc(CN[k] || k)}</td><td class="num">${nf(n)}</td></tr>`);
+    write(`${DASH}/index.html`, page({ noindex:true, path:`/${DASH}/`, page:"none", title:"أرقام تيفو", desc:"",
+      body:`<h1>أرقام تيفو</h1><p class="season">يتحدّث مع كل بناء، آخر مرة ${new Date(Date.now() + 4 * 36e5).toISOString().slice(11, 16)} بتوقيت الإمارات. الأرقام مشاهدات صفحات، مب أشخاص. من 29 سبتمبر ما تنحسب البوتات، والبلد من توقيت الجوال لو الزائر ما اختار بلده.</p>` +
+        S.sec("آخر 14 يوم", "", tbl(["اليوم", "مشاهدات", "من بلد عربي", "الإمارات", "من زوار جدد", "من زوار رجعوا"], dayRows)) +
+        S.sec("أكثر الصفحات", "آخر 7 أيام كاملة", tbl(["الصفحة", "مشاهدات"], fam)) + S.sec("البلدان", "آخر 7 أيام كاملة", tbl(["البلد", "مشاهدات"], cc)) }));
+  } catch (e){ console.error("dash skipped:", String(e.message || e).split("\n")[0]); }
   fs.writeFileSync(path.join(OUT, ".pages"), String(urls.length));
   // W4.7: a file whose bytes match the last build keeps that build's mtime, so `aws s3 sync` (size + mtime) uploads only what changed
   { const MF = path.join(CACHE, "out_manifest.json"); let prev = {}; try { prev = JSON.parse(fs.readFileSync(MF, "utf8")); } catch (e){}
