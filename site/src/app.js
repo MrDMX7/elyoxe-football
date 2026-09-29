@@ -507,7 +507,7 @@
         "<h3" + (ar ? "" : ' dir="auto" class="lat"') + '><a href="' + R.esc(first.url || "#") + '" rel="noopener" target="_blank">' + R.esc(s.title) + "</a></h3>" +
         (s.summary ? '<p class="nsum">' + R.esc(s.summary) + "</p>" : "") + (ents ? '<p class="nent small">' + ents + "</p>" : "") +
         '<p class="nsrc small muted">' + (src.length > 1 ? src.length + " مصادر: " : "المصدر: ") + src.slice(0, 5).map(function(x){ return '<a href="' + R.esc(x.url) + '" rel="noopener" target="_blank">' + R.esc(x.name) + "</a>"; }).join(" · ") + "</p></article>"; }
-    function vids(list){ return '<div class="nvid">' + list.map(function(v){ return '<a class="nv" href="' + R.esc(v.url) + '" rel="noopener" target="_blank">' + (v.image ? '<img src="' + R.esc(v.image) + '" alt="" loading="lazy" width="320" height="180">' : "") + '<span dir="auto">' + R.esc(v.title) + '</span><small class="muted">' + R.esc(v.channel) + " · " + ago(v.at) + "</small></a>"; }).join("") + "</div>"; }
+    function vids(list){ return '<div class="nvid">' + list.map(function(v){ return '<a class="nv" href="' + R.esc(v.url) + '" rel="noopener" target="_blank">' + (v.image ? '<img src="' + R.esc(v.image) + '" alt="" loading="lazy" width="320" height="180">' : "") + '<span dir="auto">' + R.esc(v.title) + '</span><small class="muted">' + R.esc(v.channel) + (v.platform === "x" ? " على X" : " على يوتيوب") + " · " + ago(v.at) + "</small></a>"; }).join("") + "</div>"; }
     // the /news/ page: chips by kind, newest first
     var list = $("#nlist");
     if (list) get("news/latest.json").then(function(d){
@@ -526,7 +526,7 @@
         var st = (r[0].stories || []).slice(0, 20), vs = (r[1].videos || []).slice(0, 12);
         if (!st.length && !vs.length){ if (box.dataset.quiet){ var sec = box.closest("section"); if (sec) sec.hidden = true; } else box.innerHTML = '<p class="empty">ما في أخبار عنه هالأيام. <a href="/news/">كل الأخبار</a></p>'; return; }
         if (so === "all"){ var sec2 = box.closest("section"); if (sec2) sec2.hidden = false; }
-        box.innerHTML = (st.length ? '<div class="nwl">' + st.map(card).join("") + "</div>" : "") + (vs.length ? (so === "all" ? "" : "<h3 class=\"nvh\">من قناته الرسمية</h3>") + vids(vs) : "") + (so === "all" ? "" : '<p class="small"><a href="/news/">كل الأخبار</a></p>');
+        box.innerHTML = (st.length ? '<div class="nwl">' + st.map(card).join("") + "</div>" : "") + (vs.length ? (so === "all" ? "" : "<h3 class=\"nvh\">من حساباته الرسمية</h3>") + vids(vs) : "") + (so === "all" ? "" : '<p class="small"><a href="/news/">كل الأخبار</a></p>');
       });
     });
   })();
