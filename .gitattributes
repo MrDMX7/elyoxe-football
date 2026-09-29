@@ -1,0 +1,8 @@
+# LF everywhere: the Fold runs these under bash/node/python on Linux, and a CRLF deploy.sh fails at its first line.
+# Edits made on the Windows laptop (Python text-mode writes) produced CRLF files on 2026-09-29.
+* text=auto eol=lf
+*.csv -text
+*.png binary
+*.jpg binary
+*.webp binary
+*.woff2 binary
