@@ -131,7 +131,7 @@ ${o.page === "team" ? `<div class="sheet" id="pushs" role="dialog" aria-modal="t
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/icons/apple-touch-icon.png"><link rel="preload" href="${FONTS.kufi}" as="font" type="font/woff2" crossorigin><link rel="preload" href="${FONTS.readex}" as="font" type="font/woff2" crossorigin><link rel="preload" href="${FONTS.barlow}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/tifo.${ASSET_V}.css">${o.page === "match" ? '<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>' : ""}${(o.ld ? [].concat(o.ld) : []).map(l => `<script type="application/ld+json">${JSON.stringify(l).replace(/</g, "\\u003c")}</script>`).join("")}</head>
 <script type="speculationrules">{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":"/v1/*"}}]},"eagerness":"moderate"}]}</script>
-<body class="v3" data-page="${o.page}" data-bc="${BC_V}"${o.page === "home" && CC_V ? ` data-cc="${CC_V}"` : ""}${o.attrs || ""}>
+<body class="v3" data-page="${o.page}" data-bc="${BC_V}"${R.DUPCTX ? ` data-dupctx="${esc(R.DUPCTX)}"` : ""}${o.page === "home" && CC_V ? ` data-cc="${CC_V}"` : ""}${o.attrs || ""}>
 <a class="skip" href="#main">تخطَّ للمحتوى</a>
 <header class="top" data-slot="nav"><div class="wrap"><a class="brand" href="/" aria-label="تيفو">${MARK}تيفو</a><nav class="pnav" aria-label="الأقسام">${navHtml}</nav><div class="acts"><button type="button" class="ib" id="srch" aria-label="بحث" data-v="__SV__">${IC.search}<span class="vh">بحث</span></button><button type="button" class="ib" data-sheet="share" aria-haspopup="dialog" aria-label="شارك">${IC.share}<span class="vh">شارك</span></button></div></div></header>
 <main id="main">${o.v3 ? o.body : `<div class="wrap body legacy">${o.body}</div>`}</main>
@@ -349,7 +349,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   const CHN_AE = {}; for (const [cid, e] of Object.entries(BCBY.AE || {})) if (cid !== "_c" && e && e.b && e.b.length) CHN_AE[cid] = [e.b[0][0], e.b.some(x => x[1]) ? 1 : 0]; R.CHN = CHN_AE;
   // W2.7: clubs sharing an Arabic name carry their country
   const DUP = {}; { const by = {}; for (const [id, t] of Object.entries((teamsJson && teamsJson.teams) || {})) if (t.name_ar && !t.national) (by[t.name_ar] = by[t.name_ar] || []).push([id, t]); for (const list of Object.values(by)) if (list.length > 1 && new Set(list.map(x => (x[1].country || {}).iso2)).size > 1) list.forEach(([id, t]) => { if (t.country && t.country.name_ar) DUP[id] = t.country.name_ar; }); }
-  R.setDup(DUP);
+  R.setDup(DUP); R.DUPCTX = "";
   // 444: titles and descriptions take the plain Arabic name; the «· الإمارات» tag is for the page, not for Google
   const PN = t => (t && (t.name_ar || TAR[t.id] || t.name)) || "";
   // 447: BreadcrumbList for Google (the visible crumbs stay the page's own)
@@ -386,6 +386,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   // ---- 3. competition pages
   const factsByMatch = {}, probsByMatch = {}, compX = {};
   for (const { c, st, fx, stats, x } of compData){
+    R.DUPCTX = (c.country && c.country.name_ar) || "";   // 503: a league's own page drops its country's tag
     compX[c.id] = x;
     if (x.facts && x.facts.matches) Object.assign(factsByMatch, x.facts.matches);
     let rounds = "";
@@ -472,6 +473,7 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
         body:`<p class="crumbs"><a href="/c/${c.key}/">${esc(c.name_ar)}</a></p><h1>قارن</h1>` + tabsHtml("k", [["players", "لاعبين"], ["clubs", "فريقين"]]) + pane("k", "players", `<div class="cmpsel"><select id="pa" aria-label="اللاعب الأول"></select><select id="pb" aria-label="اللاعب الثاني"></select></div><div id="pout"><p class="empty skel">نحمّل الأرقام…</p></div>`, true) + pane("k", "clubs", `<div class="cmpsel"><select id="ta" aria-label="الفريق الأول"></select><select id="tb" aria-label="الفريق الثاني"></select></div><div id="tout"></div>`) }));
     }
   }
+  R.DUPCTX = "";   // 503: back to no context
   // derby / head-to-head pages (38)
   const DZ = {}; ((DERBIES && DERBIES.derbies) || []).forEach(d => { DZ[String(d.h2h || "").replace(/^h2h\/|\.json$/g, "")] = d.name_ar; });
   for (const [k, h] of Object.entries(H2H)){
@@ -529,6 +531,7 @@ ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(n
   const NATSET = new Set(Object.values(NAT).map(Number)), OG_ARAB = new Set(NATSET); S.NATU = Object.fromEntries(Object.entries(NAT).map(([iso, tid]) => [iso, `/t/${tid}/`])); { const AR = new Set((R.COUNTRIES || []).map(c => c[0])); compData.forEach(({ c, st }) => { if (c.kind !== "league" || !c.country || !AR.has(c.country.iso2) || !st || !st.groups) return; st.groups.forEach(g => (g.rows || []).forEach(r => { if (r.team) OG_ARAB.add(r.team.id); })); }); }
   const byTeam = new Map(); for (const m of matchSum.values()) for (const side of [m.home, m.away]) if (side && side.id){ if (!byTeam.has(side.id)) byTeam.set(side.id, { side, ms:[] }); byTeam.get(side.id).ms.push(m); }
   tlist.forEach((id, i) => {
+    R.DUPCTX = (((teamsJson.teams[id] || {}).country) || {}).name_ar || "";   // 503: a club's own page drops its country's tag
     let t = teams[i]; if (t && t.fixtures) t.fixtures = t.fixtures.map(unstale);
     if (!t){ const b = byTeam.get(id); if (!b) return; t = { id, name:b.side.name, name_ar:b.side.name_ar, fixtures:b.ms, squad:[], partial:true }; }
     if (/^(winner|loser)\b/i.test(t.name || "") || /^[1-4][A-Z]{1,4}(\/[1-4]?[A-Z]{1,4})?$/.test(t.name || "")) return;   // bracket placeholders («Winner SF 2», «3CDE») get no page
@@ -603,6 +606,7 @@ ${nxt ? `<a class="tnm" href="/m/${nxt.id}/">${R.logo(nxt.home, "md")}<span clas
       urls.push(`/t/${t.id}/month/${mo.month}/`); });
     if (t.id === 5789) stub("/uae/", "/t/5789/", "منتخب الإمارات");   // W4.3: one page per national team; /uae/ was a third self-canonical copy
   });
+  R.DUPCTX = "";   // 503: back to no context
 
   // ---- 6. players (135, 120, 137, 149): every player the league files name
   const pids = Object.keys(allPlayers);
@@ -612,6 +616,7 @@ ${nxt ? `<a class="tnm" href="/m/${nxt.id}/">${R.logo(nxt.home, "md")}<span clas
   const pcar = await pool(pids, 8, id => topP.has(id) ? get(`player/${id}/career.json`, 1) : null);
   let pcount = 0;
   pids.forEach((id, i) => {
+    R.DUPCTX = (((teamsJson.teams[(allPlayers[id] || {}).team] || {}).country) || {}).name_ar || "";   // 503
     const ap = allPlayers[id] || {}, sv = k => ap.stats && ap.stats[k] ? ap.stats[k].value : null;
     const p = pjs[i] || { name:ap.name, team:ap.team, comp:ap.comp, minutes:ap.minutes, goals:sv("goals"), assists:sv("goal_assist"), rating:sv("rating") }; if (!p || !p.name) return; pcount++;
     const tm = p.team || allPlayers[id].team, cx = compX[p.comp || 538] || x538, card = cx.cards && cx.cards.players && cx.cards.players[id];
@@ -629,6 +634,7 @@ ${nxt ? `<a class="tnm" href="/m/${nxt.id}/">${R.logo(nxt.home, "md")}<span clas
     playerPages.add(String(id)); write(`p/${id}/index.html`, page({ noindex:thinP, heroExtra:p.number ? `<span class="shirt" style="--sc:${R.colOn(tm)}" aria-label="الرقم ${esc(p.number)}">${esc(p.number)}</span>` : "", art:colors[tm] ? [colors[tm], [colors[tm][1] || colors[tm][0], colors[tm][0]]] : null, path:`/p/${id}/`, page:"player", title:`${nameOf(id) || p.name}: أهدافه وأرقامه هالموسم${tt.name_ar ? " مع " + tt.name_ar : ""} | تيفو`, ld:bcLd([pc && [pc.name_ar, `/c/${pc.key}/`], tt.name_ar && [tt.name_ar, `/t/${tm}/`], [nameOf(id) || p.name, `/p/${id}/`]]), desc:`${nameOf(id) || p.name}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.`, body }));
     if (!thinP) urls.push(`/p/${id}/`);
   });
+  R.DUPCTX = "";   // 503: back to no context
 
   // ---- 7. matches: summary for all, full detail where stored; probabilities (92) and records at stake (94, 95)
   const mids = [...matchSum.keys()].filter(id => id != null && id !== "null");   // W1.4: a fixture without an id gets no page and no link
@@ -636,6 +642,7 @@ ${nxt ? `<a class="tnm" href="/m/${nxt.id}/">${R.logo(nxt.home, "md")}<span clas
   const det = await pool([...withDetail], 8, id => get(`match/${id}.json`, 1));
   const D = new Map(); [...withDetail].forEach((id, i) => { if (det[i]) D.set(id, det[i]); });
   for (const id of mids){
+    { const mc = comps.find(cc => cc.id === (matchSum.get(id) || {}).comp); R.DUPCTX = (mc && mc.country && mc.country.name_ar) || ""; }   // 503: a league match drops its own country's tag
     const md0 = D.get(id) || matchSum.get(id), uaeMatchTop = R.UAE_COMPS.indexOf(md0.comp) >= 0 || md0.home.id === 5789 || md0.away.id === 5789;
     const md = md0, sum = matchSum.get(id), ttl = `${R.tname(md.home)} ${md.score ? md.score.home + "-" + md.score.away : "ضد"} ${R.tname(md.away)}`;
     const probs = md.status === "scheduled" ? (md.probs || sum.probs) : null, facts = md.status === "scheduled" ? factsByMatch[id] : null;
@@ -751,6 +758,7 @@ ${nxt ? `<a class="tnm" href="/m/${nxt.id}/">${R.logo(nxt.home, "md")}<span clas
           S.sec("الموعد والقناة في كل دولة عربية", "", `<div id="kitct" data-comp="${md.comp}" data-ko="${esc(md.kickoff_uae || "")}"><p class="empty skel">نجهّز الجدول…</p></div>`) }));
     }
   }
+  R.DUPCTX = "";   // 503: back to no context
 
   // ---- 7b. majlis TV (22, 131) and the Tifo studio (152)
   write("tv/index.html", page({ path:"/tv/", page:"tv", title:"شاشة المجلس: كل المباريات مباشر على شاشة كبيرة | تيفو", desc:"افتحها على تلفزيون المجلس أو القهوة: كل مباريات اليوم مباشر بخط كبير، تتحدّث بروحها كل 20 ثانية.",
@@ -819,11 +827,12 @@ ${items}
     write("coach/compare/index.html", page({ noindex:true, attrs:` data-cv="${CV}"`, path:"/coach/compare/", page:"coachcmp", title:"قارن بين مدربين | تيفو", desc:"قارن أي مدربين درّبوا في الدوري: المباريات والفوز ومعدل النقاط والأندية.", body:'<h1>قارن بين مدربين</h1><div class="cmpsel"><select id="ca" aria-label="المدرب الأول"></select><select id="cb" aria-label="المدرب الثاني"></select></div><div id="cout"></div>' })); }
   for (const [cid, co] of coachRows){ if (!co.rows.length) continue; co.rows.sort((a, b) => String(b.season).localeCompare(String(a.season)));
     write(`coach/${cid}/index.html`, page({ path:`/coach/${cid}/`, page:"ref", title:`المدرب ${co.name}: مسيرته التدريبية | تيفو`, desc:`مسيرة المدرب ${co.name}: الأندية والمواسم والفوز والتعادل والخسارة ومعدل النقاط.`, body:`<h1 class="lat">${esc(co.name)}</h1><p><a class="btn" href="/coach/compare/?a=${cid}">قارنه بمدرب ثاني</a></p>${co.current ? `<p class="season">يدرّب الحين <a href="/t/${co.current}/">${esc((teamsJson.teams[co.current] || {}).name_ar || "")}</a></p>` : ""}` + S.coachPage(co.name, co.rows, [...new Set(co.rows.map(r => r.comp && R.compName(index, r.comp)).filter(Boolean))].join("، ")) + (CH2H.has(cid) ? S.sec("ضد المدربين", "هالموسم", '<div class="tblwrap"><table class="st wrapn"><thead><tr><th style="text-align:start">المدرب</th><th>فوز</th><th>تعادل</th><th>خسارة</th></tr></thead><tbody>' + CH2H.get(cid).sort((a, b) => (b.w + b.d + b.l) - (a.w + a.d + a.l)).map(o => `<tr><td class="tm">${coachRows.has(o.op) ? `<a class="lat" href="/coach/${o.op}/">${esc(o.name || "")}</a>` : `<span class="lat">${esc(o.name || "")}</span>`}</td><td>${o.w}</td><td>${o.d}</td><td>${o.l}</td></tr>`).join("") + "</tbody></table></div>") : "") })); urls.push(`/coach/${cid}/`); }
-  for (const { c, fx, x } of compData){ if (!fx || !fx.matches) continue; const rr = R.rounds(fx);
+  for (const { c, fx, x } of compData){ if (!fx || !fx.matches) continue; R.DUPCTX = (c.country && c.country.name_ar) || ""; const rr = R.rounds(fx);
     for (const k of rr.order){ if (!/^\d+$/.test(String(k))) continue;   /* QA 99: round pages only for numbered rounds (no «3rd Place Final» paths) */ const ms = rr.by[k], fin = ms.filter(m => m.status === "finished"), goals = fin.reduce((a, m) => a + (m.score ? m.score.home + m.score.away : 0), 0);
       const tor = x["team-of-round"] && x["team-of-round"].rounds && x["team-of-round"].rounds[k] ? S.teamOfRound({ rounds:{ [k]:x["team-of-round"].rounds[k] } }) : "";
       write(`c/${c.key}/r/${k}/index.html`, page({ lg:LOGO(c.id) ? [c.id].concat(glow(c.id)) : null, path:`/c/${c.key}/r/${k}/`, page:"ref", nav:String(c.id), title:`نتائج ومواعيد الجولة ${k} من ${c.name_ar} ${c.season || ""} | تيفو`, ld:bcLd([[c.name_ar, `/c/${c.key}/`], [`الجولة ${k}`, `/c/${c.key}/r/${k}/`]]), desc:`نتايج ومواعيد الجولة ${k} من ${c.name_ar} بتوقيت بلدك، والأهداف وتشكيلة الجولة.`,
         body:`<p class="crumbs"><a href="/c/${c.key}/">${esc(c.name_ar)}</a></p><h1>الجولة ${esc(k)}</h1>` + (fin.length ? `<div class="pstats"><div><b>${fin.length}</b><span>مباراة خلصت</span></div><div><b>${goals}</b><span>هدف</span></div><div><b>${fin.length ? (goals / fin.length).toFixed(1) : 0}</b><span>بالمباراة</span></div></div>` : "") + R.roundList(ms) + (fin.length && stIds(c.id).length ? S.sec("قصة الجولة", "الترتيب يتغيّر مع كل نتيجة", S.roundStory(fx, k, stIds(c.id))) : "") + (tor ? S.sec("تشكيلة الجولة", "", tor) : "") + `<p class="tools">${(() => { const nr = rr.order.filter(x => /^\d+$/.test(String(x))), i = nr.indexOf(k); return (i > 0 ? `<a class="btn" href="/c/${c.key}/r/${nr[i - 1]}/">الجولة اللي قبل</a>` : "") + (i >= 0 && i < nr.length - 1 ? `<a class="btn" href="/c/${c.key}/r/${nr[i + 1]}/">الجولة اللي بعد</a>` : ""); })()}</p>` })); urls.push(`/c/${c.key}/r/${k}/`); } }
+  R.DUPCTX = "";   // 503: back to no context
 
   // ---- 198: pages for the most-searched phrases
   { const tmr = new Date(Date.now() + 4 * 3600e3 + 864e5).toISOString().slice(0, 10), dayT = await get(`day/${tmr.replace(/-/g, "")}.json`) || { matches:[] };
@@ -965,6 +974,7 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
     // leagues and national team, the top of its main table, its scorers, the national team, its competitions and clubs.
     // Only what this build already holds; a country with neither a league nor a national team gets no page.
     for (const [iso, cname] of R.COUNTRIES){
+      R.DUPCTX = cname;   // 503
       const cs = byC[iso] || [], nat = NAT[iso], lg = cs.find(c => c.kind === "league") || cs[0]; if (!cs.length && !nat) continue;
       const slug = iso.toLowerCase(), now = Date.now(), ids = new Set(cs.map(c => c.id)), isNat = m => nat && m.home && m.away && (m.home.id === nat || m.away.id === nat);
       const soon = [...matchSum.values()].filter(m => m && m.kickoff_utc && m.id != null && (ids.has(m.comp) || isNat(m)) && (R.isLive(m) || (Date.parse(m.kickoff_utc) > now - 3 * 36e5 && Date.parse(m.kickoff_utc) < now + 7 * 864e5))).sort((a, b) => a.kickoff_utc.localeCompare(b.kickoff_utc)).slice(0, 12);
@@ -973,7 +983,6 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
       const natM = nat ? [...matchSum.values()].filter(isNat) : [], natNext = natM.filter(m => m.status === "scheduled" && Date.parse(m.kickoff_utc) > now).sort((a, b) => a.kickoff_utc.localeCompare(b.kickoff_utc))[0];
       const natLast = natM.filter(m => m.status === "finished").sort((a, b) => b.kickoff_utc.localeCompare(a.kickoff_utc)).slice(0, 3);
       const clubs = st && st.groups ? [...new Set(st.groups.flatMap(g => (g.rows || []).map(r => r.team.id)))] : [];
-      R.setDup(Object.fromEntries(Object.entries(DUP).filter(([, v]) => v !== cname)));   // on its own country's page «الهلال · السعودية» says the obvious
       const secL = [soon.length ? S.sec("الأيام الجاية", "", R.dayList(soon, index)) : "",
         top ? S.sec(`ترتيب ${esc(lg.name_ar)}`, "", R.standings(top) + `<p class="small"><a href="/c/${lg.key}/#table">الترتيب كامل</a></p>`) : "",
         lst && lst.lists && (lst.lists.goals || []).length >= 3 ? S.sec(`هدافين ${esc(lg.name_ar)}`, "", R.leaders(lst, "goals", 5) + `<p class="small"><a href="/c/${lg.key}/scorers/">كل الهدافين</a></p>`) : "",
@@ -987,7 +996,7 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
         body:`<p class="crumbs"><a href="/competitions/">البطولات</a></p><h1>الكورة في ${esc(cname)}</h1><p class="season">${what.map(esc).join(" · ")}</p>` + secs }));
       if (!thinC) urls.push(`/country/${slug}/`);
     }
-    R.setDup(DUP); }
+    R.DUPCTX = ""; }
   fs.mkdirSync(path.join(OUT, "og"), { recursive:true }); fs.writeFileSync(path.join(OUT, "og/jobs.json"), JSON.stringify(OGJ));
   try { process.stdout.write(require("child_process").execFileSync("python3", [path.join(__dirname, "og.py")]).toString()); } catch (e){ console.error("og.py failed", e.message); }
   // W1.9: internal links to pages this build did not write become plain text (reported, never fatal)

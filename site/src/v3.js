@@ -155,7 +155,9 @@
   // 397: club names the feed has no Arabic for (names/clubs_ar.json via window.TAR)
   var TAR = (root && root.TAR) || {}; R.setClubNames = function(m){ TAR = m || {}; };
   var DUP = (root && root.DUP) || {}; R.setDup = function(m){ DUP = m || {}; };
-  var tname0 = R.tname; R.tname = function(t){ var sl = t && !t.name_ar && R.slotAr && R.slotAr(t.name); if (sl) return esc(sl); var n = t && !t.name_ar && TAR[t.id] ? esc(TAR[t.id]) : tname0(t); return t && DUP[t.id] ? n + "\u00a0·\u00a0" + esc(DUP[t.id]) : n; };   /* QA 101: no-break spaces keep «·» with its country */   // W2.7: «النصر · السعودية»
+  // 503: no country tag on a page whose context is that country (its league, rounds, clubs, players, their matches): the build sets R.DUPCTX, the page carries data-dupctx
+  function dupCtx(){ if (R.DUPCTX != null) return R.DUPCTX; var b = root && root.document && root.document.body; return (b && b.dataset && b.dataset.dupctx) || ""; }
+  var tname0 = R.tname; R.tname = function(t){ var sl = t && !t.name_ar && R.slotAr && R.slotAr(t.name); if (sl) return esc(sl); var n = t && !t.name_ar && TAR[t.id] ? esc(TAR[t.id]) : tname0(t); return t && DUP[t.id] && DUP[t.id] !== dupCtx() ? n + " ·\u00a0" + esc(DUP[t.id]) : n; };   /* QA 101: the dot stays with its country; 503: the line may break before it (a long name + country tag pushed the away team off a phone match header) */   // W2.7: «النصر · السعودية»
   // 391: when «ليش هالنتيجة؟» is on the page, the catch-up keeps only what it doesn't say (red cards, a missed penalty, a comeback)
   var catch0 = R.catchup; R.catchup = function(md){ var h = catch0.apply(R, arguments); if (!R._hasWhy || !h) return h;
     // QA 81: a kept line the why text already tells (the missed penalty, the red card, the minute) goes too
