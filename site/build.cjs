@@ -973,6 +973,7 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
       const natM = nat ? [...matchSum.values()].filter(isNat) : [], natNext = natM.filter(m => m.status === "scheduled" && Date.parse(m.kickoff_utc) > now).sort((a, b) => a.kickoff_utc.localeCompare(b.kickoff_utc))[0];
       const natLast = natM.filter(m => m.status === "finished").sort((a, b) => b.kickoff_utc.localeCompare(a.kickoff_utc)).slice(0, 3);
       const clubs = st && st.groups ? [...new Set(st.groups.flatMap(g => (g.rows || []).map(r => r.team.id)))] : [];
+      R.setDup(Object.fromEntries(Object.entries(DUP).filter(([, v]) => v !== cname)));   // on its own country's page «الهلال · السعودية» says the obvious
       const secL = [soon.length ? S.sec("الأيام الجاية", "", R.dayList(soon, index)) : "",
         top ? S.sec(`ترتيب ${esc(lg.name_ar)}`, "", R.standings(top) + `<p class="small"><a href="/c/${lg.key}/#table">الترتيب كامل</a></p>`) : "",
         lst && lst.lists && (lst.lists.goals || []).length >= 3 ? S.sec(`هدافين ${esc(lg.name_ar)}`, "", R.leaders(lst, "goals", 5) + `<p class="small"><a href="/c/${lg.key}/scorers/">كل الهدافين</a></p>`) : "",
@@ -985,7 +986,8 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
         ld:bcLd([["البطولات", "/competitions/"], [cname, `/country/${slug}/`]]),
         body:`<p class="crumbs"><a href="/competitions/">البطولات</a></p><h1>الكورة في ${esc(cname)}</h1><p class="season">${what.map(esc).join(" · ")}</p>` + secs }));
       if (!thinC) urls.push(`/country/${slug}/`);
-    } }
+    }
+    R.setDup(DUP); }
   fs.mkdirSync(path.join(OUT, "og"), { recursive:true }); fs.writeFileSync(path.join(OUT, "og/jobs.json"), JSON.stringify(OGJ));
   try { process.stdout.write(require("child_process").execFileSync("python3", [path.join(__dirname, "og.py")]).toString()); } catch (e){ console.error("og.py failed", e.message); }
   // W1.9: internal links to pages this build did not write become plain text (reported, never fatal)
