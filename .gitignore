@@ -9,3 +9,4 @@ __pycache__/
 samconfig.toml
 .env
 news/.x-inbox.json
+news/.x-reader.log

@@ -124,7 +124,14 @@ def main(argv=None):
     state["gcursor"] = (cur + per) % max(1, len(qs))
     errors, fresh = {}, []
     cutoff = iso(now() - timedelta(days=st.get("keep_items_days", 5)))
-    batches = [RD.read_source(s) + (s,) for s in srcs] + [(RD.x_inbox(os.path.join(HERE, ".x-inbox.json")), None, {"key": "x"})]
+    # X: the laptop's reader uploads its inbox to state/news/x-inbox.json; a local inbox (a hand run on this machine) counts too
+    s3box = store.get_state("news/x-inbox.json") or {}
+    try:
+        xbox = {"items": s3box.get("items", []) + json.load(open(os.path.join(HERE, ".x-inbox.json"), encoding="utf-8")).get("items", [])}
+    except (OSError, ValueError):
+        xbox = s3box
+    state["x"] = {"reader_last_run": s3box.get("last_run"), "reader_errors": s3box.get("errors"), "posts": len(xbox.get("items") or [])}
+    batches = [RD.read_source(s) + (s,) for s in srcs] + [(RD.x_posts(xbox), None, {"key": "x"})]
     for got, err, s in batches:
         if err:
             errors[s.get("query") or s["key"]] = err

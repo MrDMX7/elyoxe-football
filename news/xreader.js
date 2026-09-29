@@ -7,16 +7,23 @@
 //
 // Rotation: every run reads the accounts marked `every: true` plus the next `per_run` from the list (news/sources.yaml `x:`),
 // so ~5 profile loads per run. Runs no more often than `min_minutes` apart, whatever calls it.
+//
+// Where it runs (owner 2026-09-30: «نخلي شغلة تويتر… على اللابتوب عشان ما يخلص جرج التلفون»): the LAPTOP, every 30 min from
+// Task Scheduler (news/xreader-task.vbs, hidden), Edge in a window parked off-screen; `--upload` puts the inbox at
+// s3://…/state/news/x-inbox.json and the Fold's news.run reads it from there. The Fold can still run it by hand (Xvfb).
+// The laptop's session comes from the Fold's reader profile: `ssh fold "node …/xreader.js --export-cookies" > <profile>/x-cookies.json`.
 'use strict';
-const fs = require('fs'), path = require('path'), { execSync, spawn } = require('child_process');
-const PW = ['/root/workspace/content-pipeline/node_modules/playwright-core', 'playwright-core', 'playwright'];
+const fs = require('fs'), os = require('os'), path = require('path'), { execSync, spawn } = require('child_process');
+const WIN = process.platform === 'win32', HOME = os.homedir();
+const PW = [path.join(HOME, 'workspace/content-pipeline/node_modules/playwright-core'), 'playwright-core', 'playwright'];
 let chromium; for (const p of PW) { try { chromium = require(p).chromium; break; } catch (e) {} }
 const HERE = __dirname, INBOX = path.join(HERE, '.x-inbox.json');
-const SRC_PROFILE = '/root/workspace/automation/browse/profiles/elyoxe-social';
-const PROFILE = '/root/workspace/automation/browse/profiles/x-reader';
+const SRC_PROFILE = path.join(HOME, 'workspace/automation/browse/profiles/elyoxe-social');
+const PROFILE = path.join(HOME, 'workspace/automation/browse/profiles/x-reader');
+const BUCKET = process.env.FOOTBALL_BUCKET || 'elyoxe-football-574771023173-ap-south-1';
 const DISPLAY = ':98';
 const a = process.argv.slice(2), arg = (k) => { const i = a.indexOf(k); return i >= 0 ? a[i + 1] : null; };
-const log = (...x) => console.log('[x]', ...x);
+const log = (...x) => (a.includes('--export-cookies') ? console.error : console.log)('[x]', ...x);
 
 function config() {
   // the `x:` block of sources.yaml, read without a YAML library: one flow mapping per line, as the file writes them
@@ -33,6 +40,9 @@ function config() {
 }
 
 function seedProfile() {
+  fs.mkdirSync(PROFILE, { recursive: true });
+  for (const f of fs.readdirSync(PROFILE)) if (f.startsWith('Singleton')) fs.rmSync(path.join(PROFILE, f), { force: true });
+  if (WIN) return;   // the laptop's session is x-cookies.json, added to the context below
   // copy the session (cookies + the key file that decrypts them) from the posting profile; the posting profile itself is
   // never opened here, so the screen browser can stay up while this runs
   fs.mkdirSync(path.join(PROFILE, 'Default'), { recursive: true });
@@ -85,7 +95,7 @@ function posts(json, handle) {
 (async () => {
   if (!chromium) { console.error('playwright-core not found'); process.exit(2); }
   const cfg = config(), inbox = fs.existsSync(INBOX) ? JSON.parse(fs.readFileSync(INBOX, 'utf8')) : { cursor: 0, last_run: null, items: [], errors: {} };
-  if (!arg('--handles') && inbox.last_run && (Date.now() - Date.parse(inbox.last_run)) / 6e4 < cfg.min_minutes) { log('ran', inbox.last_run, '- skip'); return; }
+  if (!arg('--handles') && !a.includes('--export-cookies') && inbox.last_run && (Date.now() - Date.parse(inbox.last_run)) / 6e4 < cfg.min_minutes) { log('ran', inbox.last_run, '- skip'); return; }
   let pick;
   if (arg('--handles')) pick = arg('--handles').split(',').map(h => cfg.accounts.find(x => x.handle.toLowerCase() === h.toLowerCase()) || { handle: h, name: h, lang: 'en', tier: 'journalist' });
   else {
@@ -94,12 +104,24 @@ function posts(json, handle) {
     pick = every.concat(rest.slice(cur, cur + cfg.per_run), rest.slice(0, Math.max(0, cur + cfg.per_run - rest.length)));
     inbox.cursor = (cur + cfg.per_run) % Math.max(1, rest.length);
   }
-  seedProfile(); xvfb();
-  const ctx = await chromium.launchPersistentContext(PROFILE, {
+  seedProfile(); if (!WIN) xvfb();
+  const ctx = await chromium.launchPersistentContext(PROFILE, WIN ? {
+    // Edge, a real window parked off-screen: never headless, never in the owner's way
+    channel: 'msedge', headless: false, viewport: { width: 1280, height: 1500 }, locale: 'en-US',
+    args: ['--disable-blink-features=AutomationControlled', '--mute-audio', '--window-position=-32000,-32000', '--window-size=1280,1600'],
+  } : {
     executablePath: '/usr/bin/chromium', headless: false, env: Object.assign({}, process.env, { DISPLAY }),
     viewport: { width: 1280, height: 1500 }, locale: 'en-US',
     args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-blink-features=AutomationControlled', '--mute-audio', '--window-size=1280,1600'],
   });
+  if (a.includes('--export-cookies')) {   // the session, for the laptop's profile (run on the Fold; stdout only, never a file in git)
+    process.stdout.write(JSON.stringify(await ctx.cookies(['https://x.com'])));
+    await ctx.close(); return;
+  }
+  const jar = path.join(PROFILE, 'x-cookies.json');
+  if (!(await ctx.cookies(['https://x.com'])).some(c => c.name === 'auth_token') && fs.existsSync(jar)) {
+    await ctx.addCookies(JSON.parse(fs.readFileSync(jar, 'utf8'))); log('session added from x-cookies.json');
+  }
   const page = ctx.pages()[0] || await ctx.newPage();
   const seen = new Set(inbox.items.map(x => x.id)); let added = 0;
   try {
@@ -131,6 +153,10 @@ function posts(json, handle) {
   } finally { await ctx.close().catch(() => {}); }
   inbox.last_run = new Date().toISOString();
   inbox.items = inbox.items.slice(-800);
-  if (!a.includes('--dry')) fs.writeFileSync(INBOX, JSON.stringify(inbox));
+  if (!a.includes('--dry')) {
+    fs.writeFileSync(INBOX, JSON.stringify(inbox));
+    // the whole inbox (last 800 posts) overwrites the copy in S3; news.run skips the posts it already has by id
+    if (a.includes('--upload')) execSync(`aws s3 cp "${INBOX}" s3://${BUCKET}/state/news/x-inbox.json --content-type application/json --cache-control no-store --only-show-errors`, { stdio: 'inherit' });
+  }
   log('done:', added, 'new posts from', pick.length, 'accounts');
 })().catch(e => { console.error(e); process.exit(1); });

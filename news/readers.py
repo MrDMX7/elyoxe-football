@@ -99,16 +99,12 @@ def youtube_source(y):
             "url": "https://www.youtube.com/feeds/videos.xml?channel_id=" + y["channel"]}
 
 
-def x_inbox(path):
-    """Posts news/xreader.js left in its inbox -> items (the inbox is emptied of what was read; the dedupe by id in run.py
-    makes a second read harmless). A club's or league's account carries its owner like a YouTube channel."""
-    import json
-    try:
-        box = json.load(open(path, encoding="utf-8"))
-    except (OSError, ValueError):
-        return []
+def x_posts(box):
+    """The posts news/xreader.js collected ({"items": [...]}, from S3 or a local file) -> items. Nothing is emptied: the
+    reader keeps its last 800 posts and run.py skips the ids it already holds. A club's or league's account carries its
+    owner like a YouTube channel."""
     out = []
-    for p in box.get("items") or []:
+    for p in (box or {}).get("items") or []:
         txt = _clean(p.get("text") or "")
         if not txt:
             continue
@@ -118,11 +114,6 @@ def x_inbox(path):
                     "tier": p.get("tier", "journalist"), "source": p.get("source") or p.get("name") or p["handle"],
                     "title": (first if 25 <= len(first) <= 300 else txt)[:300], "desc": txt[:400], "url": p["url"],
                     "image": p.get("image"), "at": p.get("at"), "query": None, "owner": owner})
-    box["items"] = []
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(box, f)
-    os.replace(tmp, path)
     return out
 
 
