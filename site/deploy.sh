@@ -30,6 +30,19 @@ echo "$NOW" > cache/last_pages
 # W4.7: pages, /og/, /tn/ and sw.js are served with max-age=60 (CachingOptimized honours it) and /assets/ is content-hashed, so the cache
 # refreshes on its own; only the worker and the home page are purged, instead of evicting every crest and card each hour
 aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/sw.js" "/" --query Invalidation.Id --output text >/dev/null
+# 445: IndexNow (Bing, Yandex, Seznam, Naver): the pages whose bytes changed in this build (build.cjs writes cache/indexnow.txt).
+# The key file ships from static/; a refused or failed submit never fails the deploy.
+INDEXNOW_KEY=8a5d11d3194545d5a4750dc4ede4a7ad
+if [ -z "$FLAG" ] && [ -s cache/indexnow.txt ]; then
+  python3 - "$INDEXNOW_KEY" <<'PY' || echo "indexnow: submit failed (not fatal)" >&2
+import json, sys, urllib.request
+key = sys.argv[1]; urls = [u for u in open("cache/indexnow.txt", encoding="utf-8").read().split("
+") if u][:10000]
+body = json.dumps({"host": "tifo.elyoxe.com", "key": key, "keyLocation": f"https://tifo.elyoxe.com/{key}.txt", "urlList": urls}).encode()
+req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body, headers={"Content-Type": "application/json; charset=utf-8"})
+print("indexnow:", len(urls), "urls ->", urllib.request.urlopen(req, timeout=30).status)
+PY
+fi
 for p in / /c/uae-pro-league/ /v1/index.json; do
   code=$(curl -s -o /dev/null -w '%{http_code}' --compressed "https://$DOM$p"); echo "$code https://$DOM$p"
 done

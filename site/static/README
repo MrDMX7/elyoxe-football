@@ -1,1 +1,1 @@
-Files here are copied to the root of out/ unchanged on every build (build.cjs, "static passthrough"), so they survive the hourly deploy's --delete. Used for the Google Search Console verification file (google<token>.html).
+Files here are copied to the root of out/ unchanged on every build (build.cjs, "static passthrough"), so they survive the hourly deploy's --delete. Used for the Google Search Console verification file (google<token>.html) and the IndexNow key (<key>.txt, the same key as INDEXNOW_KEY in deploy.sh).
