@@ -1,0 +1,44 @@
+/* تيفو — look preview (/next/). Two proposals over the live CSS, switched by html[data-look]. Nothing here reaches the live site. */
+
+/* ---------- shared by A and B: the mosaic becomes a band that fades, the home hero stops being 78% of the screen ---------- */
+html[data-look] .hero{background-image:none}
+html[data-look] .hero canvas{opacity:.32;-webkit-mask-image:linear-gradient(180deg,#000 0,#000 18%,transparent 62%);mask-image:linear-gradient(180deg,#000 0,#000 18%,transparent 62%)}
+html[data-look] .hhero{min-block-size:clamp(23rem,56svh,34rem)}
+html[data-look] h1,html[data-look] h2,html[data-look] .rail-h h2{letter-spacing:0}
+/* lighter blocks: a hairline and more air instead of filled boxes */
+html[data-look] section.blk{background:transparent;border:0;border-block-start:1px solid var(--rule);padding-block-start:1.1rem}
+html[data-look] .sht,html[data-look] .ct,html[data-look] .rc{border-color:var(--rule-2)}
+
+/* ---------- A «ليل الملعب»: near-black, green only where it means something (live, your team), Alexandria for headings ---------- */
+html[data-look="a"]{
+  --ground:#0B0F0E; --raised:#151B19; --raised-hi:#1D2623; --sunken:#070A09; --sunken-2:#101614; --inkbg:#232C29;
+  --rule:#F6F7F21F; --rule-2:#F6F7F20F; --rule-ctl:#F6F7F266;
+  --kufi:"Alexandria","Readex Pro",system-ui,sans-serif;
+}
+html[data-look="a"] h1,html[data-look="a"] h2,html[data-look="a"] h3,html[data-look="a"] .tm,html[data-look="a"] .brand{font-family:var(--kufi);font-weight:800}
+html[data-look="a"] h2,html[data-look="a"] h3{font-weight:700}
+html[data-look="a"] .hero .scrim{background:linear-gradient(180deg,#0B0F0Ecc 0%,#0B0F0E40 22%,#0B0F0E80 48%,#0B0F0Ee6 74%,#0B0F0E 94%)}
+html[data-look="a"] .chero.haslogo .scrim{background:linear-gradient(180deg,#0B0F0E00 0%,#0B0F0E00 40%,#0B0F0Ecc 72%,#0B0F0E 96%)}
+html[data-look="a"] .lhero .scrim{background:linear-gradient(180deg,#0B0F0E66 0%,#0B0F0Ecc 55%,#0B0F0E 92%)}
+@media (min-width:880px){html[data-look="a"] .chero.haslogo .scrim{background:linear-gradient(90deg,#0B0F0E00 0%,#0B0F0E00 40%,#0B0F0E99 62%,#0B0F0Ed9 100%),linear-gradient(180deg,#0B0F0E00 60%,#0B0F0E 100%)}}
+html[data-look="a"] .top,html[data-look="a"] .tabbar{background:#0B0F0Ef2}
+
+/* ---------- B «أخضر أعمق»: the brand green with depth, IBM Plex Sans Arabic everywhere, one warm accent ---------- */
+html[data-look="b"]{
+  --ground:#061A15; --raised:#0E2A23; --raised-hi:#15352D; --sunken:#03110D; --sunken-2:#0A221C; --inkbg:#1F332D;
+  --rule:#F6F7F222; --rule-2:#F6F7F210; --mine:#D9A05B; --focus:#D9A05B;
+  --kufi:"IBM Plex Sans Arabic","Readex Pro",system-ui,sans-serif; --font-text:"IBM Plex Sans Arabic","Readex Pro",system-ui,sans-serif;
+}
+html[data-look="b"] h1,html[data-look="b"] h2,html[data-look="b"] h3,html[data-look="b"] .tm,html[data-look="b"] .brand{font-family:var(--kufi);font-weight:700}
+html[data-look="b"] .hero .scrim{background:linear-gradient(180deg,#061A15cc 0%,#061A1540 22%,#061A1580 48%,#061A15e6 74%,#061A15 94%)}
+html[data-look="b"] .chero.haslogo .scrim{background:linear-gradient(180deg,#061A1500 0%,#061A1500 40%,#061A15cc 72%,#061A15 96%)}
+html[data-look="b"] .lhero .scrim{background:linear-gradient(180deg,#061A1566 0%,#061A15cc 55%,#061A15 92%)}
+@media (min-width:880px){html[data-look="b"] .chero.haslogo .scrim{background:linear-gradient(90deg,#061A1500 0%,#061A1500 40%,#061A1599 62%,#061A15d9 100%),linear-gradient(180deg,#061A1500 60%,#061A15 100%)}}
+html[data-look="b"] .top,html[data-look="b"] .tabbar{background:#061A15f2}
+
+/* ---------- the switcher (preview only) ---------- */
+#lookpick{position:fixed;inset-inline:0;inset-block-end:calc(var(--tabH,3.6rem) + .7rem + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;z-index:95;pointer-events:none}
+#lookpick div{pointer-events:auto;display:flex;gap:.25rem;padding:.25rem;background:#000000d9;border:1px solid #ffffff33;backdrop-filter:blur(8px)}
+#lookpick button{font:600 .85rem/1 system-ui,sans-serif;color:#fff;background:none;border:0;padding:.55rem .8rem;cursor:pointer}
+#lookpick button[aria-pressed="true"]{background:#fff;color:#000}
+@media (min-width:880px){#lookpick{inset-block-end:1.2rem}}
