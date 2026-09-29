@@ -36,8 +36,7 @@ INDEXNOW_KEY=8a5d11d3194545d5a4750dc4ede4a7ad
 if [ -z "$FLAG" ] && [ -s cache/indexnow.txt ]; then
   python3 - "$INDEXNOW_KEY" <<'PY' || echo "indexnow: submit failed (not fatal)" >&2
 import json, sys, urllib.request
-key = sys.argv[1]; urls = [u for u in open("cache/indexnow.txt", encoding="utf-8").read().split("
-") if u][:10000]
+key = sys.argv[1]; urls = [u for u in open("cache/indexnow.txt", encoding="utf-8").read().splitlines() if u][:10000]
 body = json.dumps({"host": "tifo.elyoxe.com", "key": key, "keyLocation": f"https://tifo.elyoxe.com/{key}.txt", "urlList": urls}).encode()
 req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body, headers={"Content-Type": "application/json; charset=utf-8"})
 print("indexnow:", len(urls), "urls ->", urllib.request.urlopen(req, timeout=30).status)
