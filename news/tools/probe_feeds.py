@@ -10,7 +10,9 @@ UA = "Mozilla/5.0 (compatible; TifoNews/0.1; +https://tifo.elyoxe.com)"
 GN = lambda q: "https://news.google.com/rss/search?" + urllib.parse.urlencode(q)
 CANDIDATES = {
     # Spain
-    "marca": "https://e00-marca.uecdn.es/rss/futbol/portada.xml",
+    "marca": "https://e00-marca.uecdn.es/rss/portada.xml",
+    "marca_fichajes": "https://e00-marca.uecdn.es/rss/futbol/mercado-fichajes.xml",
+    "marca_primera": "https://e00-marca.uecdn.es/rss/futbol/primera-division.xml",
     "as": "https://feeds.as.com/mrss-s/pages/as/site/as.com/section/futbol/portada/",
     "mundodeportivo": "https://www.mundodeportivo.com/rss/futbol.xml",
     "sport": "https://www.sport.es/es/rss/futbol/rss.xml",
@@ -54,7 +56,8 @@ def parse(raw):
 
 def when(d):
     try:
-        return parsedate_to_datetime(d)
+        w = parsedate_to_datetime(d)
+        return w if w.tzinfo else w.replace(tzinfo=timezone.utc)
     except Exception:
         try:
             return datetime.fromisoformat(d.replace("Z", "+00:00"))

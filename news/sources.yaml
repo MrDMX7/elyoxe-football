@@ -1,0 +1,79 @@
+# Tifo news sources (owner 2026-09-30: «آلية تجيب أحدث الأخبار من كل مكان»). One entry per source; a reader per kind.
+# Checked with news/tools/probe_feeds.py on 2026-09-30 (items, freshness); dead or stale candidates are listed at the end.
+#
+#   key    stable id (stored with every item)
+#   kind   rss | gnews (Google News search RSS; one query per entity, rotated) | youtube (channel feed) | x (Fold browser, later)
+#   lang   ar | en | es | fr | de | it
+#   tier   official > journalist > paper > aggregator (what a story's reliability shows)
+#   name   the outlet's name as the site prints it
+
+sources:
+  - {key: bbc, kind: rss, lang: en, tier: paper, name: BBC Sport, url: "https://feeds.bbci.co.uk/sport/football/rss.xml"}
+  - {key: guardian, kind: rss, lang: en, tier: paper, name: The Guardian, url: "https://www.theguardian.com/football/rss"}
+  - {key: sky, kind: rss, lang: en, tier: paper, name: Sky Sports, url: "https://www.skysports.com/rss/12040"}
+  - {key: espn, kind: rss, lang: en, tier: paper, name: ESPN, url: "https://www.espn.com/espn/rss/soccer/news"}
+  - {key: marca, kind: rss, lang: es, tier: paper, name: Marca, url: "https://e00-marca.uecdn.es/rss/futbol/primera-division.xml"}
+  - {key: marca_fichajes, kind: rss, lang: es, tier: paper, name: Marca, url: "https://e00-marca.uecdn.es/rss/futbol/mercado-fichajes.xml"}
+  - {key: as, kind: rss, lang: es, tier: paper, name: AS, url: "https://feeds.as.com/mrss-s/pages/as/site/as.com/section/futbol/portada/"}
+  - {key: mundodeportivo, kind: rss, lang: es, tier: paper, name: Mundo Deportivo, url: "https://www.mundodeportivo.com/rss/futbol.xml"}
+  - {key: lequipe, kind: rss, lang: fr, tier: paper, name: L'Équipe, url: "https://dwh.lequipe.fr/api/edito/rss?path=/Football/"}
+  - {key: kicker, kind: rss, lang: de, tier: paper, name: kicker, url: "https://newsfeed.kicker.de/news/fussball"}
+  - {key: skynewsarabia, kind: rss, lang: ar, tier: paper, name: سكاي نيوز عربية, url: "https://www.skynewsarabia.com/rss/sport.xml"}
+
+# Google News in Arabic, one query per entity: the Arabic and UAE press (البيان، الإمارات اليوم، الاتحاد…) without a feed of
+# their own. `run.py` asks a rotating slice each run (gnews_per_run), so every query comes round about hourly.
+gnews:
+  lang: ar
+  params: {hl: ar, gl: AE, ceid: "AE:ar"}
+  per_run: 12
+  queries:
+    - دوري أدنوك للمحترفين
+    - منتخب الإمارات
+    - العين
+    - الشارقة
+    - الوحدة الإماراتي
+    - الجزيرة الإماراتي
+    - شباب الأهلي
+    - الوصل
+    - النصر الإماراتي
+    - دوري روشن
+    - الهلال السعودي
+    - النصر السعودي
+    - الاتحاد السعودي
+    - الأهلي السعودي
+    - الأهلي المصري
+    - الزمالك
+    - منتخب السعودية
+    - منتخب مصر
+    - منتخب المغرب
+    - كأس الخليج
+    - ريال مدريد
+    - برشلونة
+    - مانشستر سيتي
+    - ليفربول
+    - مانشستر يونايتد
+    - أرسنال
+    - تشيلسي
+    - بايرن ميونخ
+    - باريس سان جيرمان
+    - يوفنتوس
+    - إنتر ميلان
+    - ميسي
+    - كريستيانو رونالدو
+    - محمد صلاح
+    - مبابي
+    - هالاند
+    - لامين يامال
+    - انتقالات
+    - فابريزيو رومانو
+
+settings:
+  keep_items_days: 5        # raw items kept in state (for clustering and dedupe)
+  keep_clusters_days: 10
+  summarize_per_run: 25     # Claude summaries per run, newest stories first
+  latest_count: 150
+  entity_count: 40
+
+# Not used (2026-09-30 probe): marca portada (4-day-old items; the football feeds above are fresh), sport.es (406 WAF),
+# gazzetta calcio (last item 180 days old), aawsat sport (9 days old), filgoal /rss (HTML, not a feed),
+# emaratalyoum / alittihad (404), alkhaleej (malformed XML), alarabiya / btolat (no DNS answer from the laptop).

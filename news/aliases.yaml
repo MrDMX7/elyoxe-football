@@ -1,0 +1,64 @@
+# Short forms and nicknames the press uses, written against the team's exact `name` in teams.json (never an id).
+# entities.build() resolves each to one team; a name that matches none or several is ignored.
+# Leave out a nickname two clubs share (e.g. «الزعيم»: Al Hilal and Al Ain; «العميد»: Al Ittihad and Al Wasl).
+teams:
+  Man City: Manchester City
+  Man Utd: Manchester United
+  Man United: Manchester United
+  Spurs: Tottenham Hotspur
+  Tottenham: Tottenham Hotspur
+  Barça: Barcelona
+  Barca: Barcelona
+  PSG: Paris Saint-Germain
+  Paris SG: Paris Saint-Germain
+  Juve: Juventus
+  Atleti: Atlético Madrid
+  Bayern Munich: Bayern München
+  Bayern: Bayern München
+  BVB: Borussia Dortmund
+  Dortmund: Borussia Dortmund
+  Inter Milan: Inter
+  Internazionale: Inter
+  AC Milan: Milan
+  Inter Miami: Inter Miami CF
+  الملكي: Real Madrid
+  الميرنغي: Real Madrid
+  البارسا: Barcelona
+  البلوجرانا: Barcelona
+  البلاوغرانا: Barcelona
+  السيتي: Manchester City
+  اليونايتد: Manchester United
+  الريدز: Liverpool
+  المدفعجية: Arsenal
+  البلوز: Chelsea
+  السيدة العجوز: Juventus
+  البيانكونيري: Juventus
+  النيراتزوري: Inter
+  الروسونيري: Milan
+  البافاري: Bayern München
+  العالمي: Al Nassr FC
+  الفراعنة: Egypt
+  أسود الأطلس: Morocco
+  الصقور الخضر: Saudi Arabia
+  محاربو الصحراء: Algeria
+  نسور قرطاج: Tunisia
+  أسود الرافدين: Iraq
+  راقصو السامبا: Brazil
+  التانغو: Argentina
+
+# People the press names by a first name or a nickname, written against the dictionary's full Latin name.
+people:
+  Cristiano: Cristiano Ronaldo
+  CR7: Cristiano Ronaldo
+  كريستيانو: Cristiano Ronaldo
+  Vinicius: Vinícius Júnior
+  Vini Jr: Vinícius Júnior
+  Vini: Vinícius Júnior
+  فينيسيوس: Vinícius Júnior
+  Lamine: Lamine Yamal
+  Mo Salah: Mohamed Salah
+  Leo Messi: Lionel Messi
+  ليو ميسي: Lionel Messi
+  Kun Agüero: Sergio Agüero
+  Dibu Martínez: Emiliano Martínez
+  Pep: Pep Guardiola
