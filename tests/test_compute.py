@@ -127,4 +127,6 @@ def test_tracked_filter_includes_national_team_friendlies(tmp_path):
     p = P.Poller(Store(LocalBackend(tmp_path)))
     assert p.tracked({"comp": 538, "home": {"id": 1}, "away": {"id": 2}})
     assert p.tracked({"comp": 114, "home": {"id": 5789}, "away": {"id": 8}})       # friendly, UAE plays
-    assert not p.tracked({"comp": 114, "home": {"id": 7}, "away": {"id": 8}})
+    assert p.tracked({"comp": 114, "home": {"id": 7}, "away": {"id": 8}})           # owner 2026-09-30: every international friendly
+    assert not p.tracked({"comp": 999999, "home": {"id": 7}, "away": {"id": 8}})    # an untracked competition without an Arab side
+    assert p.tracked({"comp": 999999, "home": {"id": 5789}, "away": {"id": 8}})     # ... unless an Arab national team plays

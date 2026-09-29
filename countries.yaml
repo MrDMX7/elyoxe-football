@@ -29,3 +29,7 @@ countries:
   - {iso2: IT, name_ar: إيطاليا, name_en: Italy, fotmob_code: ITA}
   - {iso2: DE, name_ar: ألمانيا, name_en: Germany, fotmob_code: GER}
   - {iso2: FR, name_ar: فرنسا, name_en: France, fotmob_code: FRA}
+  # the Americas (owner 2026-09-30: MLS, Argentina, Brazil); national-team ids read from FotMob's WCQ/friendlies fixtures
+  - {iso2: US, name_ar: الولايات المتحدة, name_en: United States, fotmob_team: 6713, fotmob_code: USA}
+  - {iso2: AR, name_ar: الأرجنتين, name_en: Argentina, fotmob_team: 6706, fotmob_code: ARG}
+  - {iso2: BR, name_ar: البرازيل, name_en: Brazil, fotmob_team: 8256, fotmob_code: BRA}

@@ -26,16 +26,17 @@ settings:
   budget_seconds: 50         # hard stop for one invocation (EventBridge fires every 60 s)
   source_alert_minutes: 15   # FotMob failing this long (bad runs, neutral idle runs ignored) -> one mail to hello@; one more on recovery
   live_stall_seconds: 90      # live.json older than this while a match is live -> one mail per match (poller + analytics watchdog)
-  club_squad_comps: [536, 535, 529, 524, 519, 530, 516, 544, 10721]   # W4.5: every club's team page weekly (idle minutes only)
+  club_squad_comps: [536, 535, 529, 524, 519, 530, 516, 544, 10721, 130, 112, 268, 114, 10195, 10196, 10198, 10199]   # W4.5: every club's team page weekly (idle minutes only)
   club_squads_per_run: 3
   club_squads_minutes: 10080
   backfill_per_run: 6        # finished-match details fetched per idle invocation until the ledger is complete
-  player_stats_comps: [538, 536, 535, 529, 524, 519, 530, 516, 544, 10721, 47, 87, 55, 54, 53, 42]   # per-player season lists (radar, similarity, foreigners): ~29 requests each, daily
+  player_stats_comps: [538, 536, 535, 529, 524, 519, 530, 516, 544, 10721, 47, 87, 55, 54, 53, 42, 130, 112, 268]   # per-player season lists (radar, similarity, foreigners): ~29 requests each, daily
   # every past season of these is fetched once (history/<id>.json): records books, Arab clubs rating
   history_comps: [538, 11027, 9943, 11026, 536, 10721, 9942, 535, 11018, 529, 524, 519, 9941, 530, 11840, 516, 544,
-                  525, 10622, 9469, 9470, 526, 9468, 10474, 47, 87, 55, 54, 53, 42, 73, 10216, 78, 10703]
+                  525, 10622, 9469, 9470, 526, 9468, 10474, 47, 87, 55, 54, 53, 42, 73, 10216, 78, 10703,
+                  130, 112, 268, 45, 299, 44, 50, 297, 10043]
   # leagues that get the full 538 treatment (probabilities, season sim, facts, watchability, pressure, fatigue, fortress)
-  analytics_leagues: [538, 536, 535, 529, 524, 519, 530, 516, 544, 10721, 47, 87, 55, 54, 53]
+  analytics_leagues: [538, 536, 535, 529, 524, 519, 530, 516, 544, 10721, 47, 87, 55, 54, 53, 268]   # MLS and Argentina (groups + playoffs) wait for multi-group analytics
   # Arab clubs rating (analytics.arab_ratings): tools/calibrate_arab.py, fit before 2022-07-01, test after
   arab_rating: {k: 16, home: 60, regress: 0.2, d0: 0.30, ds: 400, newcomer: 1400, base: 1500}
   arab_rating_calibration: {brier_test: 0.5908, brier_base_rate: 0.6524, n_test: 11332, matches_total: 37575,
@@ -491,3 +492,141 @@ competitions:
     kind: tournament
     scope: national
     verified: "2026-09-27 season 2026/2027, 156 matches (36 played), 12 groups, next 2026-09-28"
+  # ---- owner 2026-09-30: the Americas (Messi and Inter Miami, South America) and every national team in the world.
+  #      Ids checked against FotMob with tools/verify_competitions.py the same day.
+  - id: 130
+    country: {iso2: US, name_ar: الولايات المتحدة}
+    key: mls
+    name_ar: الدوري الأمريكي
+    name_en: MLS
+    kind: league
+    scope: americas
+    magic: false          # two conferences, then playoffs
+    verified: "2026-09-29 season 2026, 510 matches, 60 table rows, next 2026-09-30"
+  - id: 10043
+    country: null
+    region: americas
+    key: leagues-cup
+    name_ar: كأس الدوريات
+    name_en: Leagues Cup
+    kind: tournament
+    scope: americas
+    verified: "2026-09-29 season 2026, 62 matches, 36 table rows, finished"
+  - id: 297
+    country: null
+    region: americas
+    key: concacaf-champions-cup
+    name_ar: كأس أبطال الكونكاكاف
+    name_en: CONCACAF Champions Cup
+    kind: cup
+    scope: americas
+    verified: "2026-09-29 season 2026, 51 matches, finished"
+  - id: 44
+    country: null
+    region: americas
+    key: copa-america
+    name_ar: كوبا أمريكا
+    name_en: Copa America
+    kind: tournament
+    scope: national
+    verified: "2026-09-29 season 2024, 32 matches, finished"
+  - id: 45
+    country: null
+    region: americas
+    key: copa-libertadores
+    name_ar: كأس ليبرتادوريس
+    name_en: Copa Libertadores
+    kind: tournament
+    scope: americas
+    verified: "2026-09-29 season 2026, 155 matches, 32 table rows, next 2026-10-15"
+  - id: 299
+    country: null
+    region: americas
+    key: copa-sudamericana
+    name_ar: كأس سودأمريكانا
+    name_en: Copa Sudamericana
+    kind: tournament
+    scope: americas
+    verified: "2026-09-29 season 2026, 157 matches, 32 table rows, next 2026-10-14"
+  - id: 112
+    country: {iso2: AR, name_ar: الأرجنتين}
+    key: argentina-liga-profesional
+    name_ar: الدوري الأرجنتيني
+    name_en: Liga Profesional
+    kind: league
+    scope: americas
+    magic: false          # two groups of 15, then playoffs
+    verified: "2026-09-29 season 2026, 495 matches, 60 table rows, next 2026-10-02"
+  - id: 268
+    country: {iso2: BR, name_ar: البرازيل}
+    key: brasileirao
+    name_ar: الدوري البرازيلي
+    name_en: Série A
+    kind: league
+    scope: americas
+    matches_per_team: 38
+    verified: "2026-09-29 season 2026, 380 matches, 20 table rows, next 2026-10-02"
+  - id: 10199
+    country: null
+    region: americas
+    key: wc-qualification-conmebol
+    name_ar: تصفيات كأس العالم - أمريكا الجنوبية
+    name_en: World Cup Qualification CONMEBOL
+    kind: tournament
+    scope: national
+    verified: "2026-09-29 season 2023/2025, 90 matches, 10 table rows, finished"
+  - id: 10198
+    country: null
+    region: americas
+    key: wc-qualification-concacaf
+    name_ar: تصفيات كأس العالم - الكونكاكاف
+    name_en: World Cup Qualification CONCACAF
+    kind: tournament
+    scope: national
+    verified: "2026-09-29 season 2024/2025, 100 matches, 42 table rows, finished"
+  - id: 9806
+    country: null
+    region: europe
+    key: nations-league
+    name_ar: دوري الأمم الأوروبية
+    name_en: UEFA Nations League A
+    kind: tournament
+    scope: national
+    verified: "2026-09-29 season 2026/2027, 48 matches, 16 table rows, next 2026-10-01"
+  - id: 50
+    country: null
+    region: europe
+    key: euro
+    name_ar: كأس أمم أوروبا
+    name_en: EURO
+    kind: tournament
+    scope: national
+    verified: "2026-09-29 season 2028, 51 matches, 24 table rows, next 2028-06-09"
+  - id: 10195
+    country: null
+    region: europe
+    key: wc-qualification-uefa
+    name_ar: تصفيات كأس العالم - أوروبا
+    name_en: World Cup Qualification UEFA
+    kind: tournament
+    scope: national
+    verified: "2026-09-29 season 2025/2026, 204 matches, 54 table rows, finished"
+  - id: 10196
+    country: null
+    region: africa
+    key: wc-qualification-caf
+    name_ar: تصفيات كأس العالم - أفريقيا
+    name_en: World Cup Qualification CAF
+    kind: tournament
+    scope: national
+    verified: "2026-09-29 season 2023/2025, 263 matches, 62 table rows, finished"
+  - id: 114
+    country: null
+    region: world
+    key: friendlies
+    name_ar: مباريات ودية دولية
+    name_en: International Friendlies
+    kind: cup
+    scope: national
+    magic: false
+    verified: "2026-09-29 season 2026, 379 matches, 195 teams"

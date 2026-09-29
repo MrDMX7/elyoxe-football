@@ -371,7 +371,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   fs.mkdirSync(path.join(OUT, "lg"), { recursive:true }); comps.forEach(c => { if (LOGO(c.id)) cpKeep(path.join(CACHE, "leaguelogo", c.id + ".png"), path.join(OUT, "lg", c.id + ".png")); });
   const sat = h => { const n = parseInt(h.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b); return mx ? (mx - mn) / mx : 0; };
   const glow = id => { const cs = (LCOL[id] || []).slice().sort((a, b) => sat(b) - sat(a)); return [cs[0] && sat(cs[0]) > .25 ? cs[0] : "#F6F7F2", cs[1] && sat(cs[1]) > .25 ? cs[1] : (cs[0] && sat(cs[0]) > .25 ? cs[0] : "#5C7A70")]; };
-  const scopeAr = { gulf:"الخليج", asia:"آسيا", europe:"أوروبا", arab:"العرب", africa:"أفريقيا", world:"العالم", national:"المنتخبات", uae:"الإمارات" };
+  const scopeAr = { gulf:"الخليج", asia:"آسيا", europe:"أوروبا", arab:"العرب", africa:"أفريقيا", world:"العالم", national:"المنتخبات", uae:"الإمارات", americas:"الأمريكيتين" };
   const tileOf = c => { const sub = esc((c.country && c.country.name_ar) || scopeAr[c.scope] || "");
     if (LOGO(c.id)){ const g = glow(c.id); return `<a class="ct lgt" data-iso="${(c.country && c.country.iso2) || ""}" href="/c/${c.key}/" style="--g1:${g[0]};--g2:${g[1]}"><span class="cl" aria-hidden="true"><img src="/lg/${c.id}.png" alt="" loading="lazy" width="96" height="96"></span><b>${esc(c.name_ar)}</b><small>${sub}</small></a>`; }
     const d = compData.find(x => x.c.id === c.id) || {}; let tids = stIdsOf(d.st); if (!tids.length && d.fx && d.fx.matches) tids = [...new Set(d.fx.matches.flatMap(m => [m.home.id, m.away.id]))];
@@ -964,7 +964,7 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   OGJ.push({ key:"tifo", home:"تيفو", sub:"نتايج المباريات مباشر لكل العرب، بتوقيت بلدك", hc:["#0A2620", "#123A31"] });   // W1.10: the default share image
 
   // ---- 8. competitions list, robots, sitemap, 404
-  const groups = [["uae", "الإمارات"], ["gulf", "الخليج"], ["asia", "آسيا"], ["africa", "أفريقيا"], ["national", "المنتخبات"], ["arab", "العرب"], ["europe", "أوروبا"], ["world", "العالم"]];
+  const groups = [["uae", "الإمارات"], ["gulf", "الخليج"], ["asia", "آسيا"], ["africa", "أفريقيا"], ["national", "المنتخبات"], ["arab", "العرب"], ["europe", "أوروبا"], ["americas", "الأمريكيتين"], ["world", "العالم"]];
   { const byC = {}; comps.forEach(c => { const cc = c.country && c.country.iso2; if (cc && R.COUNTRIES.some(x => x[0] === cc)) (byC[cc] = byC[cc] || []).push(c); });
     const grp = (t, cs) => cs.length ? `<section class="rail cgrid3" data-slot="grid" data-iso="${(cs[0].country && cs[0].country.iso2) || ""}"><div class="rail-h"><h2>${t}</h2></div><div class="cts all">${cs.map(tileOf).join("")}</div></section>` : "";
     const lists = Object.keys(byC).sort((a, b) => R.COUNTRIES.findIndex(x => x[0] === a) - R.COUNTRIES.findIndex(x => x[0] === b)).map(cc => grp(`<a href="/country/${cc.toLowerCase()}/">${esc(byC[cc][0].country.name_ar)}</a>`, byC[cc])).join("") + groups.map(g => grp(g[1], comps.filter(c => c.scope === g[0] && !(c.country && R.COUNTRIES.some(x => x[0] === c.country.iso2))))).join("");
