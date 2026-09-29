@@ -79,7 +79,9 @@ def other_sport(item):
 
 
 WOMEN = [norm(w) for w in ["women", "womens", "women's", "wsl", "frauen", "femenino", "femenil", "feminine", "feminin", "féminine",
-                            "femminile", "lfc women", "arsenal women", "chelsea women", "barca femeni", "femeni", "nwsl", "للسيدات", "السيدات"]]
+                            "femminile", "lfc women", "arsenal women", "chelsea women", "barca femeni", "femeni", "nwsl", "للسيدات", "السيدات",
+                            # the clubs' own hashtags for their women's side, and the women's competitions
+                            "awfc", "lfcw", "mcwfc", "cfcw", "mufcw", "fcbfemeni", "uwcl", "wwc", "fifawwc", "barclayswsl", "liga f"]]
 
 
 def womens(item):

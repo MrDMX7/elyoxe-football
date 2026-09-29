@@ -97,4 +97,5 @@ def test_stories_merge_on_the_headline_not_on_a_passing_mention():
 def test_womens_items_are_told_apart():
     assert C.womens({"title": "PRESS CONFERENCE | Renée Slegers", "desc": "Arsenal Women head coach speaks ahead of the WSL game"})
     assert C.womens({"title": "Resumen del Barça Femení"})
+    assert C.womens({"title": "PRESS CONFERENCE | Renée Slegers previews Chelsea clash", "desc": "Watch it live. #arsenal #awfc Subscribe"})
     assert not C.womens({"title": "Arteta press conference ahead of Newcastle"})
