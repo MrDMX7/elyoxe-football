@@ -6,6 +6,10 @@ before it goes to the owner. Kore (مريم), Alnilam (مايد) and Charon (rej
 """
 import os, subprocess, sys, time
 sys.path.insert(0, os.path.expanduser("~/workspace/content-pipeline"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from gen import tifo_key
+if not tifo_key(): raise SystemExit("no TIFO_GEMINI_API_KEY: Tifo does not use the shared film key (owner 2026-09-29)")
+os.environ["GEMINI_API_KEY"] = tifo_key()
 from tts import tts as _tts
 
 MODEL = "gemini-2.5-pro-preview-tts"

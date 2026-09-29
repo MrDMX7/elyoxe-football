@@ -579,18 +579,15 @@ def resolve_wikidata(todo, pool, teams, cache, pause, out, save):
 # --------------------------------------------------------------------------
 
 def gemini_key():
-    # Tifo's own AI Studio project first (owner 2026-09-29); the shared film key only until it exists
-    for name in ("TIFO_GEMINI_API_KEY", "GEMINI_API_KEY"):
-        if os.environ.get(name):
-            return os.environ[name]
+    """Tifo's own AI Studio key, or None: never the shared film key (owner 2026-09-29)."""
+    if os.environ.get("TIFO_GEMINI_API_KEY"):
+        return os.environ["TIFO_GEMINI_API_KEY"]
     f = Path.home() / "workspace/content-pipeline/.env"
     if f.exists():
-        env = dict(l.split("=", 1) for l in f.read_text().splitlines() if "=" in l)
-        for name in ("TIFO_GEMINI_API_KEY", "GEMINI_API_KEY"):
-            v = env.get(name, "").strip().strip('"\'')
-            if v:
-                return v
-    raise SystemExit("GEMINI_API_KEY not found")
+        for l in f.read_text().splitlines():
+            if l.startswith("TIFO_GEMINI_API_KEY="):
+                return l.split("=", 1)[1].strip().strip('"\'') or None
+    return None
 
 
 PROMPT = """You are an Arabic sports editor (think beIN Sports, Al Kass, Kooora, Al Ittihad).
@@ -812,7 +809,9 @@ def main():
     log(f"{len(out)} already done, {len(todo)} to resolve")
     if todo and not a.no_wikidata:
         resolve_wikidata(todo, pool, teams, cache, a.pause, out, save)
-    if not a.no_gemini:
+    if not a.no_gemini and not gemini_key():
+        log("no TIFO_GEMINI_API_KEY: Gemini step skipped (wikidata only)")
+    elif not a.no_gemini:
         resolve_trim(out, save)
         rest = [pid for pid in todo if pid not in out] + \
                [pid for pid, o in out.items() if o.get("_gen") and pid in pool]

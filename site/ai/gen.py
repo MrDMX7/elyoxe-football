@@ -27,15 +27,19 @@ UAE_COMPS = [538, 11027, 9943, 11026]
 ARAB = {"AE", "SA", "EG", "MA", "DZ", "TN", "IQ", "JO", "KW", "QA", "BH", "OM", "LB", "SY", "PS", "YE", "LY", "SD", "MR", "SO", "DJ", "KM"}
 BIG5 = {47, 87, 55, 54, 53}
 
-def key():
-    # Tifo's own AI Studio project first (owner 2026-09-29: Tifo drained the shared prepay); the shared film key only until it exists
+def tifo_key():
+    """Tifo's own AI Studio key, or None. Owner 2026-09-29: Tifo never touches the shared film key (it drained the prepay);
+    with no TIFO_GEMINI_API_KEY every Gemini call (text fallback, Tifo Cast TTS) is skipped, not redirected."""
     if os.environ.get("TIFO_GEMINI_API_KEY"): return os.environ["TIFO_GEMINI_API_KEY"]
-    env = {}
-    for line in open(os.path.expanduser("~/workspace/content-pipeline/.env")):
-        if "=" in line: k, v = line.split("=", 1); env[k.strip()] = v.strip().strip('"')
-    for k in ("TIFO_GEMINI_API_KEY", "GEMINI_API_KEY"):
-        if env.get(k): return env[k]
-    raise SystemExit("no GEMINI_API_KEY")
+    try:
+        for line in open(os.path.expanduser("~/workspace/content-pipeline/.env")):
+            if line.startswith("TIFO_GEMINI_API_KEY="): return line.split("=", 1)[1].strip().strip('"') or None
+    except OSError: pass
+    return None
+def key():
+    k = tifo_key()
+    if not k: raise SystemExit("no TIFO_GEMINI_API_KEY")
+    return k
 
 def get(p):
     for i in range(4):
@@ -131,6 +135,7 @@ def gemini(system, payload, schema, temp=0.6, tokens=4000, provider=None, kind=N
     return out
 def gemini_api(system, payload, schema, temp=0.6, tokens=4000):
     if GEMINI_OUT: return None
+    if not tifo_key(): GEMINI_OUT.append("no TIFO_GEMINI_API_KEY"); return None
     req = {"systemInstruction": {"parts": [{"text": system}]}, "contents": [{"role": "user", "parts": [{"text": json.dumps(payload, ensure_ascii=False)}]}],
            "generationConfig": {"temperature": temp, "maxOutputTokens": tokens, "responseMimeType": "application/json", "responseSchema": schema}}
     for i in range(3):
@@ -415,7 +420,8 @@ def do_podcast(ctx, audio):
     if leak: rec["held"] = f"«الحين» still in Hamed lines {leak} after 3 scripts; no audio this week"
     save("podcast", wk, rec)
     if leak: print("podcast held:", rec["held"], file=sys.stderr); mail_held(jf); return "held"
-    if audio:   # Gemini TTS (Orus = حامد, Aoede = مها): writes the mp3 next to the json and adds qa/voices
+    if audio and not tifo_key(): print("podcast: no TIFO_GEMINI_API_KEY, script kept without audio", file=sys.stderr)
+    elif audio:   # Gemini TTS (Orus = حامد, Aoede = مها): writes the mp3 next to the json and adds qa/voices
         from cast_voice import synth
         synth(jf)
         ep = json.load(open(jf)); bad = [q["line"] for q in ep.get("qa", []) if not q.get("take") or q.get("flags")]
