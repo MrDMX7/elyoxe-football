@@ -64,6 +64,10 @@ def parse_feed(raw, src):
         for el in (it.find("media:content", NS), it.find("media:thumbnail", NS), it.find("enclosure")):
             if el is not None and el.get("url") and (el.get("type") or "image").startswith("image"):
                 img = el.get("url"); break
+        if src["kind"] == "youtube":         # the Atom thumbnail sits inside media:group; the video id gives the same picture
+            m = re.search(r"(?:v=|/shorts/)([\w-]{11})", link)
+            img = f"https://i.ytimg.com/vi/{m.group(1)}/hqdefault.jpg" if m else img
+            desc = _clean(it.findtext("media:group/media:description", default="", namespaces=NS), 400)
         source = src["name"]
         if src["kind"] == "gnews":           # «العنوان - البيان»: the outlet is the last « - » part
             m = re.match(r"^(.*\S)\s+-\s+([^-]{2,60})$", title)
@@ -72,7 +76,7 @@ def parse_feed(raw, src):
             desc = ""                        # Google's description repeats the title plus other outlets
         out.append({"id": item_id(link), "src": src["key"], "kind": src["kind"], "lang": src["lang"], "tier": src["tier"],
                     "source": source, "title": title[:300], "desc": desc, "url": link, "image": img,
-                    "at": at.isoformat().replace("+00:00", "Z") if at else None, "query": src.get("query")})
+                    "at": at.isoformat().replace("+00:00", "Z") if at else None, "query": src.get("query"), "owner": src.get("owner")})
     return out
 
 
@@ -86,6 +90,13 @@ def read_source(src):
         return parse_feed(fetch(src["url"]), src), None
     except Exception as e:
         return [], f"{type(e).__name__}: {str(e)[:120]}"
+
+
+def youtube_source(y):
+    """A `youtube:` entry of sources.yaml -> a source; `owner` is the club or league the channel belongs to."""
+    owner = ["team", int(y["team"])] if y.get("team") else (["comp", int(y["comp"])] if y.get("comp") else None)
+    return {"key": y["key"], "kind": "youtube", "lang": y.get("lang", "en"), "tier": "official", "name": y["name"], "owner": owner,
+            "url": "https://www.youtube.com/feeds/videos.xml?channel_id=" + y["channel"]}
 
 
 def gnews_source(query, cfg):

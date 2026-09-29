@@ -78,4 +78,14 @@ def other_sport(item):
     return any((w in words) if " " not in w else (" " + w + " " in t) for w in OTHER_SPORTS)
 
 
+WOMEN = [norm(w) for w in ["women", "womens", "women's", "wsl", "frauen", "femenino", "femenil", "feminine", "feminin", "féminine",
+                            "femminile", "lfc women", "arsenal women", "chelsea women", "barca femeni", "femeni", "nwsl", "للسيدات", "السيدات"]]
+
+
+def womens(item):
+    """True for a women's-team item (a club channel posts both sides; the site's club pages are the men's)."""
+    t = " " + norm((item.get("title") or "") + " " + (item.get("desc") or "")[:200]) + " "
+    return any(" " + w + " " in t for w in WOMEN)
+
+
 STAGE_RANK = {None: -1, "rumour": 0, "talks": 1, "agreed": 2, "here_we_go": 3, "official": 4}

@@ -20,6 +20,32 @@ sources:
   - {key: kicker, kind: rss, lang: de, tier: paper, name: kicker, url: "https://newsfeed.kicker.de/news/fussball"}
   - {key: skynewsarabia, kind: rss, lang: ar, tier: paper, name: سكاي نيوز عربية, url: "https://www.skynewsarabia.com/rss/sport.xml"}
 
+# Official YouTube channels: the public feed of each channel (15 newest videos, no key). A video goes to the club's or the
+# league's «social» strip on the site; it joins the news only when its title is news (a press conference, a signing, an
+# injury), because most of it is training clips. `team` / `comp` are FotMob ids. Ids resolved with news/tools/youtube_ids.py
+# on 2026-09-30 from each channel page's canonical link. Left out: @AlNassr (0 videos), @AlAhlySC and @championsleague (404).
+youtube:
+  - {key: yt_realmadrid, lang: es, team: 8633, name: "ريال مدريد", channel: UCWV3obpZVGgJ3j9FVhEjF2Q}
+  - {key: yt_fcbarcelona, lang: es, team: 8634, name: "برشلونة", channel: UC14UlmYlSNiQCBe9Eookf_A}
+  - {key: yt_mancity, lang: en, team: 8456, name: "مانشستر سيتي", channel: UCkzCjdRMrW2vXLx8mvPVLdQ}
+  - {key: yt_liverpoolfc, lang: en, team: 8650, name: "ليفربول", channel: UC9LQwHZoucFT94I2h6JOcjw}
+  - {key: yt_manutd, lang: en, team: 10260, name: "مانشستر يونايتد", channel: UC6yW44UGJJBvYTlfC7CRg2Q}
+  - {key: yt_arsenal, lang: en, team: 9825, name: "أرسنال", channel: UCpryVRk_VDudG8SHXgWcG0w}
+  - {key: yt_chelseafc, lang: en, team: 8455, name: "تشيلسي", channel: UCU2PacFf99vhb3hNiYDmxww}
+  - {key: yt_fcbayern, lang: de, team: 9823, name: "بايرن ميونخ", channel: UCZkcxFIsqW5htimoUQKA0iA}
+  - {key: yt_psg, lang: fr, team: 9847, name: "باريس سان جيرمان", channel: UCt9a_qP9CqHCNwilf-iULag}
+  - {key: yt_juventus, lang: it, team: 9885, name: "يوفنتوس", channel: UCLzKhsxrExAC6yAdtZ-BOWw}
+  - {key: yt_inter, lang: it, team: 8636, name: "إنتر", channel: UCvXzEblUa0cfny4HAJ_ZOWw}
+  - {key: yt_acmilan, lang: it, team: 8564, name: "ميلان", channel: UCKcx1uK38H4AOkmfv4ywlrg}
+  - {key: yt_alhilal, lang: ar, team: 2529, name: "الهلال", channel: UChM_8YeNCava2-OSbgbpe_w}
+  - {key: yt_intermiami, lang: en, team: 960720, name: "إنتر ميامي", channel: UCcFuqX01k0dCBULXl1YvCsA}
+  - {key: yt_premierleague, lang: en, comp: 47, name: "الدوري الإنجليزي", channel: UCG5qGWdu8nIRZqJ_GgDwQ-w}
+  - {key: yt_laliga, lang: es, comp: 87, name: "الليغا", channel: UCTv-XvfzLX3i4IGWAm4sbmA}
+  - {key: yt_seriea, lang: it, comp: 55, name: "الدوري الإيطالي", channel: UCBJeMCIeLQos7wacox4hmLQ}
+  - {key: yt_bundesliga, lang: de, comp: 54, name: "البوندسليغا", channel: UC6UL29enLNe4mqwTfAyeNuw}
+  - {key: yt_uaeproleague, lang: ar, comp: 538, name: "دوري أدنوك", channel: UC3mQCPDzpRstR58t9nfQ_Ew}
+  - {key: yt_fifa, lang: en, name: "فيفا", channel: UCpcTrCXblq78GZrTUTLWeBw}
+
 # Google News in Arabic, one query per entity: the Arabic and UAE press (البيان، الإمارات اليوم، الاتحاد…) without a feed of
 # their own. `run.py` asks a rotating slice each run (gnews_per_run), so every query comes round about hourly.
 gnews:
@@ -73,6 +99,7 @@ settings:
   summarize_per_run: 25     # Claude summaries per run, newest stories first
   latest_count: 150
   entity_count: 40
+  social_count: 24         # videos per club / league strip, and 60 on the all-channels strip
 
 # Not used (2026-09-30 probe): marca portada (4-day-old items; the football feeds above are fresh), sport.es (406 WAF),
 # gazzetta calcio (last item 180 days old), aawsat sport (9 days old), filgoal /rss (HTML, not a feed),

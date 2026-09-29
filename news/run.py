@@ -58,6 +58,24 @@ def display(story, items_by_id, D):
             "sources": srcs, "reliability": K.reliability(srcs), "first_at": story["first_at"], "last_at": story["last_at"]}
 
 
+def social(store, items, D, gen, n):
+    """Official videos: news/social.json (every channel) and news/social/<team|comp>-<id>.json (one club's or league's)."""
+    vids = sorted((v for v in items.values() if v.get("social")), key=lambda v: v.get("at") or "", reverse=True)
+    card = lambda v: {"id": v["id"], "title": v["title"], "lang": v["lang"], "url": v["url"], "image": v.get("image"), "at": v["at"],
+                      "channel": v["source"], "kind": v["kind"], "owner": v.get("owner"),
+                      "entities": [{"kind": k, "id": i, "name": D.names.get((k, i), "")} for k, i in v.get("anchor") or [] if (k, i) in D.names]}
+    store.put_json("news/social.json", {"generated": gen, "videos": [card(v) for v in vids[: max(60, n)]]}, cache="hot")
+    groups = {}
+    for v in vids:
+        keys = {tuple(v["owner"])} if v.get("owner") else set()
+        keys |= {tuple(e) for e in v.get("anchor") or [] if e[0] in ("team", "player")}
+        for k in keys:
+            groups.setdefault(k, []).append(v)
+    for (k, i), vs in groups.items():
+        store.put_json(f"news/social/{k}-{i}.json", {"generated": gen, "owner": {"kind": k, "id": i, "name": D.names.get((k, i), "")},
+                                                     "videos": [card(v) for v in vs[:n]]}, cache="warm")
+
+
 def transfers(stories, items_by_id, D):
     by_player = {}
     for s in stories:
@@ -97,7 +115,7 @@ def main(argv=None):
     D.player_team = {int(k): v for k, v in (state.get("pteam") or {}).items()}
 
     # ---- fetch: every feed, plus a rotating slice of the Google News queries
-    srcs = list(cfg["sources"])
+    srcs = list(cfg["sources"]) + [RD.youtube_source(y) for y in cfg.get("youtube") or []]
     qs = (cfg.get("gnews") or {}).get("queries") or []
     per = (cfg.get("gnews") or {}).get("per_run", 12)
     cur = state.get("gcursor", 0) % max(1, len(qs))
@@ -115,6 +133,23 @@ def main(argv=None):
                 continue
             it["anchor"] = [list(e) for e in E.link(D, it["title"], it.get("query"))]      # who the headline is about
             it["entities"] = [list(e) for e in E.link(D, it["title"] + " " + (it.get("desc") or ""), it.get("query"))]
+            if it["kind"] == "youtube":
+                # an official video: its channel's club or league is always one of its subjects; it is classified like any
+                # headline (not "official" for being on the club's channel), and only news-like titles join the stories
+                own = it.get("owner")
+                if own and own[0] == "team" and own not in it["anchor"]:
+                    it["anchor"].append(own)
+                if own and own[0] == "team" and own not in it["entities"]:
+                    it["entities"].append(own)
+                if C.womens(it):       # the club id is the men's side: a women's-team video would land on the wrong page
+                    continue
+                # the title only: a channel's description is boilerplate («the official channel of…», «deal» in a sponsor line)
+                it.update(C.classify({"title": it["title"], "tier": "paper"}))
+                it["social"] = True
+                items[it["id"]] = it
+                if it["kind"] in ("injury", "presser") or (it["kind"] == "transfer" and C.STAGE_RANK[it["stage"]] >= C.STAGE_RANK["agreed"]):
+                    fresh.append(it)
+                continue
             it.update(C.classify(it))
             items[it["id"]] = it
             fresh.append(it)
@@ -147,6 +182,7 @@ def main(argv=None):
         mine = [s for s in newest if [k, i] in (s.get("anchor") or [])][: st.get("entity_count", 40)]
         store.put_json(f"news/e/{k}-{i}.json", {"generated": gen, "entity": {"kind": k, "id": i, "name": D.names.get((k, i), "")},
                                                 "stories": [display(s, items, D) for s in mine]}, cache="warm")
+    social(store, items, D, gen, st.get("social_count", 24))
     store.put_json("news/transfers.json", {"generated": gen, "players": transfers(newest, items, D)[:200]}, cache="warm")
     state.update({"items": items, "stories": stories, "run": {"at": gen, "fresh": len(fresh), "stories_touched": len(touched),
                   "summaries": done, "errors": errors, "secs": round(time.time() - t0, 1)}})

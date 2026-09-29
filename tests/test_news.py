@@ -92,3 +92,9 @@ def test_stories_merge_on_the_headline_not_on_a_passing_mention():
     by = {tuple(sorted(s["items"])) for s in stories.values()}
     assert ("1", "2") in by                                          # one story, two languages
     assert ("3",) in by and ("4",) in by                             # sharing Messi is not enough for general news
+
+
+def test_womens_items_are_told_apart():
+    assert C.womens({"title": "PRESS CONFERENCE | Renée Slegers", "desc": "Arsenal Women head coach speaks ahead of the WSL game"})
+    assert C.womens({"title": "Resumen del Barça Femení"})
+    assert not C.womens({"title": "Arteta press conference ahead of Newcastle"})
