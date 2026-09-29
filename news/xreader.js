@@ -107,7 +107,7 @@ function posts(json, handle) {
       let got = [];
       const onResp = async (r) => {
         if (a.includes('--debug') && /graphql/.test(r.url())) log('gql', r.status(), r.url().split('?')[0].split('/').slice(-1)[0]);
-        if (!/\/graphql\/[^/]+\/UserTweets\b/.test(r.url())) return;
+        if (!/\/graphql\/[^/]+\/(UserTweets|UserOriginalsTimeline)\b/.test(r.url())) return;   // X renamed it by 2026-09-30
         try { got = got.concat(posts(await r.json(), acc.handle)); } catch (e) {}
       };
       page.on('response', onResp);
