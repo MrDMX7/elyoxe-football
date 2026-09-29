@@ -1107,7 +1107,7 @@ class Poller:
                                       "fatigue", "coaches", "fortress", "clutch", "minute-clock", "lineup-ages", "rotation",
                                       "team-of-round", "style", "cards", "improved", "young-uae", "similar", "records",
                                       "alltime", "loans", "referees", "halftime", "goal-bands", "xg", "shots", "players",
-                                      "foreigners", "transfers"]},
+                                      "foreigners", "transfers", "attendance"]},
         }, cache="hot")
         teams = {k: {"name": v[0], "name_ar": v[1] or self.names["teams"].get(k), "logo": S.LOGO.format(id=k),
                      "comps": self.st.get("team_comps", {}).get(k, []), "country": self.team_country(k)}
@@ -1300,6 +1300,7 @@ class Poller:
             ("loans", 60, lambda: AN.loans(self)),
             ("league_squads", 0, lambda: AN.league_squads_step(self)),
             ("compare", 1440, lambda: AN.league_compare(self)),
+            ("attendance", 360, lambda: AN.attendance_step(self)),
             ("archive", 0, lambda: AN.archive_step(self)),
         ] if only is None else only
         for key, every, fn in steps:

@@ -600,6 +600,21 @@ def league_compare(p):
     p.mark("compare")
 
 
+def attendance_step(p):
+    """449: comp/<id>/attendance.json for every competition whose ledger reports crowds (FotMob, some leagues only)."""
+    for cid in p.comp_ids:
+        try:
+            a = EX.attendance(list(p.ledger(cid)["matches"].values()))
+        except ERRORS as e:
+            p.store.fail(f"attendance:{cid}", f"{type(e).__name__}: {e}")
+            continue
+        if a:
+            p.store.put_json(f"comp/{cid}/attendance.json", {"comp": cid, "generated": iso(p.now()), **a,
+                                                             "note": "FotMob's attendance per match, this season's league games in the ledger"},
+                             cache="static")
+    p.mark("attendance")
+
+
 # ------------------------------------------------------------------ national teams
 def national(p):
     try:

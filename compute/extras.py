@@ -10,6 +10,7 @@
   watchability 0-100 score per upcoming match
   record_chase gaps between active players and the all-time scorer list
   summaries    one compact season card per player (share images)
+  attendance   crowds from the ledger: league average, each home team's average and best, the biggest games
 """
 import math
 
@@ -287,3 +288,22 @@ def summaries(table, cards_out, clutch_out, squads_info):
                     "card": (cards_out.get("players", {}).get(pid) or {}).get("overall"),
                     "clutch_points": (cl.get(pid) or {}).get("total"), **(squads_info.get(pid) or {})}
     return out
+
+
+# ---------------------------------------------------------------- attendance (449)
+def attendance(entries, min_matches=5, top=10):
+    """Ledger entries (compute/season.ledger_entry) -> the season's crowds, or None when fewer than min_matches report one.
+    FotMob gives attendance for some leagues only (Saudi, the Premier League: every game; the UAE league: none, 2026-09)."""
+    rows = [e for e in entries if isinstance(e.get("att"), (int, float)) and not isinstance(e.get("att"), bool) and e["att"] > 0]
+    if len(rows) < min_matches:
+        return None
+    by = {}
+    for e in rows:
+        by.setdefault(e["home"], []).append(e["att"])
+    teams = sorted(({"team": t, "avg": round(sum(v) / len(v)), "max": max(v), "n": len(v)} for t, v in by.items()),
+                   key=lambda x: (-x["avg"], -x["max"]))
+    big = sorted(rows, key=lambda e: (-e["att"], e.get("ko") or ""))[:top]
+    return {"matches": len(rows), "avg": round(sum(e["att"] for e in rows) / len(rows)), "total": sum(e["att"] for e in rows),
+            "teams": teams,
+            "top": [{"id": e["id"], "home": e["home"], "away": e["away"], "score": e.get("score"), "att": e["att"],
+                     "ko": e.get("ko")} for e in big]}

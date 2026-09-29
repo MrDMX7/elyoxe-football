@@ -141,6 +141,13 @@
   S.fortress = function(f){
     if (!f || !f.stadiums) return ""; return '<ol class="lead">' + f.stadiums.slice().sort(function(a, b){ return b.current_unbeaten - a.current_unbeaten; }).slice(0, 10).map(function(s, i){ return '<li><span class="num muted">' + (i + 1) + '</span><span class="who">' + R.logo(team(s.team), "sm") + "<span>" + esc(s.name_ar) + '</span> <span class="muted small">' + R.tname(team(s.team)) + "، أطول سلسلة " + s.longest_unbeaten + " (" + esc(s.longest_season) + ")</span></span><b>" + s.current_unbeaten + "</b></li>"; }).join("") + "</ol>" + noteSrc("كم مباراة متتالية ما خسر فيها صاحب الملعب على أرضه في الدوري، من موسم " + esc(f.since) + ".");
   };
+  // 449: crowds (comp/<id>/attendance.json, FotMob's figure per game; some leagues only)
+  S.attendance = function(a){
+    if (!a || !a.teams || !a.teams.length) return ""; var nf = function(n){ return Number(n || 0).toLocaleString("en-US"); };
+    return '<ol class="lead">' + a.teams.slice(0, 10).map(function(t, i){ return '<li><span class="num muted">' + (i + 1) + '</span><span class="who">' + R.logo(team(t.team), "sm") + "<span>" + R.tname(team(t.team)) + '</span> <span class="muted small">أكبر حضور ' + nf(t.max) + "</span></span><b>" + nf(t.avg) + "</b></li>"; }).join("") + "</ol>" +
+      ((a.top || []).length ? '<h3>أكبر المباريات حضوراً</h3><ul class="facts-l">' + a.top.slice(0, 5).map(function(m){ return '<li><a href="/m/' + m.id + '/">' + R.tname(team(m.home)) + (m.score ? ' <span class="num">' + m.score.home + "-" + m.score.away + "</span> " : " و") + R.tname(team(m.away)) + '</a>: <b class="num">' + nf(m.att) + "</b></li>"; }).join("") + "</ul>" : "") +
+      noteSrc("الرقم = معدل الحضور في ملعب كل فريق هالموسم. المعدل العام " + nf(a.avg) + " من " + a.matches + " مباراة، والأرقام من FotMob.");
+  };
   S.records = function(rc){
     if (!rc || !rc.chases || !rc.chases.length) return "";
     return '<ul class="facts-l">' + rc.chases.filter(function(c){ return c.needs_to_equal != null; }).map(function(c){ return '<li><b class="lat">' + esc(c.name) + "</b> عنده " + c.goals_all_time + " هدف في تاريخ الدوري (المركز " + c.rank + "). يحتاج <b class=\"num\">" + c.needs_to_equal + "</b> عشان يعادل <span class=\"lat\">" + esc(c.next_rank_name) + "</span>.</li>"; }).join("") + "</ul>";

@@ -256,7 +256,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   const teamsJson = await get("teams.json"); S.setTeams(teamsJson && teamsJson.teams || {}); S_TEAMS = (teamsJson && teamsJson.teams) || {};
 
   // ---- 1. fetch: competitions (+ every analytics file the pipeline may have written), today, national
-  const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios", "shots", "fatigue", "coaches", "transfers", "records-book", "seasons", "milestones", "upsets", "projections", "bracket-sim", "local-minutes", "suspensions", "first-goal", "dropped", "dependence", "xi", "signings", "absences", "alltime-table", "promoted", "late-goals", "champion-path", "games-in-hand"];
+  const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios", "shots", "fatigue", "coaches", "transfers", "records-book", "seasons", "milestones", "upsets", "projections", "bracket-sim", "local-minutes", "suspensions", "first-goal", "dropped", "dependence", "xi", "signings", "absences", "alltime-table", "promoted", "late-goals", "champion-path", "games-in-hand", "attendance"];
   // phase 5: generated content (ai/gen.py) is published only for kinds the owner approved (ai/approved.json)
   const APPROVED = JSON.parse(fs.readFileSync(path.join(__dirname, "ai/approved.json"), "utf8"));
   const AI = k => { const d = path.join(CACHE, "ai", k), o = {}; if (fs.existsSync(d)) for (const f of fs.readdirSync(d)) if (f.endsWith(".json")) o[f.slice(0, -5)] = JSON.parse(fs.readFileSync(path.join(d, f), "utf8")); return o; };
@@ -409,7 +409,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
       ["cards", "بطاقات تيفو", S.cards(x.cards, 12)], ["clutch", "منو الحاسم؟", S.clutch(x.clutch)], ["tor", "تشكيلة الجولة", S.teamOfRound(x["team-of-round"])],
       ["foreign", "أفضل محترف أجنبي", S.foreigners(x.foreigners)], ["improved", "الأكثر تطوّر", S.improved(x.improved)], ["young", "المواهب الإماراتية تحت 23", S.young(x["young-uae"])],
       ["clock", "ساعة الأهداف", S.clock(x["minute-clock"])], ["late", "ملوك الدقايق الأخيرة", S.late(x["goal-bands"])],
-      ["pressure", "ترمومتر المدربين", S.pressure(x.pressure)], ["style", "بصمة كل فريق", S.style(x.style)], ["fortress", "حصون الملاعب", S.fortress(x.fortress)],
+      ["pressure", "ترمومتر المدربين", S.pressure(x.pressure)], ["style", "بصمة كل فريق", S.style(x.style)], ["fortress", "حصون الملاعب", S.fortress(x.fortress)], ["crowd", "الحضور الجماهيري", S.attendance(x.attendance)],
       ["fatigue", "مؤشر الإرهاق", S.fatigue(x.fatigue)], ["coaches", "أنجح المدربين في التاريخ", S.coachesLeague(x.coaches)],
       ["transfers", "سوق الانتقالات", S.transfers(x.transfers)], ["susp", "الإيقافات", S.suspensions(SUSR[c.id], x.suspensions)],
       ["refs", "الحكام", S.referees(x.referees)], ["ages", "أعمار التشكيلات", S.ages(x["lineup-ages"])], ["rot", "مؤشر التدوير", S.rotation(x.rotation)],
