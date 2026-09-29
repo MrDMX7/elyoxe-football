@@ -116,6 +116,7 @@ function posts(json, handle) {
         await page.waitForTimeout(1500);
         if (/\/login|\/i\/flow/.test(page.url())) { inbox.errors[acc.handle] = 'not signed in'; log('NOT SIGNED IN'); break; }
         const body = await page.locator('body').innerText().catch(() => '');
+        if (a.includes('--debug')) { await page.screenshot({ path: `/tmp/x-${acc.handle}.png` }).catch(() => {}); log('url', page.url(), '|', body.replace(/\s+/g, ' ').slice(0, 400)); }
         if (!got.length) inbox.errors[acc.handle] = /doesn.t exist|account is suspended/i.test(body) ? 'no such account' : /rate limit|try again/i.test(body) ? 'rate limited' : 'no posts seen';
         else delete inbox.errors[acc.handle];
       } catch (e) { inbox.errors[acc.handle] = String(e.message || e).slice(0, 120); }
