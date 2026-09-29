@@ -75,6 +75,17 @@ python3 build_names.py --reuse-pool --limit 500   # resume in chunks from the ca
 - **Names.** FotMob renames update `latin` in place. The Arabic is not re-derived.
 - **Owner corrections.** Put the corrected `ar` into `players_ar.json` and set `source` to `"manual"`. Existing ids are never overwritten, and `--retry-generated` only touches `generated` entries.
 
+## Review of the Arab national squads (461, 2026-09-29)
+
+All 381 players in the current squads of 15 Arab national teams were checked against how Arab sports media spell them. 38 were corrected. They carry `source: "manual"`, the old value in `prev`, and a `note`. The misses fell into five kinds:
+- **Another person or a nickname:** «مختار شيخ» for Mukhtar Ali, «شرارة» for Mohammad Abu Zraiq, «مهند إيتو», «إبراهيم سامي» for Ibrahim Sadeh, «أحمد البيزي» for Ahmed Alsuwee.
+- **Cut short:** «منير», «برونو», «غيليرمي».
+- **Too long:** «سلطان بدر مبروك المرزوق», «أحمد باسل فاضل», «مصطفى أحمد شوبير».
+- **Order reversed:** «حسن علاء الدين» for Alaa Eddin Hasan.
+- **Spelling:** «مصطفي» (with ي), «احمد» (no hamza), «ايدميلسون», «لوانزينهو».
+
+**Left for the owner** (plausible either way, so not changed): 697618 «علاء آل حجي» or «علاء الهجي» · 921919 «سيباستيان توناكتي» or «تونكتي» · 1432180 «أيوب العلوي» · 1553354 «عبد الهادي ياسين» for Abed Yassin · 1201075 «إميليو سبع» · 918114 «أغوستين منظور» or «منصور» · 1582710 «محمد داربي».
+
 ## Known weak spots
 
 - Some Wikidata Arabic labels are bot transliterations, not media spellings (e.g. «موستافا ازادزوى», «ياكو ميت»). They are marked `wikidata`, but they deserve a look for the most-shown players.

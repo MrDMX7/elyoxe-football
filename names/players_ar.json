@@ -2806,11 +2806,13 @@
  },
  "288610": {
   "latin": "Sayed Dhiya",
-  "ar": "سيد سعيد",
-  "source": "wikidata",
+  "ar": "سيد ضياء",
+  "source": "manual",
   "qid": "Q7429184",
-  "checked": "2026-09-27",
-  "wd_label": "سيد ضياء سيد سعيد"
+  "checked": "2026-09-29",
+  "wd_label": "سيد ضياء سيد سعيد",
+  "prev": "سيد سعيد",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "288893": {
   "latin": "Koffi Kouamé",
@@ -4037,10 +4039,12 @@
  },
  "365245": {
   "latin": "Edmílson Junior",
-  "ar": "ايدميلسون جونيور",
-  "source": "wikidata",
+  "ar": "إدميلسون جونيور",
+  "source": "manual",
   "qid": "Q1957458",
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "ايدميلسون جونيور",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "369282": {
   "latin": "Jamal Arago",
@@ -7419,11 +7423,13 @@
  },
  "543370": {
   "latin": "Ahmed Huwaydi",
-  "ar": "احمد عبدالله",
-  "source": "generated",
+  "ar": "أحمد هويدي",
+  "source": "manual",
   "qid": "Q108413733",
-  "checked": "2026-09-28",
-  "wd_label": "أبو عاقلة عبد الله"
+  "checked": "2026-09-29",
+  "wd_label": "أبو عاقلة عبد الله",
+  "prev": "احمد عبدالله",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "543386": {
   "latin": "Gabaski",
@@ -8082,11 +8088,13 @@
  },
  "573787": {
   "latin": "Munir El Kajoui",
-  "ar": "منير",
-  "source": "wikidata",
+  "ar": "منير المحمدي",
+  "source": "manual",
   "qid": "Q18062338",
-  "checked": "2026-09-27",
-  "wd_label": "منير مهند محمدي"
+  "checked": "2026-09-29",
+  "wd_label": "منير مهند محمدي",
+  "prev": "منير",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "574623": {
   "latin": "Kenan Kodro",
@@ -14660,10 +14668,12 @@
  },
  "759808": {
   "latin": "Mukhtar Sheik",
-  "ar": "مختار شيخ",
-  "source": "generated",
+  "ar": "مختار علي",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "مختار شيخ",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "759814": {
   "latin": "Jay Dasilva",
@@ -17716,10 +17726,12 @@
  },
  "843241": {
   "latin": "Abdul Rahman Weiss",
-  "ar": "عبد الرحمن وايس",
-  "source": "wikidata",
+  "ar": "عبد الرحمن ويس",
+  "source": "manual",
   "qid": "Q64010175",
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "عبد الرحمن وايس",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "843275": {
   "latin": "Stian Kristiansen",
@@ -17945,10 +17957,12 @@
  },
  "846321": {
   "latin": "Muhanad Madyen",
-  "ar": "مهند إيتو",
-  "source": "generated",
+  "ar": "مهند مدين",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-28"
+  "checked": "2026-09-29",
+  "prev": "مهند إيتو",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "846383": {
   "latin": "Callum Hudson-Odoi",
@@ -18173,11 +18187,13 @@
  },
  "848607": {
   "latin": "Hassan Al Tambakti",
-  "ar": "حسان التمبكتي",
-  "source": "generated",
+  "ar": "حسان تمبكتي",
+  "source": "manual",
   "qid": "Q45108287",
-  "checked": "2026-09-27",
-  "wd_label": "حسان تمبكتي"
+  "checked": "2026-09-29",
+  "wd_label": "حسان تمبكتي",
+  "prev": "حسان التمبكتي",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "848608": {
   "latin": "Ali Al Asmari",
@@ -18231,10 +18247,12 @@
  },
  "849334": {
   "latin": "Ahmed Abou El Fotouh",
-  "ar": "أحمد أبو الفتوح",
-  "source": "wikidata",
+  "ar": "أحمد فتوح",
+  "source": "manual",
   "qid": "Q27585643",
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "أحمد أبو الفتوح",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "849335": {
   "latin": "Mahmoud Dunga",
@@ -18404,10 +18422,12 @@
  },
  "852168": {
   "latin": "Yazan Abu Al-Arab",
-  "ar": "يزن أبو عرب",
-  "source": "wikidata",
+  "ar": "يزن العرب",
+  "source": "manual",
   "qid": "Q47105682",
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "يزن أبو عرب",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "852326": {
   "latin": "Firew Getahun",
@@ -18794,10 +18814,12 @@
  },
  "860910": {
   "latin": "Pablo Sabbag",
-  "ar": "بابلو سلباج",
-  "source": "wikidata",
+  "ar": "بابلو صباغ",
+  "source": "manual",
   "qid": "Q20016459",
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "بابلو سلباج",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "860913": {
   "latin": "Jhon Lucumí",
@@ -19015,10 +19037,12 @@
  },
  "863341": {
   "latin": "Luanzinho",
-  "ar": "لوانزينهو",
-  "source": "generated",
+  "ar": "لوانزينيو",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "لوانزينهو",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "863359": {
   "latin": "Andy Irving",
@@ -20573,11 +20597,13 @@
  },
  "899206": {
   "latin": "Mahdi Abduljabbar Hasan",
-  "ar": "مهدي عبد الجبار حسن",
-  "source": "generated",
+  "ar": "مهدي عبد الجبار",
+  "source": "manual",
   "qid": "Q47544125",
-  "checked": "2026-09-27",
-  "wd_label": "مهدي عبد الجبار"
+  "checked": "2026-09-29",
+  "wd_label": "مهدي عبد الجبار",
+  "prev": "مهدي عبد الجبار حسن",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "899236": {
   "latin": "Gomezgani Chirwa",
@@ -23586,10 +23612,12 @@
  },
  "956659": {
   "latin": "Himad Abdelli",
-  "ar": "حمد عبدلي",
-  "source": "wikidata",
+  "ar": "هيماد عبدلي",
+  "source": "manual",
   "qid": "Q58303150",
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "حمد عبدلي",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "956661": {
   "latin": "Edwin Quarshie",
@@ -25866,10 +25894,12 @@
  },
  "1022718": {
   "latin": "Ala Zouhir",
-  "ar": "علاء الدين زهير",
-  "source": "wikidata",
+  "ar": "علاء زهير",
+  "source": "manual",
   "qid": "Q90863388",
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "علاء الدين زهير",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1023017": {
   "latin": "Armstrong Oko-Flex",
@@ -26105,11 +26135,13 @@
  },
  "1028896": {
   "latin": "Ali Iyad Olwan",
-  "ar": "علي إياد علوان",
-  "source": "generated",
+  "ar": "علي علوان",
+  "source": "manual",
   "qid": "Q107130635",
-  "checked": "2026-09-27",
-  "wd_label": "علي علوان"
+  "checked": "2026-09-29",
+  "wd_label": "علي علوان",
+  "prev": "علي إياد علوان",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1029023": {
   "latin": "Charles M'Mombwa",
@@ -27451,10 +27483,12 @@
  },
  "1059129": {
   "latin": "Shararh",
-  "ar": "شرارة",
-  "source": "generated",
+  "ar": "محمد أبو زريق",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "شرارة",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1059490": {
   "latin": "Mauricio",
@@ -28565,10 +28599,12 @@
  },
  "1088997": {
   "latin": "Khaled Kourdoghli",
-  "ar": "خالد كرداوغلي",
-  "source": "wikidata",
+  "ar": "خالد كردغلي",
+  "source": "manual",
   "qid": "Q58428043",
-  "checked": "2026-09-28"
+  "checked": "2026-09-29",
+  "prev": "خالد كرداوغلي",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1089041": {
   "latin": "Warsama Hassan",
@@ -29195,11 +29231,13 @@
  },
  "1104099": {
   "latin": "Bruno",
-  "ar": "برونو",
-  "source": "wikidata",
+  "ar": "برونو كونسيساو",
+  "source": "manual",
   "qid": "Q85749262",
-  "checked": "2026-09-27",
-  "wd_label": "برونو كونسيساو"
+  "checked": "2026-09-29",
+  "wd_label": "برونو كونسيساو",
+  "prev": "برونو",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1104103": {
   "latin": "Kouame Kouadio",
@@ -30585,11 +30623,13 @@
  },
  "1131928": {
   "latin": "Amine Ben Hamida",
-  "ar": "أمين بن حميدة",
-  "source": "wikidata",
+  "ar": "محمد أمين بن حميدة",
+  "source": "manual",
   "qid": "Q101064617",
-  "checked": "2026-09-27",
-  "wd_label": "محمد أمين بن حميدة"
+  "checked": "2026-09-29",
+  "wd_label": "محمد أمين بن حميدة",
+  "prev": "أمين بن حميدة",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1131946": {
   "latin": "Alireza Koushki",
@@ -30656,10 +30696,12 @@
  },
  "1132570": {
   "latin": "Ahmed Basil",
-  "ar": "أحمد باسل فاضل",
-  "source": "arwiki",
+  "ar": "أحمد باسل",
+  "source": "manual",
   "qid": "Q105946025",
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "أحمد باسل فاضل",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1132578": {
   "latin": "Waleed Al Anzi",
@@ -31831,10 +31873,12 @@
  },
  "1174676": {
   "latin": "Guilherme",
-  "ar": "غيليرمي",
-  "source": "generated",
+  "ar": "غيليرمي بالا",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "غيليرمي",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1174685": {
   "latin": "Ênio",
@@ -32048,10 +32092,12 @@
  },
  "1178324": {
   "latin": "Jaouen Hadjam",
-  "ar": "جوين حجام",
-  "source": "wikidata",
+  "ar": "جوان حجام",
+  "source": "manual",
   "qid": "Q98561102",
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "جوين حجام",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1178325": {
   "latin": "Ousmane Camara",
@@ -33553,11 +33599,13 @@
  },
  "1202924": {
   "latin": "Ibrahim Sami",
-  "ar": "إبراهيم سامي",
-  "source": "generated",
+  "ar": "إبراهيم سعادة",
+  "source": "manual",
   "qid": "Q106173160",
-  "checked": "2026-09-27",
-  "wd_label": "إبراهيم سعادة"
+  "checked": "2026-09-29",
+  "wd_label": "إبراهيم سعادة",
+  "prev": "إبراهيم سامي",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1203189": {
   "latin": "Fredrik Oppegård",
@@ -34759,11 +34807,13 @@
  },
  "1228546": {
   "latin": "Mostafa Ahmed Shobeir",
-  "ar": "مصطفى أحمد شوبير",
-  "source": "generated",
+  "ar": "مصطفى شوبير",
+  "source": "manual",
   "qid": "Q110263543",
-  "checked": "2026-09-27",
-  "wd_label": "مصطفى شوبير"
+  "checked": "2026-09-29",
+  "wd_label": "مصطفى شوبير",
+  "prev": "مصطفى أحمد شوبير",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1228554": {
   "latin": "Abdullah Radif",
@@ -36386,10 +36436,12 @@
  },
  "1258145": {
   "latin": "Abbas Al Asfoor",
-  "ar": "عباس فاضل العصفور",
-  "source": "wikidata",
+  "ar": "عباس العصفور",
+  "source": "manual",
   "qid": "Q47544124",
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "عباس فاضل العصفور",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1258292": {
   "latin": "Nicolò Bertola",
@@ -38457,11 +38509,13 @@
  },
  "1303501": {
   "latin": "Ali Youssif",
-  "ar": "علي يوسف المصراتي",
-  "source": "generated",
+  "ar": "علي يوسف",
+  "source": "manual",
   "qid": "Q131704368",
-  "checked": "2026-09-28",
-  "wd_label": "علي يوسف"
+  "checked": "2026-09-29",
+  "wd_label": "علي يوسف",
+  "prev": "علي يوسف المصراتي",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1305226": {
   "latin": "Ivan Sulev",
@@ -40458,10 +40512,12 @@
  },
  "1343129": {
   "latin": "Abdelaziz Ali",
-  "ar": "عبد العزيز بن علي",
-  "source": "generated",
+  "ar": "عبد العزيز علي",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-28"
+  "checked": "2026-09-29",
+  "prev": "عبد العزيز بن علي",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1343145": {
   "latin": "Imad Riahi",
@@ -42964,10 +43020,12 @@
  },
  "1401228": {
   "latin": "Nawaf Bu Washl",
-  "ar": "نواف بو وشل",
-  "source": "generated",
+  "ar": "نواف بوشل",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "نواف بو وشل",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1401248": {
   "latin": "Rémy Lascary",
@@ -43765,10 +43823,12 @@
  },
  "1419131": {
   "latin": "Hassan Alaa Aladdin",
-  "ar": "حسن علاء الدين",
-  "source": "generated",
+  "ar": "علاء الدين حسن",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "حسن علاء الدين",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1419287": {
   "latin": "Joshua Quarshie",
@@ -44186,10 +44246,12 @@
  },
  "1426403": {
   "latin": "Mostafa Ziko",
-  "ar": "مصطفي زيكو",
-  "source": "wikidata",
+  "ar": "مصطفى زيكو",
+  "source": "manual",
   "qid": "Q121537482",
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "مصطفي زيكو",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1426407": {
   "latin": "Amr Kalawa",
@@ -46896,11 +46958,13 @@
  },
  "1503399": {
   "latin": "Athbi Saleh",
-  "ar": "عذبي صالح",
-  "source": "generated",
+  "ar": "عذبي شهاب",
+  "source": "manual",
   "qid": "Q134783321",
-  "checked": "2026-09-27",
-  "wd_label": "عذبي شهاب"
+  "checked": "2026-09-29",
+  "wd_label": "عذبي شهاب",
+  "prev": "عذبي صالح",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1503403": {
   "latin": "Kinga Wangchuk",
@@ -50421,10 +50485,12 @@
  },
  "1598179": {
   "latin": "Sayfulnasr Judour",
-  "ar": "سيف جدور",
-  "source": "generated",
+  "ar": "سيف النصر جدور",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-28"
+  "checked": "2026-09-29",
+  "prev": "سيف جدور",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1598978": {
   "latin": "Pascal Msindo",
@@ -53611,10 +53677,12 @@
  },
  "1677900": {
   "latin": "Sultan Al Marzuq",
-  "ar": "سلطان بدر مبروك المرزوق",
-  "source": "generated",
+  "ar": "سلطان المرزوق",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "سلطان بدر مبروك المرزوق",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1677906": {
   "latin": "Yousef Majed",
@@ -57663,10 +57731,12 @@
  },
  "1748875": {
   "latin": "Mohamad Ahmad Al-Sheikh",
-  "ar": "محمد احمد الشيخ",
-  "source": "generated",
+  "ar": "محمد أحمد الشيخ",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-28"
+  "checked": "2026-09-29",
+  "prev": "محمد احمد الشيخ",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1748953": {
   "latin": "Minato Yoshida",
@@ -60312,10 +60382,12 @@
  },
  "1822924": {
   "latin": "Ahmed Alsuwee",
-  "ar": "أحمد البيزي",
-  "source": "generated",
+  "ar": "أحمد الصويعي",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-28"
+  "checked": "2026-09-29",
+  "prev": "أحمد البيزي",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1823175": {
   "latin": "Leluma Mofoka",
@@ -61548,17 +61620,21 @@
  },
  "1840386": {
   "latin": "Mohammad Al Gharably",
-  "ar": "محمد عبد الرحيم الغربلي",
-  "source": "generated",
+  "ar": "محمد الغربلي",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "محمد عبد الرحيم الغربلي",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1840390": {
   "latin": "Omar Saber",
-  "ar": "عمر صابر عبد الرحمن",
-  "source": "generated",
+  "ar": "عمر صابر",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-29",
+  "prev": "عمر صابر عبد الرحمن",
+  "note": "461: reviewed against Arab sports media spelling"
  },
  "1840592": {
   "latin": "David Barčot",
