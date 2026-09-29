@@ -452,7 +452,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
     const art = hasLogo ? `<div class="lgart" aria-hidden="true"><img class="lglogo" src="/lg/${c.id}.png" alt="" width="192" height="192" fetchpriority="high"></div>` : `<canvas aria-hidden="true"></canvas>`;
     const tools = `${nextR.length ? `<button type="button" class="sa" id="rpbtn">صورة توقعات الجولة ${esc(nextR[0].r)}</button>` : ""}${x.cards ? `<a class="sa" href="/c/${c.key}/compare/">قارن بين لاعبين أو فريقين</a>` : ""}${powK ? `<a class="sa" href="/c/${c.key}/power/">ترتيب القوة هالأسبوع</a>` : ""}${has.table ? `<button type="button" class="sa" id="embedbtn" data-src="/embed/t/?c=${c.id}" data-h="560">ضمّن الترتيب في موقعك</button>` : ""}`;
     const body = `<section class="hero chero${hasLogo ? " haslogo" : ""}" data-slot="hero" data-art='${esc(artBands)}' style="--g1:${g[0]};--g2:${g[1]}${hasLogo ? "" : `;--mos:url(${mosaicURI(JSON.parse(artBands), 11)})`}">${art}<div class="scrim"></div><div class="hero-in wrap">
-<p class="hk"><a href="/competitions/">البطولات</a>${c.country ? `، ${esc(c.country.name_ar)}` : ""}</p><h1>${esc(c.name_ar)}</h1><p class="season">الموسم <span class="num">${esc(c.season || "")}</span></p>${c.dormant ? '<p class="note">البطولة متوقفة أو خلصت هالموسم. هذي آخر نتايجها.</p>' : ""}
+<p class="hk"><a href="/competitions/">البطولات</a>${c.country ? `، ${R.COUNTRIES.some(x => x[0] === c.country.iso2) ? `<a href="/country/${c.country.iso2.toLowerCase()}/">${esc(c.country.name_ar)}</a>` : esc(c.country.name_ar)}` : ""}</p><h1>${esc(c.name_ar)}</h1><p class="season">الموسم <span class="num">${esc(c.season || "")}</span></p>${c.dormant ? '<p class="note">البطولة متوقفة أو خلصت هالموسم. هذي آخر نتايجها.</p>' : ""}
 <dl class="hfacts">${heroFacts}</dl><div class="hero-acts"><a class="cta" href="#fixtures" data-go="fixtures">${upcoming ? "مباريات الجولة" : "المباريات"}</a><button type="button" class="ghost" data-sheet="share">شارك</button></div></div></section>
 ${nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(nextR).replace(/</g, "\\u003c")}</script>` : ""}<div class="wrap body">` + tabsBar("c", tl) +
       (has.table ? vpane("c", "table", tableLead + tableShelf, true) : "") + vpane("c", "fixtures", `<div id="rounds">${rounds || '<p class="empty">ما في مباريات منشورة.</p>'}</div>`, !has.table) +
@@ -958,9 +958,34 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   const groups = [["uae", "الإمارات"], ["gulf", "الخليج"], ["asia", "آسيا"], ["africa", "أفريقيا"], ["national", "المنتخبات"], ["arab", "العرب"], ["europe", "أوروبا"], ["world", "العالم"]];
   { const byC = {}; comps.forEach(c => { const cc = c.country && c.country.iso2; if (cc && R.COUNTRIES.some(x => x[0] === cc)) (byC[cc] = byC[cc] || []).push(c); });
     const grp = (t, cs) => cs.length ? `<section class="rail cgrid3" data-slot="grid" data-iso="${(cs[0].country && cs[0].country.iso2) || ""}"><div class="rail-h"><h2>${t}</h2></div><div class="cts all">${cs.map(tileOf).join("")}</div></section>` : "";
-    const lists = Object.keys(byC).sort((a, b) => R.COUNTRIES.findIndex(x => x[0] === a) - R.COUNTRIES.findIndex(x => x[0] === b)).map(cc => grp(esc(byC[cc][0].country.name_ar), byC[cc])).join("") + groups.map(g => grp(g[1], comps.filter(c => c.scope === g[0] && !(c.country && R.COUNTRIES.some(x => x[0] === c.country.iso2))))).join("");
+    const lists = Object.keys(byC).sort((a, b) => R.COUNTRIES.findIndex(x => x[0] === a) - R.COUNTRIES.findIndex(x => x[0] === b)).map(cc => grp(`<a href="/country/${cc.toLowerCase()}/">${esc(byC[cc][0].country.name_ar)}</a>`, byC[cc])).join("") + groups.map(g => grp(g[1], comps.filter(c => c.scope === g[0] && !(c.country && R.COUNTRIES.some(x => x[0] === c.country.iso2))))).join("");
     write("competitions/index.html", page({ v3:true, path:"/competitions/", page:"comps", nav:"comps", title:"كل البطولات | تيفو", desc:"كل البطولات اللي يغطيها تيفو: الإماراتية والخليجية والآسيوية والعربية والأوروبية.",
-      body:`<section class="hero lhero" data-slot="hero"><div class="lgwall" aria-hidden="true">${comps.filter(c => LOGO(c.id)).slice(0, 24).map(c => `<img src="/lg/${c.id}.png" alt="" width="64" height="64">`).join("")}</div><div class="scrim"></div><div class="hero-in wrap"><p class="hk">تيفو</p><h1>البطولات</h1><p class="season">كل البطولات اللي نغطيها، <span class="num">${comps.length}</span> بطولة</p></div></section><div class="wrap body">${lists}</div>` })); }
+      body:`<section class="hero lhero" data-slot="hero"><div class="lgwall" aria-hidden="true">${comps.filter(c => LOGO(c.id)).slice(0, 24).map(c => `<img src="/lg/${c.id}.png" alt="" width="64" height="64">`).join("")}</div><div class="scrim"></div><div class="hero-in wrap"><p class="hk">تيفو</p><h1>البطولات</h1><p class="season">كل البطولات اللي نغطيها، <span class="num">${comps.length}</span> بطولة</p></div></section><div class="wrap body">${lists}</div>` }));
+    // 448: a page per Arab country at /country/<iso>/ (not /<iso>/: /tn/ is the thumbnails folder): the next 7 days of its
+    // leagues and national team, the top of its main table, its scorers, the national team, its competitions and clubs.
+    // Only what this build already holds; a country with neither a league nor a national team gets no page.
+    for (const [iso, cname] of R.COUNTRIES){
+      const cs = byC[iso] || [], nat = NAT[iso], lg = cs.find(c => c.kind === "league") || cs[0]; if (!cs.length && !nat) continue;
+      const slug = iso.toLowerCase(), now = Date.now(), ids = new Set(cs.map(c => c.id)), isNat = m => nat && m.home && m.away && (m.home.id === nat || m.away.id === nat);
+      const soon = [...matchSum.values()].filter(m => m && m.kickoff_utc && m.id != null && (ids.has(m.comp) || isNat(m)) && (R.isLive(m) || (Date.parse(m.kickoff_utc) > now - 3 * 36e5 && Date.parse(m.kickoff_utc) < now + 7 * 864e5))).sort((a, b) => a.kickoff_utc.localeCompare(b.kickoff_utc)).slice(0, 12);
+      const d = (lg && compData.find(x => x.c.id === lg.id)) || {}, st = d.st, lst = d.stats;
+      const top = st && !st.composite && st.groups && st.groups.length === 1 && st.groups[0].rows ? { groups:[Object.assign({}, st.groups[0], { rows:st.groups[0].rows.slice(0, 6) })] } : null;
+      const natM = nat ? [...matchSum.values()].filter(isNat) : [], natNext = natM.filter(m => m.status === "scheduled" && Date.parse(m.kickoff_utc) > now).sort((a, b) => a.kickoff_utc.localeCompare(b.kickoff_utc))[0];
+      const natLast = natM.filter(m => m.status === "finished").sort((a, b) => b.kickoff_utc.localeCompare(a.kickoff_utc)).slice(0, 3);
+      const clubs = st && st.groups ? [...new Set(st.groups.flatMap(g => (g.rows || []).map(r => r.team.id)))] : [];
+      const secL = [soon.length ? S.sec("الأيام الجاية", "", R.dayList(soon, index)) : "",
+        top ? S.sec(`ترتيب ${esc(lg.name_ar)}`, "", R.standings(top) + `<p class="small"><a href="/c/${lg.key}/#table">الترتيب كامل</a></p>`) : "",
+        lst && lst.lists && (lst.lists.goals || []).length >= 3 ? S.sec(`هدافين ${esc(lg.name_ar)}`, "", R.leaders(lst, "goals", 5) + `<p class="small"><a href="/c/${lg.key}/scorers/">كل الهدافين</a></p>`) : "",
+        natNext || natLast.length ? S.sec(`منتخب ${esc(cname)}`, "", [natNext].concat(natLast).filter(Boolean).map(m => R.matchRow(m, { date:true, crest:true })).join("") + `<p class="small"><a href="/t/${nat}/">صفحة المنتخب</a></p>`) : "",
+        cs.length ? S.sec("البطولات", "", `<div class="cts all">${cs.map(tileOf).join("")}</div>`) : "",
+        clubs.length ? S.sec(`أندية ${esc(lg.name_ar)}`, "", `<ul class="facts-l">${clubs.map(id => `<li>${tlink(id)}</li>`).join("")}</ul>`) : ""].filter(Boolean);
+      if (!secL.length) continue; const secs = secL.join(""), thinC = secL.length < 2;   // owner item 11: a one-section page stays for visitors, out of Google
+      const what = [lg && lg.name_ar, nat && `منتخب ${cname}`].filter(Boolean);
+      write(`country/${slug}/index.html`, page({ noindex:thinC, path:`/country/${slug}/`, page:"ref", nav:"comps", title:`مباريات ${what.join(" و")} اليوم | تيفو`, desc:`مواعيد مباريات ${what.join(" و")} بتوقيت بلدك${top ? "، وترتيب " + lg.name_ar + " والهدافين" : ""}${clubs.length ? "، وكل الأندية" : ""}.`,
+        ld:bcLd([["البطولات", "/competitions/"], [cname, `/country/${slug}/`]]),
+        body:`<p class="crumbs"><a href="/competitions/">البطولات</a></p><h1>الكورة في ${esc(cname)}</h1><p class="season">${what.map(esc).join(" · ")}</p>` + secs }));
+      if (!thinC) urls.push(`/country/${slug}/`);
+    } }
   fs.mkdirSync(path.join(OUT, "og"), { recursive:true }); fs.writeFileSync(path.join(OUT, "og/jobs.json"), JSON.stringify(OGJ));
   try { process.stdout.write(require("child_process").execFileSync("python3", [path.join(__dirname, "og.py")]).toString()); } catch (e){ console.error("og.py failed", e.message); }
   // W1.9: internal links to pages this build did not write become plain text (reported, never fatal)
