@@ -106,6 +106,7 @@ function posts(json, handle) {
     for (const acc of pick) {
       let got = [];
       const onResp = async (r) => {
+        if (a.includes('--debug') && /graphql/.test(r.url())) log('gql', r.status(), r.url().split('?')[0].split('/').slice(-1)[0]);
         if (!/\/graphql\/[^/]+\/UserTweets\b/.test(r.url())) return;
         try { got = got.concat(posts(await r.json(), acc.handle)); } catch (e) {}
       };
