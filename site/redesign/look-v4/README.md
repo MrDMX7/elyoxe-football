@@ -21,3 +21,16 @@ The owner asked «فيه أحلى؟» about the fonts and design, then said «ص
   1. Move the chosen variant's tokens into v3.css `:root`, and its scrim colours into the hardcoded `#0A2620` scrims.
   2. Add the fonts to site/fonts and `FONTS` in build.cjs, and preload them.
   3. Run the gates: inventory, no horizontal scroll at 390/880/1440, FCP.
+
+## Round 2 (same day)
+The owner picked **B** from round 1, then asked for better: «بس بعده الاستايل والديزاين والخطوط والجمالية، في افضل منهم». The switcher now offers the current look, B and four bolder directions. B is the default.
+
+| # | name | display face | ground | accent | notes |
+|---|---|---|---|---|---|
+| C | موزاييك | Handjet (a face made of squares, like a tifo) | near-black `#06090A` | live green | Handjet on big type and digits only. At tab or button size it was unreadable, so those use Readex. |
+| D | بث مباشر | Changa | pure black | electric lime `#C8FF2E` (primary button, active tab, section mark) | sports-channel graphics |
+| E | جريدة | El Messiri | paper `#F4F1EA`, ink `#15130F` | red `#C8102E` | light theme; the hero is a dark ink band like a photo; the top bar is solid paper |
+| F | ملصق | Lalezar | night navy `#0A1633` | gold `#E8B04A` | match-poster feel; Lalezar on big type only |
+
+- **Scrims, top bar and tab bar:** each look sets `--g` (the ground as r,g,b) and these follow it. They were hardcoded `#0A2620` in v3.css.
+- **Cache:** the `look.css` link carries a content-hash `?v=`, so a phone never keeps the old file.

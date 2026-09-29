@@ -1,5 +1,5 @@
 # Build the /next/ look preview from a local build: the same pages, the live CSS, plus look.css and a switcher.
-import os, re, shutil, sys
+import os, re, shutil, sys, hashlib
 OUT = sys.argv[1]                      # the local build (tifo-out)
 HERE = os.path.dirname(os.path.abspath(__file__))
 DST = os.path.join(HERE, "site")       # uploaded to s3://…/next/
@@ -12,10 +12,13 @@ shutil.copytree(os.path.join(HERE, "fonts"), os.path.join(DST, "fonts"), ignore=
 os.makedirs(os.path.join(DST, "look"))
 shutil.copy(os.path.join(HERE, "fonts", "fonts.css"), os.path.join(DST, "look", "fonts.css"))
 shutil.copy(os.path.join(HERE, "look", "look.css"), os.path.join(DST, "look", "look.css"))
-HEAD = ('<link rel="stylesheet" href="/next/look/fonts.css"><link rel="stylesheet" href="/next/look/look.css">'
-        '<script>(function(){var q=new URLSearchParams(location.search).get("look"),v=q;try{v=v||localStorage.getItem("tifo.look")}catch(e){}v=v||"a";if(v!=="cur")document.documentElement.dataset.look=v})()</script>')
+LV = hashlib.sha1(open(os.path.join(HERE, 'look', 'look.css'), 'rb').read()).hexdigest()[:8]
+HEAD = ('<link rel="stylesheet" href="/next/look/fonts.css"><link rel="stylesheet" href="/next/look/look.css?v=' + LV + '">'
+        '<script>(function(){var q=new URLSearchParams(location.search).get("look"),v=q;try{v=v||localStorage.getItem("tifo.look")}catch(e){}if(["cur","b","c","d","e","f"].indexOf(v)<0)v="b";if(v!=="cur")document.documentElement.dataset.look=v})()</script>')
 PICK = ('<div id="lookpick"><div role="group" aria-label="اختار الشكل"><button type="button" data-l="cur">الحالي</button>'
-        '<button type="button" data-l="a">أ · ليل الملعب</button><button type="button" data-l="b">ب · أخضر أعمق</button></div></div>'
+        '<button type="button" data-l="b">ب · أخضر أعمق</button><button type="button" data-l="c">ج · موزاييك</button>'
+        '<button type="button" data-l="d">د · بث مباشر</button><button type="button" data-l="e">هـ · جريدة</button>'
+        '<button type="button" data-l="f">و · ملصق</button></div></div>'
         '<script>(function(){var h=document.documentElement,bs=document.querySelectorAll("#lookpick button");'
         'function set(v){if(v==="cur")delete h.dataset.look;else h.dataset.look=v;try{localStorage.setItem("tifo.look",v)}catch(e){}'
         'bs.forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.l===v))})}'

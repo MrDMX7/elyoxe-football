@@ -1,44 +1,96 @@
-/* تيفو — look preview (/next/). Two proposals over the live CSS, switched by html[data-look]. Nothing here reaches the live site. */
+/* تيفو — look preview round 2 (/next/). B (the owner's pick of round 1) and four bolder directions, switched by html[data-look].
+   Nothing here reaches the live site. */
 
-/* ---------- shared by A and B: the mosaic becomes a band that fades, the home hero stops being 78% of the screen ---------- */
+/* ---------- shared: the mosaic becomes a band that fades, the home hero stops being 78% of the screen, hairline blocks ---------- */
 html[data-look] .hero{background-image:none}
 html[data-look] .hero canvas{opacity:.32;-webkit-mask-image:linear-gradient(180deg,#000 0,#000 18%,transparent 62%);mask-image:linear-gradient(180deg,#000 0,#000 18%,transparent 62%)}
 html[data-look] .hhero{min-block-size:clamp(23rem,56svh,34rem)}
 html[data-look] h1,html[data-look] h2,html[data-look] .rail-h h2{letter-spacing:0}
-/* lighter blocks: a hairline and more air instead of filled boxes */
 html[data-look] section.blk{background:transparent;border:0;border-block-start:1px solid var(--rule);padding-block-start:1.1rem}
 html[data-look] .sht,html[data-look] .ct,html[data-look] .rc{border-color:var(--rule-2)}
 
-/* ---------- A «ليل الملعب»: near-black, green only where it means something (live, your team), Alexandria for headings ---------- */
-html[data-look="a"]{
-  --ground:#0B0F0E; --raised:#151B19; --raised-hi:#1D2623; --sunken:#070A09; --sunken-2:#101614; --inkbg:#232C29;
-  --rule:#F6F7F21F; --rule-2:#F6F7F20F; --rule-ctl:#F6F7F266;
-  --kufi:"Alexandria","Readex Pro",system-ui,sans-serif;
-}
-html[data-look="a"] h1,html[data-look="a"] h2,html[data-look="a"] h3,html[data-look="a"] .tm,html[data-look="a"] .brand{font-family:var(--kufi);font-weight:800}
-html[data-look="a"] h2,html[data-look="a"] h3{font-weight:700}
-html[data-look="a"] .hero .scrim{background:linear-gradient(180deg,#0B0F0Ecc 0%,#0B0F0E40 22%,#0B0F0E80 48%,#0B0F0Ee6 74%,#0B0F0E 94%)}
-html[data-look="a"] .chero.haslogo .scrim{background:linear-gradient(180deg,#0B0F0E00 0%,#0B0F0E00 40%,#0B0F0Ecc 72%,#0B0F0E 96%)}
-html[data-look="a"] .lhero .scrim{background:linear-gradient(180deg,#0B0F0E66 0%,#0B0F0Ecc 55%,#0B0F0E 92%)}
-@media (min-width:880px){html[data-look="a"] .chero.haslogo .scrim{background:linear-gradient(90deg,#0B0F0E00 0%,#0B0F0E00 40%,#0B0F0E99 62%,#0B0F0Ed9 100%),linear-gradient(180deg,#0B0F0E00 60%,#0B0F0E 100%)}}
-html[data-look="a"] .top,html[data-look="a"] .tabbar{background:#0B0F0Ef2}
-
-/* ---------- B «أخضر أعمق»: the brand green with depth, IBM Plex Sans Arabic everywhere, one warm accent ---------- */
-html[data-look="b"]{
-  --ground:#061A15; --raised:#0E2A23; --raised-hi:#15352D; --sunken:#03110D; --sunken-2:#0A221C; --inkbg:#1F332D;
-  --rule:#F6F7F222; --rule-2:#F6F7F210; --mine:#D9A05B; --focus:#D9A05B;
-  --kufi:"IBM Plex Sans Arabic","Readex Pro",system-ui,sans-serif; --font-text:"IBM Plex Sans Arabic","Readex Pro",system-ui,sans-serif;
-}
+/* ---------- B «أخضر أعمق» (round 1 pick): IBM Plex Sans Arabic, the brand green with depth ---------- */
+html[data-look="b"]{--ground:#061A15;--raised:#0E2A23;--raised-hi:#15352D;--sunken:#03110D;--sunken-2:#0A221C;--inkbg:#1F332D;--rule:#F6F7F222;--rule-2:#F6F7F210;--mine:#D9A05B;--focus:#D9A05B;
+  --kufi:"IBM Plex Sans Arabic","Readex Pro",system-ui,sans-serif;--font-text:"IBM Plex Sans Arabic","Readex Pro",system-ui,sans-serif}
 html[data-look="b"] h1,html[data-look="b"] h2,html[data-look="b"] h3,html[data-look="b"] .tm,html[data-look="b"] .brand{font-family:var(--kufi);font-weight:700}
-html[data-look="b"] .hero .scrim{background:linear-gradient(180deg,#061A15cc 0%,#061A1540 22%,#061A1580 48%,#061A15e6 74%,#061A15 94%)}
-html[data-look="b"] .chero.haslogo .scrim{background:linear-gradient(180deg,#061A1500 0%,#061A1500 40%,#061A15cc 72%,#061A15 96%)}
-html[data-look="b"] .lhero .scrim{background:linear-gradient(180deg,#061A1566 0%,#061A15cc 55%,#061A15 92%)}
-@media (min-width:880px){html[data-look="b"] .chero.haslogo .scrim{background:linear-gradient(90deg,#061A1500 0%,#061A1500 40%,#061A1599 62%,#061A15d9 100%),linear-gradient(180deg,#061A1500 60%,#061A15 100%)}}
-html[data-look="b"] .top,html[data-look="b"] .tabbar{background:#061A15f2}
+
+/* ---------- C «موزاييك»: the site is a tifo. Handjet (a type built from squares) for headings and the big numbers ---------- */
+html[data-look="c"]{--ground:#06090A;--raised:#11161A;--raised-hi:#182026;--sunken:#030506;--sunken-2:#0B1013;--inkbg:#1E262B;--rule:#F2F4F01F;--rule-2:#F2F4F00F;
+  --kufi:"Handjet","Readex Pro",system-ui,sans-serif;--digits:"Handjet","Barlow Condensed",sans-serif;--dune:#5BE08F}
+html[data-look="c"] h1,html[data-look="c"] h2,html[data-look="c"] h3,html[data-look="c"] .tm,html[data-look="c"] .brand{font-family:var(--kufi);font-weight:800}
+html[data-look="c"] h1{font-size:clamp(2.4rem,1.6rem + 5vw,4.4rem);line-height:1}
+html[data-look="c"] .hero canvas{opacity:.45}
+html[data-look="c"] .v3 h2::before,html[data-look="c"] h2::before{background:var(--live)}
+
+/* ---------- D «بث مباشر»: a broadcast graphic. Changa, pure black, one electric accent ---------- */
+html[data-look="d"]{--ground:#000;--raised:#111;--raised-hi:#1A1A1A;--sunken:#000;--sunken-2:#0A0A0A;--inkbg:#222;--rule:#FFFFFF1F;--rule-2:#FFFFFF10;--rule-ctl:#FFFFFF66;
+  --kufi:"Changa","Readex Pro",system-ui,sans-serif;--dune:#C8FF2E;--mine:#C8FF2E;--focus:#C8FF2E}
+html[data-look="d"] h1,html[data-look="d"] h2,html[data-look="d"] h3,html[data-look="d"] .tm,html[data-look="d"] .brand{font-family:var(--kufi);font-weight:800}
+html[data-look="d"] h1{font-size:clamp(2.1rem,1.4rem + 4.4vw,4rem);line-height:1.05}
+html[data-look="d"] .cta{background:#C8FF2E;border-color:#C8FF2E;color:#000}
+html[data-look="d"] .ghost{background:transparent;border-color:#FFFFFF55}
+html[data-look="d"] h2::before,html[data-look="d"] .v3 h2::before{background:#C8FF2E}
+html[data-look="d"] .mtabs [aria-selected="true"]{color:#C8FF2E}
+
+/* ---------- E «جريدة»: a sports paper. Light paper, black ink, El Messiri, one red ---------- */
+html[data-look="e"]{--ground:#F4F1EA;--raised:#FFFFFF;--raised-hi:#EDE8DE;--sunken:#E9E4D8;--sunken-2:#EFEBE2;--inkbg:#DDD6C8;
+  --text:#15130F;--text-2:#4A463E;--text-3:#6B665C;--rule:#15130F24;--rule-2:#15130F12;--rule-ctl:#15130F66;--line-2:#15130F12;--stone:#6B665C;--board:#E9E4D8;
+  --kufi:"El Messiri","Readex Pro",system-ui,sans-serif;--dune:#C8102E;--mine:#9A5B14;--focus:#C8102E;--live-text:#0B7A3B;color-scheme:light}
+html[data-look="e"] body{background:var(--ground);color:var(--text)}
+html[data-look="e"] h1,html[data-look="e"] h2,html[data-look="e"] h3,html[data-look="e"] .tm,html[data-look="e"] .brand{font-family:var(--kufi);font-weight:700}
+html[data-look="e"] h1{font-size:clamp(2.2rem,1.5rem + 4.4vw,4rem);line-height:1.15}
+html[data-look="e"] .hero canvas{opacity:.22}
+html[data-look="e"] .top,html[data-look="e"] .top.solid{background:#F4F1EAf2;border-block-end-color:var(--rule)}
+html[data-look="e"] .tabbar{background:#F4F1EAf5;border-block-start-color:var(--rule)}
+html[data-look="e"] .ghost{background:transparent}
+html[data-look="e"] .v3 table.st tbody tr:hover td{background:#15130F08}
+html[data-look="e"] h2::before,html[data-look="e"] .v3 h2::before{background:#C8102E}
+html[data-look="e"] .sheet .sh-in,html[data-look="e"] .panel .pn-in{background:var(--ground);color:var(--text)}
+
+/* ---------- F «ملصق»: a match poster. Lalezar, night navy, gold ---------- */
+html[data-look="f"]{--ground:#0A1633;--raised:#13224A;--raised-hi:#1A2D5E;--sunken:#060E22;--sunken-2:#0E1B3D;--inkbg:#22335F;--text:#F7F3E8;--text-2:#C9C3B2;--text-3:#B3AD9C;
+  --rule:#F7F3E81F;--rule-2:#F7F3E810;--kufi:"Lalezar","Readex Pro",system-ui,sans-serif;--dune:#E8B04A;--mine:#E8B04A;--focus:#E8B04A}
+html[data-look="f"] h1,html[data-look="f"] h2,html[data-look="f"] h3,html[data-look="f"] .tm,html[data-look="f"] .brand{font-family:var(--kufi);font-weight:400}
+html[data-look="f"] h1{font-size:clamp(2.4rem,1.6rem + 5vw,4.6rem);line-height:1.05}
+html[data-look="f"] .cta{background:#E8B04A;border-color:#E8B04A;color:#0A1633}
+html[data-look="f"] h2::before,html[data-look="f"] .v3 h2::before{background:#E8B04A}
+
+/* ---------- the scrims, top bar and tab bar are hardcoded in the green; each look gets its own ground ---------- */
+html[data-look="b"]{--g:6,26,21}
+html[data-look="c"]{--g:6,9,10}
+html[data-look="d"]{--g:0,0,0}
+html[data-look="e"]{--g:244,241,234}
+html[data-look="f"]{--g:10,22,51}
+html[data-look] .hero .scrim{background:linear-gradient(180deg,rgba(var(--g),.8) 0%,rgba(var(--g),.25) 22%,rgba(var(--g),.5) 48%,rgba(var(--g),.9) 74%,rgb(var(--g)) 94%)}
+html[data-look] .chero.haslogo .scrim{background:linear-gradient(180deg,rgba(var(--g),0) 0%,rgba(var(--g),0) 40%,rgba(var(--g),.8) 72%,rgb(var(--g)) 96%)}
+html[data-look] .lhero .scrim{background:linear-gradient(180deg,rgba(var(--g),.4) 0%,rgba(var(--g),.8) 55%,rgb(var(--g)) 92%)}
+@media (min-width:880px){html[data-look] .chero.haslogo .scrim{background:linear-gradient(90deg,rgba(var(--g),0) 0%,rgba(var(--g),0) 40%,rgba(var(--g),.6) 62%,rgba(var(--g),.85) 100%),linear-gradient(180deg,rgba(var(--g),0) 60%,rgb(var(--g)) 100%)}}
+html[data-look]:not([data-look="e"]) .top{background:linear-gradient(rgba(var(--g),.8),rgba(var(--g),0))}
+html[data-look]:not([data-look="e"]) .top.solid{background:rgba(var(--g),.92)}
+html[data-look]:not([data-look="e"]) .tabbar{background:rgba(var(--g),.95)}
+html[data-look]:not([data-look="e"]) .ghost{background:rgba(var(--g),.4)}
 
 /* ---------- the switcher (preview only) ---------- */
-#lookpick{position:fixed;inset-inline:0;inset-block-end:calc(var(--tabH,3.6rem) + .7rem + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;z-index:95;pointer-events:none}
-#lookpick div{pointer-events:auto;display:flex;gap:.25rem;padding:.25rem;background:#000000d9;border:1px solid #ffffff33;backdrop-filter:blur(8px)}
-#lookpick button{font:600 .85rem/1 system-ui,sans-serif;color:#fff;background:none;border:0;padding:.55rem .8rem;cursor:pointer}
+#lookpick{position:fixed;inset-inline:.5rem;inset-block-end:calc(var(--tabH,3.6rem) + .7rem + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;z-index:95;pointer-events:none}
+#lookpick div{pointer-events:auto;display:flex;gap:.2rem;padding:.25rem;background:#000000e0;border:1px solid #ffffff33;max-inline-size:100%;overflow-x:auto;scrollbar-width:none}
+#lookpick button{flex:none;font:600 .8rem/1 system-ui,sans-serif;color:#fff;background:none;border:0;padding:.55rem .65rem;cursor:pointer;white-space:nowrap}
 #lookpick button[aria-pressed="true"]{background:#fff;color:#000}
 @media (min-width:880px){#lookpick{inset-block-end:1.2rem}}
+
+/* ---------- round 2 fixes after the first look on a phone ---------- */
+/* C and F: the display face on big type only; buttons, tabs and small UI stay in a text face */
+html[data-look="c"],html[data-look="f"]{--kufi:"Readex Pro",system-ui,sans-serif}
+html[data-look="c"] h1,html[data-look="c"] .hero h2,html[data-look="c"] .rail-h h2,html[data-look="c"] section.blk > h2,html[data-look="c"] .board .tm,html[data-look="c"] .brand{font-family:"Handjet","Readex Pro",sans-serif;font-weight:800}
+html[data-look="c"] section.blk > h2,html[data-look="c"] .rail-h h2{font-size:1.5rem}
+html[data-look="c"] .mtabs,html[data-look="c"] .cta,html[data-look="c"] .ghost,html[data-look="c"] .tabbar{font-family:"Readex Pro",system-ui,sans-serif}
+html[data-look="f"] h1,html[data-look="f"] .hero h2,html[data-look="f"] .rail-h h2,html[data-look="f"] section.blk > h2,html[data-look="f"] .board .tm,html[data-look="f"] .brand{font-family:"Lalezar","Readex Pro",sans-serif;font-weight:400}
+html[data-look="f"] .mtabs,html[data-look="f"] .cta,html[data-look="f"] .ghost,html[data-look="f"] .tabbar{font-family:"Readex Pro",system-ui,sans-serif;font-weight:700}
+/* E: the hero is a dark ink band (like a photo) over the paper page; the top bar is solid paper */
+html[data-look="e"] .hero{--ink:#F4F1EA;--text:#F4F1EA;--text-2:#DAD4C6;--tert:#DAD4C6;--bg:#15130F;--rule:#F4F1EA33;--line:#F4F1EA33;color:#F4F1EA;background:#15130F}
+html[data-look="e"] .hero .scrim{background:linear-gradient(180deg,rgba(21,19,15,.55) 0%,rgba(21,19,15,.2) 25%,rgba(21,19,15,.55) 55%,rgba(21,19,15,.92) 85%,#15130F 100%)}
+html[data-look="e"] .chero.haslogo .scrim,html[data-look="e"] .lhero .scrim{background:linear-gradient(180deg,rgba(21,19,15,.2) 0%,rgba(21,19,15,.7) 60%,#15130F 100%)}
+html[data-look="e"] .hero canvas{opacity:.5}
+html[data-look="e"] .top,html[data-look="e"] .top.solid{background:#F4F1EA;border-block-end:1px solid var(--rule)}
+html[data-look="e"] .hero .hero-in{padding-block-start:calc(var(--topH) + 2.2rem)}
+html[data-look="e"] .top .brand,html[data-look="e"] .top .brand:hover,html[data-look="e"] .top .ib{color:#15130F}
+html[data-look="e"] .pnav a{color:#4A463E}
