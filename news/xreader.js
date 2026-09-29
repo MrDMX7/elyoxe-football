@@ -48,9 +48,11 @@ function seedProfile() {
 }
 
 function xvfb() {
-  try { execSync(`pgrep -f "Xvfb ${DISPLAY} "`, { stdio: 'ignore' }); return; } catch (e) {}
+  // the display's socket, not pgrep: `pgrep -f "Xvfb :98"` from execSync matches its own shell and always says yes
+  const sock = '/tmp/.X11-unix/X' + DISPLAY.slice(1);
+  if (fs.existsSync(sock)) return;
   spawn('Xvfb', [DISPLAY, '-screen', '0', '1280x1600x24', '-nolisten', 'tcp'], { detached: true, stdio: 'ignore' }).unref();
-  execSync('sleep 2');
+  for (let i = 0; i < 20 && !fs.existsSync(sock); i++) execSync('sleep 0.25');
 }
 
 function text(t) {   // a post's full text: long posts keep it in note_tweet
