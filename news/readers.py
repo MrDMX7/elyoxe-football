@@ -4,7 +4,7 @@
 
 `id` is a hash of the canonical URL, so the same article from two queries or two runs is one item.
 Stdlib only (RSS 2.0, Atom, Media RSS); a failing source is reported and skipped, never fatal."""
-import hashlib, html, re, urllib.parse, urllib.request, xml.etree.ElementTree as ET
+import hashlib, html, os, re, urllib.parse, urllib.request, xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 
@@ -97,6 +97,33 @@ def youtube_source(y):
     owner = ["team", int(y["team"])] if y.get("team") else (["comp", int(y["comp"])] if y.get("comp") else None)
     return {"key": y["key"], "kind": "youtube", "lang": y.get("lang", "en"), "tier": "official", "name": y["name"], "owner": owner,
             "url": "https://www.youtube.com/feeds/videos.xml?channel_id=" + y["channel"]}
+
+
+def x_inbox(path):
+    """Posts news/xreader.js left in its inbox -> items (the inbox is emptied of what was read; the dedupe by id in run.py
+    makes a second read harmless). A club's or league's account carries its owner like a YouTube channel."""
+    import json
+    try:
+        box = json.load(open(path, encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    out = []
+    for p in box.get("items") or []:
+        txt = _clean(p.get("text") or "")
+        if not txt:
+            continue
+        first = re.split(r"(?<=[.!?؟])\s", txt)[0]
+        owner = ["team", int(p["team"])] if p.get("team") else (["comp", int(p["comp"])] if p.get("comp") else None)
+        out.append({"id": item_id(p["url"]), "src": "x_" + p["handle"].lower(), "kind": "x", "lang": p.get("lang", "en"),
+                    "tier": p.get("tier", "journalist"), "source": p.get("source") or p.get("name") or p["handle"],
+                    "title": (first if 25 <= len(first) <= 300 else txt)[:300], "desc": txt[:400], "url": p["url"],
+                    "image": p.get("image"), "at": p.get("at"), "query": None, "owner": owner})
+    box["items"] = []
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(box, f)
+    os.replace(tmp, path)
+    return out
 
 
 def gnews_source(query, cfg):

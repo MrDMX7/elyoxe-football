@@ -8,3 +8,4 @@ __pycache__/
 .pytest_cache/
 samconfig.toml
 .env
+news/.x-inbox.json

@@ -46,6 +46,41 @@ youtube:
   - {key: yt_uaeproleague, lang: ar, comp: 538, name: "دوري أدنوك", channel: UC3mQCPDzpRstR58t9nfQ_Ew}
   - {key: yt_fifa, lang: en, name: "فيفا", channel: UCpcTrCXblq78GZrTUTLWeBw}
 
+# X, read by news/xreader.js in a real browser on the Fold with the @Elyoxe session (owner 2026-09-30: no paid API, any
+# account). Read-only. `every: true` accounts are read every run, the rest in turn, per_run at a time; runs at most every
+# min_minutes. The first live run lists accounts that don't exist in news/.x-inbox.json `errors`.
+x:
+  per_run: 4
+  min_minutes: 28
+  max_posts: 20
+  accounts:
+    - {handle: FabrizioRomano, name: "Fabrizio Romano", lang: en, tier: journalist, every: true}
+    - {handle: David_Ornstein, name: "David Ornstein", lang: en, tier: journalist}
+    - {handle: MatteMoretto, name: "Matteo Moretto", lang: es, tier: journalist}
+    - {handle: marca, name: Marca, lang: es, tier: paper}
+    - {handle: diarioas, name: AS, lang: es, tier: paper}
+    - {handle: kooora, name: "كووورة", lang: ar, tier: paper}
+    - {handle: realmadridarab, name: "ريال مدريد", lang: ar, tier: official, team: 8633}
+    - {handle: FCBarcelona, name: "برشلونة", lang: en, tier: official, team: 8634}
+    - {handle: ManCity, name: "مانشستر سيتي", lang: en, tier: official, team: 8456}
+    - {handle: LFC, name: "ليفربول", lang: en, tier: official, team: 8650}
+    - {handle: ManUtd, name: "مانشستر يونايتد", lang: en, tier: official, team: 10260}
+    - {handle: Arsenal, name: "أرسنال", lang: en, tier: official, team: 9825}
+    - {handle: ChelseaFC, name: "تشيلسي", lang: en, tier: official, team: 8455}
+    - {handle: FCBayern, name: "بايرن ميونخ", lang: de, tier: official, team: 9823}
+    - {handle: PSG_inside, name: "باريس سان جيرمان", lang: fr, tier: official, team: 9847}
+    - {handle: juventusfc, name: "يوفنتوس", lang: it, tier: official, team: 9885}
+    - {handle: Inter, name: "إنتر", lang: it, tier: official, team: 8636}
+    - {handle: acmilan, name: "ميلان", lang: it, tier: official, team: 8564}
+    - {handle: Alhilal_FC, name: "الهلال", lang: ar, tier: official, team: 2529}
+    - {handle: AlNassrFC, name: "النصر", lang: ar, tier: official, team: 101918}
+    - {handle: InterMiamiCF, name: "إنتر ميامي", lang: en, tier: official, team: 960720}
+    - {handle: SPL, name: "دوري روشن", lang: ar, tier: official, comp: 536}
+    - {handle: premierleague, name: "الدوري الإنجليزي", lang: en, tier: official, comp: 47}
+    - {handle: LaLiga, name: "الليغا", lang: es, tier: official, comp: 87}
+    - {handle: ChampionsLeague, name: "دوري أبطال أوروبا", lang: en, tier: official, comp: 42}
+    - {handle: FIFAcom, name: "فيفا", lang: en, tier: official}
+
 # Google News in Arabic, one query per entity: the Arabic and UAE press (البيان، الإمارات اليوم، الاتحاد…) without a feed of
 # their own. `run.py` asks a rotating slice each run (gnews_per_run), so every query comes round about hourly.
 gnews:

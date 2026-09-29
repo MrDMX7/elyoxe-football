@@ -489,6 +489,47 @@
     try { var an = JSON.parse(el.dataset.an || "{}")[md] || []; an.forEach(function(a){ items.push("<li>ذكرى تأسيس " + '<a href="/t/' + a[0] + '/">' + R.esc(a[1]) + '</a> <span class="muted">(' + (yr - a[2]) + " سنة، من " + a[2] + ")</span></li>"); }); } catch (e){}
     function draw(){ if (items.length) el.innerHTML = '<section class="blk"><h2>اليوم في التقويم</h2><ul class="facts-l">' + items.join("") + "</ul></section>"; }
     get("players/birthdays/" + md + ".json").then(function(b){ (b.players || []).slice(0, 8).forEach(function(p){ var age = p.dob ? yr - +p.dob.slice(0, 4) : null; items.push("<li>عيد ميلاد " + (p.name_ar ? R.esc(p.name_ar) : '<span class="lat">' + R.esc(p.name) + "</span>") + (age ? ' <span class="muted">(' + age + " سنة)</span>" : "") + "</li>"); }); draw(); }).catch(draw); })();
+  // ---- the journal (owner 2026-09-30): /news/ lists every story; .enews[data-e] on team and player pages lists that entity's
+  //      stories (v1/news/e/<kind>-<id>.json), and [data-social] adds the official videos (v1/news/social/…). Rendered here, not
+  //      prebuilt: the stories change every 15 minutes and the pages hourly.
+  (function(){
+    var KIND = { transfer:"انتقالات", injury:"إصابة", presser:"مؤتمر صحفي", statement:"تصريحات", official:"رسمي", match:"مباراة", other:"خبر" };
+    var STAGE = { rumour:"إشاعة", talks:"مفاوضات", agreed:"اتفاق", here_we_go:"Here we go", official:"رسمي" };
+    var HREF = { team:"/t/", player:"/p/", coach:"/coach/" };
+    function ago(iso){ var m = Math.max(1, Math.round((Date.now() - Date.parse(iso)) / 6e4)); if (!isFinite(m)) return "";
+      return m < 60 ? "قبل " + m + " دقيقة" : m < 1440 ? "قبل " + Math.round(m / 60) + " ساعة" : "قبل " + Math.round(m / 1440) + " يوم"; }
+    function ent(e){ return e.name ? '<a href="' + HREF[e.kind] + e.id + '/">' + R.esc(e.name) + "</a>" : ""; }
+    function card(s){
+      var src = s.sources || [], first = src[0] || {}, ar = s.title_lang === "ar";
+      var tag = KIND[s.kind] || "خبر"; if (s.kind === "transfer" && s.stage) tag += " · " + (STAGE[s.stage] || s.stage);
+      var ents = (s.entities || []).map(ent).filter(Boolean).join("، ");
+      return '<article class="nw' + (s.kind === "transfer" ? " tr" : "") + '"><p class="nk"><span class="tg">' + tag + '</span> <time datetime="' + R.esc(s.last_at || "") + '">' + ago(s.last_at) + "</time></p>" +
+        "<h3" + (ar ? "" : ' dir="auto" class="lat"') + '><a href="' + R.esc(first.url || "#") + '" rel="noopener" target="_blank">' + R.esc(s.title) + "</a></h3>" +
+        (s.summary ? '<p class="nsum">' + R.esc(s.summary) + "</p>" : "") + (ents ? '<p class="nent small">' + ents + "</p>" : "") +
+        '<p class="nsrc small muted">' + (src.length > 1 ? src.length + " مصادر: " : "المصدر: ") + src.slice(0, 5).map(function(x){ return '<a href="' + R.esc(x.url) + '" rel="noopener" target="_blank">' + R.esc(x.name) + "</a>"; }).join(" · ") + "</p></article>"; }
+    function vids(list){ return '<div class="nvid">' + list.map(function(v){ return '<a class="nv" href="' + R.esc(v.url) + '" rel="noopener" target="_blank">' + (v.image ? '<img src="' + R.esc(v.image) + '" alt="" loading="lazy" width="320" height="180">' : "") + '<span dir="auto">' + R.esc(v.title) + '</span><small class="muted">' + R.esc(v.channel) + " · " + ago(v.at) + "</small></a>"; }).join("") + "</div>"; }
+    // the /news/ page: chips by kind, newest first
+    var list = $("#nlist");
+    if (list) get("news/latest.json").then(function(d){
+      var all = d.stories || [], cur = "", chips = $("#nkinds"), have = {};
+      all.forEach(function(s){ have[s.kind] = (have[s.kind] || 0) + 1; });
+      chips.innerHTML = ['<button type="button" data-k="" aria-pressed="true">الكل</button>'].concat(["transfer", "injury", "presser", "statement", "official", "match"].filter(function(k){ return have[k]; }).map(function(k){ return '<button type="button" data-k="' + k + '" aria-pressed="false">' + KIND[k] + "</button>"; })).join("");
+      function draw(){ var xs = all.filter(function(s){ return !cur || s.kind === cur; }); list.innerHTML = xs.length ? xs.map(card).join("") : '<p class="empty">ما في أخبار من هالنوع الحين.</p>'; }
+      chips.onclick = function(e){ var b = e.target.closest("button[data-k]"); if (!b) return; cur = b.dataset.k; [].forEach.call(chips.children, function(c){ c.setAttribute("aria-pressed", String(c === b)); }); draw(); };
+      draw();
+    }).catch(function(){ list.innerHTML = '<p class="empty">ما قدرنا نحمّل الأخبار الحين.</p>'; });
+    // a club's or a player's stories, plus its official videos
+    [].forEach.call(document.querySelectorAll(".enews"), function(box){
+      var e = box.dataset.e, so = box.dataset.social;
+      Promise.all([e ? get("news/e/" + e + ".json").catch(function(){ return { stories:[] }; }) : Promise.resolve({ stories:[] }),
+                   so ? get(so === "all" ? "news/social.json" : "news/social/" + so + ".json").catch(function(){ return { videos:[] }; }) : Promise.resolve({ videos:[] })]).then(function(r){
+        var st = (r[0].stories || []).slice(0, 20), vs = (r[1].videos || []).slice(0, 12);
+        if (!st.length && !vs.length){ if (box.dataset.quiet){ var sec = box.closest("section"); if (sec) sec.hidden = true; } else box.innerHTML = '<p class="empty">ما في أخبار عنه هالأيام. <a href="/news/">كل الأخبار</a></p>'; return; }
+        if (so === "all"){ var sec2 = box.closest("section"); if (sec2) sec2.hidden = false; }
+        box.innerHTML = (st.length ? '<div class="nwl">' + st.map(card).join("") + "</div>" : "") + (vs.length ? (so === "all" ? "" : "<h3 class=\"nvh\">من قناته الرسمية</h3>") + vids(vs) : "") + (so === "all" ? "" : '<p class="small"><a href="/news/">كل الأخبار</a></p>');
+      });
+    });
+  })();
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio, daypage:daypage, arabs:arabs }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && Object.keys(window.NAT || {}).some(function(k){ return String(window.NAT[k]) === ID; })) countdown(); }
   tvFull();
   tabs(); run(); dist();

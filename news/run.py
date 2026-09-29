@@ -61,7 +61,7 @@ def display(story, items_by_id, D):
 def social(store, items, D, gen, n):
     """Official videos: news/social.json (every channel) and news/social/<team|comp>-<id>.json (one club's or league's)."""
     vids = sorted((v for v in items.values() if v.get("social")), key=lambda v: v.get("at") or "", reverse=True)
-    card = lambda v: {"id": v["id"], "title": v["title"], "lang": v["lang"], "url": v["url"], "image": v.get("image"), "at": v["at"],
+    card = lambda v: {"id": v["id"], "title": v["title"], "platform": "x" if "x.com/" in v["url"] else "youtube", "lang": v["lang"], "url": v["url"], "image": v.get("image"), "at": v["at"],
                       "channel": v["source"], "kind": v["kind"], "owner": v.get("owner"),
                       "entities": [{"kind": k, "id": i, "name": D.names.get((k, i), "")} for k, i in v.get("anchor") or [] if (k, i) in D.names]}
     store.put_json("news/social.json", {"generated": gen, "videos": [card(v) for v in vids[: max(60, n)]]}, cache="hot")
@@ -124,8 +124,8 @@ def main(argv=None):
     state["gcursor"] = (cur + per) % max(1, len(qs))
     errors, fresh = {}, []
     cutoff = iso(now() - timedelta(days=st.get("keep_items_days", 5)))
-    for s in srcs:
-        got, err = RD.read_source(s)
+    batches = [RD.read_source(s) + (s,) for s in srcs] + [(RD.x_inbox(os.path.join(HERE, ".x-inbox.json")), None, {"key": "x"})]
+    for got, err, s in batches:
         if err:
             errors[s.get("query") or s["key"]] = err
         for it in got:
@@ -133,8 +133,8 @@ def main(argv=None):
                 continue
             it["anchor"] = [list(e) for e in E.link(D, it["title"], it.get("query"))]      # who the headline is about
             it["entities"] = [list(e) for e in E.link(D, it["title"] + " " + (it.get("desc") or ""), it.get("query"))]
-            if it["kind"] == "youtube":
-                # an official video: its channel's club or league is always one of its subjects; it is classified like any
+            if it["kind"] == "youtube" or (it["kind"] == "x" and it["tier"] == "official"):
+                # an official video or post: its channel's club or league is always one of its subjects; it is classified like any
                 # headline (not "official" for being on the club's channel), and only news-like titles join the stories
                 own = it.get("owner")
                 if own and own[0] == "team" and own not in it["anchor"]:
