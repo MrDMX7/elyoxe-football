@@ -579,14 +579,17 @@ def resolve_wikidata(todo, pool, teams, cache, pause, out, save):
 # --------------------------------------------------------------------------
 
 def gemini_key():
-    k = os.environ.get("GEMINI_API_KEY")
-    if k:
-        return k
-    for f in (Path.home() / "workspace/content-pipeline/.env",):
-        if f.exists():
-            for line in f.read_text().splitlines():
-                if line.startswith("GEMINI_API_KEY="):
-                    return line.split("=", 1)[1].strip().strip('"\'')
+    # Tifo's own AI Studio project first (owner 2026-09-29); the shared film key only until it exists
+    for name in ("TIFO_GEMINI_API_KEY", "GEMINI_API_KEY"):
+        if os.environ.get(name):
+            return os.environ[name]
+    f = Path.home() / "workspace/content-pipeline/.env"
+    if f.exists():
+        env = dict(l.split("=", 1) for l in f.read_text().splitlines() if "=" in l)
+        for name in ("TIFO_GEMINI_API_KEY", "GEMINI_API_KEY"):
+            v = env.get(name, "").strip().strip('"\'')
+            if v:
+                return v
     raise SystemExit("GEMINI_API_KEY not found")
 
 

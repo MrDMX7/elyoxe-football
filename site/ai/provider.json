@@ -1,13 +1,13 @@
 {
-  "_note": "text provider per kind (gen.py provider_for); TIFO_TEXT in the environment overrides all. Claude runs through `claude -p` on the owner's subscription; any failure falls back to Gemini for that item, 3 in a row = Gemini for the rest of the run. Owner's choice 2026-09-27: Sonnet writes, Gemini does the short structured kinds.",
+  "_note": "text provider per kind (gen.py provider_for); TIFO_TEXT in the environment overrides all. Claude runs through `claude -p` on the owner's subscription; any failure falls back to Gemini for that item, 3 in a row = Gemini for the rest of the run. Owner's choice 2026-09-27: Sonnet writes, Gemini does the short structured kinds. Owner 2026-09-29: every text kind on Claude (the Gemini prepay ran dry on Tifo); Gemini keeps only TTS and name transliteration.",
   "summary": "claude:sonnet",
   "preview": "claude:sonnet",
   "digest": "claude:sonnet",
   "podcast": "claude:sonnet",
-  "why": "gemini",
-  "quick": "gemini",
-  "commentary": "gemini",
-  "power": "gemini",
-  "daily5": "gemini",
-  "default": "gemini"
+  "why": "claude:haiku",
+  "quick": "claude:haiku",
+  "commentary": "claude:haiku",
+  "power": "claude:haiku",
+  "daily5": "claude:haiku",
+  "default": "claude:haiku"
 }

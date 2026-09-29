@@ -28,8 +28,13 @@ ARAB = {"AE", "SA", "EG", "MA", "DZ", "TN", "IQ", "JO", "KW", "QA", "BH", "OM", 
 BIG5 = {47, 87, 55, 54, 53}
 
 def key():
+    # Tifo's own AI Studio project first (owner 2026-09-29: Tifo drained the shared prepay); the shared film key only until it exists
+    if os.environ.get("TIFO_GEMINI_API_KEY"): return os.environ["TIFO_GEMINI_API_KEY"]
+    env = {}
     for line in open(os.path.expanduser("~/workspace/content-pipeline/.env")):
-        if line.startswith("GEMINI_API_KEY="): return line.split("=", 1)[1].strip().strip('"')
+        if "=" in line: k, v = line.split("=", 1); env[k.strip()] = v.strip().strip('"')
+    for k in ("TIFO_GEMINI_API_KEY", "GEMINI_API_KEY"):
+        if env.get(k): return env[k]
     raise SystemExit("no GEMINI_API_KEY")
 
 def get(p):
