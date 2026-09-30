@@ -175,6 +175,11 @@ def test_a_goal_clip_on_another_clubs_channel_needs_the_match_named():
     assert run("realmadrid", "Haaland goal!", "2026-09-20T15:00:00Z")[0] == {}
 
 
+def test_mls_full_match_highlights_is_a_summary_but_full_match_alone_is_a_replay():
+    assert M.Text("Columbus Crew vs. Inter Miami CF | Full Match Highlights | STUNNING Messi FREE KICK").neg is None
+    assert M.Text("NAPOLI-INTER 3-1 | FULL MATCH | SERIE A 2025/26").neg == "full match"
+
+
 def test_titles_read_through_unicode_tricks():
     tx = M.Text("𝗠𝗔𝗧𝗖𝗛 𝗥𝗘𝗖𝗔𝗣 🇯🇴 🆚 🇸🇾")
     assert tx.hl

@@ -37,7 +37,8 @@ from news import readers as RD
 from news.entities import norm, ar_variants, LATIN_STOP, AR_STOP
 
 STATE = "news/media.json"
-WINDOW_H = 48                 # a match is followed this long after kickoff
+WINDOW_H = 48                 # a match is followed this long after kickoff (live polling on the site, goal clips)
+FOLLOW_H = 7 * 24             # ... and its highlights this long (late extended highlights)
 KEEP_VIDEOS_H = 96            # videos are kept this long (the matching runs again on them every run)
 LIVE = {"live", "ht"}
 DONE = {"finished", "awarded"}
@@ -247,7 +248,9 @@ class Text:
         self.summary = any(has(self.al, p) for p in SUMMARY_WORDS)       # a summary, not only the goals («أهداف المباراة»)
         gw = GOAL_WORDS + GOAL_WORDS_LANG.get(lang, [])
         self.goal = any(has(self.al, p) for p in gw) or bool(re.search(r"(?i)\bgo{2,}l\b|\bgo+la[cç]o\b", self.raw))
-        self.neg = next((" ".join(p) for p in NEG_ALWAYS if has(self.al, p)), None)
+        # «Full Match Highlights» (MLS) is a summary of the whole match, not the replay «FULL MATCH»
+        full_hl = has(self.al, ("full", "match", "highlights")) or has(self.al, ("full", "game", "highlights"))
+        self.neg = next((" ".join(p) for p in NEG_ALWAYS if has(self.al, p) and not (full_hl and p[:1] == ("full",))), None)
         self.women = next((" ".join(p) for p in WOMEN if has(self.al, p) or has(self.dal, p)), None)
         self.youth = next((" ".join(p) for p in YOUTH if has(self.al, p) or has(self.dal, p)), None)
         ages = [int(a or b) for a, b in YOUTH_AGE.findall(self.raw + " " + prep(head))]
@@ -708,14 +711,16 @@ def check_highlights(v, ch, tx, md, gs, teams, youth_m, t_pub):
         sh, sa = (max(sh, 1), sa) if own == h else (sh, max(sa, 1))
     if not (sh and sa):
         return None, "teams"
-    if max(sh, sa) < 2 and own not in (h, a):
+    # two short or shared names («الجزيرة ضد الوحدة», «ROMA-INTER») are enough on the competition's or the club's own channel
+    scoped = own in (h, a) or bool(ch.get("comps") and md.get("comp") in ch["comps"])
+    if max(sh, sa) < 2 and not scoped:
         return None, "weak names"
     if ch.get("comps") and md.get("comp") not in ch["comps"] and own not in (h, a):
         return None, "not this channel's competition"
     k = ptime(md.get("kickoff_utc"))
     if not k or t_pub < k + timedelta(minutes=40):
         return None, "before the match"
-    if t_pub > k + timedelta(hours=WINDOW_H + 24):
+    if t_pub > k + timedelta(hours=FOLLOW_H):
         return None, "too late"
     # a summary comes out after the final whistle, or at half-time (the first half's); anything out while the ball is in
     # play is something else (last season's meeting posted as a reminder has this match's score one time in a thousand)
@@ -959,8 +964,11 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
 
 # ------------------------------------------------------------------------------------------------ the step
 def window(store, t, cache, workers=6):
-    """The matches to follow: live, or kicked off in the last 48 h and finished. Day files: the UAE dates from 3 days ago to
-    today; match files: read again while live or within 4 h of kickoff, when the score or status moved, else from the cache."""
+    """The matches to follow: live, or finished and kicked off in the last 48 h (goal clips and highlights), and for their
+    highlights only the finished ones of the last 7 days (a league uploads its extended highlights days later: the UAE Pro
+    League's League Cup round came out 5 days after). Day files: the UAE dates of the last 4 days; older matches come from the
+    cache. Match files: read again while live, when the score or status moved, and every 3 h until a day after kickoff;
+    after that the cached file is final."""
     days = [(t + timedelta(hours=4) - timedelta(days=d)).strftime("%Y%m%d") for d in (0, 1, 2, 3)]
     ms = {}
     for d in days:
@@ -970,17 +978,23 @@ def window(store, t, cache, workers=6):
             x = {}
         for m in x.get("matches") or []:
             ms[m["id"]] = m
-    cutoff = t - timedelta(hours=WINDOW_H)
+    far = t - timedelta(hours=FOLLOW_H)
     keep = [m for m in ms.values() if (m.get("status") in LIVE or m.get("status") in DONE)
-            and ptime(m.get("kickoff_utc")) and ptime(m["kickoff_utc"]) >= cutoff]
+            and ptime(m.get("kickoff_utc")) and ptime(m["kickoff_utc"]) >= far]
+    seen = {m["id"] for m in keep}
+    for c in cache.values():       # the day files are gone: what we read then
+        d = c.get("doc") or {}
+        if d.get("id") not in seen and d.get("status") in DONE and ptime(d.get("kickoff_utc")) and ptime(d["kickoff_utc"]) >= far:
+            keep.append(dict(d)); seen.add(d["id"])
     need = []
     for m in keep:
         c = cache.get(str(m["id"]))
         sig = f"{m.get('status')}|{json.dumps(m.get('score'))}"
         k = ptime(m["kickoff_utc"])
         at = ptime((c or {}).get("at"))
-        # a finished match is read again every 3 h while it is followed (FotMob adds its highlights link and corrects scorers)
-        fresh_ok = c and c.get("sig") == sig and m.get("status") not in LIVE and at and at > k + timedelta(hours=2) and at > t - timedelta(hours=3)
+        # a finished match is read again every 3 h for a day (FotMob adds its highlights link and corrects scorers), then kept
+        fresh_ok = c and c.get("sig") == sig and m.get("status") not in LIVE and at and at > k + timedelta(hours=2) and \
+            (at > t - timedelta(hours=3) or at > k + timedelta(hours=24))
         if not fresh_ok:
             need.append((m, sig))
 
@@ -1005,7 +1019,7 @@ def window(store, t, cache, workers=6):
         out.append(doc)
     for k_ in list(cache):
         c = cache[k_]
-        if not ptime(c.get("doc", {}).get("kickoff_utc")) or ptime(c["doc"]["kickoff_utc"]) < cutoff - timedelta(hours=24):
+        if not ptime(c.get("doc", {}).get("kickoff_utc")) or ptime(c["doc"]["kickoff_utc"]) < far - timedelta(hours=24):
             del cache[k_]
     return out
 
