@@ -54,8 +54,9 @@ const SHOTS = [
 (async () => {
   const fs = require("fs"); fs.mkdirSync(OUT, { recursive: true });
   const b = await chromium.launch({ channel: "msedge" }), log = [];
+  const ONLY = (opt("only", "") || "").split(",").filter(Boolean);   // --only 03,04: just those shots
   for (const sc of ["light", "dark"]) {
-    for (const [name, p, act, pre, wait] of SHOTS) {
+    for (const [name, p, act, pre, wait] of SHOTS.filter(s => !ONLY.length || ONLY.some(o => s[0].startsWith(o)))) {
       const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: sc, reducedMotion: "reduce", serviceWorkers: "block", locale: "ar-AE", timezoneId: "Asia/Dubai" });
       if (pre) await ctx.addInitScript(pre);
       const pg = await ctx.newPage(), errs = []; pg.on("pageerror", e => errs.push(e.message));

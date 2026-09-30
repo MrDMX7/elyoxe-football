@@ -58,7 +58,7 @@ table{border-collapse:collapse}
 .nav::before{content:"";position:absolute;inset:0;background:var(--bar);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--sep);opacity:0;transition:opacity .22s var(--ease)}
 .nav.stuck::before,.nav.solid::before{opacity:1}
 .nav.merge::before{border-bottom-color:transparent}
-.nav-in{position:relative;display:flex;align-items:center;gap:8px;height:var(--navh);max-width:calc(var(--maxw) + 2 * var(--gut));margin:0 auto;padding:0 10px;pointer-events:auto}
+.nav-in{position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;height:var(--navh);max-width:calc(var(--maxw) + 2 * var(--gut));margin:0 auto;padding:0 10px;pointer-events:auto}
 .nav-lead,.nav-trail{display:flex;align-items:center;gap:6px;min-width:44px;max-width:40%;flex:1}
 .nav-trail{justify-content:flex-end}
 .nav-title{position:absolute;inset-inline:22%;top:0;line-height:var(--navh);pointer-events:none;text-align:center;font-weight:600;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transform:translateY(6px);transition:opacity .22s var(--ease),transform .22s var(--ease)}

@@ -58,6 +58,8 @@ function write(rel, html) {
   const getT = async (p, ttl) => { const j = await get(p, ttl); fillT(j); return j; };
   cfg.cc = FMN.countries || {};
   cfg.tc = TC;
+  // injury names in Arabic: the live renderer's Transfermarkt map (site/src/render.js), read, not changed
+  try { const src = fs.readFileSync(path.join(REPO, "site/src/render.js"), "utf8"), m = /var TM_INJ = (\{[\s\S]*?\});/.exec(src); const INJ = m ? JSON.parse(m[1]) : {}; U.injAr = n => INJ[String(n || "").toLowerCase()] || n; } catch (e) { console.log("injury names stay in English:", e.message); }
 
   // ---------------------------------------------------------------- index, days, competitions
   const index = await getT("index.json", 5 * 60e3); if (!index) throw new Error("no index.json");
@@ -124,7 +126,10 @@ function write(rel, html) {
   // ---------------------------------------------------------------- snapshot: a real live state saved during a match (the live-page preview)
   let SNAPM = null;
   if (SNAP && fs.existsSync(SNAP)) { const fsn = fs.readdirSync(SNAP).filter(f => /^m6052086_\d+\.json$/.test(f)).sort(); const pick = fsn.map(f => [f, readJ(path.join(SNAP, f))]).filter(x => x[1] && x[1].status === "live").sort((a, b) => Math.abs(+a[1].minute - 80) - Math.abs(+b[1].minute - 80))[0];
-    if (pick) { SNAPM = pick[1]; fillT(SNAPM); const hh = pick[0].match(/_(\d\d)(\d\d)(\d\d)\.json$/); SNAPM._at = hh ? new Date(Date.parse(today + "T" + hh[1] + ":" + hh[2] + ":" + hh[3] + "Z")).toISOString() : null; console.log("snapshot", pick[0], SNAPM.minute, SNAPM.score); } }
+    // the moment of the snapshot: the instant at which the clock (period start + elapsed) reads the minute the feed reported, else the file's time
+    if (pick) { SNAPM = pick[1]; fillT(SNAPM); const mn = parseInt(SNAPM.minute, 10), ps = Date.parse(SNAPM.period_start || "");
+      SNAPM._at = !isNaN(mn) && ps && SNAPM.period_base != null ? new Date(ps + (mn - SNAPM.period_base - 1) * 6e4 + 3e4).toISOString() : new Date(fs.statSync(path.join(SNAP, pick[0])).mtimeMs).toISOString();
+      console.log("snapshot", pick[0], SNAPM.minute, SNAPM.score, SNAPM._at); } }
 
   // ---------------------------------------------------------------- prerender sets -> links
   cfg.pre.m = {}; for (const id of MD.keys()) cfg.pre.m[id] = 1;
@@ -208,7 +213,8 @@ ${pg.sheets || ""}<div class="toast" id="toast" role="status" aria-live="polite"
   if (SNAPM) {   // the live-state preview: a real snapshot saved during UAE v Qatar, frozen (no polling)
     cfg.now = Date.parse(SNAPM._at || SNAPM.period_start || now);
     const { pg, pn } = matchPage(SNAPM);
-    pg.body = `<p class="pv">${U.icon("info", "", 2).replace('class=""', 'class="" style="width:20px;height:20px;flex:none;color:var(--accent)"')}<span><b>معاينة الحالة المباشرة:</b> لقطة حقيقية من مباراة الإمارات وقطر وهي مباشرة (30 سبتمبر). الصفحة نفسها تتحدّث كل 20 ثانية وقت أي مباراة مباشرة.</span></p>` + pg.body;
+    const note = `<p class="pv">${U.icon("info", "", 2).replace('class=""', 'class="" style="width:20px;height:20px;flex:none;color:var(--accent)"')}<span><b>معاينة الحالة المباشرة:</b> لقطة حقيقية من مباراة الإمارات وقطر وهي مباشرة (30 سبتمبر). الصفحة نفسها تتحدّث كل 20 ثانية وقت أي مباراة مباشرة.</span></p>`;
+    pg.body = pg.body.replace("</header>", "</header>" + note);   // under the scoreboard, so the club-colour wash stays at the top
     write("m/live/index.html", doc(pg, { page: "match", id: SNAPM.id, pn, tc: colorsFor([SNAPM.home.id, SNAPM.away.id]), extra: { snap: 1, now: cfg.now, comp: SNAPM.comp } }));
     cfg.now = now;
   }
