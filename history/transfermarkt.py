@@ -132,6 +132,7 @@ def main(argv=None):
     print(more, "more matched by name + current club")
 
     json.dump(club, open(os.path.join(HERE, ".cache", "tm_clubmap.json"), "w", encoding="utf-8", newline="\n"))   # db/clubs.py links through it
+    json.dump(tm2fm, open(os.path.join(HERE, ".cache", "tm_playermap.json"), "w", encoding="utf-8", newline="\n"))   # db/scorers.py too
     players, clubs = defaultdict(list), defaultdict(lambda: {"in": [], "out": []})
     for t in table("transfers"):
         fee, mv = money(t["transfer_fee"]), money(t["market_value_in_eur"])
