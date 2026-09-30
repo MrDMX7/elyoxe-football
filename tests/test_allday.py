@@ -156,10 +156,13 @@ def _poller(tmp_path, now):
 
 
 def test_poller_writes_all_and_live_from_the_day_request(tmp_path, day, s365fx, monkeypatch):
+    import poller as P
     p = _poller(tmp_path, NOW)
-    calls = []
+    calls, n365 = [], []
     p.fm.day_raw = lambda ymd: calls.append(ymd) or json.loads(json.dumps(day))
-    monkeypatch.setattr(s365, "fetch_day", lambda http, comps, ymd: s365fx["arab_20260919"])
+    monkeypatch.setattr(s365, "fetch_day", lambda http, comps, ymd: n365.append((http, ymd)) or (s365fx["arab_20260919"] if ymd == "20260930" else {}))
+    p.refresh_s365()                                                     # the chore: today, yesterday, tomorrow
+    assert sorted(y for _, y in n365) == ["20260929", "20260930", "20261001"] and all(h is P.HTTP365 for h, _ in n365)
     p.day_file("20260930", "hot")
     assert calls == ["20260930"]                                          # one FotMob request for both files
     doc = p.store.get_json("all/20260930.json")
@@ -173,11 +176,15 @@ def test_poller_writes_all_and_live_from_the_day_request(tmp_path, day, s365fx, 
     p.all_at.clear()
     p.refresh_all("20260930")
     assert calls == ["20260930", "20260930"]
-    # 365Scores is not asked again within its 2-minute cadence
-    n365 = []
-    monkeypatch.setattr(s365, "fetch_day", lambda http, comps, ymd: n365.append(ymd) or s365fx["arab_20260919"])
+    # writing the lists never asks 365Scores (a slow answer must not eat a live pass); its chore keeps its cadence
+    n = len(n365)
     p.refresh_all("20260930")
-    assert n365 == []
+    p.refresh_s365()
+    assert len(n365) == n
+    assert p.store.get_json("all/20260930.json")["n"] == 82               # the cached Arab leagues are still in
+    p.day_file("20261001", "warm")                                        # tomorrow: 5-minute cache, no live rows
+    assert p.store.b.meta("v1/all/20261001.json")["CacheControl"].startswith("public, max-age=300")
+    assert p.store.get_json("all/live.json")["days"] == ["20260930"]
 
 
 def test_poller_all_feed_failure_never_costs_the_day_file(tmp_path, day, monkeypatch):

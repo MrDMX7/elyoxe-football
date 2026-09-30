@@ -41,6 +41,7 @@ from store import Store, S3Backend, LocalBackend  # noqa: E402
 from timeutil import now_utc, parse_utc, iso, uae_date, UAE  # noqa: E402
 
 HTTP = Http()                     # module level: a warm Lambda container keeps the source cache
+HTTP365 = Http(timeout=6)         # 365Scores (Arab leagues FotMob lacks): short, so a slow answer never eats a live pass
 _NAMES = {"stamp": None, "data": None}
 NATIONAL = 5789
 ARAB_NATIONAL = {c["fotmob_team"] for c in config.countries() if c.get("arab") and c.get("fotmob_team")}
@@ -313,12 +314,12 @@ class Poller:
         """sources/fotmob.py already describes each goal from its event and shot; the English live ticker fills in what
         they lack (no shot map: the UAE leagues and every "ratings" coverage league; human commentary: volleys, bicycle
         kicks…). One ticker request per match at most every 2 min while a goal still has no ticker line, 6 tries per goal
-        count; the descriptions are kept in state (ltc) so every later fetch of the match reuses them."""
+        count; the descriptions are kept in state/ltc.json so every later fetch of the match reuses them."""
         goals = [e for e in d.get("events") or [] if e.get("type") in ("goal", "own_goal", "penalty_goal")]
         if not goals:
             return
         now, mid = self.now(), str(d["id"])
-        cache = self.st.setdefault("ltc", {})
+        cache = self.aux("ltc")                              # state/ltc.json, not poller.json (read every minute)
         for k in [k for k, v in cache.items() if _age_min(v.get("at"), now) > 2 * 1440]:
             del cache[k]
         c = dict(cache.get(mid) or {})
@@ -357,26 +358,33 @@ class Poller:
         return ent.get("ids") or list(S365.DEFAULT_COMPS)
 
     def s365_day(self, ymd):
-        """The Arab leagues FotMob lacks, from 365Scores (sources/s365.py), kept per day in state/all365.json: today every
-        2 min while one of their matches is live or about to start, else every 30 min; other days every 3 h. A failed
-        fetch keeps the last good leagues."""
+        """The Arab leagues FotMob lacks for this day, as refresh_s365() last fetched them (state/all365.json)."""
+        ent = self.aux("all365").get(ymd) or {}
+        return json.loads(json.dumps(ent.get("leagues") or []))      # build() sorts and trims: never the cached copy
+
+    def refresh_s365(self):
+        """365Scores' day of the Arab leagues FotMob lacks (sources/s365.py), one request per day and cadence: today every
+        2 min while one of their matches is live or about to start, else every 30 min; yesterday and tomorrow every 3 h.
+        A chore (never inside a live pass: HTTP365 times out after 6 s); a failed fetch keeps the last good leagues, and
+        the next write of all/<ymd>.json picks the new ones up."""
         c = self.aux("all365")
         now = self.now()
         today = uae_date(now)
         for k in [k for k in c if not k.startswith("_") and k < uae_date(now - timedelta(days=2))]:
             del c[k]
-        ent = c.get(ymd) or {}
-        every = (2 if ent.get("hot") else 30) if ymd == today else 180
-        if _age_min(ent.get("at"), now) >= every and self.has_time(8):
+        for ymd in (today, uae_date(now - timedelta(days=1)), uae_date(now + timedelta(days=1))):
+            ent = c.get(ymd) or {}
+            every = (2 if ent.get("hot") else 30) if ymd == today else 180
+            if _age_min(ent.get("at"), now) < every or not self.has_time(15):
+                continue
             ent = dict(ent, at=iso(now))
             try:
-                lg = S365.leagues(S365.fetch_day(HTTP, self.s365_comps(), ymd))
+                lg = S365.leagues(S365.fetch_day(HTTP365, self.s365_comps(), ymd))
                 ent.update(leagues=lg, hot=ALL.hot({"leagues": lg}, now, ahead_min=15))
                 self.store.ok("s365:day")
             except CONVERT_ERRORS as e:
                 self.store.fail("s365:day", f"{ymd}: {e}")
             c[ymd] = ent
-        return json.loads(json.dumps(ent.get("leagues") or []))      # build() sorts and trims: never the cached copy
 
     def write_all(self, ymd, raw):
         """v1/all/<ymd>.json from the day list already fetched for day/<ymd>.json (no extra FotMob request), and, for
@@ -386,13 +394,13 @@ class Poller:
         if not doc["n"]:
             raise S.Invalid(f"all {ymd}: no matches")
         today, yday = uae_date(now), uae_date(now - timedelta(days=1))
-        self.store.put_json(f"all/{ymd}.json", doc, cache="hot" if ymd >= yday else "warm")
+        self.store.put_json(f"all/{ymd}.json", doc, cache="hot" if yday <= ymd <= today else "warm")
         self.store.ok("all:" + ("today" if ymd == today else "other"))
         self.all_at[ymd] = self.clock()
         live = self.aux("all_live")
-        for k in [k for k in live if k < yday]:
+        for k in [k for k in live if not yday <= k <= today]:
             del live[k]
-        if ymd >= yday:
+        if yday <= ymd <= today:
             live[ymd] = {"at": iso(now), "hot": ALL.hot(doc, now), "rows": ALL.live_rows(doc, now)}
             rows = [r for k in sorted(live) for r in live[k]["rows"]]
             self.store.put_json("all/live.json", {"generated": iso(now), "live": sum(r["status"] in S.LIVE_STATUSES for r in rows),
@@ -1260,7 +1268,12 @@ class Poller:
                 self.mark("day_today")
             except CONVERT_ERRORS as e:
                 self.store.fail("day:today", e)
-        # v1/all: while any match of the day is live or about to kick off (ours or not), its list every minute
+        # v1/all: 365Scores' Arab leagues on their own cadence; while any match of the day is live or about to kick off
+        # (ours or not), that day's list every minute
+        try:
+            self.refresh_s365()
+        except Exception as e:
+            self.store.fail("s365:day", f"{type(e).__name__}: {e}")
         for ymd in (uae_date(now), uae_date(now - timedelta(days=1))):
             if self.has_time(8) and self.all_hot(ymd) and self.clock() - self.all_at.get(ymd, -1e9) > 45:
                 self.refresh_all(ymd)
