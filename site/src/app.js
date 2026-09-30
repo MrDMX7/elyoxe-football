@@ -574,6 +574,19 @@
         '<p class="small muted">إيلو يرتفع مع كل فوز وينزل مع كل خسارة، وقدر التغيير حسب قوة الخصم وأهمية المباراة. أدق من تصنيف فيفا لمقارنة الأجيال.</p><p class="src">المصدر: eloratings.net.</p></section>';
     }).catch(function(){});
   })();
+  // ---- a club's expected goals season by season (Understat, db/understat.py)
+  (function(){
+    var box = $(".cxg"); if (!box) return;
+    get("history/xg/" + box.dataset.club + ".json").then(function(d){
+      var S = d.seasons; if (!S || !S.length) return;
+      var f1 = function(v){ return (Math.round(v * 10) / 10).toFixed(1); }, luck = S.map(function(r){ return r[6] - r[7]; }), best = luck.indexOf(Math.max.apply(null, luck)), worst = luck.indexOf(Math.min.apply(null, luck));
+      box.innerHTML = '<section class="blk"><h2>الأهداف المتوقعة موسم بموسم <small>من ' + S[0][0].slice(0, 4) + "</small></h2>" +
+        '<p>أكثر موسم حصد فيه نقاط فوق المتوقع: <b class="num">' + S[best][0] + '</b> (<bdi dir="ltr" class="num">+' + f1(luck[best]) + '</bdi> نقطة)، وأكثر موسم تحت المتوقع: <b class="num">' + S[worst][0] + '</b> (<bdi dir="ltr" class="num">' + f1(luck[worst]) + "</bdi>).</p>" +
+        '<table class="tbl"><thead><tr><th>الموسم</th><th>أهداف</th><th>المتوقع</th><th>عليه</th><th>المتوقع عليه</th><th>نقاط</th><th>النقاط المتوقعة</th><th>الضغط</th></tr></thead><tbody>' +
+        S.slice().reverse().map(function(r){ return '<tr><td class="num">' + r[0] + '</td><td class="num">' + r[4] + '</td><td class="num">' + f1(r[2]) + '</td><td class="num">' + r[5] + '</td><td class="num">' + f1(r[3]) + '</td><td class="num">' + r[6] + '</td><td class="num">' + f1(r[7]) + '</td><td class="num">' + (r[8] == null ? "—" : r[8]) + "</td></tr>"; }).join("") +
+        '</tbody></table><p class="small muted">«الضغط» كم تمريرة يخلّي الخصم يمرّرها قبل كل محاولة افتكاك: كل ما قلّ الرقم زاد الضغط.</p><p class="src">المصدر: Understat.</p></section>';
+    }).catch(function(){});
+  })();
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio, daypage:daypage, arabs:arabs }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && Object.keys(window.NAT || {}).some(function(k){ return String(window.NAT[k]) === ID; })) countdown(); }
   tvFull();
   tabs(); run(); dist();
