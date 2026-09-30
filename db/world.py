@@ -10,7 +10,8 @@ club's teams?id= (shared cache with db/fotmob_profiles.py) -> with --players, ea
 Out (public):
   v1/world/club/<id>.json      the card: country, league, position, trophies, stadium, squad (id, name, number, role),
                                coaches, league position by season, transfers
-  v1/world/index.json          search: clubs [id, name ar|en, country code, league id] and players [id, name, club id]
+  v1/world/index.json          clubs [id, name ar|en, country code, league id] and the players' count
+  v1/world/players.json        search: players [id, name ar, name, club id] (loaded on the first keystroke)
   v1/world/leagues.json        every league: id, names, country, club ids
   (players: v1/player/<id>/profile.json + bios, as db/fotmob_profiles.py writes them; v1/world/bios.json [name, born, club]
    for db/eafc.py's matching)
@@ -117,15 +118,18 @@ def main(argv=None):
                     except Exception as e:
                         print("skip player", pid, e)
         print(f"{len(bios)} players ({round(time.time() - t0)}s)")
-    idx = {"generated": date.today().isoformat(),
-           "clubs": [[c["id"], c["name_ar"] or c["name"], c["name"], c["cc"], c["league"]] for c in cards.values()],
-           "players": [[pid, parts.get(str(pid)) or b.get("name"), b.get("name"), b.get("team")] for pid, b in bios.items()]}
+    # the index page opens with the clubs; the players (tens of thousands) load on the first search keystroke
+    plist = [[pid, parts.get(str(pid)) or b.get("name"), b.get("name"), b.get("team")] for pid, b in bios.items()]
+    idx = {"generated": date.today().isoformat(), "clubs": [[c["id"], c["name_ar"] or c["name"], c["name"], c["cc"], c["league"]] for c in cards.values()],
+           "n_players": len(plist)}
     if a.upload:
         store = Store(S3Backend(BUCKET))
         with ThreadPoolExecutor(8) as ex:
             list(ex.map(lambda c: store.put_json(f"world/club/{c['id']}.json", c, cache="warm"), cards.values()))
         store.put_json("world/leagues.json", {"generated": date.today().isoformat(), "leagues": lg_out}, cache="warm")
         store.put_json("world/index.json", idx, cache="warm")
+        if plist:
+            store.put_json("world/players.json", {"generated": date.today().isoformat(), "players": plist}, cache="warm")
         if bios:
             store.put_json("world/bios.json", {"generated": date.today().isoformat(), "players": {str(k): [b.get("name"), b.get("born"), b.get("team")] for k, b in bios.items()}}, cache="warm")
             with ThreadPoolExecutor(8) as ex:

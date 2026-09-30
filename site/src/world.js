@@ -24,7 +24,8 @@
       var I = x[0], L = x[1].leagues, S = x[2], inp = $("#wq"), out = $("#wr");
       var fold = function(s){ return String(s || "").toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/[ً-ْـ]/g, ""); };
       var clubs = I.clubs.map(function(c){ return { t:"c", id:c[0], ar:c[1], en:c[2], cc:c[3], k:fold(c[1]) + " " + fold(c[2]) }; });
-      var players = I.players.map(function(p){ return { t:"p", id:p[0], ar:p[1], en:p[2], club:p[3], k:fold(p[1]) + " " + fold(p[2]) }; });
+      var pmap = function(p){ return { t:"p", id:p[0], ar:p[1], en:p[2], club:p[3], k:fold(p[1]) + " " + fold(p[2]) }; };
+      var players = (I.players || []).map(pmap), nPlayers = I.n_players || players.length, pLoad = I.players ? Promise.resolve() : null;
       var cname = {}; I.clubs.forEach(function(c){ cname[c[0]] = c[1]; });
       var sname = {};
       if (S){ S.teams.forEach(function(t){ sname[t[0]] = t[1]; });
@@ -39,8 +40,10 @@
           wc.innerHTML = '<p class="muted small"><span class="num">' + nC + "</span> بطولة، كل أبطالها من أول موسم</p>" + keys.map(function(cc){ var cs = byCC[cc].sort(function(a, b){ return b[5] - a[5]; });
             return '<details class="wc"><summary>' + esc((CN[cc] || [""])[0] || "") + ' <span class="muted small num">' + cs.length + '</span></summary><ul class="mlist cols">' + cs.map(function(c){
               return '<li><a href="' + (c[5] >= 5 && !c[11] ? "/db/league/" + c[0] + "/" : leagueUrl(c[0])) + '">' + esc(c[1]) + '</a> <span class="muted small num">' + esc(c[6]) + " – " + esc(c[7]) + "</span>" + (c[8] ? ' <span class="muted small">سيدات</span>' : "") + "</li>"; }).join("") + "</ul></details>"; }).join(""); } }
-      $("#wn").textContent = clubs.length.toLocaleString("en") + " نادي و" + players.length.toLocaleString("en") + " لاعب في " + L.length + " دوري" + (S ? " و" + S.comps.length + " بطولة بأبطالها" : "");
+      $("#wn").textContent = clubs.length.toLocaleString("en") + " نادي و" + (nPlayers + (S ? S.players.length : 0)).toLocaleString("en") + " لاعب في " + L.length + " دوري" + (S ? " و" + S.comps.length + " بطولة بأبطالها" : "");
       inp.oninput = function(){ var s = fold(inp.value.trim()); if (s.length < 2){ out.innerHTML = ""; return; }
+        if (!pLoad){ out.innerHTML = '<p class="empty">نحمّل اللاعبين…</p>';   // tens of thousands of players: only once somebody searches
+          pLoad = get("world/players.json").then(function(P){ players = (P.players || []).map(pmap).concat(players); }).catch(function(){}).then(function(){ inp.oninput(); }); return; }
         var hc = clubs.filter(function(c){ return c.k.indexOf(s) >= 0; }).slice(0, 30), hp = players.filter(function(p){ return p.k.indexOf(s) >= 0; }).slice(0, 40);
         out.innerHTML = (hc.length ? "<h3>أندية</h3><ul class=\"mlist cols\">" + hc.map(function(c){ return '<li><a href="' + (c.t === "s" ? teamUrl : clubUrl)(c.id) + '">' + esc(c.ar) + '</a> <span class="muted small lat">' + esc(c.en) + "</span></li>"; }).join("") + "</ul>" : "") +
           (hp.length ? "<h3>لاعبين</h3><ul class=\"mlist cols\">" + hp.map(function(p){ return '<li><a href="' + (p.t === "a" ? athUrl : playerUrl)(p.id) + '">' + esc(p.ar) + '</a> <span class="muted small">' + esc((p.t === "a" ? sname : cname)[p.club] || "") + "</span></li>"; }).join("") + "</ul>" : "") || '<p class="empty">ما لقينا شي.</p>'; };
