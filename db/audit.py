@@ -1120,7 +1120,7 @@ def area_derived(A):
 # ------------------------------------------------------------------ champions
 JUNK = re.compile(r"^\W*\d+\W*$|^(tbd|tba|n/?a|none|nan|-|—)$|no (champion|winner)|not (held|awarded|played|completed|finished)|cancel|abandon|void|"
                   r"league \d{4}|\(.*(winner|runner|cup|league|champion).*\)|لا فائز|بدون فائز|ألغي", re.I)
-SPLIT_YEARS = {112, 268, 55, 44, 130}       # genuinely two champions in one year: Argentina's Apertura/Clausura, Brazil's old splits, Serie A 1922, Copa 1959, MLS
+SPLIT_YEARS = {112, 268, 55, 44, 130, 329}  # genuinely two champions in one year: Argentina's Apertura/Clausura, Brazil's old splits, Serie A 1922, Copa 1959, MLS, the Gulf Cup's two 2004 editions
 
 
 def y365(t):
@@ -1188,7 +1188,7 @@ def area_champions(A):
         both = [y for y in ours if th.get(y)]
         dis = [y for y in both if not (ours[y] & th[y])]
         A.count("champions", "vs_365_seasons", len(both))
-        if max(am, ap) >= 3 and max(am, ap) > a0 * 0.5:
+        if max(am, ap) >= 3 and max(am, ap) > a0:
             A.add("champions", "year_offset", "error", "ours", f"comp:{cid}", f"{c['name_ar']} ({cid}): our years look shifted against 365Scores' (agree at 0: {a0}, at -1: {am}, at +1: {ap})", url=url)
         if dis:
             A.add("champions", "winner_vs_365", "warn", "source", f"comp:{cid}", f"{c['name_ar']} ({cid}): {len(dis)} of {len(both)} seasons name another champion than 365Scores: " +

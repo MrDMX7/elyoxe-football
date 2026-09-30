@@ -25,7 +25,9 @@ BUCKET = os.environ.get("FOOTBALL_BUCKET", "elyoxe-football-574771023173-ap-sout
 CACHE = os.path.join(HERE, ".cache", "wiki_ar.json")
 UA = "TifoBot/1.0 (https://tifo.elyoxe.com; hello@elyoxe.com)"
 PASSED = ("ok", "no clear face")        # photo statuses reached only after the identity check passed
-BORN = re.compile(r"(?:ولد|وُلد|مواليد|مولود|ولدت)[^0-9٠-٩]{0,40}?([0-9٠-٩]{4})")
+# the year after «ولد»: past a day and a month too («ولد في 26 أكتوبر 2000»: the first form stopped at the «26» and read no
+# year, so five leads of other people passed, audit 2026-09-30)
+BORN = re.compile(r"(?:ولد|وُلد|مواليد|مولود|ولدت)(?:[^0-9٠-٩\n]|(?<![0-9٠-٩])[0-9٠-٩]{1,2}(?![0-9٠-٩])){0,60}?([0-9٠-٩]{4})")
 
 
 def verified(v):
