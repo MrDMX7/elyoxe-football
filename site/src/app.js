@@ -559,6 +559,21 @@
     }
     get("history/club/" + id + ".json").then(function(d){ D = d; draw(); }).catch(function(){});
   })();
+  // ---- a national team's Elo rating through its history (v1/history/elo/<id>.json, db/elo_nations.py)
+  (function(){
+    var box = $(".elo"); if (!box) return;
+    get("history/elo/" + box.dataset.team + ".json").then(function(d){
+      var S = d.series, W = 600, H = 170, t0 = Date.parse(S[0][0]), t1 = Date.parse(S[S.length - 1][0]), lo = Math.min.apply(null, S.map(function(x){ return x[1]; })), hi = Math.max.apply(null, S.map(function(x){ return x[1]; }));
+      var X = function(dt){ return (8 + (Date.parse(dt) - t0) / Math.max(1, t1 - t0) * (W - 16)).toFixed(1); }, Y = function(r){ return (H - 18 - (r - lo) / Math.max(1, hi - lo) * (H - 34)).toFixed(1); };
+      var path = S.map(function(x, i){ return (i ? "L" : "M") + X(x[0]) + " " + Y(x[1]); }).join("");
+      var y0 = +S[0][0].slice(0, 4), y1 = +S[S.length - 1][0].slice(0, 4), step = Math.max(10, Math.round((y1 - y0) / 6 / 10) * 10), ticks = [];
+      for (var y = Math.ceil(y0 / step) * step; y <= y1; y += step) ticks.push('<text x="' + X(y + "-01-01") + '" y="' + (H - 3) + '" class="ax">' + y + "</text>");
+      box.innerHTML = '<section class="blk"><h2>تصنيف إيلو عبر التاريخ <small>من ' + y0 + "</small></h2>" +
+        '<p>الحين <b class="num">' + d.now[1] + '</b> والمركز <b class="num">' + d.now[2] + '</b> عالمياً. أعلى تصنيف <b class="num">' + d.peak[1] + '</b> في <span class="num">' + d.peak[0].slice(0, 4) + '</span>، وأدناه <span class="num">' + d.low[1] + '</span> في <span class="num">' + d.low[0].slice(0, 4) + "</span>.</p>" +
+        '<svg class="chart elo-c" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="تصنيف إيلو عبر السنين"><path d="' + path + '" class="gl2"/><circle cx="' + X(d.peak[0]) + '" cy="' + Y(d.peak[1]) + '" r="3.5" class="pk"/>' + ticks.join("") + "</svg>" +
+        '<p class="small muted">إيلو يرتفع مع كل فوز وينزل مع كل خسارة، وقدر التغيير حسب قوة الخصم وأهمية المباراة. أدق من تصنيف فيفا لمقارنة الأجيال.</p><p class="src">المصدر: eloratings.net.</p></section>';
+    }).catch(function(){});
+  })();
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio, daypage:daypage, arabs:arabs }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && Object.keys(window.NAT || {}).some(function(k){ return String(window.NAT[k]) === ID; })) countdown(); }
   tvFull();
   tabs(); run(); dist();
