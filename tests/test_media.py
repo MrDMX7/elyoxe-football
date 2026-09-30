@@ -113,6 +113,13 @@ def test_last_seasons_full_match_between_the_same_clubs_is_left_out():
     assert run("seriea", "INTER-NAPOLI 3-2 | HIGHLIGHTS | SERIE A 2026/27", "2026-09-28T22:00:00Z")[0] == {700: "highlights"}
 
 
+def test_a_summary_out_while_the_ball_is_in_play_is_not_this_matchs():
+    # Napoli led 0-2 from minute 30: an old «0-2» summary posted at minute 35 carries a score this match had at that moment
+    assert run("seriea", "INTER-NAPOLI 0-2 | HIGHLIGHTS", "2026-09-28T19:20:00Z")[0] == {}
+    # at half-time (no half starts known: kickoff + 47 .. + 85 min) the first half's summary is fine
+    assert run("seriea", "INTER-NAPOLI 0-2 | HIGHLIGHTS PRIMO TEMPO", "2026-09-28T19:40:00Z")[0] == {700: "highlights"}
+
+
 def test_a_club_channel_may_name_only_the_opponent_and_classic_means_thriller_only_with_the_final_score():
     r, _ = run("mancity", "EXTENDED HIGHLIGHTS | Man City 5-3 Sunderland | A Premier League Classic at the Etihad!", "2026-09-20T23:00:07Z")
     assert r == {800: "highlights"}
@@ -234,6 +241,32 @@ def test_x_posts_only_with_a_video_from_an_official_account():
     assert [v["id"] for v in vids] == ["x1"]
     out = M.attach(vids, [KSA_IRQ], N, CH)
     assert list(out[6052048]["goals"]) == ["69-102"]
+
+
+def test_step_writes_a_file_per_match_with_media_and_nothing_when_unchanged(tmp_path, monkeypatch):
+    from store import Store, LocalBackend
+    store = Store(LocalBackend(str(tmp_path)))
+    md = dict(KSA_IRQ, highlights={"url": "https://www.youtube.com/watch?v=FOTMOBVID01", "image": None, "source": "www.youtube.com"})
+    day = {"matches": [{k: md[k] for k in ("id", "comp", "kickoff_utc", "status", "score", "home", "away")}]}
+    store.put_json("day/20260929.json", day); store.put_json("day/20260930.json", {"matches": []})
+    store.put_json(f"match/{md['id']}.json", md)
+    store.put_json("teams.json", {"teams": TEAMS})
+    items = [{"url": "https://www.youtube.com/watch?v=aaaaaaaaaaa", "title": "ملخص مباراة السعودية 2 - 0 العراق | كأس الخليج", "desc": "", "at": "2026-09-29T21:03:16Z"},
+             {"url": "https://www.youtube.com/shorts/bbbbbbbbbbb", "title": "الهدف الثاني لمنتخبنا الوطني سجله اللاعب عبدالله الحمدان- السعودية 2- العراق 0", "desc": "", "at": "2026-09-29T19:11:10Z"},
+             {"url": "https://www.youtube.com/watch?v=ccccccccccc", "title": "مباشر | السعودية والعراق", "desc": "", "at": "2026-09-29T17:10:00Z"}]
+    monkeypatch.setattr(M, "fetch_feeds", lambda chs, prefetched=None, workers=6: ({"yt_ksasports": items}, {}))
+    monkeypatch.setattr(M, "oembed", lambda vid: {"s": 200, "title": "t", "author": "a"})
+    monkeypatch.setattr(M, "load_names", lambda store, nat, cache_dir=None: M.Names(TEAMS, PLAYERS, {}, {}, ALIASES, NATIONS, {329}))
+    cfg = {"youtube": [], "media": {"youtube": [{"key": "yt_ksasports", "channel": "UCLo2xigvxv9ksxp78AyCBTw", "name": "القنوات الرياضية السعودية", "lang": "ar", "kind": "broadcaster"}]}, "x": {"accounts": []}}
+    t = datetime(2026, 9, 30, 10, 0, tzinfo=timezone.utc)
+    res = M.step(store, cfg, t=t)
+    assert res["written"] == 1 and res["with_media"] == 1
+    doc = store.get_json(f"media/{md['id']}.json")
+    assert [h["id"] for h in doc["highlights"]] == ["aaaaaaaaaaa", "FOTMOBVID01"]       # ours first, FotMob's link kept too
+    assert doc["highlights"][0]["kind"] == "summary" and doc["highlights"][1]["found_by"] == "fotmob"
+    assert list(doc["goals"]) == ["69-102"] and doc["goals"]["69-102"][0]["vertical"] is True
+    assert store.get_json("media/recent.json")["matches"][0]["id"] == md["id"]
+    assert M.step(store, cfg, t=t)["written"] == 0                                        # same content: nothing uploaded
 
 
 def test_goal_time_uses_the_real_half_starts():

@@ -715,6 +715,13 @@ def check_highlights(v, ch, tx, md, gs, teams, youth_m, t_pub):
         return None, "before the match"
     if t_pub > k + timedelta(hours=WINDOW_H + 24):
         return None, "too late"
+    # a summary comes out after the final whistle, or at half-time (the first half's); anything out while the ball is in
+    # play is something else (last season's meeting posted as a reminder has this match's score one time in a thousand)
+    P, end = md.get("periods") or {}, match_end(md)
+    ht0 = ptime(P.get("firstHalfEnded")) or k + timedelta(minutes=47)
+    ht1 = ptime(P.get("secondHalfStarted")) or k + timedelta(minutes=65)
+    if not (end and t_pub >= end - timedelta(minutes=10)) and not (ht0 - timedelta(minutes=2) <= t_pub <= ht1 + timedelta(minutes=20)):
+        return None, "out while the match was being played"
     ok, why = dates_ok(tx, md)
     if not ok:
         return None, why
