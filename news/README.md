@@ -59,6 +59,16 @@ python -m news.run [--local DIR] [--no-llm]      # the Fold runs it every 15 min
    Serie A's «NAPOLI-INTER 3-1 | FULL MATCH | SERIE A 2025/26» two days after this season's Inter 3-2 Napoli; CAF TV's
    WAFCON (women's) highlights between the same countries as the men's qualifiers.
 
+8. **«منو يعلّق؟»** (`commentators.py`, run at the end of every pass; `--no-tv` skips it, `python -m news.commentators --date
+   YYYYMMDD --dry` redoes a day and prints it): Kooora's daily «جدول مباريات اليوم .. القنوات الناقلة والمعلقين» (~01:00 UAE),
+   found through its google-news sitemap (every 30 min, every run 00:40–02:30 UAE; the article only when its lastmod moved, at
+   most hourly), parsed table by table and tied to our FotMob fixtures only on evidence (kickoff within 20 min, both names,
+   a margin; or one exact distinctive name at that minute with an opponent of the same stem). Kooora's fixtures page and
+   Yallakora's match centre add a channel (never a voice) only where both give the same number (every 3 h). Out:
+   `v1/tv/YYYYMMDD.json` per UAE kickoff day, with `unmatched` / `dropped` / `disputed` for review; state in
+   `state/tv/state.json`. The site paints it with `site/src/tv.js` (match page, day lists, `/commentators/`). Commentator
+   spellings: `FAMOUS` / `VARIANTS` in the module; a new famous voice is one line there.
+
 Official videos go to the social strips; they join the news only for a press conference, an injury or a transfer at
 «agreed» or later — most of a club channel is training clips. Tools: `tools/probe_feeds.py` (is a feed alive and fresh),
 `tools/try_link.py` (what a headline links to), `tools/youtube_ids.py` (handle → channel id, read from the page's

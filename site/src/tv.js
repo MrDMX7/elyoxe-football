@@ -43,7 +43,8 @@
     var ww = $("#wwbox"), box = $("#tvc");
     if (!ww || done(md)){ if (box) box.remove(); return; }   // after full time the hero line is enough
     var rows = sorted(es).map(function(e){ var n = voices(e); return '<li><span class="tvn">📺 <b>' + esc(e.channel) + '</b></span><span class="tvv">' + (n ? (e.commentators && e.commentators.length > 1 ? "المعلقين: " : "المعلق: ") + "<b>" + n + "</b>" : "المعلق ما انعلن للحين") + "</span></li>"; }).join("");
-    var html = '<h2 id="tvct">منو يعلّق؟<small>القناة والمعلق</small></h2><ul class="tvl">' + rows + '</ul><p class="src">من جدول القنوات الناقلة والمعلقين اللي ينشره كووورة كل يوم، وممكن يتغيّر قبل المباراة. <a href="/commentators/">كل معلقين اليوم</a></p>';
+    var sched = es.every(function(e){ return e.from === "schedules"; });   // the channel only, from two schedules that agree
+    var html = '<h2 id="tvct">منو يعلّق؟<small>القناة والمعلق</small></h2><ul class="tvl">' + rows + '</ul><p class="src">' + (sched ? "القناة اتفق عليها جدول كووورة وجدول يلا كورة، والمعلق يبان يوم المباراة." : "من جدول القنوات الناقلة والمعلقين اللي ينشره كووورة كل يوم، وممكن يتغيّر قبل المباراة.") + ' <a href="/commentators/">كل معلقين اليوم</a></p>';
     if (!box){ box = document.createElement("section"); box.className = "blk tvc"; box.id = "tvc"; box.setAttribute("aria-labelledby", "tvct"); ww.insertAdjacentElement("afterend", box); }   // a sibling: app.js rewrites #wwbox for other countries
     if (box._h !== html){ box._h = html; box.innerHTML = html; }
   }

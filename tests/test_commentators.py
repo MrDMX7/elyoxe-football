@@ -163,6 +163,39 @@ def test_a_voice_on_two_overlapping_matches_is_dropped():
     assert not m and {x["why"] for x in dr} == {"channel carries two overlapping matches"}
 
 
+def _feeds(d):
+    read = lambda n: open(str(__import__("conftest").FIX / n), encoding="utf-8").read()
+    return {"kooora-feed": {d.isoformat(): {"url": "k", "at": "2026-09-30T19:30:00Z", "lines": C.kooora_feed_lines(read("kooora_feed_20261001.html"), d)}},
+            "yallakora": {d.isoformat(): {"url": "y", "at": "2026-09-30T19:30:00Z", "lines": C.yallakora_lines(read("yallakora_20261001.html"), d)}}}
+
+
+def test_schedules_publish_only_the_channel_both_give():
+    """1 October 2026: Kooora's TV feed and Yallakora agree on beIN 4 and 3, and swap beIN 1 and 2 on two matches."""
+    d, fx = date(2026, 10, 1), fixtures("20261001")
+    doc = C.build_days([d], {}, lambda x: fx if x == d else [], "g", _feeds(d))[d]
+    assert doc["matches"]["5181830"] == [{"channel": "beIN SPORTS 4", "commentator": None, "from": "schedules"}]     # اليونان - هولندا
+    assert doc["matches"]["5181866"] == [{"channel": "beIN SPORTS 3", "commentator": None, "from": "schedules"}]     # ويلز - النرويج
+    assert "5181829" not in doc["matches"] and "5181865" not in doc["matches"]
+    assert {x["match"] for x in doc["disputed"]} == {"5181829", "5181865"}
+    assert "6040250" not in doc["matches"]                    # غينيا - كينيا: only Yallakora names a channel
+    assert {s["key"] for s in doc["sources"]} == {"kooora-feed", "yallakora"}
+    # handball («الزمالك - الأهلي» on ON Sport) and women's football never enter
+    assert not any("الزمالك" in l["home"] for l in _feeds(d)["yallakora"][d.isoformat()]["lines"])
+
+
+def test_the_article_wins_and_takes_the_agreed_number():
+    d, fx = date(2026, 10, 1), fixtures("20261001")
+    ko = [C.iso(datetime(2026, 10, 1, 18, 45, tzinfo=UTC))]
+    ln = lambda h, a, ch, v: {"home": h, "away": a, "time": "", "competition": "دوري الأمم الأوروبية", "kickoffs": ko, "time_ok": True,
+                              "channels": [{"raw": ch, "ch": C.channel(ch), "comm": [v]}]}
+    arts = {d.isoformat(): {"url": "a", "lines": [ln("اليونان", "هولندا", "beIN Sports", "عصام الشوالي"), ln("ألمانيا", "صربيا", "beIN Sports 3", "حفيظ دراجي")]}}
+    doc = C.build_days([d], arts, lambda x: fx if x == d else [], "g", _feeds(d))[d]
+    assert doc["matches"]["5181830"] == [{"channel": "beIN SPORTS 4", "commentator": "عصام الشوالي"}]      # «beIN SPORTS» + both say 4
+    assert doc["matches"]["5181829"] == [{"channel": "beIN SPORTS 3", "commentator": "حفيظ دراجي"}]       # the article, as written
+    assert "5181866" not in doc["matches"]         # the schedules' beIN 3 for ويلز - النرويج clashes with the article's beIN 3
+    assert any(x["match"] == "5181866" and "already carries" in x["why"] for x in doc["disputed"])
+
+
 def test_a_match_after_midnight_goes_to_the_next_days_file():
     """Kooora's list for the 28th runs to «02:00 السعودية» (03:00 UAE on the 29th): the site reads that match in 20260929.json."""
     ko = datetime(2026, 9, 28, 23, 0, tzinfo=UTC)

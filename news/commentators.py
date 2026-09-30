@@ -19,9 +19,13 @@ tie-break, and a clear margin over the next candidate. Anything else goes to `un
 booked on two matches that overlap, or a numbered channel carrying two overlapping matches, is dropped: a wrong name is
 worse than none.
 
-Published (public): v1/tv/<yyyymmdd>.json (UAE day of the article)
-  {generated, date, sources:[{key, name, url, updated}], matches:{<matchId>:[{channel, commentator, commentators?, country?}]},
-   fixtures:{<matchId>:{home, away, ko, comp}}, unmatched:[{home, away, time, competition, channels, why}], dropped:[…]}
+Two schedules (Kooora's fixtures page, Yallakora's match centre) add a channel, never a voice, where both give the same
+number (FEEDS below): tomorrow's matches before the article is out, and the number behind the article's bare «beIN SPORTS».
+
+Published (public): v1/tv/<yyyymmdd>.json, one per UAE kickoff day
+  {generated, date, sources:[{key, name, url, updated}],
+   matches:{<matchId>:[{channel, commentator, commentators?, country?, from?}]},   from: "schedules" = channel only
+   fixtures:{<matchId>:{home, away, ko, comp}}, unmatched:[{home, away, time, competition, channels, why}], dropped:[…], disputed:[…]}
 State (private): state/tv/state.json"""
 import argparse, difflib, gzip, html as H, json, os, re, sys, time, urllib.parse, urllib.request
 from datetime import date, datetime, timedelta, timezone
@@ -483,11 +487,16 @@ def parse_article(body, day):
     return lines
 
 
-def next_data(page):
+def page_data(page):
+    """Kooora pages are Next.js: the content is the JSON in __NEXT_DATA__ (props.pageProps.data)."""
     m = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', page, re.S)
     if not m:
         raise ValueError("no __NEXT_DATA__ on the page")
-    art = (((json.loads(m.group(1)).get("props") or {}).get("pageProps") or {}).get("data") or {}).get("article")
+    return ((json.loads(m.group(1)).get("props") or {}).get("pageProps") or {}).get("data")
+
+
+def next_data(page):
+    art = (page_data(page) or {}).get("article")
     if not art or not art.get("body"):
         raise ValueError("no article body in __NEXT_DATA__")
     return art
@@ -517,6 +526,84 @@ def sitemap_articles(xml):
         out.append({"id": urllib.parse.unquote(url).rstrip("/").rsplit("/", 1)[-1], "url": url, "title": t, "day": d.isoformat(),
                     "lastmod": lm.group(1).strip() if lm else None, "published": iso(published)})
     return out
+
+
+# ------------------------------------------------------------------------------------------------ channel-only schedules
+# Two schedules name the channel (never the voice) days ahead: Kooora's fixtures page (a TV-listings feed of every country's
+# channels; the Arab ones are kept) and Yallakora's match centre (Egypt's view, one channel per match). They only ever
+# publish together: a numbered channel both give for a fixture fills a match the day's article does not cover (tomorrow's,
+# before the article is out) and names the number where the article only says «beIN SPORTS». They never override the
+# article. On 1 October 2026 they agreed on 5 of 7 Nations League matches and swapped beIN 1 and 2 on the other two.
+FEED_EVERY = 3 * 3600
+NOT_FOOTBALL = re.compile(r"ihf|handball|basket|fiba|volley|fivb|tennis|squash|futsal|beach|esport|اليد|السله|الطايره|التنس|"
+                          r"الاسكواش|الصالات|الشاطييه|سيدات|للسيدات|نسايي")
+
+
+def _feed_channels(names):
+    """Numbered/national channels only (a platform such as TOD or beIN CONNECT carries everything and proves nothing);
+    beIN's English channels are not for this site."""
+    seen, out = set(), []
+    for n in names:
+        ch = channel(n or "")
+        if not ch or not ch["linear"] or ch["key"].startswith("bein-en") or ch["key"] in seen:
+            continue
+        seen.add(ch["key"])
+        out.append(ch)
+    return out
+
+
+def kooora_feed_url(d):
+    return KOOORA + "/" + urllib.parse.quote("كرة-القدم/مواعيد-المباريات") + "/" + d.isoformat()
+
+
+def kooora_feed_lines(page, d=None):
+    """Kooora's fixtures page (props.pageProps.data: [{competition, matches:[{startDate, teamA, teamB, tvChannels}]}])."""
+    out = []
+    for c in page_data(page) or []:
+        comp = clean((c.get("competition") or {}).get("name"))
+        if NOT_FOOTBALL.search(fold(comp)):
+            continue
+        for x in c.get("matches") or []:
+            ko = parse_iso(x.get("startDate"))
+            chans = _feed_channels(t.get("name") for t in x.get("tvChannels") or [])
+            if not ko or not chans:
+                continue
+            out.append({"competition": comp, "home": clean((x.get("teamA") or {}).get("name")), "away": clean((x.get("teamB") or {}).get("name")),
+                        "time": iso(ko), "kickoffs": [iso(ko)], "time_ok": True, "channels": [{"raw": ch["name"], "ch": ch, "comm": []} for ch in chans]})
+    return out
+
+
+def yallakora_url(d):
+    return f"https://www.yallakora.com/matches-center?date={d.month}/{d.day}/{d.year}"
+
+
+def yallakora_lines(page, d):
+    """Yallakora's match centre for an Egyptian day: cards per tournament, one channel and a Cairo time per match."""
+    out, cairo = [], _tz("Africa/Cairo")
+    for card in re.split(r'<div class="\d+ matchCard', page)[1:]:
+        tour = re.search(r"<h2>\s*([^<]+?)\s*</h2>", card)
+        tname = clean(tour.group(1)) if tour else ""
+        if NOT_FOOTBALL.search(fold(tname)):
+            continue
+        for it in re.split(r"liveScoreMatchId=", card)[1:]:
+            href = re.search(r'href="/([^/"]+)/', it)
+            if href and NOT_FOOTBALL.search(href.group(1).lower()):
+                continue
+            ch = re.search(r'<div class="channel[^"]*">([^<]*)</div>', it)
+            a = re.search(r'teamA">.*?<p>([^<]*)</p>', it, re.S)
+            b = re.search(r'teamB">.*?<p>([^<]*)</p>', it, re.S)
+            t = re.search(r'<span class="time">\s*(\d{1,2}):(\d{2})\s*</span>', it)
+            chans = _feed_channels([H.unescape(ch.group(1))] if ch else [])
+            if not (chans and a and b and t and cairo):
+                continue
+            ko = datetime(d.year, d.month, d.day, int(t.group(1)), int(t.group(2)), tzinfo=cairo).astimezone(UTC)
+            out.append({"competition": tname, "home": clean(a.group(1)), "away": clean(b.group(1)), "time": iso(ko), "kickoffs": [iso(ko)],
+                        "time_ok": True, "channels": [{"raw": c["name"], "ch": c, "comm": []} for c in chans]})
+    return out
+
+
+FEEDS = {"kooora-feed": ("كووورة (جدول المباريات)", kooora_feed_url, kooora_feed_lines),
+         "yallakora": ("يلا كورة", yallakora_url, yallakora_lines)}
 
 
 # ------------------------------------------------------------------------------------------------ our fixtures
@@ -883,30 +970,102 @@ def uae_day(t):
     return (t + timedelta(hours=4)).date()
 
 
-def build_days(targets, arts, fixtures_of, gen):
+def _number(article_name, agreed):
+    """«beIN SPORTS» in the article + the schedules agreeing on «beIN SPORTS 3» -> «beIN SPORTS 3» (only one candidate)."""
+    if re.search(r"\d", article_name):
+        return article_name
+    hits = [n for n in agreed if n.startswith(article_name + " ") and re.fullmatch(r"\d{1,2}", n[len(article_name) + 1:])]
+    return hits[0] if len(hits) == 1 else article_name
+
+
+def build_days(targets, arts, fixtures_of, gen, feeds=None):
     """One file per UAE day X: the matches that kick off on X, from X's article and from the previous day's (whose list
-    runs past midnight: «02:00 السعودية» is X's early morning); the unmatched and dropped lines of X's own article."""
-    results = {}
+    runs past midnight: «02:00 السعودية» is X's early morning); the unmatched and dropped lines of X's own article.
+    Then the schedules (FEEDS): where both name the same numbered channel for a fixture, that channel fills a match the
+    article does not have, or gives the article's «beIN SPORTS» its number. Disagreements are listed, never published."""
+    feeds = feeds or {}
+    arts_res, feed_res = {}, {}
     for d in sorted({x - timedelta(days=k) for x in targets for k in (0, 1)}):
+        pool = None
         a = arts.get(d.isoformat()) or {}
         if a.get("lines"):
-            results[d] = (a, match_all(a["lines"], fixtures_of(d) + fixtures_of(d + timedelta(days=1)), d))
+            pool = fixtures_of(d) + fixtures_of(d + timedelta(days=1))
+            arts_res[d] = (a, match_all(a["lines"], pool, d))
+        for key, per in feeds.items():
+            f = per.get(d.isoformat()) or {}
+            if f.get("lines"):
+                pool = pool if pool is not None else fixtures_of(d) + fixtures_of(d + timedelta(days=1))
+                feed_res[(key, d)] = (f, match_all(f["lines"], pool, d))
     docs = {}
     for x in targets:
-        matches, fx, srcs = {}, {}, []
+        matches, fx, srcs, disputed = {}, {}, [], []
         for d in (x - timedelta(days=1), x):
-            if d not in results:
+            if d not in arts_res:
                 continue
-            a, (m, f, _, _) = results[d]
+            a, (m, f, _, _) = arts_res[d]
             took = False
             for mid, es in m.items():
                 if uae_day(parse_iso(f[mid]["ko"])) == x:
-                    matches[mid], fx[mid], took = es, f[mid], True
+                    matches[mid], fx[mid], took = [dict(e) for e in es], f[mid], True
             if took or d == x:
                 srcs.append({"key": "kooora", "name": "كووورة", "url": a.get("url"), "updated": a.get("lastmod") or a.get("published")})
-        own = results.get(x)
+        # the schedules: per fixture of day X, the channels each one gives
+        by, fx_s, used = {}, {}, {}
+        for (key, d), (f, (m, fxx, _, _)) in feed_res.items():
+            if d not in (x - timedelta(days=1), x):
+                continue
+            for mid, es in m.items():
+                if uae_day(parse_iso(fxx[mid]["ko"])) != x:
+                    continue
+                by.setdefault(mid, {}).setdefault(key, {}).update({e["channel"]: e for e in es})
+                fx_s[mid] = fxx[mid]
+                used.setdefault(key, f)
+        took_keys = set()
+        for mid, per in by.items():
+            if len(per) < 2:
+                continue                                        # one schedule alone never publishes
+            agreed = set.intersection(*[set(v) for v in per.values()])
+            if mid in matches:
+                for e in matches[mid]:
+                    n = _number(e["channel"], agreed)
+                    if n != e["channel"]:
+                        e["channel"] = n
+                        took_keys.update(per)
+                named = {e["channel"] for e in matches[mid]}
+                if agreed and not agreed & named:
+                    disputed.append({"match": mid, "article": sorted(named), "schedules": sorted(agreed), "why": "the schedules agree on another channel"})
+                continue
+            if not agreed:
+                disputed.append({"match": mid, "schedules": {k: sorted(v) for k, v in per.items()}, "why": "the schedules disagree"})
+                continue
+            any_e = next(iter(per.values()))
+            matches[mid] = [{"channel": n, "commentator": None, **({"country": any_e[n]["country"]} if any_e[n].get("country") else {}), "from": "schedules"}
+                            for n in sorted(agreed)]
+            fx[mid] = fx_s[mid]
+            took_keys.update(per)
+        # a numbered channel the schedules add cannot air two overlapping matches of the day (the article's entries win)
+        seen = []
+        for mid, es in matches.items():
+            ko = parse_iso(fx[mid]["ko"])
+            for e in es:
+                if re.search(r"\d", e["channel"]):
+                    seen.append((e["channel"], ko, mid, e.get("from") == "schedules"))
+        clash = set()
+        for i, (c1, k1, m1, s1) in enumerate(seen):
+            for c2, k2, m2, s2 in seen[i + 1:]:
+                if c1 == c2 and m1 != m2 and overlap(k1, k2):
+                    clash.update({(c1, m1)} if s1 and not s2 else {(c2, m2)} if s2 and not s1 else {(c1, m1), (c2, m2)} if s1 and s2 else set())
+        for c, mid in clash:
+            matches[mid] = [e for e in matches[mid] if not (e["channel"] == c and e.get("from") == "schedules")]
+            disputed.append({"match": mid, "schedules": [c], "why": "that channel already carries another match then"})
+            if not matches[mid]:
+                del matches[mid]
+                fx.pop(mid, None)
+        for key in sorted(took_keys):
+            srcs.append({"key": key, "name": FEEDS[key][0], "url": used[key].get("url"), "updated": used[key].get("at")})
+        own = arts_res.get(x)
         docs[x] = {"generated": gen, "date": x.isoformat(), "sources": [s for s in srcs if s["url"]], "matches": matches, "fixtures": fx,
-                   "unmatched": own[1][2] if own else [], "dropped": own[1][3] if own else []}
+                   "unmatched": own[1][2] if own else [], "dropped": own[1][3] if own else [], "disputed": disputed}
     return docs
 
 
@@ -969,6 +1128,23 @@ def run(store, now=None, log=print, force_day=None, article_html=None, dry=False
                 errors[d.isoformat()] = str(e)[:200]
                 a["fetched"] = iso(now)                          # a broken page is retried after the hour, not every run
 
+    # ---- the channel-only schedules, every 3 hours per day (a failure keeps the last lines)
+    feeds = state.get("feeds") or {}
+    for key, (_, url_of, parse) in FEEDS.items():
+        per = feeds.setdefault(key, {})
+        for d in (days if article_html is None else []):
+            f = per.get(d.isoformat()) or {}
+            last_f = parse_iso(f.get("at"))
+            if not force_day and last_f and (now - last_f).total_seconds() < FEED_EVERY:
+                continue
+            url = url_of(d)
+            try:
+                per[d.isoformat()] = {"at": iso(now), "url": url, "lines": parse(fetch(url), d)}
+            except Exception as e:
+                errors[f"{key} {d.isoformat()}"] = str(e)[:200]
+                per[d.isoformat()] = {**f, "at": iso(now)}
+    state["feeds"] = feeds
+
     # ---- match and publish
     gen = iso(now)
     clubs, cache = _clubs_ar(), {}
@@ -982,17 +1158,21 @@ def run(store, now=None, log=print, force_day=None, article_html=None, dry=False
                 cache[d] = []
         return cache[d]
 
-    built = build_days(days, arts, fixtures_of, gen)
+    built = build_days(days, arts, fixtures_of, gen, feeds)
     summary, docs = {}, {}
     for d, doc in built.items():
         a = arts.get(d.isoformat()) or {}
         docs[d.isoformat()] = doc
-        summary[d.isoformat()] = {"lines": len(a.get("lines") or []), "matched": len(doc["matches"]), "unmatched": len(doc["unmatched"]),
-                                  "dropped": len(doc["dropped"]), "fixtures": len(fixtures_of(d))}
+        summary[d.isoformat()] = {"lines": len(a.get("lines") or []), "matched": len(doc["matches"]),
+                                  "voices": sum(1 for es in doc["matches"].values() if any(e.get("commentator") for e in es)),
+                                  "from_schedules": sum(1 for es in doc["matches"].values() if all(e.get("from") == "schedules" for e in es)),
+                                  "unmatched": len(doc["unmatched"]), "dropped": len(doc["dropped"]), "disputed": len(doc["disputed"]),
+                                  "fixtures": len(fixtures_of(d))}
         if not dry:
             store.put_json(f"tv/{ymd(d)}.json", doc, cache="warm")
     keep = (today - timedelta(days=3)).isoformat()
     state["articles"] = {k: v for k, v in arts.items() if k >= keep}
+    state["feeds"] = {k: {d: v for d, v in per.items() if d >= keep} for k, per in feeds.items()}
     state["run"] = {"at": gen, "days": summary, "errors": errors, "secs": round(time.time() - t0, 1)}
     if not dry:
         store.put_state(STATE, state)
@@ -1014,7 +1194,7 @@ def main(argv=None):
     docs = run(store, force_day=day, article_html=page, dry=a.dry)
     if a.dry or a.date:
         for d, doc in docs.items():
-            print(json.dumps({k: doc[k] for k in ("date", "matches", "unmatched", "dropped")}, ensure_ascii=False, indent=1))
+            print(json.dumps({k: doc[k] for k in ("date", "matches", "unmatched", "dropped", "disputed")}, ensure_ascii=False, indent=1))
     return 0
 
 
