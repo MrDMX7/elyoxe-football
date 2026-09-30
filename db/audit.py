@@ -206,6 +206,8 @@ def person_sim(a, b):
         return 0.8 if min(len(fa), len(fb)) > 1 or fa[-1] == fb[-1] else 0.6
     if fa[0] == fb[0] and len(fa) > 1 and len(fb) > 1 and difflib.SequenceMatcher(None, fa[-1], fb[-1]).ratio() >= 0.8:
         return 0.8                                        # Walid Azarou / Walid Azaro
+    if fa[0][0] == fb[0][0] and (fa[-1] in fb or fb[-1] in fa):
+        return 0.8                                        # Nico Paz / Nicolás Paz Martínez (two surnames), Dani Olmo / Daniel Olmo Carvajal
     return 0.0
 
 
@@ -1279,8 +1281,9 @@ def area_identity(A):
     unchecked, conflict = [], []
     for k, v in (wiki.get("players") or {}).items():
         A.count("identity", "wiki_leads")
-        st = str((photos.get(k) or {}).get("status", "none"))
-        if photos and not st.startswith(("ok", "no clear face")):
+        rec = photos.get(k) or {}
+        passed = rec.get("identity") == "ok" if "identity" in rec else str(rec.get("status", "none")).startswith(("ok", "no clear face"))
+        if photos and not passed:
             unchecked.append(k)
         born = (bios.get(k) or {}).get("born") or ((wb.get(k) or [None, None])[1] if isinstance(wb.get(k), list) else None)
         m = LEAD_BIRTH.search(str(v[1] if isinstance(v, list) and len(v) > 1 else v).translate(trans_d))
@@ -1322,11 +1325,12 @@ def area_identity(A):
         for k, w in who.items():
             A.count("identity", "linked_names")
             ours_n = (bios.get(k) or {}).get("name") or ((wb.get(k) or [None])[0] if isinstance(wb.get(k), list) else None)
-            if ours_n and w and w[0] and person_sim(ours_n, w[0]) < 0.6:
+            # a one-word name (Rodri, Pedri, Vitinha) is a nickname of the full name: nothing to compare
+            if ours_n and w and w[0] and len(S365.fold(ours_n).split()) > 1 and person_sim(ours_n, w[0]) < 0.6:
                 odd.append(f"{ours_n} ({k}) = {w[0]}")
-        if odd:
-            A.add("identity", "linked_name_differs", "warn", "ours", f"identity:{path}", f"{len(odd)} {label}s carry another name than ours (namesakes?): " + "; ".join(odd[:8]),
-                  examples=[x.split("(")[1].split(")")[0] for x in odd[:40]])
+        if odd:     # mostly nicknames and full legal names (Taty / Valentín Castellanos): a list to eyeball, not errors
+            A.add("identity", "linked_name_differs", "info", "unknown", f"identity:{path}", f"{len(odd)} {label}s carry a name unlike ours (nicknames, or namesakes to look at): " + "; ".join(odd[:8]),
+                  examples=[x.split("(")[1].split(")")[0] for x in odd[:60]])
     # 7. placeholder birth dates (FotMob's 0001-01-01 shows «age 2025»)
     ph = [k for k, b in bios.items() if b.get("born") and b["born"] < "1900"]
     phw = [k for k, b in wb.items() if isinstance(b, list) and len(b) > 1 and b[1] and b[1] < "1900"]
