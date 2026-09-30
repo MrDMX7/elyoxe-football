@@ -12,3 +12,5 @@ news/.x-inbox.json
 news/.x-reader.log
 history/.cache/
 db/.cache/
+.claude/worktrees/
+.worktrees/
