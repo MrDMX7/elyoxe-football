@@ -200,7 +200,7 @@
   // «الملخص»: the official highlights video FotMob links (match file "highlights"; the poller re-polls after full time
   // until it appears), opened in a new tab
   R.hl = function(md){ var h = md && md.highlights, u = h && h.url; if (!u || !/^https:\/\//.test(u)) return "";
-    return '<p class="hlink"><a class="btn hlbtn" href="' + esc(u) + '" target="_blank" rel="noopener">الملخص' + (/youtu/.test(u) ? ' <span class="small">على يوتيوب</span>' : "") + "</a></p>"; };
+    return '<p class="hlink"><a class="btn hlbtn" href="' + esc(u) + '" target="_blank" rel="noopener">▶ الملخص</a></p>'; };
   // the match line: minute 0 on the RIGHT, time runs left (forward in RTL). Physical `right` on purpose.
   R.timeline = function(md){
     var ev = (md.events || []).filter(function(e){ return /goal|yellow|red/.test(e.type) && e.team; });
