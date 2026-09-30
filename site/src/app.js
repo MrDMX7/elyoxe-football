@@ -544,7 +544,7 @@
       var T = D.total, dec = Object.keys(D.by_decade), dm = Math.max.apply(null, dec.map(function(k){ return D.by_decade[k].p; }).concat([1]));
       var bars = dec.map(function(k, i){ var v = D.by_decade[k], h = pct(v.w, v.p); return '<g><rect x="' + (i * 22 + 2) + '" y="' + (62 - h * 0.55).toFixed(1) + '" width="18" height="' + (h * 0.55).toFixed(1) + '" class="dw"><title>' + k + ": " + h + "% فوز من " + v.p + '</title></rect><text x="' + (i * 22 + 11) + '" y="72" class="ax">' + k.slice(2) + '</text><text x="' + (i * 22 + 11) + '" y="' + (58 - h * 0.55).toFixed(1) + '" class="ax">' + h + "</text></g>"; }).join("");
       box.innerHTML = '<p class="hsum">من <b class="num">' + D.since.slice(0, 4) + "</b>: " + line(T) + " · نسبة الفوز <b class=\"num\">" + pct(T.w, T.p) + "٪</b></p>" +
-        '<h3>نسبة الفوز في كل عقد</h3><svg class="chart dec" viewBox="0 0 ' + (dec.length * 22 + 4) + ' 76" role="img" aria-label="نسبة الفوز في كل عقد">' + bars + "</svg>" +
+        '<h3>نسبة الفوز في كل عقد</h3><svg class="chart dec" style="max-inline-size:' + Math.min(44, dec.length * 3.2) + 'rem" viewBox="0 0 ' + (dec.length * 22 + 4) + ' 76" role="img" aria-label="نسبة الفوز في كل عقد">' + bars + "</svg>" +
         (D.positions && D.positions.length ? '<h3>مركزه في الدوري موسم بموسم (<span class="num">' + D.positions.length + '</span> موسم)</h3><div class="tscroll"><table class="tbl"><thead><tr><th>الموسم</th><th>المركز</th><th>لعب</th><th>فوز</th><th>تعادل</th><th>خسارة</th><th>له-عليه</th><th>نقاط</th></tr></thead><tbody>' +
           D.positions.slice().reverse().map(function(p){ return '<tr' + (p[1] === 1 ? ' class="mine"' : "") + '><td class="num">' + R.esc(p[0]) + '</td><td class="num">' + p[1] + ' <span class="muted small">من ' + p[2] + '</span></td><td class="num">' + p[4] + '</td><td class="num">' + p[5] + '</td><td class="num">' + p[6] + '</td><td class="num">' + p[7] + '</td><td class="num"><bdi dir="ltr">' + p[8] + "-" + p[9] + '</bdi></td><td class="num">' + p[3] + "</td></tr>"; }).join("") +
           '</tbody></table></div><p class="src">الجداول النهائية من RSSSF.</p>' : "") +
@@ -660,7 +660,8 @@
   // ---- a club from FotMob (v1/history/fm/team/<id>.json): league position every season, its coaches, every transfer
   (function(){
     var box = $(".fmteam"); if (!box) return;
-    var feeT = function(t){ return t[8] ? R.esc(String(t[8]).replace("on loan", "إعارة").replace("free transfer", "انتقال حر").replace("undisclosed", "غير معلن")) : t[7] ? "€" + (Math.round(t[7] / 1e5) / 10) + " مليون" : "—"; };
+    var FEE = { "on loan":"إعارة", "free transfer":"انتقال حر", "undisclosed":"غير معلن", "contract extension":"تجديد عقد", "fee":"بمقابل", "loan":"إعارة", "end of loan":"نهاية إعارة", "free":"انتقال حر", "back from loan":"رجع من الإعارة" };
+    var feeT = function(t){ return t[7] ? "€" + (Math.round(t[7] / 1e5) / 10) + " مليون" : t[8] ? R.esc(FEE[String(t[8]).toLowerCase()] || t[8]) : "—"; };
     get("history/fm/team/" + box.dataset.team + ".json").then(function(d){
       var html = "", id = +box.dataset.team;
       var RK = (d.ranks || []).filter(function(r){ return r[1]; });

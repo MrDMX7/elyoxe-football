@@ -68,6 +68,13 @@ def split(s):
     return [x for x in (s or "").split(",") if x]
 
 
+PARTS = {}          # FotMob's Arabic names by id (main() fills it): clubs, players and coaches
+
+
+def ar(i, fb):
+    return PARTS.get(str(i)) or fb
+
+
 def team_card(raw, tt):
     h, ov = raw.get("history") or {}, raw.get("overview") or {}
     tro = []
@@ -85,7 +92,7 @@ def team_card(raw, tt):
               (r.get("stats") or {}).get("draws"), (r.get("stats") or {}).get("loss"), r.get("templateId"), r.get("tournamentName")]
              for r in ((h.get("tables") or {}).get("ranks") or [])]
     # one row per coach per season in the league: [coach id, name, season, league id, wins, draws, losses, points per game]
-    coaches = [[c.get("id"), c.get("name"), c.get("season"), c.get("leagueId"), c.get("win"), c.get("draw"), c.get("loss"), c.get("pointsPerGame")]
+    coaches = [[c.get("id"), ar(c.get("id"), c.get("name")), c.get("season"), c.get("leagueId"), c.get("win"), c.get("draw"), c.get("loss"), c.get("pointsPerGame")]
                for c in (h.get("coachHistory") or ov.get("coachHistory") or []) if isinstance(c, dict)]
     squad = []
     for g in ((raw.get("squad") or {}).get("squad") or []):
@@ -97,7 +104,8 @@ def team_card(raw, tt):
     for grp in ("allTransfers",):
         for x in tr.get(grp) or []:
             fee = x.get("fee") or {}
-            moves.append([(x.get("transferDate") or "")[:10], x.get("playerId"), x.get("name"), x.get("fromClubId"), x.get("fromClub"), x.get("toClubId"), x.get("toClub"),
+            moves.append([(x.get("transferDate") or "")[:10], x.get("playerId"), ar(x.get("playerId"), x.get("name")), x.get("fromClubId"), ar(x.get("fromClubId"), x.get("fromClub")),
+                          x.get("toClubId"), ar(x.get("toClubId"), x.get("toClub")),
                           fee.get("value") if isinstance(fee, dict) else fee, (fee.get("feeText") if isinstance(fee, dict) else None), x.get("onLoan")])
     return {"trophies": tro, "venue": venue, "ranks": ranks, "coaches": coaches, "squad": squad, "transfers": moves,
             "colors": (h.get("teamColors") or {}), "country": (raw.get("details") or {}).get("country")}
@@ -118,12 +126,12 @@ def player_doc(raw, tt):
     tro = []
     for t in ((raw.get("trophies") or {}).get("playerTrophies") or []):
         for tn in t.get("tournaments") or []:
-            tro.append([t.get("teamId"), t.get("teamName"), str(tn.get("leagueId")), tt.get(str(tn.get("leagueId"))) or tn.get("leagueName"), tn.get("seasonsWon") or [], tn.get("seasonsRunnerUp") or []])
+            tro.append([t.get("teamId"), ar(t.get("teamId"), t.get("teamName")), str(tn.get("leagueId")), tt.get(str(tn.get("leagueId"))) or tn.get("leagueName"), tn.get("seasonsWon") or [], tn.get("seasonsRunnerUp") or []])
     career = {}
     for kind, v in (((raw.get("careerHistory") or {}).get("careerItems")) or {}).items():
-        teams = [[e.get("teamId"), e.get("team"), str(e.get("startDate") or "")[:10], str(e.get("endDate") or "")[:10] or None, e.get("appearances"), e.get("goals"), e.get("assists"), e.get("transferType")]
+        teams = [[e.get("teamId"), ar(e.get("teamId"), e.get("team")), str(e.get("startDate") or "")[:10], str(e.get("endDate") or "")[:10] or None, e.get("appearances"), e.get("goals"), e.get("assists"), e.get("transferType")]
                  for e in v.get("teamEntries") or []]
-        seasons = [[s.get("seasonName"), s.get("teamId"), s.get("team"), s.get("appearances"), s.get("goals"), s.get("assists"), ((s.get("rating") or {}).get("rating")),
+        seasons = [[s.get("seasonName"), s.get("teamId"), ar(s.get("teamId"), s.get("team")), s.get("appearances"), s.get("goals"), s.get("assists"), ((s.get("rating") or {}).get("rating")),
                     [[str(t.get("leagueId")), tt.get(str(t.get("leagueId"))) or t.get("leagueName"), t.get("appearances"), t.get("goals"), t.get("assists"), ((t.get("rating") or {}).get("rating"))]
                      for t in s.get("tournamentStats") or [] if not t.get("isFriendly")]]
                    for s in v.get("seasonEntries") or []]
@@ -147,6 +155,7 @@ def main(argv=None):
     store = Store(S3Backend(BUCKET))
     tm = FotMob().http.get_json("https://www.fotmob.com/api/translationmapping?locale=ar", min_ttl=3600)
     tt, parts = tm.get("TournamentTemplates") or {}, tm.get("Participants") or {}
+    PARTS.update(parts)
     teams = (store.get_json("teams.json") or {}).get("teams") or {}
     ids = [int(k) for k, t in teams.items() if t.get("name") and not any(c.isdigit() for c in (t.get("name") or "")[:2]) and not (t.get("name") or "").startswith("Winner")]
     if a.limit:

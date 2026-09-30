@@ -405,7 +405,12 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
       b.mv && ["القيمة السوقية", eur(b.mv)], b.contract && ["نهاية العقد", `<span class="num">${esc(b.contract.slice(0, 7))}</span>`], b.loan && ["الحالة", "معار"]].filter(Boolean);
     return rows.length ? `<dl class="pbio">${rows.map(r => `<div><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`).join("")}</dl>` : ""; };
   const fmcard = id => { const c = FMT[id]; if (!c) return "";
-    const v = c.venue, tro = (c.trophies || []).filter(t => t.won > 0), wst = CCARD[id] && CCARD[id].stadium;
+    const v = c.venue, wst = CCARD[id] && CCARD[id].stadium;
+    const TRN = { "presidents cup":"كأس رئيس الدولة", "president's cup":"كأس رئيس الدولة", "agcff gulf champions league":"دوري أبطال الخليج للأندية", "gulf club champions cup":"كأس الخليج للأندية",
+      "cup":"الكأس", "league cup":"كأس الرابطة", "super cup":"السوبر", "federation cup":"كأس الاتحاد", "crown prince cup":"كأس ولي العهد", "king cup":"كأس الملك", "emir cup":"كأس الأمير" };
+    const tro = (c.trophies || []).filter(t => t.won > 0).map(t => { const ch = CHAMPS[+t.lid], mine = ch ? ch.champions.filter(r => r[3] === id).map(r => r[0]) : [];
+      const name = /[\u0600-\u06FF]/.test(t.name || "") ? t.name : (TRN[String(t.name || "").toLowerCase()] || t.name);
+      return mine.length > t.won ? Object.assign({}, t, { name, won:mine.length, seasons:mine.slice().reverse(), src:"champions" }) : Object.assign({}, t, { name }); }).sort((a, b) => b.won - a.won);
     const facts = v && v.name ? [`الملعب ${esc((wst && wst.ar) || v.name)}`, v.capacity && `<span class="num">${Number(v.capacity).toLocaleString("en")}</span> متفرج`, v.opened && `افتُتح <span class="num">${esc(String(v.opened))}</span>`,
       v.surface && SURF[String(v.surface).toLowerCase()], v.lat != null && `<a href="https://www.openstreetmap.org/?mlat=${v.lat}&mlon=${v.lon}#map=16/${v.lat}/${v.lon}" rel="noopener">على الخريطة</a>`].filter(Boolean) : [];
     return (facts.length ? `<p class="fmv">${facts.join(" · ")}</p>` : "") + (tro.length ? `<h3>ألقابه (<span class="num">${tro.reduce((a, t) => a + t.won, 0)}</span>)</h3><ul class="chon">${tro.map(t => `<li><b>${esc(t.name || "")}</b> <span class="num">${t.won}</span><span class="muted small yrs">${esc(t.seasons.join("، "))}${t.runnerup ? ` · وصيف ${t.runnerup} مرات` : ""}</span></li>`).join("")}</ul><p class="src">الألقاب والملعب من FotMob.</p>` : ""); };

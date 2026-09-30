@@ -36,13 +36,17 @@ def league_teams(lid, http):
         raw = http.get_json(f"https://www.fotmob.com/api/data/leagues?id={lid}", min_ttl=0)
     except Exception:
         return []
+    if not isinstance(raw, dict):          # FotMob answers «null» for a few leagues between seasons
+        return []
     out = []
     for t in (raw.get("table") or []):
+        if not isinstance(t, dict):
+            continue
         for tb in ((t.get("data") or {}).get("table") or {}).values() if isinstance((t.get("data") or {}).get("table"), dict) else []:
             for r in tb or []:
                 if isinstance(r, dict) and r.get("id"):
                     out.append([r["id"], r.get("name"), r.get("idx")])
-        for grp in ((t.get("data") or {}).get("tables") or []):
+        for grp in [g for g in ((t.get("data") or {}).get("tables") or []) if isinstance(g, dict)]:
             for tb in ((grp.get("table") or {}).values() if isinstance(grp.get("table"), dict) else []):
                 for r in tb or []:
                     if isinstance(r, dict) and r.get("id"):
