@@ -9,7 +9,8 @@ const fs = require("fs"), path = require("path"), crypto = require("crypto");
 const U = require("./src/ui.js"), P = require("./src/pages.js");
 const ROOT = __dirname, OUT = path.join(ROOT, "out"), CACHE = path.join(ROOT, "cache"), REPO = path.resolve(ROOT, "../../..");
 const SITE = "https://tifo.elyoxe.com", BASE = "/next";
-const args = process.argv.slice(2), FRESH = args.includes("--fresh"), TTL = FRESH ? 0 : 30 * 60e3, SNAP = (i => i >= 0 ? args[i + 1] : null)(args.indexOf("--snap"));
+// --snap <dir>: saved live copies of match/6052086.json (UAE v Qatar, 30 Sep); v5/snap/ keeps the one the preview uses
+const args = process.argv.slice(2), FRESH = args.includes("--fresh"), TTL = FRESH ? 0 : 30 * 60e3, SNAP = (i => i >= 0 ? args[i + 1] : path.join(__dirname, "snap"))(args.indexOf("--snap"));
 const esc = U.esc, cfg = U.cfg;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const hash = s => crypto.createHash("sha1").update(s).digest("hex").slice(0, 10);
