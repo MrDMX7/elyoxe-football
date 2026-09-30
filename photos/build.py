@@ -181,7 +181,7 @@ def main(argv=None):
             open(os.path.join(os.environ.get("TEMP", "/tmp"), f"ph-{pid}.webp"), "wb").write(pic)
     index["generated"] = now.isoformat()[:19] + "Z"
     from collections import Counter
-    print(json.dumps(Counter(v.get("status", "?") for k, v in st.items() if k in set(todo)), ensure_ascii=False))
+    print(json.dumps(Counter(v.get("status", "?").split(" (")[0] for k, v in st.items() if k in set(todo)), ensure_ascii=False))
     print(f"{made} portraits made; {len(index['players'])} in the index")
     if not a.dry:
         store.put_json("ph/index.json", index, cache="warm")
