@@ -907,12 +907,13 @@ ${items}
   if (tdToday) ED.push(S.sec("هذا اليوم في كورة الإمارات", '<a href="/thisday/">كل الأيام</a>', tdToday));
 
   // «اسأل تيفو» (76): only after the owner approves sample answers
-  // /messi/ (owner 2026-09-30: «صفحات… لميسي واي مكان لعب فيه»): every shot in StatsBomb's open data (history/statsbomb_messi.py),
-  // the numbers prerendered, the 3D pitch (src/messi3d.js) loaded when it scrolls into view
+  // /messi/ — the Messi museum (owner 2026-09-30, lib/messi_page.cjs): rooms prerendered here, 3D and games in the browser
   { const MS = await get("legends/messi/shots.json");
     if (MS && MS.matches && MS.matches.length){
+      const [MP, MM, MX, MPL] = await Promise.all([get("legends/messi/play.json"), get("legends/messi/matches.json"), get("legends/messi/extra.json"), get("player/30981.json")]);
       const TN = {}; Object.values(S_TEAMS).forEach(t => { if (t && t.name && t.name_ar && !TN[t.name]) TN[t.name] = t.name_ar; });
-      const ar = n => TN[n] || ({ "Barcelona":"برشلونة", "Paris Saint-Germain":"باريس سان جيرمان", "Argentina":"الأرجنتين", "Inter Miami":"إنتر ميامي", "Real Madrid":"ريال مدريد", "Atlético Madrid":"أتلتيكو مدريد",
+      const PNL = {}; Object.values(NAMES_AR).forEach(v => { if (v && v.latin && v.ar && !PNL[v.latin]) PNL[v.latin] = v.ar; });
+      const MANUAL = { "Barcelona":"برشلونة", "Paris Saint-Germain":"باريس سان جيرمان", "Argentina":"الأرجنتين", "Inter Miami":"إنتر ميامي", "Inter Miami CF":"إنتر ميامي", "Real Madrid":"ريال مدريد", "Atlético Madrid":"أتلتيكو مدريد",
         // StatsBomb's names for the clubs and countries our data has no Arabic for (relegated since, or outside our leagues)
         "AC Ajaccio":"أجاكسيو", "AS Monaco":"موناكو", "Albacete":"ألباسيتي", "Almería":"ألميريا", "Bordeaux":"بوردو", "CD Numancia de Soria":"نومانسيا",
         "Charlotte":"شارلوت", "Chile":"تشيلي", "Cincinnati":"سينسيناتي", "Clermont Foot":"كليرمون", "Cádiz":"قادش", "Córdoba CF":"قرطبة", "Eibar":"إيبار",
@@ -921,30 +922,16 @@ ${items}
         "Montpellier":"مونبلييه", "Nantes":"نانت", "Nashville SC":"ناشفيل", "New York Red Bulls":"نيويورك ريد بولز", "OGC Nice":"نيس",
         "Olympique de Marseille":"مارسيليا", "Poland":"بولندا", "RC Deportivo La Coruña":"ديبورتيفو لاكورونيا", "Real Murcia CF":"ريال مورسيا",
         "Real Valladolid":"بلد الوليد", "Real Zaragoza":"سرقسطة", "Recreativo Huelva":"ريكرياتيفو ويلفا", "Saint-Étienne":"سانت إتيان",
-        "Sporting Gijón":"سبورتينغ خيخون", "Stade Brestois":"بريست", "Stade de Reims":"ريمس", "Tenerife":"تينيريفي", "Toronto FC":"تورونتو", "Xerez":"خيريز" })[n] || n;
-      const bySeason = {}, byTeam = {}, byComp = {};
-      MS.matches.forEach(m => { const k = m.season + "|" + m.team, g = m.shots.filter(s => s.goal).length, xg = m.shots.reduce((a, s) => a + s.xg, 0);
-        const r = bySeason[k] = bySeason[k] || { season:m.season, team:m.team, comp:m.comp, m:0, sh:0, g:0, xg:0 }; r.m++; r.sh += m.shots.length; r.g += g; r.xg += xg;
-        const t = byTeam[m.team] = byTeam[m.team] || { m:0, g:0 }; t.m++; t.g += g; const c = byComp[m.comp] = byComp[m.comp] || { m:0, g:0 }; c.m++; c.g += g; });
-      const T = MS.totals, pens = MS.matches.reduce((a, m) => a + m.shots.filter(s => s.goal && s.kind === "Penalty").length, 0);
-      const left = MS.matches.reduce((a, m) => a + m.shots.filter(s => s.goal && s.body === "L").length, 0);
-      const outBox = MS.matches.reduce((a, m) => a + m.shots.filter(s => s.goal && (s.x < 102 || s.y < 18 || s.y > 62)).length, 0);
-      const rows = Object.values(bySeason).sort((a, b) => a.season.localeCompare(b.season) || a.team.localeCompare(b.team));
-      const f1 = v => (Math.round(v * 10) / 10).toFixed(1);
-      const body = `<h1>ميسي: كل أهدافه على ملعب واحد</h1>
-<p class="season">${T.goals} هدف من ${T.shots} تسديدة في ${T.matches} مباراة، من ${esc(rows[0].season)} لين ${esc(rows[rows.length - 1].season)}</p>
-<section class="blk m3d" id="m3d"><h2>من وين يسجل، ووين تروح الكورة</h2>
-<p class="muted">كل خط هدف: يطلع من المكان اللي سدد منه ميسي وينزل في النقطة اللي عبرت فيها الكورة خط المرمى، بارتفاعها. الذهبي رجله اليسار، الأبيض اليمين، الأخضر الراس. النقاط الباهتة تسديداته اللي ما دخلت.</p>
-<div class="m3d-ctl" role="group" aria-label="زاوية الشوف"><button type="button" class="sa" data-v="behind" aria-pressed="true">من ورا</button><button type="button" class="sa" data-v="above" aria-pressed="false">من فوق</button><button type="button" class="sa" data-v="goal" aria-pressed="false">من داخل المرمى</button><button type="button" class="sa" id="m3dplay">شغّل مسيرته من البداية</button><label class="small"><input type="checkbox" id="m3dmiss" checked> التسديدات اللي ما دخلت</label></div>
-<div id="m3dc" data-src="/assets/messi3d.${ASSET_V}.js" data-json="/v1/legends/messi/shots.json" data-opp='${esc(JSON.stringify(Object.fromEntries([...new Set(MS.matches.map(m => m.opp))].map(o => [o, ar(o)]).filter(x => x[1] !== x[0]))))}'><p class="empty">نحمّل الملعب…</p></div>
-<input type="range" id="m3dr" min="0" max="${T.goals}" value="0" aria-label="لين أي هدف" dir="ltr"><p class="small" id="m3ds" aria-live="polite"></p>
-<p class="small">${left} من أهدافه برجله اليسار، و${outBox} من برا منطقة الجزاء، و${pens} من ضربات جزاء.</p></section>
-<section class="blk"><h2>موسم بموسم</h2><table class="tbl"><thead><tr><th>الموسم</th><th>الفريق</th><th>مباريات</th><th>أهداف</th><th>تسديدات</th><th>الأهداف المتوقعة</th><th>الفرق</th></tr></thead><tbody>${rows.map(r => `<tr><td class="num">${esc(r.season)}</td><td>${esc(ar(r.team))}</td><td class="num">${r.m}</td><td class="num">${r.g}</td><td class="num">${r.sh}</td><td class="num">${f1(r.xg)}</td><td class="num"><bdi dir="ltr">${r.g - r.xg >= 0 ? "+" : ""}${f1(r.g - r.xg)}</bdi></td></tr>`).join("")}</tbody></table>
-<p class="small muted">«الأهداف المتوقعة» كم هدف يسجل لاعب عادي من نفس التسديدات. الفرق الموجب يعني إنه سجل أكثر من المتوقع.</p></section>
-<section class="blk"><h2>وين لعب</h2><ul>${Object.entries(byTeam).map(([t, v]) => `<li><b>${esc(ar(t))}</b>: <span class="num">${v.g}</span> هدف في <span class="num">${v.m}</span> مباراة</li>`).join("")}</ul>
-<p class="small">وهالموسم مع إنتر ميامي: <a href="/p/30981/">أرقامه في الدوري الأمريكي</a>.</p></section>
-<p class="src">البيانات: StatsBomb (بيانات مفتوحة). تغطي كل مبارياته في الدوري الإسباني 2004-2021، والدوري الفرنسي، وكأس العالم 2018 و2022، وكوبا أمريكا 2024، ونهائيات دوري الأبطال؛ مب كل مباراة في مسيرته (${Object.entries(byComp).map(([c, v]) => esc(MS.comps[c] || c) + " " + v.g).join("، ")}).</p>`;
-      write("messi/index.html", page({ path:"/messi/", page:"messi", title:"أهداف ميسي على ملعب ثلاثي الأبعاد: من وين يسجل ووين تروح الكورة | تيفو", desc:`${T.goals} هدف لميسي من بيانات StatsBomb على ملعب واحد: مكان كل تسديدة ونقطة دخول الكورة المرمى، وموسم بموسم الأهداف والأهداف المتوقعة.`, body, ld:bcLd([["ليونيل ميسي", "/p/30981/"], ["كل أهدافه", "/messi/"]]) }));
+        "Sporting Gijón":"سبورتينغ خيخون", "Stade Brestois":"بريست", "Stade de Reims":"ريمس", "Tenerife":"تينيريفي", "Toronto FC":"تورونتو", "Xerez":"خيريز" };
+      const ar = n => TN[n] || MANUAL[n] || PNL[n] || (MX && MX.names_ar && MX.names_ar[n]) || n;
+      // «ميسي الحين»: Inter Miami's last and next match, and his season line from FotMob
+      const mt = typeof teamById !== "undefined" && teamById.get(960720), fx = mt ? R.teamFixtures(mt) : null, now = {};
+      if (fx && fx.past[0]){ const m = fx.past[0]; now.last = `${R.tname(m.home)} <bdi dir="ltr" class="num">${esc(String((m.score || {}).home ?? ""))}-${esc(String((m.score || {}).away ?? ""))}</bdi> ${R.tname(m.away)}، ${R.td(m.kickoff_uae, true)}`; }
+      if (fx && fx.next[0]){ const m = fx.next[0]; now.next = `<a href="/m/${m.id}/">${R.tname(m.home)} ضد ${R.tname(m.away)}</a>، ${R.td(m.kickoff_uae, true)}`; }
+      if (MPL && MPL.goals != null) now.season = `هالموسم مع إنتر ميامي: ${MPL.goals} هدف و${MPL.assists} تمريرة حاسمة في ${Math.round((MPL.minutes || 0) / 90)} مباراة كاملة من الدقايق · <a href="/p/30981/">صفحته</a>`;
+      const museum = require("./lib/messi_page.cjs")({ shots:MS, play:MP, matches:MM, extra:MX, now, transfersHtml:trPlayer(30981) }, { esc, ar, eur, clubCell, ASSET_V });
+      write("messi/index.html", page({ path:"/messi/", page:"messi", title:"متحف ميسي: كل أهدافه وتمريراته وألقابه على ملعب ثلاثي الأبعاد | تيفو", desc:`${museum.total ? museum.total.goals + " هدف" : museum.goals + " هدف"} لليونيل ميسي في متحف تفاعلي: من وين يسجل ووين تروح الكورة بالـ3D، تمريراته وشراكاته، ألقابه وكراته الذهبية، رحلة قطر 2022، وألعاب.`, body:museum.body, ld:bcLd([["ليونيل ميسي", "/p/30981/"], ["متحف ميسي", "/messi/"]]) }));
+      write("messi/poster/index.html", page({ path:"/messi/poster/", page:"poster", noindex:true, title:"بوستر متحف ميسي للطباعة | تيفو", desc:"كل أهداف ميسي على ملعب واحد، جاهز للطباعة.", body:museum.poster }));
       urls.push("/messi/");
     } }
   // the journal (news/ in the pipeline): every outlet's story in one Arabic line, rendered in the browser from /v1/news/latest.json

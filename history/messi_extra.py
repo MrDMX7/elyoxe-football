@@ -114,11 +114,33 @@ def legends():
     return out
 
 
+def dob():
+    b = sparql("SELECT ?d WHERE { wd:%s wdt:P569 ?d }" % Q["messi"])
+    return b[0]["d"]["value"][:10] if b else None
+
+
+def names_ar():
+    """Arabic labels for the teammates, assist receivers and coaches StatsBomb names (English labels matched exactly,
+    footballers and managers only: a namesake never gets in)."""
+    base = os.path.join(HERE, ".cache", "messi")
+    try:
+        play = json.load(open(os.path.join(base, "play.json"), encoding="utf-8")); mm = json.load(open(os.path.join(base, "matches.json"), encoding="utf-8"))
+    except OSError:
+        return {}
+    want = {x[0] for x in play.get("links", [])} | {x[0] for x in play.get("costarts", [])} | {a.get("to") for a in play.get("assists", []) if a.get("to")} | {m.get("coach") for m in mm["matches"] if m.get("coach")}
+    out, want = {}, sorted(w for w in want if w)
+    for i in range(0, len(want), 60):
+        vals = " ".join('"%s"@en' % w.replace('"', "") for w in want[i:i + 60])
+        for b in sparql("SELECT ?l ?ar WHERE { VALUES ?l { %s } ?p rdfs:label ?l; wdt:P106 ?o. VALUES ?o { wd:Q937857 wd:Q628099 } ?p rdfs:label ?ar FILTER(LANG(?ar)='ar') }" % vals):
+            out.setdefault(b["l"]["value"], b["ar"]["value"])
+    return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(); ap.add_argument("--upload", action="store_true"); a = ap.parse_args(argv)
     doc = {"generated": date.today().isoformat(), "sources": {"career": "FotMob", "value": "Transfermarkt (transfermarkt-datasets, CC0)",
            "awards": "Wikidata", "trophies": "Wikidata (P1346 winner)", "intl": "martj42/international_results (CC0)", "legends": "Wikidata (P54 with P1350/P1351)"}}
-    for name, fn in (("career", career), ("value", value), ("awards", awards), ("trophies", trophies), ("intl", intl), ("legends", legends)):
+    for name, fn in (("dob", dob), ("names_ar", names_ar), ("career", career), ("value", value), ("awards", awards), ("trophies", trophies), ("intl", intl), ("legends", legends)):
         try:
             doc[name] = fn()
         except Exception as e:
