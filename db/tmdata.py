@@ -5,9 +5,12 @@ birthplace, second nationality, agent, kit sponsor, contract option, the name in
 
     python -m db.tmdata [--upload] [--refetch]
 
-Match: the same birth date, and Transfermarkt's name (without its «(1)» suffix) inside the FotMob name or the other way
-round, one candidate only. Players: the site's (v1/history/fm/players.json) and the world encyclopedia's (v1/world/bios.json).
-Out (public): v1/player/<fotmob id>/tm.json, v1/history/tm/index.json {fotmob id: transfermarkt id}.
+Match: the same birth date (FotMob's «0001-01-01» is none), and Transfermarkt's name (without its «(1)» suffix) equal to the
+FotMob name, one candidate only. One name inside the other («David» / «David Eguaibor») counts only when Transfermarkt's
+club is FotMob's, or when both names have two words or more with the same surname and Transfermarkt's citizenship has
+FotMob's nationality. Players: the site's (v1/history/fm/players.json) and the world encyclopedia's (v1/world/bios.json).
+Out (public): v1/player/<fotmob id>/tm.json, v1/history/tm/index.json {players: {fotmob id: transfermarkt id}, who: {fotmob
+id: [Transfermarkt's name, citizenship]}} (who: for the daily identity check; the site reads players).
 Cache: db/.cache/tm/ (the CSVs; refetched every 30 days, the big ones from media.githubusercontent.com).
 """
 import argparse, csv, gzip, json, os, re, sys, time, unicodedata, urllib.request
@@ -104,14 +107,46 @@ def main(argv=None):
             return json.loads(gzip.decompress(b) if r.headers.get("Content-Encoding") == "gzip" else b)
         except Exception as e:
             print("can't read", u, e); return {}
-    fm = {int(k): (v.get("name"), v.get("born")) for k, v in (jget("https://tifo.elyoxe.com/v1/history/fm/players.json").get("players") or {}).items()}
+    fm = {int(k): (v.get("name"), v.get("born"), v.get("team"), v.get("cc")) for k, v in (jget("https://tifo.elyoxe.com/v1/history/fm/players.json").get("players") or {}).items()}
     for k, v in (jget("https://tifo.elyoxe.com/v1/world/bios.json").get("players") or {}).items():
-        fm.setdefault(int(k), (v[0], v[1]))
+        fm.setdefault(int(k), (v[0], v[1], v[2], None))
     by_dob = {}
-    for fid, (nm, born) in fm.items():
-        if born and nm:
+    for fid, (nm, born, team, cc) in fm.items():
+        if born and born >= "1900" and nm:
             by_dob.setdefault(born, []).append(fid)
     print(len(fm), "FotMob players")
+    tname = {str(c[0]): c[2] for c in jget("https://tifo.elyoxe.com/v1/world/index.json").get("clubs") or []}
+    for k, t in (jget("https://tifo.elyoxe.com/v1/teams.json").get("teams") or {}).items():
+        tname.setdefault(k, t.get("name"))
+    STOP = {"fc", "cf", "afc", "sc", "ac", "club", "de", "united", "utd", "city", "ii", "u21", "u23", "u19", "u20", "b", "sk", "fk", "cd", "ca", "real",
+            "sporting", "al", "the", "futebol", "clube", "esporte", "atletico", "sport", "calcio", "if", "bk", "fk", "sv", "vfb", "vfl", "1"}
+
+    def same_club(tm_club, fid):
+        a, b = set(fold(tm_club)) - STOP, set(fold(tname.get(str(fm[fid][2]), ""))) - STOP
+        import difflib
+        return bool(a and b) and (bool(a & b) or difflib.SequenceMatcher(None, " ".join(sorted(a)), " ".join(sorted(b))).ratio() >= 0.7)
+    cit_of = lambda r: [c.strip() for c in re.split(r"\s{2,}", r.get("citizenship") or "") if c.strip()]
+    tm_name = lambda r: fold(re.sub(r"\s*\(\d+\)\s*$", "", r.get("player_name") or ""))
+    # FotMob's nationality code -> Transfermarkt's country names, learned from the players whose names are the same
+    votes = {}
+    with open(paths["player_profiles"], encoding="utf-8", newline="") as f:
+        for r in csv.DictReader(f):
+            for fid in by_dob.get((r.get("date_of_birth") or "")[:10]) or []:
+                if fm[fid][3] and set(tm_name(r)) == set(fold(fm[fid][0])):
+                    for c in cit_of(r):
+                        votes.setdefault(fm[fid][3], {}).setdefault(c, 0); votes[fm[fid][3]][c] += 1
+    cc2 = {k: {c for c, n in v.items() if n >= max(3, 0.2 * max(v.values()))} for k, v in votes.items()}
+
+    def same_one(r, tn, fid):
+        fn = fold(fm[fid][0])
+        if not fn or not (set(tn) <= set(fn) or set(fn) <= set(tn)):
+            return False
+        if set(tn) == set(fn) or same_club(r.get("current_club_name"), fid):
+            return True
+        if len(tn) < 2 or len(fn) < 2 or tn[-1] != fn[-1]:
+            return False                          # «David» / «David Eguaibor», «João Oliveira» / «João Vitor de Oliveira Dreger»
+        cc = fm[fid][3]
+        return not (cc and cc in cc2 and cit_of(r) and not set(cit_of(r)) & cc2[cc])
     # 1. profiles -> the match
     prof, taken = {}, {}
     with open(paths["player_profiles"], encoding="utf-8", newline="") as f:
@@ -120,10 +155,10 @@ def main(argv=None):
             cands = by_dob.get(d)
             if not cands:
                 continue
-            tn = fold(re.sub(r"\s*\(\d+\)\s*$", "", r.get("player_name") or ""))
+            tn = tm_name(r)
             if not tn:
                 continue
-            hits = [fid for fid in cands if (lambda fn: fn and (set(tn) <= set(fn) or set(fn) <= set(tn)))(fold(fm[fid][0]))]
+            hits = [fid for fid in cands if same_one(r, tn, fid)]
             if len(hits) == 1:
                 taken.setdefault(hits[0], []).append(r["player_id"]); prof[r["player_id"]] = r
     m = {fid: tms[0] for fid, tms in taken.items() if len(tms) == 1}
@@ -206,7 +241,9 @@ def main(argv=None):
         t0 = time.time()
         with ThreadPoolExecutor(12) as ex:
             list(ex.map(lambda d: store.put_json(f"player/{d['player']}/tm.json", d, cache="warm"), docs.values()))
-        store.put_json("history/tm/index.json", {"generated": date.today().isoformat(), "players": {str(f): int(t) for f, t in m.items()}}, cache="warm")
+        store.put_json("history/tm/index.json", {"generated": date.today().isoformat(), "players": {str(f): int(t) for f, t in m.items()},
+                                                 "who": {str(f): [re.sub(r"\s*\(\d+\)\s*$", "", prof[t].get("player_name") or ""), cit_of(prof[t])] for f, t in m.items()}},
+                       cache="warm")
         store.put_json("history/tm/fill.json", {"generated": date.today().isoformat(), "players": fill}, cache="warm")
         print(f"uploaded ({round(time.time() - t0)}s)")
     return 0

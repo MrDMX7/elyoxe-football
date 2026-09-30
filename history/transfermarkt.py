@@ -6,7 +6,9 @@ history and records from open datasets, not FotMob.
 
 Matching, never by name alone: a Transfermarkt player is one of ours when the folded name AND the date of birth agree
 (FotMob dates: state/dobs.json + squads). A Transfermarkt club becomes a FotMob team by vote: the current club of every
-matched player, kept when at least 3 players and 70% of them agree.
+matched player, kept when at least 3 players and 70% of them agree. National teams never take part: their squads are
+left out of the vote (a player's club is his club, not his country) and no Transfermarkt club maps to one. The map is one
+to one: a FotMob team that two Transfermarkt clubs reach keeps the one whose name is its own, else neither.
 
 Out (public, v1/history/): transfers.json {players: {fotmob id: [moves]}, clubs: {fotmob team id: {in, out}}}.
 A move is [date, season, from name, from team id|null, to name, to team id|null, fee EUR|null (0 = free), market value|null].
@@ -27,6 +29,25 @@ def fold(s):
     return re.sub(r"[^a-z]+", " ", s).strip()
 
 
+# national-team competitions outside the «national» scope of competitions.yaml: World Cup, Gulf Cup, Arab Cup (+ qualifying)
+NT_COMPS = {77, 329, 10242, 11156}
+
+
+def national_ids(store):
+    """FotMob ids of national teams. teams.json flags only some (country.national), and Germany, Mexico, South Korea… carry
+    no country at all: a team is national when countries.yaml names it, when teams.json flags it, or when every competition
+    it plays is a national-team one. db/clubs.py and db/rsssf.py use it too."""
+    import config
+    comps = (store.get_json("index.json") or {}).get("competitions") or []
+    nt = {c["id"] for c in comps if c.get("scope") == "national"} | NT_COMPS
+    out = {int(c["fotmob_team"]) for c in config.countries() if c.get("fotmob_team")}
+    for k, t in ((store.get_json("teams.json") or {}).get("teams") or {}).items():
+        cs = t.get("comps") or []
+        if t.get("national") or (t.get("country") or {}).get("national") or (cs and all(c in nt for c in cs)):
+            out.add(int(k))
+    return out
+
+
 def table(name):
     raw = urllib.request.urlopen(urllib.request.Request(R2 + name + ".csv.gz", headers={"User-Agent": "elyoxe-tifo/0.1"}), timeout=300).read()
     return list(csv.DictReader(io.TextIOWrapper(gzip.GzipFile(fileobj=io.BytesIO(raw)), encoding="utf-8")))
@@ -43,25 +64,27 @@ def main(argv=None):
     ap = argparse.ArgumentParser(); ap.add_argument("--upload", action="store_true"); a = ap.parse_args(argv)
     store = Store(S3Backend(BUCKET))
     names = json.load(open(os.path.join(os.path.dirname(HERE), "names", "players_ar.json"), encoding="utf-8"))
+    national = national_ids(store)
     dobs, team_of = dict(store.get_state("dobs.json", {}) or {}), {}
     for tid, groups in (store.get_state("squads.json", {}) or {}).items():
         for g in groups or []:
             for pl in g.get("players") or []:
                 if pl.get("dob"):
                     dobs[str(pl["id"])] = pl["dob"][:10]
-                team_of[str(pl["id"])] = int(tid)
+                if int(tid) not in national:          # a national squad says the player's country, not his club
+                    team_of[str(pl["id"])] = int(tid)
     # the big leagues have no squad files: their player tables say each player's team
     import config
     for cid in config.settings().get("player_stats_comps", []):
         try:
             for pid, v in ((store.get_json(f"comp/{cid}/players.json") or {}).get("players") or {}).items():
-                if v.get("team"):
+                if v.get("team") and int(v["team"]) not in national:
                     team_of.setdefault(str(pid), int(v["team"]))
         except ValueError:
             pass
     ours = defaultdict(list)                      # (folded name, dob) -> fotmob ids
     for pid, v in names.items():
-        if dobs.get(pid):
+        if dobs.get(pid) and dobs[pid] >= "1900":   # FotMob's «0001-01-01» means unknown
             ours[(fold(v.get("latin")), dobs[pid])].append(pid)
     print(len(ours), "of our players have a name and a birth date")
 
@@ -100,11 +123,14 @@ def main(argv=None):
         for c in t.get("comps") or []:
             by_comp[c].append((int(tid), toks(t.get("name")), toks(t.get("name")) - STOP))
     named = 0
-    for c in table("clubs"):
+    tclubs = table("clubs")
+    for c in tclubs:
         cand = by_comp.get(TM2FM.get(c["domestic_competition_id"]), [])
         if not cand or c["club_id"] in club:
             continue
         mine, core = toks(c["name"]), toks(c["name"]) - STOP
+        # one name's core words inside the other's («Olympique Lyon» / «Lyon»); when that lets two Transfermarkt clubs reach one
+        # FotMob team («Los Angeles Galaxy» and «Los Angeles FC», the two Estudiantes), the one-to-one rule below decides both ways
         def score(x):
             full, cr = x[1], x[2]
             if cr and core:
@@ -116,7 +142,26 @@ def main(argv=None):
         if score(ranked[0]) >= 0.99 and (len(ranked) == 1 or score(ranked[1]) < 0.99 or jac(ranked[0]) >= jac(ranked[1]) + 0.15):
             club[c["club_id"]] = ranked[0][0]; named += 1
     print(named, "more clubs mapped by name within their league;", len(club), "in all")
-    pass  # (counted above)
+    # one to one: a FotMob team reached by two Transfermarkt clubs keeps the one that carries its name (both ways), else none;
+    # and never a national team
+    tm_name = {c["club_id"]: c.get("name") for c in tclubs}
+    for p in tmp:
+        if p.get("current_club_id"):
+            tm_name.setdefault(p["current_club_id"], p.get("current_club_name"))
+    by_fm = defaultdict(list)
+    for c, t in club.items():
+        by_fm[t].append(c)
+    same_name = lambda c, t: (toks(tm_name.get(c)) - STOP or toks(tm_name.get(c))) == (toks((teams.get(str(t)) or {}).get("name")) - STOP or toks((teams.get(str(t)) or {}).get("name")))
+    for t, cs in by_fm.items():
+        if len(cs) > 1:
+            keep = [c for c in cs if same_name(c, t)]
+            for c in cs:
+                if len(keep) != 1 or c != keep[0]:
+                    del club[c]
+            print("one to one:", t, (teams.get(str(t)) or {}).get("name"), "<-", [tm_name.get(c) for c in cs], "kept", [tm_name.get(c) for c in keep] if len(keep) == 1 else "none")
+    for c in [c for c, t in club.items() if t in national]:
+        print("national team, not a club:", tm_name.get(c), "->", club.pop(c))
+    print(len(club), "clubs mapped after the one-to-one and national-team rules")
     # second pass for players FotMob gave no birth date: same folded name AND the same (mapped) current club
     by_team = defaultdict(list)
     for pid, v in names.items():

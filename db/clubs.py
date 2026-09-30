@@ -4,8 +4,10 @@
 
 Linking a FotMob club to its Wikidata item, strongest first:
   1. Transfermarkt id: history/transfermarkt.py maps Transfermarkt clubs to FotMob; Wikidata holds the Transfermarkt id (P7223).
-  2. Name + country: an exact (folded) English or Arabic label of a football club (Q476028 and subclasses) in the same
-     country (P17 -> ISO 3166 P297). Only when exactly one item matches.
+  2. Name + country: an exact (folded) English or Arabic label of a football club (Q476028 and subclasses, not a women's
+     one) in the same country (P17 -> ISO 3166 P297). Only when exactly one item matches.
+National teams never get a card (history.transfermarkt.national_ids), and the link is one to one: a FotMob club reached
+by two items, or an item reached by two FotMob clubs, gets none.
 Fields: founded (P571), stadium (P115) + its capacity (P1083) and coordinates (P625), city (P159 / P131), nickname
 (P1449), website (P856), official accounts (Instagram, X, Facebook, YouTube, TikTok), Arabic label, and every season/edition it won (items whose winner P1346 is the club), grouped
 by competition (P3450 «season of»).
@@ -48,37 +50,40 @@ def ar_fold(s):
     return re.sub(r"^(نادي|النادي)\s+", "", re.sub(r"\s+(السعودي|الاماراتي|المصري|الرياضي|لكره القدم)$", "", s.strip()))
 
 
-def main(argv=None):
-    ap = argparse.ArgumentParser(); ap.add_argument("--upload", action="store_true"); a = ap.parse_args(argv)
-    store = Store(S3Backend(BUCKET))
+def link(store):
+    """{FotMob club id: Wikidata qid} — the two steps above, national teams out, one to one."""
+    from history.transfermarkt import national_ids
     teams = (store.get_json("teams.json") or {}).get("teams") or {}
+    national = {str(x) for x in national_ids(store)}
     # a club's country: its own, else its league's (FotMob leaves many foreign clubs without one: River Plate, Boca…)
     comp_cc = {c["id"]: (c.get("country") or {}).get("iso2") for c in ((store.get_json("index.json") or {}).get("competitions") or []) if c.get("kind") == "league"}
     clubs = {}
     for k, t in teams.items():
-        if t.get("national"):
+        if k in national:
             continue
         cc = (t.get("country") or {}).get("iso2") or next((comp_cc[c] for c in t.get("comps") or [] if comp_cc.get(c)), None)
         if cc:
             clubs[k] = dict(t, country={"iso2": cc})
-    # 1. Transfermarkt ids -> FotMob, from the transfer history's club map
+    # 1. Transfermarkt ids -> FotMob, from the transfer history's club map (clubs only: never a national team)
     tm2fm = {}
     try:
         tm2fm = json.load(open(os.path.join(ROOT, "history", ".cache", "tm_clubmap.json"), encoding="utf-8"))
     except OSError:
         pass
-    qid = {}
+    by_tm = defaultdict(set)
     if tm2fm:
         vals = " ".join(f'"{k}"' for k in tm2fm)
         for b in sparql("SELECT ?c ?tm WHERE { VALUES ?tm { %s } ?c wdt:P7223 ?tm }" % vals):
             fm = tm2fm.get(b["tm"]["value"])
-            if fm:
-                qid.setdefault(str(fm), b["c"]["value"].rsplit("/", 1)[1])
-    print(len(qid), "clubs linked by Transfermarkt id")
+            if fm and str(fm) in teams and str(fm) not in national:
+                by_tm[str(fm)].add(b["c"]["value"].rsplit("/", 1)[1])
+    qid = {k: next(iter(v)) for k, v in by_tm.items() if len(v) == 1}
+    print(len(qid), "clubs linked by Transfermarkt id;", sum(1 for v in by_tm.values() if len(v) > 1), "left out (two items)")
     # 2. name + country, per country (one query each: every football club there with its labels)
     by_cc = defaultdict(list)
+    step2 = set()
     for k, t in clubs.items():
-        if k not in qid:
+        if k not in qid and k not in by_tm:
             by_cc[ISO_FIX.get(t["country"]["iso2"], t["country"]["iso2"])].append(k)
     for cc, ids in sorted(by_cc.items()):
         rows = sparql("""SELECT ?c ?en ?ar WHERE { ?co wdt:P297 "%s". ?c wdt:P17 ?co; wdt:P31/wdt:P279* wd:Q476028.
@@ -94,10 +99,33 @@ def main(argv=None):
             if len(c) != 1 and t.get("name_ar"):
                 c = arl.get(ar_fold(t["name_ar"])) or set()
             if len(c) == 1:
-                qid[k] = next(iter(c)); got += 1
+                qid[k] = next(iter(c)); step2.add(k); got += 1
         print(cc, f"{got}/{len(ids)}")
         time.sleep(1)
+    # a name can be a women's club's (Le Mans FC's card was one): one small query over the items step 2 found
+    wq = sorted({qid[k] for k in step2})
+    women = set()
+    for i in range(0, len(wq), 200):
+        women |= {b["c"]["value"].rsplit("/", 1)[1] for b in sparql("SELECT ?c WHERE { VALUES ?c { %s } ?c wdt:P2094 wd:Q606060 }" % " ".join("wd:" + q for q in wq[i:i + 200]))}
+    for k in [k for k in step2 if qid[k] in women]:
+        print("women's club, not this one:", k, qid.pop(k))
+    # one to one: an item two FotMob clubs reach belongs to neither (Qatar SC was also the Qatar national team's card)
+    inv = defaultdict(list)
+    for k, q in qid.items():
+        inv[q].append(k)
+    for q, ks in inv.items():
+        if len(ks) > 1:
+            print("one to one:", q, "reached by", [(k, (teams.get(k) or {}).get("name")) for k in ks], "-> left out")
+            for k in ks:
+                del qid[k]
     print(len(qid), "clubs linked in all")
+    return qid
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(); ap.add_argument("--upload", action="store_true"); a = ap.parse_args(argv)
+    store = Store(S3Backend(BUCKET))
+    qid = link(store)
     # the cards
     cards, qs = {}, sorted(set(qid.values()))
     inv = defaultdict(list)

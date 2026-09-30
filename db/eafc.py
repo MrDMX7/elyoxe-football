@@ -3,8 +3,9 @@ matched to our FotMob players, for a player card on every player page (owner 202
 
     python -m db.eafc [--upload] [--refetch]
 
-Match: the same birth date, and EA's surname (or common name) inside the FotMob name, or the other way round; one
-candidate only. Players: the site's (v1/history/fm/players.json) and, when db/world.py has run with --players, the world
+Match: the same birth date (FotMob's «0001-01-01» is none), and EA's full or common name inside the FotMob name, or the
+other way round; one candidate only. EA's surname alone counts only with a compatible given name (Joe / Joseph, Tino /
+Valentino) or the same club: «Isaac Lee» of Shrewsbury is not «Myung-Dong Lee» of Chuncheon. Players: the site's (v1/history/fm/players.json) and, when db/world.py has run with --players, the world
 encyclopedia's (v1/world/bios.json).
 Out (public): v1/ea/cards.json {fotmob id: card} for the build, v1/ea/s/<id % 100>.json for the encyclopedia's pages.
 card = [overall, position, [6 face stats], skill moves, weak foot, foot (1 right, 2 left), [29 attributes], [PlayStyles, + marks
@@ -88,16 +89,36 @@ def main(argv=None):
         fm.setdefault(int(k), (v[0], v[1], v[2]))
     by_dob = {}
     for fid, (nm, born, team) in fm.items():
-        if born:
+        if born and born >= "1900":
             by_dob.setdefault(born, []).append(fid)
     print(len(fm), "FotMob players,", sum(1 for v in fm.values() if v[1]), "with a birth date")
+    tname = {str(c[0]): c[2] for c in jget("https://tifo.elyoxe.com/v1/world/index.json").get("clubs") or []}
+    for k, t in (jget("https://tifo.elyoxe.com/v1/teams.json").get("teams") or {}).items():
+        tname.setdefault(k, t.get("name"))
+    STOP = {"fc", "cf", "afc", "sc", "ac", "club", "de", "united", "utd", "city", "ii", "u21", "u23", "u19", "b", "sk", "fk", "cd", "ca", "real", "sporting",
+            "al", "the", "if", "bk", "sv", "1", "2"}
+
+    def same_club(ea_team, team):
+        import difflib
+        a, b = set(fold(ea_team)) - STOP, set(fold(tname.get(str(team), ""))) - STOP
+        return bool(a and b) and (bool(a & b) or difflib.SequenceMatcher(None, " ".join(sorted(a)), " ".join(sorted(b))).ratio() >= 0.7)
+
+    def given_ok(x, fn):
+        """EA's first names and FotMob's other words: one starts like the other (Joe / Joseph, Jake / Jacob), is inside it (Tino /
+        Valentino) or is a close spelling with the same initial (Tom / Thomas, Mishal / Meshal)"""
+        import difflib
+        last = set(fold(x.get("lastName")))
+        g, h = fold(x.get("firstName")), [w for w in fn if w not in last]
+        return any(a == b or a in b or b in a or (len(a) >= 2 and len(b) >= 2 and a[:2] == b[:2])
+                   or (a[0] == b[0] and difflib.SequenceMatcher(None, a, b).ratio() >= 0.6) for a in g for b in h)
     cards, taken = {}, {}
     for x in items:
         d = dob(x.get("birthdate"))
         cands = by_dob.get(d) or []
         if not cands:
             continue
-        keys = [fold(x.get("commonName")), fold(x.get("lastName")), fold((x.get("firstName") or "") + " " + (x.get("lastName") or ""))]
+        keys = [fold(x.get("commonName")), fold((x.get("firstName") or "") + " " + (x.get("lastName") or ""))]
+        last = fold(x.get("lastName"))
         hits = []
         for fid in cands:
             fn = fold(fm[fid][0])
@@ -105,15 +126,21 @@ def main(argv=None):
                 continue
             if any(k and (set(k) <= set(fn) or set(fn) <= set(k)) for k in keys):
                 hits.append(fid)
+            elif last and (set(last) <= set(fn) or set(fn) <= set(last)) and (given_ok(x, fn) or same_club((x.get("team") or {}).get("label"), fm[fid][2])):
+                hits.append(fid)                  # the surname alone: a given name that fits, or the same club
         if len(hits) == 1:
             taken.setdefault(hits[0], []).append(x)
+    who = {}
     for fid, xs in taken.items():
         if len(xs) == 1:
             cards[fid] = card(xs[0])
+            who[fid] = [" ".join(filter(None, [xs[0].get("firstName"), xs[0].get("lastName")])), (xs[0].get("nationality") or {}).get("label")]
     print(len(cards), "cards matched")
     if a.upload:
         store = Store(S3Backend(BUCKET))
-        store.put_json("ea/cards.json", {"generated": date.today().isoformat(), "edition": "EA SPORTS FC 27", "cards": {str(k): v for k, v in cards.items()}}, cache="warm")
+        # who: EA's name and nationality, for the daily identity check (the site reads cards; the shards stay as they were)
+        store.put_json("ea/cards.json", {"generated": date.today().isoformat(), "edition": "EA SPORTS FC 27", "cards": {str(k): v for k, v in cards.items()},
+                                         "who": {str(k): v for k, v in who.items()}}, cache="warm")
         shards = {}
         for k, v in cards.items():
             shards.setdefault(k % 100, {})[str(k)] = v

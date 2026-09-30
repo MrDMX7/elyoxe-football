@@ -1,6 +1,9 @@
 """Arabic Wikipedia's lead for every club and player we can tie to a Wikidata item (owner 2026-09-30: «كل الخانات تكون
 كاملة»): players from the photo pipeline's identity check (state/photos.json: the Wikidata footballer whose birth date is
 FotMob's), clubs from db/clubs.py's cards.
+A player gets a lead only when that check passed (identity «ok»; before photos/build.py wrote it, the statuses «ok» and
+«no clear face»: an item with no picture was never checked), never when two FotMob players point at one item, and never
+when the lead's own birth year («ولد في … 1953») is another than FotMob's.
 
     python -m db.wiki_ar [--upload]
 
@@ -8,7 +11,8 @@ Wikidata gives the Arabic article (schema:about), Wikipedia's REST summary its l
 Out (public): v1/history/wiki_ar.json {"players": {fotmob id: [title, lead]}, "clubs": {fotmob id: [title, lead]}}
 Cache: db/.cache/wiki_ar.json (each lead kept 30 days).
 """
-import argparse, gzip, json, os, sys, time, urllib.parse, urllib.request
+import argparse, gzip, json, os, re, sys, time, urllib.parse, urllib.request
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
@@ -20,7 +24,12 @@ from store import Store, S3Backend  # noqa: E402
 BUCKET = os.environ.get("FOOTBALL_BUCKET", "elyoxe-football-574771023173-ap-south-1")
 CACHE = os.path.join(HERE, ".cache", "wiki_ar.json")
 UA = "TifoBot/1.0 (https://tifo.elyoxe.com; hello@elyoxe.com)"
-BAD = ("unverified", "birth date differs")
+PASSED = ("ok", "no clear face")        # photo statuses reached only after the identity check passed
+BORN = re.compile(r"(?:ولد|وُلد|مواليد|مولود|ولدت)[^0-9٠-٩]{0,40}?([0-9٠-٩]{4})")
+
+
+def verified(v):
+    return v.get("identity") == "ok" if "identity" in v else str(v.get("status") or "") in PASSED
 
 
 def http_json(url, data=None, tries=4):
@@ -56,13 +65,15 @@ def main(argv=None):
     ap = argparse.ArgumentParser(); ap.add_argument("--upload", action="store_true"); a = ap.parse_args(argv)
     store = Store(S3Backend(BUCKET))
     ph = store.get_state("photos.json") or {}
-    pq = {k: v["qid"] for k, v in ph.items() if isinstance(v, dict) and v.get("qid") and not str(v.get("status") or "").startswith(BAD)}
-    try:
-        r = urllib.request.urlopen(urllib.request.Request("https://tifo.elyoxe.com/v1/history/clubs.json", headers={"User-Agent": UA, "Accept-Encoding": "gzip"}), timeout=120)
-        b = r.read(); cl = json.loads(gzip.decompress(b) if r.headers.get("Content-Encoding") == "gzip" else b).get("clubs") or {}
-    except Exception as e:
-        print("no club cards", e); cl = {}
+    pq = {k: v["qid"] for k, v in ph.items() if isinstance(v, dict) and v.get("qid") and verified(v)}
+    shared = {q for q, n in Counter(pq.values()).items() if n > 1}      # two FotMob players on one item: at most one is it
+    pq = {k: q for k, q in pq.items() if q not in shared}
+    print(len(shared), "items shared by two FotMob players left out")
+    cl = (store.get_json("history/clubs.json") or {}).get("clubs") or {}
     cq = {k: v["qid"] for k, v in cl.items() if v.get("qid")}
+    born = {k: (v.get("born") or "")[:4] for k, v in ((store.get_json("history/fm/players.json") or {}).get("players") or {}).items()}
+    for k, v in ((store.get_json("world/bios.json") or {}).get("players") or {}).items():
+        born.setdefault(k, (v[1] or "")[:4])
     print(len(pq), "players and", len(cq), "clubs with a Wikidata item")
     titles = articles(list(pq.values()) + list(cq.values()))
     print(len(titles), "with an Arabic article")
@@ -83,7 +94,16 @@ def main(argv=None):
     os.makedirs(os.path.dirname(CACHE), exist_ok=True)
     json.dump(cache, open(CACHE, "w", encoding="utf-8", newline="\n"), ensure_ascii=False)
     pick = lambda m: {k: [titles[q], cache[titles[q]][0]] for k, q in m.items() if q in titles and cache.get(titles[q], [""])[0]}
-    out = {"generated": date.today().isoformat(), "players": pick(pq), "clubs": pick(cq)}
+
+    def lead_year(t):
+        m = BORN.search((t or "").translate(str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")))
+        return m.group(1) if m else None
+    players = pick(pq)
+    other = [k for k, (t, x) in players.items() if lead_year(x) and born.get(k, "") >= "1900" and abs(int(lead_year(x)) - int(born[k])) > 1]
+    for k in other:
+        del players[k]
+    print(len(other), "player leads left out: the lead's birth year is another than FotMob's")
+    out = {"generated": date.today().isoformat(), "players": players, "clubs": pick(cq)}
     print(len(out["players"]), "players and", len(out["clubs"]), "clubs with a lead")
     if a.upload:
         store.put_json("history/wiki_ar.json", out, cache="warm")
