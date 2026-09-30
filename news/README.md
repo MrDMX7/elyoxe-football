@@ -34,7 +34,7 @@ python -m news.run [--local DIR] [--no-llm]      # the Fold runs it every 15 min
    read twice), the `media:` channels (broadcasters, leagues, confederations, federations; each line says why it is
    official; a channel limited to competitions or to its national team is read only when one of them played), the official
    X accounts' posts that carry a video (the laptop reader marks them `video`), and FotMob's own link in the match file.
-   Public: `v1/media/<match>.json` `{generated, match, highlights: [video], goals: {"<minute>-<playerId>": [video]}}` and
+   Public: `v1/media/<match>.json` `{generated, match, highlights: [video], goals: {"<minute as shown, 45+2>-<playerId>": [video]}}` and
    `v1/media/recent.json`; a file is written only when its content changes. State (videos 4 days, the match files read,
    embed checks) in `state/news/media.json`. The site's `site/src/media.js` reads the file in the browser («▶ شاهد» by
    each goal, «▶ الملخص» with the match buttons, a sheet with the player). `python -m news.media --dry --explain [id]`

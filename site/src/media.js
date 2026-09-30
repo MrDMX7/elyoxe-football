@@ -5,13 +5,15 @@
    bottom sheet that plays the video (youtube-nocookie, loaded only then) or links to the post on X. While the match is live or
    ended in the last 5 hours the file is read again every 2 minutes (not while the tab is hidden).
    Portable on purpose: its own few styles, the site's sheet system when there is one (window.TifoSheet) and its own otherwise.
-   It finds goal rows by data-goal-key="<minute>-<playerId>" (or the v3 rows' data-eid), the match buttons by .hero-acts or a
-   [data-media-slot] element, so a new look keeps it by keeping those hooks. /m/<id>/ and /db/match/?id= only. */
+   It finds goal rows by data-goal-key="<minute as shown, 45+2>-<playerId>" (render.js / v3.js; or the v3 rows' data-eid), and
+   one «الملخص» only: the page's own button when the match file already has FotMob's highlights (the hero's .cta, #hlbtn's
+   .hlbtn: they then open the sheet, their link stays the no-script way), else one of its own in .hero-acts or a
+   [data-media-slot] element. /m/<id>/, /live/?id= and /db/match/?id=. */
 (function(){
   "use strict";
   var D = document, B = D.body; if (!B || !window.fetch) return;
-  var PAGE = B.dataset.page, db = PAGE === "world" && /\/db\/match\/?$/.test(location.pathname);
-  var MID = PAGE === "match" ? B.dataset.id : db ? new URLSearchParams(location.search).get("id") : null;
+  var PAGE = B.dataset.page, db = PAGE === "world" && /\/db\/match\/?$/.test(location.pathname), qid = new URLSearchParams(location.search).get("id");
+  var MID = PAGE === "match" ? B.dataset.id : db || PAGE === "live" ? qid : null;
   if (!MID || !/^\d+$/.test(MID)) return;
   var M = null, SUM = null, timer = null, busy = false, POLL = 120e3;
   var esc = function(s){ return s == null ? "" : String(s).replace(/[&<>"']/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]; }); };
@@ -37,8 +39,8 @@
     return "قبل " + (m < 60 ? n(m, ["دقيقة", "دقيقتين", "دقايق", "دقيقة"]) : m < 1440 ? n(Math.round(m / 60), ["ساعة", "ساعتين", "ساعات", "ساعة"]) : n(Math.round(m / 1440), ["يوم", "يومين", "أيام", "يوم"])); }
   function ytid(u){ var m = /(?:v=|\/shorts\/|youtu\.be\/|\/embed\/)([\w-]{11})/.exec(u || ""); return m ? m[1] : null; }
 
-  // ---- state of the match: the page's summary, then every refresh app.js announces
-  function hot(){ var s = SUM; if (!s) return false; if (s.status === "live" || s.status === "ht") return true;
+  // ---- state of the match: the page's summary, then every refresh app.js announces (/live/ has neither: its board says live)
+  function hot(){ var s = SUM; if (!s) return !!D.querySelector("#lvh .board.live"); if (s.status === "live" || s.status === "ht") return true;
     return s.status === "finished" && Date.now() - Date.parse(s.kickoff_utc || 0) < 5 * 36e5; }
   D.addEventListener("tifo:match", function(e){ var m = e.detail; if (m && String(m.id) === MID){ var was = hot(); SUM = { status:m.status, kickoff_utc:m.kickoff_utc }; if (!was && hot() && !timer) load(); paint(); } });
 
@@ -49,27 +51,37 @@
   function plan(){ clearTimeout(timer); timer = null; if (hot()) timer = setTimeout(function(){ timer = null; if (D.hidden) { plan(); return; } load(); }, POLL); }
   D.addEventListener("visibilitychange", function(){ if (!D.hidden && hot() && !timer) load(); });
 
-  // ---- goal rows: data-goal-key, else the v3 row's event id («<match>-goal-<minute>-<added>-<player>»)
-  function keyOf(el){ if (el.dataset.goalKey) return el.dataset.goalKey; var m = /-(?:goal|penalty_goal|own_goal)-(\d+)-\d+-(\d+)(?:-\d+)?$/.exec(el.dataset.eid || ""); return m ? m[1] + "-" + m[2] : null; }
+  // ---- goal rows: data-goal-key («45+2-851198»), else the v3 row's event id («<match>-goal-<minute>-<added>-<player>»)
+  function keyOf(el){ if (el.dataset.goalKey) return el.dataset.goalKey; var m = /-(?:goal|penalty_goal|own_goal)-(\d+)-(\d+)-(\d+)(?:-\d+)?$/.exec(el.dataset.eid || "");
+    return m ? m[1] + (+m[2] ? "+" + m[2] : "") + "-" + m[3] : null; }
+  // the encyclopedia's rows know the minute but not the added time («45-851198» for «45+2-851198»): the one key that fits
+  function clips(G, k){ if (!k) return null; if (G[k]) return { k:k, list:G[k] }; var p = /^(\d+)-(\d+)$/.exec(k); if (!p) return null;
+    var hits = Object.keys(G).filter(function(x){ return new RegExp("^" + p[1] + "\\+\\d+-" + p[2] + "$").test(x); }); return hits.length === 1 ? { k:hits[0], list:G[hits[0]] } : null; }
   function rows(){ return [].slice.call(D.querySelectorAll("[data-goal-key],ul.ev li.g[data-eid]")); }
   function who(el){ var n = el.querySelector(".who .lat,.who a,.lat,a"); return n ? n.textContent.trim() : ""; }
+  // the page's own «الملخص» (FotMob's link, render.js R.hl and the hero's cta): reused, never doubled
+  function theirs(){ return [].slice.call(D.querySelectorAll("a.hlbtn,.hero-acts a.cta")).filter(function(a){ return /الملخص/.test(a.textContent); }); }
   function paint(){
     if (!M) return;
     var G = M.goals || {};
-    rows().forEach(function(el){ var k = keyOf(el), list = k && G[k], b = el.querySelector(".mdw");
-      if (list && list.length){ if (!b){ b = D.createElement("button"); b.type = "button"; b.className = "mdw"; b.dataset.mk = k;
-          var mn = k.split("-")[0], nm = who(el); b.setAttribute("aria-label", "شاهد هدف " + (nm ? nm + " " : "") + "في الدقيقة " + mn); b.innerHTML = '<i aria-hidden="true">▶</i>شاهد';
+    rows().forEach(function(el){ var c = clips(G, keyOf(el)), b = el.querySelector(".mdw");
+      if (c && c.list.length){ if (!b){ b = D.createElement("button"); b.type = "button"; b.className = "mdw"; b.dataset.mk = c.k;
+          var mn = c.k.split("-")[0], nm = who(el); b.setAttribute("aria-label", "شاهد هدف " + (nm ? nm + " " : "") + "في الدقيقة " + mn); b.innerHTML = '<i aria-hidden="true">▶</i>شاهد';
           (el.querySelector(".who") || el).appendChild(b); } }
       else if (b) b.remove(); });
-    var hl = M.highlights || [], hb = D.querySelector(".mdh");
-    if (hl.length && !hb){ hb = D.createElement("button"); hb.type = "button"; hb.innerHTML = '<i aria-hidden="true">▶</i> الملخص';
-      var slot = D.querySelector("[data-media-slot]"), acts = D.querySelector(".hero-acts");
-      if (slot){ hb.className = "mdh alone"; slot.appendChild(hb); }
-      else if (acts){ hb.className = "cta mdh"; var old = acts.querySelector('a.cta[href*="youtube.com"]'); if (old) old.hidden = true; acts.insertBefore(hb, acts.firstChild); }
-      else { var box = D.createElement("p"); box.className = "mdh-slot"; hb.className = "mdh alone"; box.appendChild(hb); var at = D.querySelector(".wmh,#events");
-        if (at && at.parentNode) at.parentNode.insertBefore(box, at.classList.contains("wmh") ? at.nextSibling : at); else return; }
-      var sl = D.querySelector("p.hlink"); if (sl) sl.hidden = true;   // the old «شوف الملخص الرسمي» search link
-    } else if (!hl.length && hb) hb.remove();
+    var hl = M.highlights || [], own = D.querySelector(".mdh-own"), ex = theirs();
+    ex.forEach(function(a){ a.classList.toggle("mdh", !!hl.length); });
+    // the search link («شوف الملخص الرسمي» on the channel) steps aside for a real video
+    [].slice.call(D.querySelectorAll("p.hlink")).forEach(function(p){ if (!p.querySelector("a.hlbtn")) p.hidden = !!hl.length; });
+    if (!hl.length || ex.length){ if (own) own.remove(); return; }
+    if (own) return;
+    var hb = D.createElement("button"); hb.type = "button"; hb.innerHTML = '<i aria-hidden="true">▶</i> الملخص';
+    var slot = D.querySelector("[data-media-slot]"), acts = D.querySelector(".hero-acts");
+    if (slot){ hb.className = "mdh mdh-own alone"; slot.appendChild(hb); }
+    else if (acts){ hb.className = "cta mdh mdh-own"; acts.insertBefore(hb, acts.firstChild); }
+    else { var box = D.createElement("p"); box.className = "mdh-slot"; hb.className = "mdh mdh-own alone"; box.appendChild(hb);
+      var at = D.querySelector("#lvhl,.wmh,#events"); if (!at || !at.parentNode) return;
+      if (at.id === "lvhl") at.appendChild(box); else at.parentNode.insertBefore(box, at.classList.contains("wmh") ? at.nextSibling : at); }
   }
 
   // ---- the sheet: the site's when it has one (history entry, scrim, back gesture), a plain one otherwise
@@ -111,8 +123,10 @@
     else { var row = b.closest("[data-goal-key],li"), nm = row ? who(row) : "", mn = (b.dataset.mk || "").split("-")[0]; open((M.goals || {})[b.dataset.mk], "هدف" + (nm ? " " + nm : "") + (mn ? " · الدقيقة " + mn : ""), b); }
   });
 
-  // ---- repaint whenever the events are drawn again (app.js re-renders them from fresh data; /db/ renders after its fetch)
-  var raf = 0; function soon(){ if (!raf) raf = requestAnimationFrame(function(){ raf = 0; paint(); }); }
-  ["events", "world"].forEach(function(id){ var el = D.getElementById(id); if (el) new MutationObserver(soon).observe(el, { childList:true, subtree:true }); });
+  // ---- repaint whenever the events or the highlights link are drawn again (app.js re-renders them from fresh data; /live/
+  // every 30 s; /db/ once its fetch is back)
+  // (in the observer's own microtask: the buttons are back before the next frame, and a page in a background tab gets them too)
+  function soon(){ paint(); if (!timer && hot()) plan(); }
+  ["events", "hlbtn", "world", "lve", "lvhl", "lvh"].forEach(function(id){ var el = D.getElementById(id); if (el) new MutationObserver(soon).observe(el, { childList:true, subtree:true }); });
   load();
 })();

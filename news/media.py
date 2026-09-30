@@ -21,7 +21,7 @@ by those, or by when the clip came out; otherwise the clip is left out. During a
 read 10 minutes after it came out, so the goal it shows is already in the file.
 
 Published (public, v1/):
-  media/<matchId>.json   {generated, match, highlights: [video], goals: {"<minute>-<playerId>": [video]}}
+  media/<matchId>.json   {generated, match, highlights: [video], goals: {"<minute as shown, 45+2>-<playerId>": [video]}}
                          video = {id, url, title, source (youtube|x), channel, published, image, embed, vertical, lang, conf,
                          found_by (tifo|fotmob), kind (highlights only: summary|goals)}
   media/recent.json      {generated, matches: [{id, comp, kickoff_utc, status, score, home, away, highlights, goals}]}
@@ -466,6 +466,12 @@ def goals_of(md):
         out.append(dict(e, lb=goal_time(md, e.get("minute"), e.get("added"))))
     out.sort(key=lambda e: (e["lb"] or datetime.max.replace(tzinfo=UTC)))
     return out
+
+
+def goal_key(e):
+    """The key the match page puts on the goal's row (data-goal-key, render.js / v3.js): the minute as shown, added time
+    included («45+2»), then the scorer's id."""
+    return f"{e.get('minute')}{'+' + str(e['added']) if e.get('added') else ''}-{(e.get('player') or {}).get('id') or 0}"
 
 
 def goal_time(md, minute, added):
@@ -957,7 +963,7 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
         elif tx.plural and not tx.many:
             note(v, mid, "goal", "goals, one scored"); continue
         for conf, mid_, g in hits:
-            key = f"{g.get('minute')}-{g['player']['id']}"
+            key = goal_key(g)
             out.setdefault(mid_, {"highlights": [], "goals": {}})["goals"].setdefault(key, []).append((v, conf))
     return out
 
@@ -1152,8 +1158,7 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
             if vid and e.get("player") and e["player"].get("id") and vid not in blocked:
                 v = vids.get(vid) or {"id": vid, "source": "youtube", "url": "https://www.youtube.com/watch?v=" + vid, "title": None,
                                        "at": None, "ch": None, "image": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"}
-                found.setdefault(md["id"], {"highlights": [], "goals": {}})["goals"].setdefault(
-                    f"{e.get('minute')}-{e['player']['id']}", []).append((dict(v, fotmob=True), 100))
+                found.setdefault(md["id"], {"highlights": [], "goals": {}})["goals"].setdefault(goal_key(e), []).append((dict(v, fotmob=True), 100))
     # embed checks, once per attached YouTube video (a gone video is dropped, a no-embed one opens on YouTube)
     oe = st.setdefault("oembed", {})
     todo = {v["id"] for r in found.values() for v, _ in r["highlights"] + [x for l in r["goals"].values() for x in l]

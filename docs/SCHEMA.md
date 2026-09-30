@@ -353,7 +353,7 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 
 | file | content | refresh |
 |---|---|---|
-| `media/{match}.json` | `{generated, match, highlights: [video], goals: {"<minute>-<playerId>": [video]}}`; `video` = `{id, url, title, source ("youtube"/"x"), channel (Arabic name), published, image, embed (false = open on the platform), vertical (a Short), lang, conf, found_by ("tifo"/"fotmob")}`, best first. The goal key is the event's `minute` (without `added`) and `player.id`, the same key the match page puts on the goal row (`data-goal-key`) | written only when it changes, while the match is live or finished less than 48 h ago; no file = nothing found |
+| `media/{match}.json` | `{generated, match, highlights: [video], goals: {"<minute as shown>-<playerId>": [video]}}`; `video` = `{id, url, title, source ("youtube"/"x"), channel (Arabic name), published, image, embed (false = open on the platform), vertical (a Short), lang, conf, found_by ("tifo"/"fotmob")}`, best first. The goal key is the event's `minute` with its `added` time as the page shows it (`45+2`) and `player.id`: the key the match page puts on the goal row (`data-goal-key`) | written only when it changes, while the match is live or finished less than 48 h ago; no file = nothing found |
 | `media/recent.json` | `{generated, matches: [{id, comp, kickoff_utc, status, score, home, away, highlights, goals}]}` for the followed matches that have a video | same |
 
 Only official channels (`news/sources.yaml` `media:` + the journal's `youtube:` and official X accounts) and FotMob's own `highlights`/event `clip` links. How a video is matched: news/README.md step 7.

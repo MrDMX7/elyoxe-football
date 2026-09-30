@@ -282,6 +282,17 @@ def test_step_writes_a_file_per_match_with_media_and_nothing_when_unchanged(tmp_
     assert M.step(store, cfg, t=t)["written"] == 0                                        # same content: nothing uploaded
 
 
+def test_goal_key_is_the_minute_the_page_shows():
+    # the match page's rows: data-goal-key="45+4-301" (render.js / v3.js)
+    assert M.goal_key(goal(45, "home", 301, "Ali Saleh", (1, 1), added=4)) == "45+4-301"
+    assert M.goal_key(goal(69, "home", 102, "Abdullah Al-Hamdan", (2, 0))) == "69-102"
+    uae_qat = {"id": 904, "comp": 329, "kickoff_utc": "2026-09-30T17:30:00Z", "status": "finished", "score": {"home": 1, "away": 1},
+               "home": team(5789), "away": {"id": 5902, "name": "Qatar", "name_ar": "قطر"},
+               "periods": {"firstHalfStarted": "2026-09-30T17:31:08Z", "secondHalfStarted": "2026-09-30T18:37:37Z", "gameEnded": "2026-09-30T19:30:00Z"},
+               "events": [goal(33, "away", 401, "Almoez Ali", (0, 1)), goal(45, "home", 301, "Ali Saleh", (1, 1), added=4)]}
+    assert run("ksa", "هدف علي صالح في مرمى قطر", "2026-09-30T18:25:00Z", [uae_qat])[0] == {904: ["45+4-301"]}
+
+
 def test_goal_time_uses_the_real_half_starts():
     t = M.goal_time(KSA_IRQ, 69, None)
     assert t == datetime(2026, 9, 29, 19, 0, 26, tzinfo=timezone.utc)      # 18:37:26 + 23 min
