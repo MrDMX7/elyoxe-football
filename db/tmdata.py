@@ -239,8 +239,15 @@ def main(argv=None):
     if a.upload:
         store = Store(S3Backend(BUCKET))
         t0 = time.time()
+        # a player the last run matched and this one doesn't (another person, found out): his tm.json is emptied, since the
+        # encyclopedia's player page loads it without looking at the index (278 namesakes on 2026-09-30)
+        was = ((store.get_json("history/tm/index.json") or {}).get("players") or {})
+        gone = [int(k) for k in was if int(k) not in docs]
         with ThreadPoolExecutor(12) as ex:
             list(ex.map(lambda d: store.put_json(f"player/{d['player']}/tm.json", d, cache="warm"), docs.values()))
+            list(ex.map(lambda pid: store.put_json(f"player/{pid}/tm.json", {"player": pid, "removed": "no longer matched to a Transfermarkt record"},
+                                                   cache="warm"), gone))
+        print(len(gone), "records no longer matched emptied")
         store.put_json("history/tm/index.json", {"generated": date.today().isoformat(), "players": {str(f): int(t) for f, t in m.items()},
                                                  "who": {str(f): [re.sub(r"\s*\(\d+\)\s*$", "", prof[t].get("player_name") or ""), cit_of(prof[t])] for f, t in m.items()}},
                        cache="warm")

@@ -38,6 +38,7 @@ STAGES = [   # name, module, args, every (days)
     ("s365", "db.scores365", ["--upload"], 1),
     ("eafc", "db.eafc", ["--upload"], 7),
     ("tmdata", "db.tmdata", ["--upload"], 7),                        # Transfermarkt careers by competition, injuries, bio fill (salimt datasets)
+    ("photos_identity", "photos.build", ["--identity-only"], 7),      # who every Wikidata person is (~28 queries): namesakes' photos out, leads gated
     ("wiki_ar", "db.wiki_ar", ["--upload"], 30),                     # Arabic Wikipedia's lead for players and clubs
     ("audit", "db.audit", [], 1),                                    # last: every number checked against itself, FotMob now and 365Scores (docs/AUDIT-DATA-<date>.md)
 ]
