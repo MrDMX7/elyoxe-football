@@ -61,4 +61,7 @@ python -m news.run [--local DIR] [--no-llm]      # the Fold runs it every 15 min
 Official videos go to the social strips; they join the news only for a press conference, an injury or a transfer at
 «agreed» or later — most of a club channel is training clips. Tools: `tools/probe_feeds.py` (is a feed alive and fresh),
 `tools/try_link.py` (what a headline links to), `tools/youtube_ids.py` (handle → channel id, read from the page's
-canonical link: a bare "channelId" on the page can be a related channel).
+canonical link: a bare "channelId" on the page can be a related channel; `--check <id|@handle>…` prints what decides
+whether a channel is official: name, handle, subscribers, badge, description, newest uploads — handles are not proof:
+@SPL is a swimming-pool channel, @CAFTV a church), `tools/nations.py` (rebuilds `nations.json` with CLDR, laptop only).
+Bulk checks of watch pages get HTTP 429 from YouTube after a few hundred; the pipeline itself reads only feeds and oEmbed.
