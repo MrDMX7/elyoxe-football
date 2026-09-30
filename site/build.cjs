@@ -421,7 +421,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
     const tro = use365 ? t365.map(x => ({ name:x[1], won:x[2].length, seasons:x[2], cid:x[0] })) : tro0;
     const facts = v && v.name ? [`الملعب ${esc((wst && wst.ar) || v.name)}`, v.capacity && `<span class="num">${Number(v.capacity).toLocaleString("en")}</span> متفرج`, v.opened && `افتُتح <span class="num">${esc(String(v.opened))}</span>`,
       v.surface && SURF[String(v.surface).toLowerCase()], v.lat != null && `<a href="https://www.openstreetmap.org/?mlat=${v.lat}&mlon=${v.lon}#map=16/${v.lat}/${v.lon}" rel="noopener">على الخريطة</a>`].filter(Boolean) : [];
-    return (facts.length ? `<p class="fmv">${facts.join(" · ")}</p>` : "") + (tro.length ? `<h3>ألقابه (<span class="num">${tro.reduce((a, t) => a + t.won, 0)}</span>)</h3><ul class="chon">${tro.map(t => `<li><b>${t.cid ? `<a href="/db/league/?id=${t.cid}">${esc(t.name || "")}</a>` : esc(t.name || "")}</b> <span class="num">${t.won}</span><span class="muted small yrs">${esc(t.seasons.join("، "))}${t.runnerup ? ` · وصيف ${t.runnerup} مرات` : ""}</span></li>`).join("")}</ul><p class="src">${use365 ? `الألقاب من 365Scores، كل بطولة من أول موسم لها${facts.length ? "، والملعب من FotMob" : ""}. <a href="/db/team/?id=${M365[id]}">كل ألقابه في الموسوعة</a>` : "الألقاب والملعب من FotMob"}.</p>` : ""); };
+    return (facts.length ? `<p class="fmv">${facts.join(" · ")}</p>` : "") + (tro.length ? `<h3>ألقابه (<span class="num">${tro.reduce((a, t) => a + t.won, 0)}</span>)</h3><ul class="chon">${tro.map(t => `<li><b>${t.cid ? `<a href="${lgUrl(t.cid)}">${esc(t.name || "")}</a>` : esc(t.name || "")}</b> <span class="num">${t.won}</span><span class="muted small yrs">${esc(t.seasons.join("، "))}${t.runnerup ? ` · وصيف ${t.runnerup} مرات` : ""}</span></li>`).join("")}</ul><p class="src">${use365 ? `الألقاب من 365Scores، كل بطولة من أول موسم لها${facts.length ? "، والملعب من FotMob" : ""}. <a href="/db/team/?id=${M365[id]}">كل ألقابه في الموسوعة</a>` : "الألقاب والملعب من FotMob"}.</p>` : ""); };
   // the club's identity card from Wikidata (db/clubs.py): founded, stadium, city, nickname, every title by competition
   const CCARD = ((await get("history/clubs.json")) || {}).clubs || {};
   const UEFAIDX = new Set((((await get("history/uefa/index.json")) || {}).clubs) || []);   // clubs with a UEFA ranking history (db/uefa.py)
@@ -430,13 +430,15 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   const CHAMPS = {}; await pool(comps.map(c => c.id), 8, async id => { const d = await get(`history/champions/${id}.json`, 1); if (d && d.champions && d.champions.length) CHAMPS[id] = d; });
   // 365Scores (db/scores365.py): each linked club's titles in ~640 competitions, each site competition's champions from its first season
   const S365 = (await get("s365/fm.json")) || {}, T365 = S365.titles || {}, C365 = S365.comps || {}, M365 = S365.teams || {};
+  const S365I = (await get("s365/index.json")) || {}, LG365 = new Set((S365I.comps || []).filter(c => c[5] >= 5 && !c[11]).map(c => c[0]));
+  const lgUrl = id => LG365.has(+id) ? `/db/league/${id}/` : `/db/league/?id=${id}`, SID2F = Object.fromEntries(Object.entries(M365).map(([f, s]) => [s, +f]));
   const champ365 = id => { const x = C365[id], rows = x.champions.filter(r => r[1]);
     const nm = r => r[2] && S_TEAMS[r[2]] ? `<a href="/t/${r[2]}/">${esc(S_TEAMS[r[2]].name_ar || r[1])}</a>` : `<a href="/db/team/?id=${r[4]}">${esc(r[1])}</a>`;
     const cnt = new Map(); rows.forEach(r => { const e = cnt.get(r[4]) || { r, n:0 }; e.n++; cnt.set(r[4], e); });
     const top = [...cnt.values()].sort((a, b) => b.n - a.n).slice(0, 10), mx = top.length ? top[0].n : 1;
     return `<ul class="bars">${top.map(e => `<li><span>${nm(e.r)}</span><i style="--w:${Math.round(e.n / mx * 100)}%"></i><b class="num">${e.n}</b></li>`).join("")}</ul>
 <details class="chl"><summary>كل الأبطال من <span class="num">${esc(rows[rows.length - 1][0])}</span> (<span class="num">${rows.length}</span>)</summary><ol class="mlist cols">${rows.map(r => `<li><span class="num">${esc(r[0])}</span> ${nm(r)}</li>`).join("")}</ol></details>
-<p class="src">المصدر: 365Scores. <a href="/db/league/?id=${x.id}">صفحة البطولة في الموسوعة</a> فيها كل موسم${x.cols && x.cols.length ? " بنقاطه" : ""}.</p>`; };
+<p class="src">المصدر: 365Scores. <a href="${lgUrl(x.id)}">صفحة الأبطال كاملة</a> فيها كل موسم${x.cols && x.cols.length ? " بنقاطه" : ""}.</p>`; };
   // every season's top scorer and top assister since 2012 (db/scorers.py, Transfermarkt)
   const SCORERS = {}; await pool(comps.map(c => c.id), 8, async id => { const d = await get(`history/scorers/${id}.json`, 1); if (d && d.seasons && Object.keys(d.seasons).length) SCORERS[id] = d; });
   const scorersHtml = id => { const d = SCORERS[id]; if (!d) return "";
@@ -454,11 +456,14 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
     // friendlies, youth and reserve cups are out; a title listed twice (the same years under two items, e.g. «First Division» and
     // «Football League») counts once
     const JUNK = /gamper|herrera|juvenil|youth|junior|u-?1\d|u-?2[0-3]|reserve|b team|trofeo|trophée d|audi cup|emirates cup|carranza|colombino|summer|friendly|ودي|شباب|ناشئ/i, seen = new Set();
-    const fmHas = FMT[id] && (FMT[id].trophies || []).some(t => t.won > 0), fmVen = FMT[id] && FMT[id].venue && FMT[id].venue.name;
+    const fmHas = (FMT[id] && (FMT[id].trophies || []).some(t => t.won > 0)) || !!T365[id], fmVen = FMT[id] && FMT[id].venue && FMT[id].venue.name;
     const st = fmVen ? null : c.stadium, hon = fmHas ? [] : Object.values(c.honours || {}).filter(h => h.years && h.years.length && !JUNK.test((h.en || "") + " " + (h.ar || ""))).sort((a, b) => b.years.length - a.years.length)
       .filter(h => { const k = h.years.join(","); if (seen.has(k)) return false; seen.add(k); return true; });
     const facts = [c.founded && `تأسس <b class="num">${esc(c.founded)}</b>`, st && (st.ar || st.en) && `الملعب ${esc(st.ar || st.en)}${st.capacity ? ` (<span class="num">${st.capacity.toLocaleString("en")}</span> متفرج)` : ""}`, c.city && `المدينة ${esc(c.city)}`, c.nick && c.nick.length && `يلقبونه ${esc(c.nick.join("، "))}`].filter(Boolean);
-    return `<div class="ccard">${facts.length ? `<p>${facts.join(" · ")}</p>` : ""}${hon.length ? `<h3>ألقابه (<span class="num">${hon.reduce((a, h) => a + h.years.length, 0)}</span>)</h3><ul class="chon">${hon.map(h => `<li><b>${esc(h.ar || h.en || "")}</b> <span class="num">${h.years.length}</span><span class="muted small yrs">${esc(h.years.join("، "))}</span></li>`).join("")}</ul>` : ""}<p class="src">من ويكي داتا.</p></div>`; };
+    const SOC = { instagram:["إنستقرام", v => `https://www.instagram.com/${v}/`], x:["إكس", v => `https://x.com/${v}`], facebook:["فيسبوك", v => `https://www.facebook.com/${v}`],
+      youtube:["يوتيوب", v => `https://www.youtube.com/channel/${v}`], tiktok:["تيك توك", v => `https://www.tiktok.com/@${v}`] };
+    const links = [c.web && `<a href="${esc(c.web)}" rel="noopener nofollow">موقعه الرسمي</a>`].concat(Object.entries(c.social || {}).filter(([k]) => SOC[k]).map(([k, v]) => `<a href="${esc(SOC[k][1](encodeURIComponent(v)))}" rel="noopener nofollow">${SOC[k][0]}</a>`)).filter(Boolean);
+    return `<div class="ccard">${facts.length ? `<p>${facts.join(" · ")}</p>` : ""}${links.length ? `<p class="clinks">${links.join(" · ")}</p>` : ""}${hon.length ? `<h3>ألقابه (<span class="num">${hon.reduce((a, h) => a + h.years.length, 0)}</span>)</h3><ul class="chon">${hon.map(h => `<li><b>${esc(h.ar || h.en || "")}</b> <span class="num">${h.years.length}</span><span class="muted small yrs">${esc(h.years.join("، "))}</span></li>`).join("")}</ul>` : ""}<p class="src">من ويكي داتا.</p></div>`; };
   const eur = v => v == null ? "—" : v === 0 ? "مجاناً" : v >= 1e6 ? `<span class="num">€${Math.round(v / 1e5) / 10}</span> مليون` : `<span class="num">€${Math.round(v / 1e3)}</span> ألف`;
   const clubCell = (nm, id) => { const t = id && S_TEAMS[id]; return t ? `<a href="/t/${id}/">${esc(t.name_ar || t.name)}</a>` : `<span class="lat">${esc(nm)}</span>`; };
   const trPlayer = id => { const mv = (TRH.players || {})[id]; if (!mv || !mv.length) return "";
@@ -1013,6 +1018,28 @@ ${items}
   write("db/club/index.html", page({ path:"/db/club/", page:"world", noindex:true, title:"نادي | موسوعة تيفو", desc:"بطاقة النادي من موسوعة تيفو.", body:'<p class="crumbs"><a href="/db/">الموسوعة</a></p><h1 id="wt">نحمّل…</h1><div id="world" data-kind="club"></div>' }));
   write("db/match/index.html", page({ path:"/db/match/", page:"world", noindex:true, title:"مباراة | موسوعة تيفو", desc:"تفاصيل المباراة من موسوعة تيفو.", body:'<p class="crumbs"><a href="/db/">الموسوعة</a></p><h1 id="wt">نحمّل…</h1><div id="world" data-kind="match"></div>' }));
   write("db/player/index.html", page({ path:"/db/player/", page:"world", noindex:true, title:"لاعب | موسوعة تيفو", desc:"بطاقة اللاعب من موسوعة تيفو.", body:'<p class="crumbs"><a href="/db/">الموسوعة</a></p><h1 id="wt">نحمّل…</h1><div id="world" data-kind="player"></div>' }));
+  // every competition's champions through history as a real page (db/scores365.py): 5 champions or more, no youth competitions
+  { const tl = t => { const f = SID2F[t]; return f && S_TEAMS[f] ? `/t/${f}/` : `/db/team/?id=${t}`; }, CN = S365I.countries || {};
+    const tbl = (rows, N) => `<div class="tscroll"><table class="tbl"><thead><tr><th>#</th><th>الفريق</th><th>لعب</th><th>فوز</th><th>تعادل</th><th>خسارة</th><th>له-عليه</th><th>نقاط</th></tr></thead><tbody>${rows.map(r => `<tr><td class="num">${r[0] == null ? "" : r[0]}</td><td><a href="${tl(r[1])}">${esc(N[r[1]] || "")}</a>${r[9] != null ? ` <span class="muted small">${esc(r[9])}</span>` : ""}</td>${[2, 3, 4, 5].map(i => `<td class="num">${r[i] == null ? "" : r[i]}</td>`).join("")}<td class="num"><bdi dir="ltr">${r[6] == null ? "" : r[6]}-${r[7] == null ? "" : r[7]}</bdi></td><td class="num">${r[8] == null ? "" : Math.round(r[8])}</td></tr>`).join("")}</tbody></table></div>`;
+    const dstr = s => { const d = s ? new Date(s) : null; return d && !isNaN(d) ? d.toLocaleDateString("ar-AE-u-nu-latn", { year:"numeric", month:"short", day:"numeric", timeZone:"Asia/Dubai" }) : ""; };
+    const grow = (g, N) => `<li><span class="num muted small">${esc(dstr(g[1]))}</span> <a href="${tl(g[4])}">${esc(N[g[4]] || "")}</a> ${g[6] == null ? "" : `<a href="/db/game/?id=${g[0]}"><bdi dir="rtl" class="num">${g[6]} - ${g[7]}</bdi></a>`} <a href="${tl(g[5])}">${esc(N[g[5]] || "")}</a></li>`;
+    let nL = 0;
+    await pool([...LG365], 8, async cid => { const d = await get(`s365/comp/${cid}.json`, 1); if (!d || !(d.champions || []).length) return;
+      const N = d.names || {}, CH = d.champions, won = CH.filter(r => r[1]); if (won.length < 5) return;
+      const cnt = new Map(); won.forEach(r => cnt.set(r[1], (cnt.get(r[1]) || 0) + 1));
+      const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]), mx = top[0][1], first = CH[CH.length - 1][0], last = CH[0][0], cols = d.cols || [], T = d.tables || {}, L = d.live;
+      const country = d.country || (CN[d.cc] || [""])[0];
+      const body = `<p class="crumbs"><a href="/db/">الموسوعة</a></p><h1>أبطال ${esc(d.name)}</h1><p class="season">${[country && esc(country), d.name_en && `<span class="lat">${esc(d.name_en)}</span>`, `كل الأبطال من <b class="num">${esc(first)}</b> لين <b class="num">${esc(last)}</b>`].filter(Boolean).join(" · ")}</p>` +
+        `<p>فاز بها <b class="num">${cnt.size}</b> ${cnt.size > 10 ? "فريق" : "فرق"} في <b class="num">${won.length}</b> موسم، وأكثرهم ${esc(N[top[0][0]] || "")} بـ<b class="num">${mx}</b> ${mx > 10 ? "لقب" : "ألقاب"}.</p>` +
+        (L && (L.table || []).length ? `<section class="blk"><h2>الترتيب الحين</h2>${tbl(L.table, N)}</section>` : "") +
+        (L && (L.results || []).length ? `<section class="blk"><h2>آخر النتايج</h2><ul class="mlist wgm">${L.results.slice(0, 20).map(g => grow(g, N)).join("")}</ul></section>` : "") +
+        `<section class="blk"><h2>الأكثر تتويجاً</h2><ul class="bars">${top.slice(0, 15).map(([t, n]) => `<li><span><a href="${tl(t)}">${esc(N[t] || "")}</a></span><i style="--w:${Math.round(n / mx * 100)}%"></i><b class="num">${n}</b></li>`).join("")}</ul></section>` +
+        `<section class="blk"><h2>كل الأبطال <small>${won.length}</small></h2><div class="tscroll"><table class="tbl"><thead><tr><th>الموسم</th><th>البطل</th>${cols.map(x => `<th>${esc(x)}</th>`).join("")}</tr></thead><tbody>${CH.map(r => `<tr><td class="num">${esc(r[0])}</td><td>${r[1] ? `<a href="${tl(r[1])}">${esc(N[r[1]] || "")}</a>` : '<span class="muted">—</span>'}</td>${cols.map((x, i) => `<td class="num">${esc((r[2] || [])[i] == null ? "" : r[2][i])}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>` +
+        (Object.keys(T).length ? `<section class="blk"><h2>الترتيب النهائي موسم بموسم</h2>${Object.keys(T).sort().reverse().map((s, i) => `<details${i ? "" : " open"}><summary class="num">${esc(s)}</summary>${tbl(T[s], N)}</details>`).join("")}</section>` : "") +
+        `<p class="src">من 365Scores. آخر تحديث <span class="num">${esc(d.generated || "")}</span>.</p>`;
+      write(`db/league/${cid}/index.html`, page({ path:`/db/league/${cid}/`, title:`أبطال ${d.name} عبر التاريخ من ${first} | تيفو`, desc:`كل أبطال ${d.name}${country ? " في " + country : ""} من ${first} لين ${last}: ${won.length} موسم، والأكثر تتويجاً ${N[top[0][0]] || ""} بـ${mx} لقب.`, body }));
+      urls.push(`/db/league/${cid}/`); nL++; });
+    console.log(`competition champion pages: ${nL}`); }
   for (const [k, t, d] of [["league", "بطولة", "أبطال البطولة من أول موسم، والجداول النهائية، ونتايج الموسم."], ["team", "فريق", "ألقاب الفريق في كل بطولة، ولاعبينه ومبارياته."],
     ["game", "مباراة", "التشكيلة والأهداف والكروت."], ["athlete", "لاعب", "مسيرة اللاعب موسم بموسم وألقابه وانتقالاته."]])
     write(`db/${k}/index.html`, page({ path:`/db/${k}/`, page:"world", noindex:true, title:`${t} | موسوعة تيفو`, desc:d, body:`<p class="crumbs"><a href="/db/">الموسوعة</a></p><h1 id="wt">نحمّل…</h1><div id="world" data-kind="${k}"></div>` }));

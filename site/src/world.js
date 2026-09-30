@@ -63,6 +63,7 @@
       '</td><td class="num"><bdi dir="ltr">' + (r[6] == null ? "" : r[6]) + "-" + (r[7] == null ? "" : r[7]) + '</bdi></td><td class="num">' + (r[8] == null ? "" : Math.round(r[8])) + "</td></tr>"; }).join("") + "</tbody></table></div>"; }
 
   if (kind === "league"){
+    if (!/\/db\/league\/\d+\/$/.test(location.pathname)) has("/db/league/" + id + "/").then(function(live){ if (live) location.replace("/db/league/" + id + "/" + location.hash); });
     get("s365/comp/" + id + ".json").then(function(c){
       title(c.name); var N = c.names || {}, CH = c.champions || [], won = CH.filter(function(r){ return r[1]; });
       var html = '<p class="season">' + logo("Competitions", c.id) + [c.country && esc(c.country), c.name_en && '<span class="lat">' + esc(c.name_en) + "</span>",

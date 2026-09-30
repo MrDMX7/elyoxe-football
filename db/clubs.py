@@ -7,7 +7,7 @@ Linking a FotMob club to its Wikidata item, strongest first:
   2. Name + country: an exact (folded) English or Arabic label of a football club (Q476028 and subclasses) in the same
      country (P17 -> ISO 3166 P297). Only when exactly one item matches.
 Fields: founded (P571), stadium (P115) + its capacity (P1083) and coordinates (P625), city (P159 / P131), nickname
-(P1449), website (P856), Arabic label, and every season/edition it won (items whose winner P1346 is the club), grouped
+(P1449), website (P856), official accounts (Instagram, X, Facebook, YouTube, TikTok), Arabic label, and every season/edition it won (items whose winner P1346 is the club), grouped
 by competition (P3450 «season of»).
 Out: v1/history/clubs.json {fotmob id: card} (one file: the build reads it once, the client never needs it separately).
 """
@@ -126,6 +126,15 @@ def main(argv=None):
                 if v("nick"): c.setdefault("nick", [])
                 if v("nick") and v("nick") not in c["nick"] and len(c["nick"]) < 3: c["nick"].append(v("nick"))
                 if v("web"): c.setdefault("web", v("web"))
+        time.sleep(1)
+    # official accounts: Instagram (P2003), X (P2002), Facebook (P2013), YouTube channel (P2397), TikTok (P7085)
+    SOC = {"P2003": "instagram", "P2002": "x", "P2013": "facebook", "P2397": "youtube", "P7085": "tiktok"}
+    for i in range(0, len(qs), 150):
+        vals = " ".join("wd:" + q for q in qs[i:i + 150])
+        for b in sparql("""SELECT ?c ?p ?v WHERE { VALUES ?c { %s } VALUES ?p { wdt:P2003 wdt:P2002 wdt:P2013 wdt:P2397 wdt:P7085 } ?c ?p ?v }""" % vals):
+            q, prop, val = b["c"]["value"].rsplit("/", 1)[1], b["p"]["value"].rsplit("/", 1)[1], b["v"]["value"]
+            for k in inv[q]:
+                cards.setdefault(k, {"qid": q}).setdefault("social", {}).setdefault(SOC.get(prop, prop), val)
         time.sleep(1)
     # honours: every season/edition won, grouped by the competition it belongs to
     for i in range(0, len(qs), 100):
