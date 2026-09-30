@@ -535,7 +535,9 @@
     var box = $(".chist"); if (!box) return;
     var id = box.dataset.club, D = null, pct = function(a, b){ return b ? Math.round(a / b * 100) : 0; };
     function nm(k){ return (D.names && D.names[k]) || k; }
-    function link(k){ return /^\d+$/.test(String(k)) ? '<a href="/t/' + k + '/">' + R.esc(nm(String(k))) + "</a>" : R.esc(nm(String(k))); }
+    // the encyclopedia's club link: it opens the /t/ page when the club has one, the world card otherwise (audit 2026-09-30:
+    // 6,913 opponent links went to /t/<id>/ pages that don't exist)
+    function link(k){ return /^\d+$/.test(String(k)) ? '<a href="/db/club/?id=' + k + '">' + R.esc(nm(String(k))) + "</a>" : R.esc(nm(String(k))); }
     function line(t){ return '<span class="num">' + t.p + "</span> مباراة · <b class=\"num\">" + t.w + '</b> فوز · <span class="num">' + t.d + '</span> تعادل · <span class="num">' + t.l + '</span> خسارة · <bdi dir="ltr" class="num">' + t.gf + "-" + t.ga + "</bdi>"; }
     function mrow(m){ return "<li><span class=\"num\">" + m[0] + "</span> " + (m[2] ? "" : "في ملعب ") + link(m[1]) + ' <bdi dir="ltr" class="num sc">' + m[3] + "-" + m[4] + '</bdi> <span class="muted small">' + R.esc((D.comps || {})[m[5]] || "") + "</span></li>"; }
     function opps(all, q){ var rows = D.opponents.filter(function(o){ return !q || nm(o[0]).indexOf(q) >= 0; }); var list = all || q ? rows : rows.slice(0, 20);
