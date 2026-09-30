@@ -912,7 +912,16 @@ ${items}
   { const MS = await get("legends/messi/shots.json");
     if (MS && MS.matches && MS.matches.length){
       const TN = {}; Object.values(S_TEAMS).forEach(t => { if (t && t.name && t.name_ar && !TN[t.name]) TN[t.name] = t.name_ar; });
-      const ar = n => TN[n] || ({ "Barcelona":"برشلونة", "Paris Saint-Germain":"باريس سان جيرمان", "Argentina":"الأرجنتين", "Inter Miami":"إنتر ميامي", "Real Madrid":"ريال مدريد", "Atlético Madrid":"أتلتيكو مدريد" })[n] || n;
+      const ar = n => TN[n] || ({ "Barcelona":"برشلونة", "Paris Saint-Germain":"باريس سان جيرمان", "Argentina":"الأرجنتين", "Inter Miami":"إنتر ميامي", "Real Madrid":"ريال مدريد", "Atlético Madrid":"أتلتيكو مدريد",
+        // StatsBomb's names for the clubs and countries our data has no Arabic for (relegated since, or outside our leagues)
+        "AC Ajaccio":"أجاكسيو", "AS Monaco":"موناكو", "Albacete":"ألباسيتي", "Almería":"ألميريا", "Bordeaux":"بوردو", "CD Numancia de Soria":"نومانسيا",
+        "Charlotte":"شارلوت", "Chile":"تشيلي", "Cincinnati":"سينسيناتي", "Clermont Foot":"كليرمون", "Cádiz":"قادش", "Córdoba CF":"قرطبة", "Eibar":"إيبار",
+        "Gimnàstic Tarragona":"خيمناستيك", "Girona":"جيرونا", "Granada":"غرناطة", "Huesca":"ويسكا", "Hércules":"هيركوليس", "Iceland":"آيسلندا",
+        "LAFC":"لوس أنجلوس إف سي", "Las Palmas":"لاس بالماس", "Leganés":"ليغانيس", "Levante UD":"ليفانتي", "Mallorca":"مايوركا", "Metz":"ميتز",
+        "Montpellier":"مونبلييه", "Nantes":"نانت", "Nashville SC":"ناشفيل", "New York Red Bulls":"نيويورك ريد بولز", "OGC Nice":"نيس",
+        "Olympique de Marseille":"مارسيليا", "Poland":"بولندا", "RC Deportivo La Coruña":"ديبورتيفو لاكورونيا", "Real Murcia CF":"ريال مورسيا",
+        "Real Valladolid":"بلد الوليد", "Real Zaragoza":"سرقسطة", "Recreativo Huelva":"ريكرياتيفو ويلفا", "Saint-Étienne":"سانت إتيان",
+        "Sporting Gijón":"سبورتينغ خيخون", "Stade Brestois":"بريست", "Stade de Reims":"ريمس", "Tenerife":"تينيريفي", "Toronto FC":"تورونتو", "Xerez":"خيريز" })[n] || n;
       const bySeason = {}, byTeam = {}, byComp = {};
       MS.matches.forEach(m => { const k = m.season + "|" + m.team, g = m.shots.filter(s => s.goal).length, xg = m.shots.reduce((a, s) => a + s.xg, 0);
         const r = bySeason[k] = bySeason[k] || { season:m.season, team:m.team, comp:m.comp, m:0, sh:0, g:0, xg:0 }; r.m++; r.sh += m.shots.length; r.g += g; r.xg += xg;
@@ -927,7 +936,7 @@ ${items}
 <section class="blk m3d" id="m3d"><h2>من وين يسجل، ووين تروح الكورة</h2>
 <p class="muted">كل خط هدف: يطلع من المكان اللي سدد منه ميسي وينزل في النقطة اللي عبرت فيها الكورة خط المرمى، بارتفاعها. الذهبي رجله اليسار، الأبيض اليمين، الأخضر الراس. النقاط الباهتة تسديداته اللي ما دخلت.</p>
 <div class="m3d-ctl" role="group" aria-label="زاوية الشوف"><button type="button" class="sa" data-v="behind" aria-pressed="true">من ورا</button><button type="button" class="sa" data-v="above" aria-pressed="false">من فوق</button><button type="button" class="sa" data-v="goal" aria-pressed="false">من داخل المرمى</button><button type="button" class="sa" id="m3dplay">شغّل مسيرته من البداية</button><label class="small"><input type="checkbox" id="m3dmiss" checked> التسديدات اللي ما دخلت</label></div>
-<div id="m3dc" data-src="/assets/messi3d.${ASSET_V}.js" data-json="/v1/legends/messi/shots.json"><p class="empty">نحمّل الملعب…</p></div>
+<div id="m3dc" data-src="/assets/messi3d.${ASSET_V}.js" data-json="/v1/legends/messi/shots.json" data-opp='${esc(JSON.stringify(Object.fromEntries([...new Set(MS.matches.map(m => m.opp))].map(o => [o, ar(o)]).filter(x => x[1] !== x[0]))))}'><p class="empty">نحمّل الملعب…</p></div>
 <input type="range" id="m3dr" min="0" max="${T.goals}" value="0" aria-label="لين أي هدف" dir="ltr"><p class="small" id="m3ds" aria-live="polite"></p>
 <p class="small">${left} من أهدافه برجله اليسار، و${outBox} من برا منطقة الجزاء، و${pens} من ضربات جزاء.</p></section>
 <section class="blk"><h2>موسم بموسم</h2><table class="tbl"><thead><tr><th>الموسم</th><th>الفريق</th><th>مباريات</th><th>أهداف</th><th>تسديدات</th><th>الأهداف المتوقعة</th><th>الفرق</th></tr></thead><tbody>${rows.map(r => `<tr><td class="num">${esc(r.season)}</td><td>${esc(ar(r.team))}</td><td class="num">${r.m}</td><td class="num">${r.g}</td><td class="num">${r.sh}</td><td class="num">${f1(r.xg)}</td><td class="num"><bdi dir="ltr">${r.g - r.xg >= 0 ? "+" : ""}${f1(r.g - r.xg)}</bdi></td></tr>`).join("")}</tbody></table>

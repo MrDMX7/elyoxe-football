@@ -533,13 +533,14 @@
   // /messi/: the 3D pitch loads when its section comes into view (three.js + ~1 MB of shots only for those who scroll to it)
   (function(){
     var box = $("#m3dc"); if (!box) return;
-    var AR = { "الدوري الإسباني":1 }, st = $("#m3ds"), rg = $("#m3dr"), api = null, data = null;
+    var OPP = {}; try { OPP = JSON.parse(box.dataset.opp || "{}"); } catch (e){}
+    var st = $("#m3ds"), rg = $("#m3dr"), api = null, data = null;
     function go(){
       Promise.all([import(box.dataset.src), fetch(box.dataset.json).then(function(r){ return r.json(); })]).then(function(x){
         data = x[1]; box.innerHTML = ""; var goals = [];
         data.matches.forEach(function(m){ m.shots.forEach(function(s){ if (s.goal) goals.push({ m:m, s:s }); }); });
         api = x[0].mount(box, data, { onStep:function(n, g){ rg.value = n; var hit = goals[n - 1]; if (!hit) { st.textContent = ""; return; }
-          st.textContent = "الهدف " + n + " · " + hit.m.season + " · ضد " + hit.m.opp + " · الدقيقة " + hit.s.min + (hit.s.kind === "Penalty" ? " · ضربة جزاء" : hit.s.kind === "Free Kick" ? " · ضربة حرة" : ""); } });
+          st.textContent = "الهدف " + n + " · " + hit.m.season + " · ضد " + (OPP[hit.m.opp] || hit.m.opp) + " · الدقيقة " + hit.s.min + (hit.s.kind === "Penalty" ? " · ضربة جزاء" : hit.s.kind === "Free Kick" ? " · ضربة حرة" : ""); } });
         rg.max = api.total;
       }).catch(function(){ box.innerHTML = '<p class="empty">ما قدرنا نحمّل الملعب الثلاثي الأبعاد على هالجهاز.</p>'; });
     }
