@@ -99,6 +99,7 @@ def transfers(stories, items_by_id, D):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--local"); ap.add_argument("--no-llm", action="store_true"); ap.add_argument("--no-media", action="store_true")
+    ap.add_argument("--no-tv", action="store_true", help="skip «منو يعلّق؟» (news/commentators.py)")
     a = ap.parse_args(argv)
     t0 = time.time()
     store = Store(LocalBackend(a.local)) if a.local else Store(S3Backend(BUCKET))
@@ -205,6 +206,14 @@ def main(argv=None):
             print(json.dumps({"media": {k: v for k, v in res.items() if k != "found"}}, ensure_ascii=False))
         except Exception as e:
             print(json.dumps({"media_error": f"{type(e).__name__}: {str(e)[:200]}"}, ensure_ascii=False))
+    # «منو يعلّق؟»: channels and commentators per match (v1/tv/<ymd>.json). Its own state and pace (the sitemap every 30 min,
+    # an article at most hourly); a failure there never costs the news run
+    if not a.no_tv:
+        try:
+            from news import commentators as TV
+            TV.run(store)
+        except Exception as e:
+            print(json.dumps({"tv_error": str(e)[:300]}, ensure_ascii=False))
     return 0
 
 
