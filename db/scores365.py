@@ -235,7 +235,13 @@ def champions(only=None):
             w = r.get("entityId") or None
             if w and (NOWIN.search((teams.get(w) or ["", ""])[1] or "") or (teams.get(w) or [""])[0] in ("لا فائز", "بدون فائز")):
                 w = None
-            rows.append([r.get("title"), w, [vals.get(n, "") for n in order] if vals and w else [], r.get("seasonNum") if r.get("hasTable") else 0])
+            v = [vals.get(n, "") for n in order] if vals and w else []
+            try:   # 365 sometimes carries another club's line (a «champion» with 3 wins and 17 losses): keep the name, drop the numbers
+                if len(v) == 4 and int(v[0]) < int(v[2]):
+                    v = []
+            except (TypeError, ValueError):
+                pass
+            rows.append([r.get("title"), w, v, r.get("seasonNum") if r.get("hasTable") else 0])
         nm = c.get("name") or ""
         out[c["id"]] = {"id": c["id"], "name": nm, "name_en": en_comp.get(c["id"]) or "", "cc": c.get("countryId"),
                         "country": (countries.get(c.get("countryId")) or [""])[0], "ko": 1 if tb.get("isChampionByKnockout") else 0,

@@ -908,6 +908,7 @@ body.hasprayl .tile.pray{display:none}
 .v3 .elo-c{max-inline-size:44rem}.v3 .elo-c .pk{fill:var(--mg,#F0BC5A)}
 /* a list of years wraps (.num never does); nothing in the history tab may widen the page */
 .v3 .yrs{font-family:var(--digits);font-variant-numeric:tabular-nums;white-space:normal;line-height:1.6}
+@media (max-width:40rem){.v3 .chon li{grid-template-columns:minmax(0,1fr) 2.5rem}.v3 .chon li .yrs{grid-column:1/-1;font-size:.8rem}}
 .v3 [data-pane="chist"],.v3 .ccard,.v3 .chist{min-inline-size:0;overflow-wrap:anywhere}
 .v3 [data-pane="chist"] .tbl{display:block;overflow-x:auto}
 
