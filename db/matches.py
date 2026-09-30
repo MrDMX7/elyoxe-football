@@ -155,9 +155,12 @@ def main(argv=None):
             logs[pid].append([m["id"], (m["date"] or "")[:10], m["comp"], x["team"], x["opp"], gs, ga, x["start"], st.get("min"), g, a_, y, rd, st.get("r") or x.get("r"),
                               {k: v for k, v in st.items() if k not in ("r", "min", "g", "a", "t")}])
     print(len(logs), "players with a match log")
+    tm = FotMob().http.get_json("https://www.fotmob.com/api/translationmapping?locale=ar", min_ttl=3600)
+    TT, PP = tm.get("TournamentTemplates") or {}, tm.get("Participants") or {}
     if a.upload:
         with ThreadPoolExecutor(8) as ex:
-            list(ex.map(lambda m: store.put_json(f"matchx/{m['id']}.json", m, cache="static"), ms))
+            list(ex.map(lambda m: store.put_json(f"matchx/{m['id']}.json", dict(m, names={"comp": TT.get(str(m["comp"])),
+                                                                                           "home": PP.get(str(m["home"][0])), "away": PP.get(str(m["away"][0]))}), cache="static"), ms))
 
         def season_of(d):
             y, mo = int(d[:4]), int(d[5:7])
@@ -177,7 +180,10 @@ def main(argv=None):
                     t[sk] = round(t.get(sk, 0) + (sv[0] if isinstance(sv, list) else (sv or 0)), 2)
             store.put_json(f"player/{pid}/log.json", {"player": pid, "fields": ["match", "date", "comp", "team", "opp", "for", "against", "started", "minutes", "goals",
                                                                                 "assists", "yellow", "red", "rating", "stats"],
-                                                        "matches": L, "seasons": sorted(tot.values(), key=lambda t: t["season"], reverse=True), "source": "FotMob"}, cache="warm")
+                                                        "matches": L, "seasons": sorted(tot.values(), key=lambda t: t["season"], reverse=True), "source": "FotMob",
+                                                        # Arabic names for what the log shows (FotMob's own mapping), so the page needs nothing else
+                                                        "comps": {str(c): TT.get(str(c)) for c in {r[2] for r in L} if TT.get(str(c))},
+                                                        "teams": {str(t): PP.get(str(t)) for t in {x for r in L for x in (r[3], r[4])} if PP.get(str(t))}}, cache="warm")
         with ThreadPoolExecutor(8) as ex:
             list(ex.map(one, logs.items()))
         print("uploaded")
