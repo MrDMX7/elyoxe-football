@@ -543,7 +543,7 @@
     function draw(){
       var T = D.total, dec = Object.keys(D.by_decade), dm = Math.max.apply(null, dec.map(function(k){ return D.by_decade[k].p; }).concat([1]));
       var bars = dec.map(function(k, i){ var v = D.by_decade[k], h = pct(v.w, v.p); return '<g><rect x="' + (i * 22 + 2) + '" y="' + (62 - h * 0.55).toFixed(1) + '" width="18" height="' + (h * 0.55).toFixed(1) + '" class="dw"><title>' + k + ": " + h + "% فوز من " + v.p + '</title></rect><text x="' + (i * 22 + 11) + '" y="72" class="ax">' + k.slice(2) + '</text><text x="' + (i * 22 + 11) + '" y="' + (58 - h * 0.55).toFixed(1) + '" class="ax">' + h + "</text></g>"; }).join("");
-      box.innerHTML = '<p class="hl">من <b class="num">' + D.since.slice(0, 4) + "</b>: " + line(T) + " · نسبة الفوز <b class=\"num\">" + pct(T.w, T.p) + "٪</b></p>" +
+      box.innerHTML = '<p class="hsum">من <b class="num">' + D.since.slice(0, 4) + "</b>: " + line(T) + " · نسبة الفوز <b class=\"num\">" + pct(T.w, T.p) + "٪</b></p>" +
         '<h3>نسبة الفوز في كل عقد</h3><svg class="chart dec" viewBox="0 0 ' + (dec.length * 22 + 4) + ' 76" role="img" aria-label="نسبة الفوز في كل عقد">' + bars + "</svg>" +
         "<h3>في كل بطولة</h3><ul class=\"mlist\">" + Object.keys(D.by_comp).sort(function(a, b){ return D.by_comp[b].p - D.by_comp[a].p; }).map(function(c){ return "<li><b>" + R.esc((D.comps || {})[c] || c) + "</b>: " + line(D.by_comp[c]) + "</li>"; }).join("") + "</ul>" +
         '<h3>ضد كل خصم (<span class="num">' + D.opponents.length + '</span>)</h3><input type="search" class="hq" placeholder="دوّر على خصم" aria-label="دوّر على خصم"><div class="hopp">' + opps(false) + "</div>" + (D.opponents.length > 20 ? '<button type="button" class="lnk hall">كل الخصوم</button>' : "") +

@@ -900,9 +900,13 @@ body.hasprayl .tile.pray{display:none}
 .v3 .legend i{display:inline-block;inline-size:.8rem;block-size:.8rem;background:var(--c);margin-inline:.5rem .25rem;vertical-align:middle}
 .v3 .clock .c1{font-size:6px;fill:var(--tert);text-anchor:middle;dominant-baseline:middle}.v3 .clock .c2{font-size:5px;fill:var(--tert);text-anchor:middle}
 /* a club's full history (the «التاريخ» tab) */
-.v3 .chist .hl{font-size:1.05rem}.v3 .chist .dec{max-inline-size:44rem}.v3 .chist .dw{fill:var(--mg,#F0BC5A)}
+.v3 .chist .hsum{font-size:1.05rem}.v3 .chist .dec{max-inline-size:44rem}.v3 .chist .dw{fill:var(--mg,#F0BC5A)}
 .v3 .chist .hq{margin-block:.3rem .5rem;padding:.4rem .6rem;inline-size:min(100%,20rem);border:1px solid var(--line);background:transparent;color:inherit;font:inherit}
 .v3 .chist .hbig{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:1rem}.v3 .chist .sc{font-weight:700}
 .v3 .ccard{margin-block-end:1.2rem}.v3 .chon{list-style:none;padding:0;display:grid;gap:.35rem}
 .v3 .chon li{display:grid;grid-template-columns:minmax(0,14rem) 2.5rem minmax(0,1fr);gap:.6rem;align-items:baseline;border-block-end:1px solid var(--line);padding-block:.25rem}
 .v3 .elo-c{max-inline-size:44rem}.v3 .elo-c .pk{fill:var(--mg,#F0BC5A)}
+/* a list of years wraps (.num never does); nothing in the history tab may widen the page */
+.v3 .yrs{font-family:var(--digits);font-variant-numeric:tabular-nums;white-space:normal;line-height:1.6}
+.v3 [data-pane="chist"],.v3 .ccard,.v3 .chist{min-inline-size:0;overflow-wrap:anywhere}
+.v3 [data-pane="chist"] .tbl{display:block;overflow-x:auto}

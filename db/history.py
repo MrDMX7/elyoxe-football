@@ -104,7 +104,7 @@ INTL = {"UEFA CL": "دوري أبطال أوروبا", "UEFA EL": "الدوري 
         "UEFA ITC": "كأس إنترتوتو", "Copa Lib": "كأس ليبرتادوريس", "Copa Sud": "كوبا سود أمريكانا", "Recopa": "ريكوبا", "CAF CL": "دوري أبطال أفريقيا",
         "CAF CC": "كأس الكونفدرالية الأفريقية", "CAF SC": "كأس السوبر الأفريقي", "AFC CL": "دوري أبطال آسيا", "AFC Pokal": "كأس الاتحاد الآسيوي",
         "AFC Pres. Cup": "كأس رئيس الاتحاد الآسيوي", "CONCACAF CC": "أبطال الكونكاكاف", "CONCACAF L": "دوري الكونكاكاف", "OFC CC": "أبطال أوقيانوسيا",
-        "CFU CC": "أبطال الكاريبي", "Fifa Club": "كأس العالم للأندية", "ddr": "الدوري الألماني الشرقي"}
+        "CFU CC": "أبطال الكاريبي", "Fifa Club": "كأس العالم للأندية", "ddr-intl": "كأس الكؤوس الأوروبية وكأس الإنتركونتيننتال"}
 
 
 def rec():
@@ -148,7 +148,10 @@ def main(argv=None):
         ms = []
         for d, hi, ai, gh, ga, comp, lvl in rows:
             home = hi == sk; opp = ai if home else hi
-            ms.append([d.isoformat(), key_of.get(opp) or "s:" + opp, 1 if home else 0, gh if home else ga, ga if home else gh, comp or "league"])
+            # the dataset files the Cup Winners' Cup and the Intercontinental Cup under «ddr» (level international) together with
+            # the leagues of states that no longer exist (level national: USSR, Yugoslavia, East Germany)
+            c = "ddr-intl" if comp == "ddr" and lvl == "international" else "league" if comp == "ddr" else (comp or "league")
+            ms.append([d.isoformat(), key_of.get(opp) or "s:" + opp, 1 if home else 0, gh if home else ga, ga if home else gh, c])
         # English clubs: the lower divisions and the two cups (opponents linked through the main dataset's names)
         if sk.endswith("(England)"):
             for d, oname, h, gf, ga, comp in ENGM.get(efold(sk.rsplit(" (", 1)[0]), []):
@@ -176,7 +179,7 @@ def main(argv=None):
                 names[o] = o[2:]
             else:
                 t = teams.get(o) or {}
-                names[o] = t.get("name_ar") or t.get("name") or o
+                names[o] = t.get("name_ar") or t.get("name") or (cw.get(int(o)) or o).rsplit(" (", 1)[0]   # a linked club we have no page for
         comps = {}
         for c in by_comp:
             comps[c] = INTL.get(c) or ENG_COMPS.get(c) or (COMPS_AR.get(int(c[3:])) if c.startswith("fm:") else "الدوري")
