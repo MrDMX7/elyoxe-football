@@ -117,6 +117,7 @@ def main(argv=None):
         except Exception as e:
             print(cid, page, "ERR", e); continue
         doc = store.get_json(f"history/champions/{cid}.json") or {"comp": cid, "champions": [], "counts": [], "source": ""}
+        doc["champions"] = [c for c in doc["champions"] if not (len(c) > 4 and c[4] == "wiki")]   # rebuilt every run
         # a long Wikipedia list is the better judge of when the competition began: Wikidata items dated before it are
         # mis-dated (the UAE league «1900»)
         if len(rows) >= 20:
@@ -139,7 +140,7 @@ def main(argv=None):
         if "Wikipedia" not in doc.get("source", ""):
             doc["source"] = (doc.get("source") or "") + "; seasons marked «wiki» from English Wikipedia's tables"
         print(cid, page, f"table {len(rows)} rows, {added} added, now {len(doc['champions'])} ({doc['champions'][0][0] if doc['champions'] else ''}-{doc['champions'][-1][0] if doc['champions'] else ''})")
-        if a.upload and added:
+        if a.upload:
             store.put_json(f"history/champions/{cid}.json", doc, cache="warm")
         time.sleep(0.5)
     return 0
