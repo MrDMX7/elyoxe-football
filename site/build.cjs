@@ -398,6 +398,10 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   const FMT = ((await get("history/fm/teams.json")) || {}).teams || {}, FMP = ((await get("history/fm/players.json")) || {}).players || {};
   const EAC = ((await get("ea/cards.json")) || {}).cards || {};   // EA SPORTS FC 27 cards matched to our players (db/eafc.py)
   const TMI = ((await get("history/tm/index.json")) || {}).players || {};   // players with a Transfermarkt record (db/tmdata.py)
+  // the bio fields FotMob leaves empty, from Transfermarkt (db/tmdata.py) and 365Scores (db/scores365.py, the Arab leagues)
+  const FILL = Object.assign({}, ((await get("s365/fill.json")) || {}).players || {});
+  for (const [k, v] of Object.entries(((await get("history/tm/fill.json")) || {}).players || {})) FILL[k] = Object.assign({}, FILL[k] || {}, v);
+  for (const [k, v] of Object.entries(FILL)){ const b = FMP[k]; if (!b) continue; for (const f of ["h", "foot", "contract", "mv", "shirt"]) if (b[f] == null && v[f] != null) b[f] = v[f]; }
   const FOOT = { left:"اليسرى", right:"اليمنى", both:"الثنتين" }, SURF = { grass:"عشب طبيعي", "artificial turf":"عشب صناعي", artificial:"عشب صناعي", hybrid:"عشب هجين" };
   const pbio = id => { const b = FMP[id]; if (!b) return "";
     const age = b.born ? Math.floor((Date.now() - Date.parse(b.born)) / 31557600000) : null;

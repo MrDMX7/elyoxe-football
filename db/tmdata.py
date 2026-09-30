@@ -24,7 +24,7 @@ CACHE = os.path.join(HERE, ".cache", "tm")
 RAW = "https://raw.githubusercontent.com/salimt/football-datasets/main/datalake/transfermarkt/"
 MEDIA = "https://media.githubusercontent.com/media/salimt/football-datasets/main/datalake/transfermarkt/"
 FILES = {"player_profiles": "player_profiles/player_profiles.csv", "player_performances": "player_performances/player_performances.csv",
-         "player_injuries": "player_injuries/player_injuries.csv"}
+         "player_injuries": "player_injuries/player_injuries.csv", "player_latest_market_value": "player_latest_market_value/player_latest_market_value.csv"}
 BIG = {"player_performances"}
 csv.field_size_limit(1 << 24)
 
@@ -182,6 +182,23 @@ def main(argv=None):
     arn = {k: next(iter(v)) for k, v in by.items() if k and len(v) == 1}
     for d in docs.values():
         d["names_ar"] = {str(r[3]): arn[ffold(r[4])] for r in d["career"] if ffold(r[4]) in arn}
+    # the bio fields FotMob leaves empty: height, foot, contract, latest market value (the build fills only what's missing)
+    mv = {}
+    with open(paths["player_latest_market_value"], encoding="utf-8", newline="") as f:
+        for r in csv.DictReader(f):
+            if r.get("player_id") in tm2fm and num(r.get("value")):
+                mv[r["player_id"]] = (num(r.get("value")), (r.get("date_unix") or "")[:10])
+    fill = {}
+    for fid, t in m.items():
+        r = prof[t]
+        h = num(r.get("height"), float)
+        e = {"h": round(h * 100) if h and 1.4 < h < 2.2 else None, "foot": (r.get("foot") or "").strip().lower() if (r.get("foot") or "").strip().lower() in ("right", "left", "both") else None,
+             "contract": (lambda c: c if c and c[:10] > date.today().isoformat() else None)(clean(r.get("contract_expires"))),
+             "mv": mv[t][0] if t in mv and mv[t][1] >= "2025-01-01" else None}
+        e = {k: v for k, v in e.items() if v}
+        if e:
+            fill[str(fid)] = e
+    print(len(fill), "bio fill records")
     n_car = sum(1 for d in docs.values() if d["career"]); n_inj = sum(1 for d in docs.values() if d["injuries"])
     print(f"{len(docs)} players: {n_car} with a career, {n_inj} with injuries")
     if a.upload:
@@ -190,6 +207,7 @@ def main(argv=None):
         with ThreadPoolExecutor(12) as ex:
             list(ex.map(lambda d: store.put_json(f"player/{d['player']}/tm.json", d, cache="warm"), docs.values()))
         store.put_json("history/tm/index.json", {"generated": date.today().isoformat(), "players": {str(f): int(t) for f, t in m.items()}}, cache="warm")
+        store.put_json("history/tm/fill.json", {"generated": date.today().isoformat(), "players": fill}, cache="warm")
         print(f"uploaded ({round(time.time() - t0)}s)")
     return 0
 
