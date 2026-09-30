@@ -15,6 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 STATE = os.path.join(HERE, ".cache", "refresh.json")
 STAGES = [   # name, module, args, every (days)
+    ("rsssf", "db.rsssf", ["--upload"], 30),                       # Arab leagues' old seasons (before db.history, which merges them)
     ("transfers", "history.transfermarkt", ["--upload"], 7),
     ("history", "db.history", ["--upload"], 7),
     ("clubs", "db.clubs", ["--upload"], 7),
@@ -30,7 +31,8 @@ STAGES = [   # name, module, args, every (days)
     ("messi_extra", "history.messi_extra", ["--upload"], 7),
     ("fotmob_profiles", "db.fotmob_profiles", ["--upload"], 7),     # every site club and squad player complete (FotMob)
     ("fm_scorers", "db.fm_scorers", ["--upload"], 7),               # season leaders for every competition (after scorers)
-    ("world", "db.world", ["--upload", "--players"], 14),           # the world encyclopedia: ~300 leagues, their clubs and players
+    ("world", "db.world", ["--upload", "--players"], 14),
+    ("matches", "db.matches", ["--upload"], 1),                     # new finished matches in detail, then every player's log           # the world encyclopedia: ~300 leagues, their clubs and players
 ]
 
 
