@@ -531,7 +531,7 @@ class Poller:
         mid = str(d["id"])
         rp = self.st.setdefault("repoll", {})
         cov = full["coverage_events"]
-        want = not (cov["subs"] and cov["cards"]) or not full.get("highlights")
+        gap = _goal_gap(full)
         if why == "repoll":
             prev = self.store.get_json(f"match/{mid}.json") or {}
             if not full.get("highlights") and prev.get("highlights"):
@@ -542,22 +542,24 @@ class Poller:
                 if e.get("event_id") in seen:
                     e["first_seen"] = seen[e["event_id"]]       # keep the live stamps of events we already had
             have = {e.get("event_id") for e in full.get("events") or []}
-            kept = [e for e in prev.get("events") or [] if e.get("event_id") and e["event_id"] not in have]
+            kept = _kept_events(prev.get("events") or [], full.get("events") or [], full.get("score"))
             if kept:
                 full["events"] = sorted(full["events"] + kept, key=lambda e: (e.get("minute") or 0, e.get("added") or 0))
             new = len(have - {e.get("event_id") for e in prev.get("events") or []})
             if new:
                 self.note(f"repoll {mid}: {new} new events from the source")
-            if full.get("highlights") and not prev.get("highlights"):
-                self.note(f"repoll {mid}: highlights video linked")
-            if not want:
+            if cov["subs"] and cov["cards"] and not gap and (rp.get(mid) or {}).get("kind") != "late":
                 rp.pop(mid, None)           # the feed is complete now
             return
-        if mid in rp or not want:
+        if mid in rp:
             return
         ended = ((d.get("periods") or {}).get("gameEnded")) or iso(self.now())
         if _age_min(ended, self.now()) <= 6 * 60:          # only matches that just ended, not the backfill
-            rp[mid] = {"ft": ended, "done": []}
+            # thin feed (no subs/cards) or goals the events don't name: the early schedule; otherwise two late looks, since
+            # FotMob corrects scorers, assists, card players and minutes hours after full time (audit 2026-09-30: 14 of 40
+            # sampled pages differed from FotMob's own detail a day later)
+            thin = not (cov["subs"] and cov["cards"]) or gap
+            rp[mid] = {"ft": ended, "done": [] if thin else [x for x in REPOLL_MINUTES if x not in LATE_REPOLL], "kind": "thin" if thin else "late"}
 
     def repolls(self):
         # matches that finished before coverage_events existed: one more fetch each (2 per run), so they get the flag
@@ -976,9 +978,11 @@ class Poller:
         """Fetch final details of finished matches not yet in the ledger, focus competitions first."""
         n = 0
         order = config.focus_comps() + [c["id"] for c in self.comps if c["id"] not in config.focus_comps()]
+        dormant = self.st.get("dormant", {})
+        # competitions in play first, then the dormant ones (seen at least once): their finished matches had no page at all
+        # (audit 2026-09-30: 1,575 of 4,124 finished matches, the World Cup 2026 and the President's Cup among them)
+        order = [c for c in order if dormant.get(str(c)) is False] + [c for c in order if dormant.get(str(c)) is True]
         for cid in order:
-            if self.st.get("dormant", {}).get(str(cid)) is not False:
-                continue            # only competitions with a current season in play (and seen at least once)
             fx = self.fixture_cache.get(cid)
             if fx is None:
                 fx = self.fixture_cache[cid] = (self.store.get_json(f"comp/{cid}/fixtures.json") or {}).get("matches") or []
@@ -1666,6 +1670,44 @@ class Poller:
 
 REPOLL_MINUTES = (30, 60, 180, 1440)   # after full time, for matches whose feed lacks subs or cards (1440: FotMob
                                        # added Gulf Cup cards a day later, 2026-09-27)
+LATE_REPOLL = (180, 1440)              # every other finished match: FotMob's later corrections (scorer, assist, minute)
+_GOALS = ("goal", "own_goal", "penalty_goal")
+_CARDS = ("yellow", "second_yellow", "red")
+
+
+def _goal_gap(d):
+    """The feed's goal events don't make the score yet, or a goal has no scorer (FotMob names him later)."""
+    sc = d.get("score") or {}
+    if not sc:
+        return False
+    evs = [e for e in d.get("events") or [] if e.get("type") in _GOALS]
+    by = {s: sum(1 for e in evs if e.get("team") == s) for s in ("home", "away")}
+    return by["home"] != sc.get("home") or by["away"] != sc.get("away") or any(not (e.get("player") or {}).get("name") for e in evs)
+
+
+def _kept_events(prev, new, score):
+    """Events of the previous copy that a re-poll should keep: only those the source dropped, never one it corrected. The
+    event id carries the minute and the player, so a corrected scorer, assist or minute arrives as a «new» event; keeping
+    the old one would show the goal twice (audit 2026-09-30). An old event has a counterpart when the new feed has one of
+    the same kind for the same team within 3 minutes; an old goal is also dropped once the new goals make the score."""
+    group = lambda t: "goal" if t in _GOALS else "card" if t in _CARDS else t
+    have = {e.get("event_id") for e in new}
+    goals = {s: sum(1 for e in new if e.get("type") in _GOALS and e.get("team") == s) for s in ("home", "away")}
+    out = []
+    for e in prev:
+        if not e.get("event_id") or e["event_id"] in have:
+            continue
+        if group(e.get("type")) in ("goal", "card", "sub") and any(
+                group(x.get("type")) == group(e.get("type")) and x.get("team") == e.get("team")
+                and abs((x.get("minute") or 0) - (e.get("minute") or 0)) <= 3 for x in new):
+            continue
+        if e.get("type") in _GOALS:
+            side = e.get("team")
+            if not score or side not in ("home", "away") or goals[side] >= (score.get(side) or 0):
+                continue
+            goals[side] += 1
+        out.append(e)
+    return out
 
 
 ICS_COMPS = (538, 11027, 9943, 11026)       # comp/<id>.ics for the UAE competitions

@@ -98,12 +98,19 @@ def round_ar(key):
 
 
 def placeholder_ar(name):
-    """Bracket placeholders FotMob leaves in English: "Winner SF 1" -> «الفايز من نص النهائي 1»."""
-    m = re.match(r"^(Winner|Loser)\s+(SF|QF|R16|R32)\s*(\d+)$", str(name or "").strip(), re.I)
-    if not m:
-        return None
-    stage = {"SF": "نص النهائي", "QF": "ربع النهائي", "R16": "دور الـ16", "R32": "دور الـ32"}[m.group(2).upper()]
-    return f"{'الفايز' if m.group(1).lower() == 'winner' else 'الخاسر'} من {stage} {m.group(3)}"
+    """Bracket placeholders FotMob leaves in English: "Winner SF 1" / "Winner Semi-final 1" -> «الفايز من نص النهائي 1»,
+    group slots "1A" -> «أول المجموعة A», "3ACD" -> «ثالث A/C/D» (the best third of those groups)."""
+    s = str(name or "").strip()
+    m = re.match(r"^(Winner|Loser)\s+(SF|QF|R16|R32|Semi-?final|Quarter-?final)\s*(\d+)$", s, re.I)
+    if m:
+        k = m.group(2).upper()
+        stage = "نص النهائي" if k.startswith("S") else "ربع النهائي" if k.startswith("Q") else {"R16": "دور الـ16", "R32": "دور الـ32"}[k]
+        return f"{'الفايز' if m.group(1).lower() == 'winner' else 'الخاسر'} من {stage} {m.group(3)}"
+    m = re.match(r"^([1-4])([A-L]{1,6})$", s)
+    if m:
+        pos = {"1": "أول", "2": "ثاني", "3": "ثالث", "4": "رابع"}[m.group(1)]
+        return f"{pos} المجموعة {m.group(2)}" if len(m.group(2)) == 1 else f"{pos} {'/'.join(m.group(2))}"
+    return None
 
 
 def _placeholder(ref, tbd):
@@ -154,7 +161,11 @@ class FotMob(Source):
     # ---------- helpers ----------
     def _team(self, tid, name):
         tid = S._int(tid)
-        return S.team_ref(tid, name, self.names.get("teams", {}).get(str(tid)) if tid else placeholder_ar(name))
+        ar = self.names.get("teams", {}).get(str(tid)) if tid else None
+        slot = None if ar else placeholder_ar(name)
+        if slot:        # FotMob gives a bracket slot a fake team id (1A = 1870, Winner Semi-final 1 = 1): no logo, flagged
+            return {**S.team_ref(tid, name, slot), "logo": None, "placeholder": True}
+        return S.team_ref(tid, name, ar)
 
     def _match(self, *, mid, comp, status_block, home, away, round_=None, stage=None, season=None,
                home_score=None, away_score=None, pens=None, time_tbd=False):

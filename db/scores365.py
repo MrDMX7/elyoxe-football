@@ -46,18 +46,28 @@ INTL = {54, 19, 171, 44, 17, 47, 208, 176, 188, 303}   # 365's International, Eu
 # ... and those FotMob has no league for: their competitions get the full live season
 LIVE_CC = {161, 119, 123, 125, 130, 116, 117, 226, 170}
 WOMEN = re.compile(r"women|femin|ladies|سيدات|نسائي|للسيدات|السيدات", re.I)
-NOWIN = re.compile(r"^(no winner|not held|not played|not completed|cancel|abandon|void|tbd|unknown|n/a)", re.I)   # 365's placeholder «winners»
+NOWIN = re.compile(r"^(no winner|not held|not played|not completed|cancel|abandon|void|tbd|unknown|n/a)|لا فائز|بدون فائز|لا يوجد فائز|ألغي|لم تكتمل", re.I)   # 365's placeholder «winners» (either language: team 91937 «No Winner» sits in the Arabic field)
 YOUTH = re.compile(r"u-?1\d|u-?2\d|youth|junior|reserve|تحت \d\d|الشباب تحت|الناشئين|الأولمبي", re.I)
 
 
+ERR_TTL = 6 * 3600    # an HTTP 500 is 365's server failing (often for seconds): asked again after this, whatever the path's ttl
+
+
 def fetch(path, ttl):
-    """GET BASE+path as JSON through a gzip file cache; None when 365Scores has nothing (404/500) or keeps failing."""
+    """GET BASE+path as JSON through a gzip file cache; None when 365Scores has nothing (400/404/500) or keeps failing.
+    A 400/404 is kept like an answer; a 500 only for ERR_TTL (audit 2026-09-30: 69 champion histories, among them the
+    Libertadores, AFCON, the Nations League and the Arab Club Champions Cup, sat on a cached 500 for up to 30 days, and a
+    finished game's 500 was kept for good)."""
     os.makedirs(CACHE, exist_ok=True)
     f = os.path.join(CACHE, hashlib.sha1(path.encode()).hexdigest()[:20] + ".json.gz")
     if os.path.exists(f) and (ttl is None or time.time() - os.path.getmtime(f) < ttl):
         try:
             d = json.loads(gzip.open(f, "rt", encoding="utf-8").read())
-            return None if isinstance(d, dict) and d.get("_err") else d
+            if isinstance(d, dict) and d.get("_err"):
+                if d["_err"] not in (400, 404) and time.time() - os.path.getmtime(f) >= ERR_TTL:
+                    raise ValueError("stale server error")
+                return None
+            return d
         except Exception:
             pass
     for i in range(3):
@@ -173,6 +183,8 @@ def fotmob_map(teams, countries):
     out, used = {}, {}
     for sid, row in teams.items():
         ar, en, cid = row[0], row[1], row[2]
+        if side(en, ar):          # 365's women's, youth and B sides never stand for a FotMob senior club (Umeå (W), Columbus Crew II, Sassuolo U19)
+            continue
         ck = cc_key((countries.get(cid) or ["", ""])[1]) if cid in countries else None
         e, r, cand = fold(en), fold_ar(ar), None
         e = EN_ALIAS.get(e, e)
@@ -234,7 +246,7 @@ def champions(only=None):
         for r in tb["rows"]:
             vals = {v.get("columnNum"): v.get("value") for v in r.get("values") or []}
             w = r.get("entityId") or None
-            if w and (NOWIN.search((teams.get(w) or ["", ""])[1] or "") or (teams.get(w) or [""])[0] in ("لا فائز", "بدون فائز")):
+            if w and any(NOWIN.search(x or "") for x in (teams.get(w) or ["", ""])[:2]):
                 w = None
             v = [vals.get(n, "") for n in order] if vals and w else []
             try:   # 365 sometimes carries another club's line (a «champion» with 3 wins and 17 losses): keep the name, drop the numbers
@@ -525,7 +537,7 @@ def main(argv=None):
     # titles per team
     titles = {}
     for cid, c in comps.items():
-        if c.get("youth"):
+        if c.get("youth") or c.get("women"):      # a club's titles are its senior men's side's (Umeå's 4 women's leagues were on the men's page)
             continue
         for r in c["champions"]:
             if r[1]:
