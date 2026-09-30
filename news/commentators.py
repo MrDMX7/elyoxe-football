@@ -270,6 +270,10 @@ VARIANTS = {"حفيظ الدراجي": "حفيظ دراجي", "عصام شوال
 NOT_NAME = re.compile(r"^(?:لم ?يعلن|لم ?تعلن|لم ?يحدد|لم ?يتحدد|لم ?يتم|غير (?:محدد|معروف|متوفر|معلن)|بدون(?: تعليق)?|لا يوجد|"
                       r"يعلن لاحقا|سيعلن|يحدد لاحقا|لاحقا|قريبا|tba|tbd|-+|—|\?+|x)$")
 TITLES = re.compile(r"^(?:المعلق(?: الرياضي)?|الكابتن|كابتن|تعليق|بصوت|المعلقين)\s*[:：]?\s*")
+# words no person's name carries: a stadium, a studio, a channel that slipped into the commentator column
+NOT_PERSON = {"استوديو", "تحليلي", "تحليل", "قناه", "قنوات", "ملعب", "الملعب", "استاد", "ستاد", "بث", "مباشر", "تعليق", "صوت",
+              "الجمهور", "بدون", "مجاني", "مجانا", "مشفر", "مشفره", "الرياضيه", "رياضه", "سبورت", "سبورتس", "تطبيق", "اونلاين",
+              "الانترنت", "المدينه", "مدينه", "الدولي", "نادي", "منتخب"}
 
 
 def _ckey(s):
@@ -299,7 +303,7 @@ def commentators(raw):
         if not AR.search(p) or re.search(r"\d", p) or len(p) > 40:
             continue
         words = p.split()
-        if len(words) < 2 or len(words) > 5:
+        if len(words) < 2 or len(words) > 5 or any(w in NOT_PERSON for w in fold(p).split()):
             continue
         name = _FAMOUS.get(_ckey(p))
         if not name:
@@ -408,14 +412,15 @@ SKIP_HEAD = re.compile(r"جدول مباريات اليوم|كيف تشاهد|ا
 
 
 def _roles(header):
-    """Header cells -> {role: column}. Empty header cells take the roles left over, in table order."""
+    """Header cells -> {role: column}. EMPTY header cells take the roles left over, in table order (19 September: the
+    Bundesliga table's commentator column had no title); a titled column we don't know («الملعب») takes none."""
     roles, free = {}, []
     for i, c in enumerate(header):
         f = fold(c["text"]) if c else ""
         hit = next((r for r, rx in ROLE if rx.search(f) and r not in roles), None)
         if hit:
             roles[hit] = i
-        else:
+        elif not f:
             free.append(i)
     for r in [r for r, _ in ROLE if r not in roles]:
         if free:

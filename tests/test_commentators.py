@@ -86,6 +86,14 @@ def test_commentators_spelled_once_and_blanks_dropped():
     assert C.commentators("المعلق: عصام الشوالي") == ["عصام الشوالي"]
 
 
+def test_a_column_we_do_not_know_never_becomes_the_commentator():
+    body = ("<h2>الدوري السعودي - الجولة 6</h2><table><tr><th>المباراة</th><th>الموعد</th><th>الملعب</th><th>القنوات الناقلة</th></tr>"
+            "<tr><td>الهلال - النصر</td><td>21:00 السعودية</td><td>استاد الملك فهد الدولي</td><td>ثمانية 1</td></tr></table>")
+    (ln,) = C.parse_article(body, date(2026, 10, 3))
+    assert [(c["ch"]["name"], c["comm"]) for c in ln["channels"]] == [("ثمانية 1", [])]
+    assert C.commentators("استاد الملك فهد") == [] and C.commentators("استوديو تحليلي") == []
+
+
 def test_rowspans_several_channels_and_a_second_voice():
     d, lines = article("20260927")
     assert len(lines) == 10
