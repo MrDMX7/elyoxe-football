@@ -394,7 +394,11 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   // the club's identity card from Wikidata (db/clubs.py): founded, stadium, city, nickname, every title by competition
   const CCARD = ((await get("history/clubs.json")) || {}).clubs || {};
   const ccard = id => { const c = CCARD[id]; if (!c) return "";
-    const st = c.stadium, hon = Object.values(c.honours || {}).filter(h => h.years && h.years.length).sort((a, b) => b.years.length - a.years.length);
+    // friendlies, youth and reserve cups are out; a title listed twice (the same years under two items, e.g. «First Division» and
+    // «Football League») counts once
+    const JUNK = /gamper|herrera|juvenil|youth|junior|u-?1\d|u-?2[0-3]|reserve|b team|trofeo|trophée d|audi cup|emirates cup|carranza|colombino|summer|friendly|ودي|شباب|ناشئ/i, seen = new Set();
+    const st = c.stadium, hon = Object.values(c.honours || {}).filter(h => h.years && h.years.length && !JUNK.test((h.en || "") + " " + (h.ar || ""))).sort((a, b) => b.years.length - a.years.length)
+      .filter(h => { const k = h.years.join(","); if (seen.has(k)) return false; seen.add(k); return true; });
     const facts = [c.founded && `تأسس <b class="num">${esc(c.founded)}</b>`, st && (st.ar || st.en) && `الملعب ${esc(st.ar || st.en)}${st.capacity ? ` (<span class="num">${st.capacity.toLocaleString("en")}</span> متفرج)` : ""}`, c.city && `المدينة ${esc(c.city)}`, c.nick && c.nick.length && `يلقبونه ${esc(c.nick.join("، "))}`].filter(Boolean);
     return `<div class="ccard">${facts.length ? `<p>${facts.join(" · ")}</p>` : ""}${hon.length ? `<h3>ألقابه (<span class="num">${hon.reduce((a, h) => a + h.years.length, 0)}</span>)</h3><ul class="chon">${hon.map(h => `<li><b>${esc(h.ar || h.en || "")}</b> <span class="num">${h.years.length}</span><span class="muted small num">${esc(h.years.join("، "))}</span></li>`).join("")}</ul>` : ""}<p class="src">من ويكي داتا.</p></div>`; };
   const eur = v => v == null ? "—" : v === 0 ? "مجاناً" : v >= 1e6 ? `<span class="num">€${Math.round(v / 1e5) / 10}</span> مليون` : `<span class="num">€${Math.round(v / 1e3)}</span> ألف`;
