@@ -99,11 +99,16 @@ def _fit(schema, v):   # maxLength / maxItems enforced in code, whatever the mod
 def claude_text(system, payload, schema, model="haiku"):
     import subprocess, shutil
     cmd = [os.environ.get("CLAUDE_BIN") or shutil.which("claude") or os.path.expanduser("~/.local/bin/claude"), "-p", "--model", model, "--output-format", "json", "--tools", "", "--strict-mcp-config", "--disable-slash-commands",
-           "--no-session-persistence", "--setting-sources", "", "--settings", '{"alwaysThinkingEnabled":false}', "--system-prompt", system + "\n\nجاوب بـ JSON بس، مطابق للـ schema.", "--json-schema", json.dumps(_jschema(schema), ensure_ascii=False),
-           json.dumps(payload, ensure_ascii=False)]
+           "--no-session-persistence", "--setting-sources", "", "--settings", '{"alwaysThinkingEnabled":false}',
+           "--system-prompt", "You are Tifo's Arabic football writer. Follow the rules at the top of the message exactly. Reply with JSON only, matching the schema.",
+           "--json-schema", json.dumps(_jschema(schema))]
+    # the Arabic rules and the payload go over stdin, as in news/summarize.py: on Windows (the laptop runs the jobs since
+    # 2026-10-01) claude is claude.CMD and cmd.exe cuts or mangles a long multi-line Arabic argument; stdin is free on Linux
+    msg = system + "\n\nجاوب بـ JSON بس، مطابق للـ schema.\n\nالمدخلات:\n" + json.dumps(payload, ensure_ascii=False)
     t0 = time.time()
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=int(os.environ.get("TIFO_CLAUDE_TIMEOUT") or 90), cwd="/tmp", env=dict(os.environ, MAX_THINKING_TOKENS="0"))   # no thinking: ~8 s instead of ~65 s
+        r = subprocess.run(cmd, input=msg, capture_output=True, text=True, encoding="utf-8", timeout=int(os.environ.get("TIFO_CLAUDE_TIMEOUT") or 90),
+                           cwd="/tmp" if os.path.isdir("/tmp") else None, env=dict(os.environ, MAX_THINKING_TOKENS="0"))   # no thinking: ~8 s instead of ~65 s
         out = json.loads(r.stdout or "{}")
         if r.returncode or out.get("is_error"): raise RuntimeError((out.get("result") or r.stderr or "")[:200])
         res = out.get("structured_output") or json.loads(out.get("result") or "")
