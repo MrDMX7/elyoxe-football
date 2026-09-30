@@ -460,6 +460,11 @@ def archive_index(p):
                 y = int(ko[:4]) - (1 if int(ko[5:7]) < 7 else 0)
                 lst = by_season.setdefault(f"{y}-{y + 1}", [])
                 lst.append([m["id"], ko[:10], m["comp"], m["home"]["id"], m["away"]["id"], m["score"]["home"], m["score"]["away"]])
+    # our own permanent archive (owner 2026-09-30 item 14): merge into what is stored instead of rebuilding, so a
+    # competition's past season survives after its fixtures file moves on to the next one (MLS, the Arab cups, …)
+    for season in list(by_season) + [s["season"] for s in ((p.store.get_json("archive/index-all.json") or {}).get("seasons") or [])]:
+        old = p.store.get_json(f"archive/all/{season}.json") or {}
+        by_season.setdefault(season, []).extend(old.get("matches") or [])
     index = []
     for season, rows in sorted(by_season.items()):
         seen, uniq = set(), []
