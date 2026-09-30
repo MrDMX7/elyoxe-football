@@ -232,8 +232,8 @@
   };
   U.rows = function (rs) { return rs.filter(Boolean).map(U.row).join(""); };
   U.seg = function (group, tabs, sel, o) {
-    o = o || {}; var i0 = Math.max(0, tabs.findIndex(function (t) { return t[0] === sel; }));
-    return '<div class="seg' + (o.sm ? " sm" : "") + '" role="tablist" data-seg="' + group + '" style="--n:' + tabs.length + ";--i:" + i0 + '"><i class="seg-th" aria-hidden="true"></i>' +
+    o = o || {}; var i0 = tabs.findIndex(function (t) { return t[0] === sel; });   // -1: nothing chosen yet (the pick before kickoff)
+    return '<div class="seg' + (o.sm ? " sm" : "") + (i0 < 0 ? " none" : "") + '" role="tablist" data-seg="' + group + '" style="--n:' + tabs.length + ";--i:" + Math.max(0, i0) + '"><i class="seg-th" aria-hidden="true"></i>' +
       tabs.map(function (t, i) { return '<button type="button" role="tab" data-t="' + t[0] + '" aria-selected="' + (i === i0) + '"' + (t[2] ? ' aria-label="' + esc(t[2]) + '"' : "") + '><span class="sl">' + t[1] + "</span></button>"; }).join("") + "</div>";
   };
   U.segbar = function (group, tabs, sel) { return '<div class="segbar">' + U.seg(group, tabs, sel) + "</div>"; };
@@ -379,7 +379,7 @@
     var vn = v.name_ar || v.name_en || v.name; if (vn) rows.push({ icon: "pin", c: "#34C759", t: "الملعب", sub: v.name_ar ? "" : '<span class="lat">' + esc(vn) + "</span>", v: v.name_ar ? esc(v.name_ar) : esc(U.city(v.city || "") || v.city || ""), href: v.lat != null ? "https://www.openstreetmap.org/?mlat=" + v.lat + "&mlon=" + v.lon + "#map=15/" + v.lat + "/" + v.lon : null, ext: 1 });
     if (md.referee && md.referee.name) rows.push({ icon: "whistle", c: "#8E8E93", t: "الحكم", v: esc(md.referee.name) });
     if (md.attendance) rows.push({ icon: "people", c: "#5856D6", t: "الحضور", v: '<span class="num">' + nf(md.attendance) + "</span>" });
-    var w = md.weather; if (w && w.available && w.temp_c != null) rows.push({ icon: "sun", c: "#FF9F0A", t: "الطقس وقت المباراة", v: '<span class="num">' + Math.round(w.temp_c) + "°</span>" + (w.humidity != null ? " · رطوبة " + '<span class="num">' + w.humidity + "%</span>" : "") + (HEAT[w.heat_category] ? " · " + HEAT[w.heat_category] : "") });
+    var w = md.weather; if (w && w.available && w.temp_c != null) rows.push({ icon: "sun", c: "#FF9F0A", t: "الطقس", v: '<span class="num">' + Math.round(w.temp_c) + "°</span>" + (w.humidity != null ? " · رطوبة " + '<span class="num">' + w.humidity + "%</span>" : "") + (HEAT[w.heat_category] ? " · " + HEAT[w.heat_category] : "") });
     var pr = md.prayer; if (pr && pr.clashes && pr.clashes.length) pr.clashes.forEach(function (c) { rows.push({ icon: "moon", c: "#0A84FF", t: "صلاة " + (PRAY[c.prayer] || c.prayer), v: '<span class="num">' + esc(c.at_uae) + "</span> · " + (c.segment === "halftime" ? "وقت الاستراحة" : "الدقيقة " + '<span class="num">' + c.minute_of_play + "</span>") }); });
     if (o.ch) rows.push({ icon: "tv", c: "#AF52DE", t: "وين تنقل", v: o.ch, attrs: ' data-ch="' + md.comp + '"' });
     if (md.highlights && md.highlights.url) rows.push({ icon: "play", c: "#FF3B30", t: "شوف الملخص", href: md.highlights.url, ext: 1 });

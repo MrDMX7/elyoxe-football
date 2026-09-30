@@ -13,7 +13,7 @@ const items = args.filter((a, i) => /=/.test(a) && !a.startsWith("--") && !VALUE
   const b = await chromium.launch({ channel: "msedge" });
   const schemes = SCH === "both" ? ["light", "dark"] : [SCH];
   for (const sc of schemes) {
-    const ctx = await b.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: sc, serviceWorkers: "block", locale: "ar-AE", timezoneId: "Asia/Dubai" });
+    const ctx = await b.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: sc, reducedMotion: process.env.MOTION ? "no-preference" : "reduce", serviceWorkers: "block", locale: "ar-AE", timezoneId: "Asia/Dubai" });
     if (PRE) await ctx.addInitScript(PRE);   // e.g. followed teams in localStorage before the page loads
     const pg = await ctx.newPage(); const errs = [];
     pg.on("pageerror", e => errs.push("pageerror " + e.message)); pg.on("console", m => { if (m.type() === "error") errs.push("console " + m.text()); });

@@ -110,7 +110,7 @@ a.row:active,button.row:active,.mr:active,.hd-row:active{background:var(--fill)}
 .rt{flex:1;min-width:0}
 .rt b,.rt strong{font-weight:600}
 .rt small,.sub{display:block;color:var(--label2);font-size:13px;line-height:17px;margin-top:1px}
-.rv{flex:none;color:var(--label2);font-size:17px;max-width:48%;text-align:end;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rv{flex:none;color:var(--label2);font-size:17px;max-width:58%;text-align:end;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .chev{flex:none;width:9px;height:15px;color:var(--label3);margin-inline-start:2px}
 .row .badge{flex:none;min-width:22px;height:22px;padding:0 7px;border-radius:11px;background:var(--live);color:#fff;font-size:13px;font-weight:600;display:inline-grid;place-items:center}
 .row.link .rt{color:var(--accent)}
@@ -138,6 +138,7 @@ a.row:active,button.row:active,.mr:active,.hd-row:active{background:var(--fill)}
 .seg button[aria-selected="true"]{font-weight:600}
 .seg button + button::before{content:"";position:absolute;inset-inline-start:0;top:8px;bottom:8px;border-inline-start:1px solid var(--label4);transition:opacity .2s}
 .seg button[aria-selected="true"]::before,.seg button[aria-selected="true"] + button::before{opacity:0}
+.seg .cnt[hidden]{display:none}
 .seg .cnt{display:inline-block;min-width:17px;height:17px;margin-inline-start:4px;padding:0 5px;border-radius:9px;background:var(--live);color:#fff;font-size:11px;font-weight:700;line-height:17px;vertical-align:1px}
 .seg.sm{height:30px}
 .seg.sm button{font-size:13px;line-height:26px}
@@ -500,3 +501,5 @@ a.chip::after,button.chip::after{inset:-8px -2px}
 .tx::after{inset:-12px -8px}
 .nw h3 a::after{content:"";position:absolute;inset:0}
 .nw .ents{position:relative;z-index:1}
+
+.seg.none .seg-th{opacity:0}

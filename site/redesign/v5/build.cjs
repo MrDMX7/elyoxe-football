@@ -96,7 +96,11 @@ function write(rel, html) {
   // match details
   const MD = new Map(); await pool([...MIDS], 8, async id => { const m = await getT(`match/${id}.json`, 5 * 60e3); if (m) MD.set(id, m); });
   // teams (only those with a team file get a prerendered page; the rest render in the browser)
-  const TD = new Map(); await pool([...TIDS], 8, async id => { const t = await getT(`team/${id}.json`, 6 * 36e5); if (t && t.id) TD.set(id, t); });
+  const TD = new Map(); await pool([...TIDS], 8, async id => { const t = await getT(`team/${id}.json`); if (t && t.id) TD.set(id, t); });
+  // a team file is a daily snapshot patched at kick-off and full time; the day files and fixtures are fresher, so their copy of a
+  // match wins (status, score, minute), and a match still «live» three hours after kick-off is not shown as live
+  for (const t of TD.values()) t.fixtures = (t.fixtures || []).map(m => { const s = m && matchSum.get(m.id); let x = s && s.status ? Object.assign({}, m, { status: s.status, status_detail: s.status_detail, score: s.score, penalties: s.penalties, minute: s.minute, period: s.period, period_start: s.period_start, period_base: s.period_base }) : m;
+    if (x && U.isLive(x) && Date.now() - Date.parse(x.kickoff_utc) > 3 * 36e5) x = Object.assign({}, x, { status: x.score ? "finished" : "unknown", minute: null }); return x; });
   // players: the UAE squad, tonight's line-ups, the Pro League's top scorers and assisters
   const PIDS = new Set();
   ((TD.get(UAE) || {}).squad || []).forEach(g => (g.players || []).forEach(p => p.id && PIDS.add(p.id)));

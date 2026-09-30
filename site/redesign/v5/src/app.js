@@ -40,7 +40,7 @@
   // ------------------------------------------------------------------ segmented controls
   function selectSeg(seg, key, user) {
     var btns = $$("button[data-t]", seg), i = -1; btns.forEach(function (b, j) { if (b.dataset.t === key) i = j; }); if (i < 0) return;
-    btns.forEach(function (b, j) { b.setAttribute("aria-selected", String(j === i)); }); seg.style.setProperty("--i", i);
+    btns.forEach(function (b, j) { b.setAttribute("aria-selected", String(j === i)); }); seg.style.setProperty("--i", i); seg.classList.remove("none");
     var g = seg.dataset.seg;
     if (g === "f") return homeFilter(key); if (g === "pick") return pickSave(key); if (g === "nk") return newsFilter(key);
     $$('.pane[data-g="' + g + '"]').forEach(function (p) { p.hidden = p.dataset.p !== key; });
@@ -117,8 +117,9 @@
   function homeInit() {
     // the page may be days old: "today" is the UAE day now (the day files are UAE days)
     var t = new Date(Date.now() + 4 * 36e5).toISOString().slice(0, 10), tn = t.replace(/-/g, "");
-    if (tn !== V.day) { H.day = H.todayN = tn; var dd = $("#days"); if (dd) dd.outerHTML = P.days(t); var s = $("#daysub"); if (s) s.textContent = U.dname(t + "T12:00:00+04:00"); }
-    get("day/" + H.day + ".json", true).then(function (j) { H.ms = j.matches || []; return mergeLive(); }).then(renderHome).catch(function () {});
+    var box = $("#homelist");
+    if (tn !== V.day) { H.day = H.todayN = tn; var dd = $("#days"); if (dd) dd.outerHTML = P.days(t); var s = $("#daysub"); if (s) s.textContent = U.dname(t + "T12:00:00+04:00"); if (box) box.style.opacity = ".45"; }
+    get("day/" + H.day + ".json", true).then(function (j) { H.ms = j.matches || []; return mergeLive(); }).then(function () { if (box) box.style.opacity = ""; renderHome(); }).catch(function () { if (box) box.style.opacity = ""; });
     var sel = $("#days .day[aria-selected=true]"); if (sel) sel.scrollIntoView({ inline: "center", block: "nearest" });
     setInterval(function () { if (document.hidden || H.day !== H.todayN || !H.ms) return; mergeLive().then(renderHome); }, 20000);
   }
@@ -141,13 +142,18 @@
       if ((U.isLive(md) || soon) && !timer) timer = setInterval(run, 20000); else if (!U.isLive(md) && !soon && timer) { clearInterval(timer); timer = null; } }).catch(function () {}); };
     if (V.live || AGE > 12e4) run(true);
   }
-  function teamInit() { if (AGE < 30 * 60e3 || !$("#tfx")) return; get("team/" + V.id + ".json", true).then(function (t) { var tf = P.teamFx(t); $("#tfeat").innerHTML = tf.feat; $("#tfx").innerHTML = tf.fx; localize(); }).catch(function () {}); }
+  // a team page redraws its matches when one of them is in live.json (live, or finished in the last hours) or when the page is old
+  function teamInit() {
+    if (!$("#tfx")) return; var ids = {}; $$("#tfeat [data-mid], #tfx [data-mid]").forEach(function (a) { ids[a.dataset.mid] = 1; });
+    get("live.json", true).then(function (l) { var L = {}, hit = false; (l.matches || []).forEach(function (m) { L[m.id] = m; if (ids[m.id]) hit = true; });
+      if (!hit && AGE < 30 * 60e3) return;
+      return get("team/" + V.id + ".json", true).then(function (t) { cfg.now = Date.now(); t.fixtures = (t.fixtures || []).map(function (m) { return m && L[m.id] ? Object.assign({}, m, L[m.id]) : m; }); var tf = P.teamFx(t); $("#tfeat").innerHTML = tf.feat; $("#tfx").innerHTML = tf.fx; localize(); }); }).catch(function () {}); }
   function compInit() {
     if (AGE < 30 * 60e3 || !V.comp) return; var box = $("#ctab");
     if (box) get("comp/" + V.comp + "/standings.json", true).then(function (st) { var b = $('.seg[data-seg="tv"] button[aria-selected="true"]'); box.innerHTML = P.compTable(st, box.dataset.single === "1", b && b.dataset.t); localize(box); }).catch(function () {});
     var rl = $("#roundlist"); if (rl) get("comp/" + V.comp + "/fixtures.json", true).then(function (j) { FX = U.rounds(j); var b = $("#rounds button[aria-selected=true]"), k = b ? b.dataset.r : FX.cur; rl.innerHTML = U.roundMatches(FX.by[k] || []); localize(rl); }).catch(function () {});
   }
-  function selectSegOnly(seg, key) { if (!seg) return; var btns = $$("button[data-t]", seg); btns.forEach(function (b, j) { var on = b.dataset.t === key; b.setAttribute("aria-selected", String(on)); if (on) seg.style.setProperty("--i", j); }); }
+  function selectSegOnly(seg, key) { if (!seg) return; var btns = $("button[data-t]", seg); btns.forEach(function (b, j) { var on = b.dataset.t === key; b.setAttribute("aria-selected", String(on)); if (on) { seg.style.setProperty("--i", j); seg.classList.remove("none"); } }); }
   function pickSave(k) { var pk = $("#pick"); if (!pk) return; var o = ls.json("tifo.picks", {}); o[pk.dataset.mid] = { p: k, ko: pk.dataset.kick, h: +pk.dataset.h, a: +pk.dataset.a }; ls.set("tifo.picks", JSON.stringify(o)); toast("توقعك انحفظ في جوالك"); }
   var BC = null;
   function chBox() { var box = $("#chbox"); if (!box || !C.av || !C.av.bc) return; var go = function () { var cc = country() || "AE", e = (BC[cc] || {})[box.dataset.comp];
@@ -166,10 +172,14 @@
     Promise.all([get("news/e/" + box.dataset.e + ".json").catch(function () { return { stories: [] }; }), box.dataset.social ? get("news/social/" + box.dataset.social + ".json").catch(function () { return { videos: [] }; }) : Promise.resolve({ videos: [] })]).then(function (r) {
       var st = (r[0].stories || []).slice(0, 20), vs = (r[1].videos || []).slice(0, 12);
       box.innerHTML = st.length || vs.length ? (st.length ? '<div class="card sepd">' + st.map(U.newsCard).join("") + "</div>" : "") + (vs.length ? '<div class="gh mt2"><h2>من حساباته الرسمية</h2></div>' + U.vids(vs) : "") : '<div class="card"><p class="empty">ما في أخبار عنه هالأيام. <a style="color:var(--accent)" href="' + cfg.base + '/news/">كل الأخبار</a></p></div>'; }); }); }
-  var NEWS = null, NK = "all";
-  function newsFilter(k) { NK = k; var box = $("#nlist"); if (box && NEWS) box.innerHTML = P.newsList(NEWS, k); }
+  var NEWS = null, NK = "all", NSHOW = 30;
+  function newsFilter(k, more) { if (k !== NK) NSHOW = 30; NK = k; if (more) NSHOW += 30; var box = $("#nlist"); if (!box || !NEWS) return;
+    var xs = NEWS.filter(function (s) { return k === "all" || s.kind === k || (k === "statement" && (s.kind === "presser" || s.kind === "official")); });
+    box.innerHTML = P.newsList(xs.slice(0, NSHOW), "all") + (xs.length > NSHOW ? '<div class="card mt">' + U.row({ btn: 1, t: "أخبار أقدم", cls: "link", attrs: " data-nmore" }) + "</div>" : ""); localize(box); }
+  document.addEventListener("click", function (e) { if (e.target.closest("[data-nmore]")) newsFilter(NK, true); });
   function newsInit() {
-    get("news/latest.json", true).then(function (d) { NEWS = d.stories || []; newsFilter(NK); }).catch(function () {});
+    // the prerender already shows the latest 30: draw again only when the feed moved since the build
+    get("news/latest.json", true).then(function (d) { NEWS = d.stories || []; var box = $("#nlist"), first = box && box.querySelector(".nw h3 a"); if (NK === "all" && first && NEWS[0] && first.textContent === NEWS[0].title && +box.dataset.n === NEWS.length) { if (NEWS.length > NSHOW) box.insertAdjacentHTML("beforeend", '<div class="card mt">' + U.row({ btn: 1, t: "أخبار أقدم", cls: "link", attrs: " data-nmore" }) + "</div>"); return; } newsFilter(NK); }).catch(function () {});
     get("news/social.json").then(function (d) { var vs = (d.videos || []).slice(0, 12); if (vs.length) { $("#nsocb").innerHTML = U.vids(vs); $("#nsoc").hidden = false; } }).catch(function () {});
     var mine = favs().filter(function (x) { return x.t === "team"; }).slice(0, 3); if (mine.length) Promise.all(mine.map(function (x) { return get("news/e/team-" + x.id + ".json").catch(function () { return { stories: [] }; }); })).then(function (rs) { var st = []; rs.forEach(function (r) { st = st.concat((r.stories || []).slice(0, 3)); }); if (st.length) { var s = $("#mynews"); s.innerHTML = '<div class="gh"><h2>أخبار فريقك</h2></div><div class="card sepd">' + st.slice(0, 5).map(U.newsCard).join("") + "</div>"; s.hidden = false; } });
   }
