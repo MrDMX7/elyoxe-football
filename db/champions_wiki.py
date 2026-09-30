@@ -30,6 +30,9 @@ PAGES = {538: "UAE Pro League", 329: "Arabian Gulf Cup", 10474: "Arab Club Champ
          112: "Argentine Primera División"}
 
 
+ALIAS = {"United Arab Emirates": "UAE", "South Korea": "Korea Republic", "Ivory Coast": "Côte d'Ivoire", "DR Congo": "Congo DR"}
+
+
 def fold(s):
     s = unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().lower()
     s = re.sub(r"\b(fc|sc|club|al)\b", " ", s)
@@ -91,7 +94,7 @@ def main(argv=None):
         """A winner's name -> one of our teams: exact (folded) name, else every word of it in exactly one team's name.
         Looked for among the competition's own teams, then its country's, then (continental cups) everywhere; never in
         another country (the UAE's «Al Ahli» is not Saudi Arabia's)."""
-        f = fold(w); ws = set(f.split())
+        f = fold(ALIAS.get(w, w)); ws = set(f.split())
         cc = ((comps.get(cid) or {}).get("country") or {}).get("iso2")
         pools = [[k for k, t in teams.items() if cid in (t.get("comps") or [])]]
         if cc:
