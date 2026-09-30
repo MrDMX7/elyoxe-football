@@ -131,6 +131,8 @@ def main(argv=None):
             tm2fm[p["player_id"]] = hit[0]; taken.add(hit[0]); more += 1
     print(more, "more matched by name + current club")
 
+    json.dump(club, open(os.path.join(HERE, ".cache", "tm_clubmap.json"), "w", encoding="utf-8", newline="
+"))   # db/clubs.py links through it
     players, clubs = defaultdict(list), defaultdict(lambda: {"in": [], "out": []})
     for t in table("transfers"):
         fee, mv = money(t["transfer_fee"]), money(t["market_value_in_eur"])

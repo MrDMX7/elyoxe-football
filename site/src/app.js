@@ -530,6 +530,35 @@
       });
     });
   })();
+  // ---- a club's full history (the «التاريخ» tab): v1/history/club/<id>.json from db/history.py, every match on demand
+  (function(){
+    var box = $(".chist"); if (!box) return;
+    var id = box.dataset.club, D = null, pct = function(a, b){ return b ? Math.round(a / b * 100) : 0; };
+    function nm(k){ return (D.names && D.names[k]) || k; }
+    function link(k){ return /^\d+$/.test(String(k)) ? '<a href="/t/' + k + '/">' + R.esc(nm(String(k))) + "</a>" : R.esc(nm(String(k))); }
+    function line(t){ return '<span class="num">' + t.p + "</span> مباراة · <b class=\"num\">" + t.w + '</b> فوز · <span class="num">' + t.d + '</span> تعادل · <span class="num">' + t.l + '</span> خسارة · <bdi dir="ltr" class="num">' + t.gf + "-" + t.ga + "</bdi>"; }
+    function mrow(m){ return "<li><span class=\"num\">" + m[0] + "</span> " + (m[2] ? "" : "في ملعب ") + link(m[1]) + ' <bdi dir="ltr" class="num sc">' + m[3] + "-" + m[4] + '</bdi> <span class="muted small">' + R.esc((D.comps || {})[m[5]] || "") + "</span></li>"; }
+    function opps(all, q){ var rows = D.opponents.filter(function(o){ return !q || nm(o[0]).indexOf(q) >= 0; }); var list = all || q ? rows : rows.slice(0, 20);
+      return '<table class="tbl"><thead><tr><th>الخصم</th><th>لعب</th><th>فوز</th><th>تعادل</th><th>خسارة</th><th>له-عليه</th><th>آخر مرة</th></tr></thead><tbody>' + list.map(function(o){ return "<tr><td>" + link(o[0]) + '</td><td class="num">' + o[1] + '</td><td class="num">' + o[2] + '</td><td class="num">' + o[3] + '</td><td class="num">' + o[4] + '</td><td class="num"><bdi dir="ltr">' + o[5] + "-" + o[6] + '</bdi></td><td class="num">' + (o[7] || "").slice(0, 4) + "</td></tr>"; }).join("") + "</tbody></table>"; }
+    function draw(){
+      var T = D.total, dec = Object.keys(D.by_decade), dm = Math.max.apply(null, dec.map(function(k){ return D.by_decade[k].p; }).concat([1]));
+      var bars = dec.map(function(k, i){ var v = D.by_decade[k], h = pct(v.w, v.p); return '<g><rect x="' + (i * 22 + 2) + '" y="' + (62 - h * 0.55).toFixed(1) + '" width="18" height="' + (h * 0.55).toFixed(1) + '" class="dw"><title>' + k + ": " + h + "% فوز من " + v.p + '</title></rect><text x="' + (i * 22 + 11) + '" y="72" class="ax">' + k.slice(2) + '</text><text x="' + (i * 22 + 11) + '" y="' + (58 - h * 0.55).toFixed(1) + '" class="ax">' + h + "</text></g>"; }).join("");
+      box.innerHTML = '<p class="hl">من <b class="num">' + D.since.slice(0, 4) + "</b>: " + line(T) + " · نسبة الفوز <b class=\"num\">" + pct(T.w, T.p) + "٪</b></p>" +
+        '<h3>نسبة الفوز في كل عقد</h3><svg class="chart dec" viewBox="0 0 ' + (dec.length * 22 + 4) + ' 76" role="img" aria-label="نسبة الفوز في كل عقد">' + bars + "</svg>" +
+        "<h3>في كل بطولة</h3><ul class=\"mlist\">" + Object.keys(D.by_comp).sort(function(a, b){ return D.by_comp[b].p - D.by_comp[a].p; }).map(function(c){ return "<li><b>" + R.esc((D.comps || {})[c] || c) + "</b>: " + line(D.by_comp[c]) + "</li>"; }).join("") + "</ul>" +
+        '<h3>ضد كل خصم (<span class="num">' + D.opponents.length + '</span>)</h3><input type="search" class="hq" placeholder="دوّر على خصم" aria-label="دوّر على خصم"><div class="hopp">' + opps(false) + "</div>" + (D.opponents.length > 20 ? '<button type="button" class="lnk hall">كل الخصوم</button>' : "") +
+        '<div class="hbig"><div><h3>أكبر انتصاراته</h3><ul class="mlist">' + D.biggest_wins.map(mrow).join("") + '</ul></div><div><h3>أكبر خساراته</h3><ul class="mlist">' + D.biggest_losses.map(mrow).join("") + "</ul></div></div>" +
+        "<p>أول مباراة عندنا: " + mrow(D.first).replace(/^<li>|<\/li>$/g, "") + '</p><p><button type="button" class="btn hmatch">كل مبارياته (<span class="num">' + T.p + "</span>)</button></p><div class=\"hml\"></div>" +
+        '<p class="src">النتايج من الدرجة الأولى والبطولات القارية: قاعدة schochastics/football-data لين ' + R.esc((D.source.match(/\d{4}-\d{2}-\d{2}/) || [""])[0]) + "، وبعدها أرشيف تيفو. الكؤوس المحلية والدرجات الأدنى مب داخلة.</p>";
+      var q = box.querySelector(".hq"), all = false;
+      q.oninput = function(){ box.querySelector(".hopp").innerHTML = opps(all, q.value.trim()); };
+      var ha = box.querySelector(".hall"); if (ha) ha.onclick = function(){ all = true; ha.remove(); box.querySelector(".hopp").innerHTML = opps(true, q.value.trim()); };
+      box.querySelector(".hmatch").onclick = function(){ var b = this; b.disabled = true; get("history/club/" + id + "/matches.json").then(function(x){ var ms = x.matches.slice().reverse(), shown = 200;
+        function more(){ box.querySelector(".hml").innerHTML = '<ul class="mlist hms">' + ms.slice(0, shown).map(mrow).join("") + "</ul>" + (shown < ms.length ? '<button type="button" class="lnk hmore">أقدم</button>' : ""); var hm = box.querySelector(".hmore"); if (hm) hm.onclick = function(){ shown += 400; more(); }; }
+        more(); b.remove(); }).catch(function(){ b.disabled = false; }); };
+    }
+    get("history/club/" + id + ".json").then(function(d){ D = d; draw(); }).catch(function(){});
+  })();
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio, daypage:daypage, arabs:arabs }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && Object.keys(window.NAT || {}).some(function(k){ return String(window.NAT[k]) === ID; })) countdown(); }
   tvFull();
   tabs(); run(); dist();
