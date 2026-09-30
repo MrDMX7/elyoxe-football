@@ -65,6 +65,15 @@ def test_awarded_result_moves_the_table_and_the_fixture():
     assert AW.apply_to_standings(st2, [dict(m, status="awarded", score={"home": 3, "away": 0})], aw) == []
 
 
+def test_phantom_goal_dropped_from_a_finished_match():
+    from sources.fotmob import drop_phantom_goals
+    evs = [_ev("goal", 45, "home", 1), _ev("goal", 51, "home", 2), _ev("goal", 56, "home", 2), _ev("goal", 89, "away", 3),
+           {**_ev("goal", 90, "home", None), "player": {"id": None, "name": "<TBD>"}}]
+    out = drop_phantom_goals(evs, {"home": 3, "away": 1})                  # 5030320: FotMob's own score is 3-1
+    assert [(e["minute"], e["team"]) for e in out] == [(45, "home"), (51, "home"), (56, "home"), (89, "away")]
+    assert drop_phantom_goals(evs[:4], {"home": 3, "away": 1}) == evs[:4]
+
+
 # ------------------------------------------------------------------ sources: bracket slots
 def test_bracket_slot_names():
     assert placeholder_ar("1A") == "أول المجموعة A"

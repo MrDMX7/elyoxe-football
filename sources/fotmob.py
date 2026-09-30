@@ -400,6 +400,8 @@ class FotMob(Source):
         m["attendance"] = info.get("Attendance")
         raw_events = (mf.get("events") or {}).get("events") or []
         m["events"] = self._events(raw_events, m)
+        if m["status"] == S.FINISHED and m.get("score"):
+            m["events"] = drop_phantom_goals(m["events"], m["score"])
         m["halftime_score"] = next(({"home": e.get("homeScore"), "away": e.get("awayScore")} for e in raw_events
                                     if e.get("type") == "Half" and e.get("halfStrShort") == "HT"), None)
         m["lineups"] = self._lineups(c.get("lineup"))
@@ -723,6 +725,23 @@ class FotMob(Source):
         if len(teams) < 1000:
             raise S.Invalid(f"translation map has only {len(teams)} teams")
         return {"teams": teams, "competitions": comps, "countries": raw.get("CountryCodes") or {}}
+
+
+def drop_phantom_goals(evs, score):
+    """A finished match's feed sometimes keeps a goal its final score doesn't have (5030320, President's Cup: a 90' goal by
+    «<TBD>» making 4-1 in a match FotMob itself gives 3-1): goal events beyond a side's final score go, unnamed or «<TBD>»
+    ones first, then the latest. A live match is left alone (its score can lag the events)."""
+    goal = ("goal", "own_goal", "penalty_goal")
+    out = list(evs)
+    for side in ("home", "away"):
+        goals = [e for e in out if e.get("type") in goal and e.get("team") == side]
+        extra = len(goals) - (score.get(side) or 0)
+        if extra <= 0:
+            continue
+        named = lambda e: bool((e.get("player") or {}).get("name")) and "TBD" not in str((e.get("player") or {}).get("name"))
+        drop = {id(e) for e in sorted(goals, key=lambda e: (named(e), -((e.get("minute") or 0) * 100 + (e.get("added") or 0))))[:extra]}
+        out = [e for e in out if id(e) not in drop]
+    return out
 
 
 def _num(v):

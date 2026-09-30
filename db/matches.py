@@ -436,7 +436,7 @@ SOURCE_KEYS = ("score", "status", "status_detail", "penalties", "events", "halft
                "referee", "attendance", "coverage")
 
 
-def refresh_pages(store, comp_ids, names, days):
+def refresh_pages(store, comp_ids, names, days, ids=None):
     """FotMob corrects a finished match for hours (a scorer named, an assist moved, a card's player, a goal the feed lacked):
     the site's match pages of the last `days` days take FotMob's detail now when it differs. Only the source's own keys are
     replaced; what the poller computed (win probability, venue, weather, firsts…) stays, and so do the live stamps of
@@ -445,8 +445,8 @@ def refresh_pages(store, comp_ids, names, days):
     from compute import awarded as AW
     from timeutil import parse_utc
     now = now_utc()
-    todo = []
-    for cid in comp_ids:
+    todo = list(ids or [])
+    for cid in ([] if ids else comp_ids):
         for m in (store.get_json(f"comp/{cid}/fixtures.json") or {}).get("matches") or []:
             ko = parse_utc(m.get("kickoff_utc"))
             if m.get("id") and m.get("status") in (S.FINISHED, S.AWARDED) and ko and 3 * 3600 < (now - ko).total_seconds() < days * 86400:
@@ -491,6 +491,7 @@ def main(argv=None):
     ap.add_argument("--no-pages", action="store_true")
     ap.add_argument("--refresh-days", type=int, default=3, help="match pages of the last N days take FotMob's later corrections (0: off)")
     ap.add_argument("--pages-only", action="store_true", help="only the match-page steps (missing pages, corrections), no matchx/logs")
+    ap.add_argument("--refresh-ids", default="", help="match pages to refresh whatever their age (the audit names them: file_goals_exceed_score …)")
     a = ap.parse_args(argv)
     store = Store(S3Backend(BUCKET))
     comp_ids = [c["id"] for c in config.competitions()]
@@ -500,6 +501,8 @@ def main(argv=None):
         pages(store, comp_ids, names)
         if a.refresh_days:
             refresh_pages(store, comp_ids, names, a.refresh_days)
+        if a.refresh_ids:
+            refresh_pages(store, comp_ids, names, 0, ids=[int(x) for x in a.refresh_ids.split(",") if x.strip().isdigit()])
     if a.pages_only:
         return 0
     seasons = [s["season"] for s in ((store.get_json("archive/index-all.json") or {}).get("seasons") or []) if s["season"] != "unknown"]
