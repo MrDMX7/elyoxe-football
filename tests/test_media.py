@@ -129,6 +129,14 @@ def test_a_club_channel_may_name_only_the_opponent_and_classic_means_thriller_on
 def test_women_and_youth_matches_never_reach_the_mens_match():
     assert run("mancity", "Highlights: Man City Women 5-3 Sunderland", "2026-09-20T23:00:00Z")[0] == {}
     assert run("ksa", "ملخص مباراة السعودية 2 - 0 العراق تحت 23 سنة", "2026-09-29T21:00:00Z")[0] == {}
+    # CAF TV's uploads are the women's AFCON between the same countries as the men's qualifiers
+    mar_alg = {"id": 903, "comp": 114, "kickoff_utc": "2026-09-29T19:00:00Z", "status": "finished", "score": {"home": 1, "away": 0},
+               "home": {"id": 6262, "name": "Morocco", "name_ar": "المغرب"}, "away": {"id": 6317, "name": "Algeria", "name_ar": "الجزائر"},
+               "periods": {"gameEnded": "2026-09-29T20:55:00Z"}, "events": [goal(30, "home", 801, "Ayoub El Kaabi", (1, 0))]}
+    caf = dict(CH["bein"], key="caf", lang="en", kind="confed", comps={114})
+    CH["caf"] = caf
+    assert run("caf", "Morocco 1-0 Algeria | Match Highlights | TotalEnergies WAFCON 2026 | 3rd Place", "2026-09-29T21:30:00Z", [mar_alg])[0] == {}
+    assert run("caf", "Morocco 1-0 Algeria | Match Highlights | TotalEnergies AFCON 2027 Qualifiers", "2026-09-29T21:30:00Z", [mar_alg])[0] == {903: "highlights"}
 
 
 def test_goal_clip_by_the_arabic_name_with_a_split_abd():

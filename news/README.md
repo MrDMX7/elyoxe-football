@@ -42,13 +42,21 @@ python -m news.run [--local DIR] [--no-llm]      # the Fold runs it every 15 min
 
    **Only confident matches are attached** (a missing video costs nothing, a wrong one costs the page). Highlights: both
    teams named in the title (Arabic clitics read through, national teams in seven languages from `nations.json`,
-   `news/tools/nations.py`), a summary word (ملخص، أهداف المباراة، highlights، resumen، sintesi، résumé…), out at least 40 min
-   after kickoff, never live / a full replay / a preview / a press conference / women / youth / a game simulation, every
-   year, season or date in the title this match's, every score in it one this match had. Goal clips: the scorer named
-   (full name, or a family name no one else in the match has), a goal word, out after the goal's real minute (from
-   FotMob's half start times), tied to the match (a team named, the club's or federation's own channel, or the
-   competition's channel within 6 h), and its score, minute, penalty/own-goal/equaliser/ordinal words agreeing with that
-   goal. Two goals by one scorer are told apart by those or by when the clip came out; otherwise left out.
+   `news/tools/nations.py`, or two flags «🇯🇴 🆚 🇸🇾»), a summary word (ملخص، أهداف المباراة، highlights، resumen، sintesi،
+   résumé…), out after the final whistle or at half-time, never live / a full replay / a preview / a press conference /
+   women / youth / another sport / a game simulation, every year, season or date in the title this match's, every score in
+   it one this match had. Goal clips: the scorer named (full name, or a family name no one else in the match has) or the
+   side named after the goal word («GOAL FOR PERU!», «¡GOOL DE MÉXICO!») when that side had one goal so far, a goal word,
+   out after the goal's real minute (from FotMob's half start times), tied to the match (a team named, the club's or
+   federation's own channel, or the competition's channel within 6 h), and its score, minute, penalty/own-goal/
+   equaliser/ordinal words agreeing with that goal. Two goals by one scorer are told apart by those or by when the clip
+   came out; otherwise left out. While a match is live, a clip waits for a match file read 10 min after it came out.
+
+   Measured 2026-09-26..30 (50 matches, 1,053 official uploads, every attachment checked by hand): 25 matches got their
+   highlights (48 videos), 8 goals a clip, **0 wrong**. Traps seen in those uploads (each is a case in `tests/test_media.py`):
+   US Soccer's clips of Hall's and Berhalter's goals against Peru, posted two days before both scored again against Chile;
+   Serie A's «NAPOLI-INTER 3-1 | FULL MATCH | SERIE A 2025/26» two days after this season's Inter 3-2 Napoli; CAF TV's
+   WAFCON (women's) highlights between the same countries as the men's qualifiers.
 
 Official videos go to the social strips; they join the news only for a press conference, an injury or a transfer at
 «agreed» or later — most of a club channel is training clips. Tools: `tools/probe_feeds.py` (is a feed alive and fresh),

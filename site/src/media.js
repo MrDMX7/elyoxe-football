@@ -107,7 +107,7 @@
     var b = e.target.closest(".mdw,.mdh,[data-mi]"); if (!b || !M) return;
     if (b.dataset.mi != null){ CUR = +b.dataset.mi; draw(); return; }
     e.preventDefault();
-    if (b.classList.contains("mdh")) open(M.highlights, "ملخص المباراة", b);
+    if (b.classList.contains("mdh")) open(M.highlights, (M.highlights[0] || {}).kind === "goals" ? "أهداف المباراة" : "ملخص المباراة", b);
     else { var row = b.closest("[data-goal-key],li"), nm = row ? who(row) : "", mn = (b.dataset.mk || "").split("-")[0]; open((M.goals || {})[b.dataset.mk], "هدف" + (nm ? " " + nm : "") + (mn ? " · الدقيقة " + mn : ""), b); }
   });
 

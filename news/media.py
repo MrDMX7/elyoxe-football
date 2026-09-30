@@ -9,19 +9,21 @@ read for the journal anyway, and `media:`, read only here), the official X accou
 carry a video), and FotMob's own highlights link in the match file. Every check has to agree before a video is attached: a
 missing video costs nothing, a wrong one costs the page.
 
-A highlights video names both teams (any language, clitics read through), says it is a summary (ملخص، أهداف المباراة,
-highlights, resumen, sintesi, résumé, Zusammenfassung…), came out at least 40 minutes after kickoff, is not live, a full
-replay, a preview, a press conference, a women's or youth match, a game simulation or an old match (any year, season or
-date in it must be this match's), and any score in it happened in this match. A goal clip names the scorer (Latin or
-Arabic, full name or a surname no teammate or opponent shares), says it is a goal (or a shot that went in), came out after
-that goal was scored, is tied to the match (a team named, the club's or federation's own channel, or the competition's
-channel), and its score, minute, penalty or own-goal words agree with the event. Two goals by one player are told apart by
-those, or by when the clip came out; otherwise the clip is left out.
+A highlights video names both teams (any language, clitics read through, «🇯🇴 🆚 🇸🇾»), says it is a summary (ملخص، أهداف
+المباراة, highlights, resumen, sintesi, résumé, Zusammenfassung…), came out after the final whistle (or at half-time), is not
+live, a full replay, a preview, a press conference, a women's or youth match, another sport, a game simulation or an old match
+(any year, season or date in it must be this match's), and any score in it happened in this match. A goal clip names the
+scorer (Latin or Arabic, full name or a surname no teammate or opponent shares) — or says which side scored when that side
+had one goal so far («GOAL FOR PERU!») — says it is a goal (or a shot that went in), came out after that goal was scored,
+is tied to the match (a team named, the club's or federation's own channel, or the competition's channel), and its score,
+minute, penalty, own-goal, equaliser and «second goal» words agree with the event. Two goals by one player are told apart
+by those, or by when the clip came out; otherwise the clip is left out. During a live match a clip waits for a match file
+read 10 minutes after it came out, so the goal it shows is already in the file.
 
 Published (public, v1/):
   media/<matchId>.json   {generated, match, highlights: [video], goals: {"<minute>-<playerId>": [video]}}
                          video = {id, url, title, source (youtube|x), channel, published, image, embed, vertical, lang, conf,
-                         found_by (tifo|fotmob)}
+                         found_by (tifo|fotmob), kind (highlights only: summary|goals)}
   media/recent.json      {generated, matches: [{id, comp, kickoff_utc, status, score, home, away, highlights, goals}]}
 State (private): state/news/media.json — videos seen (4 days), the match files already read, what each media file holds,
 the embed checks."""
