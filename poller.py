@@ -1092,12 +1092,12 @@ class Poller:
         # the latest FINISHED meeting: FotMob's h2h block lists the meetings before the match it hangs on, so an
         # older via-match missed the newest games (Wahda-Ain stopped at 2025-02-27); that match is added itself
         known.update({k: v[1] for k, v in fin.items()})
-        n = 0
+        n, stored = 0, None
         for a, b in pairs:
             if n >= limit or not self.has_time(5):
                 break
-            if not self.due("h2h", 7 * 1440, f"{a}-{b}") and f"{a}-{b}" in self.st.get("h2h_v2", {}):
-                continue                    # files written before the via match / upcoming split are rebuilt once
+            if not self.due("h2h", 7 * 1440, f"{a}-{b}") and f"{a}-{b}" in self.st.get("h2h_v3", {}):
+                continue                    # files written before the archive meetings joined FotMob's list are rebuilt once
             if not self.due("h2h_none", 1440, f"{a}-{b}"):
                 continue                    # FotMob had no h2h block for it today
             mid = known.get((a, b))
@@ -1122,9 +1122,17 @@ class Poller:
                                         "home": {k: d["home"].get(k) for k in ("id", "name", "name_ar", "logo")},
                                         "away": {k: d["away"].get(k) for k in ("id", "name", "name_ar", "logo")},
                                         "score": d["score"]})
+            # FotMob's block leaves out League Cup (11027) and other cup meetings (audit 2026-09-30: 11 meetings in 6 files, the
+            # 2026-05-01 League Cup final among them): every finished meeting of the pair in our archive (covered competitions
+            # since 2010/11) and this season's fixtures joins it, one per match id (arabs.py)
+            if stored is None:
+                stored = AR.stored_meetings(self.store, self.fixtures, [c["id"] for c in self.comps], set(pairs))
+            h["matches"] = AR.merge_meetings(h["matches"], stored.get((a, b)) or {},
+                                             {t["id"]: t for t in (d.get("home"), d.get("away")) if t and t.get("id")},
+                                             self.names["teams"])
             played, upcoming = AR.split_h2h(h["matches"])
             h = {**h, "matches": played}
-            self.st.setdefault("h2h_v2", {})[f"{a}-{b}"] = 1
+            self.st.setdefault("h2h_v3", {})[f"{a}-{b}"] = 1
             per = {str(a): 0, str(b): 0, "draws": 0}
             for x in h["matches"]:
                 sc = x.get("score")
@@ -1138,7 +1146,8 @@ class Poller:
                         per[str(w)] += 1
             self.store.put_json(f"h2h/{a}-{b}.json", {"teams": [a, b], "generated": iso(self.now()),
                                                      "wins": per, "matches": h["matches"], "upcoming": upcoming, "via_match": mid,
-                                                     "note": "all meetings FotMob lists for this pair (its depth, all competitions)"},
+                                                     "note": "every meeting FotMob lists for this pair plus every meeting in Tifo's archive "
+                                                             "(covered competitions since 2010/11) and this season's fixtures, one per match id"},
                                 cache="static")
             self.st.setdefault("h2h_index", {})[f"{a}-{b}"] = len(h["matches"])
         if self.st.get("h2h_index"):
