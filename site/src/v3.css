@@ -934,6 +934,7 @@ body.hasprayl .tile.pray{display:none}
 .v3 .wgm li{display:flex;flex-wrap:wrap;gap:.2rem .6rem;align-items:baseline}.v3 .wgm li>span:first-child{min-inline-size:6.5rem}
 .v3 .wlu .ev.g{font-size:.7rem;border:1px solid var(--mg,#F0BC5A);padding:0 .25rem}
 .v3 #wts{font:inherit;padding:.3rem .5rem}
+.v3 .pwiki{line-height:1.9;max-inline-size:46rem;margin:.6rem 0 1.2rem}
 .v3 .eag{display:grid;grid-template-columns:auto 1fr;gap:1rem 1.5rem;align-items:center}.v3 .eao{display:grid;justify-items:center;border:1px solid var(--line);padding:.6rem 1rem}
 .v3 .eao b{font-size:2.6rem;line-height:1}.v3 .eao span{font-size:.85rem;color:var(--stone);letter-spacing:.05em}
 .v3 .eas{letter-spacing:.1em;color:var(--mg,#F0BC5A)}.v3 .eas i{font-style:normal;opacity:.25}
