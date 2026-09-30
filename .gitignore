@@ -15,3 +15,4 @@ db/.cache/
 .claude/worktrees/
 .worktrees/
 news/.cache/
+docs/AUDIT-DATA-*.md
