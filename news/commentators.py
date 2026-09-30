@@ -1136,6 +1136,8 @@ def run(store, now=None, log=print, force_day=None, article_html=None, dry=False
                     raise ValueError(f"headline day {title_day(art.get('headline') or '')} is not {d}")
                 a.update({"lines": parse_article(art["body"], d), "title": art.get("headline"), "fetched": iso(now),
                           "fetched_lastmod": a.get("lastmod"), "updated": art.get("updateTime")})
+                if not a["lines"]:                               # the piece is there but no table read: Kooora changed its layout?
+                    errors[d.isoformat()] = "article read, 0 match lines parsed"
             except Exception as e:
                 errors[d.isoformat()] = str(e)[:200]
                 a["fetched"] = iso(now)                          # a broken page is retried after the hour, not every run
