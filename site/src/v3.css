@@ -836,3 +836,7 @@ body.hasprayl .tile.pray{display:none}
 .v3 #m3dc{min-block-size:320px;background:#0B1512}
 .v3 #m3dc canvas{display:block;inline-size:100%}
 .v3 #m3dr{inline-size:100%;margin-block-start:.5rem}
+/* transfer history (player) and record deals (club) */
+.v3 .trh td,.v3 .trh th{white-space:nowrap}
+.v3 .trc{padding-inline-start:1.2rem;margin:.3rem 0 .8rem}
+.v3 .trc li{margin:.25rem 0}
