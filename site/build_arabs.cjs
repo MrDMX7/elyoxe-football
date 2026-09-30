@@ -142,7 +142,7 @@ module.exports = async function(X){
   if (DB && DB.derbies && DB.derbies.length){
     const hs = await pool(DB.derbies, 4, d => d.h2h ? get(d.h2h, 1) : null);
     const body = '<div class="derbies">' + DB.derbies.map((d, i) => { const h = hs[i], k = String(d.h2h || "").replace(/^h2h\/|\.json$/g, ""), [a, b] = d.teams, w = (h && h.wins) || {}, tag = h && X.H2H && X.H2H[k] ? "a" : "div";
-      return `<${tag} class="derby"${tag === "a" ? ` href="/h2h/${k}/"` : ""}><h3>${esc(d.name_ar)}</h3><p class="muted small">${esc(d.city_ar || "")}، ${esc(CN[d.country] || "")}</p>${h ? `<div class="h2hsum"><div><b>${w[a] || 0}</b>${tname(a)}</div><div><b>${w.draws || 0}</b>تعادل</div><div><b>${w[b] || 0}</b>${tname(b)}</div></div>` : '<p class="muted small">ما عندنا سجل مواجهاتهم للحين.</p>'}</${tag}>`; }).join("") + "</div>" + note("كل المواجهات اللي يعرضها FotMob لكل ديربي، في كل البطولات.");
+      return `<${tag} class="derby"${tag === "a" ? ` href="/h2h/${k}/"` : ""}><h3>${esc(d.name_ar)}</h3><p class="muted small">${esc(d.city_ar || "")}، ${esc(CN[d.country] || "")}</p>${h ? `<div class="h2hsum"><div><b>${w[a] || 0}</b>${tname(a)}</div><div><b>${w.draws || 0}</b>تعادل</div><div><b>${w[b] || 0}</b>${tname(b)}</div></div>` : '<p class="muted small">ما عندنا سجل مواجهاتهم للحين.</p>'}</${tag}>`; }).join("") + "</div>" + note("كل المواجهات اللي يعرضها FotMob لكل ديربي ومعها أرشيف تيفو (بطولاتنا من 2010/11)، في كل البطولات.");
     put("/derbies/", "أكبر الديربيات العربية", "12 ديربي عربي كبير: القاهرة والرياض وجدة والدار البيضاء وتونس وغيرها، ومنو فاز أكثر في كل واحد.", "الديربيات العربية", "", body, { crumbs:hubLink });
   }
   // 210 Arab club clashes in AFC/CAF/Arab competitions (±45 days)

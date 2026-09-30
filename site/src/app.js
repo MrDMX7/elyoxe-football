@@ -552,7 +552,10 @@
         '<h3>ضد كل خصم (<span class="num">' + D.opponents.length + '</span>)</h3><input type="search" class="hq" placeholder="دوّر على خصم" aria-label="دوّر على خصم"><div class="hopp">' + opps(false) + "</div>" + (D.opponents.length > 20 ? '<button type="button" class="lnk hall">كل الخصوم</button>' : "") +
         '<div class="hbig"><div><h3>أكبر انتصاراته</h3><ul class="mlist">' + D.biggest_wins.map(mrow).join("") + '</ul></div><div><h3>أكبر خساراته</h3><ul class="mlist">' + D.biggest_losses.map(mrow).join("") + "</ul></div></div>" +
         "<p>أول مباراة عندنا: " + mrow(D.first).replace(/^<li>|<\/li>$/g, "") + '</p><p><button type="button" class="btn hmatch">كل مبارياته (<span class="num">' + T.p + "</span>)</button></p><div class=\"hml\"></div>" +
-        '<p class="src">النتايج من الدرجة الأولى والبطولات القارية: قاعدة schochastics/football-data لين ' + R.esc((D.source.match(/\d{4}-\d{2}-\d{2}/) || [""])[0]) + "، وبعدها أرشيف تيفو. الكؤوس المحلية والدرجات الأدنى مب داخلة.</p>";
+        // audit 2026-09-30: db/history.py now merges every game of Tifo's archive (its cups too), and says since when (scope)
+        '<p class="src">النتايج من قاعدة schochastics/football-data (الدرجة الأولى والبطولات القارية لين ' + R.esc((D.source.match(/\d{4}-\d{2}-\d{2}/) || [""])[0]) + ") ومن أرشيف تيفو" +
+        ((D.scope || {}).domestic_cups_since ? "، والكؤوس المحلية من " + R.esc(String(D.scope.domestic_cups_since).slice(0, 4)) + ((D.scope || {}).lower_divisions_since ? " والدرجة الثانية من " + R.esc(String(D.scope.lower_divisions_since).slice(0, 4)) : "") + "."
+          : ". الكؤوس المحلية والدرجات الأدنى مب داخلة.") + "</p>";
       var q = box.querySelector(".hq"), all = false;
       q.oninput = function(){ box.querySelector(".hopp").innerHTML = opps(all, q.value.trim()); };
       var ha = box.querySelector(".hall"); if (ha) ha.onclick = function(){ all = true; ha.remove(); box.querySelector(".hopp").innerHTML = opps(true, q.value.trim()); };
