@@ -68,7 +68,9 @@ stadiums:
     emirate: dubai
     lat: 25.038225
     lon: 55.224866
-    home_of: [1552577]
+    # no home_of: FotMob's team page names this ground for United FC (1552577), but every one of its league home games
+    # (5961825, 1000020517 and the scheduled ones) is at Al Maktoum Stadium, which lists it; one home_of per club, else
+    # the fortress list (comp/538/fortress.json) shows the same home games under two stadiums
     sources: [fotmob matchDetails n/a; fotmob team venue]
   - id: hamdan-bin-rashid-al-maktoum-stadium
     name_en: Hamdan Bin Rashid Al Maktoum Stadium

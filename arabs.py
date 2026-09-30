@@ -5,7 +5,7 @@ h2h/, listed in docs/SCHEMA.md.
 Nationality: FotMob 3-letter country codes on lineups and squads, mapped to the 22 Arab League members
 in countries.yaml. "Abroad" = a non-Arab competition we cover (big five, UCL/UEL/UECL).
 """
-from datetime import timedelta
+from datetime import date as _date, timedelta
 
 import config
 from compute import history as HI
@@ -122,14 +122,15 @@ def abroad(p):
 
 # ------------------------------------------------------------------ 209
 def derbies(p, limit=4):
-    out = []
+    out, stored = [], None
+    pairs = {tuple(sorted(d["teams"])) for d in config.arab_derbies()}
     for d in config.arab_derbies():
         a, b = sorted(d["teams"])
         entry = {"teams": [a, b], "name_ar": d["name_ar"], "city_ar": d.get("city_ar"), "country": d.get("country"),
                  "comp": d.get("comp"), "h2h": f"h2h/{a}-{b}.json"}
         out.append(entry)
         v2 = p.an_state.setdefault("derby_v2", {})
-        if f"{a}-{b}" not in v2:        # written before the file carried the via match / split upcoming: rebuild once
+        if f"{a}-{b}" not in v2 or v2[f"{a}-{b}"] == "ok":   # "ok": written from FotMob's list alone: rebuild once, merged
             p.dues().pop(f"arab_derby:{a}-{b}", None)
         if limit <= 0 or not p.has_time(6) or not p.due("arab_derby", 7 * 1440, f"{a}-{b}"):
             continue
@@ -146,20 +147,30 @@ def derbies(p, limit=4):
         except ERRORS as e:
             p.store.fail("arab-derbies", e)
             continue
-        h = m.get("h2h")
-        if not h or not h.get("matches"):
+        if stored is None:          # every meeting we hold ourselves, read once per run for all the derbies
+            stored = stored_meetings(p.store, p.fixtures, [c["id"] for c in p.comps], pairs)
+        h = m.get("h2h") or {}
+        mine = stored.get((a, b)) or {}
+        if not h.get("matches") and not mine:
             p.store.fail("arab-derbies", f"{a}-{b}: FotMob match {mid} has no head-to-head block yet")
             p.dues()[f"arab_derby:{a}-{b}"] = iso(p.now() - timedelta(days=6))     # again in a day, not a week
             v2.setdefault(f"{a}-{b}", "no-h2h")
             continue
-        p.mark("arab_derby", f"{a}-{b}")
-        v2[f"{a}-{b}"] = "ok"
-        matches = list(h["matches"])
+        if h.get("matches"):
+            p.mark("arab_derby", f"{a}-{b}")
+        else:                       # FotMob lists nothing yet: our own meetings now, its list again in a day
+            p.dues()[f"arab_derby:{a}-{b}"] = iso(p.now() - timedelta(days=6))
+        v2[f"{a}-{b}"] = "merged"
+        matches = list(h.get("matches") or [])
         if m.get("status") == "finished" and m.get("score") and all(x.get("id") != m["id"] for x in matches):
             # FotMob's head-to-head block lists the meetings before the match it hangs on: add that match itself
             matches.insert(0, {"id": m["id"], "kickoff_utc": m.get("kickoff_utc"), "comp": m.get("comp"),
                                "home": {k: m["home"].get(k) for k in ("id", "name", "name_ar", "logo")},
                                "away": {k: m["away"].get(k) for k in ("id", "name", "name_ar", "logo")}, "score": m["score"]})
+        # FotMob's list is short (the Kuwait derby: 6 meetings since 2024 against 43 league meetings we store): every
+        # meeting in our archive and this season's fixtures joins it, one per match id
+        matches = merge_meetings(matches, mine, {t["id"]: t for t in (m.get("home"), m.get("away")) if t and t.get("id")},
+                                 p.names.get("teams") or {})
         matches, upcoming = split_h2h(matches)
         wins = {str(a): 0, str(b): 0, "draws": 0}
         for x in matches:
@@ -172,12 +183,19 @@ def derbies(p, limit=4):
                 wnr = x["home"]["id"] if sc["home"] > sc["away"] else x["away"]["id"]
                 if str(wnr) in wins:
                     wins[str(wnr)] += 1
+        listed = {x.get("id") for x in (h.get("matches") or [])} | {m.get("id")}
         p.store.put_json(f"h2h/{a}-{b}.json", {"teams": [a, b], "name_ar": d["name_ar"], "generated": iso(p.now()),
                                               "wins": wins, "matches": matches, "upcoming": upcoming, "via_match": mid,
+                                              "since": min((x.get("kickoff_utc") or "")[:10] for x in matches) if matches else None,
+                                              "from_fotmob_list": sum(1 for x in matches if x.get("id") in listed),
+                                              "from_tifo_archive": sum(1 for x in matches if x.get("id") not in listed),
                                               "check": _h2h_check(p, a, b, d.get("comp"), matches),
                                               "sources": [f"https://www.fotmob.com/match/{mid}",
-                                                          f"https://www.fotmob.com/api/data/matchDetails?matchId={mid}"],
-                                              "note": "all meetings FotMob lists for this pair (its depth, all competitions)"},
+                                                          f"https://www.fotmob.com/api/data/matchDetails?matchId={mid}",
+                                                          "Tifo archive (archive/all/<season>.json) and this season's fixtures"],
+                                              "note": "every meeting FotMob lists for this pair (its depth, all competitions) plus every "
+                                                      "meeting in Tifo's archive (covered competitions since 2010/11) and this season's "
+                                                      "fixtures, one per match id; date_only = the archive keeps the day, not the time"},
                          cache="static")
     v2 = p.an_state.get("derby_v2", {})
     for e in out:               # derbies.json never points at a file that does not exist
@@ -195,6 +213,74 @@ def split_h2h(matches):
     played = sorted([x for x in matches if x.get("score")], key=lambda x: x.get("kickoff_utc") or "", reverse=True)
     upcoming = sorted([{**x, "status": "scheduled"} for x in matches if not x.get("score")], key=lambda x: x.get("kickoff_utc") or "")
     return played, upcoming
+
+
+def stored_meetings(store, fixtures, comp_ids, pairs, seasons=None):
+    """{(a, b): {match id: meeting}} for the given pairs (a < b): every finished game between the two in our archive
+    (archive/all/<season>.json: every covered competition since 2010/11, the League Cup and the other cups included)
+    and in the current fixtures of comp_ids (fixtures(cid) -> normalized matches), in the h2h row shape. A fixture row
+    replaces the archive's (it has the kickoff time; the archive keeps the day only: date_only)."""
+    pairs = {tuple(sorted(x)) for x in pairs}
+    out = {k: {} for k in pairs}
+    if seasons is None:
+        seasons = [s["season"] for s in ((store.get_json("archive/index-all.json") or {}).get("seasons") or [])
+                   if s.get("season") and s["season"] != "unknown"]
+    for s in seasons:
+        for r in (store.get_json(f"archive/all/{s}.json") or {}).get("matches") or []:
+            k = (min(r[3], r[4]), max(r[3], r[4])) if r[3] and r[4] else None
+            if k in out and r[5] is not None and r[6] is not None:
+                out[k][r[0]] = {"id": r[0], "kickoff_utc": f"{r[1][:10]}T00:00:00Z", "date_only": True, "comp": r[2],
+                                "home": {"id": r[3]}, "away": {"id": r[4]}, "score": {"home": r[5], "away": r[6]}}
+    for cid in comp_ids:
+        for m in fixtures(cid) or []:
+            if not (m.get("id") and m.get("status") == S.FINISHED and m.get("score") and m.get("home") and m.get("away")):
+                continue
+            k = tuple(sorted((m["home"].get("id"), m["away"].get("id"))))
+            if k in out:
+                out[k][m["id"]] = {"id": m["id"], "kickoff_utc": m.get("kickoff_utc"), "comp": m.get("comp"),
+                                   "home": {f: m["home"].get(f) for f in ("id", "name", "name_ar", "logo")},
+                                   "away": {f: m["away"].get(f) for f in ("id", "name", "name_ar", "logo")},
+                                   "score": {"home": m["score"]["home"], "away": m["score"]["away"]}}
+    return out
+
+
+def merge_meetings(listed, stored, teams=None, names_ar=None):
+    """FotMob's head-to-head list plus every stored meeting it lacks, one per match id: a stored fixture row (fresh)
+    beats FotMob's row, FotMob's row beats an archive row (date only). Two meetings of the pair within a day with the
+    same result are one game under two ids: the date-only copy goes. Archive rows get the teams' name/logo from the
+    other rows (the pair is always the same two clubs), else the Arabic name and FotMob's logo."""
+    teams, names_ar = dict(teams or {}), names_ar or {}
+    stored = list(stored.values()) if isinstance(stored, dict) else list(stored or [])
+    by_id = {}
+    for x in [s for s in stored if s.get("date_only")] + list(listed) + [s for s in stored if not s.get("date_only")]:
+        if x.get("id") is not None:
+            by_id[x["id"]] = x
+        for side in ("home", "away"):
+            t = x.get(side) or {}
+            if t.get("id") and t.get("name"):
+                teams.setdefault(t["id"], t)
+    rows = [x for x in listed if x.get("id") is None] + list(by_id.values())
+    keep, seen = [], {}
+    for x in sorted(rows, key=lambda x: (bool(x.get("date_only")), x.get("kickoff_utc") or "")):
+        sc = x.get("score")
+        if sc and x.get("kickoff_utc"):
+            try:
+                day = _date.fromisoformat(x["kickoff_utc"][:10]).toordinal()
+            except ValueError:
+                day = None
+            key = ((x.get("home") or {}).get("id"), (x.get("away") or {}).get("id"), sc.get("home"), sc.get("away"))
+            if day is not None and x.get("date_only") and any(k == key and abs(d - day) <= 1 for d, k in seen.get(key[:2], [])):
+                continue            # the same game under another id
+            if day is not None:
+                seen.setdefault(key[:2], []).append((day, key))
+        if x.get("date_only"):
+            x = dict(x)
+            for side in ("home", "away"):
+                tid = (x.get(side) or {}).get("id")
+                t = teams.get(tid) or {"id": tid, "name": None, "name_ar": names_ar.get(str(tid)), "logo": S.LOGO.format(id=tid)}
+                x[side] = {f: t.get(f) for f in ("id", "name", "name_ar", "logo")}
+        keep.append(x)
+    return keep
 
 
 def _h2h_check(p, a, b, comp, matches):
