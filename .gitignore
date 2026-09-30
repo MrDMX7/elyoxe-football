@@ -14,3 +14,4 @@ history/.cache/
 db/.cache/
 .claude/worktrees/
 .worktrees/
+news/.cache/

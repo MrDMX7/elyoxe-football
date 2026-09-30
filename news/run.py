@@ -4,6 +4,7 @@ Arabic headline and summary per story, publish.
   python -m news.run                 # production: state and output in the data bucket (BUCKET env or the default below)
   python -m news.run --local DIR     # everything under DIR (tests, a dry look)
   python -m news.run --no-llm        # skip the Claude summaries (stories keep their best original headline)
+  python -m news.run --no-media      # skip the official-videos step (news/media.py: v1/media/<match>.json)
 
 Published (public, under v1/):
   news/latest.json              the newest stories, every kind
@@ -97,7 +98,7 @@ def transfers(stories, items_by_id, D):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--local"); ap.add_argument("--no-llm", action="store_true")
+    ap.add_argument("--local"); ap.add_argument("--no-llm", action="store_true"); ap.add_argument("--no-media", action="store_true")
     a = ap.parse_args(argv)
     t0 = time.time()
     store = Store(LocalBackend(a.local)) if a.local else Store(S3Backend(BUCKET))
@@ -195,6 +196,15 @@ def main(argv=None):
                   "summaries": done, "errors": errors, "secs": round(time.time() - t0, 1)}})
     store.put_state(STATE, state)
     print(json.dumps(state["run"], ensure_ascii=False))
+    # ---- official videos by the matches and their goals (news/media.py): the journal's YouTube feeds are reused, never fatal
+    if not a.no_media:
+        try:
+            from news import media
+            yt = {s["key"]: got for got, err, s in batches if s and s.get("kind") == "youtube" and not err}
+            res = media.step(store, cfg, prefetched=yt, xbox=xbox)
+            print(json.dumps({"media": {k: v for k, v in res.items() if k != "found"}}, ensure_ascii=False))
+        except Exception as e:
+            print(json.dumps({"media_error": f"{type(e).__name__}: {str(e)[:200]}"}, ensure_ascii=False))
     return 0
 
 

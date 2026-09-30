@@ -1,0 +1,2475 @@
+{
+"about": "news/tools/nations.py: CLDR + football forms; FotMob English name -> code",
+"fotmob": {
+"Afghanistan": "AF",
+"Albania": "AL",
+"Algeria": "DZ",
+"American Samoa": "AS",
+"Andorra": "AD",
+"Angola": "AO",
+"Anguilla": "AI",
+"Argentina": "AR",
+"Armenia": "AM",
+"Aruba": "AW",
+"Australia": "AU",
+"Austria": "AT",
+"Azerbaijan": "AZ",
+"Bahamas": "BS",
+"Bahrain": "BH",
+"Bangladesh": "BD",
+"Barbados": "BB",
+"Belarus": "BY",
+"Belgium": "BE",
+"Belize": "BZ",
+"Benin": "BJ",
+"Bermuda": "BM",
+"Bhutan": "BT",
+"Bolivia": "BO",
+"Bosnia and Herzegovina": "BA",
+"Botswana": "BW",
+"Brazil": "BR",
+"British Virgin Islands": "VG",
+"Brunei": "BN",
+"Bulgaria": "BG",
+"Burkina Faso": "BF",
+"Burundi": "BI",
+"Cambodia": "KH",
+"Cameroon": "CM",
+"Canada": "CA",
+"Cape Verde": "CV",
+"Cayman Islands": "KY",
+"Central African Republic": "CF",
+"Chad": "TD",
+"Chile": "CL",
+"China": "CN",
+"Chinese Taipei": "TW",
+"Colombia": "CO",
+"Comoros": "KM",
+"Congo": "CG",
+"Cook Islands": "CK",
+"Costa Rica": "CR",
+"Croatia": "HR",
+"Cuba": "CU",
+"Curacao": "CW",
+"Cyprus": "CY",
+"Czechia": "CZ",
+"DR Congo": "CD",
+"Denmark": "DK",
+"Djibouti": "DJ",
+"Dominica": "DM",
+"Dominican Republic": "DO",
+"Ecuador": "EC",
+"Egypt": "EG",
+"El Salvador": "SV",
+"England": "GB-ENG",
+"Equatorial Guinea": "GQ",
+"Eritrea": "ER",
+"Estonia": "EE",
+"Eswatini": "SZ",
+"Ethiopia": "ET",
+"Faroe Islands": "FO",
+"Fiji": "FJ",
+"Finland": "FI",
+"France": "FR",
+"Gabon": "GA",
+"Gambia": "GM",
+"Georgia": "GE",
+"Germany": "DE",
+"Ghana": "GH",
+"Gibraltar": "GI",
+"Greece": "GR",
+"Grenada": "GD",
+"Guam": "GU",
+"Guatemala": "GT",
+"Guinea": "GN",
+"Guinea-Bissau": "GW",
+"Guyana": "GY",
+"Haiti": "HT",
+"Honduras": "HN",
+"Hong Kong": "HK",
+"Hungary": "HU",
+"Iceland": "IS",
+"India": "IN",
+"Indonesia": "ID",
+"Iran": "IR",
+"Iraq": "IQ",
+"Ireland": "IE",
+"Israel": "IL",
+"Italy": "IT",
+"Ivory Coast": "CI",
+"Jamaica": "JM",
+"Japan": "JP",
+"Jordan": "JO",
+"Kazakhstan": "KZ",
+"Kenya": "KE",
+"Kosovo": "XK",
+"Kuwait": "KW",
+"Kyrgyzstan": "KG",
+"Laos": "LA",
+"Latvia": "LV",
+"Lebanon": "LB",
+"Lesotho": "LS",
+"Liberia": "LR",
+"Libya": "LY",
+"Liechtenstein": "LI",
+"Lithuania": "LT",
+"Luxembourg": "LU",
+"Macau": "MO",
+"Madagascar": "MG",
+"Malawi": "MW",
+"Malaysia": "MY",
+"Maldives": "MV",
+"Mali": "ML",
+"Malta": "MT",
+"Martinique": "MQ",
+"Mauritania": "MR",
+"Mauritius": "MU",
+"Mexico": "MX",
+"Moldova": "MD",
+"Mongolia": "MN",
+"Montenegro": "ME",
+"Montserrat": "MS",
+"Morocco": "MA",
+"Mozambique": "MZ",
+"Myanmar": "MM",
+"Namibia": "NA",
+"Nepal": "NP",
+"Netherlands": "NL",
+"New Caledonia": "NC",
+"New Zealand": "NZ",
+"Nicaragua": "NI",
+"Niger": "NE",
+"Nigeria": "NG",
+"North Korea": "KP",
+"North Macedonia": "MK",
+"Northern Ireland": "GB-NIR",
+"Norway": "NO",
+"Oman": "OM",
+"Pakistan": "PK",
+"Palestine": "PS",
+"Panama": "PA",
+"Papua New Guinea": "PG",
+"Paraguay": "PY",
+"Peru": "PE",
+"Philippines": "PH",
+"Poland": "PL",
+"Portugal": "PT",
+"Puerto Rico": "PR",
+"Qatar": "QA",
+"Republic of Ireland": "IE",
+"Romania": "RO",
+"Russia": "RU",
+"Rwanda": "RW",
+"San Marino": "SM",
+"Saudi Arabia": "SA",
+"Scotland": "GB-SCT",
+"Senegal": "SN",
+"Serbia": "RS",
+"Seychelles": "SC",
+"Sierra Leone": "SL",
+"Singapore": "SG",
+"Sint Maarten": "SX",
+"Slovakia": "SK",
+"Slovenia": "SI",
+"Solomon Islands": "SB",
+"Somalia": "SO",
+"South Africa": "ZA",
+"South Korea": "KR",
+"South Sudan": "SS",
+"Spain": "ES",
+"Sri Lanka": "LK",
+"St. Kitts and Nevis": "KN",
+"St. Lucia": "LC",
+"St. Vincent / Grenadines": "VC",
+"Sudan": "SD",
+"Suriname": "SR",
+"Sweden": "SE",
+"Switzerland": "CH",
+"Syria": "SY",
+"Tajikistan": "TJ",
+"Tanzania": "TZ",
+"Thailand": "TH",
+"Timor-Leste": "TL",
+"Togo": "TG",
+"Tunisia": "TN",
+"Turkey": "TR",
+"Turkmenistan": "TM",
+"Türkiye": "TR",
+"U.S. Virgin Islands": "VI",
+"UAE": "AE",
+"USA": "US",
+"Uganda": "UG",
+"Ukraine": "UA",
+"Uruguay": "UY",
+"Uzbekistan": "UZ",
+"Vanuatu": "VU",
+"Venezuela": "VE",
+"Vietnam": "VN",
+"Wales": "GB-WLS",
+"Yemen": "YE",
+"Zambia": "ZM",
+"Zimbabwe": "ZW"
+},
+"en": {
+"Afghanistan": "AF",
+"Albania": "AL",
+"Algeria": "DZ",
+"American Samoa": "AS",
+"Andorra": "AD",
+"Angola": "AO",
+"Anguilla": "AI",
+"Antarctica": "AQ",
+"Antigua & Barbuda": "AG",
+"Argentina": "AR",
+"Armenia": "AM",
+"Aruba": "AW",
+"Ascension Island": "AC",
+"Australia": "AU",
+"Austria": "AT",
+"Azerbaijan": "AZ",
+"Bahamas": "BS",
+"Bahrain": "BH",
+"Bangladesh": "BD",
+"Barbados": "BB",
+"Belarus": "BY",
+"Belgium": "BE",
+"Belize": "BZ",
+"Benin": "BJ",
+"Bermuda": "BM",
+"Bhutan": "BT",
+"Bolivia": "BO",
+"Bosnia & Herzegovina": "BA",
+"Botswana": "BW",
+"Bouvet Island": "BV",
+"Brazil": "BR",
+"British Indian Ocean Territory": "IO",
+"British Virgin Islands": "VG",
+"Brunei": "BN",
+"Bulgaria": "BG",
+"Burkina Faso": "BF",
+"Burundi": "BI",
+"Cambodia": "KH",
+"Cameroon": "CM",
+"Canada": "CA",
+"Canary Islands": "IC",
+"Cape Verde": "CV",
+"Caribbean Netherlands": "BQ",
+"Cayman Islands": "KY",
+"Central African Republic": "CF",
+"Ceuta & Melilla": "EA",
+"Chad": "TD",
+"Chile": "CL",
+"China": "CN",
+"Christmas Island": "CX",
+"Clipperton Island": "CP",
+"Cocos": "CC",
+"Cocos (Keeling) Islands": "CC",
+"Colombia": "CO",
+"Comoros": "KM",
+"Congo": "CD",
+"Congo - Brazzaville": "CG",
+"Congo - Kinshasa": "CD",
+"Cook Islands": "CK",
+"Costa Rica": "CR",
+"Croatia": "HR",
+"Cuba": "CU",
+"Curaçao": "CW",
+"Cyprus": "CY",
+"Czechia": "CZ",
+"Côte d'Ivoire": "CI",
+"Denmark": "DK",
+"Diego Garcia": "DG",
+"Djibouti": "DJ",
+"Dominica": "DM",
+"Dominican Republic": "DO",
+"Ecuador": "EC",
+"Egypt": "EG",
+"El Salvador": "SV",
+"Equatorial Guinea": "GQ",
+"Eritrea": "ER",
+"Estonia": "EE",
+"Eswatini": "SZ",
+"Ethiopia": "ET",
+"European Union": "EU",
+"Eurozone": "EZ",
+"Falkland Islands": "FK",
+"Faroe Islands": "FO",
+"Fiji": "FJ",
+"Finland": "FI",
+"France": "FR",
+"French Guiana": "GF",
+"French Polynesia": "PF",
+"French Southern Territories": "TF",
+"Gabon": "GA",
+"Gambia": "GM",
+"Georgia": "GE",
+"Germany": "DE",
+"Ghana": "GH",
+"Gibraltar": "GI",
+"Greece": "GR",
+"Greenland": "GL",
+"Grenada": "GD",
+"Guadeloupe": "GP",
+"Guam": "GU",
+"Guatemala": "GT",
+"Guernsey": "GG",
+"Guinea": "GN",
+"Guinea-Bissau": "GW",
+"Guyana": "GY",
+"Haiti": "HT",
+"Heard & McDonald Islands": "HM",
+"Honduras": "HN",
+"Hong Kong SAR China": "HK",
+"Hungary": "HU",
+"Iceland": "IS",
+"India": "IN",
+"Indonesia": "ID",
+"Iran": "IR",
+"Iraq": "IQ",
+"Ireland": "IE",
+"Isle of Man": "IM",
+"Israel": "IL",
+"Italy": "IT",
+"Jamaica": "JM",
+"Japan": "JP",
+"Jersey": "JE",
+"Jordan": "JO",
+"Kazakhstan": "KZ",
+"Kenya": "KE",
+"Kiribati": "KI",
+"Kosovo": "XK",
+"Kuwait": "KW",
+"Kyrgyzstan": "KG",
+"Laos": "LA",
+"Latvia": "LV",
+"Lebanon": "LB",
+"Lesotho": "LS",
+"Liberia": "LR",
+"Libya": "LY",
+"Liechtenstein": "LI",
+"Lithuania": "LT",
+"Luxembourg": "LU",
+"Macao SAR China": "MO",
+"Madagascar": "MG",
+"Malawi": "MW",
+"Malaysia": "MY",
+"Maldives": "MV",
+"Mali": "ML",
+"Malta": "MT",
+"Marshall Islands": "MH",
+"Martinique": "MQ",
+"Mauritania": "MR",
+"Mauritius": "MU",
+"Mayotte": "YT",
+"Mexico": "MX",
+"Micronesia": "FM",
+"Moldova": "MD",
+"Monaco": "MC",
+"Mongolia": "MN",
+"Montenegro": "ME",
+"Montserrat": "MS",
+"Morocco": "MA",
+"Mozambique": "MZ",
+"Myanmar": "MM",
+"Myanmar (Burma)": "MM",
+"Namibia": "NA",
+"Nauru": "NR",
+"Nepal": "NP",
+"Netherlands": "NL",
+"New Caledonia": "NC",
+"New Zealand": "NZ",
+"Nicaragua": "NI",
+"Niger": "NE",
+"Nigeria": "NG",
+"Niue": "NU",
+"Norfolk Island": "NF",
+"North Korea": "KP",
+"North Macedonia": "MK",
+"Northern Mariana Islands": "MP",
+"Norway": "NO",
+"Oman": "OM",
+"Outlying Oceania": "QO",
+"Pakistan": "PK",
+"Palau": "PW",
+"Palestinian Territories": "PS",
+"Panama": "PA",
+"Papua New Guinea": "PG",
+"Paraguay": "PY",
+"Peru": "PE",
+"Philippines": "PH",
+"Pitcairn Islands": "PN",
+"Poland": "PL",
+"Portugal": "PT",
+"Pseudo-Accents": "XA",
+"Pseudo-Bidi": "XB",
+"Puerto Rico": "PR",
+"Qatar": "QA",
+"Romania": "RO",
+"Russia": "RU",
+"Rwanda": "RW",
+"Réunion": "RE",
+"Samoa": "WS",
+"San Marino": "SM",
+"Sark": "CQ",
+"Saudi Arabia": "SA",
+"Senegal": "SN",
+"Serbia": "RS",
+"Seychelles": "SC",
+"Sierra Leone": "SL",
+"Singapore": "SG",
+"Sint Maarten": "SX",
+"Slovakia": "SK",
+"Slovenia": "SI",
+"Solomon Islands": "SB",
+"Somalia": "SO",
+"South Africa": "ZA",
+"South Georgia & South Sandwich Islands": "GS",
+"South Korea": "KR",
+"South Sudan": "SS",
+"Spain": "ES",
+"Sri Lanka": "LK",
+"St. Barthélemy": "BL",
+"St. Helena": "SH",
+"St. Kitts & Nevis": "KN",
+"St. Lucia": "LC",
+"St. Martin": "MF",
+"St. Pierre & Miquelon": "PM",
+"St. Vincent & Grenadines": "VC",
+"Sudan": "SD",
+"Suriname": "SR",
+"Svalbard & Jan Mayen": "SJ",
+"Sweden": "SE",
+"Switzerland": "CH",
+"Syria": "SY",
+"São Tomé & Príncipe": "ST",
+"Taiwan": "TW",
+"Tajikistan": "TJ",
+"Tanzania": "TZ",
+"Thailand": "TH",
+"Timor-Leste": "TL",
+"Togo": "TG",
+"Tokelau": "TK",
+"Tonga": "TO",
+"Trinidad & Tobago": "TT",
+"Tristan da Cunha": "TA",
+"Tunisia": "TN",
+"Turkmenistan": "TM",
+"Turks & Caicos Islands": "TC",
+"Tuvalu": "TV",
+"Türkiye": "TR",
+"U.S. Outlying Islands": "UM",
+"U.S. Virgin Islands": "VI",
+"Uganda": "UG",
+"Ukraine": "UA",
+"United Arab Emirates": "AE",
+"United Kingdom": "GB",
+"United Nations": "UN",
+"United States": "US",
+"Unknown Region": "ZZ",
+"Uruguay": "UY",
+"Uzbekistan": "UZ",
+"Vanuatu": "VU",
+"Vatican City": "VA",
+"Venezuela": "VE",
+"Vietnam": "VN",
+"Wallis & Futuna": "WF",
+"Western Sahara": "EH",
+"Yemen": "YE",
+"Zambia": "ZM",
+"Zimbabwe": "ZW",
+"Åland Islands": "AX"
+},
+"names": {
+"AC": [
+"Ascension",
+"Ascension Island",
+"Ilha de Ascensão",
+"Isla de la Ascensión",
+"Isola Ascensione",
+"Île de l'Ascension",
+"جزيرة أسينشيون"
+],
+"AD": [
+"Andorra",
+"Andorre",
+"أندورا"
+],
+"AE": [
+"EAU",
+"Emirados Árabes Unidos",
+"Emirates",
+"Emirati Arabi Uniti",
+"Emiratos",
+"Emiratos Árabes Unidos",
+"UAE",
+"United Arab Emirates",
+"Vereinigte Arabische Emirate",
+"Émirats arabes unis",
+"الإمارات",
+"الإمارات العربية المتحدة",
+"الامارات",
+"المنتخب الإماراتي",
+"منتخب الإمارات"
+],
+"AF": [
+"Afeganistão",
+"Afganistán",
+"Afghanistan",
+"أفغانستان"
+],
+"AG": [
+"Antigua & Barbuda",
+"Antigua e Barbuda",
+"Antigua und Barbuda",
+"Antigua y Barbuda",
+"Antigua-et-Barbuda",
+"Antígua e Barbuda",
+"أنتيغوا وبربودا"
+],
+"AI": [
+"Anguila",
+"Anguilla",
+"أنغويلا"
+],
+"AL": [
+"Albania",
+"Albanie",
+"Albanien",
+"Albânia",
+"ألبانيا"
+],
+"AM": [
+"Armenia",
+"Armenien",
+"Arménie",
+"Armênia",
+"أرمينيا"
+],
+"AO": [
+"Angola",
+"أنغولا"
+],
+"AQ": [
+"Antarctica",
+"Antarctique",
+"Antarktis",
+"Antartide",
+"Antártida",
+"أنتاركتيكا"
+],
+"AR": [
+"Albiceleste",
+"Argentina",
+"Argentine",
+"Argentinien",
+"الأرجنتين",
+"الارجنتين"
+],
+"AS": [
+"American Samoa",
+"Amerikanisch-Samoa",
+"Samoa Americana",
+"Samoa Americane",
+"Samoa américaines",
+"ساموا الأمريكية"
+],
+"AT": [
+"Austria",
+"Autriche",
+"Áustria",
+"Österreich",
+"النمسا"
+],
+"AU": [
+"Australia",
+"Australie",
+"Australien",
+"Austrália",
+"Socceroos",
+"أستراليا",
+"استراليا"
+],
+"AW": [
+"Aruba",
+"أروبا"
+],
+"AX": [
+"Ilhas Aland",
+"Islas Aland",
+"Isole Åland",
+"Åland Islands",
+"Ålandinseln",
+"Îles Åland",
+"جزر آلاند"
+],
+"AZ": [
+"Aserbaidschan",
+"Azerbaigian",
+"Azerbaijan",
+"Azerbaijão",
+"Azerbaiyán",
+"Azerbaïdjan",
+"أذربيجان"
+],
+"BA": [
+"Bosnia",
+"Bosnia & Herzegovina",
+"Bosnia and Herzegovina",
+"Bosnia ed Erzegovina",
+"Bosnia y Herzegovina",
+"Bosnia-Herzegovina",
+"Bosnie-Herzégovine",
+"Bosnien und Herzegowina",
+"Bósnia e Herzegovina",
+"البوسنة",
+"البوسنة والهرسك"
+],
+"BB": [
+"Barbade",
+"Barbados",
+"بربادوس"
+],
+"BD": [
+"Bangladesch",
+"Bangladesh",
+"Bangladés",
+"بنغلاديش"
+],
+"BE": [
+"Belgien",
+"Belgio",
+"Belgique",
+"Belgium",
+"Bélgica",
+"بلجيكا"
+],
+"BF": [
+"Burkina Faso",
+"Burquina Faso",
+"بوركينا فاسو"
+],
+"BG": [
+"Bulgaria",
+"Bulgarie",
+"Bulgarien",
+"Bulgária",
+"بلغاريا"
+],
+"BH": [
+"Bahrain",
+"Bahrein",
+"Bahreïn",
+"Barein",
+"Baréin",
+"البحرين",
+"المنتخب البحريني"
+],
+"BI": [
+"Burundi",
+"بوروندي"
+],
+"BJ": [
+"Benin",
+"Benín",
+"Bénin",
+"بنين"
+],
+"BL": [
+"Saint-Barthélemy",
+"San Bartolomé",
+"St. Barthélemy",
+"São Bartolomeu",
+"سان بارتليمي"
+],
+"BM": [
+"Bermuda",
+"Bermudas",
+"Bermudes",
+"برمودا"
+],
+"BN": [
+"Brunei",
+"Brunei Darussalam",
+"Brunéi",
+"بروناي"
+],
+"BO": [
+"Bolivia",
+"Bolivie",
+"Bolivien",
+"Bolívia",
+"بوليفيا"
+],
+"BQ": [
+"Caraibi Olandesi",
+"Caribbean Netherlands",
+"Caribe neerlandés",
+"Karibische Niederlande",
+"Pays-Bas caribéens",
+"Países Baixos Caribenhos",
+"هولندا الكاريبية"
+],
+"BR": [
+"Brasil",
+"Brasile",
+"Brasilien",
+"Brazil",
+"Brésil",
+"Selecao",
+"Seleção",
+"البرازيل"
+],
+"BS": [
+"Bahamas",
+"جزر البهاما"
+],
+"BT": [
+"Bhoutan",
+"Bhutan",
+"Bután",
+"Butão",
+"بوتان"
+],
+"BV": [
+"Bouvet Island",
+"Bouvetinsel",
+"Ilha Bouvet",
+"Isla Bouvet",
+"Isola Bouvet",
+"Île Bouvet",
+"جزيرة بوفيه"
+],
+"BW": [
+"Botsuana",
+"Botswana",
+"بوتسوانا"
+],
+"BY": [
+"Belarus",
+"Bielorrusia",
+"Bielorrússia",
+"Bielorussia",
+"Biélorussie",
+"بيلاروس"
+],
+"BZ": [
+"Belice",
+"Belize",
+"بليز"
+],
+"CA": [
+"Canada",
+"Canadá",
+"Kanada",
+"كندا"
+],
+"CC": [
+"Cocos",
+"Cocos (Keeling) Islands",
+"Ilhas Cocos",
+"Ilhas Cocos (Keeling)",
+"Islas Cocos",
+"Isole Cocos",
+"Isole Cocos (Keeling)",
+"Kokosinseln",
+"Îles Cocos",
+"جزر كوكوس",
+"جزر كوكوس (كيلينغ)"
+],
+"CD": [
+"Congo",
+"Congo - Kinshasa",
+"Congo DR",
+"Congo-Kinshasa",
+"DR Congo",
+"Kongo-Kinshasa",
+"RD Congo",
+"RDC",
+"República Democrática del Congo",
+"الكونغو",
+"الكونغو - كينشاسا",
+"الكونغو الديمقراطية",
+"الكونغو الديموقراطية"
+],
+"CF": [
+"CAR",
+"Centrafrique",
+"Central African Republic",
+"Repubblica Centrafricana",
+"República Centro-Africana",
+"República Centroafricana",
+"République centrafricaine",
+"Zentralafrikanische Republik",
+"أفريقيا الوسطى",
+"جمهورية أفريقيا الوسطى"
+],
+"CG": [
+"Congo",
+"Congo - Brazzaville",
+"Congo Brazzaville",
+"Congo-Brazzaville",
+"Kongo-Brazzaville",
+"República do Congo",
+"الكونغو",
+"الكونغو - برازافيل",
+"الكونغو برازافيل"
+],
+"CH": [
+"Schweiz",
+"Suisse",
+"Suiza",
+"Suíça",
+"Svizzera",
+"Switzerland",
+"سويسرا"
+],
+"CI": [
+"Costa d'Avorio",
+"Costa de Marfil",
+"Costa do Marfim",
+"Cote d'Ivoire",
+"Côte d'Ivoire",
+"Ivory Coast",
+"ساحل العاج",
+"كوت ديفوار"
+],
+"CK": [
+"Cook Islands",
+"Cookinseln",
+"Ilhas Cook",
+"Islas Cook",
+"Isole Cook",
+"Îles Cook",
+"جزر كوك"
+],
+"CL": [
+"Chile",
+"Chili",
+"Cile",
+"تشيلي"
+],
+"CM": [
+"Camarões",
+"Cameroon",
+"Cameroun",
+"Camerun",
+"Camerún",
+"Indomitable Lions",
+"Kamerun",
+"الكاميرون"
+],
+"CN": [
+"China",
+"China PR",
+"Chine",
+"Cina",
+"الصين"
+],
+"CO": [
+"Colombia",
+"Colombie",
+"Colômbia",
+"Kolumbien",
+"كولومبيا"
+],
+"CP": [
+"Clipperton Island",
+"Clipperton-Insel",
+"Ilha de Clipperton",
+"Isla Clipperton",
+"Isola di Clipperton",
+"Île Clipperton",
+"جزيرة كليبيرتون"
+],
+"CQ": [
+"Sark"
+],
+"CR": [
+"Costa Rica",
+"كوستاريكا"
+],
+"CU": [
+"Cuba",
+"Kuba",
+"كوبا"
+],
+"CV": [
+"Cabo Verde",
+"Cap-Vert",
+"Cape Verde",
+"Capo Verde",
+"الرأس الأخضر"
+],
+"CW": [
+"Curazao",
+"Curaçao",
+"كوراساو"
+],
+"CX": [
+"Christmas Island",
+"Ilha Christmas",
+"Isla de Navidad",
+"Isola Christmas",
+"Weihnachtsinsel",
+"Île Christmas",
+"جزيرة كريسماس"
+],
+"CY": [
+"Chipre",
+"Chypre",
+"Cipro",
+"Cyprus",
+"Zypern",
+"قبرص"
+],
+"CZ": [
+"Cechia",
+"Chequia",
+"Czech Republic",
+"Czechia",
+"República Checa",
+"République tchèque",
+"Tchéquia",
+"Tchéquie",
+"Tschechien",
+"Česko",
+"التشيك",
+"جمهورية التشيك"
+],
+"DE": [
+"Alemanha",
+"Alemania",
+"Allemagne",
+"DFB-Team",
+"Deutschland",
+"Germania",
+"Germany",
+"ألمانيا",
+"المانيا"
+],
+"DG": [
+"Diego Garcia",
+"Diego García",
+"دييغو غارسيا"
+],
+"DJ": [
+"Djibouti",
+"Djibuti",
+"Dschibuti",
+"Gibuti",
+"Yibuti",
+"جيبوتي"
+],
+"DK": [
+"Danemark",
+"Danimarca",
+"Denmark",
+"Dinamarca",
+"Dänemark",
+"الدانمرك"
+],
+"DM": [
+"Dominica",
+"Dominique",
+"دومينيكا"
+],
+"DO": [
+"Dominican Republic",
+"Dominikanische Republik",
+"Repubblica Dominicana",
+"República Dominicana",
+"République dominicaine",
+"جمهورية الدومينيكان"
+],
+"DZ": [
+"Algeria",
+"Algerien",
+"Algérie",
+"Argelia",
+"Argélia",
+"Desert Warriors",
+"Fennecs",
+"الجزائر",
+"المنتخب الجزائري",
+"محاربو الصحراء",
+"محاربي الصحراء"
+],
+"EA": [
+"Ceuta & Melilla",
+"Ceuta e Melilla",
+"Ceuta et Melilla",
+"Ceuta und Melilla",
+"Ceuta y Melilla",
+"سيوتا وميليلا"
+],
+"EC": [
+"Ecuador",
+"Equador",
+"Équateur",
+"الإكوادور"
+],
+"EE": [
+"Estland",
+"Estonia",
+"Estonie",
+"Estônia",
+"إستونيا"
+],
+"EG": [
+"Egipto",
+"Egito",
+"Egitto",
+"Egypt",
+"Pharaohs",
+"Ägypten",
+"Égypte",
+"الفراعنة",
+"المنتخب المصري",
+"مصر",
+"منتخب مصر"
+],
+"EH": [
+"Saara Ocidental",
+"Sahara Occidentale",
+"Sahara occidental",
+"Sáhara Occidental",
+"Western Sahara",
+"Westsahara",
+"الصحراء الغربية"
+],
+"ER": [
+"Eritrea",
+"Eritreia",
+"Érythrée",
+"إريتريا"
+],
+"ES": [
+"Espagne",
+"Espanha",
+"España",
+"Spagna",
+"Spain",
+"Spanien",
+"إسبانيا",
+"اسبانيا"
+],
+"ET": [
+"Ethiopia",
+"Etiopia",
+"Etiopía",
+"Etiópia",
+"Äthiopien",
+"Éthiopie",
+"إثيوبيا"
+],
+"FI": [
+"Finland",
+"Finlande",
+"Finlandia",
+"Finlândia",
+"Finnland",
+"فنلندا"
+],
+"FJ": [
+"Fidji",
+"Fidschi",
+"Figi",
+"Fiji",
+"Fiyi",
+"فيجي"
+],
+"FK": [
+"Falkland Islands",
+"Falklandinseln",
+"Ilhas Malvinas",
+"Islas Malvinas",
+"Isole Falkland",
+"Îles Malouines",
+"جزر فوكلاند"
+],
+"FM": [
+"Micronesia",
+"Micronésia",
+"Micronésie",
+"Mikronesien",
+"ميكرونيزيا"
+],
+"FO": [
+"Faroe Islands",
+"Färöer",
+"Ilhas Faroé",
+"Islas Feroe",
+"Isole Fær Øer",
+"Îles Féroé",
+"جزر فارو"
+],
+"FR": [
+"France",
+"Francia",
+"Frankreich",
+"França",
+"Les Bleus",
+"فرنسا"
+],
+"GA": [
+"Gabon",
+"Gabun",
+"Gabão",
+"Gabón",
+"الغابون"
+],
+"GB-ENG": [
+"Angleterre",
+"England",
+"Inghilterra",
+"Inglaterra",
+"Three Lions",
+"إنجلترا",
+"إنكلترا",
+"انجلترا"
+],
+"GB-NIR": [
+"Irlanda del Norte",
+"Irlande du Nord",
+"Nordirland",
+"Northern Ireland",
+"أيرلندا الشمالية",
+"ايرلندا الشمالية"
+],
+"GB-SCT": [
+"Escocia",
+"Schottland",
+"Scotland",
+"Scozia",
+"Écosse",
+"إسكتلندا",
+"اسكتلندا"
+],
+"GB-WLS": [
+"Gales",
+"Galles",
+"Pays de Galles",
+"Wales",
+"ويلز"
+],
+"GD": [
+"Granada",
+"Grenada",
+"Grenade",
+"غرينادا"
+],
+"GE": [
+"Georgia",
+"Georgien",
+"Geórgia",
+"Géorgie",
+"جورجيا"
+],
+"GF": [
+"Französisch-Guayana",
+"French Guiana",
+"Guayana Francesa",
+"Guiana Francesa",
+"Guyana Francese",
+"Guyane française",
+"غويانا الفرنسية"
+],
+"GG": [
+"Guernesey",
+"Guernsey",
+"غيرنزي"
+],
+"GH": [
+"Black Stars",
+"Gana",
+"Ghana",
+"غانا"
+],
+"GI": [
+"Gibilterra",
+"Gibraltar",
+"جبل طارق"
+],
+"GL": [
+"Greenland",
+"Groenland",
+"Groenlandia",
+"Groenlândia",
+"Grönland",
+"غرينلاند"
+],
+"GM": [
+"Gambia",
+"Gambie",
+"Gâmbia",
+"غامبيا"
+],
+"GN": [
+"Guinea",
+"Guiné",
+"Guinée",
+"غينيا"
+],
+"GP": [
+"Guadalupa",
+"Guadalupe",
+"Guadeloupe",
+"غوادلوب"
+],
+"GQ": [
+"Equatorial Guinea",
+"Guinea Ecuatorial",
+"Guinea Equatoriale",
+"Guiné Equatorial",
+"Guinée équatoriale",
+"Äquatorialguinea",
+"غينيا الاستوائية"
+],
+"GR": [
+"Grecia",
+"Greece",
+"Griechenland",
+"Grèce",
+"Grécia",
+"اليونان"
+],
+"GS": [
+"Georgia del Sud e Sandwich Australi",
+"Géorgie du Sud-et-les Îles Sandwich du Sud",
+"Ilhas Geórgia do Sul e Sandwich do Sul",
+"Islas Georgia del Sur y Sandwich del Sur",
+"South Georgia & South Sandwich Islands",
+"Südgeorgien und die Südlichen Sandwichinseln",
+"جورجيا الجنوبية وجزر ساندويتش الجنوبية"
+],
+"GT": [
+"Guatemala",
+"غواتيمالا"
+],
+"GU": [
+"Guam",
+"غوام"
+],
+"GW": [
+"Guinea Bissau",
+"Guinea-Bissau",
+"Guinea-Bisáu",
+"Guiné-Bissau",
+"Guinée-Bissau",
+"غينيا بيساو"
+],
+"GY": [
+"Guiana",
+"Guyana",
+"غيانا"
+],
+"HK": [
+"Hong Kong",
+"Hong Kong SAR China",
+"Hong Kong, China",
+"Hong Kong, RAE da China",
+"R.A.S. chinoise de Hong Kong",
+"RAE de Hong Kong",
+"RAE de Hong Kong (China)",
+"RAS di Hong Kong",
+"Sonderverwaltungsregion Hongkong",
+"هونغ كونغ",
+"هونغ كونغ الصينية",
+"هونغ كونغ الصينية (منطقة إدارية خاصة)"
+],
+"HM": [
+"Heard & McDonald Islands",
+"Heard und McDonaldinseln",
+"Ilhas Heard e McDonald",
+"Islas Heard y McDonald",
+"Isole Heard e McDonald",
+"Îles Heard-et-MacDonald",
+"جزيرة هيرد وجزر ماكدونالد"
+],
+"HN": [
+"Honduras",
+"هندوراس"
+],
+"HR": [
+"Croacia",
+"Croatia",
+"Croatie",
+"Croazia",
+"Croácia",
+"Kroatien",
+"كرواتيا"
+],
+"HT": [
+"Haiti",
+"Haití",
+"Haïti",
+"هايتي"
+],
+"HU": [
+"Hongrie",
+"Hungary",
+"Hungria",
+"Hungría",
+"Ungarn",
+"Ungheria",
+"هنغاريا"
+],
+"IC": [
+"Canarias",
+"Canary Islands",
+"Ilhas Canárias",
+"Isole Canarie",
+"Kanarische Inseln",
+"Îles Canaries",
+"جزر الكناري"
+],
+"ID": [
+"Indonesia",
+"Indonesien",
+"Indonésia",
+"Indonésie",
+"إندونيسيا"
+],
+"IE": [
+"Ireland",
+"Irland",
+"Irlanda",
+"Irlande",
+"Republic of Ireland",
+"أيرلندا",
+"ايرلندا"
+],
+"IL": [
+"Israel",
+"Israele",
+"Israël",
+"إسرائيل"
+],
+"IM": [
+"Ilha de Man",
+"Isla de Man",
+"Isle of Man",
+"Isola di Man",
+"Île de Man",
+"جزيرة مان"
+],
+"IN": [
+"Inde",
+"India",
+"Indien",
+"Índia",
+"الهند"
+],
+"IO": [
+"Britisches Territorium im Indischen Ozean",
+"British Indian Ocean Territory",
+"Territoire britannique de l'océan Indien",
+"Territorio Britannico dell'Oceano Indiano",
+"Territorio Británico del Océano Índico",
+"Território Britânico do Oceano Índico",
+"الإقليم البريطاني في المحيط الهندي"
+],
+"IQ": [
+"Irak",
+"Iraq",
+"Iraque",
+"أسود الرافدين",
+"اسود الرافدين",
+"العراق",
+"المنتخب العراقي"
+],
+"IR": [
+"IR Iran",
+"Iran",
+"Irán",
+"Irã",
+"إيران",
+"ايران"
+],
+"IS": [
+"Iceland",
+"Island",
+"Islanda",
+"Islande",
+"Islandia",
+"Islândia",
+"آيسلندا"
+],
+"IT": [
+"Azzurri",
+"Italia",
+"Italie",
+"Italien",
+"Italy",
+"Itália",
+"إيطاليا",
+"ايطاليا"
+],
+"JE": [
+"Jersey",
+"جيرسي"
+],
+"JM": [
+"Giamaica",
+"Jamaica",
+"Jamaika",
+"Jamaïque",
+"جامايكا"
+],
+"JO": [
+"Giordania",
+"Jordan",
+"Jordania",
+"Jordanie",
+"Jordanien",
+"Jordânia",
+"الأردن",
+"الاردن",
+"المنتخب الأردني",
+"المنتخب الاردني",
+"النشامى"
+],
+"JP": [
+"Giappone",
+"Japan",
+"Japon",
+"Japão",
+"Japón",
+"Samurai Blue",
+"اليابان"
+],
+"KE": [
+"Kenia",
+"Kenya",
+"Quênia",
+"كينيا"
+],
+"KG": [
+"Kirghizistan",
+"Kirghizstan",
+"Kirgisistan",
+"Kirguistán",
+"Kyrgyz Republic",
+"Kyrgyzstan",
+"Quirguistão",
+"قيرغيزستان"
+],
+"KH": [
+"Cambodge",
+"Cambodia",
+"Cambogia",
+"Camboja",
+"Camboya",
+"Kambodscha",
+"كمبوديا"
+],
+"KI": [
+"Kiribati",
+"Quiribati",
+"كيريباتي"
+],
+"KM": [
+"Comoras",
+"Comore",
+"Comores",
+"Comoros",
+"Komoren",
+"جزر القمر"
+],
+"KN": [
+"Saint Kitts e Nevis",
+"Saint-Christophe-et-Niévès",
+"San Cristóbal y Nieves",
+"St. Kitts & Nevis",
+"St. Kitts und Nevis",
+"São Cristóvão e Névis",
+"سانت كيتس ونيفيس"
+],
+"KP": [
+"Corea del Nord",
+"Corea del Norte",
+"Coreia do Norte",
+"Corée du Nord",
+"Korea DPR",
+"Nordkorea",
+"North Korea",
+"كوريا الشمالية"
+],
+"KR": [
+"Corea del Sud",
+"Corea del Sur",
+"Coreia do Sul",
+"Corée du Sud",
+"Korea",
+"Korea Republic",
+"South Korea",
+"Südkorea",
+"Taeguk Warriors",
+"كوريا",
+"كوريا الجنوبية"
+],
+"KW": [
+"Koweït",
+"Kuwait",
+"الكويت",
+"المنتخب الكويتي"
+],
+"KY": [
+"Cayman Islands",
+"Ilhas Cayman",
+"Islas Caimán",
+"Isole Cayman",
+"Kaimaninseln",
+"Îles Caïmans",
+"جزر كايمان"
+],
+"KZ": [
+"Cazaquistão",
+"Kasachstan",
+"Kazajistán",
+"Kazakhstan",
+"Kazakistan",
+"كازاخستان"
+],
+"LA": [
+"Laos",
+"لاوس"
+],
+"LB": [
+"Lebanon",
+"Liban",
+"Libano",
+"Libanon",
+"Líbano",
+"المنتخب اللبناني",
+"رجال الأرز",
+"لبنان"
+],
+"LC": [
+"Saint Lucia",
+"Sainte-Lucie",
+"Santa Lucía",
+"Santa Lúcia",
+"St. Lucia",
+"سانت لوسيا"
+],
+"LI": [
+"Liechtenstein",
+"ليختنشتاين"
+],
+"LK": [
+"Sri Lanka",
+"سريلانكا"
+],
+"LR": [
+"Liberia",
+"Libéria",
+"ليبيريا"
+],
+"LS": [
+"Lesotho",
+"Lesoto",
+"ليسوتو"
+],
+"LT": [
+"Litauen",
+"Lithuania",
+"Lituania",
+"Lituanie",
+"Lituânia",
+"ليتوانيا"
+],
+"LU": [
+"Lussemburgo",
+"Luxembourg",
+"Luxemburg",
+"Luxemburgo",
+"لوكسمبورغ"
+],
+"LV": [
+"Latvia",
+"Letonia",
+"Lettland",
+"Lettonia",
+"Lettonie",
+"Letônia",
+"لاتفيا"
+],
+"LY": [
+"Libia",
+"Libya",
+"Libye",
+"Libyen",
+"Líbia",
+"المنتخب الليبي",
+"ليبيا"
+],
+"MA": [
+"Atlas Lions",
+"Maroc",
+"Marocco",
+"Marokko",
+"Marrocos",
+"Marruecos",
+"Morocco",
+"أسود الأطلس",
+"اسود الاطلس",
+"المغرب",
+"المنتخب المغربي"
+],
+"MC": [
+"Monaco",
+"Mónaco",
+"Mônaco",
+"موناكو"
+],
+"MD": [
+"Moldavia",
+"Moldavie",
+"Moldova",
+"Moldávia",
+"Republik Moldau",
+"مولدوفا"
+],
+"ME": [
+"Montenegro",
+"Monténégro",
+"الجبل الأسود"
+],
+"MF": [
+"Saint Martin",
+"Saint-Martin",
+"San Martín",
+"St. Martin",
+"São Martinho",
+"سان مارتن"
+],
+"MG": [
+"Madagascar",
+"Madagaskar",
+"مدغشقر"
+],
+"MH": [
+"Ilhas Marshall",
+"Islas Marshall",
+"Isole Marshall",
+"Marshall Islands",
+"Marshallinseln",
+"Îles Marshall",
+"جزر مارشال"
+],
+"MK": [
+"Macedonia",
+"Macedonia del Nord",
+"Macedonia del Norte",
+"Macedônia do Norte",
+"Macédoine du Nord",
+"Nordmazedonien",
+"North Macedonia",
+"مقدونيا الشمالية"
+],
+"ML": [
+"Mali",
+"مالي"
+],
+"MM": [
+"Mianmar",
+"Mianmar (Birmânia)",
+"Myanmar",
+"Myanmar (Birmania)",
+"Myanmar (Birmanie)",
+"Myanmar (Burma)",
+"ميانمار",
+"ميانمار (بورما)"
+],
+"MN": [
+"Mongolei",
+"Mongolia",
+"Mongolie",
+"Mongólia",
+"منغوليا"
+],
+"MO": [
+"Macao SAR China",
+"Macau",
+"Macau, RAE da China",
+"R.A.S. chinoise de Macao",
+"RAE de Macao",
+"RAE de Macao (China)",
+"RAS di Macao",
+"Sonderverwaltungsregion Macau",
+"منطقة ماكاو الإدارية الخاصة"
+],
+"MP": [
+"Ilhas Marianas do Norte",
+"Islas Marianas del Norte",
+"Isole Marianne Settentrionali",
+"Northern Mariana Islands",
+"Nördliche Marianen",
+"Îles Mariannes du Nord",
+"جزر ماريانا الشمالية"
+],
+"MQ": [
+"Martinica",
+"Martinique",
+"جزر المارتينيك"
+],
+"MR": [
+"Mauretanien",
+"Mauritania",
+"Mauritanie",
+"Mauritânia",
+"المنتخب الموريتاني",
+"موريتانيا"
+],
+"MS": [
+"Montserrat",
+"مونتسرات"
+],
+"MT": [
+"Malta",
+"Malte",
+"مالطا"
+],
+"MU": [
+"Maurice",
+"Mauricio",
+"Mauritius",
+"Maurício",
+"موريشيوس"
+],
+"MV": [
+"Maldivas",
+"Maldive",
+"Maldives",
+"Malediven",
+"جزر المالديف"
+],
+"MW": [
+"Malaui",
+"Malawi",
+"ملاوي"
+],
+"MX": [
+"El Tri",
+"Messico",
+"Mexico",
+"Mexiko",
+"Mexique",
+"México",
+"المكسيك"
+],
+"MY": [
+"Malaisie",
+"Malasia",
+"Malaysia",
+"Malásia",
+"ماليزيا"
+],
+"MZ": [
+"Mosambik",
+"Mozambico",
+"Mozambique",
+"Moçambique",
+"موزمبيق"
+],
+"NA": [
+"Namibia",
+"Namibie",
+"Namíbia",
+"ناميبيا"
+],
+"NC": [
+"Neukaledonien",
+"New Caledonia",
+"Nouvelle-Calédonie",
+"Nova Caledônia",
+"Nueva Caledonia",
+"Nuova Caledonia",
+"كاليدونيا الجديدة"
+],
+"NE": [
+"Niger",
+"Níger",
+"النيجر"
+],
+"NF": [
+"Ilha Norfolk",
+"Isla Norfolk",
+"Isola Norfolk",
+"Norfolk Island",
+"Norfolkinsel",
+"Île Norfolk",
+"جزيرة نورفولك"
+],
+"NG": [
+"Nigeria",
+"Nigéria",
+"Super Eagles",
+"نيجيريا"
+],
+"NI": [
+"Nicaragua",
+"Nicarágua",
+"نيكاراغوا"
+],
+"NL": [
+"Holland",
+"Netherlands",
+"Niederlande",
+"Oranje",
+"Paesi Bassi",
+"Pays-Bas",
+"Países Baixos",
+"Países Bajos",
+"هولندا"
+],
+"NO": [
+"Noruega",
+"Norvegia",
+"Norvège",
+"Norway",
+"Norwegen",
+"النرويج"
+],
+"NP": [
+"Nepal",
+"Népal",
+"نيبال"
+],
+"NR": [
+"Nauru",
+"ناورو"
+],
+"NU": [
+"Niue",
+"نيوي"
+],
+"NZ": [
+"All Whites",
+"Neuseeland",
+"New Zealand",
+"Nouvelle-Zélande",
+"Nova Zelândia",
+"Nueva Zelanda",
+"Nuova Zelanda",
+"نيوزيلندا"
+],
+"OM": [
+"Oman",
+"Omán",
+"Omã",
+"المنتخب العماني",
+"سلطنة عمان",
+"عمان",
+"عُمان"
+],
+"PA": [
+"Panama",
+"Panamá",
+"بنما"
+],
+"PE": [
+"Peru",
+"Perù",
+"Perú",
+"Pérou",
+"بيرو"
+],
+"PF": [
+"Französisch-Polynesien",
+"French Polynesia",
+"Polinesia Francesa",
+"Polinesia Francese",
+"Polinésia Francesa",
+"Polynésie française",
+"بولينيزيا الفرنسية"
+],
+"PG": [
+"Papouasie-Nouvelle-Guinée",
+"Papua New Guinea",
+"Papua Nuova Guinea",
+"Papua-Neuguinea",
+"Papua-Nova Guiné",
+"Papúa Nueva Guinea",
+"بابوا غينيا الجديدة"
+],
+"PH": [
+"Filipinas",
+"Filippine",
+"Philippinen",
+"Philippines",
+"الفلبين"
+],
+"PK": [
+"Pakistan",
+"Pakistán",
+"Paquistão",
+"باكستان"
+],
+"PL": [
+"Poland",
+"Polen",
+"Pologne",
+"Polonia",
+"Polônia",
+"بولندا"
+],
+"PM": [
+"Saint-Pierre e Miquelon",
+"Saint-Pierre-et-Miquelon",
+"San Pedro y Miquelón",
+"St. Pierre & Miquelon",
+"St. Pierre und Miquelon",
+"São Pedro e Miquelão",
+"سان بيير ومكويلون"
+],
+"PN": [
+"Ilhas Pitcairn",
+"Islas Pitcairn",
+"Isole Pitcairn",
+"Pitcairn Islands",
+"Pitcairninseln",
+"Îles Pitcairn",
+"جزر بيتكيرن"
+],
+"PR": [
+"Porto Rico",
+"Portorico",
+"Puerto Rico",
+"بورتوريكو"
+],
+"PS": [
+"Palestina",
+"Palestine",
+"Palestinian Territories",
+"Palästinensische Autonomiegebiete",
+"Territoires palestiniens",
+"Territori Palestinesi",
+"Territorios Palestinos",
+"Territórios palestinos",
+"الأراضي الفلسطينية",
+"الفدائي",
+"المنتخب الفلسطيني",
+"فلسطين"
+],
+"PT": [
+"Portogallo",
+"Portugal",
+"البرتغال"
+],
+"PW": [
+"Palaos",
+"Palau",
+"بالاو"
+],
+"PY": [
+"Paraguai",
+"Paraguay",
+"باراغواي"
+],
+"QA": [
+"Catar",
+"Katar",
+"Qatar",
+"العنابي",
+"المنتخب القطري",
+"قطر"
+],
+"RE": [
+"La Réunion",
+"Reunião",
+"Reunión",
+"Riunione",
+"Réunion",
+"روينيون"
+],
+"RO": [
+"Romania",
+"Romênia",
+"Roumanie",
+"Rumanía",
+"Rumänien",
+"رومانيا"
+],
+"RS": [
+"Serbia",
+"Serbie",
+"Serbien",
+"Sérvia",
+"صربيا"
+],
+"RU": [
+"Rusia",
+"Russia",
+"Russie",
+"Russland",
+"Rússia",
+"روسيا"
+],
+"RW": [
+"Ruanda",
+"Rwanda",
+"رواندا"
+],
+"SA": [
+"Arabia Saudita",
+"Arabia Saudí",
+"Arabie Saoudite",
+"Arabie saoudite",
+"Arábia Saudita",
+"KSA",
+"Saudi",
+"Saudi Arabia",
+"Saudi-Arabien",
+"السعودية",
+"المملكة العربية السعودية",
+"المنتخب السعودي",
+"منتخب السعودية"
+],
+"SB": [
+"Ilhas Salomão",
+"Islas Salomón",
+"Isole Salomone",
+"Salomonen",
+"Solomon Islands",
+"Îles Salomon",
+"جزر سليمان"
+],
+"SC": [
+"Seicheles",
+"Seychellen",
+"Seychelles",
+"سيشل"
+],
+"SD": [
+"Soudan",
+"Sudan",
+"Sudán",
+"Sudão",
+"السودان",
+"المنتخب السوداني",
+"صقور الجديان"
+],
+"SE": [
+"Schweden",
+"Suecia",
+"Suède",
+"Suécia",
+"Svezia",
+"Sweden",
+"السويد"
+],
+"SG": [
+"Singapore",
+"Singapour",
+"Singapur",
+"Singapura",
+"سنغافورة"
+],
+"SH": [
+"Sainte-Hélène",
+"Sant'Elena",
+"Santa Elena",
+"Santa Helena",
+"St. Helena",
+"سانت هيلينا"
+],
+"SI": [
+"Eslovenia",
+"Eslovênia",
+"Slovenia",
+"Slovénie",
+"Slowenien",
+"سلوفينيا"
+],
+"SJ": [
+"Spitzbergen und Jan Mayen",
+"Svalbard & Jan Mayen",
+"Svalbard e Jan Mayen",
+"Svalbard et Jan Mayen",
+"Svalbard y Jan Mayen",
+"سفالبارد وجان ماين"
+],
+"SK": [
+"Eslovaquia",
+"Eslováquia",
+"Slovacchia",
+"Slovakia",
+"Slovaquie",
+"Slowakei",
+"سلوفاكيا"
+],
+"SL": [
+"Serra Leoa",
+"Sierra Leona",
+"Sierra Leone",
+"سيراليون"
+],
+"SM": [
+"Saint-Marin",
+"San Marino",
+"سان مارينو"
+],
+"SN": [
+"Lions of Teranga",
+"Senegal",
+"Sénégal",
+"السنغال"
+],
+"SO": [
+"Somalia",
+"Somalie",
+"Somália",
+"الصومال"
+],
+"SR": [
+"Surinam",
+"Suriname",
+"سورينام"
+],
+"SS": [
+"Soudan du Sud",
+"South Sudan",
+"Sud Sudan",
+"Sudán del Sur",
+"Sudão do Sul",
+"Südsudan",
+"جنوب السودان"
+],
+"ST": [
+"Santo Tomé y Príncipe",
+"Sao Tomé-et-Principe",
+"São Tomé & Príncipe",
+"São Tomé e Príncipe",
+"São Tomé und Príncipe",
+"ساو تومي وبرينسيبي"
+],
+"SV": [
+"El Salvador",
+"Salvador",
+"السلفادور"
+],
+"SX": [
+"Saint-Martin",
+"Saint-Martin (partie néerlandaise)",
+"Sint Maarten",
+"سانت مارتن"
+],
+"SY": [
+"Siria",
+"Syria",
+"Syrie",
+"Syrien",
+"Síria",
+"المنتخب السوري",
+"سوريا",
+"سورية",
+"نسور قاسيون"
+],
+"SZ": [
+"Essuatíni",
+"Esuatini",
+"Eswatini",
+"Swaziland",
+"إسواتيني",
+"سوازيلاند"
+],
+"TA": [
+"Tristan da Cunha",
+"Tristán de Acuña",
+"Tristão da Cunha",
+"تريستان دا كونا"
+],
+"TC": [
+"Ilhas Turcas e Caicos",
+"Islas Turcas y Caicos",
+"Isole Turks e Caicos",
+"Turks & Caicos Islands",
+"Turks- und Caicosinseln",
+"Îles Turques-et-Caïques",
+"جزر توركس وكايكوس"
+],
+"TD": [
+"Chad",
+"Chade",
+"Ciad",
+"Tchad",
+"Tschad",
+"تشاد"
+],
+"TF": [
+"Französische Süd- und Antarktisgebiete",
+"French Southern Territories",
+"Terre Australi Francesi",
+"Terres australes françaises",
+"Territorios Australes Franceses",
+"Territórios Franceses do Sul",
+"الأقاليم الجنوبية الفرنسية"
+],
+"TG": [
+"Togo",
+"توغو"
+],
+"TH": [
+"Tailandia",
+"Tailândia",
+"Thailand",
+"Thailandia",
+"Thaïlande",
+"تايلاند"
+],
+"TJ": [
+"Tadjikistan",
+"Tadjiquistão",
+"Tadschikistan",
+"Tagikistan",
+"Tajikistan",
+"Tayikistán",
+"طاجيكستان"
+],
+"TK": [
+"Tokelau",
+"توكيلاو"
+],
+"TL": [
+"East Timor",
+"Timor Est",
+"Timor oriental",
+"Timor-Leste",
+"تيمور",
+"تيمور - ليشتي",
+"تيمور الشرقية"
+],
+"TM": [
+"Turcomenistão",
+"Turkmenistan",
+"Turkmenistán",
+"Turkménistan",
+"تركمانستان"
+],
+"TN": [
+"Eagles of Carthage",
+"Tunesien",
+"Tunisia",
+"Tunisie",
+"Tunísia",
+"Túnez",
+"المنتخب التونسي",
+"تونس",
+"نسور قرطاج"
+],
+"TO": [
+"Tonga",
+"تونغا"
+],
+"TR": [
+"Turchia",
+"Turkey",
+"Turquia",
+"Turquie",
+"Turquía",
+"Türkei",
+"Türkiye",
+"تركيا"
+],
+"TT": [
+"Trinidad & Tobago",
+"Trinidad e Tobago",
+"Trinidad und Tobago",
+"Trinidad y Tobago",
+"Trinité-et-Tobago",
+"ترينيداد وتوباغو"
+],
+"TV": [
+"Tuvalu",
+"توفالو"
+],
+"TW": [
+"Chinese Taipei",
+"Taiwan",
+"Taiwán",
+"Taïwan",
+"تايبيه الصينية",
+"تايوان"
+],
+"TZ": [
+"Tansania",
+"Tanzania",
+"Tanzanie",
+"Tanzânia",
+"تنزانيا"
+],
+"UA": [
+"Ucraina",
+"Ucrania",
+"Ucrânia",
+"Ukraine",
+"أوكرانيا"
+],
+"UG": [
+"Ouganda",
+"Uganda",
+"أوغندا"
+],
+"UM": [
+"Amerikanische Überseeinseln",
+"Ilhas Menores Distantes dos EUA",
+"Islas menores alejadas de EE. UU.",
+"Isole Minori Esterne degli Stati Uniti",
+"U.S. Outlying Islands",
+"Îles mineures éloignées des États-Unis",
+"جزر الولايات المتحدة النائية"
+],
+"US": [
+"EE.UU.",
+"EEUU",
+"Estados Unidos",
+"Stati Uniti",
+"U.S.",
+"USA",
+"USMNT",
+"United States",
+"Vereinigte Staaten",
+"États-Unis",
+"أمريكا",
+"المنتخب الأمريكي",
+"الولايات المتحدة",
+"امريكا"
+],
+"UY": [
+"Uruguai",
+"Uruguay",
+"أورغواي"
+],
+"UZ": [
+"Ouzbékistan",
+"Usbekistan",
+"Uzbekistan",
+"Uzbekistán",
+"Uzbequistão",
+"أوزبكستان"
+],
+"VA": [
+"Cidade do Vaticano",
+"Città del Vaticano",
+"Ciudad del Vaticano",
+"Vatican City",
+"Vatikanstadt",
+"État de la Cité du Vatican",
+"الفاتيكان"
+],
+"VC": [
+"Saint Vincent e Grenadine",
+"Saint-Vincent-et-les Grenadines",
+"San Vicente y las Granadinas",
+"St. Vincent & Grenadines",
+"St. Vincent und die Grenadinen",
+"São Vicente e Granadinas",
+"سانت فنسنت وجزر غرينادين"
+],
+"VE": [
+"Venezuela",
+"فنزويلا"
+],
+"VG": [
+"Britische Jungferninseln",
+"British Virgin Islands",
+"Ilhas Virgens Britânicas",
+"Islas Vírgenes Británicas",
+"Isole Vergini Britanniche",
+"Îles Vierges britanniques",
+"جزر فيرجن البريطانية"
+],
+"VI": [
+"Amerikanische Jungferninseln",
+"Ilhas Virgens Americanas",
+"Islas Vírgenes de EE. UU.",
+"Isole Vergini Americane",
+"U.S. Virgin Islands",
+"Îles Vierges des États-Unis",
+"جزر فيرجن الأمريكية"
+],
+"VN": [
+"Viet Nam",
+"Vietnam",
+"Vietnã",
+"Viêt Nam",
+"فيتنام"
+],
+"VU": [
+"Vanuatu",
+"فانواتو"
+],
+"WF": [
+"Wallis & Futuna",
+"Wallis e Futuna",
+"Wallis und Futuna",
+"Wallis y Futuna",
+"Wallis-et-Futuna",
+"جزر والس وفوتونا"
+],
+"WS": [
+"Samoa",
+"ساموا"
+],
+"XA": [
+"Pseudo-Accents",
+"Pseudo-Akzente",
+"Pseudo-accenti",
+"Pseudoacentos",
+"Pseudossotaques",
+"pseudo-accents",
+"لكنات تجريبية غير أصلية"
+],
+"XB": [
+"Pseudo-Bidi",
+"Pseudo-bidi",
+"Pseudobidi",
+"Pseudobidirecional",
+"pseudo-bidi",
+"لكنات تجريبية ثنائية الاتجاه"
+],
+"XK": [
+"Kosovo",
+"كوسوفو"
+],
+"YE": [
+"Iêmen",
+"Jemen",
+"Yemen",
+"Yémen",
+"المنتخب اليمني",
+"اليمن"
+],
+"YT": [
+"Mayotte",
+"مايوت"
+],
+"ZA": [
+"Afrique du Sud",
+"Bafana Bafana",
+"South Africa",
+"Sudafrica",
+"Sudáfrica",
+"Südafrika",
+"África do Sul",
+"جنوب أفريقيا",
+"جنوب افريقيا"
+],
+"ZM": [
+"Sambia",
+"Zambia",
+"Zambie",
+"Zâmbia",
+"زامبيا"
+],
+"ZW": [
+"Simbabwe",
+"Zimbabue",
+"Zimbabwe",
+"Zimbábue",
+"زيمبابوي"
+]
+}
+}

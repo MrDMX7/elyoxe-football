@@ -28,6 +28,28 @@ python -m news.run [--local DIR] [--no-llm]      # the Fold runs it every 15 min
    headline names it), `transfers.json` (per player, furthest stage), `social.json` + `social/<team|comp|player>-<id>.json`
    (official videos). State (items 5 days, stories 10) in `state/news/state.json`.
 
+7. **media** (`media.py`, owner 2026-09-30: «أول ما يتوفر فيديو رسمي … ينرفق عدال للهدف اضغط لمشاهدته، ونفس الشي ملخص
+   المباراة»): for every match of our competitions that is live or finished in the last 48 h, the official highlights and a
+   clip per goal, from what the official channels published after kickoff: the journal's `youtube:` feeds (reused, not
+   read twice), the `media:` channels (broadcasters, leagues, confederations, federations; each line says why it is
+   official; a channel limited to competitions or to its national team is read only when one of them played), the official
+   X accounts' posts that carry a video (the laptop reader marks them `video`), and FotMob's own link in the match file.
+   Public: `v1/media/<match>.json` `{generated, match, highlights: [video], goals: {"<minute>-<playerId>": [video]}}` and
+   `v1/media/recent.json`; a file is written only when its content changes. State (videos 4 days, the match files read,
+   embed checks) in `state/news/media.json`. The site's `site/src/media.js` reads the file in the browser («▶ شاهد» by
+   each goal, «▶ الملخص» with the match buttons, a sheet with the player). `python -m news.media --dry --explain [id]`
+   prints every decision without writing; `media: block:` in sources.yaml takes a wrong video out for good.
+
+   **Only confident matches are attached** (a missing video costs nothing, a wrong one costs the page). Highlights: both
+   teams named in the title (Arabic clitics read through, national teams in seven languages from `nations.json`,
+   `news/tools/nations.py`), a summary word (ملخص، أهداف المباراة، highlights، resumen، sintesi، résumé…), out at least 40 min
+   after kickoff, never live / a full replay / a preview / a press conference / women / youth / a game simulation, every
+   year, season or date in the title this match's, every score in it one this match had. Goal clips: the scorer named
+   (full name, or a family name no one else in the match has), a goal word, out after the goal's real minute (from
+   FotMob's half start times), tied to the match (a team named, the club's or federation's own channel, or the
+   competition's channel within 6 h), and its score, minute, penalty/own-goal/equaliser/ordinal words agreeing with that
+   goal. Two goals by one scorer are told apart by those or by when the clip came out; otherwise left out.
+
 Official videos go to the social strips; they join the news only for a press conference, an injury or a transfer at
 «agreed» or later — most of a club channel is training clips. Tools: `tools/probe_feeds.py` (is a feed alive and fresh),
 `tools/try_link.py` (what a headline links to), `tools/youtube_ids.py` (handle → channel id, read from the page's

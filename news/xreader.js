@@ -79,9 +79,10 @@ function posts(json, handle) {
       const u = o.core.user_results && o.core.user_results.result, sn = (u && ((u.core && u.core.screen_name) || (u.legacy && u.legacy.screen_name))) || '';
       const L = o.legacy;
       if (sn.toLowerCase() === handle.toLowerCase() && !L.retweeted_status_result && !L.in_reply_to_status_id_str) {
-        const media = ((L.extended_entities || L.entities || {}).media || [])[0];
+        const all = (L.extended_entities || L.entities || {}).media || [], media = all[0];
         out.push({ id: L.id_str || o.rest_id, text: text(o), at: new Date(L.created_at).toISOString(), handle: sn,
                    name: (u && ((u.core && u.core.name) || (u.legacy && u.legacy.name))) || sn, image: media ? media.media_url_https : null,
+                   video: all.some(m => m.type === 'video'),   // news/media.py: an official post with a video can be a goal clip
                    url: `https://x.com/${sn}/status/${L.id_str || o.rest_id}` });
       }
       return;   // a quoted post inside is someone else's

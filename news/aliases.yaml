@@ -46,6 +46,85 @@ teams:
   راقصو السامبا: Brazil
   التانغو: Argentina
 
+# The spellings official channels write in video titles (news/media.py only; the journal's linker does not read this block).
+# Checked against Arryadia, UAE Pro League and beIN uploads, 2026-09-30.
+media_teams:
+  Difaâ Hassani El Jadidi: Difaâ El Jadida
+  الدفاع الجديدي: Difaâ El Jadida
+  COD Meknès: CODM Meknès
+  CODM: CODM Meknès
+  المغرب الفاسي: MAS Fès
+  Maghreb Fès: MAS Fès
+  حسنية أكادير: Hassania Agadir
+  Hassania Union Sport Agadir: Hassania Agadir
+  Kawkab Marrakech: KACM
+  الرجاء البيضاوي: Raja Casablanca
+  الوداد البيضاوي: Wydad Casablanca
+  وداد تمارة: Widad Temara
+  الجيش الملكي: FAR Rabat
+  AS FAR: FAR Rabat
+  اتحاد طنجة: Ittihad Tanger
+  شباب الأهلي دبي: Shabab Al-Ahli Dubai FC
+  اتحاد كلباء: Kalba FC
+  الشارقة الثقافي: Sharjah Cultural Club
+  Sharjah: Sharjah Cultural Club
+  Shabab Al Ahli: Shabab Al-Ahli Dubai FC
+  Al Ain: Al-Ain
+  Al Wahda: Al-Wahda
+  Al Jazira: Al-Jazira
+  Al Wasl: Al-Wasl
+  Al Nasr: Al-Nasr SC
+  Al Dhafra: Al-Dhafra
+  Man City: Manchester City
+  Man Utd: Manchester United
+  Spurs: Tottenham Hotspur
+  Wolves: Wolverhampton Wanderers
+  Nottm Forest: Nottingham Forest
+  Brighton: Brighton & Hove Albion
+  Atlético de Madrid: Atlético Madrid
+  Athletic Bilbao: Athletic Club
+  Alavés: Deportivo Alavés
+  Celta: Celta Vigo
+  RC Celta: Celta Vigo
+  Betis: Real Betis
+  Internazionale: Inter
+  Inter Milan: Inter
+  AC Milan: Milan
+  Bayern Munich: Bayern München
+  FC Bayern: Bayern München
+  Leverkusen: Bayer Leverkusen
+  Gladbach: Borussia Mönchengladbach
+  Frankfurt: Eintracht Frankfurt
+  Stuttgart: VfB Stuttgart
+  Leipzig: RB Leipzig
+  Köln: 1. FC Köln
+  Mainz: Mainz 05
+  PSG: Paris Saint-Germain
+  Paris SG: Paris Saint-Germain
+  Olympique de Marseille: Marseille
+  Olympique Lyonnais: Lyon
+  Stade Rennais: Rennes
+  LOSC: Lille
+  AS Monaco: Monaco
+  RC Lens: Lens
+  OGC Nice: Nice
+  Al Nassr: Al Nassr FC
+  Al Ahli Saudi: Al Ahli
+  Al Ahly: Al Ahly SC
+  Zamalek: Zamalek SC
+  Pyramids: Pyramids FC
+  ENPPI: Al Sharkeyah-ENPPI
+  إنبي: Al Sharkeyah-ENPPI
+  Al Sadd: Al-Sadd
+  Al Duhail: Al-Duhail SC
+  Al Gharafa: Al-Gharafa
+  Al Rayyan: Al-Rayyan
+  Esperance: Espérance
+  Espérance de Tunis: Espérance
+  الترجي: Espérance
+  Etoile Sahel: Etoile du Sahel
+  CR Belouizdad: CR Bélouizdad
+
 # People the press names by a first name or a nickname, written against the dictionary's full Latin name.
 people:
   Cristiano: Cristiano Ronaldo

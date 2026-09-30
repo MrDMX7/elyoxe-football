@@ -349,6 +349,15 @@ The ledger fills as matches finish. A backfill cursor also fetches up to 6 alrea
 - **Upcoming match files:** a scheduled match in the next 7 days with no detail yet gets `match/{id}.json` built from its fixture: the summary, `minimal: true`, empty `events`/`stats`, `lineups: null` and `h2h` from `h2h/{a}-{b}.json`. The prematch and live details replace it.
 - **National teams:** `team/{id}.json` is also written for the 21 other Arab national teams (the same object as `national/{id}/team.json`: squad, every fixture including friendlies). `arabs/national.json` next/last matches take home/away, status and score from our tracked fixtures when we have the match. A finished match in a national competition re-runs the national step (Elo, Gulf Cup/Asian Cup simulations, archives) within 10 minutes instead of daily, and a finished match of a focus team refreshes its team file.
 
+## Official videos (`news/media.py`, a step of the journal, every 15 min on the Fold)
+
+| file | content | refresh |
+|---|---|---|
+| `media/{match}.json` | `{generated, match, highlights: [video], goals: {"<minute>-<playerId>": [video]}}`; `video` = `{id, url, title, source ("youtube"/"x"), channel (Arabic name), published, image, embed (false = open on the platform), vertical (a Short), lang, conf, found_by ("tifo"/"fotmob")}`, best first. The goal key is the event's `minute` (without `added`) and `player.id`, the same key the match page puts on the goal row (`data-goal-key`) | written only when it changes, while the match is live or finished less than 48 h ago; no file = nothing found |
+| `media/recent.json` | `{generated, matches: [{id, comp, kickoff_utc, status, score, home, away, highlights, goals}]}` for the followed matches that have a video | same |
+
+Only official channels (`news/sources.yaml` `media:` + the journal's `youtube:` and official X accounts) and FotMob's own `highlights`/event `clip` links. How a video is matched: news/README.md step 7.
+
 ## Not available (checked 2026-09-26)
 
 | item | status |
