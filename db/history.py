@@ -1,4 +1,4 @@
-"""Every club's full history (owner 2026-09-30: «الداتا بيس لكل الاندية العالمية… كلها»), stage 1: results since 1888.
+"""Every club's full history (owner 2026-09-30: «الداتا بيس لكل الاندية العالمية… كلها»), stage 1: results since 1888 (England: every division and both cups).
 
     python -m db.history [--upload] [--club 8456]
 
@@ -70,6 +70,36 @@ def crosswalk(con):
     return {int(fm): sk for fm, sk, n in rows}
 
 
+ENG = "https://raw.githubusercontent.com/jalapic/engsoccerdata/master/data-raw/"
+ENG_COMPS = {"eng:2": "الدرجة الثانية الإنجليزية", "eng:3": "الدرجة الثالثة الإنجليزية", "eng:4": "الدرجة الرابعة الإنجليزية",
+             "facup": "كأس الاتحاد الإنجليزي", "leaguecup": "كأس الرابطة الإنجليزية"}
+
+
+def eng_matches():
+    """England beyond the top flight, from jalapic/engsoccerdata (GPL; the owner allows every source): divisions 2-4
+    since 1892, the FA Cup since 1871 and the League Cup since 1960. {folded club name: [[date, opp name, home, gf, ga, comp]]}.
+    The top flight is left out: the main dataset already has it."""
+    import csv, io, re, unicodedata
+    fold = lambda x: re.sub(r"[^a-z0-9]+", " ", re.sub(r"(fc|afc)", " ", unicodedata.normalize("NFKD", x or "").encode("ascii", "ignore").decode().lower())).strip()
+    out = defaultdict(list)
+    for f, comp in (("england", None), ("facup", "facup"), ("leaguecup", "leaguecup")):
+        cp = os.path.join(CACHE, f"eng_{f}.csv")
+        if not os.path.exists(cp) or time.time() - os.path.getmtime(cp) > 6 * 86400:
+            open(cp, "wb").write(urllib.request.urlopen(urllib.request.Request(ENG + f + ".csv", headers={"User-Agent": "elyoxe-tifo/0.1"}), timeout=300).read())
+        for r in csv.DictReader(open(cp, encoding="utf-8")):
+            try:
+                hg, vg = int(r["hgoal"]), int(r["vgoal"])
+            except (ValueError, KeyError):
+                continue
+            c = comp or (f"eng:{r['tier']}" if r.get("tier") and r["tier"] != "1" else None)
+            if not c:
+                continue
+            d = r["Date"][:10]
+            out[fold(r["home"])].append([d, r["visitor"], 1, hg, vg, c])
+            out[fold(r["visitor"])].append([d, r["home"], 0, vg, hg, c])
+    return out, fold
+
+
 INTL = {"UEFA CL": "دوري أبطال أوروبا", "UEFA EL": "الدوري الأوروبي", "UEFA CONF L": "دوري المؤتمر الأوروبي", "UEFA SC": "كأس السوبر الأوروبي",
         "UEFA ITC": "كأس إنترتوتو", "Copa Lib": "كأس ليبرتادوريس", "Copa Sud": "كوبا سود أمريكانا", "Recopa": "ريكوبا", "CAF CL": "دوري أبطال أفريقيا",
         "CAF CC": "كأس الكونفدرالية الأفريقية", "CAF SC": "كأس السوبر الأفريقي", "AFC CL": "دوري أبطال آسيا", "AFC Pokal": "كأس الاتحاد الآسيوي",
@@ -106,6 +136,8 @@ def main(argv=None):
     global COMPS_AR
     COMPS_AR = {c["id"]: c.get("name_ar") for c in ((store.get_json("index.json") or {}).get("competitions") or []) if c.get("id")}
 
+    ENGM, efold = eng_matches()
+    eng_sk = {efold(r[0].rsplit(" (", 1)[0]): r[0] for r in con.execute("select distinct home_ident from g where home_ident like '%(England)'").fetchall()}
     targets = [a.club] if a.club else sorted(cw)
     index = {}
     for fid in targets:
@@ -117,6 +149,12 @@ def main(argv=None):
         for d, hi, ai, gh, ga, comp, lvl in rows:
             home = hi == sk; opp = ai if home else hi
             ms.append([d.isoformat(), key_of.get(opp) or "s:" + opp, 1 if home else 0, gh if home else ga, ga if home else gh, comp or "league"])
+        # English clubs: the lower divisions and the two cups (opponents linked through the main dataset's names)
+        if sk.endswith("(England)"):
+            for d, oname, h, gf, ga, comp in ENGM.get(efold(sk.rsplit(" (", 1)[0]), []):
+                osk = eng_sk.get(efold(oname))
+                ms.append([d, key_of.get(osk) or ("s:" + osk if osk else "e:" + oname), h, gf, ga, comp])
+            ms.sort(key=lambda m: m[0])
         # after the dataset's last date: our own FotMob archive (every covered competition)
         for mid, d, comp, h, aw, gh, ga in con.execute("select * from fm where (h = ? or a = ?) and date > ? order by date", [fid, fid, last]).fetchall():
             home = h == fid
@@ -134,12 +172,14 @@ def main(argv=None):
         for o in opp:
             if o.startswith("s:"):
                 names[o] = o[2:].rsplit(" (", 1)[0]
+            elif o.startswith("e:"):
+                names[o] = o[2:]
             else:
                 t = teams.get(o) or {}
                 names[o] = t.get("name_ar") or t.get("name") or o
         comps = {}
         for c in by_comp:
-            comps[c] = INTL.get(c) or (COMPS_AR.get(int(c[3:])) if c.startswith("fm:") else "الدوري")
+            comps[c] = INTL.get(c) or ENG_COMPS.get(c) or (COMPS_AR.get(int(c[3:])) if c.startswith("fm:") else "الدوري")
         doc = {"club": fid, "key": sk, "name": (teams.get(str(fid)) or {}).get("name"), "since": ms[0][0], "until": ms[-1][0],
                "total": tot, "by_comp": by_comp, "by_decade": dict(sorted(by_dec.items())),
                "opponents": sorted(([k, v["p"], v["w"], v["d"], v["l"], v["gf"], v["ga"], v["last"]] for k, v in opp.items()), key=lambda x: -x[1]),
