@@ -305,6 +305,32 @@
     var live = R.isLive(m), mid = live ? '<span class="dg">' + (m.score ? sc(m.score) : "0 - 0") + "</span>" + R.minute(m) : m.score ? '<span class="dg">' + sc(m.score) + "</span>" + R.statusText(m) : '<span class="dg">' + R.tt(m.kickoff_uae) + "</span>" + R.td(m.kickoff_uae, true);
     return '<a class="h" href="/m/' + m.id + '/">' + R.logo(m.home) + "<span>" + R.tname(m.home) + '</span></a><a class="mid' + (live ? " live" : "") + '" href="/m/' + m.id + '/">' + mid + '</a><a class="a" href="/m/' + m.id + '/"><span>' + R.tname(m.away) + "</span>" + R.logo(m.away) + "</a>";
   };
+  // the player's EA SPORTS FC 27 card (db/eafc.py): [overall, position, [6 face stats], skill moves, weak foot, foot, [29 attributes],
+  // [PlayStyles], EA id, EA team, goalkeeper, [5 goalkeeping attributes]]
+  var EA_FACE = ["السرعة", "التسديد", "التمرير", "المراوغة", "الدفاع", "البدنية"], EA_GKF = ["الارتماء", "الإمساك", "ركل الكرة", "ردة الفعل", "السرعة", "التمركز"];
+  var EA_ATTR = ["التسارع", "السرعة القصوى", "التمركز الهجومي", "إنهاء الهجمات", "قوة التسديد", "التسديد البعيد", "الكرات الطائرة", "ضربات الجزاء", "الرؤية", "العرضيات",
+    "الركلات الحرة", "التمرير القصير", "التمرير الطويل", "الانحناء", "الرشاقة", "التوازن", "ردة الفعل", "التحكم بالكرة", "المراوغة", "الهدوء", "قطع الكرات", "الرأسيات",
+    "الوعي الدفاعي", "الافتكاك", "التدخل الانزلاقي", "القفز", "التحمّل", "القوة", "الشراسة"];
+  var EA_GROUPS = [["السرعة", 0, 2], ["التسديد", 2, 8], ["التمرير", 8, 14], ["المراوغة", 14, 20], ["الدفاع", 20, 25], ["البدنية", 25, 29]];
+  var EA_GK = ["الارتماء", "الإمساك", "ركل الكرة", "ردة الفعل", "التمركز"];
+  var EA_PS = { "Aerial Fortress":"حصن الكرات العالية", "Technical":"تقني", "Long Ball Pass":"الكرات الطويلة", "Intercept":"قطع الكرات", "Rapid":"سريع", "Precision Header":"الرأسية الدقيقة",
+    "Finesse Shot":"التسديدة الملتفة", "Slide Tackle":"التدخل الانزلاقي", "Whipped Pass":"العرضية المقوّسة", "Quick Step":"الانطلاقة السريعة", "Incisive Pass":"التمريرة القاتلة",
+    "Anticipate":"قراءة اللعب", "Relentless":"ما يتعب", "Block":"صد التسديدات", "Bruiser":"قوي في الالتحام", "Jockey":"المراقبة اللصيقة", "Press Proven":"يتحمّل الضغط",
+    "Long Throw":"رمية التماس الطويلة", "Inventive":"مبتكر", "First Touch":"اللمسة الأولى", "Dead Ball":"الكرات الثابتة", "Footwork":"حركة القدمين", "Low Driven Shot":"التسديدة الأرضية",
+    "Gamechanger":"صانع الفارق", "Enforcer":"صاحب الهيبة", "Power Shot":"التسديدة القوية", "Cross Claimer":"صيّاد العرضيات", "Far Throw":"الرمية البعيدة", "Pinged Pass":"التمريرة المشدودة",
+    "Tiki Taka":"تيكي تاكا", "Acrobatic":"الأكروبات", "Chip Shot":"اللوب", "Trickster":"الحيل", "Deflector":"مبعد الكرات", "Rush Out":"الخروج من المرمى", "Far Reach":"الامتداد الطويل" };
+  R.eaCard = function(c){
+    if (!c || !c[0]) return "";
+    var gk = c[10], face = gk ? EA_GKF : EA_FACE, stars = function(n){ n = +n || 0; return '<span class="eas" aria-label="' + n + ' من 5">' + "★★★★★".slice(0, n) + '<i>' + "★★★★★".slice(n) + "</i></span>"; };
+    var bar = function(label, v){ return "<li><span>" + label + '</span><i style="--w:' + (+v || 0) + '%"></i><b class="num">' + (v == null ? "—" : v) + "</b></li>"; };
+    var ps = (c[7] || []).map(function(p){ var plus = /\+$/.test(p), k = p.replace(/\+$/, ""); return '<span class="eap' + (plus ? " plus" : "") + '">' + esc(EA_PS[k] || k) + (plus ? "+" : "") + "</span>"; }).join("");
+    var all = gk ? '<ul class="bars eab">' + EA_GK.map(function(l, i){ return bar(l, (c[11] || [])[i]); }).join("") + "</ul>" :
+      EA_GROUPS.map(function(g){ return "<h4>" + g[0] + '</h4><ul class="bars eab">' + EA_ATTR.slice(g[1], g[2]).map(function(l, i){ return bar(l, (c[6] || [])[g[1] + i]); }).join("") + "</ul>"; }).join("");
+    return '<section class="blk eac"><h2>في EA SPORTS FC 27</h2><div class="eag"><div class="eao"><b class="num">' + c[0] + '</b><span>' + esc(c[1] || "") + '</span></div><ul class="bars eab">' +
+      face.map(function(l, i){ return bar(l, (c[2] || [])[i]); }).join("") + "</ul></div>" +
+      '<p class="muted small">المهارات ' + stars(c[3]) + " · القدم الضعيفة " + stars(c[4]) + (c[5] ? " · يلعب " + (c[5] === 2 ? "باليسرى" : "باليمنى") : "") + "</p>" +
+      (ps ? '<p class="eaps">' + ps + "</p>" : "") + "<details><summary>كل الخصائص</summary>" + all + "</details>" + '<p class="src">التقييم من EA SPORTS FC 27' + (c[9] ? " (" + esc(c[9]) + ")" : "") + ".</p></section>";
+  };
   R.UAE_COMPS = UAE_COMPS;
   if (typeof module !== "undefined" && module.exports) module.exports = R; else root.TR = R;
 })(this);

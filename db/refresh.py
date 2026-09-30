@@ -6,7 +6,8 @@ daily 04:30; StartWhenAvailable catches up after the laptop was off); each stage
 
 Stages and cadence (days): Transfermarkt transfers + maps 7 · club histories 7 · club cards 7 · champions (Wikidata, then
 Wikipedia) 7 · season scorers 7 · Understat 7 · national Elo 1 · FIFA ranking 30 · UEFA coefficients 30 · photos 30 ·
-Messi museum data 7 · FotMob club and player profiles 7 · FotMob season leaders 7 · world encyclopedia 14.
+Messi museum data 7 · FotMob club and player profiles 7 · FotMob season leaders 7 · world encyclopedia 14 · every match since 2010 1 ·
+365Scores (champions of ~640 competitions, Arab final tables, the Arab leagues FotMob lacks) 1 · EA FC ratings 7.
 """
 import argparse, json, os, subprocess, sys, time
 from datetime import datetime, timezone
@@ -31,8 +32,10 @@ STAGES = [   # name, module, args, every (days)
     ("messi_extra", "history.messi_extra", ["--upload"], 7),
     ("fotmob_profiles", "db.fotmob_profiles", ["--upload"], 7),     # every site club and squad player complete (FotMob)
     ("fm_scorers", "db.fm_scorers", ["--upload"], 7),               # season leaders for every competition (after scorers)
-    ("world", "db.world", ["--upload", "--players"], 14),
-    ("matches", "db.matches", ["--upload"], 1),                     # new finished matches in detail, then every player's log           # the world encyclopedia: ~300 leagues, their clubs and players
+    ("world", "db.world", ["--upload", "--players"], 14),           # the world encyclopedia: ~300 leagues, their clubs and players
+    ("matches", "db.matches", ["--upload"], 1),                     # new finished matches in detail, then every player's log
+    ("s365", "db.scores365", ["--upload"], 1),
+    ("eafc", "db.eafc", ["--upload"], 7),                            # EA SPORTS FC ratings on the player pages (the feed is refetched every 30 days)                      # 365Scores: champions of ~640 competitions, Arab tables, the Arab leagues FotMob lacks
 ]
 
 
