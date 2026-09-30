@@ -410,24 +410,27 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   for (const [k, v] of Object.entries(FILL)){ const b = FMP[k]; if (!b) continue; for (const f of ["h", "foot", "contract", "mv", "shirt"]) if (b[f] == null && v[f] != null) b[f] = v[f]; }
   const FOOT = { left:"اليسرى", right:"اليمنى", both:"الثنتين" }, SURF = { grass:"عشب طبيعي", "artificial turf":"عشب صناعي", artificial:"عشب صناعي", hybrid:"عشب هجين" };
   const pbio = id => { const b = FMP[id]; if (!b) return "";
-    const age = b.born ? Math.floor((Date.now() - Date.parse(b.born)) / 31557600000) : null;
+    // a birth date before 1900 is FotMob's placeholder (0001-01-01), not a date: no age from it (audit 2026-09-30: 190 pages said «العمر 2025 سنة»)
+    const born = b.born && b.born >= "1900" ? b.born : null, age = born ? Math.floor((Date.now() - Date.parse(born)) / 31557600000) : null;
     const rows = [b.pos && ["المركز", esc(b.pos) + (b.pos2 && b.pos2.length ? `<span class="muted small"> · ${esc(b.pos2.filter(Boolean).join("، "))}</span>` : "")],
-      b.born && ["العمر", `<span class="num">${age}</span> سنة <span class="muted small num">${esc(b.born)}</span>`], b.h && ["الطول", `<span class="num">${b.h}</span> سم`],
+      born && ["العمر", `<span class="num">${age}</span> سنة <span class="muted small num">${esc(born)}</span>`], b.h && ["الطول", `<span class="num">${b.h}</span> سم`],
       b.foot && ["القدم", FOOT[b.foot] || esc(b.foot)], b.cc && ["الجنسية", esc((FMN.countries || {})[b.cc] || b.cc)], b.shirt && ["الرقم", `<span class="num">${b.shirt}</span>`],
       b.mv && ["القيمة السوقية", eur(b.mv)], b.contract && ["نهاية العقد", `<span class="num">${esc(b.contract.slice(0, 7))}</span>`], b.loan && ["الحالة", "معار"]].filter(Boolean);
     return rows.length ? `<dl class="pbio">${rows.map(r => `<div><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`).join("")}</dl>` : ""; };
   const fmcard = id => { const c = FMT[id]; if (!c && !T365[id]) return "";
     const v = c && c.venue, wst = CCARD[id] && CCARD[id].stadium;
     const TRN = { "presidents cup":"كأس رئيس الدولة", "president's cup":"كأس رئيس الدولة", "agcff gulf champions league":"دوري أبطال الخليج للأندية", "gulf club champions cup":"كأس الخليج للأندية",
-      "cup":"الكأس", "league cup":"كأس الرابطة", "super cup":"السوبر", "federation cup":"كأس الاتحاد", "crown prince cup":"كأس ولي العهد", "king cup":"كأس الملك", "emir cup":"كأس الأمير" };
-    const tro0 = ((c && c.trophies) || []).filter(t => t.won > 0).map(t => { const ch = CHAMPS[+t.lid], mine = ch ? ch.champions.filter(r => r[3] === id).map(r => r[0]) : [];
-      const name = /[\u0600-\u06FF]/.test(t.name || "") ? t.name : (TRN[String(t.name || "").toLowerCase()] || t.name);
-      return mine.length > t.won ? Object.assign({}, t, { name, won:mine.length, seasons:mine.slice().reverse(), src:"champions" }) : Object.assign({}, t, { name }); }).sort((a, b) => b.won - a.won);
-    const t365 = T365[id] || [], n365 = t365.reduce((a, x) => a + x[2].length, 0), use365 = n365 > tro0.reduce((a, t) => a + t.won, 0);
-    const tro = use365 ? t365.map(x => ({ name:x[1], won:x[2].length, seasons:x[2], cid:x[0] })) : tro0;
+      "cup":"الكأس", "league cup":"كأس الرابطة", "super cup":"السوبر", "federation cup":"كأس الاتحاد", "crown prince cup":"كأس ولي العهد", "king cup":"كأس الملك", "emir cup":"كأس الأمير",
+      "gulf cup of nations":"كأس الخليج" };
+    // titles per competition (audit 2026-09-30): 365Scores' count for every competition 365 lists for the club, FotMob's for the
+    // ones it doesn't (R.mergeTitles in src/render.js, shared with the encyclopedia). Our champions lists no longer raise a count
+    // (they gave Al Ahli Jeddah 9 league titles for 3 and Zamalek 20 for 15), and the bigger total no longer wins wholesale
+    // (that dropped FotMob-only titles such as Al Ain's 2001 Gulf Club Champions Cup).
+    const fm0 = ((c && c.trophies) || []).filter(t => t.won > 0).map(t => Object.assign({}, t, { name:/[\u0600-\u06FF]/.test(t.name || "") ? t.name : (TRN[String(t.name || "").toLowerCase()] || t.name) }));
+    const tro = R.mergeTitles(fm0, T365[id] || [], L365), use365 = tro.some(t => t.src === "365"), withFm = use365 && tro.some(t => t.src === "fm");
     const facts = v && v.name ? [`الملعب ${esc((wst && wst.ar) || v.name)}`, v.capacity && `<span class="num">${Number(v.capacity).toLocaleString("en")}</span> متفرج`, v.opened && `افتُتح <span class="num">${esc(String(v.opened))}</span>`,
       v.surface && SURF[String(v.surface).toLowerCase()], v.lat != null && `<a href="https://www.openstreetmap.org/?mlat=${v.lat}&mlon=${v.lon}#map=16/${v.lat}/${v.lon}" rel="noopener">على الخريطة</a>`].filter(Boolean) : [];
-    return (facts.length ? `<p class="fmv">${facts.join(" · ")}</p>` : "") + (tro.length ? `<h3>ألقابه (<span class="num">${tro.reduce((a, t) => a + t.won, 0)}</span>)</h3><ul class="chon">${tro.map(t => `<li><b>${t.cid ? `<a href="${lgUrl(t.cid)}">${esc(t.name || "")}</a>` : esc(t.name || "")}</b> <span class="num">${t.won}</span><span class="muted small yrs">${esc(t.seasons.join("، "))}${t.runnerup ? ` · وصيف ${t.runnerup} مرات` : ""}</span></li>`).join("")}</ul><p class="src">${use365 ? `الألقاب من 365Scores، كل بطولة من أول موسم لها${facts.length ? "، والملعب من FotMob" : ""}. <a href="/db/team/?id=${M365[id]}">كل ألقابه في الموسوعة</a>` : "الألقاب والملعب من FotMob"}.</p>` : ""); };
+    return (facts.length ? `<p class="fmv">${facts.join(" · ")}</p>` : "") + (tro.length ? `<h3>ألقابه (<span class="num">${tro.reduce((a, t) => a + t.won, 0)}</span>)</h3><ul class="chon">${tro.map(t => `<li><b>${t.cid ? `<a href="${lgUrl(t.cid)}">${esc(t.name || "")}</a>` : esc(t.name || "")}</b> <span class="num">${t.won}</span><span class="muted small yrs">${esc(t.seasons.join("، "))}${t.runnerup ? ` · وصيف ${t.runnerup} مرات` : ""}</span></li>`).join("")}</ul><p class="src">${use365 ? `الألقاب من 365Scores، كل بطولة من أول موسم لها${withFm ? "، واللي ما عنده من FotMob" : ""}${facts.length ? "، والملعب من FotMob" : ""}. <a href="/db/team/?id=${M365[id]}">كل ألقابه في الموسوعة</a>` : "الألقاب والملعب من FotMob"}.</p>` : ""); };
   // the club's identity card from Wikidata (db/clubs.py): founded, stadium, city, nickname, every title by competition
   const CCARD = ((await get("history/clubs.json")) || {}).clubs || {};
   const UEFAIDX = new Set((((await get("history/uefa/index.json")) || {}).clubs) || []);   // clubs with a UEFA ranking history (db/uefa.py)
@@ -438,26 +441,41 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   const S365 = (await get("s365/fm.json")) || {}, T365 = S365.titles || {}, C365 = S365.comps || {}, M365 = S365.teams || {};
   const S365I = (await get("s365/index.json")) || {}, LG365 = new Set((S365I.comps || []).filter(c => c[5] >= 5 && !c[11]).map(c => c[0]));
   const lgUrl = id => LG365.has(+id) ? `/db/league/${id}/` : `/db/league/?id=${id}`, SID2F = Object.fromEntries(Object.entries(M365).map(([f, s]) => [s, +f]));
-  const champ365 = id => { const x = C365[id], rows = x.champions.filter(r => r[1]);
-    const nm = r => r[2] && S_TEAMS[r[2]] ? `<a href="/t/${r[2]}/">${esc(S_TEAMS[r[2]].name_ar || r[1])}</a>` : `<a href="/db/team/?id=${r[4]}">${esc(r[1])}</a>`;
-    const cnt = new Map(); rows.forEach(r => { const e = cnt.get(r[4]) || { r, n:0 }; e.n++; cnt.set(r[4], e); });
-    const top = [...cnt.values()].sort((a, b) => b.n - a.n).slice(0, 10), mx = top.length ? top[0].n : 1;
-    return `<ul class="bars">${top.map(e => `<li><span>${nm(e.r)}</span><i style="--w:${Math.round(e.n / mx * 100)}%"></i><b class="num">${e.n}</b></li>`).join("")}</ul>
-<details class="chl"><summary>كل الأبطال من <span class="num">${esc(rows[rows.length - 1][0])}</span> (<span class="num">${rows.length}</span>)</summary><ol class="mlist cols">${rows.map(r => `<li><span class="num">${esc(r[0])}</span> ${nm(r)}</li>`).join("")}</ol></details>
-<p class="src">المصدر: 365Scores. <a href="${lgUrl(x.id)}">صفحة الأبطال كاملة</a> فيها كل موسم${x.cols && x.cols.length ? " بنقاطه" : ""}.</p>`; };
+  const L365 = Object.fromEntries(Object.entries(C365).map(([f, x]) => [f, x.id]));   // FotMob competition id -> 365's, for R.mergeTitles
+  // a season's END year from a title: «2019/2020» and «2019-20» -> 2020, «الإمارات 2021» -> 2021, «خليجي 26» -> null (db/champions.py end_year)
+  const endYear = s => { const t = String(s == null ? "" : s), m = t.match(/(\d{4})\s*[\/\-–]\s*(\d{4}|\d{2})(?!\d)/);
+    if (m){ const a = +m[1], b = m[2].length === 4 ? +m[2] : Math.floor(a / 100) * 100 + +m[2]; return b < a ? b + 100 : b; }
+    const y = t.match(/\d{4}/g); return y ? +y[y.length - 1] : null; };
+  // a competition's champions (audit 2026-09-30): 365Scores season by season; our list (db/champions.py + db/champions_wiki.py)
+  // only fills the seasons 365 lacks inside 365's span — never before its first season, never a season it lists with no winner,
+  // never when its seasons name no year («خليجي 26»). The longer list used to win outright, and ours was longer because of
+  // duplicated and misplaced seasons (UAE league: «2020 شباب الأهلي», Shabab Al Ahli 13 titles for 9).
+  // -> [{y, t (season as written), name, fid, sid (365 team), key, ours («wd» | «wiki» | «table») for our rows}], newest first
+  const champRows = id => { const x = C365[id], d = CHAMPS[id];
+    const ours = r => ({ y:+r[0], t:String(r[0]), name:r[2] || String(r[1]).replace(/^w:/, ""), fid:r[3], sid:null, key:r[3] ? "f" + r[3] : "q" + r[1], ours:r[4] || "wd" });
+    if (!x) return d ? d.champions.map(ours).sort((a, b) => b.y - a.y) : [];
+    const all = x.champions.map(r => ({ y:endYear(r[0]), t:r[0], name:r[1], fid:r[2], sid:r[4], key:r[2] ? "f" + r[2] : "s" + r[4], won:!!r[1] }));
+    const rows = all.filter(r => r.won);
+    if (d && all.length && all.every(r => r.y)){ const first = Math.min(...all.map(r => r.y)), have = new Set(all.map(r => r.y));
+      for (const r of d.champions) if (+r[0] >= first && !have.has(+r[0])) rows.push(ours(r)); }
+    return rows.sort((a, b) => (b.y || 0) - (a.y || 0)); };
+  // 365's champion of each season by end year for «الدوري موسم بموسم»: [FotMob id, name], or null for a season 365 lists with no
+  // winner (UAE 2019–20). The computed table's leader stays for the seasons 365 doesn't have (src/stats.js S.seasons).
+  const realChamps = id => { const x = C365[id]; if (!x) return null; const o = {};
+    for (const r of x.champions){ const y = endYear(r[0]); if (y) o[y] = r[1] ? [r[2], r[1]] : null; } return o; };
   // every season's top scorer and top assister since 2012 (db/scorers.py, Transfermarkt)
   const SCORERS = {}; await pool(comps.map(c => c.id), 8, async id => { const d = await get(`history/scorers/${id}.json`, 1); if (d && d.seasons && Object.keys(d.seasons).length) SCORERS[id] = d; });
   const scorersHtml = id => { const d = SCORERS[id]; if (!d) return "";
     const who = r => r ? (r[0] && allPlayers[r[0]] ? `<a href="/p/${r[0]}/">${esc(r[1])}</a>` : esc(r[1])) + ` <b class="num">${r[2]}</b>` : "—";
     return `<table class="tbl"><thead><tr><th>الموسم</th><th>الهداف</th><th>أكثر واحد صنع</th></tr></thead><tbody>${Object.entries(d.seasons).reverse().map(([s, v]) => `<tr><td class="num">${esc(s)}</td><td>${who(v.goals[0])}</td><td>${who(v.assists[0])}</td></tr>`).join("")}</tbody></table><p class="src">المصدر: Transfermarkt. الأهداف بدون العكسية.</p>`; };
-  const champHtml = id => { const d = CHAMPS[id], x = C365[id];
-    if (x && x.champions.filter(r => r[1]).length >= (d ? d.champions.length : 0)) return champ365(id);
-    if (!d) return "";
-    const nm = (q, name, fid) => fid && S_TEAMS[fid] ? `<a href="/t/${fid}/">${esc(S_TEAMS[fid].name_ar || S_TEAMS[fid].name)}</a>` : esc(name || q);
-    const top = d.counts.slice(0, 10), mx = top.length ? top[0][1] : 1;
-    return `<ul class="bars">${top.map(r => `<li><span>${nm(r[0], r[2], r[3])}</span><i style="--w:${Math.round(r[1] / mx * 100)}%"></i><b class="num">${r[1]}</b></li>`).join("")}</ul>
-<details class="chl"><summary>كل الأبطال من <span class="num">${esc(d.champions[0][0])}</span> (<span class="num">${d.champions.length}</span>)</summary><ol class="mlist cols">${d.champions.slice().reverse().map(r => `<li><span class="num">${esc(r[0])}</span> ${nm(r[1], r[2], r[3])}${r[4] === "table" ? '<span class="muted small"> *</span>' : ""}</li>`).join("")}</ol></details>
-<p class="src">المصدر: ويكي داتا${d.champions.some(r => r[4] === "table") ? "، و* من جدول النقاط في أرشيف تيفو للمواسم اللي ما سجّلها أحد هناك" : ""}. ممكن تنقصها مواسم.</p>`; };
+  const champHtml = id => { const rows = champRows(id), x = C365[id]; if (!rows.length) return "";
+    const star = r => x ? !!r.ours : r.ours === "table";   // under a 365 list, * marks the seasons ours filled
+    const nm = r => r.fid && S_TEAMS[r.fid] ? `<a href="/t/${r.fid}/">${esc(S_TEAMS[r.fid].name_ar || r.name)}</a>` : r.sid ? `<a href="/db/team/?id=${r.sid}">${esc(r.name)}</a>` : esc(r.name || "");
+    const cnt = new Map(); rows.forEach(r => { const e = cnt.get(r.key) || { r, n:0 }; e.n++; cnt.set(r.key, e); });
+    const top = [...cnt.values()].sort((a, b) => b.n - a.n).slice(0, 10), mx = top.length ? top[0].n : 1, filled = rows.some(star);
+    return `<ul class="bars">${top.map(e => `<li><span>${nm(e.r)}</span><i style="--w:${Math.round(e.n / mx * 100)}%"></i><b class="num">${e.n}</b></li>`).join("")}</ul>
+<details class="chl"><summary>كل الأبطال من <span class="num">${esc(rows[rows.length - 1].t)}</span> (<span class="num">${rows.length}</span>)</summary><ol class="mlist cols">${rows.map(r => `<li><span class="num">${esc(r.t)}</span> ${nm(r)}${star(r) ? '<span class="muted small"> *</span>' : ""}</li>`).join("")}</ol></details>
+<p class="src">${x ? `المصدر: 365Scores${filled ? "، و* مواسم ما عنده من ويكي داتا وويكيبيديا" : ""}. <a href="${lgUrl(x.id)}">صفحة الأبطال كاملة</a> فيها كل موسم${x.cols && x.cols.length ? " بنقاطه" : ""}.` : `المصدر: ويكي داتا وويكيبيديا${filled ? "، و* من جدول النقاط في أرشيف تيفو للمواسم اللي ما سجّلها أحد هناك" : ""}. ممكن تنقصها مواسم.`}</p>`; };
   const ccard = id => { const c = CCARD[id]; if (!c) return "";
     // friendlies, youth and reserve cups are out; a title listed twice (the same years under two items, e.g. «First Division» and
     // «Football League») counts once
@@ -537,7 +555,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
       (ratedL.length >= 3 ? pane("lead", "rated", R.leaders({ lists:{ rated:ratedL } }, "rated") + `<p class="src">متوسط تقييم FotMob للاعبين اللي لعبوا ${pMin} دقيقة أو أكثر.</p>`) : "") +
       (keepL.length >= 2 ? pane("lead", "keepers", R.leaders({ lists:{ keepers:keepL } }, "keepers") + `<p class="src">الرقم = مباريات بشباك نظيفة، للحراس اللي لعبوا ${pMin} دقيقة أو أكثر.</p>`) : "") : "";
     const derb = c.id === 538 ? S.derbyList(h2hIdx, H2H) : "";
-    const histSecs = blocks((x["champion-path"] ? (h => h ? S.sec("طريق البطل", "", h) : "")(S.championPath(x["champion-path"])) : "") + (ATS[c.id] ? S.sec("الهدافين التاريخيين", "", S.alltimeScorers(ATS[c.id])) : "") + (h => h ? S.sec("الجدول التاريخي", "من " + esc((x["alltime-table"] || {}).since || ""), h) : "")(S.alltimeTable(x["alltime-table"])) + (h => h ? S.sec("الدوري موسم بموسم", "", h) : "")(S.seasons(x.seasons, c.season)) + (h => h ? S.sec("الصاعدين هالموسم", "", h) : "")(S.promoted(x.promoted)) + (x.alltime ? S.sec("تاريخ الدوري", "من 1973", S.alltime(x.alltime)) : "") + (derb ? S.sec("سجل المواجهات بين الأندية", "", derb) : "") + (CHAMPS[c.id] || C365[c.id] ? S.sec("الأبطال عبر التاريخ", "", champHtml(c.id)) : "") + (SCORERS[c.id] ? S.sec("هدّاف كل موسم", "من " + Object.keys(SCORERS[c.id].seasons)[0].slice(0, 4), scorersHtml(c.id)) : "") + (x.records && x.records.chases && x.records.chases.length ? S.sec("أرقام قياسية على المحك", "", S.records(x.records)) : "") + (x["records-book"] ? S.sec("كتاب الأرقام القياسية", "من " + esc(x["records-book"].since || ""), S.recordsBook(x["records-book"])) : "") + (allTime ? S.sec(allTime[1], "", allTime[2], "n-coaches") : "")).secs;
+    const histSecs = blocks((x["champion-path"] ? (h => h ? S.sec("طريق البطل", "", h) : "")(S.championPath(x["champion-path"])) : "") + (ATS[c.id] ? S.sec("الهدافين التاريخيين", "", S.alltimeScorers(ATS[c.id])) : "") + (h => h ? S.sec("الجدول التاريخي", "من " + esc((x["alltime-table"] || {}).since || ""), h) : "")(S.alltimeTable(x["alltime-table"])) + (h => h ? S.sec("الدوري موسم بموسم", "", h) : "")(S.seasons(x.seasons, c.season, realChamps(c.id))) + (h => h ? S.sec("الصاعدين هالموسم", "", h) : "")(S.promoted(x.promoted)) + (x.alltime ? S.sec("تاريخ الدوري", "من 1973", S.alltime(x.alltime)) : "") + (derb ? S.sec("سجل المواجهات بين الأندية", "", derb) : "") + (h => h ? S.sec("الأبطال عبر التاريخ", "", h) : "")(champHtml(c.id)) + (SCORERS[c.id] ? S.sec("هدّاف كل موسم", "من " + Object.keys(SCORERS[c.id].seasons)[0].slice(0, 4), scorersHtml(c.id)) : "") + (x.records && x.records.chases && x.records.chases.length ? S.sec("أرقام قياسية على المحك", "", S.records(x.records)) : "") + (x["records-book"] ? S.sec("كتاب الأرقام القياسية", "من " + esc(x["records-book"].since || ""), S.recordsBook(x["records-book"])) : "") + (allTime ? S.sec(allTime[1], "", allTime[2], "n-coaches") : "")).secs;
     const tl = [has.table && ["table", "الترتيب"], ["fixtures", "المباريات"], (numLead || numSecs.length) && ["num", "الأرقام"], (predLead || predSecs.length) && ["pred", "التوقعات"], histSecs.length && ["hist", "التاريخ"]].filter(Boolean);
     const lead = has.table && !st.composite && st.groups.length === 1 ? st.groups[0].rows[0] : null;
     const upcoming = (fx && fx.matches || []).filter(m => m.status === "scheduled" && m.kickoff_utc).sort((a, b) => a.kickoff_utc.localeCompare(b.kickoff_utc))[0];

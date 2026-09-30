@@ -154,10 +154,16 @@
   };
   S.alltime = function(at){
     if (!at || !at.titles_by_club) return "";
-    var clubs = Object.keys(at.titles_by_club).sort(function(a, b){ return at.titles_by_club[b] - at.titles_by_club[a]; }), max = at.titles_by_club[clubs[0]];
-    var idOf = {}; (at.champions || []).forEach(function(c){ if (c.champion_id) idOf[c.champion] = c.champion_id; });
-    var titles = '<div class="thermo">' + clubs.map(function(c){ var n = at.titles_by_club[c], id = idOf[c]; return '<div class="th1"><span class="who">' + (id ? tl(id) : '<span class="lat">' + esc(c) + "</span>") + '</span><span class="tbar"><i style="inline-size:' + (n / max * 100) + "%;background:" + (id ? R.col(id) : "var(--stone)") + '"></i></span><b class="num">' + n + "</b></div>"; }).join("") + "</div>";
-    var champs = '<details class="more"><summary>كل الأبطال من ' + esc(at.champions[0].season) + "</summary><ol class=\"lead\">" + at.champions.slice().reverse().map(function(c){ return '<li><span class="num muted">' + esc(c.season) + '</span><span class="who">' + (c.cancelled ? '<span class="muted">' + esc(c.cancelled) + "</span>" : c.champion_id ? tl(c.champion_id) : esc(c.champion_ar || c.champion)) + "</span><b></b></li>"; }).join("") + "</ol></details>";
+    // audit 2026-09-30: a cancelled season (alltime.yaml «cancelled: true») printed «true»; a club the site has no page for
+    // (Al Shabab, 102115) printed an empty name; and Al Ahli's 7 titles and Shabab Al Ahli's 2 stood as two bars with one name,
+    // though the note below counts them as one club. Bars now add up per club the site knows.
+    var idOf = {}, arOf = {}; (at.champions || []).forEach(function(c){ if (c.champion_id) idOf[c.champion] = c.champion_id; if (c.champion_ar) arOf[c.champion] = c.champion_ar; });
+    var known = function(id){ var t = id && T[id]; return !!(t && (t.name_ar || t.name)); };
+    var who = function(id, name){ return known(id) ? tl(id) : arOf[name] ? esc(arOf[name]) : '<span class="lat">' + esc(name) + "</span>"; };
+    var by = {}; Object.keys(at.titles_by_club).forEach(function(c){ var id = idOf[c], k = known(id) ? "i" + id : "n" + c; (by[k] = by[k] || { c:c, id:known(id) ? id : null, n:0 }).n += at.titles_by_club[c]; });
+    var bars = Object.keys(by).map(function(k){ return by[k]; }).sort(function(a, b){ return b.n - a.n; }), max = bars.length ? bars[0].n : 1;
+    var titles = '<div class="thermo">' + bars.map(function(b){ return '<div class="th1"><span class="who">' + who(b.id, b.c) + '</span><span class="tbar"><i style="inline-size:' + (b.n / max * 100) + "%;background:" + (b.id ? R.col(b.id) : "var(--stone)") + '"></i></span><b class="num">' + b.n + "</b></div>"; }).join("") + "</div>";
+    var champs = '<details class="more"><summary>كل الأبطال من ' + esc(at.champions[0].season) + "</summary><ol class=\"lead\">" + at.champions.slice().reverse().map(function(c){ return '<li><span class="num muted">' + esc(c.season) + '</span><span class="who">' + (c.cancelled ? '<span class="muted">' + (c.cancelled === true ? "ما اكتمل الموسم" : esc(c.cancelled)) + "</span>" : c.champion_id ? who(c.champion_id, c.champion) : esc(c.champion_ar || c.champion)) + "</span><b></b></li>"; }).join("") + "</ol></details>";
     var sc = (at.top_scorers_all_time || []).slice(0, 10);
     return "<h3>البطولات</h3>" + titles + champs + (sc.length ? "<h3>الهدافين التاريخيين</h3><ol class=\"lead\">" + sc.map(function(s){ return '<li><span class="num muted">' + s.rank + '</span><span class="who"><span class="lat">' + esc(s.name) + '</span> <span class="muted small"><bdi dir="ltr">' + esc(s.years) + "</bdi></span></span><b>" + s.goals + "</b></li>"; }).join("") + "</ol>" : "") + '<p class="src">المصادر: <a href="' + esc(at.source.champions_cited_source.replace(/^.*\((.*)\)$/, "$1")) + '" rel="noopener">RSSSF</a> و<a href="' + esc(at.source.wikipedia) + '" rel="noopener">ويكيبيديا</a>. ألقاب «الأهلي» قبل 2017 محسوبة لشباب الأهلي.</p>';
   };
@@ -623,14 +629,22 @@
     if (!m || !m.items) return ""; var ok = m.items.filter(function(x){ return x.scope === "national" || ids.indexOf(+x.team) >= 0; }); if (!ok.length) return "";
     return '<ul class="facts-l">' + ok.map(function(x){ var what = x.stat === "goals" ? "هدف" : "مباراة"; return "<li>" + pl(x.player, x.name) + " يحتاج <b class=\"num\">" + x.needs + "</b> ويوصل " + x.target + " " + what + " " + (x.scope === "national" ? "مع المنتخب" : "مع " + R.tname(team(x.team))) + ' <span class="muted small">(الحين ' + x.now + ")</span></li>"; }).join("") + "</ul>";
   };
-  S.seasons = function(s, cur){
+  // real (build.cjs realChamps, audit 2026-09-30): 365Scores' champion by season end year — [FotMob id, name], or null for a season
+  // 365 lists with no winner. It replaces the computed table's leader, which was no champion in a void season (UAE 2019–20 showed
+  // «شباب الأهلي») or one decided by a play-off (Kuwait 2014–15); the margin, the leader's, is then left blank.
+  S.seasons = function(s, cur, real){
     if (!s || !s.seasons) return ""; var ks = Object.keys(s.seasons).sort().reverse(); if (ks.length < 2) return "";
     var now = s.seasons[cur], line = now && (now.avg_age || now.foreign_share_pct) ? "<p>هالموسم: متوسط أعمار التشكيلات " + (now.avg_age ? '<b class="num">' + fx(now.avg_age, 1) + "</b> سنة" : "") + (now.foreign_share_pct != null ? '، ونسبة دقايق المحترفين الأجانب <b class="num">' + Math.round(now.foreign_share_pct) + "%</b>" : "") + ".</p>" : "";
-    return line + tb(["الموسم", "البطل", "الفارق", "أهداف/مباراة", "فوز الأرض", "تعادل"], ks.map(function(k){ var x = s.seasons[k], live = k === cur; return '<tr><td class="num">' + esc(k) + '</td><td class="tm">' + (x.champion ? tl(x.champion) + (live ? ' <span class="muted small">(المتصدر)</span>' : "") : "") + "</td><td>" + (x.title_margin != null ? x.title_margin : "") + "</td><td>" + fx(x.goals_per_game, 2) + "</td><td>" + Math.round(x.home_win_pct) + "%</td><td>" + Math.round(x.draw_pct) + "%</td></tr>"; })) + noteSrc("من جداول محسوبة من نتايج كل موسم. الفارق = نقاط البطل ناقص الثاني.");
+    var ey = function(k){ var m = String(k).match(/(\d{4})\s*\/\s*(\d{4}|\d{2})/); if (m){ var a = +m[1], b = m[2].length === 4 ? +m[2] : Math.floor(a / 100) * 100 + +m[2]; return b < a ? b + 100 : b; } var y = String(k).match(/\d{4}/); return y ? +y[0] : null; };
+    return line + tb(["الموسم", "البطل", "الفارق", "أهداف/مباراة", "فوز الأرض", "تعادل"], ks.map(function(k){ var x = s.seasons[k], live = k === cur, y = ey(k), rc = !live && real && y && Object.prototype.hasOwnProperty.call(real, y) ? real[y] : undefined;
+      var other = rc === null || (rc && rc[0] !== x.champion);
+      var champ = rc === null ? '<span class="muted">ما اكتمل الموسم</span>' : rc && rc[0] !== x.champion ? (rc[0] && T[rc[0]] ? tl(rc[0]) : esc(rc[1] || "")) : x.champion ? tl(x.champion) + (live ? ' <span class="muted small">(المتصدر)</span>' : "") : "";
+      return '<tr><td class="num">' + esc(k) + '</td><td class="tm">' + champ + "</td><td>" + (!other && x.title_margin != null ? x.title_margin : "") + "</td><td>" + fx(x.goals_per_game, 2) + "</td><td>" + Math.round(x.home_win_pct) + "%</td><td>" + Math.round(x.draw_pct) + "%</td></tr>"; })) +
+      noteSrc(real ? "البطل من 365Scores، ولمواسم ما عنده متصدر جدول محسوب من نتايج الموسم. الفارق = نقاط البطل ناقص الثاني في الجدول المحسوب." : "من جداول محسوبة من نتايج كل موسم. الفارق = نقاط البطل ناقص الثاني.");
   };
   S.alltimeTable = function(a){
     if (!a || !a.table || !a.table.length) return "";
-    return tb(["الفريق", "مواسم", "لعب", "فوز", "تعادل", "خسارة", "الفارق", "النقاط", "ألقاب"], a.table.slice(0, 20).map(function(r){ return '<tr><td class="tm"><span class="num muted">' + r.rank + "</span> " + tl(r.team) + "</td><td>" + r.seasons + "</td><td>" + r.played + "</td><td>" + r.won + "</td><td>" + r.drawn + "</td><td>" + r.lost + '</td><td><bdi dir="ltr">' + r.gd + "</bdi></td><td><b>" + r.pts + "</b></td><td>" + (r.titles || "") + "</td></tr>"; })) + noteSrc("مجموع جداول كل موسم من " + esc(a.since || "") + "، والألقاب = المركز الأول في الجداول المحسوبة.");
+    return tb(["الفريق", "مواسم", "لعب", "فوز", "تعادل", "خسارة", "الفارق", "النقاط", "ألقاب"], a.table.slice(0, 20).map(function(r){ return '<tr><td class="tm"><span class="num muted">' + r.rank + "</span> " + tl(r.team) + "</td><td>" + r.seasons + "</td><td>" + r.played + "</td><td>" + r.won + "</td><td>" + r.drawn + "</td><td>" + r.lost + '</td><td><bdi dir="ltr">' + r.gd + "</bdi></td><td><b>" + r.pts + "</b></td><td>" + (r.titles || "") + "</td></tr>"; })) + noteSrc("مجموع جداول كل موسم من " + esc(a.since || "") + "، والألقاب = المركز الأول في المواسم اللي اكتملت (مو الموسم الجاري ولا موسم توقّف).");
   };
   S.promoted = function(p){
     if (!p || !p.promoted_now || !p.promoted_now.length) return "";

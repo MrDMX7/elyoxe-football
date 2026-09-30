@@ -419,6 +419,42 @@
     }
     return out ? out + '<p class="src">من Transfermarkt عبر مجموعة salimt/football-datasets المفتوحة. المسيرة حسب البطولة لين آخر موسم كامل عندهم؛ المواسم الأحدث من FotMob فوق.</p>' : "";
   };
+  // A club's titles per competition from FotMob's trophies and 365Scores' titles (club pages in build.cjs and the encyclopedia's
+  // club page; audit 2026-09-30: the bigger total used to win wholesale, and our champions lists could raise FotMob's counts).
+  // Every competition 365 lists for the club counts as 365 has it; a FotMob trophy is added only when none of 365's entries is
+  // the same competition:
+  //   * the same competition id (l365: FotMob competition id -> 365 id, the site's competitions), or the same Arabic name of
+  //     two words or more;
+  //   * or, for FotMob's unnamed ids («Cup», «Botola Pro»), the same kind (domestic/continental × league/cup/super cup: a
+  //     club's CAF Super Cups follow its Champions League wins a year later, and must not pass for them), a similar number of
+  //     titles, and at least 80% of FotMob's seasons among 365's at one shift of -1/0/+1 (cups are dated by season on one
+  //     side and by year on the other); a single title, only against a single title of the same kind the same year.
+  // So Al Ain keeps 365's 15 league titles over FotMob's 6 and gains FotMob's 2001 Gulf Club Champions Cup, which 365 lacks.
+  // fm: [{lid, name, won, seasons, runnerup}], t365: [[365 id, name, [seasons]]] -> [{name, won, seasons, cid|lid, src}]
+  R.mergeTitles = function(fm, t365, l365){
+    var ey = function(s){ var t = String(s == null ? "" : s), m = t.match(/(\d{4})\s*[\/\-–]\s*(\d{4}|\d{2})(?!\d)/);
+      if (m){ var a = +m[1], b = m[2].length === 4 ? +m[2] : Math.floor(a / 100) * 100 + +m[2]; return b < a ? b + 100 : b; }
+      var y = t.match(/\d{4}/g); return y ? +y[y.length - 1] : null; };
+    var fold = function(s){ return String(s || "").replace(/\([^)]*\)/g, " ").replace(/[ً-ْـ]/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/(^|\s)ال/g, "$1").replace(/\s+/g, " ").trim(); };
+    var kind = function(s){ var n = String(s || "").toLowerCase();
+      return (/champions|club world|intercontinental|caf|afc|uefa|concacaf|conmebol|gulf|arab|asia|africa|europe|أبطال|الأندية|أفريقي|افريقي|آسيا|اسيا|أوروب|العرب|الخليج|القارات/.test(n) ? "c" : "d") +
+        (/super|shield|سوبر|درع/.test(n) ? "s" : /league|botola|division|ligue|liga\b|serie|premier|دوري|الدوري/.test(n) ? "l" : "k"); };
+    var out = (t365 || []).map(function(x){ return { name:x[1], won:x[2].length, seasons:x[2], cid:x[0], src:"365", ys:x[2].map(ey), k:kind(x[1]) }; });
+    (fm || []).forEach(function(t){
+      var sid = l365 && l365[t.lid], f = fold(t.name), fy = (t.seasons || []).map(ey).filter(function(y){ return y; }), k = kind(t.name);
+      var same = out.some(function(e){
+        if (e.src !== "365") return false;
+        if (sid && +sid === +e.cid) return true;
+        if (f.indexOf(" ") > 0 && f === fold(e.name)) return true;
+        if (sid || e.k !== k || !fy.length) return false;
+        if (fy.length === 1) return e.won === 1 && e.ys[0] === fy[0];
+        if (t.won > e.won * 1.25 + 2 || e.won > t.won * 2 + 2) return false;
+        return [-1, 0, 1].some(function(d){ return fy.filter(function(y){ return e.ys.indexOf(y + d) >= 0; }).length >= Math.max(2, Math.ceil(0.8 * fy.length)); });
+      });
+      if (!same) out.push({ name:t.name, won:t.won, seasons:t.seasons || [], runnerup:t.runnerup, lid:t.lid, src:"fm" });
+    });
+    return out.sort(function(a, b){ return b.won - a.won; }).map(function(e){ delete e.ys; delete e.k; return e; });
+  };
   R.UAE_COMPS = UAE_COMPS;
   if (typeof module !== "undefined" && module.exports) module.exports = R; else root.TR = R;
 })(this);

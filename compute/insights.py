@@ -570,16 +570,28 @@ def referee_profile(ref_id, ref_name, refs_doc, ledger, home, away):
             "with_teams": hist, "note": "this season's stored matches in this competition"}
 
 
-def alltime_table(season_docs):
+def alltime_table(season_docs, champions=None):
+    """Every season's table added up. A title (audit 2026-09-30) is first place in a COMPLETE season only: some team has
+    played the full double round robin, 2·(teams − 1) games. So the season under way (the UAE's 2026/27: Al Jazira top
+    after 5 rounds, counted as a 4th title) and the seasons stopped part-way (UAE 2019/20, Egypt 2011/12 and 2012/13, Iraq
+    2013/14 and 2019/20: void) no longer count, nor split formats whose added-up table was never the standings (Egypt
+    2024/25, Tunisia 2012/13, Iraq 2014/15). champions={season: team id}, an authoritative list, overrides the table's
+    leader. A row with no team (an unlinked club) is left out: it has no page and gave Algeria a «None» champion."""
     t = {}
     for season, doc in season_docs.items():
-        for r in doc["table"]:
+        rows = [r for r in doc["table"] if r.get("team") is not None]
+        complete = len(rows) > 1 and max(r["played"] for r in rows) >= 2 * (len(rows) - 1)
+        if champions is not None:
+            winner = champions.get(season)
+        else:
+            winner = next((r["team"] for r in rows if r["rank"] == 1), None) if complete else None
+        for r in rows:
             x = t.setdefault(r["team"], {"team": r["team"], "seasons": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0,
                                          "gf": 0, "ga": 0, "pts": 0, "titles": 0})
             x["seasons"] += 1
             for k in ("played", "won", "drawn", "lost", "gf", "ga", "pts"):
                 x[k] += r[k]
-            x["titles"] += 1 if r["rank"] == 1 else 0
+            x["titles"] += 1 if winner is not None and r["team"] == winner else 0
     rows = sorted(t.values(), key=lambda x: (-x["pts"], -(x["gf"] - x["ga"])))
     for i, x in enumerate(rows, 1):
         x["rank"], x["gd"] = i, x["gf"] - x["ga"]

@@ -153,7 +153,8 @@
   if (kind === "athlete"){
     get("s365/player/" + id + ".json").then(function(d){
       title(d.name || d.en || ""); var N = d.names || {};
-      var rows = [d.pos && ["المركز", esc(d.pos) + (d.pos2 && d.pos2 !== d.pos ? ' <span class="muted small">' + esc(d.pos2) + "</span>" : "")], d.age && ["العمر", d.age + " سنة" + (d.born ? ' <span class="muted small num">' + esc(d.born) + "</span>" : "")],
+      var bad = d.born && d.born < "1900";   // a placeholder birth date: no age from it either (audit 2026-09-30)
+      var rows = [d.pos && ["المركز", esc(d.pos) + (d.pos2 && d.pos2 !== d.pos ? ' <span class="muted small">' + esc(d.pos2) + "</span>" : "")], d.age && !bad && ["العمر", d.age + " سنة" + (d.born ? ' <span class="muted small num">' + esc(d.born) + "</span>" : "")],
         d.height && ["الطول", esc(d.height) + " م"], d.foot && ["القدم", esc(d.foot)], d.nat && ["الجنسية", esc(d.nat)], d.shirt > 0 && ["الرقم", d.shirt],
         d.club && ["النادي", '<a href="' + teamUrl(d.club) + '">' + esc(N[d.club] || "") + "</a>"], d.contract && ["نهاية العقد", '<span class="num">' + esc(d.contract.slice(0, 7)) + "</span>"],
         d.nat_text && ["مع المنتخب", esc(d.nat_text)]].filter(Boolean);
@@ -192,12 +193,14 @@
         if (T.length) html += '<section class="blk"><h2>آخر انتقالاته</h2><ul class="mlist">' + T.slice(0, 30).map(function(t){ var inb = t[5] === +id; return '<li><span class="num">' + esc(t[0]) + "</span> " + (t[1] ? '<a href="' + playerUrl(t[1]) + '">' + esc(t[2] || "") + "</a>" : esc(t[2] || "")) + ' <span class="muted small">' + (inb ? "جاه من " + esc(t[4] || "") : "راح إلى " + esc(t[6] || "")) + (t[8] ? " · " + esc(t[8]) : "") + "</span></li>"; }).join("") + "</ul></section>";
         html += '<p class="src">من FotMob. <a href="/db/">الموسوعة</a></p>';
         box.innerHTML = html;
-        // 365Scores' titles (every competition from its first season) replace FotMob's list when they count more
+        // titles per competition (audit 2026-09-30; the bigger total used to win wholesale): 365Scores' count for every competition
+        // it lists for the club, FotMob's for the others — R.mergeTitles, as on the club pages (the site's competition-id map isn't
+        // loaded here, so names and seasons decide which FotMob trophy is the same competition)
         get("s365/fmmap.json").then(function(mp){ var sid = (mp.map || {})[id]; if (!sid) return;
-          return get("s365/team/" + sid + ".json").then(function(t){ var T = t.titles || [], n365 = T.reduce(function(a, x){ return a + x[2].length; }, 0), nfm = tro.reduce(function(a, x){ return a + x.won; }, 0);
-            if (n365 <= nfm) return;
-            var sec = '<section class="blk" id="w365t"><h2>ألقابه <small>' + n365 + '</small></h2><ul class="chon">' + T.map(function(x){ return '<li><b><a href="' + leagueUrl(x[0]) + '">' + esc(x[1]) + '</a></b> <span class="num">' + x[2].length + '</span><span class="muted small yrs">' + esc(x[2].join("، ")) + "</span></li>"; }).join("") +
-              '</ul><p class="src">الألقاب من 365Scores. <a href="' + teamUrl(sid) + '">صفحته هناك في الموسوعة</a></p></section>';
+          return get("s365/team/" + sid + ".json").then(function(t){ var T = t.titles || []; if (!T.length) return;
+            var M = R.mergeTitles(tro, T, null), n = M.reduce(function(a, x){ return a + x.won; }, 0), withFm = M.some(function(x){ return x.src === "fm"; });
+            var sec = '<section class="blk" id="w365t"><h2>ألقابه <small>' + n + '</small></h2><ul class="chon">' + M.map(function(x){ return "<li><b>" + (x.cid ? '<a href="' + leagueUrl(x.cid) + '">' + esc(x.name) + "</a>" : esc(x.name || "")) + '</b> <span class="num">' + x.won + '</span><span class="muted small yrs">' + esc(x.seasons.join("، ")) + "</span></li>"; }).join("") +
+              '</ul><p class="src">الألقاب من 365Scores' + (withFm ? "، واللي ما عنده من FotMob" : "") + '. <a href="' + teamUrl(sid) + '">صفحته هناك في الموسوعة</a></p></section>';
             var old = [].filter.call(box.querySelectorAll("section.blk"), function(x){ var h = x.querySelector("h2"); return h && /^ألقابه/.test(h.textContent); })[0];
             if (old) old.outerHTML = sec; else box.insertAdjacentHTML("afterbegin", sec); }); }).catch(function(){});
         get("history/club/" + id + ".json").then(function(h){ box.insertAdjacentHTML("beforeend", '<section class="blk"><h2>تاريخه</h2><p>من <b class="num">' + h.since.slice(0, 4) + "</b>: " + h.total.p + " مباراة، " + h.total.w + " فوز، " + h.total.d + " تعادل، " + h.total.l + ' خسارة.</p><p class="src">النتايج من قاعدة schochastics/football-data.</p></section>'); }).catch(function(){});
@@ -247,8 +250,9 @@
     has("/p/" + id + "/").then(function(live){ if (live){ location.replace("/p/" + id + "/"); return; }
       get("player/" + id + "/profile.json").then(function(d){
         var b = d.bio || {}, nm = b.name || ""; title(nm);
-        var age = b.born ? Math.floor((Date.now() - Date.parse(b.born)) / 31557600000) : null;
-        var rows = [b.pos && ["المركز", esc(b.pos)], b.born && ["العمر", age + " سنة (" + esc(b.born) + ")"], b.h && ["الطول", b.h + " سم"], b.foot && ["القدم", FOOT[b.foot] || esc(b.foot)],
+        // a birth date before 1900 is FotMob's placeholder (0001-01-01), not a date (audit 2026-09-30: 995 pages said «العمر 2025 سنة»)
+        var born = b.born && b.born >= "1900" ? b.born : null, age = born ? Math.floor((Date.now() - Date.parse(born)) / 31557600000) : null;
+        var rows = [b.pos && ["المركز", esc(b.pos)], born && ["العمر", age + " سنة (" + esc(born) + ")"], b.h && ["الطول", b.h + " سم"], b.foot && ["القدم", FOOT[b.foot] || esc(b.foot)],
           b.cc && ["الجنسية", esc(b.cc)], b.shirt && ["الرقم", b.shirt], b.mv && ["القيمة السوقية", eur(b.mv)], b.contract && ["نهاية العقد", esc(b.contract.slice(0, 7))]].filter(Boolean);
         var html = rows.length ? '<dl class="pbio">' + rows.map(function(r){ return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + "</dl>" : "";
         var C = d.career || {};
