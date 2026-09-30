@@ -15,7 +15,9 @@ Areas (visitor impact first):
               vs 365Scores, and on a disagreement 365Scores' table vs its own results (which side is inconsistent)
   scorers     leaderboards vs FotMob now and vs 365Scores; the top scorers' season line in their match log (player page
               «أرقامه موسم بموسم») vs the leaderboard, season labels (calendar-year competitions) and log coverage
-  derived     internal consistency of derived files (h2h wins vs listed results, club history totals) on a sample
+  derived     every head-to-head file (wins = the listed results, index counts, duplicates, this season's and last
+              season's meetings all listed) and every club history (totals add up, no match twice, no club against itself,
+              every match of our archive in it, one league position per season, no national team)
   champions   junk and placeholder winners, duplicated seasons, titles on national teams, our list vs 365Scores' (winners,
               year offsets, champions of seasons 365Scores marks void), the all-time tables' title counts
   identity    who is who: national teams carrying a club's card/lead/transfers, one Wikidata id on two clubs or players,
@@ -94,6 +96,10 @@ class S365Client:
     def __init__(self, per_sec=2.0, cache=CACHE):
         self.throttle, self.cache, self.calls, self.errors = Throttle(per_sec), cache, 0, Counter()
         os.makedirs(cache, exist_ok=True)
+        for fn in os.listdir(cache):             # the longest ttl asked for is 7 days: older answers are dead weight
+            p = os.path.join(cache, fn)
+            if fn.startswith("s365-") and time.time() - os.path.getmtime(p) > 8 * 86400:
+                os.remove(p)
 
     def get(self, path, ttl):
         f = os.path.join(self.cache, "s365-" + hashlib.sha1(path.encode()).hexdigest()[:20] + ".json.gz")
@@ -364,12 +370,16 @@ def area_freshness(A):
         from db import refresh as RF
         st = json.load(open(st_path, encoding="utf-8"))
         for name, mod, args, every in RF.STAGES:
+            if name == "audit":
+                continue
             s = st.get(name) or {}
             A.count("freshness", "db_stage")
             ok = s.get("ok_at") or 0
             if s.get("rc") not in (None, 0):
                 A.add("freshness", "db_stage_failed", "warn", "stale", f"stage:{name}", f"stage {name} ({mod}) exited {s.get('rc')}: {s.get('tail')}")
-            if time.time() - ok > (every + 1) * 86400:
+            if not ok:
+                A.add("freshness", "db_stage_late", "warn", "stale", f"stage:{name}", f"stage {name} never succeeded")
+            elif time.time() - ok > (every + 1) * 86400:
                 A.add("freshness", "db_stage_late", "warn", "stale", f"stage:{name}", f"stage {name} last succeeded {((time.time() - ok) / 86400):.1f} days ago (every {every} d)")
     # each competition: fixtures refreshed, the table newer than its last result
     for c in A.comps:
@@ -563,6 +573,7 @@ def area_matches(A):
         mid = m["id"]
         ours_d = docs.get(f"match/{mid}.json")
         now_d = A.fm_detail(mid)
+        now_d = AWARDED.apply_to_match(now_d, A.awarded) if now_d else None
         A.count("matches", "detail_vs_fotmob")
         url = PAGE["match"].format(mid)
         name = f"{m['home']['name']} v {m['away']['name']} ({m['comp']}, {m['kickoff_utc'][:10]})"
