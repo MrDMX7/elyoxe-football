@@ -495,6 +495,17 @@ def refresh_pages(store, comp_ids, names, days, ids=None):
             d = AW.apply_to_match(src.match_from_raw(raw), aw)
         except Exception:
             return None
+        # how each goal was scored: the poller also reads FotMob's live ticker (compute/goal_how.py), which the detail
+        # alone doesn't carry: a goal keeps the description the page already has when the detail gives none
+        had = {}
+        for e in cur.get("events") or []:
+            if e.get("how"):
+                had[e.get("event_id")] = had[(e.get("minute"), (e.get("player") or {}).get("id"))] = e["how"]
+        for e in d.get("events") or []:
+            if not e.get("how") and e.get("type") in ("goal", "own_goal", "penalty_goal"):
+                h = had.get(e.get("event_id")) or had.get((e.get("minute"), (e.get("player") or {}).get("id")))
+                if h:
+                    e["how"] = h
         bare = lambda evs: [{k: v for k, v in e.items() if k != "first_seen"} for e in evs or []]
         if d.get("status") not in (S.FINISHED, S.AWARDED) or all((bare(d.get(k)) == bare(cur.get(k))) if k == "events" else d.get(k) == cur.get(k)
                                                                   for k in SOURCE_KEYS):
