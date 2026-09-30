@@ -16,8 +16,12 @@ Areas (visitor impact first):
   scorers     leaderboards vs FotMob now and vs 365Scores; the top scorers' season line in their match log (player page
               «أرقامه موسم بموسم») vs the leaderboard, season labels (calendar-year competitions) and log coverage
   derived     internal consistency of derived files (h2h wins vs listed results, club history totals) on a sample
-  champions   placeholder winners, duplicated seasons, our champions list vs 365Scores' where both exist
-  gaps        what is missing that a source has: match pages, scorers of low-coverage matches, player bio fields,
+  champions   junk and placeholder winners, duplicated seasons, titles on national teams, our list vs 365Scores' (winners,
+              year offsets, champions of seasons 365Scores marks void), the all-time tables' title counts
+  identity    who is who: national teams carrying a club's card/lead/transfers, one Wikidata id on two clubs or players,
+              Arabic Wikipedia leads of an unchecked or another person (birth year), RSSSF rows of two clubs on one id,
+              365Scores' women's/youth/B sides in the club map, placeholder birth dates
+  gaps       what is missing that a source has: match pages, scorers of low-coverage matches, player bio fields,
               club cards, Arabic names
 
 Verdicts: ours (our code is wrong), stale (the source moved on, our copy didn't), gap (missing, fillable), source (the
@@ -36,6 +40,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 import config  # noqa: E402
+from compute import awarded as AWARDED  # noqa: E402
 from db import scores365 as S365  # noqa: E402
 from sources import schema as S  # noqa: E402
 from sources.fotmob import FotMob  # noqa: E402
@@ -45,7 +50,7 @@ from timeutil import now_utc, parse_utc, iso, UAE  # noqa: E402
 
 BUCKET = os.environ.get("FOOTBALL_BUCKET", "elyoxe-football-574771023173-ap-south-1")
 CACHE = os.path.join(HERE, ".cache", "audit")
-AREAS = ("freshness", "matches", "standings", "scorers", "derived", "champions", "gaps")
+AREAS = ("freshness", "matches", "standings", "scorers", "derived", "champions", "identity", "gaps")
 FOCUS = (538, 11027, 9943, 11026)                  # UAE competitions: sampled first
 NONSTD_POINTS = {10043}                             # Leagues Cup: a drawn match goes to penalties (2 points / 1 point)
 G = ("goal", "own_goal", "penalty_goal")
@@ -267,6 +272,7 @@ class Audit:
         self.now = now_utc()
         self.comps = config.competitions()
         self.comp = {c["id"]: c for c in self.comps}
+        self.awarded = config.awarded()
         self.findings, self.checked, self.notes = [], defaultdict(Counter), []
         self._league, self._detail, self._keys = {}, {}, {}
         self.t0 = time.time()
@@ -469,7 +475,7 @@ def area_matches(A):
             if not m.get("id") or not ko or not (lo <= ko <= hi):
                 continue
             our_ids.add(m["id"])
-            n = now_by.get(m["id"])
+            n = AWARDED.apply_to_match(now_by.get(m["id"]), A.awarded) if now_by.get(m["id"]) else None   # FotMob now + the decisions we apply
             A.count("matches", "fixture_vs_fotmob")
             if n is None:
                 if m.get("season") == data["competition"].get("season"):
@@ -477,8 +483,9 @@ def area_matches(A):
                 continue
             live_now = n["status"] in S.LIVE_STATUSES or m.get("status") in S.LIVE_STATUSES
             if n["status"] != m.get("status") and not live_now:
-                A.add("matches", "fixture_status", "error" if S.FINISHED in (n["status"], m.get("status")) else "warn", "stale", f"match:{m['id']}",
-                      f"{m['home']['name']} v {m['away']['name']} ({cid}, {m.get('kickoff_utc', '')[:10]}): ours «{m.get('status')}», FotMob now «{n['status']}»",
+                A.add("matches", "fixture_status", "error" if {S.FINISHED, S.AWARDED} & {n["status"], m.get("status")} else "warn", "stale", f"match:{m['id']}",
+                      f"{m['home']['name']} v {m['away']['name']} ({cid}, {m.get('kickoff_utc', '')[:10]}): ours «{m.get('status')}» {m.get('score')}, FotMob now «{n['status']}» {n.get('score')}"
+                      + (" (a decision listed in competitions.yaml awarded:, applied by the poller once deployed)" if m["id"] in A.awarded else ""),
                       url=PAGE["match"].format(m["id"]), ours=m.get("status"), fotmob=n["status"])
             elif n["status"] == S.FINISHED and (n.get("score") != m.get("score") or (n.get("penalties") or None) != (m.get("penalties") or None)):
                 A.add("matches", "fixture_score", "error", "stale", f"match:{m['id']}",
@@ -495,8 +502,8 @@ def area_matches(A):
     fin = []
     for mid, (cid, m) in ours.items():
         ko = parse_utc(m.get("kickoff_utc"))
-        n = (fm_now.get(mid) or (None, m))[1]
-        if ko and lo <= ko <= A.now - timedelta(hours=2) and n.get("status") == S.FINISHED and n.get("score"):
+        n = AWARDED.apply_to_match((fm_now.get(mid) or (None, m))[1], A.awarded)
+        if ko and lo <= ko <= A.now - timedelta(hours=2) and n.get("status") in (S.FINISHED, S.AWARDED) and n.get("score"):
             fin.append(dict(n, comp=cid))
     days, d = [], (lo - timedelta(days=1)).astimezone(UAE).date()
     while d <= A.now.astimezone(UAE).date():
@@ -710,6 +717,8 @@ def area_standings(A):
         if raw:
             try:
                 now_st = A.fm.standings_from_raw(cid, (raw.get("details") or {}).get("selectedSeason"), raw)
+                if now_st and A.awarded:     # FotMob's table + the decisions we apply (compute/awarded.py)
+                    AWARDED.apply_to_standings(now_st, A.fm.competition_from_raw(c, raw, with_leaders=False)["matches"], A.awarded)
             except Exception:
                 now_st = None
         if now_st:
@@ -779,12 +788,16 @@ def area_standings(A):
                 if own and tuple(own) == ours_t:
                     favors = "fotmob"
                     evidence.append("365Scores' own results add up to our row: its table is out of step with its results")
-                elif own and tuple(own) == theirs_t:
-                    evidence.append("365Scores' table agrees with its own results: a match result differs between the sources")
-                    # the match(es)
+                else:
+                    if own and tuple(own) == theirs_t:
+                        evidence.append("365Scores' table agrees with its own results: a match result differs between the sources")
+                    elif own:
+                        evidence.append(f"365Scores' own results give P{own[0]} W{own[1]} D{own[2]} L{own[3]} {own[4]}-{own[5]}, neither its table nor ours")
+                    # the match(es) whose result differs
                     team_games = [gm for gm in res365 if s_ in ((gm.get("homeCompetitor") or {}).get("id"), (gm.get("awayCompetitor") or {}).get("id")) and gm.get("statusGroup") == 4]
                     my = [dict(m, comp=cid) for m in A.fixtures(cid) if r["team"]["id"] in (m["home"]["id"], m["away"]["id"]) and m.get("status") == S.FINISHED and m.get("score")]
                     pr = pair_games(my, team_games, fmmap, window_h=30)
+                    favs = []
                     for m in my:
                         p = pr.get(m["id"])
                         if not p:
@@ -794,10 +807,13 @@ def area_standings(A):
                             s3 = (s3[1], s3[0])
                         if s3 and s3 != (m["score"]["home"], m["score"]["away"]):
                             fav, evd, stt = score_evidence(A, m["id"], p[0], p[1])
-                            favors = fav
+                            favs.append(fav)
                             evidence.append(f"{m['home']['name']} v {m['away']['name']} {m['kickoff_utc'][:10]}: FotMob {m['score']['home']}-{m['score']['away']}, 365Scores {s3[0]}-{s3[1]} «{stt}» ({evd})")
-                elif own:
-                    evidence.append(f"365Scores' own results give {tuple(own)}")
+                    if favs and len(set(favs)) == 1:
+                        favors = favs[0]
+                    elif not favs and theirs_t[:4] == ours_t[:4]:
+                        favors = "fotmob"
+                        evidence.append("every result agrees; only 365Scores' goal totals differ")
                 A.add("standings", "table_vs_365", "warn", "source", f"comp:{cid}",
                       f"{c['name_ar']} ({cid}) {g.get('name') or ''} {r['team']['name']}: ours P{ours_t[0]} W{ours_t[1]} D{ours_t[2]} L{ours_t[3]} {ours_t[4]}-{ours_t[5]} {ours_t[6]} pts; 365Scores P{theirs_t[0]} W{theirs_t[1]} D{theirs_t[2]} L{theirs_t[3]} {theirs_t[4]}-{theirs_t[5]} {theirs_t[6]} pts",
                       url=f"/c/{c.get('key')}/", favors=favors, evidence="; ".join(evidence) or None)
@@ -805,6 +821,60 @@ def area_standings(A):
 
 
 # ------------------------------------------------------------------ scorers
+def scorers_vs_365(A, c, sid, cat, ours, comp_names, names365, fmmap):
+    """365Scores' top scorers vs our leaderboard (same player: same team, name alike); on a difference, the match where
+    FotMob's goal events and 365Scores' credit the player differently."""
+    cid = c["id"]
+    for g in (A.s365.get(f"/web/games/results/?{S365.QE}&competitions={sid}", 6 * 3600) or {}).get("games") or []:
+        for side in ("homeCompetitor", "awayCompetitor"):
+            t = g.get(side) or {}
+            names365.setdefault(t.get("id"), t.get("name"))
+    tmap = {v: k for k, v in pair_teams({k: v for k, v in comp_names.items() if k}, {k: v for k, v in names365.items() if k}, fmmap).items()}
+    top = {}
+    for r in (cat.get("rows") or [])[:15]:
+        e = r.get("entity") or {}
+        try:
+            v = float(((r.get("stats") or [{}])[0]).get("value"))
+        except (TypeError, ValueError):
+            continue
+        top[(e.get("name"), tmap.get(e.get("competitorId")))] = v
+    A.count("scorers", "vs_365", len(top))
+    for (nm, tid), v in top.items():
+        if tid is None:
+            continue
+        best = None
+        for pid, e in ours.items():
+            if (e.get("team") or {}).get("id") != tid:
+                continue
+            sc = name_sim(nm, e["player"]["name"])
+            if sc >= 0.5 and (best is None or sc > best[0]):
+                best = (sc, pid, e)
+        if not best or float(best[2].get("value") or 0) == v:
+            continue
+        pid, e = best[1], best[2]
+        # evidence: his team's finished matches, his goals in our match page (FotMob) and in 365Scores' game
+        ms = [dict(m, comp=cid) for m in A.fixtures(cid) if m.get("status") == S.FINISHED and tid in (m["home"]["id"], m["away"]["id"])]
+        docs = A.pub.many([f"match/{m['id']}.json" for m in ms])
+        res = [g for g in s365_results(A, sid, pages=4) if g.get("statusGroup") == 4]
+        pr = pair_games(ms, res, fmmap, window_h=30)
+        ev = []
+        for m in ms:
+            d = docs.get(f"match/{m['id']}.json") or {}
+            n_fm = sum(1 for x in d.get("events") or [] if x.get("type") in ("goal", "penalty_goal") and _pid(x.get("player")) == pid)
+            p = pr.get(m["id"])
+            if not p:
+                continue
+            gg = (A.s365.get(f"/web/game/?{S365.QE}&gameId={p[0]['id']}", 7 * 86400) or {}).get("game") or {}
+            mem = {x.get("id"): x for x in gg.get("members") or []}
+            n_365 = sum(1 for x in gg.get("events") or [] if (x.get("eventType") or {}).get("id") == 1
+                        and "own" not in str((x.get("eventType") or {}).get("subTypeName") or "").lower()
+                        and name_sim((mem.get(x.get("playerId")) or {}).get("name"), nm) >= 0.5)
+            if n_fm != n_365:
+                ev.append(f"{m['home']['name']} v {m['away']['name']} {m['kickoff_utc'][:10]}: FotMob credits him {n_fm}, 365Scores {n_365}")
+        A.add("scorers", "vs_365", "warn", "source", f"player:{pid}", f"{c['name_ar']} ({cid}) {e['player']['name']}: {e.get('value')} goals on our leaderboard (FotMob), {v:g} at 365Scores",
+              url=PAGE["player"].format(pid), favors="unknown", evidence="; ".join(ev) or "no single match differs in the paired games (the lists count different matches)")
+
+
 def area_scorers(A):
     fmmap = A.fmmap()
     for c in A.comps:
@@ -845,41 +915,19 @@ def area_scorers(A):
                     for side in ("home", "away"):
                         comp_names[m[side]["id"]] = m[side]["name"]
                 std = A.s365.get(f"/web/standings/?{S365.QE}&competitions={sid}", 3 * 3600) or {}
-                names365 = {}
+                names365, p365 = {}, 0
                 for s_ in std.get("standings") or []:
                     for r in s_.get("rows") or []:
                         t = r.get("competitor") or {}
                         names365[t.get("id")] = t.get("name")
-                for g in (A.s365.get(f"/web/games/results/?{S365.QE}&competitions={sid}", 6 * 3600) or {}).get("games") or []:
-                    for side in ("homeCompetitor", "awayCompetitor"):
-                        t = g.get(side) or {}
-                        names365.setdefault(t.get("id"), t.get("name"))
-                tmap = {v: k for k, v in pair_teams({k: v for k, v in comp_names.items() if k}, {k: v for k, v in names365.items() if k}, fmmap).items()}
-                top = {}
-                for r in (cat.get("rows") or [])[:15]:
-                    e = r.get("entity") or {}
-                    try:
-                        v = float(((r.get("stats") or [{}])[0]).get("value"))
-                    except (TypeError, ValueError):
-                        continue
-                    top[(e.get("name"), tmap.get(e.get("competitorId")))] = v
-                A.count("scorers", "vs_365", len(top))
-                diffs = []
-                for (nm, tid), v in top.items():
-                    if tid is None:
-                        continue
-                    best = None
-                    for pid, e in ours.items():
-                        if (e.get("team") or {}).get("id") != tid:
-                            continue
-                        sc = name_sim(nm, e["player"]["name"])
-                        if sc >= 0.5 and (best is None or sc > best[0]):
-                            best = (sc, pid, e)
-                    if best and float(best[2].get("value") or 0) != v:
-                        diffs.append(f"{best[2]['player']['name']} ours {best[2].get('value')} / 365 {v:g}")
-                if diffs:
-                    A.add("scorers", "vs_365", "warn", "source", f"comp:{cid}", f"{c['name_ar']} ({cid}): goals differ for {len(diffs)} of the top scorers: " + "; ".join(diffs[:6]),
-                          url=f"/c/{c.get('key')}/")
+                        p365 = max(p365, r.get("gamePlayed") or 0)
+                ours_st = A.pub.get(f"comp/{cid}/standings.json") or {}
+                p_ours = max((r.get("played") or 0 for g in ours_st.get("groups") or [] for r in g.get("rows") or []), default=0)
+                if p365 and p_ours and p_ours - p365 > 2:
+                    # 365's current stage is another table (Argentina's Clausura against FotMob's whole season): its scorers too
+                    A.count("scorers", "vs_365_other_stage")
+                else:
+                    scorers_vs_365(A, c, sid, cat, ours, comp_names, names365, fmmap)
         # 3. the top scorers' match logs (player page «أرقامه موسم بموسم», db/matches.py)
         calendar = season_label_calendar(st.get("season"))
         want = str(st.get("season") or "")[:4] if calendar else st.get("season")     # «2025 Qatar» -> «2025»
@@ -1217,8 +1265,9 @@ def summary(A):
 
 def markdown(A, doc):
     L = [f"# Tifo data audit — {doc['date']}", "",
-         f"Generated {doc['generated']} by `python -m db.audit` in {doc['seconds']} s; {doc['requests']['fotmob']} FotMob and {doc['requests']['s365']} 365Scores requests, "
-         f"{doc['requests']['published']} published files read. Window: the last {A.days} days; sample {A.sample}.", "",
+         f"Generated {doc['generated']} by `python -m db.audit` in {doc['seconds']} s ({', '.join(f'{k} {v} s' for k, v in doc['timing'].items())}); "
+         f"{doc['requests']['fotmob']} FotMob requests ({doc['requests']['fotmob_failed']} failed), {doc['requests']['s365']} 365Scores requests "
+         f"(errors: {doc['requests']['s365_errors'] or 'none'}), {doc['requests']['published']} published files read. Window: the last {A.days} days; sample {A.sample}.", "",
          "Verdicts: **ours** = our code is wrong · **stale** = the source moved on and our copy didn't · **gap** = missing, fillable · "
          "**source** = the sources disagree (`favors` = which one the evidence supports) · **unknown**.", "", "## Summary", "",
          "| area | checked | errors | warnings | info |", "|---|---|---|---|---|"]
@@ -1239,33 +1288,38 @@ def markdown(A, doc):
             by[(order[f["level"]], f["check"])].append(f)
         for (lv, chk), items in sorted(by.items()):
             L.append(f"### {chk} — {len(items)} ({items[0]['level']}, {Counter(i['verdict'] for i in items).most_common(1)[0][0]})")
-            for f in items[:12]:
+            cap = 70 if all(str(i["key"]).startswith("comp:") for i in items) else 15     # one line per competition: all of them
+            for f in items[:cap]:
                 extra = ""
                 if f.get("favors"):
                     extra += f" — favors **{f['favors']}**"
                 if f.get("evidence"):
                     extra += f" — {f['evidence']}"
                 L.append(f"- {f['msg']}{extra}" + (f" ({f['url']})" if f.get("url") else ""))
-            if len(items) > 12:
-                L.append(f"- … and {len(items) - 12} more (state/audit/{doc['date']}.json)")
+            if len(items) > cap:
+                L.append(f"- … and {len(items) - cap} more (state/audit/{doc['date']}.json)")
     return "\n".join(L) + "\n"
 
 
 def run(store, areas, days=14, sample=60, verbose=True):
     A = Audit(store, days=days, sample=sample, verbose=verbose)
     fns = {"freshness": area_freshness, "matches": area_matches, "standings": area_standings, "scorers": area_scorers,
-           "derived": area_derived, "champions": area_champions, "gaps": area_gaps}
+           "derived": area_derived, "champions": area_champions, "identity": area_identity, "gaps": area_gaps}
+    timing = {}
     for a in AREAS:
         if a in areas:
+            t0 = time.time()
             try:
                 fns[a](A)
             except Exception as e:     # one broken area must not cost the others
                 import traceback
                 traceback.print_exc()
                 A.add(a, "audit_crashed", "warn", "ours", f"audit:{a}", f"the {a} checks crashed: {type(e).__name__}: {e}")
+            timing[a] = round(time.time() - t0)
     doc = {"date": A.now.astimezone(UAE).strftime("%Y-%m-%d"), "generated": iso(A.now), "seconds": round(time.time() - A.t0),
            "params": {"days": days, "sample": sample, "areas": sorted(areas)},
-           "requests": {"fotmob": A.http.network_calls, "s365": A.s365.calls, "s365_errors": dict(A.s365.errors), "published": A.pub.reads},
+           "requests": {"fotmob": A.http.network_calls, "fotmob_failed": sum(A.http.failed.values()), "s365": A.s365.calls,
+                        "s365_errors": {str(k): v for k, v in A.s365.errors.items()}, "published": A.pub.reads}, "timing": timing,
            "summary": None, "findings": A.findings, "notes": A.notes}
     doc["summary"] = summary(A)
     return A, doc

@@ -36,6 +36,11 @@ def settings() -> dict:
     return _load("competitions.yaml").get("settings", {})
 
 
+def awarded() -> dict:
+    """competitions.yaml `awarded:` {match id: {home, away, source}}: results decided after the match (compute/awarded.py)."""
+    return {int(k): v for k, v in (_load("competitions.yaml").get("awarded") or {}).items()}
+
+
 def stadiums() -> list[dict]:
     return _load("stadiums.yaml").get("stadiums", [])
 

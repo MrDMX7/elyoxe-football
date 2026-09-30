@@ -42,6 +42,29 @@ def test_goal_gap():
     assert P._goal_gap(d)                                       # a goal with no scorer yet
 
 
+# ------------------------------------------------------------------ results decided after the match
+def _row(tid, rank, p, w, d, l_, gf, ga, pts, zone=None):
+    return {"rank": rank, "team": {"id": tid, "name": str(tid)}, "played": p, "won": w, "drawn": d, "lost": l_, "gf": gf, "ga": ga,
+            "gd": gf - ga, "pts": pts, "zone": zone}
+
+
+def test_awarded_result_moves_the_table_and_the_fixture():
+    from compute import awarded as AW
+    aw = {6028541: {"home": 3, "away": 0, "source": "FA"}}
+    m = {"id": 6028541, "status": "finished", "score": {"home": 1, "away": 1}, "home": {"id": 1}, "away": {"id": 2}}
+    st = {"groups": [{"rows": [_row(3, 1, 8, 3, 3, 2, 12, 9, 12), _row(2, 2, 8, 1, 4, 3, 6, 11, 7, "z2"), _row(1, 3, 8, 2, 3, 3, 8, 10, 9, "z3")]}]}
+    assert AW.apply_to_standings(st, [m], aw)[0]["awarded"] == "3-0"
+    rows = {r["team"]["id"]: r for r in st["groups"][0]["rows"]}
+    assert (rows[1]["won"], rows[1]["drawn"], rows[1]["gf"], rows[1]["ga"], rows[1]["pts"]) == (3, 2, 10, 9, 11)   # Al Minaa
+    assert (rows[2]["drawn"], rows[2]["lost"], rows[2]["gf"], rows[2]["ga"], rows[2]["pts"]) == (3, 4, 5, 13, 6)   # Naft Maysan
+    assert [r["team"]["id"] for r in st["groups"][0]["rows"]] == [3, 1, 2] and rows[1]["rank"] == 2 and rows[1]["zone"] == "z2"
+    f = AW.apply_to_match(m, aw)
+    assert f["status"] == "awarded" and f["score"] == {"home": 3, "away": 0} and f["score_played"] == {"home": 1, "away": 1}
+    assert AW.apply_to_match(f, aw) is f                                    # FotMob showing the decision: nothing to do
+    st2 = {"groups": [{"rows": [_row(1, 1, 8, 3, 2, 3, 10, 9, 11), _row(2, 2, 8, 1, 3, 4, 5, 13, 6)]}]}
+    assert AW.apply_to_standings(st2, [dict(m, status="awarded", score={"home": 3, "away": 0})], aw) == []
+
+
 # ------------------------------------------------------------------ sources: bracket slots
 def test_bracket_slot_names():
     assert placeholder_ar("1A") == "أول المجموعة A"

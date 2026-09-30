@@ -30,7 +30,7 @@ from compute import insights as IN  # noqa: E402
 import config  # noqa: E402
 from compute import winprob as WP  # noqa: E402
 from compute import ics as ICS, magic as MAGIC, prayer as PRAYER, season as SEASON, weather as WEATHER  # noqa: E402
-from compute import allday as ALL, goal_how as GH  # noqa: E402
+from compute import awarded as AWARDED  # noqa: E402
 from compute.venues import Venues  # noqa: E402
 from sources import schema as S  # noqa: E402
 from sources import s365 as S365  # noqa: E402
@@ -477,6 +477,7 @@ class Poller:
             self.plan_repoll(d, full, why)
             self.st.setdefault("cov_checked", {})[str(mid)] = d.get("kickoff_utc")
         cache = "hot" if d["status"] in S.LIVE_STATUSES or self._near_kickoff(d) else "static" if d["status"] == S.FINISHED else "warm"
+        full = AWARDED.apply_to_match(full, config.awarded())     # the page shows a result decided after the match (compute/awarded.py)
         self.store.put_json(f"match/{mid}.json", full, cache=cache, validate=S.validate_detail, health_key=f"match:{why}")
         self.store.ok(f"match:{why}")
         s = self.st.setdefault("schedule", {}).get(str(mid))
@@ -668,6 +669,10 @@ class Poller:
                 self.note(f"comp {cid}: source returned no fixtures, kept the last good {len(prev)}")
         if comp.get("uaepl") and source == "fotmob":
             matches = self.merge_uaepl(comp, matches)
+        awarded = config.awarded()
+        if awarded:         # results decided after the match (compute/awarded.py): the table first, from FotMob's scores
+            AWARDED.apply_to_standings(data.get("standings"), matches, awarded)
+            matches = [AWARDED.apply_to_match(m, awarded) for m in matches]
         self.remember_schedule(matches)
         now = self.now()
         kos = [parse_utc(m["kickoff_utc"]) for m in matches if m.get("kickoff_utc")]
@@ -872,7 +877,8 @@ class Poller:
             self.store.fail(f"team:{tid}", e)
             return
         self.note_time_tbd(t["fixtures"])
-        t["fixtures"] = self.settle_fixtures([self.enrich(m) for m in t["fixtures"]])
+        aw = config.awarded()
+        t["fixtures"] = self.settle_fixtures([AWARDED.apply_to_match(self.enrich(m), aw) for m in t["fixtures"]])
         if t.get("national"):
             uae_clubs = {int(k) for k, v in self.st.get("team_comps", {}).items() if 538 in v or 11027 in v}
             for g in t["squad"]:

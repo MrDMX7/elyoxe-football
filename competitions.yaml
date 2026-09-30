@@ -67,6 +67,11 @@ derbies:
 
 focus_teams: [5789]          # UAE national team
 focus_comps: [538, 11027]    # every team in these gets a daily team file (squad, fixtures, .ics)
+# Results a federation decided after the match and FotMob still shows as played (compute/awarded.py): the fixture, the
+# match page and the table take the decision. The daily audit (db/audit.py, score_vs_365) finds new ones when 365Scores
+# marks a result «Awarded»; add one only with the decision's source.
+awarded:
+  6028541: {home: 3, away: 0, source: "Iraqi FA disciplinary committee, 2026-09 (round 6, played 1-1 on 2026-09-09): Naft Maysan counted as losers 0-3 for keeping a withdrawn player on the bench, art. 69-1-6-8 (INA, Shafaq News)"}
 
 competitions:
   # ---------- UAE ----------
