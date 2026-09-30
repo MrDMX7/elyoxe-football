@@ -188,11 +188,19 @@
       if (e.type === "added_time") return '<li class="div">+' + esc(e.detail) + " دقايق وقت بدل ضايع</li>";
       var who = e.player ? '<span class="lat">' + esc(e.player.name) + "</span>" : "";
       var extra = e.type === "sub" && e.player_out ? '<span class="sub">طلع <span class="lat">' + esc(e.player_out.name) + "</span></span>" : e.assist ? '<span class="sub">صناعة <span class="lat">' + esc(e.assist.name) + "</span></span>" : "";
-      var body = '<span class="who">' + evIcon(e.type) + who + (/goal/.test(e.type) && e.score ? '<span class="gs">' + sc(e.score) + "</span>" : "") + (EV[e.type] ? '<span class="kind">' + EV[e.type] + "</span>" : "") + "</span>" + extra;
+      // how the goal went in (compute/goal_how.py, from 2026-09-30): «رأسية من ركنية»; a penalty or own goal already says so
+      var how = e.type === "goal" && e.how && e.how.ar ? '<span class="sub how" data-how="' + esc(e.how.key) + '">' + esc(e.how.ar) + "</span>" : "";
+      var body = '<span class="who">' + evIcon(e.type) + who + (/goal/.test(e.type) && e.score ? '<span class="gs">' + sc(e.score) + "</span>" : "") + (EV[e.type] ? '<span class="kind">' + EV[e.type] + "</span>" : "") + "</span>" + extra + how;
       var mn = '<bdi dir="ltr">' + esc(e.minute) + (e.added ? "+" + esc(e.added) : "") + "'</bdi>";
-      return e.team === "home" ? '<li><span class="h">' + body + '</span><span class="mn">' + mn + "</span><span></span></li>" : '<li><span></span><span class="mn">' + mn + "</span><span>" + body + "</span></li>";
+      // hook for goal clips: data-goal-key="<minute as shown, 45+2>-<player id>"
+      var gk = /goal/.test(e.type) && !/^shootout/.test(e.type) ? ' data-goal-key="' + esc(e.minute + (e.added ? "+" + e.added : "") + "-" + ((e.player && e.player.id) || 0)) + '"' : "";
+      return e.team === "home" ? "<li" + gk + '><span class="h">' + body + '</span><span class="mn">' + mn + "</span><span></span></li>" : "<li" + gk + '><span></span><span class="mn">' + mn + "</span><span>" + body + "</span></li>";
     }).join("") + '</ul><p class="src"><a href="/laws/">ليش ألغى الحكم هدف أو صفّر بلنتي؟ قانون الكورة بالإماراتي</a></p>';
   };
+  // «الملخص»: the official highlights video FotMob links (match file "highlights"; the poller re-polls after full time
+  // until it appears), opened in a new tab
+  R.hl = function(md){ var h = md && md.highlights, u = h && h.url; if (!u || !/^https:\/\//.test(u)) return "";
+    return '<p class="hlink"><a class="btn hlbtn" href="' + esc(u) + '" target="_blank" rel="noopener">الملخص' + (/youtu/.test(u) ? ' <span class="small">على يوتيوب</span>' : "") + "</a></p>"; };
   // the match line: minute 0 on the RIGHT, time runs left (forward in RTL). Physical `right` on purpose.
   R.timeline = function(md){
     var ev = (md.events || []).filter(function(e){ return /goal|yellow|red/.test(e.type) && e.team; });

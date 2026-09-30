@@ -30,13 +30,14 @@ CC_AR = {"LBN": "لبنان", "LIB": "لبنان", "INT": "دولي", "KSA": "ا
 LOWER = re.compile(r"women|kvinner|damallsvenskan|frauen|femenin|f[eé]minine|ladies|\bw\)|u-?1\d\b|u-?2[0-3]\b|under[- ]?\d\d|"
                    r"youth|junior|reserve|primavera|juvenil|\bii\b|development|academy|amateur|regionalliga|oberliga", re.I)
 LIVE = S.LIVE_STATUSES
-KEEP_LIVE_ROWS_H = 3          # all/live.json keeps a finished match this long after kickoff + 2 h (so pages see it end)
+KEEP_LIVE_ROWS_H = 1          # all/live.json keeps a finished match this long after kickoff + 2 h (so pages see it end;
+                              # /all/ also reloads the whole day every 2 minutes)
 
 
 def _group_label(lg):
-    g = lg.get("groupName")
+    g = (lg.get("groupName") or "").strip()
     if g:
-        return g
+        return "Grp. " + g if re.fullmatch(r"[A-Za-z0-9]{1,2}", g) else g     # FotMob says "D" / "4": the site reads "Grp. D"
     parent = lg.get("parentLeagueName")
     name = lg.get("name") or ""
     if parent and name.startswith(parent):

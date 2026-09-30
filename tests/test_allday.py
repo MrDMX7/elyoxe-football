@@ -93,7 +93,7 @@ def test_live_rows_and_hot(day):
     assert sum(r["status"] in ("live", "ht") for r in rows) == 18
     assert all(set(r) <= {"id", "status", "minute", "home", "away", "pen", "sd", "lg"} for r in rows)
     old = [r for r in rows if r["status"] == "finished"]
-    assert all(0 <= (NOW - parse_utc(next(m["utc"] for lg in doc["leagues"] for m in lg["matches"] if m["id"] == r["id"]))).total_seconds() <= 5 * 3600 for r in old)
+    assert all(0 <= (NOW - parse_utc(next(m["utc"] for lg in doc["leagues"] for m in lg["matches"] if m["id"] == r["id"]))).total_seconds() <= 3 * 3600 for r in old)
     assert A.hot(doc, NOW)
     quiet = {"leagues": [{"id": 1, "matches": [{"id": 1, "status": "scheduled", "utc": "2026-09-30T20:00:00Z"}]}]}
     assert not A.hot(quiet, NOW)

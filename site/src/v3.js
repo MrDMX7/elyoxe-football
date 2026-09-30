@@ -66,10 +66,14 @@
       } else {
         team = e.team; mn = '<bdi dir="ltr">' + esc(e.minute) + (e.added ? "+" + esc(e.added) : "") + "'</bdi>";
         var extra = e.assist ? '<span class="sub">صناعة ' + nm(e.assist) + "</span>" : "";
-        body = '<span class="who">' + evIcon(e.type) + nm(e.player) + (/goal/.test(e.type) && e.score ? '<span class="gs">' + sc(e.score) + "</span>" : "") + (EV[e.type] ? '<span class="kind">' + EV[e.type] + "</span>" : "") + "</span>" + extra;
+        // how the goal went in (compute/goal_how.py, from 2026-09-30): «رأسية من ركنية»; a penalty or own goal already says so
+        var how = e.type === "goal" && e.how && e.how.ar ? '<span class="sub how" data-how="' + esc(e.how.key) + '">' + esc(e.how.ar) + "</span>" : "";
+        body = '<span class="who">' + evIcon(e.type) + nm(e.player) + (/goal/.test(e.type) && e.score ? '<span class="gs">' + sc(e.score) + "</span>" : "") + (EV[e.type] ? '<span class="kind">' + EV[e.type] + "</span>" : "") + "</span>" + extra + how;
       }
       var k = e && /goal/.test(e.type) ? " g" : "", eid = esc((e && e.event_id) || (r.list ? r.list.map(function(x){ return x.event_id || ""; }).join("+") : ""));
-      return team === "home" ? '<li class="' + k + '" data-eid="' + eid + '"><span class="h">' + body + '</span><span class="mn">' + mn + "</span><span></span></li>" : '<li class="' + k + '" data-eid="' + eid + '"><span></span><span class="mn">' + mn + "</span><span>" + body + "</span></li>";
+      // hook for goal clips: data-goal-key="<minute as shown, 45+2>-<player id>" (penalty shoot-out kicks have none)
+      var gk = e && /goal/.test(e.type) && !/^shootout/.test(e.type) ? ' data-goal-key="' + esc(e.minute + (e.added ? "+" + e.added : "") + "-" + ((e.player && e.player.id) || 0)) + '"' : "";
+      return team === "home" ? '<li class="' + k + '" data-eid="' + eid + '"' + gk + '><span class="h">' + body + '</span><span class="mn">' + mn + "</span><span></span></li>" : '<li class="' + k + '" data-eid="' + eid + '"' + gk + '><span></span><span class="mn">' + mn + "</span><span>" + body + "</span></li>";
     }).join("") + '</ul>' + (noSubs(md) ? '<p class="na">التبديلات ما وصلتنا من المصدر لهالمباراة</p>' : "") + '<p class="src"><a href="/laws/">ليش ألغى الحكم هدف أو صفّر بلنتي؟ قانون الكورة بالإماراتي</a></p>';
   };
 

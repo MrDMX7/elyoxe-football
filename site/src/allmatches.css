@@ -1,0 +1,33 @@
+/* /all/ (every match of the day) and /live/?id= (any match): src/allmatches.js. Rows reuse .m / .chip / .grp-sub, the
+   day switch reuses .seg.segf, the search reuses .wq; only what is new is here. */
+.allbar{display:flex;flex-wrap:wrap;gap:.5rem;align-items:stretch;margin-block:0 .8rem}
+.allbar .wq{flex:1 1 8rem;min-inline-size:0;margin:0;border:1px solid var(--line);background:transparent;color:inherit;font:inherit;font-size:.95rem;padding:.55rem .7rem}
+.alllive{display:inline-flex;align-items:center;gap:.4rem;border:1px solid var(--line);background:none;color:var(--ink);padding:.5rem .9rem;font:600 .88rem var(--font-text);cursor:pointer;white-space:nowrap}
+.alllive b{font-family:var(--digits,inherit);color:var(--live-text)}
+.alllive[aria-pressed="true"]{background:var(--live);color:var(--ground)}
+.alllive[aria-pressed="true"] b{color:var(--ground)}
+.alllive:disabled{opacity:.55;cursor:default}
+.alllive .cardflip{inline-size:.55rem;block-size:.55rem}
+#alllist{min-block-size:40vh}
+#alllist[aria-busy="true"]{opacity:.6}
+details.alg{border-block-end:1px solid var(--line)}
+details.alg > summary{display:flex;align-items:center;gap:.5rem;padding-block:.65rem .5rem;cursor:pointer;list-style:none;font-size:.92rem;font-weight:600}
+details.alg > summary::-webkit-details-marker{display:none}
+details.alg > summary::after{content:"";inline-size:.45rem;block-size:.45rem;border-block-end:1.5px solid var(--tert);border-inline-start:1.5px solid var(--tert);transform:rotate(-45deg);margin-inline-start:.2rem;transition:transform .15s}
+details.alg[open] > summary::after{transform:rotate(135deg)}
+details.alg.ours > summary .aln{color:var(--ink)}
+.alg .aln{min-inline-size:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alg .alc{color:var(--tert);font-size:.78rem;font-weight:400;white-space:nowrap}
+.alg .alglive{color:var(--live-text);font-size:.78rem;display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap}
+.alg .alglive .cardflip{inline-size:.5rem;block-size:.5rem}
+.alg .aln2{margin-inline-start:auto;color:var(--tert);font-size:.8rem;font-weight:400}
+.alg .algb{padding-block-end:.5rem}
+.alg .alk{display:inline-block;margin-block:.4rem .2rem;font-size:.8rem;color:var(--tert)}
+.alg .alk:hover{color:var(--ink)}
+.alred{display:inline-block;inline-size:.45rem;block-size:.62rem;background:var(--card-r);margin-inline-start:.35rem;vertical-align:-1px}
+a.unfold.allgo{text-align:center;text-decoration:none}
+/* the live page: the board of a match page, in the body */
+.lvh .board{margin-block:.4rem 1rem}
+.lvh .board .tm{color:var(--ink)}
+#lvhl .hlink{margin-block:0 .8rem}
+ul.ev .how{color:var(--tert)}

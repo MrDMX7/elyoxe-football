@@ -63,6 +63,24 @@ Resources:
       FunctionCode: |
         function handler(event) { var r = event.request; r.uri = r.uri.replace(/^\/v1/, ""); return r; }
 
+  # /api/tifo/match?id= (saas/cards src/tifo_match.py, any match live): cached on the id for as long as the Lambda's
+  # Cache-Control says (20 s live ... 1 h finished), so one FotMob request serves every viewer of a match
+  ApiMatchCache:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub "${AWS::StackName}-api-match"
+        Comment: "/api/tifo/match: origin max-age, keyed on ?id"
+        MinTTL: 0
+        DefaultTTL: 0
+        MaxTTL: 3600
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingGzip: true
+          EnableAcceptEncodingBrotli: true
+          HeadersConfig: { HeaderBehavior: none }
+          CookiesConfig: { CookieBehavior: none }
+          QueryStringsConfig: { QueryStringBehavior: whitelist, QueryStrings: [id] }
+
   Dist:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -96,6 +114,13 @@ Resources:
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6   # Managed-CachingOptimized (honours origin max-age)
           FunctionAssociations: [{ EventType: viewer-request, FunctionARN: !GetAtt IndexRewrite.FunctionMetadata.FunctionARN }]
         CacheBehaviors:
+          - PathPattern: /api/tifo/match              # before /api/tifo/*: the only cached API path
+            TargetOriginId: api
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS]
+            Compress: true
+            CachePolicyId: !Ref ApiMatchCache
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac   # Managed-AllViewerExceptHostHeader
           - PathPattern: /api/tifo/*
             TargetOriginId: api
             ViewerProtocolPolicy: https-only

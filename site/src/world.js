@@ -122,9 +122,13 @@
   }
 
   if (kind === "game"){
-    get("s365/game/" + id + ".json").then(function(m){
+    // a game of today (the Arab leagues FotMob lacks, linked from /all/) is not in s365/game/ before db/scores365.py's next
+    // run: the live API gives the same shape (saas/cards src/tifo_match.py), and a live game is fetched again every 30 s
+    var api365 = function(){ return fetch("/api/tifo/match?id=365:" + encodeURIComponent(id)).then(function(r){ if (!r.ok){ var e = new Error(r.status); e.status = r.status; throw e; } return r.json(); }); };
+    var game = function(m){
       var hn = m.home[1] || "", an = m.away[1] || ""; title(hn + " " + (m.home[2] == null ? "" : m.home[2]) + " - " + (m.away[2] == null ? "" : m.away[2]) + " " + an);
       var html = '<div class="wmh"><a href="' + teamUrl(m.home[0]) + '">' + esc(hn) + '</a><bdi dir="rtl" class="num wsc">' + (m.home[2] == null ? "" : m.home[2]) + " - " + (m.away[2] == null ? "" : m.away[2]) + '</bdi><a href="' + teamUrl(m.away[0]) + '">' + esc(an) + "</a></div>" +
+        (m.live_api && m.status ? '<p class="season">' + (m.status_group === 3 ? '<i class="cardflip"></i> مباشر ' + (m.minute ? '<bdi dir="ltr" class="num">' + esc(String(m.minute).replace(/'/g, "")) + "'</bdi>" : "") : esc(m.status)) + "</p>" : "") +
         '<p class="season">' + [m.comp_name && '<a href="' + leagueUrl(m.comp) + '">' + esc(m.comp_name) + "</a>" + (m.round ? " · الجولة " + m.round : ""), dstr(m.date), m.venue && (/^(ملعب|استاد|ستاد)/.test(m.venue) ? "" : "ملعب ") + esc(m.venue), m.referee && "الحكم " + esc(m.referee)].filter(Boolean).join(" · ") + "</p>";
       var EV = { g:"هدف", y:"إنذار", r:"طرد", s:"تبديل" };
       if ((m.events || []).length) html += '<section class="blk"><h2>أحداث المباراة</h2><ul class="mlist wev">' + m.events.map(function(e){
@@ -137,7 +141,12 @@
           return "<li" + (p[4] ? "" : ' class="sub"') + ">" + (p[2] > 0 ? '<span class="num muted">' + esc(p[2]) + "</span> " : "") + '<a href="' + athUrl(p[0]) + '">' + esc(p[1] || "") + "</a>" + ' <span class="muted small">' + esc(p[3] || "") + "</span>" +
             (p[5] != null ? ' <span class="num muted small">' + p[5] + "′</span>" : "") + (+p[6] ? ' <span class="ev g">' + p[6] + "</span>" : "") + (+p[7] ? ' <span class="muted small">صناعة ' + p[7] + "</span>" : "") + "</li>"; }).join("") + "</ol></div>"; }).join("") + "</div></section>";
       box.innerHTML = html + src365;
-    }).catch(function(){ box.innerHTML = '<p class="empty">ما لقينا تفاصيل هالمباراة. <a href="/db/">الموسوعة</a></p>'; });
+      if (m.live_api && m.status_group !== 4){ var again = function(){ if (document.hidden){ setTimeout(again, 30e3); return; } api365().then(game).catch(function(){}); }; setTimeout(again, 30e3); }
+    };
+    var tries = 0, load365 = function(){ api365().then(game).catch(function(e){
+      if (e && e.status >= 500 && tries++ < 4){ box.innerHTML = '<p class="empty">ما قدرنا نجيب المباراة الحين، نحاول مرة ثانية…</p>'; setTimeout(load365, 12e3); return; }
+      box.innerHTML = '<p class="empty">ما لقينا تفاصيل هالمباراة. <a href="/db/">الموسوعة</a></p>'; }); };
+    get("s365/game/" + id + ".json").then(game, load365).catch(function(){ box.innerHTML = '<p class="empty">ما لقينا تفاصيل هالمباراة. <a href="/db/">الموسوعة</a></p>'; });
     return;
   }
 

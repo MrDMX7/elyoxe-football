@@ -250,7 +250,7 @@
       var idx = r[0], md = r[1];
       if (MD && md.generated && MD.generated === md.generated && MD._full){ var t0 = Date.parse(md.kickoff_utc); if (R.isLive(md) || (md.status === "scheduled" && t0 - Date.now() < 90 * 60e3)) poll(match, 20e3); return; }   // W2.11: nothing new
       md._full = 1; MD = md; FULL = md; setTimeout(dist, 0); var pb = $("#p3dbtn"); if (pb) pb.hidden = !(md.lineups && md.lineups.home) || (navigator.deviceMemory && navigator.deviceMemory <= 3);   // W4.7: no 3D on phones with 3 GB or less
-      set("#mh", R.matchHead(md)); set("#facts", R.matchFacts(md, idx)); set("#catchup", R.catchup(md)); set("#events", R.events(md)); set("#lineups", R.lineups(md)); set("#stats", R.stats(md)); if (md.h2h && md.h2h.summary) set("#h2h", R.h2h(md));   /* QA 2: a detail file without h2h keeps the prerendered history */ document.dispatchEvent(new CustomEvent("tifo:match", { detail:md }));   // v3 shell: after the re-render
+      set("#mh", R.matchHead(md)); set("#facts", R.matchFacts(md, idx)); set("#catchup", R.catchup(md)); set("#events", R.events(md)); set("#hlbtn", R.hl(md)); set("#lineups", R.lineups(md)); set("#stats", R.stats(md)); if (md.h2h && md.h2h.summary) set("#h2h", R.h2h(md));   /* QA 2: a detail file without h2h keeps the prerendered history */ document.dispatchEvent(new CustomEvent("tifo:match", { detail:md }));   // v3 shell: after the re-render
       stamp(md.generated); ok();
       var t = Date.parse(md.kickoff_utc), soon = md.status === "scheduled" && t - Date.now() < 90 * 60e3 && t > Date.now() - 3 * 3600e3;
       weak(md); if (R.isLive(md) || soon){ poll(match, 20e3); overlay(); } else wake(md);

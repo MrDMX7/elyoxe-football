@@ -4,7 +4,7 @@
    - tifo-crest: /logo/ and /lg/, cache first, the newest 300 kept.
    - tifo-pages: navigations, network first (navigation preload) with a 4 s budget, the newest 60 kept.
    - tifo-data: other /v1 files, network first with a 4 s budget, the newest 40 kept.
-   Live data (/v1/live.json, /v1/match/*, /v1/day/*) is network only; the last copy is served only when the network fails
+   Live data (/v1/live.json, /v1/match/*, /v1/day/*, /v1/all/*) is network only; the last copy is served only when the network fails
    outright (offline), never on a timeout, or a slow stadium connection would freeze the score. /og/ is never cached.
    Offline: a navigation that fails with nothing cached gets /offline/ (tifo-off, filled on install).
    Kill switch: on activate the worker reads /sw.json and unregisters itself (and clears its caches) when it says {"off":true}. */
@@ -28,7 +28,7 @@ self.addEventListener("activate", e => { e.waitUntil((async () => {
   await self.clients.claim();
 })()); });
 async function put(name, req, res){ const c = await caches.open(name); await c.put(req, res); const lim = LIMIT[name]; if (!lim) return; const ks = await c.keys(); for (let i = 0; i < ks.length - lim; i++) await c.delete(ks[i]); }   // keys come back oldest first
-const LIVE = /^\/v1\/(live\.json|match\/|day\/)/;
+const LIVE = /^\/v1\/(live\.json|match\/|day\/|all\/)/;   // all/: every match of the day (/all/), network only like day/
 // push (W3.6 + owner item 9a): payload {title, body, url, tag, team}; a push is always shown, even when the payload is not JSON
 self.addEventListener("push", e => { let d = {}; try { d = e.data ? e.data.json() : {}; } catch (err){ try { d = { body:e.data.text() }; } catch (x){} }
   e.waitUntil(self.registration.showNotification(d.title || "تيفو", { body:d.body || "", tag:d.tag || "tifo", renotify:!!d.tag, lang:"ar", dir:"rtl", icon:"/icons/icon-192.png", badge:"/icons/badge-96.png", data:{ url:d.url || "/", team:d.team || null } })); });
