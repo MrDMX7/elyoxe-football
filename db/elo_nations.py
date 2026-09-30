@@ -39,7 +39,7 @@ def main(argv=None):
     for fid, t in teams.items():
         nm = ALIAS.get(t.get("name"), t.get("name"))
         code = names.get(nm)
-        if not code or t.get("country"):          # a club never matches: clubs carry a country, national teams don't
+        if not code or not ({77, 50, 44, 289, 290, 329, 10242, 114, 10195, 10196, 10197, 10198, 10199, 10609, 10608, 9806, 11156, 9571} & set(t.get("comps") or [])):   # national teams only, known by their competitions
             continue
         try:
             raw = get(nm.replace(" ", "_") + ".tsv")

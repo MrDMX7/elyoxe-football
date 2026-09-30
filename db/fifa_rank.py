@@ -58,7 +58,9 @@ def main(argv=None):
     print(len(dates), "dates,", len(series), "teams")
     store = Store(S3Backend(BUCKET))
     teams = (store.get_json("teams.json") or {}).get("teams") or {}
-    fm = {fold(t.get("name")): int(k) for k, t in teams.items() if not t.get("country")}     # national teams carry no country
+    # a national team is known by its competitions (some carry a country in FotMob's data, some don't)
+    NAT = {77, 50, 44, 289, 290, 329, 10242, 114, 10195, 10196, 10197, 10198, 10199, 10609, 10608, 9806, 11156, 9571}
+    fm = {fold(t.get("name")): int(k) for k, t in teams.items() if NAT & set(t.get("comps") or [])}
     idx, missing = {}, []
     for code, S in series.items():
         fid = fm.get(fold(names.get(code)))
