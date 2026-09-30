@@ -530,6 +530,25 @@
       });
     });
   })();
+  // /messi/: the 3D pitch loads when its section comes into view (three.js + ~1 MB of shots only for those who scroll to it)
+  (function(){
+    var box = $("#m3dc"); if (!box) return;
+    var AR = { "الدوري الإسباني":1 }, st = $("#m3ds"), rg = $("#m3dr"), api = null, data = null;
+    function go(){
+      Promise.all([import(box.dataset.src), fetch(box.dataset.json).then(function(r){ return r.json(); })]).then(function(x){
+        data = x[1]; box.innerHTML = ""; var goals = [];
+        data.matches.forEach(function(m){ m.shots.forEach(function(s){ if (s.goal) goals.push({ m:m, s:s }); }); });
+        api = x[0].mount(box, data, { onStep:function(n, g){ rg.value = n; var hit = goals[n - 1]; if (!hit) { st.textContent = ""; return; }
+          st.textContent = "الهدف " + n + " · " + hit.m.season + " · ضد " + hit.m.opp + " · الدقيقة " + hit.s.min + (hit.s.kind === "Penalty" ? " · ضربة جزاء" : hit.s.kind === "Free Kick" ? " · ضربة حرة" : ""); } });
+        rg.max = api.total;
+      }).catch(function(){ box.innerHTML = '<p class="empty">ما قدرنا نحمّل الملعب الثلاثي الأبعاد على هالجهاز.</p>'; });
+    }
+    var io = new IntersectionObserver(function(es){ if (es[0].isIntersecting){ io.disconnect(); go(); } }, { rootMargin:"200px" }); io.observe(box);
+    document.querySelectorAll(".m3d-ctl [data-v]").forEach(function(b){ b.onclick = function(){ if (!api) return; api.view(b.dataset.v); document.querySelectorAll(".m3d-ctl [data-v]").forEach(function(o){ o.setAttribute("aria-pressed", String(o === b)); }); }; });
+    $("#m3dplay").onclick = function(){ if (api) api.play(); };
+    $("#m3dmiss").onchange = function(e){ if (api) api.misses(e.target.checked); };
+    rg.oninput = function(){ if (api) api.seek(+rg.value); };
+  })();
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio, daypage:daypage, arabs:arabs }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && Object.keys(window.NAT || {}).some(function(k){ return String(window.NAT[k]) === ID; })) countdown(); }
   tvFull();
   tabs(); run(); dist();

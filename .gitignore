@@ -10,3 +10,4 @@ samconfig.toml
 .env
 news/.x-inbox.json
 news/.x-reader.log
+history/.cache/

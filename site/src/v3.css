@@ -830,3 +830,9 @@ body.hasprayl .tile.pray{display:none}
 .phero .pph img{display:block;inline-size:100%;block-size:auto;aspect-ratio:4/5;mix-blend-mode:luminosity;opacity:.92;-webkit-mask-image:linear-gradient(to top,transparent 0,#000 22%);mask-image:linear-gradient(to top,transparent 0,#000 22%)}
 .phero .pph figcaption{font-size:.6rem;line-height:1.3;margin-block-start:.2rem;opacity:.55;max-inline-size:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;direction:ltr;text-align:end}
 .phero .pph figcaption a{color:inherit;text-decoration:none}
+/* /messi/: the 3D pitch and its controls */
+.v3 .m3d-ctl{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:.6rem 0}
+.v3 .m3d-ctl [aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.v3 #m3dc{min-block-size:320px;background:#0B1512}
+.v3 #m3dc canvas{display:block;inline-size:100%}
+.v3 #m3dr{inline-size:100%;margin-block-start:.5rem}
