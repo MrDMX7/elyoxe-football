@@ -192,6 +192,23 @@ def name_sim(a, b):
     return 0.7 * r if r >= 0.8 else 0.0
 
 
+def person_sim(a, b):
+    """0..1 for two spellings of one person: the same surname and a compatible first name, or one name inside the other.
+    Teammates sharing a word («Ali Saleh», «Almoez Ali») score 0."""
+    fa, fb = S365.fold(a).split(), S365.fold(b).split()
+    if not fa or not fb:
+        return 0.0
+    if fa == fb:
+        return 1.0
+    if fa[-1] == fb[-1] and (len(fa) == 1 or len(fb) == 1 or fa[0][0] == fb[0][0]):
+        return 0.9
+    if set(fa) <= set(fb) or set(fb) <= set(fa):
+        return 0.8 if min(len(fa), len(fb)) > 1 or fa[-1] == fb[-1] else 0.6
+    if fa[0] == fb[0] and len(fa) > 1 and len(fb) > 1 and difflib.SequenceMatcher(None, fa[-1], fb[-1]).ratio() >= 0.8:
+        return 0.8                                        # Walid Azarou / Walid Azaro
+    return 0.0
+
+
 def team_score(fm_team, t365, fmmap):
     if not t365:
         return 0.0
@@ -875,8 +892,8 @@ def scorers_vs_365(A, c, sid, cat, ours, comp_names, names365, fmmap):
         for pid, e in ours.items():
             if (e.get("team") or {}).get("id") != tid:
                 continue
-            sc = name_sim(nm, e["player"]["name"])
-            if sc >= 0.5 and (best is None or sc > best[0]):
+            sc = person_sim(nm, e["player"]["name"])
+            if sc >= 0.6 and (best is None or sc > best[0]):
                 best = (sc, pid, e)
         if not best or float(best[2].get("value") or 0) == v:
             continue
@@ -897,7 +914,7 @@ def scorers_vs_365(A, c, sid, cat, ours, comp_names, names365, fmmap):
             mem = {x.get("id"): x for x in gg.get("members") or []}
             n_365 = sum(1 for x in gg.get("events") or [] if (x.get("eventType") or {}).get("id") == 1
                         and "own" not in str((x.get("eventType") or {}).get("subTypeName") or "").lower()
-                        and name_sim((mem.get(x.get("playerId")) or {}).get("name"), nm) >= 0.5)
+                        and person_sim((mem.get(x.get("playerId")) or {}).get("name"), nm) >= 0.6)
             if n_fm != n_365:
                 ev.append(f"{m['home']['name']} v {m['away']['name']} {m['kickoff_utc'][:10]}: FotMob credits him {n_fm}, 365Scores {n_365}")
         A.add("scorers", "vs_365", "warn", "source", f"player:{pid}", f"{c['name_ar']} ({cid}) {e['player']['name']}: {e.get('value')} goals on our leaderboard (FotMob), {v:g} at 365Scores",
