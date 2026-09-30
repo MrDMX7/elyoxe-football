@@ -42,6 +42,7 @@ H = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 DAY = 86400
 # 365Scores country ids of the Arab world
 ARAB = {122, 131, 124, 127, 135, 115, 161, 119, 123, 125, 139, 130, 114, 116, 117, 126, 226, 170}
+INTL = {54, 19, 171, 44, 17, 47, 208, 176, 188, 303}   # 365's International, Europe, Asia, Africa, South/North America, Oceania, Olympics, National Teams, America
 # ... and those FotMob has no league for: their competitions get the full live season
 LIVE_CC = {161, 119, 123, 125, 130, 116, 117, 226, 170}
 WOMEN = re.compile(r"women|femin|ladies|سيدات|نسائي|للسيدات|السيدات", re.I)
@@ -141,7 +142,7 @@ def fotmob_map(teams, countries):
     fm_cc = {c.get("ccode"): cc_key(c.get("name")) for c in (al.get("countries") or [])}
     iso_cc = {}
     fm = {}                                   # fotmob id -> (en fold, ar fold, country key or None)
-    side = lambda en, ar: YOUTH.search(en or "") or WOMEN.search((en or "") + " " + (ar or "")) or re.search(r"\s(ii|b)$|\(w\)|\bwfc\b", (en or "").lower()) or "تحت" in (ar or "")
+    side = lambda en, ar: YOUTH.search(en or "") or WOMEN.search((en or "") + " " + (ar or "")) or re.search(r"\s(ii|b|2)$|\(w\)|\bwfc\b", (en or "").lower()) or "تحت" in (ar or "")
     for c in wi:
         if not side(c[2], c[1]):
             fm[int(c[0])] = (fold(c[2]), fold_ar(c[1]), fm_cc.get(c[3]))
@@ -487,6 +488,12 @@ def fill365():
     return out
 
 
+def shown(c):
+    """365 names some competitions bare («كأس», «كأس السوبر»): on a club's title list they carry the country."""
+    nm, co = c.get("name") or "", c.get("country") or ""
+    return f"{nm} ({co})" if co and co not in nm and len(nm.split()) <= 2 and c.get("cc") not in INTL else nm
+
+
 # ------------------------------------------------------------------ main
 def main(argv=None):
     ap = argparse.ArgumentParser(); ap.add_argument("--upload", action="store_true"); ap.add_argument("--only", default="champions,tables,live,players,fill")
@@ -527,7 +534,7 @@ def main(argv=None):
     for tid in set(titles) | set(team_games):
         nm = teams.get(tid) or ["", "", None]
         d = {"id": tid, "name": nm[0], "name_en": nm[1], "cc": nm[2], "country": (countries.get(nm[2]) or [""])[0], "fotmob": fmm.get(tid),
-             "titles": sorted([[cid, comps[cid]["name"], s] for cid, s in (titles.get(tid) or {}).items()], key=lambda x: -len(x[2]))}
+             "titles": sorted([[cid, shown(comps[cid]), s] for cid, s in (titles.get(tid) or {}).items()], key=lambda x: -len(x[2]))}
         if tid in team_games:
             d["squad"] = sq.get(tid) or []
             d["games"] = sorted([games[g] for g in set(team_games[tid])], key=lambda x: x[1], reverse=True)

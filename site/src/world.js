@@ -179,6 +179,14 @@
         if (T.length) html += '<section class="blk"><h2>آخر انتقالاته</h2><ul class="mlist">' + T.slice(0, 30).map(function(t){ var inb = t[5] === +id; return '<li><span class="num">' + esc(t[0]) + "</span> " + (t[1] ? '<a href="' + playerUrl(t[1]) + '">' + esc(t[2] || "") + "</a>" : esc(t[2] || "")) + ' <span class="muted small">' + (inb ? "جاه من " + esc(t[4] || "") : "راح إلى " + esc(t[6] || "")) + (t[8] ? " · " + esc(t[8]) : "") + "</span></li>"; }).join("") + "</ul></section>";
         html += '<p class="src">من FotMob. <a href="/db/">الموسوعة</a></p>';
         box.innerHTML = html;
+        // 365Scores' titles (every competition from its first season) replace FotMob's list when they count more
+        get("s365/fmmap.json").then(function(mp){ var sid = (mp.map || {})[id]; if (!sid) return;
+          return get("s365/team/" + sid + ".json").then(function(t){ var T = t.titles || [], n365 = T.reduce(function(a, x){ return a + x[2].length; }, 0), nfm = tro.reduce(function(a, x){ return a + x.won; }, 0);
+            if (n365 <= nfm) return;
+            var sec = '<section class="blk" id="w365t"><h2>ألقابه <small>' + n365 + '</small></h2><ul class="chon">' + T.map(function(x){ return '<li><b><a href="' + leagueUrl(x[0]) + '">' + esc(x[1]) + '</a></b> <span class="num">' + x[2].length + '</span><span class="muted small yrs">' + esc(x[2].join("، ")) + "</span></li>"; }).join("") +
+              '</ul><p class="src">الألقاب من 365Scores. <a href="' + teamUrl(sid) + '">صفحته هناك في الموسوعة</a></p></section>';
+            var old = [].filter.call(box.querySelectorAll("section.blk"), function(x){ var h = x.querySelector("h2"); return h && /^ألقابه/.test(h.textContent); })[0];
+            if (old) old.outerHTML = sec; else box.insertAdjacentHTML("afterbegin", sec); }); }).catch(function(){});
         get("history/club/" + id + ".json").then(function(h){ box.insertAdjacentHTML("beforeend", '<section class="blk"><h2>تاريخه</h2><p>من <b class="num">' + h.since.slice(0, 4) + "</b>: " + h.total.p + " مباراة، " + h.total.w + " فوز، " + h.total.d + " تعادل، " + h.total.l + ' خسارة.</p><p class="src">النتايج من قاعدة schochastics/football-data.</p></section>'); }).catch(function(){});
       }).catch(function(){ box.innerHTML = '<p class="empty">ما لقينا هالنادي في الموسوعة. <a href="/db/">دوّر من جديد</a></p>'; });
     });
