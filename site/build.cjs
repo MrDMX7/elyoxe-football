@@ -275,7 +275,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   const APPROVED = JSON.parse(fs.readFileSync(path.join(__dirname, "ai/approved.json"), "utf8"));
   const AI = k => { const d = path.join(CACHE, "ai", k), o = {}; if (fs.existsSync(d)) for (const f of fs.readdirSync(d)) if (f.endsWith(".json")) o[f.slice(0, -5)] = JSON.parse(fs.readFileSync(path.join(d, f), "utf8")); return o; };
   const AIS = AI("summary"), AIP = AI("preview"), AIC = AI("podcast"), AID5 = AI("daily5"), AICM = AI("commentary"), AIDG = AI("digest"), AIPW = AI("power"), AIWHY = AI("why"), AIQK = AI("quick");
-  const RSD = path.join(process.env.HOME, "workspace/research/tifo-2026-09-27"), readRes = f => { try { return JSON.parse(fs.readFileSync(path.join(RSD, f), "utf8")); } catch (e){ return {}; } };
+  const RSD = path.join(require("os").homedir(), "workspace/research/tifo-2026-09-27"), readRes = f => { try { return JSON.parse(fs.readFileSync(path.join(RSD, f), "utf8")); } catch (e){ return {}; } };
   const CLUBS = {}; Object.values((readRes("arab_clubs.json").clubs) || {}).forEach(c => { if (c.fotmob_id) CLUBS[c.fotmob_id] = c; });
   const SUSR = {}; Object.values(readRes("suspension_rules.json")).forEach(v => { if (v && v.fotmob_id) SUSR[v.fotmob_id] = v; });
   const ACC = {}; Object.values((readRes("club_accounts.json").entities) || {}).forEach(v => { if (v.fotmob_id) ACC[v.fotmob_id] = v; });
@@ -977,7 +977,7 @@ ${items}
     write("countdowns/index.html", page({ path:"/countdowns/", page:"countdowns", title:"عدّادات المباريات الكبيرة | تيفو", desc:"كم باقي على الديربيات ومباريات المنتخبات والنهائيات، بتوقيت بلدك.", body:"<h1>كم باقي؟</h1>" + (big.length ? big.map(m => `<a class="cd" href="/m/${m.id}/"><span><b>${R.tname(m.home)} و${R.tname(m.away)}</b><br><span class="small">${esc(m.comp_name_ar || R.compName(index, m.comp))}، ${R.td(m.kickoff_uae, true)}</span></span><span class="dg cdt" data-u="${esc(m.kickoff_utc)}">—</span></a>`).join("") : '<p class="empty">ما في مباريات كبيرة قريبة.</p>') })); urls.push("/countdowns/"); }
 
   // ---- 7e. phase 4 reference pages (research/tifo-2026-09-27 + Arabic from ai/history_ar.py)
-  const RS = path.join(process.env.HOME, "workspace/research/tifo-2026-09-27"), HC = path.join(CACHE, "history");
+  const RS = path.join(require("os").homedir(), "workspace/research/tifo-2026-09-27"), HC = path.join(CACHE, "history");
   const rj = (f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch (e){ return null; } };
   const hl = rj(path.join(HC, "legends.json")) || {}, hm = rj(path.join(HC, "memorable.json")) || {}, ht = rj(path.join(HC, "thisday.json")) || {}, hw = rj(path.join(HC, "laws.json")) || {};
   const legRaw = (rj(path.join(RS, "legends.json")) || {}).players || [];

@@ -16,9 +16,9 @@ ALIASES=$(aws cloudfront get-distribution-config --id "$DIST" --query "Distribut
 FLAG=--preview; [ "$ALIASES" != "0" ] && FLAG=""
 node build.cjs $FLAG
 # guard: a flaky fetch can yield a partial build, and `sync --delete` would then wipe live pages. Refuse a build that
-# lost more than 15% of the last published page count.
+# lost more than 5% of the last published page count.
 NOW=$(find out -name index.html | wc -l); LAST=$(cat cache/last_pages 2>/dev/null || echo 0)
-if [ "$LAST" -gt 0 ] && [ "$NOW" -lt $((LAST * 85 / 100)) ]; then echo "partial build: $NOW pages vs $LAST last time; not publishing" >&2; exit 7; fi
+if [ "$LAST" -gt 0 ] && [ "$NOW" -lt $((LAST * 95 / 100)) ]; then echo "partial build: $NOW pages vs $LAST last time; not publishing" >&2; exit 7; fi
 # assets are content-hashed -> 1 year; logos 7 days; pages 60 s (live data comes from /v1 anyway)
 sync_assets(){ aws s3 sync out/assets "s3://$BUCKET/assets" --region $REGION --only-show-errors --cache-control "public,max-age=31536000,immutable"; }
 sync_logos(){ aws s3 sync out/logo "s3://$BUCKET/logo" --region $REGION --only-show-errors --cache-control "public,max-age=604800"; }

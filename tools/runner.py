@@ -80,6 +80,7 @@ class Log:
 def run(log, cmd, cwd=ROOT, timeout=None):
     """Run a command, its output into the log; (return code, the output's tail)."""
     env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONWARNINGS="ignore")
+    env.setdefault("HOME", str(Path.home()))          # Task Scheduler gives no HOME; scripts join paths onto it
     log.w("$ " + " ".join(str(c) for c in cmd))
     try:
         p = subprocess.run([str(c) for c in cmd], cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
@@ -110,8 +111,8 @@ def job_site(log):
     now = sum(1 for _ in out.rglob("index.html"))
     lastf = CACHE / "last_pages"
     last = int(lastf.read_text().strip() or 0) if lastf.exists() else 0
-    if last and now < last * 85 // 100:             # a flaky fetch can yield a partial build; `sync --delete` would wipe pages
-        return False, f"partial build: {now} pages vs {last} last time; not publishing"
+    if last and now < last * 95 // 100:             # a flaky fetch (or a missing input) can yield a partial build, and
+        return False, f"partial build: {now} pages vs {last} last time; not publishing"   # `sync --delete` would wipe pages
     q = lambda k: subprocess.run([AWS, "cloudformation", "describe-stacks", "--region", REGION, "--stack-name", STACK, "--query",
                                   f"Stacks[0].Outputs[?OutputKey=='{k}'].OutputValue", "--output", "text"], capture_output=True, text=True).stdout.strip()
     bucket, dist, dom = q("Bucket"), q("DistributionId"), q("DistributionDomain")
