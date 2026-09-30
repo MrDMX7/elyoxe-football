@@ -603,6 +603,20 @@
       box.appendChild(sec);
     }).catch(function(){});
   })();
+  // ---- a club's UEFA ranking through the years (kassiesa.net, db/uefa.py): rank 1 at the top
+  (function(){
+    var box = $(".cuefa"); if (!box) return;
+    get("history/uefa/club/" + box.dataset.club + ".json").then(function(d){
+      var S = d.series; if (!S || S.length < 3) return;
+      var W = 600, H = 130, y0 = S[0][0], y1 = S[S.length - 1][0], mx = Math.min(100, Math.max.apply(null, S.map(function(x){ return x[1]; })));
+      var X = function(y){ return (10 + (y - y0) / Math.max(1, y1 - y0) * (W - 20)).toFixed(1); }, Y = function(r){ return (10 + (Math.min(r, mx) - 1) / Math.max(1, mx - 1) * (H - 28)).toFixed(1); };
+      var tops = S.filter(function(x){ return x[1] === 1; }).map(function(x){ return x[0]; });
+      box.innerHTML = '<section class="blk"><h2>ترتيبه في أوروبا <small>تصنيف يويفا من ' + y0 + "</small></h2>" +
+        '<p>أحسن ترتيب: <b class="num">' + d.best[1] + '</b> في <span class="num">' + d.best[0] + "</span>" + (tops.length > 1 ? '، وكان الأول في أوروبا <b class="num">' + tops.length + "</b> مرات" : "") + '. الحين: <b class="num">' + S[S.length - 1][1] + "</b>.</p>" +
+        '<svg class="chart elo-c" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="ترتيبه في تصنيف يويفا، الأول فوق"><path d="' + S.map(function(x, i){ return (i ? "L" : "M") + X(x[0]) + " " + Y(x[1]); }).join("") + '" class="gl2"/>' +
+        S.filter(function(x, i){ return i % 5 === 0; }).map(function(x){ return '<text x="' + X(x[0]) + '" y="' + (H - 2) + '" class="ax">' + x[0] + "</text>"; }).join("") + "</svg><p class=\"src\">المصدر: kassiesa.net (أرشيف معاملات يويفا).</p></section>";
+    }).catch(function(){});
+  })();
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio, daypage:daypage, arabs:arabs }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && Object.keys(window.NAT || {}).some(function(k){ return String(window.NAT[k]) === ID; })) countdown(); }
   tvFull();
   tabs(); run(); dist();
