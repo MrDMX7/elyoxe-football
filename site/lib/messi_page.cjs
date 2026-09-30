@@ -38,7 +38,7 @@ module.exports = function messiMuseum(D, H){
   const now = D.now || {};
   const entrance = `<div class="mentry"><svg class="harcs" viewBox="-1 -6 82 66" aria-hidden="true">${heroArcs}</svg>
 <div class="mcount"><b class="num" data-count="${tot ? tot.goals : goals.length}">${tot ? tot.goals : goals.length}</b><span>هدف في مسيرته${tot ? ` مع الأندية والأرجنتين، في ${num(tot.apps)} مباراة، ومعها ${num(tot.assists)} تمريرة حاسمة` : ""}</span></div>
-${car ? `<ul class="mteams">${car.teams.filter(t => t.kind !== "youth" && t.apps).map(t => `<li><b>${esc(ar(t.team))}</b> ${num(t.goals || 0)} هدف · ${num(t.apps)} مباراة</li>`).join("")}</ul>` : ""}
+${car ? `<ul class="mteams">${car.teams.filter(t => t.kind !== "youth" && t.apps && !/U\d\d/.test(t.team)).map(t => `<li><b>${esc(ar(t.team))}</b> ${num(t.goals || 0)} هدف · ${num(t.apps)} مباراة</li>`).join("")}</ul>` : ""}
 ${now.next || now.last ? `<div class="mnow" id="mnow"><h3>ميسي الحين</h3>${now.last ? `<p>آخر مباراة: ${now.last}</p>` : ""}${now.next ? `<p>الياية: ${now.next}</p>` : ""}${now.season ? `<p>${now.season}</p>` : ""}</div>` : ""}</div>
 <p class="small muted">العدد الكلي من FotMob ويتحدّث كل أسبوع. الخطوط الذهبية فوق: ${num(goals.length)} هدف عندنا مكانها بالضبط من StatsBomb، وهي اللي ترسمها قاعات الملعب.</p>`;
 
@@ -61,8 +61,9 @@ ${now.next || now.last ? `<div class="mnow" id="mnow"><h3>ميسي الحين</h
 
   // 6. signature: the strike zone (8x8 yard cells) x the side of the goal it went in
   const side = g => { const near = g.y > 40 ? (g.ey > 41.3) : (g.ey < 38.7), far = g.y > 40 ? (g.ey < 38.7) : (g.ey > 41.3); return Math.abs(g.y - 40) < 4 ? "center" : near ? "near" : far ? "far" : "middle"; };
-  const sig = {}; np.forEach(g => { const k = `${Math.floor(g.x / 8)}|${Math.floor(g.y / 8)}|${side(g)}`; (sig[k] = sig[k] || []).push(g); });
-  const tops = Object.values(sig).filter(v => v.length >= 6).sort((a, b) => b.length - a.length).slice(0, 3);
+  // from 14 yards out and off the centre line: the tap-ins in front of goal outnumber everything and say nothing about him
+  const sig = {}; np.filter(g => Math.hypot(120 - g.x, 40 - g.y) >= 14 && side(g) !== "center").forEach(g => { const k = `${Math.floor(g.x / 8)}|${Math.floor(g.y / 8)}|${side(g)}`; (sig[k] = sig[k] || []).push(g); });
+  const tops = Object.values(sig).filter(v => v.length >= 5).sort((a, b) => b.length - a.length).slice(0, 3);
   const SIDE = { far:"للقائم البعيد", near:"للقائم القريب", middle:"لنص المرمى", center:"من قدام المرمى" };
   room("r-sig", 3, "توقيعه", "أهداف من نفس المربع ولنفس الجهة من المرمى، مكررة عبر السنين. هذي الحركة اللي يعرفها كل مدافع ويعجز عنها.",
     `<div class="mrow">${tops.map(v => { const ys = v.map(g => +g.season.slice(0, 4)); return `<figure>${half(v.map(g => { const [a, b] = HX(g.x, g.y), [c] = HX(120, Math.min(43.8, Math.max(36.2, g.ey || 40))); return `<path d="M${a} ${b}L${c} 0" class="arc L"/>`; }).join(""), "sm")}<figcaption>${num(v.length)} هدف ${SIDE[side(v[0])]}، من ${num(Math.min(...ys))} لين ${num(Math.max(...ys) + 1)}</figcaption></figure>`; }).join("")}</div>`, "البيانات: StatsBomb، بدون ضربات الجزاء.");
@@ -70,7 +71,7 @@ ${now.next || now.last ? `<div class="mnow" id="mnow"><h3>ميسي الحين</h
   // 7. eras
   const ERAS = [["برشلونة الشاب", g => g.team === "Barcelona" && g.season < "2009"], ["القمة", g => g.team === "Barcelona" && g.season >= "2009" && g.season < "2015"], ["برشلونة الأخير", g => g.team === "Barcelona" && g.season >= "2015"], ["باريس", g => g.team === "Paris Saint-Germain"], ["الأرجنتين", g => g.team === "Argentina"], ["ميامي", g => g.team === "Inter Miami"]];
   room("r-eras", 4, "حقب مسيرته", "نفس اللاعب، ست خرائط. شوف كيف قرّب من المرمى في القمة، وكيف رجع يسدد من أبعد في آخر برشلونة.",
-    `<div class="mrow">${ERAS.map(([t, fn]) => { const v = np.filter(fn); if (!v.length) return ""; const d = v.reduce((a, g) => a + Math.hypot(120 - g.x, 40 - g.y), 0) / v.length * 0.9144; return `<figure>${half(v.map(g => { const [a, b] = HX(g.x, g.y); return `<circle cx="${a}" cy="${b}" r=".9" class="pt ${g.body}"/>`; }).join(""), "sm")}<figcaption><b>${t}</b> · ${num(v.length)} هدف · معدل ${num(f1(d))} متر</figcaption></figure>`; }).join("")}</div>`, "البيانات: StatsBomb، بدون ضربات الجزاء.");
+    `<div class="mrow">${ERAS.map(([t, fn]) => { const v = np.filter(fn); if (v.length < 8) return ""; const d = v.reduce((a, g) => a + Math.hypot(120 - g.x, 40 - g.y), 0) / v.length * 0.9144; return `<figure>${half(v.map(g => { const [a, b] = HX(g.x, g.y); return `<circle cx="${a}" cy="${b}" r=".9" class="pt ${g.body}"/>`; }).join(""), "sm")}<figcaption><b>${t}</b> · ${num(v.length)} هدف · معدل ${num(f1(d))} متر</figcaption></figure>`; }).join("")}</div>`, "البيانات: StatsBomb، بدون ضربات الجزاء.");
 
   // 8. the hardest ten (lowest xG, no penalties): clicking one replays it in the 3D pitch
   const hard = np.slice().sort((a, b) => a.xg - b.xg).slice(0, 10);
@@ -94,7 +95,7 @@ ${now.next || now.last ? `<div class="mnow" id="mnow"><h3>ميسي الحين</h
     const p = (a, rr) => `${(cx + rr * Math.cos(a)).toFixed(1)} ${(cy + rr * Math.sin(a)).toFixed(1)}`; return `<path d="M${p(a0, 16)}L${p(a0, r)}A${r} ${r} 0 0 1 ${p(a1, r)}L${p(a1, 16)}Z" class="${i === 18 ? "cb hot" : "cb"}"><title>${i === 18 ? "90+" : i * 5 + "-" + (i * 5 + 5)}: ${n}</title></path>`; }).join("");
   const peak = bins.indexOf(bmax);
   room("r-clock", 7, "ساعة المباراة", `متى يسجل: كل قطعة خمس دقايق، وطولها عدد أهدافه فيها. أكثر فترة: ${peak === 18 ? "الوقت بدل الضايع" : `من الدقيقة ${num(peak * 5)} لين ${num(peak * 5 + 5)}`} (${num(bmax)} هدف).`,
-    `<svg class="clock" viewBox="0 0 120 120" role="img" aria-label="توزيع أهدافه على دقايق المباراة">${clock}<text x="60" y="58" class="c1">0</text><text x="60" y="68" class="c2">90+</text></svg>`, "البيانات: StatsBomb.");
+    `<svg class="clock" viewBox="-8 -8 136 136" role="img" aria-label="توزيع أهدافه على دقايق المباراة">${clock}${[0, 15, 30, 45, 60, 75, 90].map(m => { const a = (m / 5 / 19) * 2 * Math.PI - Math.PI / 2; return `<text x="${(60 + 64 * Math.cos(a)).toFixed(1)}" y="${(62 + 64 * Math.sin(a)).toFixed(1)}" class="c1">${m === 90 ? "90+" : m}</text>`; }).join("")}<text x="60" y="62" class="c2">الدقيقة</text></svg>`, "البيانات: StatsBomb.");
 
   // 11. victims (clubs), 12. hat-tricks, 13. the rare goals
   const vic = {}; goals.forEach(g => { vic[g.opp] = (vic[g.opp] || 0) + 1; }); const vt = Object.entries(vic).sort((a, b) => b[1] - a[1]).slice(0, 12), vmax = vt[0] ? vt[0][1] : 1;
@@ -120,11 +121,17 @@ ${now.next || now.last ? `<div class="mnow" id="mnow"><h3>ميسي الحين</h
   const grid = {}; (play.drib || []).forEach(d => { const k = Math.min(11, Math.floor(d[0] / 10)) + "|" + Math.min(7, Math.floor(d[1] / 10)); grid[k] = (grid[k] || 0) + 1; }); const gmax = Math.max(1, ...Object.values(grid));
   room("r-drib", 13, "خريطة المراوغات", `${num(play.drib_ok || 0)} مراوغة ناجحة من ${num(play.drib_try || 0)} (${num(pct(play.drib_ok, play.drib_try))}٪). المربع الأغمق وين يتخطى أكثر.`,
     full(Object.entries(grid).map(([k, n]) => { const [i, j] = k.split("|").map(Number); const [x] = FX(i * 10 + 10, 0); return `<rect x="${x}" y="${j * 10}" width="10" height="10" class="hm" style="opacity:${(0.08 + n / gmax * 0.85).toFixed(2)}"><title>${n}</title></rect>`; }).join(""), "wide"), "البيانات: StatsBomb.");
-  const cars = Object.entries(play.carries || {}); const eraOf = k => k.includes("Barcelona") ? (k < "2009" ? "e1" : k < "2015" ? "e2" : "e3") : k.includes("Paris") ? "e4" : "e5";
-  room("r-carry", 14, "ميسي يمشي بالكورة", "عيّنة من ركضاته بالكورة اللي تقدّم فيها عشر ياردات أو دخل فيها المنطقة. اللون الحقبة: الفاتح بدايته، والذهبي القمة.",
-    full(cars.map(([k, v]) => v.map(c => { const [x1, y1] = FX(c[0], c[1]), [x2, y2] = FX(c[2], c[3]); return `<path d="M${x1} ${y1}L${x2} ${y2}" class="cr ${eraOf(k)}"/>`; }).join("")).join(""), "wide"), "البيانات: StatsBomb.");
+  // his carries as a flow: from each 10x10-yard cell, the average way he took the ball (arrow length) and how often (width)
+  const flow = {}; Object.values(play.carries || {}).forEach(v => v.forEach(c => { const k = Math.min(11, Math.floor(c[0] / 10)) + "|" + Math.min(7, Math.floor(c[1] / 10)); const f = flow[k] = flow[k] || { n:0, dx:0, dy:0 }; f.n++; f.dx += c[2] - c[0]; f.dy += c[3] - c[1]; }));
+  const fmax = Math.max(1, ...Object.values(flow).map(f => f.n));
+  const arrows = Object.entries(flow).filter(([, f]) => f.n >= 4).map(([k, f]) => { const [i, j] = k.split("|").map(Number), cx0 = i * 10 + 5, cy0 = j * 10 + 5, ux = f.dx / f.n, uy = f.dy / f.n, len = Math.hypot(ux, uy) || 1, L = Math.min(9, len * 0.6);
+    const [x1, y1] = FX(cx0 - ux / len * L / 2, cy0 - uy / len * L / 2), [x2, y2] = FX(cx0 + ux / len * L / 2, cy0 + uy / len * L / 2), w = 0.3 + f.n / fmax * 2.2;
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="fl" style="stroke-width:${w.toFixed(2)}" marker-end="url(#mah)"><title>${f.n}</title></line>`; }).join("");
+  const nCar = Object.values(flow).reduce((a, f) => a + f.n, 0);
+  room("r-carry", 14, "ميسي يمشي بالكورة", `${num(nCar)} ركضة بالكورة تقدّم فيها عشر ياردات أو دخل المنطقة. كل سهم: من هالمنطقة وين ياخذ الكورة عادةً، وسمكه كم مرة. تشوف الركض من اليمين للعمق، مب على الخط.`,
+    full(`<defs><marker id="mah" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0L6 3L0 6Z" class="fh"/></marker></defs>` + arrows, "wide"), "البيانات: StatsBomb.");
   room("r-layers", 15, "كيف تغيّر مركزه", "الذروة الثانية: كل موسم طبقة من لمساته فوق الموسم اللي قبله، والزمن هو الارتفاع. من الجناح اليمين، للمهاجم الوهمي، لصانع اللعب. لفّ الطبقات بإصبعك.",
-    `<div id="m3dl" class="m3dc" data-src="/assets/messi3d.${ASSET_V}.js" data-json="/v1/legends/messi/play.json"><p class="empty">نحمّل الطبقات…</p></div>`, "البيانات: StatsBomb، كل لمسة سجّلها له.");
+    `<div id="m3dl" class="m3dc" data-src="/assets/messi3d.${ASSET_V}.js" data-json="/v1/legends/messi/play.json"><p class="empty">نحمّل الطبقات…</p></div><p class="legend small"><i style="--c:#9FB8AE"></i>برشلونة لين 2009 <i style="--c:#F0BC5A"></i>القمة 2009-2015 <i style="--c:#E58A3A"></i>برشلونة 2015-2021 <i style="--c:#6FA3E0"></i>باريس <i style="--c:#8EC9EE"></i>الأرجنتين <i style="--c:#F5A3C7"></i>ميامي · تحت أول موسم، وفوق آخر موسم.</p>`, "البيانات: StatsBomb، كل لمسة سجّلها له.");
 
   // ================= 4. titles and records
   const TR = X.trophies || [], byTeam = {}; TR.forEach(t => { (byTeam[t.team] = byTeam[t.team] || []).push(t); });
@@ -154,7 +161,7 @@ ${now.next || now.last ? `<div class="mnow" id="mnow"><h3>ميسي الحين</h
   room("r-natv", 24, "المنتخبات اللي سجل عليها", `${num(nvt.length)} منتخب.`, `<ul class="mlist cols">${nvt.map(([o, n]) => `<li>${esc(ar(o))} ${num(n)}</li>`).join("")}</ul>`, "المصدر: martj42.");
 
   // ================= 6. the career
-  const ct = car ? car.teams.filter(t => t.apps && t.kind !== "youth") : [], y0 = 2004, y1 = new Date().getFullYear() + 1;
+  const ct = car ? car.teams.filter(t => t.apps && t.kind !== "youth" && !/U\d\d/.test(t.team)) : [], y0 = 2004, y1 = new Date().getFullYear() + 1;
   const tx = y => ((y - y0) / (y1 - y0) * 100).toFixed(2);
   room("r-time", 25, "المسيرة", "من روساريو لبرشلونة لباريس لميامي، ومع الأرجنتين طول الطريق.",
     `<div class="tline">${ct.map(t => { const a = +(t.from || "").slice(0, 4) + ((+(t.from || "").slice(5, 7) || 1) - 1) / 12, b = t.to ? +t.to.slice(0, 4) + (+t.to.slice(5, 7) - 1) / 12 : y1; return `<div class="tl ${t.kind === "national team" ? "nat" : ""}" style="--a:${tx(a)}%;--b:${tx(b)}%"><b>${esc(ar(t.team))}</b><span>${num(t.apps)} مباراة · ${num(t.goals || 0)} هدف · ${num(t.assists || 0)} صناعة</span></div>`; }).join("")}<div class="ty"><span class="num">${y0}</span><span class="num">${y1 - 1}</span></div></div>`, "المصدر: FotMob.");

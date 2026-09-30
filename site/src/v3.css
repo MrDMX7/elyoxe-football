@@ -830,13 +830,72 @@ body.hasprayl .tile.pray{display:none}
 .phero .pph img{display:block;inline-size:100%;block-size:auto;aspect-ratio:4/5;mix-blend-mode:luminosity;opacity:.92;-webkit-mask-image:linear-gradient(to top,transparent 0,#000 22%);mask-image:linear-gradient(to top,transparent 0,#000 22%)}
 .phero .pph figcaption{font-size:.6rem;line-height:1.3;margin-block-start:.2rem;opacity:.55;max-inline-size:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;direction:ltr;text-align:end}
 .phero .pph figcaption a{color:inherit;text-decoration:none}
-/* /messi/: the 3D pitch and its controls */
-.v3 .m3d-ctl{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:.6rem 0}
-.v3 .m3d-ctl [aria-pressed="true"]{background:var(--ink);color:var(--bg)}
-.v3 #m3dc{min-block-size:320px;background:#0B1512}
-.v3 #m3dc canvas{display:block;inline-size:100%}
-.v3 #m3dr{inline-size:100%;margin-block-start:.5rem}
 /* transfer history (player) and record deals (club) */
 .v3 .trh td,.v3 .trh th{white-space:nowrap}
 .v3 .trc{padding-inline-start:1.2rem;margin:.3rem 0 .8rem}
 .v3 .trc li{margin:.25rem 0}
+
+/* ============ the Messi museum (/messi/, lib/messi_page.cjs + src/messi.js). Gold = his left foot, everywhere */
+.v3{--mg:#F0BC5A;--mgr:#E9ECE4;--mgh:#5CC9A4;--mink:#0B1512}
+.v3 .mentry{position:relative;display:grid;gap:1rem;padding:1.2rem 0 .6rem;isolation:isolate}
+.v3 .harcs{position:absolute;inset:0 0 auto auto;inline-size:min(100%,34rem);block-size:auto;opacity:.5;z-index:-1;pointer-events:none}
+.v3 .harcs path{fill:none;stroke-width:.14;stroke:var(--mg);stroke-dasharray:140;stroke-dashoffset:140;animation:mdraw 3.2s ease-out forwards}
+.v3 .harcs path.R{stroke:var(--mgr)}.v3 .harcs path.H{stroke:var(--mgh)}
+@keyframes mdraw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.v3 .harcs path{animation:none;stroke-dashoffset:0}}
+.v3 .mcount b{display:block;font:700 clamp(4.5rem,18vw,9rem)/1 var(--digits);color:var(--mg);letter-spacing:-.02em}
+.v3 .mcount span{font-size:1.05rem}
+.v3 .mteams{display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;list-style:none;padding:0;margin:0;font-size:.9rem}
+.v3 .mnow{border-inline-start:2px solid var(--mg);padding-inline-start:.8rem}.v3 .mnow h3{margin:0 0 .2rem;font-size:.95rem}.v3 .mnow p{margin:.1rem 0;font-size:.9rem}
+.v3 .mbday{background:var(--mg);color:#141A17;padding:.6rem .9rem;margin:.5rem 0}
+.v3 .museum{display:grid;gap:1.5rem;margin-block-start:1.5rem}
+@media (min-width:980px){.v3 .museum{grid-template-columns:15rem minmax(0,1fr)}.v3 .mrooms{position:sticky;inset-block-start:calc(var(--topH,4rem) + 1rem);align-self:start;max-block-size:calc(100svh - 6rem);overflow:auto}}
+.v3 .mrooms ol{list-style:none;margin:0;padding:0;font-size:.85rem;line-height:1.5}
+.v3 .mrooms a{display:block;padding:.2rem 0;color:var(--stone);text-decoration:none}.v3 .mrooms a:hover{color:var(--ink)}.v3 .mrooms .num{color:var(--mg);display:inline-block;min-inline-size:1.6rem}
+@media (max-width:979px){.v3 .mrooms ol{display:flex;gap:.3rem;overflow-x:auto;padding-block-end:.4rem}.v3 .mrooms a{white-space:nowrap;border:1px solid var(--line);padding:.25rem .55rem}}
+.v3 .room{padding-block:1.8rem;border-block-start:1px solid var(--line);scroll-margin-top:5rem}
+.v3 .plaque{margin-block-end:1rem;max-inline-size:44rem}.v3 .plaque .rno{font-size:.75rem;color:var(--mg);letter-spacing:.04em}.v3 .plaque h2{font-size:clamp(1.35rem,1rem + 1.6vw,2rem);margin:.1rem 0 .35rem}.v3 .plaque p{margin:0;color:var(--stone);line-height:1.7}
+.v3 .mp{display:block;inline-size:100%;max-inline-size:34rem;block-size:auto}
+.v3 .mp.sm{max-inline-size:16rem}.v3 .mp.wide{max-inline-size:44rem}.v3 .mp.big{max-inline-size:none}
+.v3 .mp .g{fill:#123a2f}.v3 .mp .l{fill:none;stroke:rgba(246,247,242,.45);stroke-width:.3}.v3 .mp .d{fill:rgba(246,247,242,.6)}.v3 .mp .gl{fill:none;stroke:#F6F7F2;stroke-width:.5}
+.v3 .mp .arc{fill:none;stroke:var(--mg);stroke-width:.25;opacity:.75}.v3 .mp .arc.R{stroke:var(--mgr)}.v3 .mp .arc.H{stroke:var(--mgh)}
+.v3 .mp .pt{fill:var(--mg)}.v3 .mp .pt.R{fill:var(--mgr)}.v3 .mp .pt.H{fill:var(--mgh)}.v3 .mp .pt.miss{fill:rgba(233,236,228,.22)}
+.v3 .mp .as{stroke:var(--mg);stroke-width:.3;opacity:.5}.v3 .mp .hm{fill:var(--mg)}.v3 .mp .you{fill:none;stroke:#fff;stroke-width:.6}
+.v3 .mp .cr{stroke-width:.35;opacity:.45}.v3 .mp .cr.e1{stroke:#9FB8AE}.v3 .mp .cr.e2{stroke:var(--mg)}.v3 .mp .cr.e3{stroke:#E58A3A}.v3 .mp .cr.e4{stroke:#6FA3E0}.v3 .mp .cr.e5{stroke:#8EC9EE}
+.v3 .mp.tap{cursor:crosshair}
+.v3 .mrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(12rem,1fr));gap:1rem}.v3 .mrow figure{margin:0}.v3 .mrow figcaption{font-size:.85rem;margin-block-start:.35rem}
+.v3 .mlist{padding-inline-start:1.1rem;line-height:1.8}.v3 .mlist.cols{columns:2 15rem;column-gap:2rem}
+.v3 .mlist.hard .lnk{font:inherit;text-align:start}
+.v3 .chart{inline-size:100%;max-inline-size:40rem;block-size:auto;display:block;margin-block-end:.8rem}
+.v3 .chart .gl2{fill:none;stroke:var(--mg);stroke-width:1.6}.v3 .chart .xgl{fill:none;stroke:var(--mgr);stroke-width:1;stroke-dasharray:3 2;opacity:.8}.v3 .chart .ax{font-size:7px;fill:var(--tert);text-anchor:middle}
+.v3 .clock{inline-size:min(100%,22rem);display:block}.v3 .clock .cb{fill:var(--mg);opacity:.8}.v3 .clock .cb.hot{fill:#E58A3A}
+.v3 .clock .c1,.v3 .clock .c2{font-size:6px;fill:var(--tert);text-anchor:middle}
+.v3 .bars{list-style:none;padding:0;margin:0;display:grid;gap:.3rem;max-inline-size:36rem}
+.v3 .bars li{display:grid;grid-template-columns:9rem minmax(0,1fr) 2.5rem;align-items:center;gap:.6rem;font-size:.9rem}
+.v3 .bars i{display:block;block-size:.6rem;inline-size:var(--w);background:var(--mg)}.v3 .bars b{text-align:end}
+.v3 .net{inline-size:min(100%,30rem);display:block}.v3 .net .nl{stroke:var(--mg);opacity:.55}.v3 .net .nn{fill:var(--mgr)}.v3 .net .nm{fill:var(--mg)}
+.v3 .net .nt{font-size:4px;fill:currentColor;text-anchor:middle}.v3 .net .nmt{font-size:3.4px;fill:#141A17;text-anchor:middle;font-weight:700}
+.v3 .cab{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));gap:.4rem 1rem;margin:.3rem 0 1rem}
+.v3 .cab li{display:flex;justify-content:space-between;gap:.5rem;border-block-end:1px solid var(--line);padding-block:.3rem;font-size:.9rem}
+.v3 .bdo{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:1rem}.v3 .bdo li{display:grid;justify-items:center;gap:.3rem}
+.v3 .bdo .ball{inline-size:3.2rem;block-size:3.2rem;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFF1C9,#F0BC5A 45%,#8F5400 100%);box-shadow:0 0 0 1px rgba(240,188,90,.4)}
+.v3 .tline{position:relative;display:grid;gap:.5rem;padding-block-end:1.4rem}
+/* each team a row: the text at the row's start, its years a band along the bottom (the band sits between --a and --b of the whole span) */
+.v3 .tl{--c:var(--mg);font-size:.85rem;padding-block-end:.55rem;background:linear-gradient(to left,transparent var(--a),var(--c) var(--a),var(--c) var(--b),transparent var(--b)) bottom/100% 6px no-repeat}
+.v3 .tl.nat{--c:#8EC9EE}.v3 .tl b{margin-inline-end:.6rem}
+.v3 .ty{position:absolute;inset-inline:0;inset-block-end:0;display:flex;justify-content:space-between;font-size:.75rem;color:var(--tert)}
+.v3 .games{display:grid;gap:1.6rem;grid-template-columns:repeat(auto-fill,minmax(18rem,1fr))}.v3 .games h3{margin:0 0 .3rem}
+.v3 .gz,.v3 .qa{display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;margin-block:.5rem;max-inline-size:18rem}.v3 .qa{grid-template-columns:1fr 1fr;max-inline-size:26rem}
+.v3 .gz button,.v3 .qa button{border:1px solid var(--line);background:none;color:inherit;padding:.45rem .3rem;font:inherit;font-size:.85rem;cursor:pointer}
+.v3 .gz .right,.v3 .qa .right{background:var(--mg);color:#141A17;border-color:var(--mg)}.v3 .gz .wrong,.v3 .qa .wrong{text-decoration:line-through;opacity:.6}
+.v3 .keep{display:flex;flex-wrap:wrap;gap:.5rem}
+.v3 .wmap{inline-size:100%;max-inline-size:44rem;display:block;margin-block-end:.6rem}.v3 .wmap .land{fill:#1c3a31;stroke:rgba(246,247,242,.25);stroke-width:.3}.v3 .wmap .md{fill:var(--mg);opacity:.8}
+.v3 .m3dc{min-block-size:320px;background:var(--mink)}.v3 .m3dc canvas{display:block;inline-size:100%}
+.v3 .m3d-ctl{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin:.6rem 0}.v3 .m3d-ctl [aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.v3 #m3dr{inline-size:100%;margin-block-start:.5rem}
+.v3 .tbl tr.mine td{color:var(--mg);font-weight:700}
+.mposter{text-align:center}.mposter h1{font-size:4rem;margin:0}.mposter .num{font-size:3rem;color:#8F5400;margin:0}
+@media print{.mposter .mp .g{fill:#fff}.mposter .mp .l{stroke:#999}.mposter .mp .arc{stroke:#8F5400;opacity:.55}.mposter .mp .arc.R{stroke:#555}.mposter .mp .arc.H{stroke:#1B6F5A}}
+.v3 .mp .fl{stroke:var(--mg);opacity:.85}.v3 .mp .fh{fill:var(--mg)}
+.v3 .legend i{display:inline-block;inline-size:.8rem;block-size:.8rem;background:var(--c);margin-inline:.5rem .25rem;vertical-align:middle}
+.v3 .clock .c1{font-size:6px;fill:var(--tert);text-anchor:middle;dominant-baseline:middle}.v3 .clock .c2{font-size:5px;fill:var(--tert);text-anchor:middle}

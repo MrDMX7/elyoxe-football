@@ -131,8 +131,22 @@ def names_ar():
     out, want = {}, sorted(w for w in want if w)
     for i in range(0, len(want), 60):
         vals = " ".join('"%s"@en' % w.replace('"', "") for w in want[i:i + 60])
-        for b in sparql("SELECT ?l ?ar WHERE { VALUES ?l { %s } ?p rdfs:label ?l; wdt:P106 ?o. VALUES ?o { wd:Q937857 wd:Q628099 } ?p rdfs:label ?ar FILTER(LANG(?ar)='ar') }" % vals):
-            out.setdefault(b["l"]["value"], b["ar"]["value"])
+        # a label names several people (Luis Suárez 1935 and 1987; two Maxwells): keep the one who played for one of his
+        # teams, else a manager born after 1955; a disambiguated Arabic label («… (لاعب كرة قدم مواليد 1995)») is never used
+        rows = sparql("SELECT ?l ?ar ?d ?club ?mgr WHERE { VALUES ?l { %s } ?p rdfs:label ?l; wdt:P106 ?o; wdt:P569 ?d. VALUES ?o { wd:Q937857 wd:Q628099 } "
+                      "?p rdfs:label ?ar FILTER(LANG(?ar)='ar') FILTER(YEAR(?d) >= 1955) "
+                      "OPTIONAL { ?p wdt:P54 ?c. VALUES ?c { wd:Q7156 wd:Q483020 wd:Q79800 wd:Q16844931 } BIND(1 AS ?club) } "
+                      "OPTIONAL { ?p wdt:P106 wd:Q628099. BIND(1 AS ?mgr) } }" % vals)
+        best = {}
+        for b in rows:
+            a = b["ar"]["value"]
+            if "(" in a:
+                continue
+            rank = 2 if b.get("club") else 1 if b.get("mgr") else 0
+            l = b["l"]["value"]
+            if rank and rank > best.get(l, (0, ""))[0]:
+                best[l] = (rank, a)
+        out.update({k: v[1] for k, v in best.items()})
     return out
 
 
