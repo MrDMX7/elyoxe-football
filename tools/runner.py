@@ -189,7 +189,7 @@ def beat(job, ok, secs, note):
     fails = 0 if ok else int(prev.get("fails") or 0) + 1
     doc = {"host": HOST, "ok": ok, "at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "seconds": round(secs), "note": str(note)[:600],
            "fails": fails, "last_ok": prev.get("last_ok") if not ok else datetime.now(timezone.utc).isoformat(timespec="seconds"),
-           "last_ok_host": prev.get("last_ok_host") if not ok else HOST, "alerted_at": prev.get("alerted_at")}
+           "last_ok_host": prev.get("last_ok_host") if not ok else HOST, "alerted_at": prev.get("alerted_at"), "running": False}
     if fails >= 2 and time.time() - float(prev.get("alerted_ts") or 0) > 6 * 3600:
         try:
             import boto3
@@ -211,6 +211,11 @@ def do(job):
             print(f"{job}: a previous run is still going; skip")
             return 0
         log, t0 = Log(job), time.time()
+        try:   # «running» tells the Fold's watchdog not to start the same job while this one is still going
+            prev = STORE.get_state(f"runner/{job}.json") or {}
+            STORE.put_state(f"runner/{job}.json", dict(prev, running=True, running_host=HOST, started_at=datetime.now(timezone.utc).isoformat(timespec="seconds")))
+        except Exception as e:
+            log.w(f"start beat failed: {e}")
         try:
             ok, note = JOBS[job](log)
         except Exception as e:
@@ -229,6 +234,9 @@ def watch():
     rc = 0
     for job, limit in STALE.items():
         st = STORE.get_state(f"runner/{job}.json") or {}
+        if st.get("running") and st.get("started_at") and time.time() - datetime.fromisoformat(st["started_at"]).timestamp() < limit:
+            print(f"watch: {job} is running on {st.get('running_host')} since {st['started_at']}; leaving it")
+            continue
         last = st.get("last_ok")
         age = time.time() - datetime.fromisoformat(last).timestamp() if last else 1e9
         if age > limit:
