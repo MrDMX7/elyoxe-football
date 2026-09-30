@@ -214,6 +214,20 @@ def fotmob_map(teams, countries):
 
 
 # ------------------------------------------------------------------ 1. champions
+# where 365's own list is wrong (audit 2026-09-30, checked against RSSSF):
+START = {649: 1975}          # the Saudi league from 1974/75: its 1957/58-1973/74 rows are His Majesty's League, the King's Cup
+FIX = {(560, "2014/2015"): 8222, (560, "2015/2016"): 8220}     # Algeria: ES Sétif won 2014/15, USM Alger 2015/16 (365 swaps them)
+
+
+def _end_year(title):
+    m = re.search(r"(\d{4})\s*[/\-–]\s*(\d{2,4})", str(title or ""))
+    if m:
+        a, b = m.group(1), m.group(2)
+        return int(b) if len(b) == 4 else int(a[:2] + b) + (100 if int(a[:2] + b) < int(a) else 0)
+    m = re.search(r"\d{4}", str(title or ""))
+    return int(m.group(0)) if m else None
+
+
 def champions(only=None):
     ca, ce = fetch(f"/web/competitions/?{QA}&sports=1", 7 * DAY), fetch(f"/web/competitions/?{QE}&sports=1", 7 * DAY)
     if not ca:
@@ -254,7 +268,11 @@ def champions(only=None):
                     v = []
             except (TypeError, ValueError):
                 pass
+            if (c["id"], r.get("title")) in FIX:
+                w, v = FIX[(c["id"], r.get("title"))], []          # the right club; 365's numbers are the other one's
             rows.append([r.get("title"), w, v, r.get("seasonNum") if r.get("hasTable") else 0])
+        if c["id"] in START:
+            rows = [r for r in rows if (_end_year(r[0]) or 0) >= START[c["id"]]]
         nm = c.get("name") or ""
         out[c["id"]] = {"id": c["id"], "name": nm, "name_en": en_comp.get(c["id"]) or "", "cc": c.get("countryId"),
                         "country": (countries.get(c.get("countryId")) or [""])[0], "ko": 1 if tb.get("isChampionByKnockout") else 0,
