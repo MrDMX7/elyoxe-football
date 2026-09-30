@@ -903,3 +903,5 @@ body.hasprayl .tile.pray{display:none}
 .v3 .chist .hl{font-size:1.05rem}.v3 .chist .dec{max-inline-size:44rem}.v3 .chist .dw{fill:var(--mg,#F0BC5A)}
 .v3 .chist .hq{margin-block:.3rem .5rem;padding:.4rem .6rem;inline-size:min(100%,20rem);border:1px solid var(--line);background:transparent;color:inherit;font:inherit}
 .v3 .chist .hbig{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:1rem}.v3 .chist .sc{font-weight:700}
+.v3 .ccard{margin-block-end:1.2rem}.v3 .chon{list-style:none;padding:0;display:grid;gap:.35rem}
+.v3 .chon li{display:grid;grid-template-columns:minmax(0,14rem) 2.5rem minmax(0,1fr);gap:.6rem;align-items:baseline;border-block-end:1px solid var(--line);padding-block:.25rem}

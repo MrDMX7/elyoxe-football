@@ -52,7 +52,15 @@ def main(argv=None):
     ap = argparse.ArgumentParser(); ap.add_argument("--upload", action="store_true"); a = ap.parse_args(argv)
     store = Store(S3Backend(BUCKET))
     teams = (store.get_json("teams.json") or {}).get("teams") or {}
-    clubs = {k: t for k, t in teams.items() if (t.get("country") or {}).get("iso2") and not t.get("national")}
+    # a club's country: its own, else its league's (FotMob leaves many foreign clubs without one: River Plate, Boca…)
+    comp_cc = {c["id"]: (c.get("country") or {}).get("iso2") for c in ((store.get_json("index.json") or {}).get("competitions") or []) if c.get("kind") == "league"}
+    clubs = {}
+    for k, t in teams.items():
+        if t.get("national"):
+            continue
+        cc = (t.get("country") or {}).get("iso2") or next((comp_cc[c] for c in t.get("comps") or [] if comp_cc.get(c)), None)
+        if cc:
+            clubs[k] = dict(t, country={"iso2": cc})
     # 1. Transfermarkt ids -> FotMob, from the transfer history's club map
     tm2fm = {}
     try:
