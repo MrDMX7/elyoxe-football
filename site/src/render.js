@@ -405,8 +405,8 @@
     if (I.length){
       var days = I.reduce(function(a, x){ return a + (x[4] || 0); }, 0), games = I.reduce(function(a, x){ return a + (x[5] || 0); }, 0);
       out += '<section class="blk"><h2>سجل الإصابات <small>' + I.length + "</small></h2><p>غاب بسببها <b class=\"num\">" + days.toLocaleString("en") + '</b> يوم و<b class="num">' + games + "</b> مباراة.</p>" +
-        '<div class="tscroll"><table class="tbl"><thead><tr><th>الموسم</th><th>الإصابة</th><th>من</th><th>لين</th><th>أيام</th><th>مباريات غاب عنها</th></tr></thead><tbody>' +
-        I.map(function(x){ return '<tr><td class="num">' + esc(tmSeason(x[0])) + "</td><td>" + esc(TM_INJ[String(x[1] || "").toLowerCase()] || x[1] || "") + "</td><td>" + dd(x[2]) + "</td><td>" + dd(x[3]) + '</td><td class="num">' + (x[4] == null ? "" : x[4]) + '</td><td class="num">' + (x[5] == null ? "" : x[5]) + "</td></tr>"; }).join("") +
+        '<div class="tscroll"><table class="tbl"><thead><tr><th>الموسم</th><th>الإصابة</th><th>من</th><th>أيام</th><th>غاب عن</th></tr></thead><tbody>' +
+        I.map(function(x){ return '<tr><td class="num">' + esc(tmSeason(x[0])) + "</td><td>" + esc(TM_INJ[String(x[1] || "").toLowerCase()] || x[1] || "") + "</td><td>" + dd(x[2]) + '</td><td class="num">' + (x[4] == null ? "" : x[4]) + '</td><td class="num">' + (x[5] == null ? "" : x[5] + " مباراة") + "</td></tr>"; }).join("") +
         "</tbody></table></div></section>";
     }
     return out ? out + '<p class="src">من Transfermarkt عبر مجموعة salimt/football-datasets المفتوحة. المسيرة حسب البطولة لين آخر موسم كامل عندهم؛ المواسم الأحدث من FotMob فوق.</p>' : "";
