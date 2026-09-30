@@ -968,52 +968,125 @@ def area_scorers(A):
 
 
 # ------------------------------------------------------------------ derived numbers
+def _archive(A, last=None):
+    """Our archive of finished results [(id, date, comp, home, away, hs, as)], every season or the last `last`."""
+    seasons = [s["file"] for s in (A.pub.get("archive/index-all.json") or {}).get("seasons") or [] if s.get("file")]
+    rows = []
+    for f, d in A.pub.many(seasons[-last:] if last else seasons).items():
+        rows += [r for r in (d or {}).get("matches") or [] if r[5] is not None]
+    return rows
+
+
 def area_derived(A):
-    # head-to-head files: wins/draws vs the listed results
-    pairs = sorted(((A.pub.get("h2h/index.json") or {}).get("pairs") or {}).keys())
-    pick = pairs[:: max(1, len(pairs) // max(1, A.sample))]
-    docs = A.pub.many([f"h2h/{k}.json" for k in pick])
-    for k in pick:
+    # 1. head-to-head files (all of them, and the derbies'): wins = the listed results, the index count, no meeting twice,
+    #    every finished meeting of this season and last in the list
+    idx = A.pub.get("h2h/index.json") or {}
+    der = A.pub.get("derbies.json") or {}
+    keys = sorted(set(idx.get("pairs") or {}) | {str(d["h2h"])[4:-5] for d in der.get("derbies") or [] if str(d.get("h2h") or "").startswith("h2h/")})
+    docs = A.pub.many([f"h2h/{k}.json" for k in keys])
+    fin = defaultdict(list)
+    for r in _archive(A, 2):
+        fin[tuple(sorted((r[3], r[4])))].append(r)
+    bad = defaultdict(list)
+    for k in keys:
         h = docs.get(f"h2h/{k}.json")
         if not h:
+            bad["h2h_file_missing"].append(k)
             continue
         A.count("derived", "h2h")
-        w, seen, dup = Counter(), set(), 0
-        for m in h.get("matches") or []:
-            sc = m.get("score")
-            if not sc or m.get("status") not in (None, S.FINISHED):
-                continue
-            sig = (str(m.get("kickoff_utc"))[:10], (m.get("home") or {}).get("id"), (m.get("away") or {}).get("id"))
-            if sig in seen:
-                dup += 1
-            seen.add(sig)
-            w[str(m["home"]["id"] if sc["home"] > sc["away"] else m["away"]["id"] if sc["home"] < sc["away"] else "draws")] += 1
+        ms = [m for m in h.get("matches") or [] if m.get("score")]
+        w = Counter(str(m["home"]["id"] if m["score"]["home"] > m["score"]["away"] else m["away"]["id"] if m["score"]["home"] < m["score"]["away"] else "draws") for m in ms)
         wins = {str(a): b for a, b in (h.get("wins") or {}).items() if b}
-        if dup:
-            A.add("derived", "h2h_duplicates", "error", "ours", f"h2h:{k}", f"h2h {k}: {dup} meetings listed twice", url=f"/h2h/{k}/")
         if wins and dict(w) != wins:
-            A.add("derived", "h2h_wins", "error", "ours", f"h2h:{k}", f"h2h {k}: wins {wins} but the listed results give {dict(w)}", url=f"/h2h/{k}/")
-    # club histories: every total adds up (overall = W+D+L, per competition and per decade sum to the overall)
+            bad["h2h_wins"].append(f"{k}: wins {wins}, the list gives {dict(w)}")
+        ids = [m.get("id") for m in ms]
+        days = Counter(str(m.get("kickoff_utc"))[:10] for m in ms)
+        if len(set(ids)) != len(ids) or any(n > 1 for n in days.values()):
+            bad["h2h_duplicates"].append(k)
+        if k in (idx.get("pairs") or {}) and idx["pairs"][k] != len(ms):
+            bad["h2h_index_count"].append(f"{k}: index {idx['pairs'][k]}, file {len(ms)}")
+        if any(str(m.get("kickoff_utc")) > str(h.get("generated")) for m in ms):
+            bad["h2h_future_in_results"].append(k)
+        a, b = (h.get("teams") or [None, None])[:2]
+        miss = [r[0] for r in fin.get(tuple(sorted((a, b))), []) if r[0] not in set(ids) and r[1] < str(h.get("generated"))[:10]]
+        if miss:
+            bad["h2h_missing_meetings"].append(f"{k}: {len(miss)} ({', '.join(map(str, miss[:3]))})")
+    labels = {"h2h_wins": ("error", "head-to-head wins don't add up to the listed results"), "h2h_duplicates": ("error", "a meeting listed twice"),
+              "h2h_index_count": ("warn", "h2h/index.json counts differ from the files"), "h2h_future_in_results": ("warn", "a future fixture sits among the results"),
+              "h2h_missing_meetings": ("error", "finished meetings of this season or last (our archive) are missing"), "h2h_file_missing": ("warn", "listed but no file")}
+    for chk, items in bad.items():
+        lv, txt = labels[chk]
+        A.add("derived", chk, lv, "stale" if chk in ("h2h_missing_meetings", "h2h_index_count") else "ours", f"h2h:{chk}", f"{len(items)} of {len(keys)} head-to-head files: {txt}: " + "; ".join(map(str, items[:8])),
+              examples=[str(x).split(":")[0] for x in items[:40]])
+    # 2. club histories (every club with one): the totals add up, and the match list is clean and complete: no match twice
+    #    (the dataset repeats 2025-06-06..09-15), no two matches on one date, no club against itself, no nameless opponent,
+    #    every match of our own archive in it (±1 day), one league position per season, no national team
     hidx = (A.pub.get("history/index.json") or {}).get("clubs") or {}
-    ids = sorted(hidx, key=lambda x: -(hidx[x] or {}).get("p", 0))[:20] + sorted(hidx)[:: max(1, len(hidx) // max(1, A.sample))]
-    docs = A.pub.many([f"history/club/{i}.json" for i in ids])
-    for i in dict.fromkeys(ids):
-        h = docs.get(f"history/club/{i}.json")
+    nat = national_ids(A)
+    ids = sorted(hidx)
+    docs = A.pub.many([f"history/club/{i}.json" for i in ids] + [f"history/club/{i}/matches.json" for i in ids])
+    arch = defaultdict(list)
+    for r in _archive(A):
+        arch[r[3]].append(r)
+        arch[r[4]].append(r)
+    bad = defaultdict(list)
+    for i in ids:
+        h, mf = docs.get(f"history/club/{i}.json"), docs.get(f"history/club/{i}/matches.json")
         if not h:
             continue
         A.count("derived", "club_history")
         tot = h.get("total") or {}
-        bad = []
         if tot and tot.get("p") != tot.get("w", 0) + tot.get("d", 0) + tot.get("l", 0):
-            bad.append(f"played {tot.get('p')} but W+D+L {tot.get('w', 0) + tot.get('d', 0) + tot.get('l', 0)}")
+            bad["history_totals"].append(f"{i} played {tot.get('p')} but W+D+L {tot.get('w', 0) + tot.get('d', 0) + tot.get('l', 0)}")
         for part in ("by_comp", "by_decade"):
             parts = h.get(part) or {}
             if parts and tot:
                 s = {k: sum((v or {}).get(k, 0) for v in parts.values()) for k in ("p", "w", "d", "l", "gf", "ga")}
                 if s != {k: tot.get(k) for k in s}:
-                    bad.append(f"{part} sums {s} vs total {tot}")
-        if bad:
-            A.add("derived", "club_history_totals", "error", "ours", f"team:{i}", f"club history {i} ({h.get('name')}): " + "; ".join(bad), url=PAGE["team"].format(i))
+                    bad["history_totals"].append(f"{i} {part} sums differ from the total")
+        if str(i) in nat:
+            bad["history_national_team"].append(str(i))
+        ms = (mf or {}).get("matches") or []
+        c2 = Counter((m[0], str(m[1])) for m in ms)
+        n2 = sum(n - 1 for n in c2.values() if n > 1)
+        if n2:
+            bad["history_duplicate_rows"].append(f"{i} ({h.get('name')}): {n2}")
+        if any(str(m[1]) == str(i) for m in ms):
+            bad["history_self_match"].append(f"{i} ({h.get('name')})")
+        names = h.get("names") or {}
+        if any(not str(v).strip() or re.fullmatch(r"s?:?\d*", str(v)) for v in names.values()):
+            bad["history_blank_opponent"].append(f"{i} ({h.get('name')})")
+        have = defaultdict(list)
+        for m in ms:
+            try:
+                have[datetime.fromisoformat(m[0]).toordinal()].append(m)
+            except (TypeError, ValueError):
+                pass
+        miss = 0
+        for r in arch.get(int(i), []):
+            home = r[3] == int(i)
+            gf, ga, opp = (r[5], r[6], r[4]) if home else (r[6], r[5], r[3])
+            try:
+                d0 = datetime.fromisoformat(r[1]).toordinal()
+            except (TypeError, ValueError):
+                continue
+            if not any(str(x[1]) == str(opp) or (x[3], x[4]) == (gf, ga) for dd in (-1, 0, 1) for x in have.get(d0 + dd, [])):
+                miss += 1
+        A.count("derived", "history_archive_rows", len(arch.get(int(i), [])))
+        if miss:
+            bad["history_archive_missing"].append((miss, f"{i} ({h.get('name')}): {miss}"))
+        pos = Counter(p[0] for p in h.get("positions") or [])
+        if any(n > 1 for n in pos.values()):
+            bad["history_two_positions"].append(f"{i} ({h.get('name')})")
+    labels = {"history_totals": ("error", "totals don't add up"), "history_national_team": ("error", "a national team has a club history"),
+              "history_duplicate_rows": ("error", "the same match (date + opponent) listed twice"), "history_self_match": ("error", "a club plays itself"),
+              "history_blank_opponent": ("warn", "an opponent without a name"), "history_archive_missing": ("error", "matches of our own archive missing"),
+              "history_two_positions": ("error", "two league positions in one season (two clubs merged)")}
+    for chk, items in bad.items():
+        if chk == "history_archive_missing":
+            items = [x[1] for x in sorted(items, reverse=True)]
+        lv, txt = labels[chk]
+        A.add("derived", chk, lv, "ours", f"history:{chk}", f"{len(items)} of {len(ids)} club histories: {txt}: " + "; ".join(items[:8]), examples=[str(x).split(" ")[0] for x in items[:40]])
 
 
 # ------------------------------------------------------------------ champions
