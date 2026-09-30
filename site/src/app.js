@@ -620,6 +620,11 @@
         S.filter(function(x, i){ return i % 5 === 0; }).map(function(x){ return '<text x="' + X(x[0]) + '" y="' + (H - 2) + '" class="ax">' + x[0] + "</text>"; }).join("") + "</svg><p class=\"src\">المصدر: kassiesa.net (أرشيف معاملات يويفا).</p></section>";
     }).catch(function(){});
   })();
+  // ---- a player's Transfermarkt record (v1/player/<id>/tm.json, db/tmdata.py): career by competition, injuries, birthplace, agent
+  (function(){
+    var box = $(".ptm"); if (!box) return;
+    get("player/" + box.dataset.player + "/tm.json").then(function(d){ box.innerHTML = R.tmSections(d); }).catch(function(){});
+  })();
   // ---- a player's full profile from FotMob (v1/player/<id>/profile.json, db/fotmob_profiles.py): trophies by club, the whole career
   //      season by season with every competition, the national team, market value through the years
   (function(){

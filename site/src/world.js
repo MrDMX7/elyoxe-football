@@ -12,9 +12,9 @@
   var FOOT = { left:"اليسرى", right:"اليمنى", both:"الثنتين" };
   var clubUrl = function(c){ return "/db/club/?id=" + c; }, playerUrl = function(p){ return "/db/player/?id=" + p; };
   function title(t){ document.title = t + " | موسوعة تيفو"; var h = $("#wt"); if (h) h.textContent = t; }
-  var IMG = "https://imagecache.365scores.com/image/upload/f_png,w_64,h_64,c_limit,q_auto:eco,dpr_2,d_Competitors:default1.png/v1/";
+  var IMG = "https://imagecache.365scores.com/image/upload/f_png,w_64,h_64,c_limit,q_auto:eco,dpr_2,d_";
   var leagueUrl = function(c){ return "/db/league/?id=" + c; }, teamUrl = function(t){ return "/db/team/?id=" + t; }, gameUrl = function(g){ return "/db/game/?id=" + g; }, athUrl = function(p){ return "/db/athlete/?id=" + p; };
-  var logo = function(kind, i){ return '<img class="wlogo" src="' + IMG + kind + "/" + i + '" alt="" width="32" height="32" loading="lazy" onerror="this.remove()">'; };
+  var logo = function(kind, i){ return '<img class="wlogo" src="' + IMG + kind + ":default1.png/" + kind + "/" + i + '" alt="" width="32" height="32" loading="lazy" onerror="this.remove()">'; };
   var dstr = function(s){ var d = s ? new Date(s) : null; return d && !isNaN(d) ? d.toLocaleDateString("ar-AE-u-nu-latn", { year:"numeric", month:"short", day:"numeric" }) : ""; };
   var src365 = '<p class="src">من 365Scores. <a href="/db/">الموسوعة</a></p>';
 
@@ -56,7 +56,7 @@
   // ================================================================ 365Scores (db/scores365.py): every competition's champions
   // through history, Arab final tables, and the Arab leagues FotMob doesn't cover in full (squads, matches, player cards)
   function gameRow(g, N){ // [id, date, season, round, home, away, hs, as, status, lineups]
-    var sc = g[6] == null ? '<span class="muted">' + esc((g[1] || "").slice(11, 16)) + "</span>" : '<bdi dir="ltr" class="num">' + g[6] + " - " + g[7] + "</bdi>";
+    var sc = g[6] == null ? '<span class="muted">' + esc((g[1] || "").slice(11, 16)) + "</span>" : '<bdi dir="rtl" class="num">' + g[6] + " - " + g[7] + "</bdi>";
     return '<li><span class="num muted small">' + esc(dstr(g[1])) + '</span> <a href="' + teamUrl(g[4]) + '">' + esc(N[g[4]] || "") + "</a> " + (g[8] === 4 ? '<a href="' + gameUrl(g[0]) + '">' + sc + "</a>" : sc) + ' <a href="' + teamUrl(g[5]) + '">' + esc(N[g[5]] || "") + "</a></li>"; }
   function tableHtml(rows, N){ return '<div class="tscroll"><table class="tbl"><thead><tr><th>#</th><th>الفريق</th><th>لعب</th><th>فوز</th><th>تعادل</th><th>خسارة</th><th>له-عليه</th><th>نقاط</th></tr></thead><tbody>' +
     rows.map(function(r){ return '<tr><td class="num">' + (r[0] == null ? "" : r[0]) + '</td><td><a href="' + teamUrl(r[1]) + '">' + esc(N[r[1]] || "") + "</a>" + (r[9] != null ? ' <span class="muted small">' + esc(r[9]) + "</span>" : "") + '</td><td class="num">' + (r[2] == null ? "" : r[2]) + '</td><td class="num">' + (r[3] == null ? "" : r[3]) + '</td><td class="num">' + (r[4] == null ? "" : r[4]) + '</td><td class="num">' + (r[5] == null ? "" : r[5]) +
@@ -108,7 +108,7 @@
       var S = t.squad || [];
       if (S.length){ var groups = {}, order = []; S.forEach(function(p){ var g = p[3] || "—"; if (!groups[g]){ groups[g] = []; order.push(g); } groups[g].push(p); });
         html += '<section class="blk"><h2>اللاعبين <small>' + S.length + "</small></h2>" + order.map(function(g){ return "<h3>" + esc(g) + '</h3><ul class="mlist cols">' + groups[g].map(function(p){
-          return "<li>" + (p[2] ? '<span class="num muted">' + p[2] + "</span> " : "") + '<a href="' + athUrl(p[0]) + '">' + esc(p[1] || "") + "</a>" + (p[5] ? ' <span class="muted small num">' + p[5] + "</span>" : "") + "</li>"; }).join("") + "</ul>"; }).join("") + "</section>"; }
+          return "<li>" + (p[2] > 0 ? '<span class="num muted">' + p[2] + "</span> " : "") + '<a href="' + athUrl(p[0]) + '">' + esc(p[1] || "") + "</a>" + (p[5] ? ' <span class="muted small num">' + p[5] + "</span>" : "") + "</li>"; }).join("") + "</ul>"; }).join("") + "</section>"; }
       var G = t.games || [], N = t.names || {};
       if (G.length) html += '<section class="blk"><h2>مبارياته <small>' + G.length + '</small></h2><ul class="mlist wgm">' + G.map(function(g){ return gameRow(g, N); }).join("") + "</ul></section>";
       box.innerHTML = html + src365;
@@ -119,9 +119,9 @@
 
   if (kind === "game"){
     get("s365/game/" + id + ".json").then(function(m){
-      var hn = m.home[1] || "", an = m.away[1] || ""; title(hn + " " + (m.home[2] == null ? "" : m.home[2]) + "-" + (m.away[2] == null ? "" : m.away[2]) + " " + an);
-      var html = '<div class="wmh"><a href="' + teamUrl(m.home[0]) + '">' + esc(hn) + '</a><bdi dir="ltr" class="num wsc">' + (m.home[2] == null ? "" : m.home[2]) + " - " + (m.away[2] == null ? "" : m.away[2]) + '</bdi><a href="' + teamUrl(m.away[0]) + '">' + esc(an) + "</a></div>" +
-        '<p class="season">' + [m.comp_name && '<a href="' + leagueUrl(m.comp) + '">' + esc(m.comp_name) + "</a>" + (m.round ? " · الجولة " + m.round : ""), dstr(m.date), m.venue && "ملعب " + esc(m.venue), m.referee && "الحكم " + esc(m.referee)].filter(Boolean).join(" · ") + "</p>";
+      var hn = m.home[1] || "", an = m.away[1] || ""; title(hn + " " + (m.home[2] == null ? "" : m.home[2]) + " - " + (m.away[2] == null ? "" : m.away[2]) + " " + an);
+      var html = '<div class="wmh"><a href="' + teamUrl(m.home[0]) + '">' + esc(hn) + '</a><bdi dir="rtl" class="num wsc">' + (m.home[2] == null ? "" : m.home[2]) + " - " + (m.away[2] == null ? "" : m.away[2]) + '</bdi><a href="' + teamUrl(m.away[0]) + '">' + esc(an) + "</a></div>" +
+        '<p class="season">' + [m.comp_name && '<a href="' + leagueUrl(m.comp) + '">' + esc(m.comp_name) + "</a>" + (m.round ? " · الجولة " + m.round : ""), dstr(m.date), m.venue && (/^(ملعب|استاد|ستاد)/.test(m.venue) ? "" : "ملعب ") + esc(m.venue), m.referee && "الحكم " + esc(m.referee)].filter(Boolean).join(" · ") + "</p>";
       var EV = { g:"هدف", y:"إنذار", r:"طرد", s:"تبديل" };
       if ((m.events || []).length) html += '<section class="blk"><h2>أحداث المباراة</h2><ul class="mlist wev">' + m.events.map(function(e){
         var who = e[3] ? '<a href="' + athUrl(e[3]) + '">' + esc(e[4] || "") + "</a>" : esc(e[4] || "");
@@ -130,7 +130,7 @@
       var L = m.lineups || {};
       if (L.h || L.a) html += '<section class="blk"><h2>التشكيلة</h2><div class="hbig">' + ["h", "a"].map(function(s){ var t = L[s]; if (!t) return "<div></div>";
         return "<div><h3>" + esc(s === "h" ? hn : an) + (t.formation ? ' <span class="muted small num">' + esc(t.formation) + "</span>" : "") + '</h3><ol class="mlist wlu">' + t.players.map(function(p){
-          return "<li" + (p[4] ? "" : ' class="sub"') + ">" + (p[2] ? '<span class="num muted">' + esc(p[2]) + "</span> " : "") + '<a href="' + athUrl(p[0]) + '">' + esc(p[1] || "") + "</a>" + ' <span class="muted small">' + esc(p[3] || "") + "</span>" +
+          return "<li" + (p[4] ? "" : ' class="sub"') + ">" + (p[2] > 0 ? '<span class="num muted">' + esc(p[2]) + "</span> " : "") + '<a href="' + athUrl(p[0]) + '">' + esc(p[1] || "") + "</a>" + ' <span class="muted small">' + esc(p[3] || "") + "</span>" +
             (p[5] != null ? ' <span class="num muted small">' + p[5] + "′</span>" : "") + (+p[6] ? ' <span class="ev g">' + p[6] + "</span>" : "") + (+p[7] ? ' <span class="muted small">صناعة ' + p[7] + "</span>" : "") + "</li>"; }).join("") + "</ol></div>"; }).join("") + "</div></section>";
       box.innerHTML = html + src365;
     }).catch(function(){ box.innerHTML = '<p class="empty">ما لقينا تفاصيل هالمباراة. <a href="/db/">الموسوعة</a></p>'; });
@@ -141,7 +141,7 @@
     get("s365/player/" + id + ".json").then(function(d){
       title(d.name || d.en || ""); var N = d.names || {};
       var rows = [d.pos && ["المركز", esc(d.pos) + (d.pos2 && d.pos2 !== d.pos ? ' <span class="muted small">' + esc(d.pos2) + "</span>" : "")], d.age && ["العمر", d.age + " سنة" + (d.born ? ' <span class="muted small num">' + esc(d.born) + "</span>" : "")],
-        d.height && ["الطول", esc(d.height) + " م"], d.foot && ["القدم", esc(d.foot)], d.nat && ["الجنسية", esc(d.nat)], d.shirt && ["الرقم", d.shirt],
+        d.height && ["الطول", esc(d.height) + " م"], d.foot && ["القدم", esc(d.foot)], d.nat && ["الجنسية", esc(d.nat)], d.shirt > 0 && ["الرقم", d.shirt],
         d.club && ["النادي", '<a href="' + teamUrl(d.club) + '">' + esc(N[d.club] || "") + "</a>"], d.contract && ["نهاية العقد", '<span class="num">' + esc(d.contract.slice(0, 7)) + "</span>"],
         d.nat_text && ["مع المنتخب", esc(d.nat_text)]].filter(Boolean);
       var html = (d.en ? '<p class="season lat">' + esc(d.en) + "</p>" : "") + (rows.length ? '<dl class="pbio">' + rows.map(function(r){ return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + "</dl>" : "") + (d.bio ? "<p>" + esc(d.bio) + "</p>" : "");
@@ -190,10 +190,10 @@
     has("/m/" + id + "/").then(function(live){ if (live){ location.replace("/m/" + id + "/"); return; }
       get("matchx/" + id + ".json").then(function(m){
         var N = m.names || {}, hn = N.home || m.home[1], an = N.away || m.away[1];
-        title(hn + " " + m.home[2] + "-" + m.away[2] + " " + an);
+        title(hn + " " + m.home[2] + " - " + m.away[2] + " " + an);
         var dt = m.date ? new Date(m.date) : null;
-        var html = '<div class="wmh"><a href="' + clubUrl(m.home[0]) + '">' + esc(hn) + '</a><bdi dir="ltr" class="num wsc">' + m.home[2] + " - " + m.away[2] + '</bdi><a href="' + clubUrl(m.away[0]) + '">' + esc(an) + "</a></div>" +
-          '<p class="season">' + [N.comp && esc(N.comp) + (m.round ? " · الجولة " + esc(m.round) : ""), dt && dt.toLocaleDateString("ar-AE-u-nu-latn", { year:"numeric", month:"long", day:"numeric" }), m.stadium && m.stadium[0] && "ملعب " + esc(m.stadium[0]),
+        var html = '<div class="wmh"><a href="' + clubUrl(m.home[0]) + '">' + esc(hn) + '</a><bdi dir="rtl" class="num wsc">' + m.home[2] + " - " + m.away[2] + '</bdi><a href="' + clubUrl(m.away[0]) + '">' + esc(an) + "</a></div>" +
+          '<p class="season">' + [N.comp && esc(N.comp) + (m.round ? " · الجولة " + esc(m.round) : ""), dt && dt.toLocaleDateString("ar-AE-u-nu-latn", { year:"numeric", month:"long", day:"numeric" }), m.stadium && m.stadium[0] && (/^(ملعب|استاد|ستاد)/.test(m.stadium[0]) ? "" : "ملعب ") + esc(m.stadium[0]),
             m.referee && "الحكم " + esc(m.referee), m.attendance && Number(m.attendance).toLocaleString("en") + " متفرج"].filter(Boolean).join(" · ") + "</p>";
         var EV = { g:"هدف", y:"إنذار", r:"طرد", s:"تبديل" };
         if ((m.events || []).length) html += '<section class="blk"><h2>أحداث المباراة</h2><ul class="mlist wev">' + m.events.map(function(e){
@@ -236,6 +236,7 @@
         if (tro.length) html += '<section class="blk"><h2>ألقابه</h2><ul class="chon">' + tro.map(function(t){ return "<li><b>" + esc(t[3] || "") + '</b> <span class="num">' + t[4].length + '</span><span class="muted small yrs">' + esc(t[1] || "") + " · " + esc(t[4].join("، ")) + "</span></li>"; }).join("") + "</ul></section>";
         html += '<p class="src">من FotMob. <a href="/db/">الموسوعة</a></p>';
         box.innerHTML = html;
+        get("player/" + id + "/tm.json").then(function(t){ var h = R.tmSections(t); if (h){ var src = box.querySelector(".src"); if (src) src.insertAdjacentHTML("beforebegin", h); else box.insertAdjacentHTML("beforeend", h); } }).catch(function(){});
         get("ea/s/" + (+id % 100) + ".json").then(function(e){ var c = (e.cards || {})[id]; if (c){ var dl = box.querySelector(".pbio"); if (dl) dl.insertAdjacentHTML("afterend", R.eaCard(c)); else box.insertAdjacentHTML("afterbegin", R.eaCard(c)); } }).catch(function(){});
       }).catch(function(){ box.innerHTML = '<p class="empty">ما لقينا هاللاعب في الموسوعة. <a href="/db/">دوّر من جديد</a></p>'; });
     });

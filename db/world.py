@@ -12,7 +12,8 @@ Out (public):
                                coaches, league position by season, transfers
   v1/world/index.json          search: clubs [id, name ar|en, country code, league id] and players [id, name, club id]
   v1/world/leagues.json        every league: id, names, country, club ids
-  (players: v1/player/<id>/profile.json + bios, as db/fotmob_profiles.py writes them)
+  (players: v1/player/<id>/profile.json + bios, as db/fotmob_profiles.py writes them; v1/world/bios.json [name, born, club]
+   for db/eafc.py's matching)
 """
 import argparse, json, os, re, sys, time
 from concurrent.futures import ThreadPoolExecutor
@@ -126,6 +127,7 @@ def main(argv=None):
         store.put_json("world/leagues.json", {"generated": date.today().isoformat(), "leagues": lg_out}, cache="warm")
         store.put_json("world/index.json", idx, cache="warm")
         if bios:
+            store.put_json("world/bios.json", {"generated": date.today().isoformat(), "players": {str(k): [b.get("name"), b.get("born"), b.get("team")] for k, b in bios.items()}}, cache="warm")
             with ThreadPoolExecutor(8) as ex:
                 list(ex.map(lambda kv: store.put_json(f"player/{kv[0]}/profile.json", dict(kv[1], player=kv[0], bio=bios[kv[0]], source="FotMob"), cache="warm"), profiles.items()))
         print("uploaded")

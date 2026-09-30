@@ -331,6 +331,86 @@
       '<p class="muted small">المهارات ' + stars(c[3]) + " · القدم الضعيفة " + stars(c[4]) + (c[5] ? " · يلعب " + (c[5] === 2 ? "باليسرى" : "باليمنى") : "") + "</p>" +
       (ps ? '<p class="eaps">' + ps + "</p>" : "") + "<details><summary>كل الخصائص</summary>" + all + "</details>" + '<p class="src">التقييم من EA SPORTS FC 27' + (c[9] ? " (" + esc(c[9]) + ")" : "") + ".</p></section>";
   };
+  // the player's Transfermarkt record (db/tmdata.py): every season by competition, the injury record, birthplace, agent…
+  var TM_COMP = { FAC:"كأس الاتحاد الإنجليزي", CGB:"كأس الرابطة الإنجليزية", CIT:"كأس إيطاليا", FRC:"كأس فرنسا", CDR:"كأس ملك إسبانيا", TRP:"كأس تركيا", DFB:"كأس ألمانيا",
+    GBFL:"كأس EFL", BRC:"كأس البرازيل", ELQ:"تصفيات الدوري الأوروبي", CL:"دوري أبطال أوروبا", IT1:"الدوري الإيطالي", EL:"الدوري الأوروبي", IT2:"الدرجة الثانية الإيطالية",
+    GB1:"الدوري الإنجليزي الممتاز", GB2:"التشامبيونشيب", BRA1:"الدوري البرازيلي", ES1:"الدوري الإسباني", ES2:"الدرجة الثانية الإسبانية", POPO:"كأس البرتغال", GB3:"الدرجة الثالثة الإنجليزية",
+    FR1:"الدوري الفرنسي", NLP:"كأس هولندا", CLQ:"تصفيات دوري أبطال أوروبا", FRL:"كأس الرابطة الفرنسية", L1:"الدوري الألماني", CCB:"كأس بلجيكا", FR2:"الدرجة الثانية الفرنسية",
+    TR1:"الدوري التركي", GB21:"الدوري الإنجليزي تحت 21", IT3A:"الدرجة الثالثة الإيطالية", IT3B:"الدرجة الثالثة الإيطالية", IT3C:"الدرجة الثالثة الإيطالية", GB4:"الدرجة الرابعة الإنجليزية",
+    NL1:"الدوري الهولندي", RUP:"كأس روسيا", SCC:"كأس سويسرا", L2:"الدرجة الثانية الألمانية", UEFA:"كأس الاتحاد الأوروبي", BE1:"الدوري البلجيكي", MLS1:"الدوري الأمريكي", PO1:"الدوري البرتغالي",
+    POPU:"كأس بولندا", CLI:"كأس ليبرتادوريس", BRA2:"الدرجة الثانية البرازيلية", MEXA:"الدوري المكسيكي (أبيرتورا)", MEX1:"الدوري المكسيكي (كلاوسورا)", GRP:"كأس اليونان", PL1:"الدوري البولندي",
+    JEMP:"كأس الإمبراطور الياباني", ARCA:"كأس الأرجنتين", UNGP:"كأس المجر", SFA:"كأس اسكتلندا", POCP:"كأس الرابطة البرتغالية", MLSP:"كأس أمريكا المفتوحة", SCP:"كأس الرابطة الاسكتلندية",
+    CS:"كوبا سودأمريكانا", UKRP:"كأس أوكرانيا", NL2:"الدرجة الثانية الهولندية", TR2:"الدرجة الأولى التركية", PO2:"الدرجة الثانية البرتغالية", FR3:"الدرجة الثالثة الفرنسية", DKP:"كأس الدنمارك",
+    SC1:"الدوري الاسكتلندي", "19YL":"دوري الشباب الأوروبي", ECLQ:"تصفيات دوري المؤتمر", UKR1:"الدوري الأوكراني", RU1:"الدوري الروسي", SEC:"كأس السويد", L3:"الدرجة الثالثة الألمانية",
+    JAPC:"كأس الرابطة اليابانية", GR1:"الدوري اليوناني", ofb:"كأس النمسا", DK1:"الدوري الدنماركي", C1:"الدوري السويسري", UNG1:"الدوري المجري", JAP1:"الدوري الياباني", SE1:"الدوري السويدي",
+    NO1:"الدوري النرويجي", CSL:"الدوري الصيني", A1:"الدوري النمساوي", AFCL:"دوري أبطال آسيا", KR1:"الدوري الكرواتي", RKPO:"كأس كوريا", CHFA:"كأس الصين", CCL:"دوري أبطال الكونكاكاف",
+    POUS:"أدوار الدوري الأمريكي الإقصائية", RSK1:"الدوري الكوري", UEQ:"تصفيات كأس الاتحاد الأوروبي", SLO1:"الدوري السلوفاكي", UI:"كأس إنترتوتو", USMX:"كأس الدوريات", KRC:"كأس كرواتيا",
+    AUS1:"الدوري الأسترالي", UCOL:"دوري المؤتمر الأوروبي", RO1:"الدوري الروماني", ZYP1:"الدوري القبرصي", QSL:"دوري نجوم قطر", KLUB:"كأس العالم للأندية", SER1:"الدوري الصربي",
+    BU1:"الدوري البلغاري", TS1:"الدوري التشيكي", AR1N:"الدوري الأرجنتيني", ARG1:"الدوري الأرجنتيني (أبيرتورا)", ARGC:"الدوري الأرجنتيني (كلاوسورا)", CDLP:"كأس الرابطة الأرجنتينية",
+    SA1:"الدوري السعودي", UAE1:"الدوري الإماراتي", EGY1:"الدوري المصري", MAR1:"الدوري المغربي", TUN1:"الدوري التونسي", ALG1:"الدوري الجزائري", SC2:"الدرجة الأولى الاسكتلندية",
+    A2:"الدرجة الثانية النمساوية", C2:"الدرجة الثانية السويسرية", BE2:"الدرجة الثانية البلجيكية", ARG2:"الدرجة الثانية الأرجنتينية", BRA3:"الدرجة الثالثة البرازيلية", JAP2:"الدرجة الثانية اليابانية",
+    RU2:"الدرجة الأولى الروسية", UKR2:"الدرجة الأولى الأوكرانية", SE2:"الدرجة الثانية السويدية", NO2:"الدرجة الثانية النرويجية", DK2:"الدرجة الأولى الدنماركية", GR2:"الدرجة الثانية اليونانية",
+    PL2:"الدرجة الأولى البولندية", ROMP:"كأس رومانيا", CNAT:"الدوري الوطني الإنجليزي", FAYC:"كأس الشباب الإنجليزي", GB18:"الدوري الإنجليزي تحت 18", IJ1:"دوري بريمافيرا الإيطالي",
+    USC:"السوبر الأوروبي", SUC:"كأس السوبر الإسباني", DFL:"كأس السوبر الألماني", SCI:"كأس السوبر الإيطالي", FRSC:"كأس الأبطال الفرنسي", GBCS:"الدرع الخيرية" };
+  var TM_INJ = { "unknown injury":"إصابة غير معلنة", "muscle injury":"إصابة عضلية", "hamstring injury":"إصابة في العضلة الخلفية", "knee injury":"إصابة في الركبة", "muscular problems":"مشاكل عضلية",
+    "ankle injury":"إصابة في الكاحل", "ill":"مرض", "cruciate ligament tear":"قطع في الرباط الصليبي", "knock":"كدمة", "corona virus":"كورونا", "knee problems":"مشاكل في الركبة", "thigh problems":"مشاكل في الفخذ",
+    "torn muscle fiber":"تمزق في ألياف العضلة", "fitness":"اللياقة", "shoulder injury":"إصابة في الكتف", "calf injury":"إصابة في السمانة", "adductor pain":"ألم في العضلة الضامة", "foot injury":"إصابة في القدم",
+    "adductor injury":"إصابة في العضلة الضامة", "groin injury":"إصابة في الفخذ الداخلي", "hamstring strain":"شد في العضلة الخلفية", "rest":"راحة", "ankle sprain":"التواء في الكاحل", "minor knock":"كدمة خفيفة",
+    "calf problems":"مشاكل في السمانة", "knee surgery":"عملية في الركبة", "back problems":"مشاكل في الظهر", "flu":"إنفلونزا", "leg injury":"إصابة في الساق", "meniscus injury":"إصابة في الغضروف الهلالي",
+    "muscle fatigue":"إجهاد عضلي", "concussion":"ارتجاج", "influenza":"إنفلونزا", "hip injury":"إصابة في الورك", "groin problems":"مشاكل في الفخذ الداخلي", "bruise":"كدمة", "achilles tendon problems":"مشاكل في وتر أكيليس",
+    "hamstring muscle injury":"إصابة في العضلة الخلفية", "ankle problems":"مشاكل في الكاحل", "cruciate ligament injury":"إصابة في الرباط الصليبي", "metatarsal fracture":"كسر في مشط القدم",
+    "torn muscle bundle":"تمزق في حزمة عضلية", "strain":"شد عضلي", "back injury":"إصابة في الظهر", "dead leg":"كدمة في الفخذ", "quarantine":"حجر صحي", "muscle tear":"تمزق عضلي",
+    "injury to the ankle":"إصابة في الكاحل", "muscle strain":"شد عضلي", "cold":"زكام", "head injury":"إصابة في الرأس", "achilles tendon rupture":"قطع في وتر أكيليس", "fever":"حمى",
+    "stomach flu":"إنفلونزا المعدة", "hip problems":"مشاكل في الورك", "ligament injury":"إصابة في الأربطة", "meniscus tear":"تمزق في الغضروف الهلالي", "torn ankle ligaments":"تمزق في أربطة الكاحل",
+    "torn thigh muscle":"تمزق في عضلة الفخذ", "surgery":"عملية جراحية", "calf strain":"شد في السمانة", "infection":"التهاب", "inner ligament injury":"إصابة في الرباط الداخلي",
+    "torn lateral knee ligament":"تمزق في الرباط الجانبي للركبة", "broken nose bone":"كسر في الأنف", "inflammation of pubic bone":"التهاب عظم العانة", "toe injury":"إصابة في إصبع القدم",
+    "broken fibula":"كسر في الشظية", "cruciate ligament surgery":"عملية في الرباط الصليبي", "foot bruise":"كدمة في القدم", "broken collarbone":"كسر في الترقوة", "calf muscle tear":"تمزق في عضلة السمانة",
+    "ankle surgery":"عملية في الكاحل", "bruised ribs":"كدمة في الأضلاع", "broken foot":"كسر في القدم", "torn lateral ankle ligament":"تمزق في الرباط الجانبي للكاحل", "virus":"فيروس",
+    "knee bruise":"كدمة في الركبة", "groin surgery":"عملية في الفخذ الداخلي", "meniscus damage":"ضرر في الغضروف الهلالي", "broken toe":"كسر في إصبع القدم", "rib fracture":"كسر في الأضلاع",
+    "pubalgia":"آلام العانة", "torn knee ligaments":"تمزق في أربطة الركبة", "hand injury":"إصابة في اليد", "ligament stretching":"تمدد في الأربطة", "knee medial ligament tear":"تمزق في الرباط الإنسي للركبة",
+    "syndesmotic ligament tear":"تمزق في الرباط الظنبوبي الشظوي", "groin strain":"شد في الفخذ الداخلي", "broken hand":"كسر في اليد", "muscle stiffness":"تيبس عضلي", "inner knee ligament tear":"تمزق في الرباط الداخلي للركبة",
+    "elbow injury":"إصابة في الكوع", "inner ligament stretch of the knee":"تمدد في الرباط الداخلي للركبة", "torn muscle fiber in the adductor area":"تمزق في ألياف العضلة الضامة", "capsular injury":"إصابة في المحفظة المفصلية",
+    "cartilage damage":"ضرر في الغضروف", "inguinal hernia":"فتق إربي", "abdominal muscle strain":"شد في عضلات البطن", "tendonitis":"التهاب في الوتر", "heel injury":"إصابة في الكعب",
+    "injury to abdominal muscles":"إصابة في عضلات البطن", "lumbago":"ألم أسفل الظهر", "muscle fiber tear":"تمزق في ألياف العضلة", "metacarpal fracture":"كسر في مشط اليد", "broken finger":"كسر في الإصبع",
+    "patellar tendon problems":"مشاكل في وتر الرضفة", "broken tibia":"كسر في الظنبوب", "broken cheekbone":"كسر في عظم الوجنة", "tendon rupture":"قطع في الوتر", "achilles tendon irritation":"تهيج في وتر أكيليس",
+    "contracture":"تقلص عضلي", "torn ligaments":"تمزق في الأربطة", "broken ankle":"كسر في الكاحل", "sprain":"التواء", "shin injury":"إصابة في قصبة الساق", "outer ligament tear":"تمزق في الرباط الخارجي",
+    "heart problems":"مشاكل في القلب", "stomach problems":"مشاكل في المعدة", "achilles tendon surgery":"عملية في وتر أكيليس", "broken arm":"كسر في الذراع", "herniated disc":"انزلاق غضروفي",
+    "foot surgery":"عملية في القدم", "bone edema":"وذمة عظمية", "internal ligament tear":"تمزق في الرباط الداخلي", "tonsillitis":"التهاب اللوزتين", "broken leg":"كسر في الساق", "finger injury":"إصابة في الإصبع",
+    "arm injury":"إصابة في الذراع", "syndesmosis ligament tear":"تمزق في الرباط الظنبوبي الشظوي", "thigh muscle strain":"شد في عضلة الفخذ", "calf muscle strain":"شد في عضلة السمانة", "shoulder dislocation":"خلع في الكتف" };
+  var tmSeason = function(s){ var m = /^(\d{2})\/(\d{2})$/.exec(s || ""); return m ? (+m[1] > 60 ? "19" : "20") + m[1] + "/" + m[2] : s || ""; };
+  R.tmSections = function(d){
+    if (!d) return "";
+    var N = d.names_ar || {}, out = "", dd = function(x){ return x ? '<span class="num">' + esc(String(x).slice(0, 10)) + "</span>" : ""; };
+    var info = [d.born_in && (d.born_in[0] || d.born_in[1]) && ["مكان الميلاد", esc([d.born_in[0], d.born_in[1]].filter(Boolean).join("، "))],
+      d.citizenship && d.citizenship.length > 1 && ["الجنسيات", esc(d.citizenship.join("، "))], d.native && /[^\x00-ɏ]/.test(d.native) && ["اسمه بلغته", esc(d.native)],
+      d.agent && ["الوكيل", esc(d.agent)], d.outfitter && ["حذاؤه من", esc(d.outfitter)], d.joined && ["انضم لناديه", dd(d.joined)], d.contract && ["عقده لين", dd(d.contract)],
+      d.option && ["خيار التمديد", esc(d.option)], d.extended && ["آخر تجديد", dd(d.extended)], d.loan_from && ["معار من", esc(d.loan_from)], d.died && ["توفي", dd(d.died)]].filter(Boolean);
+    if (info.length) out += '<section class="blk"><h2>بطاقته عند Transfermarkt</h2><dl class="pbio">' + info.map(function(r){ return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + "</dl></section>";
+    var C = d.career || [];
+    if (C.length){
+      var byC = {}, T = { a:0, g:0, as:0, y:0, r:0 };
+      C.forEach(function(r){ var k = r[1] || r[2]; var b = byC[k] = byC[k] || { name:TM_COMP[r[1]] || r[2], a:0, g:0, as:0, s:0 }; b.a += r[6] || 0; b.g += r[7] || 0; b.as += r[8] || 0; b.s++;
+        T.a += r[6] || 0; T.g += r[7] || 0; T.as += r[8] || 0; T.y += r[10] || 0; T.r += (r[11] || 0) + (r[12] || 0); });
+      var comps = Object.keys(byC).sort(function(a, b){ return byC[b].a - byC[a].a; });
+      out += '<section class="blk"><h2>مسيرته كاملة حسب البطولة <small>لين ' + esc(tmSeason(C[0][0])) + "</small></h2>" +
+        '<p><b class="num">' + T.a + '</b> مباراة · <b class="num">' + T.g + '</b> هدف · <b class="num">' + T.as + '</b> صناعة · <span class="num">' + T.y + '</span> إنذار · <span class="num">' + T.r + "</span> طرد</p>" +
+        '<div class="tscroll"><table class="tbl"><thead><tr><th>البطولة</th><th>مواسم</th><th>مباريات</th><th>أهداف</th><th>صناعة</th></tr></thead><tbody>' + comps.slice(0, 15).map(function(k){ var b = byC[k];
+          return "<tr><td>" + esc(b.name) + '</td><td class="num">' + b.s + '</td><td class="num">' + b.a + '</td><td class="num">' + b.g + '</td><td class="num">' + b.as + "</td></tr>"; }).join("") + "</tbody></table></div>" +
+        '<details><summary>كل المواسم (<span class="num">' + C.length + '</span> سطر)</summary><div class="tscroll"><table class="tbl"><thead><tr><th>الموسم</th><th>الفريق</th><th>البطولة</th><th>مباريات</th><th>أهداف</th><th>صناعة</th><th>دقيقة لكل هدف</th><th>إنذار</th><th>طرد</th><th>دخل بديل</th><th>طلع بديل</th></tr></thead><tbody>' +
+        C.map(function(r){ return '<tr><td class="num">' + esc(tmSeason(r[0])) + "</td><td>" + esc(N[r[3]] || r[4] || "") + "</td><td>" + esc(TM_COMP[r[1]] || r[2] || "") + '</td><td class="num">' + (r[6] || 0) + '</td><td class="num">' + (r[7] || 0) +
+          '</td><td class="num">' + (r[8] || 0) + '</td><td class="num">' + (r[9] == null ? "" : r[9]) + '</td><td class="num">' + (r[10] || 0) + '</td><td class="num">' + ((r[11] || 0) + (r[12] || 0)) + '</td><td class="num">' + (r[13] || 0) + '</td><td class="num">' + (r[14] || 0) + "</td></tr>"; }).join("") +
+        "</tbody></table></div></details></section>";
+    }
+    var I = d.injuries || [];
+    if (I.length){
+      var days = I.reduce(function(a, x){ return a + (x[4] || 0); }, 0), games = I.reduce(function(a, x){ return a + (x[5] || 0); }, 0);
+      out += '<section class="blk"><h2>سجل الإصابات <small>' + I.length + "</small></h2><p>غاب بسببها <b class=\"num\">" + days.toLocaleString("en") + '</b> يوم و<b class="num">' + games + "</b> مباراة.</p>" +
+        '<div class="tscroll"><table class="tbl"><thead><tr><th>الموسم</th><th>الإصابة</th><th>من</th><th>لين</th><th>أيام</th><th>مباريات غاب عنها</th></tr></thead><tbody>' +
+        I.map(function(x){ return '<tr><td class="num">' + esc(tmSeason(x[0])) + "</td><td>" + esc(TM_INJ[String(x[1] || "").toLowerCase()] || x[1] || "") + "</td><td>" + dd(x[2]) + "</td><td>" + dd(x[3]) + '</td><td class="num">' + (x[4] == null ? "" : x[4]) + '</td><td class="num">' + (x[5] == null ? "" : x[5]) + "</td></tr>"; }).join("") +
+        "</tbody></table></div></section>";
+    }
+    return out ? out + '<p class="src">من Transfermarkt عبر مجموعة salimt/football-datasets المفتوحة. المسيرة حسب البطولة لين آخر موسم كامل عندهم؛ المواسم الأحدث من FotMob فوق.</p>' : "";
+  };
   R.UAE_COMPS = UAE_COMPS;
   if (typeof module !== "undefined" && module.exports) module.exports = R; else root.TR = R;
 })(this);
