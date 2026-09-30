@@ -27,6 +27,12 @@ Out (public):
   v1/matchx/<id>.json          one match: teams, score, date, round, stadium, referee, lineups, events, player stats
   v1/player/<id>/log.json      every match of the player (club and country) and his totals per season and competition
   v1/match/<id>.json           (pages) the match page's detail for finished site matches that had none
+
+Events are compact arrays: goal [minute, "g", side, player id, name, assist id, "pen"|"own"|null, how_ar, how_key] —
+the last two (compute/goal_how.py: «رأسية من ركنية», "header+corner") only on goals fetched from 2026-09-30 on, and only
+when FotMob's event, its shot or the live ticker the poller read (v1/match/<id>.json) says how; older cached records keep
+7 fields (the raw details they came from were not kept, and refetching 66k matches is not worth it). Cards
+[minute, "y"|"r"|"c", side, id, name, null, card], substitutions [minute, "s", side, in id, in name, out id, out name].
 """
 import argparse, json, os, re, sys, threading, time
 from collections import defaultdict
@@ -36,6 +42,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 import config  # noqa: E402
+from compute import goal_how as GH  # noqa: E402
 from sources import schema as S  # noqa: E402
 from sources.fotmob import FotMob  # noqa: E402
 from store import Store, S3Backend  # noqa: E402
@@ -153,6 +160,24 @@ def raw_detail(mid):
     return None
 
 
+def fill_how(m, poller_doc):
+    """Goals FotMob's event and shot leave undescribed (no shot map: the UAE leagues…) take the description the poller
+    wrote from the live ticker into v1/match/<id>.json (compute/goal_how.py), matched on minute and scorer."""
+    how = {}
+    for e in (poller_doc or {}).get("events") or []:
+        if e.get("how") and "goal" in (e.get("type") or ""):
+            how[(e.get("minute"), (e.get("player") or {}).get("id"))] = e["how"]
+    for e in m["events"]:
+        if e[1] == "g" and len(e) < 8:
+            h = how.get((e[0], e[3]))
+            if h:
+                e += [h["ar"], h["key"]]
+    return m
+
+
+STORE = None          # main() sets it: fetch() reads the poller's match file for goals FotMob's event does not describe
+
+
 def fetch(mid):
     p = os.path.join(MX, f"{mid}.json")
     if os.path.exists(p):
@@ -164,6 +189,11 @@ def fetch(mid):
     if raw is None:
         return None
     m = compact(raw, mid)
+    if STORE is not None and any(e[1] == "g" and len(e) < 8 for e in m["events"]):
+        try:
+            fill_how(m, STORE.get_json(f"match/{mid}.json"))
+        except Exception:
+            pass                         # the poller never had this match (older than the poller): nothing to add
     if (raw.get("general") or {}).get("finished"):
         _save(mid, m)                    # not over yet: not cached, asked again next run
     with _LOCK:
@@ -493,7 +523,8 @@ def main(argv=None):
     ap.add_argument("--pages-only", action="store_true", help="only the match-page steps (missing pages, corrections), no matchx/logs")
     ap.add_argument("--refresh-ids", default="", help="match pages to refresh whatever their age (the audit names them: file_goals_exceed_score …)")
     a = ap.parse_args(argv)
-    store = Store(S3Backend(BUCKET))
+    global STORE
+    store = STORE = Store(S3Backend(BUCKET))
     comp_ids = [c["id"] for c in config.competitions()]
     if a.upload and not a.no_pages:
         names = store.get_state("names_ar.json", None) or {"teams": {}, "competitions": {}, "countries": {}}

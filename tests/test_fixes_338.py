@@ -181,7 +181,8 @@ def test_repoll_waits_for_the_highlights_video(tmp_path):
     assert again["highlights"] == hl and "1" not in p.st["repoll"]
     full_hl = dict(full, highlights=hl)
     p.plan_repoll(d, full_hl, "final")
-    assert "1" not in p.st["repoll"]                       # video already there: no re-poll
+    # video already there: no early re-poll, only the two late looks for FotMob's corrections (audit 2026-09-30)
+    assert p.st["repoll"]["1"]["kind"] == "late" and p.st["repoll"]["1"]["done"] == [30, 60]
 
 
 def test_live_watchdog_once_per_match(tmp_path):

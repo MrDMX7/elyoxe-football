@@ -30,6 +30,7 @@ from compute import insights as IN  # noqa: E402
 import config  # noqa: E402
 from compute import winprob as WP  # noqa: E402
 from compute import ics as ICS, magic as MAGIC, prayer as PRAYER, season as SEASON, weather as WEATHER  # noqa: E402
+from compute import allday as ALL, goal_how as GH  # noqa: E402
 from compute import awarded as AWARDED  # noqa: E402
 from compute.venues import Venues  # noqa: E402
 from sources import schema as S  # noqa: E402
@@ -526,18 +527,22 @@ class Poller:
 
     # ------------------------------------------------------------------ thin-coverage re-polls after full time
     def plan_repoll(self, d, full, why):
-        """Finished match whose feed lacks subs or cards, or has no highlights video yet: fetch it again REPOLL_MINUTES
-        after full time (FotMob sometimes fills events in later, and links the official highlights a while after the
-        whistle), and keep any event, or highlights link, an earlier copy had that the new one lacks."""
+        """Finished match whose feed lacks subs or cards, whose goal events don't make the score yet, or that has no
+        highlights video yet: fetch it again REPOLL_MINUTES after full time (FotMob sometimes fills events in later, and
+        links the official highlights a while after the whistle), and keep any event, or highlights link, an earlier copy
+        had that the new one lacks (never one the source corrected: _kept_events). Every other finished match gets two late
+        looks (LATE_REPOLL), since FotMob corrects scorers, assists, card players and minutes hours after full time
+        (audit 2026-09-30: 14 of 40 sampled pages differed from FotMob's own detail a day later)."""
         mid = str(d["id"])
         rp = self.st.setdefault("repoll", {})
         cov = full["coverage_events"]
         gap = _goal_gap(full)
+        want = not (cov["subs"] and cov["cards"]) or gap or not full.get("highlights")
         if why == "repoll":
             prev = self.store.get_json(f"match/{mid}.json") or {}
             if not full.get("highlights") and prev.get("highlights"):
                 full["highlights"] = prev["highlights"]
-                want = not (cov["subs"] and cov["cards"])
+                want = not (cov["subs"] and cov["cards"]) or gap
             seen = {e.get("event_id"): e.get("first_seen") for e in prev.get("events") or [] if e.get("first_seen")}
             for e in full.get("events") or []:
                 if e.get("event_id") in seen:
@@ -549,18 +554,16 @@ class Poller:
             new = len(have - {e.get("event_id") for e in prev.get("events") or []})
             if new:
                 self.note(f"repoll {mid}: {new} new events from the source")
-            if cov["subs"] and cov["cards"] and not gap and (rp.get(mid) or {}).get("kind") != "late":
-                rp.pop(mid, None)           # the feed is complete now
+            if full.get("highlights") and not prev.get("highlights"):
+                self.note(f"repoll {mid}: highlights video linked")
+            if not want and (rp.get(mid) or {}).get("kind") != "late":
+                rp.pop(mid, None)           # the feed is complete now (a late entry runs its two looks out)
             return
         if mid in rp:
             return
         ended = ((d.get("periods") or {}).get("gameEnded")) or iso(self.now())
         if _age_min(ended, self.now()) <= 6 * 60:          # only matches that just ended, not the backfill
-            # thin feed (no subs/cards) or goals the events don't name: the early schedule; otherwise two late looks, since
-            # FotMob corrects scorers, assists, card players and minutes hours after full time (audit 2026-09-30: 14 of 40
-            # sampled pages differed from FotMob's own detail a day later)
-            thin = not (cov["subs"] and cov["cards"]) or gap
-            rp[mid] = {"ft": ended, "done": [] if thin else [x for x in REPOLL_MINUTES if x not in LATE_REPOLL], "kind": "thin" if thin else "late"}
+            rp[mid] = {"ft": ended, "done": [] if want else [x for x in REPOLL_MINUTES if x not in LATE_REPOLL], "kind": "thin" if want else "late"}
 
     def repolls(self):
         # matches that finished before coverage_events existed: one more fetch each (2 per run), so they get the flag
