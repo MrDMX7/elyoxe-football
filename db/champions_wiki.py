@@ -47,7 +47,10 @@ def year_of(v):
     m = re.search(r"(\d{4})\s*[–\-/]\s*(\d{2,4})", v)
     if m:
         a, b = m.group(1), m.group(2)
-        return b if len(b) == 4 else a[:2] + b
+        if len(b) == 4:
+            return b
+        y = int(a[:2] + b)
+        return str(y + 100 if y < int(a) else y)          # «1999–00» ends in 2000, not 1900
     m = re.search(r"\d{4}", v)
     return m.group(0) if m else None
 
@@ -82,11 +85,27 @@ def main(argv=None):
     ap = argparse.ArgumentParser(); ap.add_argument("--upload", action="store_true"); ap.add_argument("--only", type=int); a = ap.parse_args(argv)
     store = Store(S3Backend(BUCKET))
     teams = (store.get_json("teams.json") or {}).get("teams") or {}
-    by_name = {}
-    for k, t in teams.items():
-        for n in (t.get("name"), t.get("short")):
-            if n:
-                by_name.setdefault(fold(n), int(k))
+    comps = {c["id"]: c for c in (store.get_json("index.json") or {}).get("competitions") or []}
+
+    def link(cid, w):
+        """A winner's name -> one of our teams: exact (folded) name, else every word of it in exactly one team's name.
+        Looked for among the competition's own teams, then its country's, then (continental cups) everywhere; never in
+        another country (the UAE's «Al Ahli» is not Saudi Arabia's)."""
+        f = fold(w); ws = set(f.split())
+        cc = ((comps.get(cid) or {}).get("country") or {}).get("iso2")
+        pools = [[k for k, t in teams.items() if cid in (t.get("comps") or [])]]
+        if cc:
+            pools.append([k for k, t in teams.items() if (t.get("country") or {}).get("iso2") == cc or any(((comps.get(x) or {}).get("country") or {}).get("iso2") == cc for x in t.get("comps") or [])])
+        else:
+            pools.append(list(teams))
+        for pool in pools:
+            exact = [k for k in pool if fold(teams[k].get("name")) == f]
+            if len(exact) == 1:
+                return int(exact[0])
+            sub = [k for k in pool if ws and ws <= set(fold(teams[k].get("name")).split())]
+            if len(sub) == 1:
+                return int(sub[0])
+        return None
     for cid, page in PAGES.items():
         if a.only and cid != a.only:
             continue
@@ -105,7 +124,7 @@ def main(argv=None):
         for y, w in rows:
             if y in have:
                 continue
-            fid = by_name.get(fold(w))
+            fid = link(cid, w)
             t = teams.get(str(fid)) or {}
             doc["champions"].append([y, f"fm:{fid}" if fid else "w:" + w, t.get("name_ar") or w, fid, "wiki"]); have.add(y); added += 1
         doc["champions"].sort(key=lambda x: x[0])
