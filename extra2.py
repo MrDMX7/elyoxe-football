@@ -684,15 +684,23 @@ def suspensions_and_absences(p):
 def league_books(p):
     from compute import insights as IN
     names = p.names["teams"]
+    s365 = None
     for cid in ARAB_LEAGUES:
         if not p.has_time(10):
             return
         seasons = (p.store.get_json(f"comp/{cid}/seasons.json") or {}).get("seasons") or {}
         if seasons:
+            if s365 is None:
+                s365 = (p.store.get_json("s365/fm.json") or {}).get("comps") or {}
+            # 365Scores' champion of each season it knows (db/scores365.py; audit 2026-09-30: the table's leader was no champion
+            # in Kuwait 2014/15, decided by a play-off, nor in Tunisia 2025/26), None for a void season; the complete-season
+            # leader for the others
+            champs = {r[0]: r[2] for r in (s365.get(str(cid)) or {}).get("champions") or [] if r and (r[2] or not r[1])}
             p.store.put_json(f"comp/{cid}/alltime-table.json", {"comp": cid, "generated": iso(p.now()), "since": min(seasons),
-                                                                "table": IN.alltime_table(seasons),
+                                                                "table": IN.alltime_table(seasons, champions=champs),
                                                                 "note": "sum of the computed season tables since 2010/11 (FotMob results); "
-                                                                        "titles = first place in those computed tables"}, cache="static")
+                                                                        "titles = 365Scores' champion of the season, else first place in a "
+                                                                        "complete computed season"}, cache="static")
             st = p.store.get_json(f"comp/{cid}/standings.json") or {}
             if st.get("groups"):
                 pr = IN.promoted(seasons, st["groups"][0]["rows"], st.get("season") or "")

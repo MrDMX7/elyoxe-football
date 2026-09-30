@@ -581,8 +581,8 @@ def alltime_table(season_docs, champions=None):
     for season, doc in season_docs.items():
         rows = [r for r in doc["table"] if r.get("team") is not None]
         complete = len(rows) > 1 and max(r["played"] for r in rows) >= 2 * (len(rows) - 1)
-        if champions is not None:
-            winner = champions.get(season)
+        if champions is not None and season in champions:
+            winner = champions[season]                       # the authoritative list's champion (None: a void season)
         else:
             winner = next((r["team"] for r in rows if r["rank"] == 1), None) if complete else None
         for r in rows:
