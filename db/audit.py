@@ -989,8 +989,10 @@ def area_scorers(A):
                 continue
             rows = [s for s in lg.get("seasons") or [] if s.get("comp") == cid]
             labels = {s.get("season") for s in rows}
-            if calendar and any("/" in str(x) for x in labels):
-                A.add("scorers", "log_season_label", "error", "ours", f"player:{pid}", f"{e['player']['name']}: {c['name_ar']} is a calendar-year competition but the log labels its seasons {sorted(labels)[:4]} (a July cut splits one season in two)", url=PAGE["player"].format(pid))
+            y = int(want[:4]) if calendar and str(want or "")[:4].isdigit() else None
+            cut = {f"{y - 1}/{y}", f"{y}/{y + 1}"} & labels if y else set()      # the current calendar season under a July cut
+            if cut:
+                A.add("scorers", "log_season_label", "error", "ours", f"player:{pid}", f"{e['player']['name']}: {c['name_ar']} {want} is one calendar-year season but the log labels it {sorted(cut)} (a July cut splits it in two)", url=PAGE["player"].format(pid))
             row = next((s for s in rows if s.get("season") == want), None)
             if row is not None and e.get("value") is not None and row.get("g") != e.get("value") and A.now - (parse_utc(st.get("generated")) or A.now) < timedelta(days=3):
                 A.add("scorers", "log_vs_leaders", "warn", "stale", f"player:{pid}", f"{e['player']['name']}: {e.get('value')} goals in {c['name_ar']} {want} on the leaderboard, {row.get('g')} in his match log", url=PAGE["player"].format(pid))
