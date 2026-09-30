@@ -85,9 +85,21 @@ def link(store):
     for k, t in clubs.items():
         if k not in qid and k not in by_tm:
             by_cc[ISO_FIX.get(t["country"]["iso2"], t["country"]["iso2"])].append(k)
+    prev = None
     for cc, ids in sorted(by_cc.items()):
-        rows = sparql("""SELECT ?c ?en ?ar WHERE { ?co wdt:P297 "%s". ?c wdt:P17 ?co; wdt:P31/wdt:P279* wd:Q476028.
-                         OPTIONAL { ?c rdfs:label ?en FILTER(LANG(?en)='en') } OPTIONAL { ?c rdfs:label ?ar FILTER(LANG(?ar)='ar') } }""" % cc)
+        try:
+            rows = sparql("""SELECT ?c ?en ?ar WHERE { ?co wdt:P297 "%s". ?c wdt:P17 ?co; wdt:P31/wdt:P279* wd:Q476028.
+                             OPTIONAL { ?c rdfs:label ?en FILTER(LANG(?en)='en') } OPTIONAL { ?c rdfs:label ?ar FILTER(LANG(?ar)='ar') } }""" % cc)
+        except Exception as e:
+            # Wikidata's query service times out on a big country now and then (504, 2026-09-30): that country's clubs keep
+            # the item their published card has, the rest of the run goes on
+            if prev is None:
+                prev = (store.get_json("history/clubs.json") or {}).get("clubs") or {}
+            kept = [k for k in ids if (prev.get(k) or {}).get("qid")]
+            for k in kept:
+                qid[k] = prev[k]["qid"]; step2.add(k)
+            print(cc, f"query failed ({type(e).__name__}: {e}); kept the published item for {len(kept)}/{len(ids)}")
+            continue
         en, arl = defaultdict(set), defaultdict(set)
         for b in rows:
             q = b["c"]["value"].rsplit("/", 1)[1]
