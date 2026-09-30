@@ -23,7 +23,7 @@ Out (public, v1/s365/):
   fmmap.json           {fotmob team id: 365 team id} (English or Arabic name within the same country, one to one)
 Cache: db/.cache/s365/ (history 6 days, finished games for good, the rest 20 hours).
 """
-import argparse, gzip, hashlib, json, os, re, sys, time, unicodedata, urllib.request, urllib.error
+import argparse, difflib, gzip, hashlib, json, os, re, sys, time, unicodedata, urllib.request, urllib.error
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
@@ -420,9 +420,76 @@ def player_doc(j, sq_row=None):
             "names": {str(c["id"]): c.get("name") for c in (j.get("competitors") or []) if c and c.get("id")}, "source": "365Scores"}
 
 
+# ------------------------------------------------------------------ 4. FotMob's empty bio fields, for the Arab leagues it covers
+ARAB_FM = [549, 5449, 649, 5502, 408, 552, 557, 560, 554, 6822, 5473]   # UAE (+D1), KSA (+D1), Qatar, Egypt, Morocco, Algeria, Tunisia, Iraq, Kuwait
+
+
+def tok(s):
+    s = unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9 ]+", " ", s.replace("-", " ")).split()
+
+
+def fill365():
+    """Height, shirt, foot and contract for FotMob's players in the Arab leagues when FotMob has none: 365Scores' squads
+    (birth date + the latin name in its URL slug) and, for the foot and the contract, each matched player's card."""
+    try:
+        r = urllib.request.urlopen(urllib.request.Request("https://tifo.elyoxe.com/v1/history/fm/players.json", headers={"User-Agent": H["User-Agent"], "Accept-Encoding": "gzip"}), timeout=120)
+        b = r.read(); bios = json.loads(gzip.decompress(b) if r.headers.get("Content-Encoding") == "gzip" else b).get("players") or {}
+    except Exception as e:
+        print("fill: no FotMob bios", e); return {}
+    by_dob = {}
+    for fid, bi in bios.items():
+        if bi.get("born") and bi.get("name"):
+            by_dob.setdefault(bi["born"], []).append(fid)
+    tids, tname = set(), {}
+    for cid in ARAB_FM:
+        for st in (fetch(f"/web/standings/?{QA}&competitions={cid}", 20 * 3600) or {}).get("standings") or []:
+            for row in st.get("rows") or []:
+                t = (row.get("competitor") or {}).get("id")
+                if t:
+                    tids.add(t); tname[t] = (row.get("competitor") or {}).get("name")
+    try:   # FotMob's Arabic club names, to confirm a spelling-apart match by the club
+        r = urllib.request.urlopen(urllib.request.Request("https://tifo.elyoxe.com/v1/world/index.json", headers={"User-Agent": H["User-Agent"], "Accept-Encoding": "gzip"}), timeout=120)
+        b = r.read(); fm_ar = {c[0]: c[1] for c in (json.loads(gzip.decompress(b) if r.headers.get("Content-Encoding") == "gzip" else b).get("clubs") or [])}
+    except Exception:
+        fm_ar = {}
+    same_club = lambda tid, f: (lambda a1, a2: bool(a1 and a2 and (a1 == a2 or a1 in a2 or a2 in a1)))(fold_ar(tname.get(tid)), fold_ar(fm_ar.get(bios[f].get("team"))))
+    sq = squads(sorted(tids), {})
+    hits = {}
+    for tid, rows in sq.items():
+        for pl in rows:
+            tn = tok(pl[9])
+            same = by_dob.get(pl[6]) or []
+            cands = [f for f in same if tn and (lambda fn: set(tn) <= set(fn) or set(fn) <= set(tn))(tok(bios[f]["name"]))]
+            if not cands and tn:   # the same birth date, and a spelling apart (Mohammed / Mohamed): 75% alike, one candidate only
+                sims = [(difflib.SequenceMatcher(None, " ".join(tn), " ".join(tok(bios[f]["name"]))).ratio(), f) for f in same]
+                cands = [f for r_, f in sims if r_ >= 0.75 and same_club(tid, f)]
+            if len(cands) == 1:
+                hits.setdefault(cands[0], []).append(pl)
+    hits = {f: v[0] for f, v in hits.items() if len(v) == 1}
+    need = [f for f, pl in hits.items() if not bios[f].get("foot") or not bios[f].get("contract")]
+    raw = pmap(lambda f: fetch(f"/web/athletes/?{QA}&athletes={hits[f][0]}&fullDetails=true", 6 * DAY), need)
+    cards = dict(zip(need, raw))
+    today, out = date.today().isoformat(), {}
+    for f, pl in hits.items():
+        e = {"h": pl[7] if pl[7] and 140 < pl[7] < 220 else None, "shirt": pl[2] if pl[2] and pl[2] > 0 else None}
+        a = ((cards.get(f) or {}).get("athletes") or [None])[0]
+        if a:
+            det = {x.get("title"): x.get("value") or "" for x in a.get("playerDetails") or []}
+            ft = det.get("\u0627\u0644\u0642\u062f\u0645 \u0627\u0644\u0645\u0641\u0636\u0644\u0629", "")
+            e["foot"] = "right" if "\u064a\u0645\u064a\u0646" in ft else "left" if "\u064a\u0633\u0627\u0631" in ft else "both" if ft else None
+            c = (a.get("contractUntil") or "")[:10]
+            e["contract"] = c if c and c > today else None
+        e = {k: v for k, v in e.items() if v}
+        if e:
+            out[f] = e
+    print(f"fill: {len(tids)} Arab teams, {sum(len(v) for v in sq.values())} squad players, {len(hits)} matched to FotMob, {len(out)} with fields")
+    return out
+
+
 # ------------------------------------------------------------------ main
 def main(argv=None):
-    ap = argparse.ArgumentParser(); ap.add_argument("--upload", action="store_true"); ap.add_argument("--only", default="champions,tables,live,players")
+    ap = argparse.ArgumentParser(); ap.add_argument("--upload", action="store_true"); ap.add_argument("--only", default="champions,tables,live,players,fill")
     ap.add_argument("--comp", default=""); ap.add_argument("--index-only", action="store_true", help="upload only index.json, fmmap.json and fm.json")
     a = ap.parse_args(argv)
     steps = set(a.only.split(",")); only = {int(x) for x in a.comp.split(",") if x.strip()} or None
@@ -445,6 +512,7 @@ def main(argv=None):
                 if d:
                     pdocs[pid] = d
             print(f"{len(pdocs)} player cards ({round(time.time() - t0)}s)")
+    fill = fill365() if "fill" in steps else {}
     fmm = fotmob_map(teams, countries)
     print(len(fmm), "teams linked to FotMob")
     # titles per team
@@ -497,6 +565,8 @@ def main(argv=None):
         store = Store(S3Backend(BUCKET))
         t0 = time.time()
         store.put_json("s365/fm.json", fm, cache="warm")
+        if fill:
+            store.put_json("s365/fill.json", {"generated": date.today().isoformat(), "players": fill}, cache="warm")
         pmap(lambda c: store.put_json(f"s365/comp/{c['id']}.json", c, cache="warm"), list(comps.values()), 8)
         pmap(lambda d: store.put_json(f"s365/team/{d['id']}.json", d, cache="warm"), list(team_docs.values()), 8)
         pmap(lambda d: store.put_json(f"s365/game/{d['id']}.json", d, cache="warm"), list(gdocs.values()), 8)
