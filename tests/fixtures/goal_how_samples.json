@@ -1,0 +1,3714 @@
+{
+ "note": "real FotMob goal events (trimmed to what compute/goal_how.py reads) and English ticker excerpts, matches of 2026-09-11..29; expect = reviewed output (scratch study of 410 matches / 1,314 goals)",
+ "singles": [
+  {
+   "match": "1000008708",
+   "event": {
+    "type": "Goal",
+    "time": 5,
+    "overloadTime": null,
+    "playerId": 825597,
+    "nameStr": "Ballou Tabla",
+    "lastName": "Tabla",
+    "fullName": "Ballou Tabla",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": null
+   },
+   "expect": null
+  },
+  {
+   "match": "1000008710",
+   "event": {
+    "type": "Goal",
+    "time": 13,
+    "overloadTime": null,
+    "playerId": 621561,
+    "nameStr": "Marco Bustos",
+    "lastName": "Bustos",
+    "fullName": "Marco Bustos",
+    "ownGoal": null,
+    "goalDescriptionKey": "penalty",
+    "goalDescription": "Penalty",
+    "suffixKey": "penalties_short",
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": null
+   },
+   "expect": {
+    "key": "penalty",
+    "ar": "ضربة جزاء"
+   }
+  },
+  {
+   "match": "1000008710",
+   "event": {
+    "type": "Goal",
+    "time": 45,
+    "overloadTime": 11,
+    "playerId": 680816,
+    "nameStr": "Ollie Bassett",
+    "lastName": "Bassett",
+    "fullName": "Ollie Bassett",
+    "ownGoal": null,
+    "goalDescriptionKey": "penalty",
+    "goalDescription": "Penalty",
+    "suffixKey": "penalties_short",
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": null
+   },
+   "expect": {
+    "key": "penalty",
+    "ar": "ضربة جزاء"
+   }
+  },
+  {
+   "match": "1000014161",
+   "event": {
+    "type": "Goal",
+    "time": 68,
+    "overloadTime": null,
+    "playerId": 244905,
+    "nameStr": "Yesús Cabrera",
+    "lastName": "Cabrera",
+    "fullName": "Yesús Cabrera",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "RegularPlay",
+     "x": 94.8684210512,
+     "y": 41.8303125,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot",
+    "ar": "تسديدة باليسار"
+   }
+  },
+  {
+   "match": "1000014161",
+   "event": {
+    "type": "Goal",
+    "time": 70,
+    "overloadTime": null,
+    "playerId": 1466686,
+    "nameStr": "Estiven Sarria",
+    "lastName": "Sarria",
+    "fullName": "Estiven Sarria",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FastBreak",
+     "x": 95.640350876,
+     "y": 31.026249999999997,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+fast_break",
+    "ar": "تسديدة باليسار من هجمة مرتدة"
+   }
+  },
+  {
+   "match": "1000014161",
+   "event": {
+    "type": "Goal",
+    "time": 86,
+    "overloadTime": null,
+    "playerId": 1634975,
+    "nameStr": "Alejandro Maya",
+    "lastName": "Maya",
+    "fullName": "Alejandro Maya",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "RegularPlay",
+     "x": 96.79824561320001,
+     "y": 33.2375,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot",
+    "ar": "تسديدة باليمين"
+   }
+  },
+  {
+   "match": "1000014162",
+   "event": {
+    "type": "Goal",
+    "time": 79,
+    "overloadTime": null,
+    "playerId": 971613,
+    "nameStr": "Hayen Palacios",
+    "lastName": "Palacios",
+    "fullName": "Hayen Palacios",
+    "ownGoal": true,
+    "goalDescriptionKey": "owngoal",
+    "goalDescription": "Own goal",
+    "suffixKey": "own_goal_short",
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "RegularPlay",
+     "x": 10.2280701769,
+     "y": 17.4833121036,
+     "isFromInsideBox": true,
+     "isOwnGoal": true
+    }
+   },
+   "expect": {
+    "key": "own_goal",
+    "ar": "هدف عكسي"
+   }
+  },
+  {
+   "match": "1000014163",
+   "event": {
+    "type": "Goal",
+    "time": 2,
+    "overloadTime": null,
+    "playerId": 1190851,
+    "nameStr": "Emerson Batalla",
+    "lastName": "Batalla",
+    "fullName": "Emerson Batalla",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FastBreak",
+     "x": 86.13823529359999,
+     "y": 43.3001273835,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+outside+fast_break",
+    "ar": "تسديدة باليسار من برا المنطقة بعد هجمة مرتدة"
+   }
+  },
+  {
+   "match": "1000014163",
+   "event": {
+    "type": "Goal",
+    "time": 12,
+    "overloadTime": null,
+    "playerId": 466633,
+    "nameStr": "Fabry Castro",
+    "lastName": "Castro",
+    "fullName": "Fabry Castro",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "RegularPlay",
+     "x": 79.55679611760002,
+     "y": 35.29625000000001,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+long",
+    "ar": "تسديدة باليسار من بعيد"
+   }
+  },
+  {
+   "match": "1000014163",
+   "event": {
+    "type": "Goal",
+    "time": 59,
+    "overloadTime": null,
+    "playerId": 1387848,
+    "nameStr": "Felix Charrupí",
+    "lastName": "Charrupí",
+    "fullName": "Felix Charrupí",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "RegularPlay",
+     "x": 93.6,
+     "y": 29.463571426999998,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot",
+    "ar": "تسديدة باليمين"
+   }
+  },
+  {
+   "match": "1000014163",
+   "event": {
+    "type": "Goal",
+    "time": 61,
+    "overloadTime": null,
+    "playerId": 50111,
+    "nameStr": "Dayro Moreno",
+    "lastName": "Moreno",
+    "fullName": "Dayro Moreno",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "RegularPlay",
+     "x": 97.6666666661,
+     "y": 41.483437499999994,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot",
+    "ar": "تسديدة باليسار"
+   }
+  },
+  {
+   "match": "1000014586",
+   "event": {
+    "type": "Goal",
+    "time": 52,
+    "overloadTime": null,
+    "playerId": 1381368,
+    "nameStr": "Rodrigo López",
+    "lastName": "López",
+    "fullName": "Rodrigo López",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "RegularPlay",
+     "x": 77.3043689336,
+     "y": 19.0947770725,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+long",
+    "ar": "تسديدة باليمين من بعيد"
+   }
+  },
+  {
+   "match": "1000014586",
+   "event": {
+    "type": "Goal",
+    "time": 55,
+    "overloadTime": null,
+    "playerId": 1054352,
+    "nameStr": "David Rodríguez",
+    "lastName": "Rodríguez",
+    "fullName": "David Rodríguez",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "RegularPlay",
+     "x": 76.1781553416,
+     "y": 33.466249999999995,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+long",
+    "ar": "تسديدة باليسار من بعيد"
+   }
+  },
+  {
+   "match": "1000014587",
+   "event": {
+    "type": "Goal",
+    "time": 76,
+    "overloadTime": null,
+    "playerId": 1071281,
+    "nameStr": "Francisco Nevárez",
+    "lastName": "Nevárez",
+    "fullName": "Francisco Nevárez",
+    "ownGoal": true,
+    "goalDescriptionKey": "owngoal",
+    "goalDescription": "Own goal",
+    "suffixKey": "own_goal_short",
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "RegularPlay",
+     "x": 1.3275862068,
+     "y": 32.17,
+     "isFromInsideBox": true,
+     "isOwnGoal": true
+    }
+   },
+   "expect": {
+    "key": "own_goal",
+    "ar": "هدف عكسي"
+   }
+  },
+  {
+   "match": "1000014588",
+   "event": {
+    "type": "Goal",
+    "time": 39,
+    "overloadTime": null,
+    "playerId": 558452,
+    "nameStr": "Henry Martín",
+    "lastName": "Martín",
+    "fullName": "Henry Martín",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "Header",
+     "situation": "FromCorner",
+     "x": 103.9568965518,
+     "y": 32.24625,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "header+corner",
+    "ar": "رأسية من ركنية"
+   }
+  },
+  {
+   "match": "1000019531",
+   "event": {
+    "type": "Goal",
+    "time": 13,
+    "overloadTime": null,
+    "playerId": 1937468,
+    "nameStr": "Gonzalo Lobos",
+    "lastName": "Lobos",
+    "fullName": "Gonzalo Lobos",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "Header",
+     "situation": "RegularPlay",
+     "x": 100.1637931038,
+     "y": 35.0675,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "header",
+    "ar": "رأسية"
+   }
+  },
+  {
+   "match": "1000019531",
+   "event": {
+    "type": "Goal",
+    "time": 84,
+    "overloadTime": null,
+    "playerId": 256609,
+    "nameStr": "Leandro González Pírez",
+    "lastName": "Pírez",
+    "fullName": "Leandro González Pírez",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FromCorner",
+     "x": 96.2192982446,
+     "y": 37.94809524,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+corner",
+    "ar": "تسديدة باليسار من ركنية"
+   }
+  },
+  {
+   "match": "1000019538",
+   "event": {
+    "type": "Goal",
+    "time": 20,
+    "overloadTime": null,
+    "playerId": 856200,
+    "nameStr": "Agustín Auzmendi",
+    "lastName": "Auzmendi",
+    "fullName": "Agustín Auzmendi",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "Header",
+     "situation": "FromCorner",
+     "x": 100.732758621,
+     "y": 37.684,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "header+corner",
+    "ar": "رأسية من ركنية"
+   }
+  },
+  {
+   "match": "1000019538",
+   "event": {
+    "type": "Goal",
+    "time": 38,
+    "overloadTime": null,
+    "playerId": 1645972,
+    "nameStr": "Lautaro Gómez",
+    "lastName": "Gómez",
+    "fullName": "Lautaro Gómez",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FastBreak",
+     "x": 81.35873786479999,
+     "y": 30.267999999999997,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+outside+fast_break",
+    "ar": "تسديدة باليسار من برا المنطقة بعد هجمة مرتدة"
+   }
+  },
+  {
+   "match": "1000019538",
+   "event": {
+    "type": "Goal",
+    "time": 62,
+    "overloadTime": null,
+    "playerId": 723677,
+    "nameStr": "Pedro Silva Torrejón",
+    "lastName": "Torrejón",
+    "fullName": "Pedro Silva Torrejón",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "ThrowInSetPiece",
+     "x": 102.53448275880001,
+     "y": 35.60125,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+close+throw_in",
+    "ar": "تسديدة باليسار من قريب بعد رمية تماس"
+   }
+  },
+  {
+   "match": "1000019542",
+   "event": {
+    "type": "Goal",
+    "time": 26,
+    "overloadTime": null,
+    "playerId": 883281,
+    "nameStr": "Junior Marabel",
+    "lastName": "Marabel",
+    "fullName": "Junior Marabel",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "Header",
+     "situation": "RegularPlay",
+     "x": 100.06896551759999,
+     "y": 36.8975,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "header",
+    "ar": "رأسية"
+   }
+  },
+  {
+   "match": "1000019542",
+   "event": {
+    "type": "Goal",
+    "time": 52,
+    "overloadTime": null,
+    "playerId": 882933,
+    "nameStr": "Adrián Martínez",
+    "lastName": "Martínez",
+    "fullName": "Adrián Martínez",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "Header",
+     "situation": "ThrowInSetPiece",
+     "x": 97.6666666661,
+     "y": 31.4075,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "header+throw_in",
+    "ar": "رأسية من رمية تماس"
+   }
+  },
+  {
+   "match": "5071094",
+   "event": {
+    "type": "Goal",
+    "time": 48,
+    "overloadTime": null,
+    "playerId": 933625,
+    "nameStr": "Danny Musovski",
+    "lastName": "Musovski",
+    "fullName": "Danny Musovski",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "RegularPlay",
+     "x": 85.81617647,
+     "y": 25.938437500000003,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+outside",
+    "ar": "تسديدة باليمين من برا المنطقة"
+   }
+  },
+  {
+   "match": "5071094",
+   "event": {
+    "type": "Goal",
+    "time": 73,
+    "overloadTime": null,
+    "playerId": 484858,
+    "nameStr": "Albert Rusnák",
+    "lastName": "Rusnák",
+    "fullName": "Albert Rusnák",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FastBreak",
+     "x": 86.0308823524,
+     "y": 35.0675,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+outside+fast_break",
+    "ar": "تسديدة باليمين من برا المنطقة بعد هجمة مرتدة"
+   }
+  },
+  {
+   "match": "5071358",
+   "event": {
+    "type": "Goal",
+    "time": 47,
+    "overloadTime": null,
+    "playerId": 664962,
+    "nameStr": "Denis Bouanga",
+    "lastName": "Bouanga",
+    "fullName": "Denis Bouanga",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "RegularPlay",
+     "x": 101.8706896554,
+     "y": 29.967857141,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+close",
+    "ar": "تسديدة باليمين من قريب"
+   }
+  },
+  {
+   "match": "5071359",
+   "event": {
+    "type": "Goal",
+    "time": 81,
+    "overloadTime": null,
+    "playerId": 462244,
+    "nameStr": "Paul Arriola",
+    "lastName": "Arriola",
+    "fullName": "Paul Arriola",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "RegularPlay",
+     "x": 102.8189655174,
+     "y": 36.2875,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+close",
+    "ar": "تسديدة باليمين من قريب"
+   }
+  },
+  {
+   "match": "5071367",
+   "event": {
+    "type": "Goal",
+    "time": 22,
+    "overloadTime": null,
+    "playerId": 182223,
+    "nameStr": "Ashley Westwood",
+    "lastName": "Westwood",
+    "fullName": "Ashley Westwood",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "RegularPlay",
+     "x": 82.4849514568,
+     "y": 35.3725,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+outside",
+    "ar": "تسديدة باليمين من برا المنطقة"
+   }
+  },
+  {
+   "match": "5071367",
+   "event": {
+    "type": "Goal",
+    "time": 47,
+    "overloadTime": null,
+    "playerId": 1338938,
+    "nameStr": "Lucas Bartlett",
+    "lastName": "Bartlett",
+    "fullName": "Lucas Bartlett",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "Header",
+     "situation": "SetPiece",
+     "x": 100.732758621,
+     "y": 34.305,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "header+set_piece",
+    "ar": "رأسية من كرة ثابتة"
+   }
+  },
+  {
+   "match": "5071370",
+   "event": {
+    "type": "Goal",
+    "time": 34,
+    "overloadTime": null,
+    "playerId": 212867,
+    "nameStr": "Heung-Min Son",
+    "lastName": "Son",
+    "fullName": "Heung-Min Son",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "RegularPlay",
+     "x": 84.1742718448,
+     "y": 40.049285714999996,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+outside",
+    "ar": "تسديدة باليسار من برا المنطقة"
+   }
+  },
+  {
+   "match": "5071370",
+   "event": {
+    "type": "Goal",
+    "time": 70,
+    "overloadTime": null,
+    "playerId": 1251793,
+    "nameStr": "Preston Judd",
+    "lastName": "Judd",
+    "fullName": "Preston Judd",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "Header",
+     "situation": "FastBreak",
+     "x": 95.0614035074,
+     "y": 32.70374999999999,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "header+fast_break",
+    "ar": "رأسية من هجمة مرتدة"
+   }
+  },
+  {
+   "match": "5071371",
+   "event": {
+    "type": "Goal",
+    "time": 49,
+    "overloadTime": null,
+    "playerId": 621946,
+    "nameStr": "Cristian Roldan",
+    "lastName": "Roldan",
+    "fullName": "Cristian Roldan",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "Header",
+     "situation": "SetPiece",
+     "x": 96.4122807008,
+     "y": 35.143750000000004,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "header+set_piece",
+    "ar": "رأسية من كرة ثابتة"
+   }
+  },
+  {
+   "match": "5071371",
+   "event": {
+    "type": "Goal",
+    "time": 56,
+    "overloadTime": null,
+    "playerId": 1786169,
+    "nameStr": "Donavan Phillip",
+    "lastName": "Phillip",
+    "fullName": "Donavan Phillip",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FromCorner",
+     "x": 103.3879310346,
+     "y": 36.135000000000005,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+close+corner",
+    "ar": "تسديدة باليسار من قريب بعد ركنية"
+   }
+  },
+  {
+   "match": "5071371",
+   "event": {
+    "type": "Goal",
+    "time": 79,
+    "overloadTime": null,
+    "playerId": 749491,
+    "nameStr": "Dejan Joveljić",
+    "lastName": "Joveljić",
+    "fullName": "Dejan Joveljić",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "RegularPlay",
+     "x": 79.4441747584,
+     "y": 40.889761905,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+long",
+    "ar": "تسديدة باليمين من بعيد"
+   }
+  },
+  {
+   "match": "5071374",
+   "event": {
+    "type": "Goal",
+    "time": 5,
+    "overloadTime": null,
+    "playerId": 1284944,
+    "nameStr": "André Luiz",
+    "lastName": "Luiz",
+    "fullName": "André Luiz",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FastBreak",
+     "x": 100.3534482762,
+     "y": 21.3368152901,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+fast_break",
+    "ar": "تسديدة باليسار من هجمة مرتدة"
+   }
+  },
+  {
+   "match": "5071374",
+   "event": {
+    "type": "Goal",
+    "time": 10,
+    "overloadTime": null,
+    "playerId": 1284944,
+    "nameStr": "André Luiz",
+    "lastName": "Luiz",
+    "fullName": "André Luiz",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "RegularPlay",
+     "x": 81.6966019424,
+     "y": 25.2446875,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+outside",
+    "ar": "تسديدة باليسار من برا المنطقة"
+   }
+  },
+  {
+   "match": "5071380",
+   "event": {
+    "type": "Goal",
+    "time": 24,
+    "overloadTime": null,
+    "playerId": 30981,
+    "nameStr": "Lionel Messi",
+    "lastName": "Messi",
+    "fullName": "Lionel Messi",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FreeKick",
+     "x": 82.1470873792,
+     "y": 16.362292994799997,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "free_kick+long",
+    "ar": "ضربة حرة مباشرة من بعيد"
+   }
+  },
+  {
+   "match": "5071386",
+   "event": {
+    "type": "Goal",
+    "time": 64,
+    "overloadTime": null,
+    "playerId": 443733,
+    "nameStr": "Marcus Ingvartsen",
+    "lastName": "Ingvartsen",
+    "fullName": "Marcus Ingvartsen",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "ThrowInSetPiece",
+     "x": 98.14912280659999,
+     "y": 33.39,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+throw_in",
+    "ar": "تسديدة باليسار من رمية تماس"
+   }
+  },
+  {
+   "match": "5071395",
+   "event": {
+    "type": "Goal",
+    "time": 16,
+    "overloadTime": null,
+    "playerId": 1611171,
+    "nameStr": "Kimito Nono",
+    "lastName": "Nono",
+    "fullName": "Kimito Nono",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FromCorner",
+     "x": 102.06034482780001,
+     "y": 32.551249999999996,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+close+corner",
+    "ar": "تسديدة باليمين من قريب بعد ركنية"
+   }
+  },
+  {
+   "match": "5103626",
+   "event": {
+    "type": "Goal",
+    "time": 90,
+    "overloadTime": null,
+    "playerId": 522651,
+    "nameStr": "Matheus Pereira",
+    "lastName": "Pereira",
+    "fullName": "Matheus Pereira",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "RegularPlay",
+     "x": 101.8706896554,
+     "y": 31.865,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+close",
+    "ar": "تسديدة باليسار من قريب"
+   }
+  },
+  {
+   "match": "5103631",
+   "event": {
+    "type": "Goal",
+    "time": 30,
+    "overloadTime": null,
+    "playerId": 1681911,
+    "nameStr": "Arthur Dias",
+    "lastName": "Dias",
+    "fullName": "Arthur Dias",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FromCorner",
+     "x": 94.9649122793,
+     "y": 39.376904763,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+corner",
+    "ar": "تسديدة باليمين من ركنية"
+   }
+  },
+  {
+   "match": "5103631",
+   "event": {
+    "type": "Goal",
+    "time": 45,
+    "overloadTime": 2,
+    "playerId": 1257285,
+    "nameStr": "Tiago",
+    "lastName": "Tiago",
+    "fullName": "Tiago",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "OtherBodyParts",
+     "situation": "SetPiece",
+     "x": 102.53448275880001,
+     "y": 36.5925,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "other_body+close+set_piece",
+    "ar": "بجسمه من قريب بعد كرة ثابتة"
+   }
+  },
+  {
+   "match": "5103634",
+   "event": {
+    "type": "Goal",
+    "time": 71,
+    "overloadTime": null,
+    "playerId": 750067,
+    "nameStr": "Pedro",
+    "lastName": "Pedro",
+    "fullName": "Pedro",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FromCorner",
+     "x": 102.72413793119999,
+     "y": 36.135000000000005,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+close+corner",
+    "ar": "تسديدة باليسار من قريب بعد ركنية"
+   }
+  },
+  {
+   "match": "5103637",
+   "event": {
+    "type": "Goal",
+    "time": 56,
+    "overloadTime": null,
+    "playerId": 323352,
+    "nameStr": "Gustavo Henrique",
+    "lastName": "Henrique",
+    "fullName": "Gustavo Henrique",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FromCorner",
+     "x": 102.629310345,
+     "y": 34.7625,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+close+corner",
+    "ar": "تسديدة باليمين من قريب بعد ركنية"
+   }
+  },
+  {
+   "match": "5103637",
+   "event": {
+    "type": "Goal",
+    "time": 76,
+    "overloadTime": null,
+    "playerId": 20276,
+    "nameStr": "Hulk",
+    "lastName": "Hulk",
+    "fullName": "Hulk",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FastBreak",
+     "x": 82.03446602,
+     "y": 22.878216564699997,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+long+fast_break",
+    "ar": "تسديدة باليسار من بعيد بعد هجمة مرتدة"
+   }
+  },
+  {
+   "match": "5103637",
+   "event": {
+    "type": "Goal",
+    "time": 90,
+    "overloadTime": 3,
+    "playerId": 1109119,
+    "nameStr": "Kevin Serna",
+    "lastName": "Serna",
+    "fullName": "Kevin Serna",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FastBreak",
+     "x": 96.605263157,
+     "y": 38.200238096999996,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+fast_break",
+    "ar": "تسديدة باليمين من هجمة مرتدة"
+   }
+  },
+  {
+   "match": "5115999",
+   "event": {
+    "type": "Goal",
+    "time": 24,
+    "overloadTime": null,
+    "playerId": 841947,
+    "nameStr": "Guido Mainero",
+    "lastName": "Mainero",
+    "fullName": "Guido Mainero",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FastBreak",
+     "x": 97.7631578942,
+     "y": 24.2794904507,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+fast_break",
+    "ar": "تسديدة باليمين من هجمة مرتدة"
+   }
+  },
+  {
+   "match": "5116005",
+   "event": {
+    "type": "Goal",
+    "time": 33,
+    "overloadTime": null,
+    "playerId": 883281,
+    "nameStr": "Junior Marabel",
+    "lastName": "Marabel",
+    "fullName": "Junior Marabel",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "SetPiece",
+     "x": 98.14912280659999,
+     "y": 30.244,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+set_piece",
+    "ar": "تسديدة باليمين من كرة ثابتة"
+   }
+  },
+  {
+   "match": "5161657",
+   "event": {
+    "type": "Goal",
+    "time": 90,
+    "overloadTime": 6,
+    "playerId": 1269082,
+    "nameStr": "Jacqueline Ovalle",
+    "lastName": "Ovalle",
+    "fullName": "Jacqueline Ovalle",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FastBreak",
+     "x": 86.5676470584,
+     "y": 36.5925,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+outside+fast_break",
+    "ar": "تسديدة باليمين من برا المنطقة بعد هجمة مرتدة"
+   }
+  },
+  {
+   "match": "5181791",
+   "event": {
+    "type": "Goal",
+    "time": 9,
+    "overloadTime": null,
+    "playerId": 805451,
+    "nameStr": "Alessandro Bastoni",
+    "lastName": "Bastoni",
+    "fullName": "Alessandro Bastoni",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FromCorner",
+     "x": 94.9649122793,
+     "y": 31.026249999999997,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+corner",
+    "ar": "تسديدة باليسار من ركنية"
+   }
+  },
+  {
+   "match": "5181864",
+   "event": {
+    "type": "Goal",
+    "time": 51,
+    "overloadTime": null,
+    "playerId": 737066,
+    "nameStr": "Erling Haaland",
+    "lastName": "Haaland",
+    "fullName": "Erling Haaland",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "SetPiece",
+     "x": 101.3965517244,
+     "y": 32.9325,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+close+set_piece",
+    "ar": "تسديدة باليسار من قريب بعد كرة ثابتة"
+   }
+  },
+  {
+   "match": "5739507",
+   "event": {
+    "type": "Goal",
+    "time": 50,
+    "overloadTime": null,
+    "playerId": 1463682,
+    "nameStr": "Laurits Raun Pedersen",
+    "lastName": "Pedersen",
+    "fullName": "Laurits Raun Pedersen",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "SetPiece",
+     "x": 98.3421052628,
+     "y": 33.77125,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+set_piece",
+    "ar": "تسديدة باليمين من كرة ثابتة"
+   }
+  },
+  {
+   "match": "5739513",
+   "event": {
+    "type": "Goal",
+    "time": 66,
+    "overloadTime": null,
+    "playerId": 1116945,
+    "nameStr": "Mohamed Sankoh",
+    "lastName": "Sankoh",
+    "fullName": "Mohamed Sankoh",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "RegularPlay",
+     "x": 102.4396551726,
+     "y": 34.915000000000006,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+close",
+    "ar": "تسديدة باليسار من قريب"
+   }
+  },
+  {
+   "match": "5749672",
+   "event": {
+    "type": "Goal",
+    "time": 50,
+    "overloadTime": null,
+    "playerId": 914103,
+    "nameStr": "Johan Vásquez",
+    "lastName": "Vásquez",
+    "fullName": "Johan Vásquez",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FromCorner",
+     "x": 94.4824561388,
+     "y": 27.278333333000003,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+corner",
+    "ar": "تسديدة باليمين من ركنية"
+   }
+  },
+  {
+   "match": "5781741",
+   "event": {
+    "type": "Goal",
+    "time": 21,
+    "overloadTime": null,
+    "playerId": 1280182,
+    "nameStr": "Ilyès Hamache",
+    "lastName": "Hamache",
+    "fullName": "Ilyès Hamache",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FastBreak",
+     "x": 101.3017241382,
+     "y": 31.026249999999997,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+close+fast_break",
+    "ar": "تسديدة باليمين من قريب بعد هجمة مرتدة"
+   }
+  },
+  {
+   "match": "5793934",
+   "event": {
+    "type": "Goal",
+    "time": 40,
+    "overloadTime": null,
+    "playerId": 1329747,
+    "nameStr": "Bradley Fink",
+    "lastName": "Fink",
+    "fullName": "Bradley Fink",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "Header",
+     "situation": "ThrowInSetPiece",
+     "x": 94.09649122639999,
+     "y": 36.440000000000005,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "header+throw_in",
+    "ar": "رأسية من رمية تماس"
+   }
+  },
+  {
+   "match": "5793937",
+   "event": {
+    "type": "Goal",
+    "time": 90,
+    "overloadTime": 6,
+    "playerId": 1174845,
+    "nameStr": "Enes Alić",
+    "lastName": "Alić",
+    "fullName": "Enes Alić",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FreeKick",
+     "x": 75.7276699048,
+     "y": 21.687133761599995,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "free_kick+long",
+    "ar": "ضربة حرة مباشرة من بعيد"
+   }
+  },
+  {
+   "match": "5795461",
+   "event": {
+    "type": "Goal",
+    "time": 9,
+    "overloadTime": null,
+    "playerId": 1137705,
+    "nameStr": "Enzo Fernández",
+    "lastName": "Fernández",
+    "fullName": "Enzo Fernández",
+    "ownGoal": null,
+    "goalDescriptionKey": "direct_free_kick",
+    "goalDescription": "Direct freekick",
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FreeKick",
+     "x": 92.9,
+     "y": 12.8561137516,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "free_kick",
+    "ar": "ضربة حرة مباشرة"
+   }
+  },
+  {
+   "match": "5795461",
+   "event": {
+    "type": "Goal",
+    "time": 59,
+    "overloadTime": null,
+    "playerId": 940446,
+    "nameStr": "Brian Brobbey",
+    "lastName": "Brobbey",
+    "fullName": "Brian Brobbey",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "SetPiece",
+     "x": 103.6724137932,
+     "y": 31.865,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+close+set_piece",
+    "ar": "تسديدة باليمين من قريب بعد كرة ثابتة"
+   }
+  },
+  {
+   "match": "5802931",
+   "event": {
+    "type": "Goal",
+    "time": 32,
+    "overloadTime": null,
+    "playerId": 1900516,
+    "nameStr": "Adil Bourabaa",
+    "lastName": "Bourabaa",
+    "fullName": "Adil Bourabaa",
+    "ownGoal": null,
+    "goalDescriptionKey": "header",
+    "goalDescription": "Header",
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "Header",
+     "situation": "FastBreak",
+     "x": 104.051724138,
+     "y": 34.22875,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "header+fast_break",
+    "ar": "رأسية من هجمة مرتدة"
+   }
+  },
+  {
+   "match": "5811757",
+   "event": {
+    "type": "Goal",
+    "time": 56,
+    "overloadTime": null,
+    "playerId": 1415484,
+    "nameStr": "Amando Lapage",
+    "lastName": "Lapage",
+    "fullName": "Amando Lapage",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "SetPiece",
+     "x": 102.4396551726,
+     "y": 38.284285716,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+close+set_piece",
+    "ar": "تسديدة باليسار من قريب بعد كرة ثابتة"
+   }
+  },
+  {
+   "match": "5811765",
+   "event": {
+    "type": "Goal",
+    "time": 32,
+    "overloadTime": null,
+    "playerId": 1188386,
+    "nameStr": "Wouter George",
+    "lastName": "George",
+    "fullName": "Wouter George",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "ThrowInSetPiece",
+     "x": 95.640350876,
+     "y": 27.614523809,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+throw_in",
+    "ar": "تسديدة باليسار من رمية تماس"
+   }
+  },
+  {
+   "match": "5836833",
+   "event": {
+    "type": "Goal",
+    "time": 61,
+    "overloadTime": null,
+    "playerId": 544312,
+    "nameStr": "Cyle Larin",
+    "lastName": "Larin",
+    "fullName": "Cyle Larin",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FastBreak",
+     "x": 100.06896551759999,
+     "y": 35.143750000000004,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+close+fast_break",
+    "ar": "تسديدة باليمين من قريب بعد هجمة مرتدة"
+   }
+  },
+  {
+   "match": "5836835",
+   "event": {
+    "type": "Goal",
+    "time": 90,
+    "overloadTime": 1,
+    "playerId": 1609716,
+    "nameStr": "Amin Nabizada",
+    "lastName": "Nabizada",
+    "fullName": "Amin Nabizada",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FromCorner",
+     "x": 80.79563106879999,
+     "y": 44.000764326500004,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+long+corner",
+    "ar": "تسديدة باليمين من بعيد بعد ركنية"
+   }
+  },
+  {
+   "match": "5836838",
+   "event": {
+    "type": "Goal",
+    "time": 88,
+    "overloadTime": null,
+    "playerId": 1218243,
+    "nameStr": "Adilson Malanda",
+    "lastName": "Malanda",
+    "fullName": "Adilson Malanda",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "SetPiece",
+     "x": 102.06034482780001,
+     "y": 34.4575,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+close+set_piece",
+    "ar": "تسديدة باليمين من قريب بعد كرة ثابتة"
+   }
+  },
+  {
+   "match": "5837151",
+   "event": {
+    "type": "Goal",
+    "time": 29,
+    "overloadTime": null,
+    "playerId": 583434,
+    "nameStr": "Aaron Collins",
+    "lastName": "Collins",
+    "fullName": "Aaron Collins",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "ThrowInSetPiece",
+     "x": 100.06896551759999,
+     "y": 36.440000000000005,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+throw_in",
+    "ar": "تسديدة باليمين من رمية تماس"
+   }
+  },
+  {
+   "match": "5837161",
+   "event": {
+    "type": "Goal",
+    "time": 57,
+    "overloadTime": null,
+    "playerId": 962026,
+    "nameStr": "Harvey White",
+    "lastName": "White",
+    "fullName": "Harvey White",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "SetPiece",
+     "x": 87.1044117644,
+     "y": 20.7763057357,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+outside+set_piece",
+    "ar": "تسديدة باليسار من برا المنطقة بعد كرة ثابتة"
+   }
+  },
+  {
+   "match": "5837943",
+   "event": {
+    "type": "Goal",
+    "time": 66,
+    "overloadTime": null,
+    "playerId": 1403861,
+    "nameStr": "Fabrizio Cavegn",
+    "lastName": "Cavegn",
+    "fullName": "Fabrizio Cavegn",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "IndividualPlay",
+     "x": 100.44827586240001,
+     "y": 35.448750000000004,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+close+solo",
+    "ar": "تسديدة باليمين من قريب، مجهود فردي"
+   }
+  },
+  {
+   "match": "5868447",
+   "event": {
+    "type": "Goal",
+    "time": 53,
+    "overloadTime": null,
+    "playerId": 545905,
+    "nameStr": "Dani Calvo",
+    "lastName": "Calvo",
+    "fullName": "Dani Calvo",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "SetPiece",
+     "x": 84.286893204,
+     "y": 30.291999999999998,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+outside+set_piece",
+    "ar": "تسديدة باليمين من برا المنطقة بعد كرة ثابتة"
+   }
+  },
+  {
+   "match": "5868453",
+   "event": {
+    "type": "Goal",
+    "time": 90,
+    "overloadTime": 11,
+    "playerId": 477600,
+    "nameStr": "Carlos Hernández",
+    "lastName": "Hernández",
+    "fullName": "Carlos Hernández",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "ThrowInSetPiece",
+     "x": 97.2807017537,
+     "y": 37.05,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+throw_in",
+    "ar": "تسديدة باليمين من رمية تماس"
+   }
+  },
+  {
+   "match": "5881172",
+   "event": {
+    "type": "Goal",
+    "time": 18,
+    "overloadTime": null,
+    "playerId": 686315,
+    "nameStr": "Phillip Tietz",
+    "lastName": "Tietz",
+    "fullName": "Phillip Tietz",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "ThrowInSetPiece",
+     "x": 103.3879310346,
+     "y": 37.05,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+close+throw_in",
+    "ar": "تسديدة باليسار من قريب بعد رمية تماس"
+   }
+  },
+  {
+   "match": "5881668",
+   "event": {
+    "type": "Goal",
+    "time": 16,
+    "overloadTime": null,
+    "playerId": 814892,
+    "nameStr": "Alexander Nollenberger",
+    "lastName": "Nollenberger",
+    "fullName": "Alexander Nollenberger",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "ThrowInSetPiece",
+     "x": 87.53382352919999,
+     "y": 36.745000000000005,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+outside+throw_in",
+    "ar": "تسديدة باليمين من برا المنطقة بعد رمية تماس"
+   }
+  },
+  {
+   "match": "5881672",
+   "event": {
+    "type": "Goal",
+    "time": 45,
+    "overloadTime": 3,
+    "playerId": 1688937,
+    "nameStr": "Paul Hennrich",
+    "lastName": "Hennrich",
+    "fullName": "Paul Hennrich",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FromCorner",
+     "x": 86.4602941172,
+     "y": 20.9864968186,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+outside+corner",
+    "ar": "تسديدة باليسار من برا المنطقة بعد ركنية"
+   }
+  },
+  {
+   "match": "5904748",
+   "event": {
+    "type": "Goal",
+    "time": 5,
+    "overloadTime": null,
+    "playerId": 796756,
+    "nameStr": "Logi Tómasson",
+    "lastName": "Tómasson",
+    "fullName": "Logi Tómasson",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FromCorner",
+     "x": 86.99705882319999,
+     "y": 36.440000000000005,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+outside+corner",
+    "ar": "تسديدة باليسار من برا المنطقة بعد ركنية"
+   }
+  },
+  {
+   "match": "5904748",
+   "event": {
+    "type": "Goal",
+    "time": 10,
+    "overloadTime": null,
+    "playerId": 603477,
+    "nameStr": "Cengiz Ünder",
+    "lastName": "Ünder",
+    "fullName": "Cengiz Ünder",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FromCorner",
+     "x": 83.160679612,
+     "y": 16.642547772,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+long+corner",
+    "ar": "تسديدة باليسار من بعيد بعد ركنية"
+   }
+  },
+  {
+   "match": "5943259",
+   "event": {
+    "type": "Goal",
+    "time": 85,
+    "overloadTime": null,
+    "playerId": 1665411,
+    "nameStr": "Georgios Charalampoglou",
+    "lastName": "Charalampoglou",
+    "fullName": "Georgios Charalampoglou",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "SetPiece",
+     "x": 96.0263157884,
+     "y": 36.97375,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+set_piece",
+    "ar": "تسديدة باليسار من كرة ثابتة"
+   }
+  },
+  {
+   "match": "5970140",
+   "event": {
+    "type": "Goal",
+    "time": 89,
+    "overloadTime": null,
+    "playerId": 690223,
+    "nameStr": "Rodrigo Abascal",
+    "lastName": "Abascal",
+    "fullName": "Rodrigo Abascal",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "SetPiece",
+     "x": 100.6379310348,
+     "y": 30.568749999999998,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+set_piece",
+    "ar": "تسديدة باليسار من كرة ثابتة"
+   }
+  },
+  {
+   "match": "5981645",
+   "event": {
+    "type": "Goal",
+    "time": 89,
+    "overloadTime": null,
+    "playerId": 1091618,
+    "nameStr": "Lynn Wilms",
+    "lastName": "Wilms",
+    "fullName": "Lynn Wilms",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "RightFoot",
+     "situation": "FromCorner",
+     "x": 104.525862069,
+     "y": 67.6720379145,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "right_foot+long+corner",
+    "ar": "تسديدة باليمين من بعيد بعد ركنية"
+   }
+  },
+  {
+   "match": "6148418",
+   "event": {
+    "type": "Goal",
+    "time": 1,
+    "overloadTime": null,
+    "playerId": 623986,
+    "nameStr": "Alexis Castro",
+    "lastName": "Castro",
+    "fullName": "Alexis Castro",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": true,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FastBreak",
+     "x": 101.1120689658,
+     "y": 37.768,
+     "isFromInsideBox": true,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+close+fast_break",
+    "ar": "تسديدة باليسار من قريب بعد هجمة مرتدة"
+   }
+  },
+  {
+   "match": "6148418",
+   "event": {
+    "type": "Goal",
+    "time": 90,
+    "overloadTime": 6,
+    "playerId": 1338015,
+    "nameStr": "Julián Fernández",
+    "lastName": "Fernández",
+    "fullName": "Julián Fernández",
+    "ownGoal": null,
+    "goalDescriptionKey": null,
+    "goalDescription": null,
+    "suffixKey": null,
+    "isPenaltyShootoutEvent": false,
+    "isHome": false,
+    "shotmapEvent": {
+     "shotType": "LeftFoot",
+     "situation": "FastBreak",
+     "x": 68.85776699360001,
+     "y": 13.3152606713,
+     "isFromInsideBox": false,
+     "isOwnGoal": false
+    }
+   },
+   "expect": {
+    "key": "left_foot+long+fast_break",
+    "ar": "تسديدة باليسار من بعيد بعد هجمة مرتدة"
+   }
+  }
+ ],
+ "matches": [
+  {
+   "match": 1000020521,
+   "teams": [
+    "Ajman",
+    "Kalba FC"
+   ],
+   "raw": {
+    "general": {
+     "matchId": 1000020521
+    },
+    "content": {
+     "liveticker": {
+      "langs": "en_gen",
+      "teams": [
+       "Ajman",
+       "Kalba FC"
+      ]
+     },
+     "matchFacts": {
+      "events": {
+       "events": [
+        {
+         "type": "Goal",
+         "time": 25,
+         "overloadTime": null,
+         "playerId": 644002,
+         "nameStr": "Benjamin Tetteh",
+         "lastName": "Tetteh",
+         "fullName": "Benjamin Tetteh",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 42,
+         "overloadTime": null,
+         "playerId": 1219068,
+         "nameStr": "Carlos Alberto",
+         "lastName": "Alberto",
+         "fullName": "Carlos Alberto",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 45,
+         "overloadTime": 2,
+         "playerId": 851198,
+         "nameStr": "Walid Azarou",
+         "lastName": "Azarou",
+         "fullName": "Walid Azarou",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 67,
+         "overloadTime": null,
+         "playerId": 981858,
+         "nameStr": "Neto",
+         "lastName": "Neto",
+         "fullName": "Neto",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 81,
+         "overloadTime": null,
+         "playerId": 1291309,
+         "nameStr": "Lithierry",
+         "lastName": "Lithierry",
+         "fullName": "Lithierry",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": null
+        }
+       ]
+      }
+     }
+    }
+   },
+   "ticker": {
+    "AutoCommentaries": true,
+    "Source": "opta/feeds/ltc/commentary-210-2026-2684378-en.xml",
+    "Events": [
+     {
+      "IncidentCode": "G",
+      "Elapsed": 81,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Ajman 2, Kalba 3. Lithierry (Ajman) left footed shot from outside the box to the bottom left corner."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 68,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Ajman 1, Kalba 3. Neto (Kalba) right footed shot from the centre of the box to the bottom right corner. Assisted by Benjamin Tetteh."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 45,
+      "ElapsedPlus": 2,
+      "Description": "Goal! Ajman 1, Kalba 2. Waleed Azaro (Ajman) header from the centre of the box to the top left corner. Assisted by Victor Henrique with a cross following a set piece situation."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 42,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Ajman 0, Kalba 2. Carlos Alberto (Kalba) header from very close range to the centre of the goal. Assisted by Saman Ghoddos with a cross."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 25,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Ajman 0, Kalba 1. Benjamin Tetteh (Kalba) header from the right side of the six yard box to the bottom left corner. Assisted by Carlos Alberto with a cross."
+     }
+    ]
+   },
+   "expect": {
+    "25-644002": {
+     "key": "header+close",
+     "ar": "رأسية من قريب"
+    },
+    "42-1219068": {
+     "key": "header+close",
+     "ar": "رأسية من قريب"
+    },
+    "45+2-851198": {
+     "key": "header+set_piece",
+     "ar": "رأسية من كرة ثابتة"
+    },
+    "67-981858": {
+     "key": "right_foot",
+     "ar": "تسديدة باليمين"
+    },
+    "81-1291309": {
+     "key": "left_foot+outside",
+     "ar": "تسديدة باليسار من برا المنطقة"
+    }
+   }
+  },
+  {
+   "match": 1000020519,
+   "teams": [
+    "Hatta",
+    "Al-Dhafra"
+   ],
+   "raw": {
+    "general": {
+     "matchId": 1000020519
+    },
+    "content": {
+     "liveticker": {
+      "langs": "en_gen",
+      "teams": [
+       "Hatta",
+       "Al-Dhafra"
+      ]
+     },
+     "matchFacts": {
+      "events": {
+       "events": [
+        {
+         "type": "Goal",
+         "time": 24,
+         "overloadTime": null,
+         "playerId": 1837011,
+         "nameStr": "Amjad Al Sayed",
+         "lastName": "Al Sayed",
+         "fullName": "Amjad Al Sayed",
+         "ownGoal": true,
+         "goalDescriptionKey": "owngoal",
+         "goalDescription": "Own goal",
+         "suffixKey": "own_goal_short",
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 57,
+         "overloadTime": null,
+         "playerId": 1826659,
+         "nameStr": "Rostand Djooh",
+         "lastName": "Djooh",
+         "fullName": "Rostand Djooh",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 84,
+         "overloadTime": null,
+         "playerId": 809170,
+         "nameStr": "Karim El Berkaoui",
+         "lastName": "El Berkaoui",
+         "fullName": "Karim El Berkaoui",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": null
+        }
+       ]
+      }
+     }
+    }
+   },
+   "ticker": {
+    "AutoCommentaries": true,
+    "Source": "opta/feeds/ltc/commentary-210-2026-2684376-en.xml",
+    "Events": [
+     {
+      "IncidentCode": "G",
+      "Elapsed": 84,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Hatta 1, Al Dhafra 2. Karim El Berkaoui (Al Dhafra) right footed shot from very close range to the bottom right corner. Assisted by Abdulla Al Karbi with a cross."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 57,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Hatta 1, Al Dhafra 1. Rostand Djooh (Al Dhafra) right footed shot from outside the box to the bottom right corner. Assisted by Karim El Berkaoui."
+     },
+     {
+      "IncidentCode": "OG",
+      "Elapsed": 24,
+      "ElapsedPlus": -1,
+      "Description": "Own Goal by Amjad Al Sayed, Al Dhafra. Hatta 1, Al Dhafra 0."
+     }
+    ]
+   },
+   "expect": {
+    "24-1837011": {
+     "key": "own_goal",
+     "ar": "هدف عكسي"
+    },
+    "57-1826659": {
+     "key": "right_foot+outside",
+     "ar": "تسديدة باليمين من برا المنطقة"
+    },
+    "84-809170": {
+     "key": "right_foot+close",
+     "ar": "تسديدة باليمين من قريب"
+    }
+   }
+  },
+  {
+   "match": 5749683,
+   "teams": [
+    "Fiorentina",
+    "Napoli"
+   ],
+   "raw": {
+    "general": {
+     "matchId": 5749683
+    },
+    "content": {
+     "liveticker": {
+      "langs": "ar_gen,de,en,es_gen,fr_gen,it,pt-BR_gen,pt_gen",
+      "teams": [
+       "Fiorentina",
+       "Napoli"
+      ]
+     },
+     "matchFacts": {
+      "events": {
+       "events": [
+        {
+         "type": "Goal",
+         "time": 23,
+         "overloadTime": null,
+         "playerId": 942549,
+         "nameStr": "Billy Gilmour",
+         "lastName": "Gilmour",
+         "fullName": "Billy Gilmour",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": {
+          "shotType": "RightFoot",
+          "situation": "FromCorner",
+          "x": 91.8,
+          "y": 32.0175,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 51,
+         "overloadTime": null,
+         "playerId": 1526689,
+         "nameStr": "Álex Jiménez",
+         "lastName": "Jiménez",
+         "fullName": "Álex Jiménez",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": {
+          "shotType": "RightFoot",
+          "situation": "RegularPlay",
+          "x": 83.8364077672,
+          "y": 19.0947770725,
+          "isFromInsideBox": false,
+          "isOwnGoal": false
+         }
+        }
+       ]
+      }
+     }
+    }
+   },
+   "ticker": {
+    "AutoCommentaries": false,
+    "Source": "opta/feeds/ltc/mcommentary-21-2026-2638163-en.xml",
+    "Events": [
+     {
+      "IncidentCode": "G",
+      "Elapsed": 51,
+      "ElapsedPlus": -1,
+      "Description": "GOALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL!! JUST LIKE THAT, FIORENTINA LEVEL THE SCORELINE! 1-1!! Jimenez receives a pass just outside the box before aiming for goal. The Spaniard's effort deflects off Marin, and flies into the bottom-right corner! Milinkovic-Savic had no chance of saving that!"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 23,
+      "ElapsedPlus": -1,
+      "Description": "GOALLLLLLLLLLLLLLLLLLLLLLLLLLLL!!! NAPOLI NOW TAKE THE LEAD!!!! 1-0!! From the resulting corner, Politano sends a left-wing delivery into the box, with an unmarked Gilmour expertly guiding a volley into the bottom-right corner!"
+     }
+    ]
+   },
+   "expect": {
+    "23-942549": {
+     "key": "volley+right_foot+corner",
+     "ar": "طايرة باليمين من ركنية"
+    },
+    "51-1526689": {
+     "key": "right_foot+long",
+     "ar": "تسديدة باليمين من بعيد"
+    }
+   }
+  },
+  {
+   "match": 5181864,
+   "teams": [
+    "Norway",
+    "Portugal"
+   ],
+   "raw": {
+    "general": {
+     "matchId": 5181864
+    },
+    "content": {
+     "liveticker": {
+      "langs": "ar_gen,de,en,es_gen,fr_gen,it_gen,nb,pt-BR_gen,pt_gen",
+      "teams": [
+       "Norway",
+       "Portugal"
+      ]
+     },
+     "matchFacts": {
+      "events": {
+       "events": [
+        {
+         "type": "Goal",
+         "time": 17,
+         "overloadTime": null,
+         "playerId": 794427,
+         "nameStr": "Joao Félix",
+         "lastName": "Félix",
+         "fullName": "Joao Félix",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": {
+          "shotType": "RightFoot",
+          "situation": "RegularPlay",
+          "x": 88.8,
+          "y": 32.551249999999996,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 51,
+         "overloadTime": null,
+         "playerId": 737066,
+         "nameStr": "Erling Haaland",
+         "lastName": "Haaland",
+         "fullName": "Erling Haaland",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": {
+          "shotType": "LeftFoot",
+          "situation": "SetPiece",
+          "x": 101.3965517244,
+          "y": 32.9325,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 54,
+         "overloadTime": null,
+         "playerId": 940087,
+         "nameStr": "Gonçalo Ramos",
+         "lastName": "Ramos",
+         "fullName": "Gonçalo Ramos",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": {
+          "shotType": "RightFoot",
+          "situation": "RegularPlay",
+          "x": 79.55679611760002,
+          "y": 35.9825,
+          "isFromInsideBox": false,
+          "isOwnGoal": false
+         }
+        }
+       ]
+      }
+     }
+    }
+   },
+   "ticker": {
+    "AutoCommentaries": false,
+    "Source": "opta/feeds/ltc/mcommentary-941-2026-2626913-en.xml",
+    "Events": [
+     {
+      "IncidentCode": "G",
+      "Elapsed": 54,
+      "ElapsedPlus": -1,
+      "Description": "WELL, WELL, WELL! A NIGHTMARE FOR NYLAND AS PORTUGAL RETAKE THE LEAD!!! 2-1!!!! The Norway goalkeeper looks to play a pass forward, but it's intercepted by Ramos, who shows the composure to lift a finish into the gaping net! Just like that, the home supporters have gone quiet!"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 51,
+      "ElapsedPlus": -1,
+      "Description": "GOALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL!!!! NORWAY LEVEL THE SCORELINE!!! IT'S HAALAND WHO MAKES IT 1-1!!!! Odegaard steps up to take the 25-yard free-kick with Diogo Costa making a save. However, it falls into the path of Berg, who cushions back a header with Haaland prodding home from close range! That equaliser is DESERVED!"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 17,
+      "ElapsedPlus": -1,
+      "Description": "GOALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL!!!! PORTUGAL TAKE THE LEAD!!! 1-0!!! Mendes wriggles away from the Norway defence before playing it to Neto down the left. The winger races to the byline before picking out Joao Felix on the edge of the box. The attacker takes a touch before placing a finish into the bottom-left corner! Brilliant from the visitors!"
+     }
+    ]
+   },
+   "expect": {
+    "17-794427": {
+     "key": "right_foot",
+     "ar": "تسديدة باليمين"
+    },
+    "51-737066": {
+     "key": "left_foot+close+set_piece",
+     "ar": "تسديدة باليسار من قريب بعد كرة ثابتة"
+    },
+    "54-940087": {
+     "key": "right_foot+long",
+     "ar": "تسديدة باليمين من بعيد"
+    }
+   }
+  },
+  {
+   "match": 5795461,
+   "teams": [
+    "Manchester City",
+    "Sunderland"
+   ],
+   "raw": {
+    "general": {
+     "matchId": 5795461
+    },
+    "content": {
+     "liveticker": {
+      "langs": "ar_gen,de,en,es_gen,fr_gen,it_gen,nb,pt-BR_gen,pt_gen",
+      "teams": [
+       "Manchester City",
+       "Sunderland"
+      ]
+     },
+     "matchFacts": {
+      "events": {
+       "events": [
+        {
+         "type": "Goal",
+         "time": 9,
+         "overloadTime": null,
+         "playerId": 1137705,
+         "nameStr": "Enzo Fernández",
+         "lastName": "Fernández",
+         "fullName": "Enzo Fernández",
+         "ownGoal": null,
+         "goalDescriptionKey": "direct_free_kick",
+         "goalDescription": "Direct freekick",
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": {
+          "shotType": "RightFoot",
+          "situation": "FreeKick",
+          "x": 92.9,
+          "y": 12.8561137516,
+          "isFromInsideBox": false,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 12,
+         "overloadTime": null,
+         "playerId": 940446,
+         "nameStr": "Brian Brobbey",
+         "lastName": "Brobbey",
+         "fullName": "Brian Brobbey",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": {
+          "shotType": "RightFoot",
+          "situation": "RegularPlay",
+          "x": 97.2807017537,
+          "y": 37.27875,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 29,
+         "overloadTime": null,
+         "playerId": 1104053,
+         "nameStr": "Rayan Cherki",
+         "lastName": "Cherki",
+         "fullName": "Rayan Cherki",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": {
+          "shotType": "RightFoot",
+          "situation": "RegularPlay",
+          "x": 92.3,
+          "y": 31.7125,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 33,
+         "overloadTime": null,
+         "playerId": 940446,
+         "nameStr": "Brian Brobbey",
+         "lastName": "Brobbey",
+         "fullName": "Brian Brobbey",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": {
+          "shotType": "RightFoot",
+          "situation": "RegularPlay",
+          "x": 98.6315789471,
+          "y": 35.9825,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 43,
+         "overloadTime": null,
+         "playerId": 933576,
+         "nameStr": "Antoine Semenyo",
+         "lastName": "Semenyo",
+         "fullName": "Antoine Semenyo",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": {
+          "shotType": "RightFoot",
+          "situation": "FromCorner",
+          "x": 92.7,
+          "y": 40.049285714999996,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 57,
+         "overloadTime": null,
+         "playerId": 933576,
+         "nameStr": "Antoine Semenyo",
+         "lastName": "Semenyo",
+         "fullName": "Antoine Semenyo",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": {
+          "shotType": "LeftFoot",
+          "situation": "RegularPlay",
+          "x": 93.5,
+          "y": 45.2619108239,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 59,
+         "overloadTime": null,
+         "playerId": 940446,
+         "nameStr": "Brian Brobbey",
+         "lastName": "Brobbey",
+         "fullName": "Brian Brobbey",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": {
+          "shotType": "RightFoot",
+          "situation": "SetPiece",
+          "x": 103.6724137932,
+          "y": 31.865,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 81,
+         "overloadTime": null,
+         "playerId": 737066,
+         "nameStr": "Erling Haaland",
+         "lastName": "Haaland",
+         "fullName": "Erling Haaland",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": {
+          "shotType": "RightFoot",
+          "situation": "RegularPlay",
+          "x": 101.8706896554,
+          "y": 31.559999999999995,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        }
+       ]
+      }
+     }
+    }
+   },
+   "ticker": {
+    "AutoCommentaries": false,
+    "Source": "opta/feeds/ltc/mcommentary-8-2026-2645241-en.xml",
+    "Events": [
+     {
+      "IncidentCode": "G",
+      "Elapsed": 82,
+      "ElapsedPlus": -1,
+      "Description": "GOOOOOOOAAAAAAAAALLLLLLLLLLLLL!!!! MAN CITY LEAD 5-3! After a VAR review, Haaland's goal is given! It was initially chalked off due to an apparent offside, but his far-post slide to finish Gvardiol's low cross was perfectly legal! Surely that secures a seventh straight win for City?"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 59,
+      "ElapsedPlus": -1,
+      "Description": "GOOOOOOOOAAAAAAAAAALLLLLLLLLLLLLL!!!!! BROBBEY BAGS A HAT-TRICK! Jaws are dropping open at the Etihad; that's already the seventh goal of this game! Xhaka's killer pass over the top picks out Angulo, who guides a low cross past Donnarumma, and Brobbey pokes home from close range. Remarkably, it's now 4-3 to Manchester City, and Sunderland are still in this!"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 57,
+      "ElapsedPlus": -1,
+      "Description": "GOOOOOOOAAAAAAAAAALLLLLLLLLLLLL!!!! SEMENYO STRIKES AGAIN! Cherki sends a searching ball forward from the centre-circle, causing havoc in Sunderland's defence. Two defenders collide, and the ball loops past Haaland into the path of Semenyo. Much like his finish before the break, the Man City winger plants a powerful shot into the bottom corner! It's now 4-2 to City!"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 43,
+      "ElapsedPlus": -1,
+      "Description": "GOOOOOOOOOOOOAAAAAAAAAAAAAALLLLLLLLLLLLLL!!!!!! CITY LEAD AGAIN! It's 3-2 to the hosts in Manchester! Semenyo's cross from the left is aimed towards Haaland, who lurks with menace at the back post. City play the subsequent corner-kick short, and after a prolonged spell of pressure, the ball falls nicely for Semenyo via Guehi. With a first-time strike, the Ghana international drills it firmly into the bottom-right corner!"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 33,
+      "ElapsedPlus": -1,
+      "Description": "GOOOOOOOOAAAAAAAAAAALLLLLL!!!!! SUNDERLAND STRIKE BACK ONCE AGAIN! It's now 2-2 at the Etihad! Linking up with Le Fee on the right side of the area, Meunier plays a short pass for Brobbey to convert from close range! The Black Cats claw their way back into the contest, and Brobbey's bagged a brace!"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 29,
+      "ElapsedPlus": -1,
+      "Description": "GOOOOOOAAAAAAAALLLLLLL!!! MAN CITY RESTORE THEIR LEAD! A stray pass out from the back by Danso is cut out, and Man City ruthlessly pounce. Semenyo ultimately tees up Cherki to strike, and the French wizard nets his third Premier League goal of the season. He picks out the bottom-left corner: 2-1!"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 12,
+      "ElapsedPlus": -1,
+      "Description": "GOOOOOOOOOAAAAAAAAAALLLLLLLLLLL!!!!! SUNDERLAND HIT STRAIGHT BACK! It's suddenly 1-1 at the Etihad! Played in by Le Fee, Brobbey still has plenty to do, but his first touch is sublime, opening up a clear chance to shoot. He then does so with the outside of his boot, guiding a low finish past Donnarumma!"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 9,
+      "ElapsedPlus": -1,
+      "Description": "GOOOOOOAAAAAAAAAAALLLLLLLLLLLL!!!! MAN CITY LEAD 1-0! It's a cheeky free-kick by Enzo Fernandez! What a way to score his first goal for the club! With a curling shot inside the near post, he beats Roefs from an improbable angle on the right edge of the area!"
+     }
+    ]
+   },
+   "expect": {
+    "9-1137705": {
+     "key": "free_kick",
+     "ar": "ضربة حرة مباشرة"
+    },
+    "12-940446": {
+     "key": "right_foot",
+     "ar": "تسديدة باليمين"
+    },
+    "29-1104053": {
+     "key": "right_foot",
+     "ar": "تسديدة باليمين"
+    },
+    "33-940446": {
+     "key": "right_foot",
+     "ar": "تسديدة باليمين"
+    },
+    "43-933576": {
+     "key": "right_foot+corner",
+     "ar": "تسديدة باليمين من ركنية"
+    },
+    "57-933576": {
+     "key": "left_foot",
+     "ar": "تسديدة باليسار"
+    },
+    "59-940446": {
+     "key": "right_foot+close+set_piece",
+     "ar": "تسديدة باليمين من قريب بعد كرة ثابتة"
+    },
+    "81-737066": {
+     "key": "right_foot+close",
+     "ar": "تسديدة باليمين من قريب"
+    }
+   }
+  },
+  {
+   "match": 1000008710,
+   "teams": [
+    "Inter Toronto FC",
+    "Pacific FC"
+   ],
+   "raw": {
+    "general": {
+     "matchId": 1000008710
+    },
+    "content": {
+     "liveticker": {
+      "langs": "en_gen",
+      "teams": [
+       "Inter Toronto FC",
+       "Pacific FC"
+      ]
+     },
+     "matchFacts": {
+      "events": {
+       "events": [
+        {
+         "type": "Goal",
+         "time": 13,
+         "overloadTime": null,
+         "playerId": 621561,
+         "nameStr": "Marco Bustos",
+         "lastName": "Bustos",
+         "fullName": "Marco Bustos",
+         "ownGoal": null,
+         "goalDescriptionKey": "penalty",
+         "goalDescription": "Penalty",
+         "suffixKey": "penalties_short",
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 15,
+         "overloadTime": null,
+         "playerId": 855352,
+         "nameStr": "Juan Córdova",
+         "lastName": "Córdova",
+         "fullName": "Juan Córdova",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 28,
+         "overloadTime": null,
+         "playerId": 1666351,
+         "nameStr": "Luca Accettola",
+         "lastName": "Accettola",
+         "fullName": "Luca Accettola",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 41,
+         "overloadTime": null,
+         "playerId": 1169230,
+         "nameStr": "Taras Gomulka",
+         "lastName": "Gomulka",
+         "fullName": "Taras Gomulka",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 44,
+         "overloadTime": null,
+         "playerId": 1385640,
+         "nameStr": "Ronan Kratt",
+         "lastName": "Kratt",
+         "fullName": "Ronan Kratt",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 45,
+         "overloadTime": 11,
+         "playerId": 680816,
+         "nameStr": "Ollie Bassett",
+         "lastName": "Bassett",
+         "fullName": "Ollie Bassett",
+         "ownGoal": null,
+         "goalDescriptionKey": "penalty",
+         "goalDescription": "Penalty",
+         "suffixKey": "penalties_short",
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 45,
+         "overloadTime": 15,
+         "playerId": 621561,
+         "nameStr": "Marco Bustos",
+         "lastName": "Bustos",
+         "fullName": "Marco Bustos",
+         "ownGoal": null,
+         "goalDescriptionKey": "penalty",
+         "goalDescription": "Penalty",
+         "suffixKey": "penalties_short",
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": null
+        }
+       ]
+      }
+     }
+    }
+   },
+   "ticker": {
+    "AutoCommentaries": true,
+    "Source": "opta/feeds/ltc/commentary-1039-2026-2624952-en.xml",
+    "Events": [
+     {
+      "IncidentCode": "PSG",
+      "Elapsed": 45,
+      "ElapsedPlus": 15,
+      "Description": "Goal! Inter Toronto 3, Pacific 4. Marco Bustos (Pacific) converts the penalty with a left footed shot to the top left corner."
+     },
+     {
+      "IncidentCode": "PSG",
+      "Elapsed": 45,
+      "ElapsedPlus": 11,
+      "Description": "Goal! Inter Toronto 3, Pacific 3. Ollie Bassett (Inter Toronto) converts the penalty with a right footed shot to the top left corner."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 44,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Inter Toronto 2, Pacific 3. Ronan Kratt (Pacific) left footed shot from very close range to the high centre of the goal. Assisted by Christian Greco-Taylor."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 41,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Inter Toronto 2, Pacific 2. Taras Gomulka (Pacific) header from the centre of the box to the top right corner. Assisted by Marco Bustos with a cross following a set piece situation."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 28,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Inter Toronto 2, Pacific 1. Luca Accettola (Inter Toronto) header from the centre of the box to the bottom right corner. Assisted by Frank Sturing with a headed pass following a set piece situation."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 15,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Inter Toronto 1, Pacific 1. Juan Córdova (Inter Toronto) left footed shot from a difficult angle on the left to the centre of the goal following a corner."
+     },
+     {
+      "IncidentCode": "PSG",
+      "Elapsed": 13,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Inter Toronto 0, Pacific 1. Marco Bustos (Pacific) converts the penalty with a left footed shot to the bottom right corner."
+     }
+    ]
+   },
+   "expect": {
+    "13-621561": {
+     "key": "penalty",
+     "ar": "ضربة جزاء"
+    },
+    "15-855352": {
+     "key": "left_foot+angle+corner",
+     "ar": "تسديدة باليسار من زاوية صعبة بعد ركنية"
+    },
+    "28-1666351": {
+     "key": "header+set_piece",
+     "ar": "رأسية من كرة ثابتة"
+    },
+    "41-1169230": {
+     "key": "header+set_piece",
+     "ar": "رأسية من كرة ثابتة"
+    },
+    "44-1385640": {
+     "key": "left_foot+close",
+     "ar": "تسديدة باليسار من قريب"
+    },
+    "45+11-680816": {
+     "key": "penalty",
+     "ar": "ضربة جزاء"
+    },
+    "45+15-621561": {
+     "key": "penalty",
+     "ar": "ضربة جزاء"
+    }
+   }
+  },
+  {
+   "match": 1000020036,
+   "teams": [
+    "Racing Club",
+    "Boca Juniors"
+   ],
+   "raw": {
+    "general": {
+     "matchId": 1000020036
+    },
+    "content": {
+     "liveticker": {
+      "langs": "de_gen,en_gen,es_gen,it_gen",
+      "teams": [
+       "Racing Club",
+       "Boca Juniors"
+      ]
+     },
+     "matchFacts": {
+      "events": {
+       "events": [
+        {
+         "type": "Goal",
+         "time": 19,
+         "overloadTime": null,
+         "playerId": 917619,
+         "nameStr": "Gastón Lodico",
+         "lastName": "Lodico",
+         "fullName": "Gastón Lodico",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 47,
+         "overloadTime": null,
+         "playerId": 882933,
+         "nameStr": "Adrián Martínez",
+         "lastName": "Martínez",
+         "fullName": "Adrián Martínez",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 72,
+         "overloadTime": null,
+         "playerId": 195927,
+         "nameStr": "Enner Valencia",
+         "lastName": "Valencia",
+         "fullName": "Enner Valencia",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 80,
+         "overloadTime": null,
+         "playerId": 195927,
+         "nameStr": "Enner Valencia",
+         "lastName": "Valencia",
+         "fullName": "Enner Valencia",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": null
+        },
+        {
+         "type": "Goal",
+         "time": 90,
+         "overloadTime": 5,
+         "playerId": 195927,
+         "nameStr": "Enner Valencia",
+         "lastName": "Valencia",
+         "fullName": "Enner Valencia",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": null
+        }
+       ]
+      }
+     }
+    }
+   },
+   "ticker": {
+    "AutoCommentaries": true,
+    "Source": "opta/feeds/ltc/commentary-603-2026-2683826-en.xml",
+    "Events": [
+     {
+      "IncidentCode": "G",
+      "Elapsed": 90,
+      "ElapsedPlus": 5,
+      "Description": "Goal! Racing Club 2, Boca Juniors 3. Enner Valencia (Boca Juniors) header from the centre of the box to the bottom left corner. Assisted by Carlos Palacios with a cross."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 80,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Racing Club 2, Boca Juniors 2. Enner Valencia (Boca Juniors) header from the centre of the box to the bottom left corner. Assisted by Sebastián Villa with a cross."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 72,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Racing Club 2, Boca Juniors 1. Enner Valencia (Boca Juniors) header from very close range to the high centre of the goal. Assisted by Lautaro Blanco with a cross following a corner."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 47,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Racing Club 2, Boca Juniors 0. Adrián Martínez (Racing Club) left footed shot from the centre of the box to the top right corner. Assisted by Mateo Martínez with a headed pass following a corner."
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 19,
+      "ElapsedPlus": -1,
+      "Description": "Goal! Racing Club 1, Boca Juniors 0. Gastón Lodico (Racing Club) right footed shot from a difficult angle and long range on the left to the top right corner following a corner."
+     }
+    ]
+   },
+   "expect": {
+    "19-917619": {
+     "key": "right_foot+long+corner",
+     "ar": "تسديدة باليمين من بعيد بعد ركنية"
+    },
+    "47-882933": {
+     "key": "left_foot+corner",
+     "ar": "تسديدة باليسار من ركنية"
+    },
+    "72-195927": {
+     "key": "header+close+corner",
+     "ar": "رأسية من قريب بعد ركنية"
+    },
+    "80-195927": {
+     "key": "header",
+     "ar": "رأسية"
+    },
+    "90+5-195927": {
+     "key": "header",
+     "ar": "رأسية"
+    }
+   }
+  },
+  {
+   "match": 5071380,
+   "teams": [
+    "Inter Miami CF",
+    "San Diego FC"
+   ],
+   "raw": {
+    "general": {
+     "matchId": 5071380
+    },
+    "content": {
+     "liveticker": {
+      "langs": "ar_gen,de_gen,en,es_gen,fr_gen,it_gen,pt-BR_gen,pt_gen",
+      "teams": [
+       "Inter Miami CF",
+       "San Diego FC"
+      ]
+     },
+     "matchFacts": {
+      "events": {
+       "events": [
+        {
+         "type": "Goal",
+         "time": 12,
+         "overloadTime": null,
+         "playerId": 641344,
+         "nameStr": "Anders Dreyer",
+         "lastName": "Dreyer",
+         "fullName": "Anders Dreyer",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": {
+          "shotType": "LeftFoot",
+          "situation": "RegularPlay",
+          "x": 93.3,
+          "y": 36.440000000000005,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 24,
+         "overloadTime": null,
+         "playerId": 30981,
+         "nameStr": "Lionel Messi",
+         "lastName": "Messi",
+         "fullName": "Lionel Messi",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": {
+          "shotType": "LeftFoot",
+          "situation": "FreeKick",
+          "x": 82.1470873792,
+          "y": 16.362292994799997,
+          "isFromInsideBox": false,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 74,
+         "overloadTime": null,
+         "playerId": 40636,
+         "nameStr": "Luis Suárez",
+         "lastName": "Suárez",
+         "fullName": "Luis Suárez",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": true,
+         "shotmapEvent": {
+          "shotType": "RightFoot",
+          "situation": "RegularPlay",
+          "x": 98.6315789471,
+          "y": 21.9673885388,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        },
+        {
+         "type": "Goal",
+         "time": 82,
+         "overloadTime": null,
+         "playerId": 641344,
+         "nameStr": "Anders Dreyer",
+         "lastName": "Dreyer",
+         "fullName": "Anders Dreyer",
+         "ownGoal": null,
+         "goalDescriptionKey": null,
+         "goalDescription": null,
+         "suffixKey": null,
+         "isPenaltyShootoutEvent": false,
+         "isHome": false,
+         "shotmapEvent": {
+          "shotType": "LeftFoot",
+          "situation": "RegularPlay",
+          "x": 92.2,
+          "y": 32.17,
+          "isFromInsideBox": true,
+          "isOwnGoal": false
+         }
+        }
+       ]
+      }
+     }
+    }
+   },
+   "ticker": {
+    "AutoCommentaries": false,
+    "Source": "opta/feeds/ltc/mcommentary-98-2026-2610110-en.xml",
+    "Events": [
+     {
+      "IncidentCode": "G",
+      "Elapsed": 82,
+      "ElapsedPlus": -1,
+      "Description": "SAN DIEGO RESTORE PARITY WITH EIGHT MINUTES TO GO! 2-2! Inter Miami don’t react as San Diego take the free-kick in midfield short to Tverskov, who is allowed to take a few touches to get inside the opposition’s half. Spotting the defence flat-footed, the captain uses the space he’s afforded to hit a pass that finds its way through the lines before reaching the foot of Dreyer, who settles it before converting with his left at close range!"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 74,
+      "ElapsedPlus": -1,
+      "Description": "COMEBACK COMPLETE! 2-1 INTER MIAMI! Berterame is brought down just outside the penalty area after a slaloming run, but with the ball at the foot of De Paul, the referee allows play to continue. After taking a second to ensure a whistle was not forthcoming, the Argentina midfielder spots the lean of Suarez and plays an incisive pass through the lines for the striker, who drops his shoulder and fires a first-time effort with his right foot past Dos Santos at the near post!"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 24,
+      "ElapsedPlus": -1,
+      "Description": "THE BALL FINDS ITS WAY IN! WE’RE LEVEL AT NU STADIUM! 1-1! Messi wraps his left boot around the free-kick and looks to be searching for a team-mate inside the six-yard box towards the far post, but it doesn’t require a touch as the ball curls back towards the frame of the goal and sneaks past the unaware goalkeeper for an equaliser!"
+     },
+     {
+      "IncidentCode": "G",
+      "Elapsed": 12,
+      "ElapsedPlus": -1,
+      "Description": "A GOAL OUT OF NOWHERE GIVES THE VISITORS THE LEAD! 1-0 SAN DIEGO! Tverskov receives a pass from Duah in a pocket of space 35 yards from his own goal and stretches out to poke a fantastically weighted pass through the lines for the well-timed run of Dreyer. In behind both Casemiro and Falcon, the winger takes possession in his stride before drawing St. Clair off his line to apply a chipped finish!"
+     }
+    ]
+   },
+   "expect": {
+    "12-641344": {
+     "key": "left_foot",
+     "ar": "تسديدة باليسار"
+    },
+    "24-30981": {
+     "key": "free_kick+long",
+     "ar": "ضربة حرة مباشرة من بعيد"
+    },
+    "74-40636": {
+     "key": "right_foot",
+     "ar": "تسديدة باليمين"
+    },
+    "82-641344": {
+     "key": "left_foot",
+     "ar": "تسديدة باليسار"
+    }
+   }
+  }
+ ]
+}
