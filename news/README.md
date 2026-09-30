@@ -52,8 +52,9 @@ python -m news.run [--local DIR] [--no-llm]      # the Fold runs it every 15 min
    equaliser/ordinal words agreeing with that goal. Two goals by one scorer are told apart by those or by when the clip
    came out; otherwise left out. While a match is live, a clip waits for a match file read 10 min after it came out.
 
-   Measured 2026-09-26..30 (50 matches, 1,053 official uploads, every attachment checked by hand): 25 matches got their
-   highlights (48 videos), 8 goals a clip, **0 wrong**. Traps seen in those uploads (each is a case in `tests/test_media.py`):
+   Measured by hand on every attachment: 2026-09-26..30, an international break (50 matches, 1,053 official uploads): 25
+   matches got their highlights (48 videos), 8 goals a clip, **0 wrong**; the club weekend 17-23 Sep (99 matches of 11
+   competitions, 797 uploads): 46 matches with highlights, 12 goal clips, **0 wrong**. Traps seen in those uploads (each is a case in `tests/test_media.py`):
    US Soccer's clips of Hall's and Berhalter's goals against Peru, posted two days before both scored again against Chile;
    Serie A's «NAPOLI-INTER 3-1 | FULL MATCH | SERIE A 2025/26» two days after this season's Inter 3-2 Napoli; CAF TV's
    WAFCON (women's) highlights between the same countries as the men's qualifiers.
