@@ -80,7 +80,7 @@ def eng_matches():
     since 1892, the FA Cup since 1871 and the League Cup since 1960. {folded club name: [[date, opp name, home, gf, ga, comp]]}.
     The top flight is left out: the main dataset already has it."""
     import csv, io, re, unicodedata
-    fold = lambda x: re.sub(r"[^a-z0-9]+", " ", re.sub(r"(fc|afc)", " ", unicodedata.normalize("NFKD", x or "").encode("ascii", "ignore").decode().lower())).strip()
+    fold = lambda x: re.sub(r"[^a-z0-9]+", " ", re.sub(r"\b(fc|afc)\b", " ", unicodedata.normalize("NFKD", x or "").encode("ascii", "ignore").decode().lower())).strip()
     out = defaultdict(list)
     for f, comp in (("england", None), ("facup", "facup"), ("leaguecup", "leaguecup")):
         cp = os.path.join(CACHE, f"eng_{f}.csv")
