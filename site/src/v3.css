@@ -910,3 +910,22 @@ body.hasprayl .tile.pray{display:none}
 .v3 .yrs{font-family:var(--digits);font-variant-numeric:tabular-nums;white-space:normal;line-height:1.6}
 .v3 [data-pane="chist"],.v3 .ccard,.v3 .chist{min-inline-size:0;overflow-wrap:anywhere}
 .v3 [data-pane="chist"] .tbl{display:block;overflow-x:auto}
+
+/* player bio (FotMob), career table with expandable seasons, club league positions */
+.v3 .pbio{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr));gap:.4rem 1rem;margin:.8rem 0 1.2rem}
+.v3 .pbio div{border-block-end:1px solid var(--line);padding-block:.3rem}.v3 .pbio dt{font-size:.75rem;color:var(--tert)}.v3 .pbio dd{margin:0;font-weight:600}
+.v3 .pcar .pexp{cursor:pointer}.v3 .pcar .psub td{font-size:.85rem;color:var(--stone)}
+.v3 .fmv{font-size:.95rem}.v3 .chart .pt0{fill:var(--mgr,#E9ECE4)}
+
+/* the world encyclopedia (/db/) */
+.v3 .wq{inline-size:min(100%,34rem);font-size:1.05rem;padding:.6rem .8rem}
+.v3 .wc{border-block-end:1px solid var(--line);padding-block:.4rem}.v3 .wc summary{cursor:pointer;font-weight:600}.v3 .wc h4{margin:.6rem 0 .2rem;font-size:.9rem;color:var(--stone)}
+.v3 .wl{line-height:2;margin:0}
+
+/* match log, match page (encyclopedia) */
+.v3 .tscroll{overflow-x:auto}.v3 .plt td,.v3 .plt th{white-space:nowrap}
+.v3 .cd{display:inline-block;inline-size:.6rem;block-size:.85rem;vertical-align:middle;margin-inline:.1rem;font-size:.6rem;text-align:center;color:#141A17}.v3 .cd.y{background:#F2C94C}.v3 .cd.r{background:#D64545}
+.v3 .res.w{color:var(--live-text,#5CC9A4)}.v3 .res.l{color:#E5484D}.v3 .rt{font-size:.8rem;border:1px solid var(--line);padding:0 .25rem}
+.v3 .wmh{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1rem;font-size:1.3rem;font-weight:700;margin:.5rem 0}.v3 .wmh a:last-child{text-align:end}.v3 .wsc{font-size:2rem}
+.v3 .wev .ev{font-size:.75rem;border:1px solid var(--line);padding:0 .3rem}.v3 .wev .ev.g{border-color:var(--mg,#F0BC5A)}.v3 .wev .ev.y{background:#F2C94C;color:#141A17}.v3 .wev .ev.r{background:#D64545;color:#fff}
+.v3 .wlu .sub{opacity:.7}

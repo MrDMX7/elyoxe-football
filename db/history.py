@@ -137,14 +137,19 @@ def main(argv=None):
     COMPS_AR = {c["id"]: c.get("name_ar") for c in ((store.get_json("index.json") or {}).get("competitions") or []) if c.get("id")}
 
     ENGM, efold = eng_matches()
+    # the Arab leagues before the datasets start: RSSSF's season pages (db/rsssf.py) — positions per season, dated matches
+    try:
+        RS = json.load(open(os.path.join(CACHE, "rsssf_clubs.json"), encoding="utf-8"))
+    except (OSError, ValueError):
+        RS = {}
     eng_sk = {efold(r[0].rsplit(" (", 1)[0]): r[0] for r in con.execute("select distinct home_ident from g where home_ident like '%(England)'").fetchall()}
-    targets = [a.club] if a.club else sorted(cw)
+    targets = [a.club] if a.club else sorted(set(cw) | {int(k) for k in RS})
     index = {}
     for fid in targets:
-        sk = cw.get(fid)
-        if not sk:
+        sk = cw.get(fid) or ""
+        if not sk and not RS.get(str(fid)):
             continue
-        rows = con.execute("""select date, home_ident, away_ident, gh, ga, competition, level from g where home_ident = ? or away_ident = ? order by date""", [sk, sk]).fetchall()
+        rows = [] if not sk else con.execute("""select date, home_ident, away_ident, gh, ga, competition, level from g where home_ident = ? or away_ident = ? order by date""", [sk, sk]).fetchall()
         ms = []
         for d, hi, ai, gh, ga, comp, lvl in rows:
             home = hi == sk; opp = ai if home else hi
@@ -157,6 +162,16 @@ def main(argv=None):
             for d, oname, h, gf, ga, comp in ENGM.get(efold(sk.rsplit(" (", 1)[0]), []):
                 osk = eng_sk.get(efold(oname))
                 ms.append([d, key_of.get(osk) or ("s:" + osk if osk else "e:" + oname), h, gf, ga, comp])
+            ms.sort(key=lambda m: m[0])
+        # RSSSF matches only where no other source has this club on that date (±2 days) against that opponent
+        rs = RS.get(str(fid)) or {}
+        if rs.get("matches"):
+            from datetime import date as _d
+            seen = {(m[0], str(m[1])) for m in ms}
+            near = lambda d, o: any((str(_d.fromordinal(_d.fromisoformat(d).toordinal() + k)), str(o)) in seen for k in (-2, -1, 0, 1, 2))
+            for m in rs["matches"]:
+                if not near(m[0], m[1]):
+                    ms.append(m)
             ms.sort(key=lambda m: m[0])
         # after the dataset's last date: our own FotMob archive (every covered competition)
         for mid, d, comp, h, aw, gh, ga in con.execute("select * from fm where (h = ? or a = ?) and date > ? order by date", [fid, fid, last]).fetchall():
@@ -175,18 +190,20 @@ def main(argv=None):
         for o in opp:
             if o.startswith("s:"):
                 names[o] = o[2:].rsplit(" (", 1)[0]
-            elif o.startswith("e:"):
+            elif o.startswith("e:") or o.startswith("r:"):
                 names[o] = o[2:]
             else:
                 t = teams.get(o) or {}
                 names[o] = t.get("name_ar") or t.get("name") or (cw.get(int(o)) or o).rsplit(" (", 1)[0]   # a linked club we have no page for
         comps = {}
         for c in by_comp:
-            comps[c] = INTL.get(c) or ENG_COMPS.get(c) or (COMPS_AR.get(int(c[3:])) if c.startswith("fm:") else "الدوري")
+            comps[c] = INTL.get(c) or ENG_COMPS.get(c) or (COMPS_AR.get(int(c[3:])) if c.startswith("fm:") else
+                                                            "الكؤوس (RSSSF)" if c.endswith(":cup") else "الدوري")
         doc = {"club": fid, "key": sk, "name": (teams.get(str(fid)) or {}).get("name"), "since": ms[0][0], "until": ms[-1][0],
                "total": tot, "by_comp": by_comp, "by_decade": dict(sorted(by_dec.items())),
                "opponents": sorted(([k, v["p"], v["w"], v["d"], v["l"], v["gf"], v["ga"], v["last"]] for k, v in opp.items()), key=lambda x: -x[1]),
                "biggest_wins": wins, "biggest_losses": losses, "first": ms[0], "names": names, "comps": comps,
+               "positions": sorted(rs.get("positions") or [], key=lambda x: x[0]),
                "source": "schochastics/football-data (ODC-By) to " + last.isoformat() + ", then Tifo's FotMob archive",
                "fields": {"match": ["date", "opponent (FotMob id or s:dataset key)", "home", "goals for", "goals against", "competition"]}}
         index[fid] = {"since": ms[0][0][:4], "p": tot["p"]}

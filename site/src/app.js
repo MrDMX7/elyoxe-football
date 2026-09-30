@@ -545,6 +545,9 @@
       var bars = dec.map(function(k, i){ var v = D.by_decade[k], h = pct(v.w, v.p); return '<g><rect x="' + (i * 22 + 2) + '" y="' + (62 - h * 0.55).toFixed(1) + '" width="18" height="' + (h * 0.55).toFixed(1) + '" class="dw"><title>' + k + ": " + h + "% فوز من " + v.p + '</title></rect><text x="' + (i * 22 + 11) + '" y="72" class="ax">' + k.slice(2) + '</text><text x="' + (i * 22 + 11) + '" y="' + (58 - h * 0.55).toFixed(1) + '" class="ax">' + h + "</text></g>"; }).join("");
       box.innerHTML = '<p class="hsum">من <b class="num">' + D.since.slice(0, 4) + "</b>: " + line(T) + " · نسبة الفوز <b class=\"num\">" + pct(T.w, T.p) + "٪</b></p>" +
         '<h3>نسبة الفوز في كل عقد</h3><svg class="chart dec" viewBox="0 0 ' + (dec.length * 22 + 4) + ' 76" role="img" aria-label="نسبة الفوز في كل عقد">' + bars + "</svg>" +
+        (D.positions && D.positions.length ? '<h3>مركزه في الدوري موسم بموسم (<span class="num">' + D.positions.length + '</span> موسم)</h3><div class="tscroll"><table class="tbl"><thead><tr><th>الموسم</th><th>المركز</th><th>لعب</th><th>فوز</th><th>تعادل</th><th>خسارة</th><th>له-عليه</th><th>نقاط</th></tr></thead><tbody>' +
+          D.positions.slice().reverse().map(function(p){ return '<tr' + (p[1] === 1 ? ' class="mine"' : "") + '><td class="num">' + R.esc(p[0]) + '</td><td class="num">' + p[1] + ' <span class="muted small">من ' + p[2] + '</span></td><td class="num">' + p[4] + '</td><td class="num">' + p[5] + '</td><td class="num">' + p[6] + '</td><td class="num">' + p[7] + '</td><td class="num"><bdi dir="ltr">' + p[8] + "-" + p[9] + '</bdi></td><td class="num">' + p[3] + "</td></tr>"; }).join("") +
+          '</tbody></table></div><p class="src">الجداول النهائية من RSSSF.</p>' : "") +
         "<h3>في كل بطولة</h3><ul class=\"mlist\">" + Object.keys(D.by_comp).sort(function(a, b){ return D.by_comp[b].p - D.by_comp[a].p; }).map(function(c){ return "<li><b>" + R.esc((D.comps || {})[c] || c) + "</b>: " + line(D.by_comp[c]) + "</li>"; }).join("") + "</ul>" +
         '<h3>ضد كل خصم (<span class="num">' + D.opponents.length + '</span>)</h3><input type="search" class="hq" placeholder="دوّر على خصم" aria-label="دوّر على خصم"><div class="hopp">' + opps(false) + "</div>" + (D.opponents.length > 20 ? '<button type="button" class="lnk hall">كل الخصوم</button>' : "") +
         '<div class="hbig"><div><h3>أكبر انتصاراته</h3><ul class="mlist">' + D.biggest_wins.map(mrow).join("") + '</ul></div><div><h3>أكبر خساراته</h3><ul class="mlist">' + D.biggest_losses.map(mrow).join("") + "</ul></div></div>" +
@@ -615,6 +618,98 @@
         '<p>أحسن ترتيب: <b class="num">' + d.best[1] + '</b> في <span class="num">' + d.best[0] + "</span>" + (tops.length > 1 ? '، وكان الأول في أوروبا <b class="num">' + tops.length + "</b> مرات" : "") + '. الحين: <b class="num">' + S[S.length - 1][1] + "</b>.</p>" +
         '<svg class="chart elo-c" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="ترتيبه في تصنيف يويفا، الأول فوق"><path d="' + S.map(function(x, i){ return (i ? "L" : "M") + X(x[0]) + " " + Y(x[1]); }).join("") + '" class="gl2"/>' +
         S.filter(function(x, i){ return i % 5 === 0; }).map(function(x){ return '<text x="' + X(x[0]) + '" y="' + (H - 2) + '" class="ax">' + x[0] + "</text>"; }).join("") + "</svg><p class=\"src\">المصدر: kassiesa.net (أرشيف معاملات يويفا).</p></section>";
+    }).catch(function(){});
+  })();
+  // ---- a player's full profile from FotMob (v1/player/<id>/profile.json, db/fotmob_profiles.py): trophies by club, the whole career
+  //      season by season with every competition, the national team, market value through the years
+  (function(){
+    var box = $(".pprof"); if (!box) return;
+    var nm = function(id, fb){ return (window.PN && window.PN[id]) || fb || ""; };
+    var tlink = function(id, name){ return id ? '<a href="/t/' + id + '/">' + R.esc(name || "") + "</a>" : R.esc(name || ""); };
+    var eur = function(v){ return v == null ? "—" : v >= 1e6 ? "€" + (Math.round(v / 1e5) / 10) + " مليون" : "€" + Math.round(v / 1e3) + " ألف"; };
+    get("player/" + box.dataset.player + "/profile.json").then(function(d){
+      var html = "", C = d.career || {};
+      // trophies grouped by club
+      if (d.trophies && d.trophies.length){
+        var by = {}, total = 0; d.trophies.forEach(function(t){ if (!t[4].length) return; (by[t[0] + "|" + t[1]] = by[t[0] + "|" + t[1]] || []).push(t); total += t[4].length; });
+        if (total) html += '<section class="blk"><h2>ألقابه <small>' + total + "</small></h2>" + Object.keys(by).map(function(k){ var tid = k.split("|")[0], tn = k.slice(tid.length + 1);
+          return "<h3>" + tlink(tid, tn) + '</h3><ul class="chon">' + by[k].map(function(t){ return "<li><b>" + R.esc(t[3] || "") + '</b> <span class="num">' + t[4].length + '</span><span class="muted small yrs">' + R.esc(t[4].join("، ")) + "</span></li>"; }).join("") + "</ul>"; }).join("") + '<p class="src">من FotMob.</p></section>';
+      }
+      // the career, season by season (club, then national team, then youth)
+      [["senior", "مسيرته مع الأندية موسم بموسم"], ["national team", "مع المنتخب"], ["youth", "في الفئات السنية"]].forEach(function(k){
+        var c = C[k[0]]; if (!c || !c.seasons || !c.seasons.length) return;
+        var sum = c.seasons.reduce(function(a, s){ a[0] += +s[3] || 0; a[1] += +s[4] || 0; a[2] += +s[5] || 0; return a; }, [0, 0, 0]);
+        html += '<section class="blk"><h2>' + k[1] + " <small>" + sum[0] + " مباراة · " + sum[1] + " هدف · " + sum[2] + " صناعة</small></h2>" +
+          '<table class="tbl pcar"><thead><tr><th>الموسم</th><th>الفريق</th><th>مباريات</th><th>أهداف</th><th>صناعة</th><th>التقييم</th></tr></thead><tbody>' +
+          c.seasons.map(function(s, i){ var sub = (s[7] || []).length > 1 ? s[7].map(function(t){ return '<tr class="psub" data-of="' + k[0] + i + '" hidden><td></td><td class="small">' + R.esc(t[1] || "") + '</td><td class="num">' + (t[2] || 0) + '</td><td class="num">' + (t[3] || 0) + '</td><td class="num">' + (t[4] || 0) + '</td><td class="num">' + (t[5] || "—") + "</td></tr>"; }).join("") : "";
+            return "<tr" + (sub ? ' class="pexp" data-i="' + k[0] + i + '" tabindex="0" title="اضغط للتفاصيل"' : "") + '><td class="num">' + R.esc(s[0] || "") + "</td><td>" + tlink(s[1], nm(s[1], s[2])) + (sub ? ' <span class="muted small">+</span>' : "") + '</td><td class="num">' + (s[3] || 0) + '</td><td class="num">' + (s[4] || 0) + '</td><td class="num">' + (s[5] || 0) + '</td><td class="num">' + (s[6] || "—") + "</td></tr>" + sub; }).join("") +
+          '</tbody></table><p class="src">من FotMob. اضغط أي موسم فيه أكثر من بطولة لتفاصيله.</p></section>';
+      });
+      // market value through the years
+      if (d.mv && d.mv.length > 2){
+        var V = d.mv, W = 600, H = 130, t0 = Date.parse(V[0][0]), t1 = Date.parse(V[V.length - 1][0]), mx = Math.max.apply(null, V.map(function(x){ return x[1] || 0; })) || 1;
+        var X = function(dt){ return (8 + (Date.parse(dt) - t0) / Math.max(1, t1 - t0) * (W - 16)).toFixed(1); }, Y = function(v){ return (H - 16 - v / mx * (H - 28)).toFixed(1); };
+        var top = V.reduce(function(a, x){ return x[1] > a[1] ? x : a; }, V[0]);
+        html += '<section class="blk"><h2>قيمته السوقية</h2><p>أعلى قيمة ' + eur(top[1]) + ' في <span class="num">' + top[0].slice(0, 7) + "</span>، والحين " + eur(V[V.length - 1][1]) + '.</p><svg class="chart elo-c" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="قيمته السوقية عبر السنين"><path d="' + V.map(function(x, i){ return (i ? "L" : "M") + X(x[0]) + " " + Y(x[1] || 0); }).join("") + '" class="gl2"/></svg><p class="src">من FotMob.</p></section>';
+      }
+      if (d.injury && (d.injury.name || d.injury.type)) html = '<p class="note">مصاب: ' + R.esc(d.injury.name || d.injury.type || "") + "</p>" + html;
+      box.innerHTML = html;
+      box.querySelectorAll(".pexp").forEach(function(r){ r.onclick = function(){ box.querySelectorAll('.psub[data-of="' + r.dataset.i + '"]').forEach(function(x){ x.hidden = !x.hidden; }); }; });
+    }).catch(function(){});
+  })();
+  // ---- a club from FotMob (v1/history/fm/team/<id>.json): league position every season, its coaches, every transfer
+  (function(){
+    var box = $(".fmteam"); if (!box) return;
+    var feeT = function(t){ return t[8] ? R.esc(String(t[8]).replace("on loan", "إعارة").replace("free transfer", "انتقال حر").replace("undisclosed", "غير معلن")) : t[7] ? "€" + (Math.round(t[7] / 1e5) / 10) + " مليون" : "—"; };
+    get("history/fm/team/" + box.dataset.team + ".json").then(function(d){
+      var html = "", id = +box.dataset.team;
+      var RK = (d.ranks || []).filter(function(r){ return r[1]; });
+      if (RK.length > 1){
+        var W = 600, H = 150, n = RK.length, mx = Math.max.apply(null, RK.map(function(r){ return r[2] || r[1]; }));
+        var X = function(i){ return (14 + i / Math.max(1, n - 1) * (W - 28)).toFixed(1); }, Y = function(p){ return (10 + (p - 1) / Math.max(1, mx - 1) * (H - 30)).toFixed(1); };
+        var champs = RK.filter(function(r){ return r[1] === 1; }).length;
+        html += '<section class="blk"><h2>ترتيبه في الدوري موسم بموسم <small>من ' + R.esc(RK[0][0] || "") + "</small></h2><p>" + (champs ? 'بطل الدوري <b class="num">' + champs + "</b> مرات في هالفترة. " : "") + 'أحسن مركز <b class="num">' + Math.min.apply(null, RK.map(function(r){ return r[1]; })) + '</b>.</p><svg class="chart elo-c" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="مركزه في الدوري كل موسم، الأول فوق"><path d="' + RK.map(function(r, i){ return (i ? "L" : "M") + X(i) + " " + Y(r[1]); }).join("") + '" class="gl2"/>' +
+          RK.map(function(r, i){ return '<circle cx="' + X(i) + '" cy="' + Y(r[1]) + '" r="' + (r[1] === 1 ? 4 : 2.2) + '" class="' + (r[1] === 1 ? "pk" : "pt0") + '"><title>' + R.esc(r[0]) + ": " + r[1] + "</title></circle>" + (i % Math.ceil(n / 8) === 0 ? '<text x="' + X(i) + '" y="' + (H - 3) + '" class="ax">' + R.esc(String(r[0]).slice(2, 4)) + "</text>" : ""); }).join("") + '</svg><p class="src">من FotMob.</p></section>';
+      }
+      if ((d.coaches || []).length){
+        var by = {}; d.coaches.forEach(function(c){ var k = c[0] || c[1]; var r = by[k] = by[k] || { name:c[1], s:[], w:0, d:0, l:0 }; if (c[2] && r.s.indexOf(c[2]) < 0) r.s.push(c[2]); r.w += c[4] || 0; r.d += c[5] || 0; r.l += c[6] || 0; });
+        var rows = Object.keys(by).map(function(k){ return by[k]; }).sort(function(a, b){ return (b.s[b.s.length - 1] || "").localeCompare(a.s[a.s.length - 1] || ""); });
+        html += '<section class="blk"><h2>مدربينه <small>' + rows.length + '</small></h2><table class="tbl"><thead><tr><th>المدرب</th><th>المواسم</th><th>فوز</th><th>تعادل</th><th>خسارة</th><th>نسبة الفوز</th></tr></thead><tbody>' +
+          rows.map(function(r){ var p = r.w + r.d + r.l; return "<tr><td>" + R.esc(r.name || "") + '</td><td class="num">' + R.esc(r.s.join("، ")) + '</td><td class="num">' + r.w + '</td><td class="num">' + r.d + '</td><td class="num">' + r.l + '</td><td class="num">' + (p ? Math.round(r.w / p * 100) + "٪" : "—") + "</td></tr>"; }).join("") + '</tbody></table><p class="src">مباريات الدوري، من FotMob.</p></section>';
+      }
+      var T = d.transfers || [];
+      if (T.length){
+        var inn = T.filter(function(t){ return t[5] === id; }), out = T.filter(function(t){ return t[3] === id; }), shown = 15;
+        var row = function(t, dir){ return '<li><span class="num">' + R.esc(t[0]) + "</span> " + (t[1] ? '<a href="/p/' + t[1] + '/">' + R.esc((window.PN && window.PN[t[1]]) || t[2] || "") + "</a>" : R.esc(t[2] || "")) + ' <span class="muted small">' + dir + " " + R.esc(dir === "من" ? (t[4] || "") : (t[6] || "")) + " · " + feeT(t) + "</span></li>"; };
+        html += '<section class="blk"><h2>انتقالاته <small>' + T.length + '</small></h2><div class="ftr"></div><p class="src">من FotMob.</p></section>';
+        box.innerHTML = html;
+        var draw = function(){ box.querySelector(".ftr").innerHTML = '<div class="hbig"><div><h3>جاه</h3><ul class="mlist">' + inn.slice(0, shown).map(function(t){ return row(t, "من"); }).join("") + '</ul></div><div><h3>راح</h3><ul class="mlist">' + out.slice(0, shown).map(function(t){ return row(t, "إلى"); }).join("") + "</ul></div></div>" + (shown < Math.max(inn.length, out.length) ? '<button type="button" class="lnk fmore">المزيد</button>' : ""); var b = box.querySelector(".fmore"); if (b) b.onclick = function(){ shown += 40; draw(); }; };
+        draw(); return;
+      }
+      box.innerHTML = html;
+    }).catch(function(){});
+  })();
+  // ---- a player's every match, and his season totals with cards, touches, passes… (v1/player/<id>/log.json, db/matches.py)
+  (function(){
+    var box = $(".plog"); if (!box) return;
+    get("player/" + box.dataset.player + "/log.json").then(function(d){
+      var CN = d.comps || {}, TN = d.teams || {}, S = d.seasons || [], M = d.matches || [];
+      if (!M.length) return;
+      var pr = function(v){ return Array.isArray(v) ? v[0] + "/" + v[1] : v == null ? "—" : v; };
+      var cards = function(y, r){ return (y ? '<span class="cd y" title="صفراء">' + (y > 1 ? y : "") + "</span>" : "") + (r ? '<span class="cd r" title="حمراء"></span>' : ""); };
+      var html = '<section class="blk"><h2>أرقامه موسم بموسم <small>من مبارياته</small></h2><div class="tscroll"><table class="tbl plt"><thead><tr><th>الموسم</th><th>البطولة</th><th>مباريات</th><th>دقايق</th><th>أهداف</th><th>صناعة</th><th>صفراء</th><th>حمراء</th><th>التقييم</th><th>لمسات</th><th>تمريرات صحيحة</th><th>فرص صنعها</th><th>مراوغات</th><th>افتكاك</th></tr></thead><tbody>' +
+        S.map(function(t){ return '<tr><td class="num">' + R.esc(t.season) + "</td><td>" + R.esc(CN[t.comp] || t.comp) + '</td><td class="num">' + t.apps + ' <span class="muted small">(' + t.starts + ')</span></td><td class="num">' + t.min + '</td><td class="num">' + t.g + '</td><td class="num">' + t.a + '</td><td class="num">' + t.y + '</td><td class="num">' + t.r + '</td><td class="num">' + (t.rn ? (t.rs / t.rn).toFixed(2) : "—") + '</td><td class="num">' + (t.tch || "—") + '</td><td class="num">' + (t.pas || "—") + '</td><td class="num">' + (t.kp || "—") + '</td><td class="num">' + (t.dr || "—") + '</td><td class="num">' + (t.tk || "—") + "</td></tr>"; }).join("") +
+        '</tbody></table></div><p class="small muted">بين القوسين: كم مرة بدا أساسي. اللمسات والتمريرات للمواسم اللي فيها إحصائيات لكل لاعب.</p></section>';
+      html += '<section class="blk"><h2>مبارياته <small>' + M.length + '</small></h2><div class="plm"></div><p class="src">من FotMob.</p></section>';
+      box.innerHTML = html;
+      var shown = 25, list = box.querySelector(".plm");
+      var draw = function(){ list.innerHTML = '<ul class="mlist pml">' + M.slice(0, shown).map(function(r){
+          var res = r[5] > r[6] ? "w" : r[5] < r[6] ? "l" : "d";
+          return '<li><span class="num muted">' + R.esc(r[1]) + '</span> <a href="/db/match/?id=' + r[0] + '">ضد ' + R.esc(TN[r[4]] || "") + ' <bdi dir="ltr" class="num res ' + res + '">' + r[5] + "-" + r[6] + '</bdi></a> <span class="muted small">' + R.esc(CN[r[2]] || "") + "</span> " +
+            (r[8] ? '<span class="num small">' + r[8] + "′</span> " : "") + (r[9] ? '<b class="num">' + r[9] + "</b> هدف " : "") + (r[10] ? '<b class="num">' + r[10] + "</b> صناعة " : "") + cards(r[11], r[12]) + (r[13] ? ' <span class="num rt">' + Number(r[13]).toFixed(1) + "</span>" : "") + "</li>"; }).join("") + "</ul>" +
+          (shown < M.length ? '<button type="button" class="lnk plmore">أقدم</button>' : "");
+        var b = list.querySelector(".plmore"); if (b) b.onclick = function(){ shown += 50; draw(); }; };
+      draw();
     }).catch(function(){});
   })();
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio, daypage:daypage, arabs:arabs }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && Object.keys(window.NAT || {}).some(function(k){ return String(window.NAT[k]) === ID; })) countdown(); }
