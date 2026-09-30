@@ -20,7 +20,9 @@ Audit fixes (db/audit.py, 2026-09-30):
     deterministic gzip), so the daily run no longer re-sends 70k files and dies half way (5,012 logs of ~60k were live);
   * the site's finished matches with no match page (the poller backfills only the competitions in play: 1,575 of 4,124
     finished matches of the current seasons had no events or lineups, the World Cup 2026 among them) get one, in the
-    poller's schema (--no-pages skips it).
+    poller's schema (--no-pages skips it);
+  * the match pages of the last --refresh-days days (3) take FotMob's later corrections (scorer, assist, card player, a
+    missing goal) and the results decided after the match (competitions.yaml awarded:), keeping what the poller computed.
 Out (public):
   v1/matchx/<id>.json          one match: teams, score, date, round, stadium, referee, lineups, events, player stats
   v1/player/<id>/log.json      every match of the player (club and country) and his totals per season and competition
@@ -430,6 +432,56 @@ def pages(store, comp_ids, names):
     return sent
 
 
+SOURCE_KEYS = ("score", "status", "status_detail", "penalties", "events", "halftime_score", "lineups", "stats", "xg", "shotmap", "momentum",
+               "referee", "attendance", "coverage")
+
+
+def refresh_pages(store, comp_ids, names, days):
+    """FotMob corrects a finished match for hours (a scorer named, an assist moved, a card's player, a goal the feed lacked):
+    the site's match pages of the last `days` days take FotMob's detail now when it differs. Only the source's own keys are
+    replaced; what the poller computed (win probability, venue, weather, firsts…) stays, and so do the live stamps of
+    events we already had. (audit 2026-09-30: 14 of 40 sampled pages differed from FotMob's detail a day later)"""
+    from poller import coverage_events
+    from compute import awarded as AW
+    from timeutil import parse_utc
+    now = now_utc()
+    todo = []
+    for cid in comp_ids:
+        for m in (store.get_json(f"comp/{cid}/fixtures.json") or {}).get("matches") or []:
+            ko = parse_utc(m.get("kickoff_utc"))
+            if m.get("id") and m.get("status") in (S.FINISHED, S.AWARDED) and ko and 3 * 3600 < (now - ko).total_seconds() < days * 86400:
+                todo.append(m["id"])
+    src = FotMob(fm().http, names)
+    aw = config.awarded()
+
+    def one(mid):
+        cur = store.get_json(f"match/{mid}.json")
+        if not cur or cur.get("minimal"):
+            return None
+        raw = raw_detail(mid)
+        if not raw:
+            return None
+        try:
+            d = AW.apply_to_match(src.match_from_raw(raw), aw)
+        except Exception:
+            return None
+        bare = lambda evs: [{k: v for k, v in e.items() if k != "first_seen"} for e in evs or []]
+        if d.get("status") not in (S.FINISHED, S.AWARDED) or all((bare(d.get(k)) == bare(cur.get(k))) if k == "events" else d.get(k) == cur.get(k)
+                                                                  for k in SOURCE_KEYS):
+            return None
+        seen = {e.get("event_id"): e.get("first_seen") for e in cur.get("events") or [] if e.get("first_seen")}
+        for e in d.get("events") or []:
+            if e.get("event_id") in seen:
+                e["first_seen"] = seen[e["event_id"]]
+        new = dict(cur, **{k: d.get(k) for k in SOURCE_KEYS}, coverage_events=coverage_events(d), refreshed=iso(now))
+        return (f"match/{mid}.json", new, "static")
+    with ThreadPoolExecutor(4) as ex:
+        items = [x for x in ex.map(one, todo) if x]
+    sent, same, failed = put_all(store, items)
+    print(f"refresh: {len(todo)} finished site matches of the last {days} days checked, {sent} pages took FotMob's corrections, {len(failed)} failed")
+    return sent
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--upload", action="store_true")
@@ -437,6 +489,8 @@ def main(argv=None):
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--comp", type=int)
     ap.add_argument("--no-pages", action="store_true")
+    ap.add_argument("--refresh-days", type=int, default=3, help="match pages of the last N days take FotMob's later corrections (0: off)")
+    ap.add_argument("--pages-only", action="store_true", help="only the match-page steps (missing pages, corrections), no matchx/logs")
     a = ap.parse_args(argv)
     store = Store(S3Backend(BUCKET))
     comp_ids = [c["id"] for c in config.competitions()]
@@ -444,6 +498,10 @@ def main(argv=None):
         names = store.get_state("names_ar.json", None) or {"teams": {}, "competitions": {}, "countries": {}}
         names.setdefault("teams", {}).update(config.team_overrides())       # the poller's own Arabic names
         pages(store, comp_ids, names)
+        if a.refresh_days:
+            refresh_pages(store, comp_ids, names, a.refresh_days)
+    if a.pages_only:
+        return 0
     seasons = [s["season"] for s in ((store.get_json("archive/index-all.json") or {}).get("seasons") or []) if s["season"] != "unknown"]
     if a.season:
         seasons = [a.season]
