@@ -813,9 +813,10 @@ def _side(line, cand):
 
 
 def _stem(a, team):
-    """Do two names share a real word (by consonants)? «الكونغو» and «الكونغو الديموقراطية» do; «القادسية» and «الشحانية» don't."""
-    ta = {skel(w) for w in team_key(a).split() if w not in GENERIC and len(w) >= 3}
-    return any(ta & {skel(w) for w in team_key(n).split() if w not in GENERIC and len(w) >= 3} for n in team["names"])
+    """Do two names share a real word (by consonants)? «الكونغو» and «الكونغو الديموقراطية» do, so do «الاتحاد» and «الاتحاد
+    السكندري» (the exact side already fixed the match); «القادسية» and «الشحانية» don't. «إف»/«سي»-size words never count."""
+    ta = {skel(w) for w in team_key(a).split() if len(w) >= 4}
+    return any(ta & {skel(w) for w in team_key(n).split() if len(w) >= 4} for n in team["names"])
 
 
 def _anchor(line, pool, fixtures):
