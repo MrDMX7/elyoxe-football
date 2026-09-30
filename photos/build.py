@@ -44,22 +44,77 @@ def fold(s):
     return re.sub(r"[^a-z0-9]+", " ", s).strip()
 
 
-def wikidata(qids):
-    """qid -> {"img": Commons file name, "dob": "YYYY-MM-DD" or None, "fb": is a footballer}; only qids with an image."""
+def wikidata(qids, need_img=True):
+    """qid -> {"img": Commons file name or None, "dob": "YYYY-MM-DD" or None, "fb": is a footballer}; with need_img only
+    the qids that have an image (the photo run), else every qid (the identity check: a lead needs it too)."""
     out = {}
+    img = "?p wdt:P18 ?img ." if need_img else "OPTIONAL { ?p wdt:P18 ?img }"
     for i in range(0, len(qids), 250):
         chunk = qids[i:i + 250]
-        q = ("SELECT ?p ?img ?dob ?fb WHERE { VALUES ?p { %s } ?p wdt:P18 ?img . OPTIONAL { ?p wdt:P569 ?dob } "
-             "BIND(EXISTS { ?p wdt:P106 wd:%s } AS ?fb) }") % (" ".join("wd:" + x for x in chunk), FOOTBALLER)
+        q = ("SELECT ?p ?img ?dob ?fb WHERE { VALUES ?p { %s } %s OPTIONAL { ?p wdt:P569 ?dob } "
+             "BIND(EXISTS { ?p wdt:P106 wd:%s } AS ?fb) }") % (" ".join("wd:" + x for x in chunk), img, FOOTBALLER)
         r = json.loads(http("https://query.wikidata.org/sparql", urllib.parse.urlencode({"query": q, "format": "json"}).encode()))
         for b in r["results"]["bindings"]:
             qid = b["p"]["value"].rsplit("/", 1)[1]
             if qid in out:
                 continue
-            out[qid] = {"img": urllib.parse.unquote(b["img"]["value"].rsplit("/", 1)[1]).replace("_", " "),
+            out[qid] = {"img": urllib.parse.unquote(b["img"]["value"].rsplit("/", 1)[1]).replace("_", " ") if b.get("img") else None,
                         "dob": b.get("dob", {}).get("value", "")[:10] or None, "fb": b["fb"]["value"] == "true"}
         time.sleep(1)
     return out
+
+
+def birth_dates(store):
+    """FotMob birth dates we hold: state/dobs.json and the squads, then the site's and the encyclopedia's bios (the pipeline
+    read only the first two: 1,044 photos were accepted with no date to compare). FotMob's 0001-01-01 is no date."""
+    dobs = dict(store.get_state("dobs.json", {}) or {})
+    for groups in (store.get_state("squads.json", {}) or {}).values():
+        for g in groups or []:
+            for pl in g.get("players") or []:
+                if pl.get("dob"):
+                    dobs[str(pl["id"])] = pl["dob"][:10]
+    for k, b in ((store.get_json("history/fm/players.json") or {}).get("players") or {}).items():
+        dobs.setdefault(str(k), b.get("born"))
+    for k, b in ((store.get_json("world/bios.json") or {}).get("players") or {}).items():
+        if isinstance(b, list) and len(b) > 1:
+            dobs.setdefault(str(k), b[1])
+    return {k: v[:10] for k, v in dobs.items() if v and str(v)[:4] >= "1900"}
+
+
+def same_date(fm, wd):
+    """FotMob's birth date and Wikidata's name the same day: equal, a day apart (time zones), day and month swapped, or
+    Wikidata knowing only the year (it gives YYYY-01-01). Of 466 differences on 2026-09-30 these were 214; the other 252
+    (another year, or another day of the same year) are another person."""
+    if fm == wd:
+        return True
+    try:
+        from datetime import date as _d
+        a, b = _d.fromisoformat(fm), _d.fromisoformat(wd)
+    except ValueError:
+        return False
+    return abs((a - b).days) <= 1 or (a.year == b.year and a.month == b.day and a.day == b.month) or (b.year == a.year and wd[5:] == "01-01")
+
+
+def identity(pid, v, w, dobs, shared):
+    """None when the Wikidata person is our player, else the reason (audit 2026-09-30: namesakes' photos and Wikipedia
+    leads, e.g. Bruno of Port FC showing Bruno Guimarães)."""
+    if not w:
+        return "no Wikidata record"
+    if not w["fb"]:
+        return "not a footballer (namesake)"
+    if v["qid"] in shared:
+        # two of our players on one person: the one whose birth date is the person's keeps it, when exactly one is
+        mates = [p for p in shared[v["qid"]] if dobs.get(p) and w["dob"] and same_date(dobs[p], w["dob"])]
+        if mates != [pid]:
+            return "Wikidata person shared by two of our players"
+    if dobs.get(pid) and w["dob"]:
+        return None if same_date(dobs[pid], w["dob"]) else f"birth date differs ({dobs[pid]} vs {w['dob']})"
+    words = fold(v.get("latin")).split()
+    if len(words) < 2:
+        return "unverified (one-word name, no birth date to compare)"
+    if not w.get("img") or words[-1] not in fold(w["img"]):
+        return "unverified (no birth date, name not in file)"
+    return None
 
 
 def commons(files):
@@ -126,17 +181,42 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=0); ap.add_argument("--dry", action="store_true"); ap.add_argument("--pid")
     ap.add_argument("--retry", help="recheck now the players whose last status starts with this (e.g. share-alike)")
+    ap.add_argument("--identity-only", action="store_true",
+                    help="check who every Wikidata person is (about 28 queries, no image downloads): state/photos.json gets "
+                         "identity «ok» or the reason for every player (db/wiki_ar.py reads it), and a photo of someone else "
+                         "leaves ph/index.json")
     a = ap.parse_args(argv)
     store = Store(S3Backend(BUCKET))
     names = json.load(open(os.path.join(HERE, "names", "players_ar.json"), encoding="utf-8"))
-    dobs = dict(store.get_state("dobs.json", {}) or {})
-    for groups in (store.get_state("squads.json", {}) or {}).values():
-        for g in groups or []:
-            for pl in g.get("players") or []:
-                if pl.get("dob"):
-                    dobs[str(pl["id"])] = pl["dob"][:10]
+    dobs = birth_dates(store)
     st = store.get_state("photos.json", {}) or {}
     now = datetime.now(timezone.utc); cut = (now - timedelta(days=RECHECK_DAYS)).isoformat()
+    from collections import Counter
+    by_q = {}
+    for p, v in names.items():
+        if v.get("qid"):
+            by_q.setdefault(v["qid"], []).append(p)
+    shared = {q: ps for q, ps in by_q.items() if len(ps) > 1}          # one Wikidata person, two of our players
+    if a.identity_only:
+        pids = [p for p, v in names.items() if v.get("qid")]
+        wd = wikidata(sorted({names[p]["qid"] for p in pids}), need_img=False)
+        index = store.get_json("ph/index.json") or {"players": {}}
+        gone = []
+        for pid in pids:
+            why = identity(pid, names[pid], wd.get(names[pid]["qid"]), dobs, shared)
+            rec = st.setdefault(pid, {"qid": names[pid]["qid"]})
+            rec["identity"] = why or "ok"
+            if why and pid in index["players"]:
+                index["players"].pop(pid)
+                rec["status"] = why
+                gone.append(pid)
+        print(json.dumps(Counter((st[p]["identity"] or "").split(" (")[0] for p in pids), ensure_ascii=False))
+        print(f"{len(gone)} photos of someone else taken out of the index: {gone[:20]}")
+        if not a.dry:
+            index["generated"] = now.isoformat()[:19] + "Z"
+            store.put_json("ph/index.json", index, cache="warm")
+            store.put_state("photos.json", st)
+        return 0
     todo = [pid for pid, v in names.items() if v.get("qid") and (a.pid == pid or (not a.pid and ((st.get(pid, {}).get("checked") or "") < cut
             or (a.retry and (st.get(pid, {}).get("status") or "").startswith(a.retry)))))]
     if a.limit:
@@ -147,14 +227,12 @@ def main(argv=None):
     for pid in todo:
         v, w = names[pid], wd.get(names[pid]["qid"])
         rec = {"qid": v["qid"], "checked": now.isoformat()[:19] + "Z"}
+        why = identity(pid, v, w, dobs, shared)
+        rec["identity"] = why or "ok"
         if not w:
             rec["status"] = "no image"
-        elif not w["fb"]:
-            rec["status"] = "not a footballer (namesake)"
-        elif dobs.get(pid) and w["dob"] and dobs[pid] != w["dob"]:
-            rec["status"] = f"birth date differs ({dobs[pid]} vs {w['dob']})"
-        elif not (dobs.get(pid) and w["dob"]) and fold(v["latin"]).split()[-1:] and fold(v["latin"]).split()[-1] not in fold(w["img"]):
-            rec["status"] = "unverified (no birth date, name not in file)"
+        elif why:
+            rec["status"] = why
         else:
             rec["file"] = w["img"]; cand[pid] = w["img"]
         st[pid] = dict(st.get(pid, {}), **rec)
