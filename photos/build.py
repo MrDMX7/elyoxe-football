@@ -8,8 +8,8 @@ colour.
    built, so it can point at a namesake. A photo is taken only when Wikidata says «association football player» AND its
    date of birth equals FotMob's (state/dobs.json + state/squads.json); without a FotMob date, the file name must carry
    the player's surname.
-2. licence: Commons metadata per file. Share-Alike (CC BY-SA, GFDL, GPL) is out, the owner's one standing licence rule;
-   CC0, public domain and CC BY are in, and the author + licence go in v1/ph/index.json for the credit line.
+2. licence: not a filter since 2026-09-30 (owner: «كل شي فايدك استعمله»); the author + licence from Commons still go in
+   v1/ph/index.json for the small credit line.
 3. picture: a face must be found (OpenCV) and big enough; the crop is 4:5 around it, grey, 400x500 WebP. No face = no
    photo: a wide match shot cut blindly looks worse than the plain hero.
 4. out: s3://<data bucket>/v1/ph/<pid>.webp (served at tifo.elyoxe.com/v1/ph/) + v1/ph/index.json; progress in
@@ -125,6 +125,7 @@ def portrait(raw):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=0); ap.add_argument("--dry", action="store_true"); ap.add_argument("--pid")
+    ap.add_argument("--retry", help="recheck now the players whose last status starts with this (e.g. share-alike)")
     a = ap.parse_args(argv)
     store = Store(S3Backend(BUCKET))
     names = json.load(open(os.path.join(HERE, "names", "players_ar.json"), encoding="utf-8"))
@@ -136,7 +137,8 @@ def main(argv=None):
                     dobs[str(pl["id"])] = pl["dob"][:10]
     st = store.get_state("photos.json", {}) or {}
     now = datetime.now(timezone.utc); cut = (now - timedelta(days=RECHECK_DAYS)).isoformat()
-    todo = [pid for pid, v in names.items() if v.get("qid") and (a.pid == pid or (not a.pid and (st.get(pid, {}).get("checked") or "") < cut))]
+    todo = [pid for pid, v in names.items() if v.get("qid") and (a.pid == pid or (not a.pid and ((st.get(pid, {}).get("checked") or "") < cut
+            or (a.retry and (st.get(pid, {}).get("status") or "").startswith(a.retry)))))]
     if a.limit:
         todo = todo[:a.limit]
     print(f"{len(todo)} players to check ({len(dobs)} FotMob birth dates)")
@@ -165,8 +167,7 @@ def main(argv=None):
         if not L or not L.get("thumb"):
             st[pid]["status"] = "no Commons record"; continue
         st[pid]["license"] = L["short"] or L["license"]
-        if not free(L):
-            st[pid]["status"] = "share-alike"; index["players"].pop(pid, None); continue
+        # owner 2026-09-30: «كل شي فايدك استعمله» — no licence filter any more (Share-Alike included); the credit line stays
         try:
             pic = portrait(http(L["thumb"], timeout=60))
         except Exception as e:
