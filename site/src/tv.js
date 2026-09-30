@@ -32,14 +32,18 @@
       "#tvall .tvp ul{list-style:none;margin:0;padding:0;font-size:.88rem;color:var(--tert,#B9C7C0)}#tvall .tvp ul li{padding:.1rem 0}#tvall .tvp a{color:var(--ink,#F6F7F2)}";
     document.head.appendChild(st); })();
 
-  // ---- match page
+  // ---- match page (and /live/?id=): one line under the scoreboard, the block under «وين تنقل»
+  function heroLine(es, md, after){
+    var top = lead(es), h = $("#tvh"); if (!top || !after) return;
+    var line = done(md) ? (top.commentator ? "📺 علّق عليها " + voices(top) + " على <b>" + esc(top.channel) + "</b>" : "")
+      : "📺 <b>" + esc(top.channel) + "</b>" + (top.commentator ? " · " + (top.commentators && top.commentators.length > 1 ? "المعلقين: " : "المعلق: ") + voices(top) : "");
+    if (!line){ if (h) h.remove(); return; }
+    if (!h){ h = document.createElement("p"); h.className = "tvh"; h.id = "tvh"; after.insertAdjacentElement("afterend", h); }   // a sibling: the scoreboard is redrawn, this line stays
+    if (h._h !== line){ h._h = line; h.innerHTML = line; }
+  }
   function paintMatch(es, md){
     if (!es || !es.length) return;
-    var top = lead(es), mh = $("#mh"), h = $("#tvh");
-    if (top && mh){ var line = done(md) ? (top.commentator ? "📺 علّق عليها " + voices(top) + " على <b>" + esc(top.channel) + "</b>" : "")
-        : "📺 <b>" + esc(top.channel) + "</b>" + (top.commentator ? " · " + (top.commentators && top.commentators.length > 1 ? "المعلقين: " : "المعلق: ") + voices(top) : "");
-      if (!line){ if (h) h.remove(); }
-      else { if (!h){ h = document.createElement("p"); h.className = "tvh"; h.id = "tvh"; mh.insertAdjacentElement("afterend", h); } if (h._h !== line){ h._h = line; h.innerHTML = line; } } }
+    heroLine(es, md, $("#mh"));
     var ww = $("#wwbox"), box = $("#tvc");
     if (!ww || done(md)){ if (box) box.remove(); return; }   // after full time the hero line is enough
     var rows = sorted(es).map(function(e){ var n = voices(e); return '<li><span class="tvn">📺 <b>' + esc(e.channel) + '</b></span><span class="tvv">' + (n ? (e.commentators && e.commentators.length > 1 ? "المعلقين: " : "المعلق: ") + "<b>" + n + "</b>" : "المعلق ما انعلن للحين") + "</span></li>"; }).join("");
@@ -68,16 +72,29 @@
       var lb = a.getAttribute("aria-label"); if (lb && e.commentator && lb.indexOf("المعلق") < 0) a.setAttribute("aria-label", lb + "، المعلق " + (e.commentators || [e.commentator]).join(" و"));
     });
   }
-  function watch(sel){ var el = $(sel); if (!el || !("MutationObserver" in window)) return; var q = false;
-    new MutationObserver(function(){ if (q) return; q = true; (window.requestAnimationFrame || setTimeout)(function(){ q = false; decorate(el); }); }).observe(el, { childList:true, subtree:true }); }
+  function watch(sel, fn){ var el = $(sel); if (!el || !("MutationObserver" in window)) return; var q = false;
+    new MutationObserver(function(){ if (q) return; q = true; setTimeout(function(){ q = false; (fn || decorate)(el); }, 30); }).observe(el, { childList:true, subtree:true }); }   // not rAF: a hidden tab never runs it, and redraws land there too
   if (PAGE === "home" || PAGE === "daypage"){
     var first = PAGE === "daypage" && /\/tomorrow\//.test(location.pathname) ? [uaeYmd(1)] : [uaeYmd(0), uaeYmd(1)];
     Promise.all(first.map(file)).then(function(){ decorate(document); });
-    ["#day", "#mine"].forEach(watch);
+    ["#day", "#mine"].forEach(function(s){ watch(s); });
     // home: the list follows the visitor's day (and the ‹ › buttons); load the UAE days those matches fall on
     document.addEventListener("tifo:day", function(e){ var ms = (e.detail && e.detail.ms) || [], ds = {}; ms.forEach(function(m){ var k = ymdOf(m.kickoff_utc || m.kickoff_uae); if (k) ds[k] = 1; });
       Promise.all(Object.keys(ds).map(file)).then(function(){ decorate(document); }); });
     document.addEventListener("tifo:country", function(){ decorate(document); });
+  }
+  // /all/ (every match of the day, src/allmatches.js): rows are redrawn on a day switch (?d=yesterday|tomorrow), every live
+  // refresh and when a league opens; the same quiet line, for the day the page shows. /live/?id=: the hero line.
+  var OFFS = { yesterday:-1, today:0, tomorrow:1, "-1":-1, "0":0, "1":1 };
+  if (PAGE === "all"){
+    var allDay = function(){ var q = new URLSearchParams(location.search).get("d"); return uaeYmd(OFFS[q] != null ? OFFS[q] : 0); };
+    var allPaint = function(el){ file(allDay()).then(function(){ decorate(el || document); }); };
+    allPaint(); watch("#alllist", allPaint);
+    document.addEventListener("tifo:country", function(){ allPaint(); });
+  }
+  if (PAGE === "live"){
+    var qs = new URLSearchParams(location.search), LID = (qs.get("id") || "").trim(), LD = qs.get("d");
+    Promise.all((/^\d{8}$/.test(LD || "") ? [LD] : [uaeYmd(0), uaeYmd(-1), uaeYmd(1)]).map(file)).then(function(){ if (TV[LID]) heroLine(TV[LID], {}, $("#lvh")); });
   }
 
   // ---- /commentators/: today and tomorrow, one row per voice with the matches they call

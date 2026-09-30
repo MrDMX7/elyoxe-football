@@ -204,6 +204,26 @@ def test_the_article_wins_and_takes_the_agreed_number():
     assert any(x["match"] == "5181866" and "already carries" in x["why"] for x in doc["disputed"])
 
 
+def test_every_match_of_the_day_file_in_its_real_shape():
+    """v1/all/<ymd>.json (compute/allday.py): leagues with [id, name, score, reds] team rows, 365Scores ids «365:…»; our own
+    competitions come from day/<ymd>.json first and are not doubled."""
+    day = {"matches": [{"id": 1000020530, "kickoff_utc": "2026-10-01T13:15:00Z", "comp": 11027, "comp_name_ar": "كأس رابطة المحترفين",
+                        "home": {"id": 102124, "name": "Sharjah", "name_ar": "الشارقة"}, "away": {"id": 102118, "name": "Al-Dhafra", "name_ar": "الظفرة"}}]}
+    all_ = {"date": "20261001", "leagues": [
+        {"id": 11027, "name": "League Cup", "name_ar": "كأس رابطة المحترفين", "ours": True,
+         "matches": [{"id": 1000020530, "utc": "2026-10-01T13:15:00Z", "status": "scheduled", "home": [102124, "الشارقة"], "away": [102118, "الظفرة"], "ours": True}]},
+        {"id": "365:5479", "src": "365", "name": "Oman Professional League", "name_ar": "دوري عمانتل", "cc": "OMA",
+         "matches": [{"id": "365:4845468", "utc": "2026-10-01T14:00:00Z", "status": "finished", "home": ["365:9001", "سمائل", 2], "away": ["365:9002", "بدية", 1, 1]}]}]}
+    fx = C.load_fixtures(Fake({"day/20261001.json": day, "all/20261001.json": all_}), "20261001")
+    assert [(f["id"], f["src"]) for f in fx] == [(1000020530, "day"), ("365:4845468", "all")]
+    om = fx[1]
+    assert om["home"]["names"] == ["سمائل"] and om["away"]["names"] == ["بدية"] and om["comp"] == "365:5479" and om["comp_name_ar"] == "دوري عمانتل"
+    ln = {"home": "سمائل", "away": "بدية", "time": "18:00 الإمارات", "competition": "الدوري العماني", "kickoffs": ["2026-10-01T14:00:00Z"], "time_ok": True,
+          "channels": [{"raw": "عمان الرياضية", "ch": C.channel("عمان الرياضية"), "comm": ["سالم الرواحي"]}]}
+    m, _, _, _ = C.match_all([ln], fx, date(2026, 10, 1))
+    assert m == {"365:4845468": [{"channel": "عمان الرياضية", "commentator": "سالم الرواحي", "country": "OM"}]}
+
+
 def test_a_match_after_midnight_goes_to_the_next_days_file():
     """Kooora's list for the 28th runs to «02:00 السعودية» (03:00 UAE on the 29th): the site reads that match in 20260929.json."""
     ko = datetime(2026, 9, 28, 23, 0, tzinfo=UTC)
