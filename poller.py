@@ -1098,6 +1098,8 @@ class Poller:
                 break
             if not self.due("h2h", 7 * 1440, f"{a}-{b}") and f"{a}-{b}" in self.st.get("h2h_v2", {}):
                 continue                    # files written before the via match / upcoming split are rebuilt once
+            if not self.due("h2h_none", 1440, f"{a}-{b}"):
+                continue                    # FotMob had no h2h block for it today
             mid = known.get((a, b))
             if not mid:
                 continue
@@ -1109,7 +1111,10 @@ class Poller:
             h = d.get("h2h")
             n += 1
             if not h or not h.get("matches"):
-                continue                    # not marked: tried again next run
+                # tried again tomorrow, not next run: two such pairs at the head of the list took both turns of every run and
+                # no other pair was rebuilt since 09-28 (audit 2026-09-30: 30 of 85 files stale, 42 meetings missing)
+                self.mark("h2h_none", f"{a}-{b}")
+                continue
             self.mark("h2h", f"{a}-{b}")
             h = {**h, "matches": list(h["matches"])}
             if d.get("status") == S.FINISHED and d.get("score") and all(x.get("id") != d["id"] for x in h["matches"]):

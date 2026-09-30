@@ -110,6 +110,9 @@ def placeholder_ar(name):
     if m:
         pos = {"1": "أول", "2": "ثاني", "3": "ثالث", "4": "رابع"}[m.group(1)]
         return f"{pos} المجموعة {m.group(2)}" if len(m.group(2)) == 1 else f"{pos} {'/'.join(m.group(2))}"
+    m = re.match(r"^(Winner|Loser)\s+([1-4][A-L]{1,6})/([1-4][A-L]{1,6})$", s, re.I)     # EURO round of 16: «Winner 1F/2E»
+    if m:
+        return f"{'الفايز' if m.group(1).lower() == 'winner' else 'الخاسر'} من مباراة {placeholder_ar(m.group(2))} و{placeholder_ar(m.group(3))}"
     return None
 
 

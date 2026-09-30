@@ -43,7 +43,7 @@ import config  # noqa: E402
 from compute import awarded as AWARDED  # noqa: E402
 from db import scores365 as S365  # noqa: E402
 from sources import schema as S  # noqa: E402
-from sources.fotmob import FotMob  # noqa: E402
+from sources.fotmob import FotMob, placeholder_ar  # noqa: E402
 from sources.http import Http  # noqa: E402
 from store import Store, S3Backend, LocalBackend  # noqa: E402
 from timeutil import now_utc, parse_utc, iso, UAE  # noqa: E402
@@ -497,6 +497,24 @@ def area_matches(A):
                 A.count("matches", "fixture_vs_fotmob")
                 A.add("matches", "fixture_missing", "error", "gap", f"match:{n['id']}", f"{n['home']['name']} v {n['away']['name']} ({cid}, {n['kickoff_utc'][:10]}) is in FotMob's fixtures, not in ours", url=PAGE["match"].format(n["id"]))
     A.log(f"matches: fixtures checked against FotMob ({A.checked['matches']['fixture_vs_fotmob']})")
+
+    # 1b. the day files the home page and the day pages read (yesterday and today, UAE days) vs FotMob's scoreboard now
+    for off in (-1, 0):
+        ymd = (A.now + timedelta(days=off)).astimezone(UAE).strftime("%Y%m%d")
+        ours_day = {m["id"]: m for m in (A.pub.get(f"day/{ymd}.json") or {}).get("matches") or [] if m.get("id")}
+        try:
+            now_day = [m for m in A.fm.day_from_raw(A.fm.day_raw(ymd)) if m.get("comp") in A.comp]
+        except Exception:
+            continue
+        for n in now_day:
+            A.count("matches", "day_file")
+            o = ours_day.get(n["id"])
+            name = f"{n['home']['name']} v {n['away']['name']} ({n['comp']})"
+            if o is None:
+                A.add("matches", "day_file_missing", "warn", "stale", f"match:{n['id']}", f"day/{ymd}.json lacks {name}", url=PAGE["match"].format(n["id"]))
+            elif n["status"] == S.FINISHED and (o.get("status") != n["status"] or o.get("score") != n.get("score")) and n["id"] not in A.awarded:
+                A.add("matches", "day_file_result", "error", "stale", f"match:{n['id']}", f"day/{ymd}.json shows {name} {o.get('status')} {o.get('score')}, FotMob {n['status']} {n.get('score')}",
+                      url=PAGE["match"].format(n["id"]))
 
     # 2. final scores vs 365Scores (every game of each UAE day in the window)
     fin = []
@@ -1212,7 +1230,8 @@ def area_gaps(A):
         for m in A.fixtures(c["id"]):
             for side in ("home", "away"):
                 t = m[side]
-                if t.get("id") and not t.get("name_ar") and not (teams.get(str(t["id"])) or {}).get("name_ar") and not t.get("placeholder"):
+                if t.get("id") and not t.get("name_ar") and not (teams.get(str(t["id"])) or {}).get("name_ar") and not t.get("placeholder") \
+                        and not placeholder_ar(t.get("name")):
                     miss_ar.append((t["id"], t.get("name"), c["id"]))
     miss_ar = sorted(set(miss_ar))
     A.count("gaps", "team_names_ar", len({t for c in A.comps for m in A.fixtures(c['id']) for t in (m['home']['id'], m['away']['id'])}))
