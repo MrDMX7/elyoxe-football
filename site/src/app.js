@@ -568,10 +568,10 @@
       var path = S.map(function(x, i){ return (i ? "L" : "M") + X(x[0]) + " " + Y(x[1]); }).join("");
       var y0 = +S[0][0].slice(0, 4), y1 = +S[S.length - 1][0].slice(0, 4), step = Math.max(10, Math.round((y1 - y0) / 6 / 10) * 10), ticks = [];
       for (var y = Math.ceil(y0 / step) * step; y <= y1; y += step) ticks.push('<text x="' + X(y + "-01-01") + '" y="' + (H - 3) + '" class="ax">' + y + "</text>");
-      box.innerHTML = '<section class="blk"><h2>تصنيف إيلو عبر التاريخ <small>من ' + y0 + "</small></h2>" +
+      box.insertAdjacentHTML("afterbegin", '<section class="blk"><h2>تصنيف إيلو عبر التاريخ <small>من ' + y0 + "</small></h2>" +
         '<p>الحين <b class="num">' + d.now[1] + '</b> والمركز <b class="num">' + d.now[2] + '</b> عالمياً. أعلى تصنيف <b class="num">' + d.peak[1] + '</b> في <span class="num">' + d.peak[0].slice(0, 4) + '</span>، وأدناه <span class="num">' + d.low[1] + '</span> في <span class="num">' + d.low[0].slice(0, 4) + "</span>.</p>" +
         '<svg class="chart elo-c" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="تصنيف إيلو عبر السنين"><path d="' + path + '" class="gl2"/><circle cx="' + X(d.peak[0]) + '" cy="' + Y(d.peak[1]) + '" r="3.5" class="pk"/>' + ticks.join("") + "</svg>" +
-        '<p class="small muted">إيلو يرتفع مع كل فوز وينزل مع كل خسارة، وقدر التغيير حسب قوة الخصم وأهمية المباراة. أدق من تصنيف فيفا لمقارنة الأجيال.</p><p class="src">المصدر: eloratings.net.</p></section>';
+        '<p class="small muted">إيلو يرتفع مع كل فوز وينزل مع كل خسارة، وقدر التغيير حسب قوة الخصم وأهمية المباراة. أدق من تصنيف فيفا لمقارنة الأجيال.</p><p class="src">المصدر: eloratings.net.</p></section>');
     }).catch(function(){});
   })();
   // ---- a club's expected goals season by season (Understat, db/understat.py)
@@ -585,6 +585,22 @@
         '<table class="tbl"><thead><tr><th>الموسم</th><th>أهداف</th><th>المتوقع</th><th>عليه</th><th>المتوقع عليه</th><th>نقاط</th><th>النقاط المتوقعة</th><th>الضغط</th></tr></thead><tbody>' +
         S.slice().reverse().map(function(r){ return '<tr><td class="num">' + r[0] + '</td><td class="num">' + r[4] + '</td><td class="num">' + f1(r[2]) + '</td><td class="num">' + r[5] + '</td><td class="num">' + f1(r[3]) + '</td><td class="num">' + r[6] + '</td><td class="num">' + f1(r[7]) + '</td><td class="num">' + (r[8] == null ? "—" : r[8]) + "</td></tr>"; }).join("") +
         '</tbody></table><p class="small muted">«الضغط» كم تمريرة يخلّي الخصم يمرّرها قبل كل محاولة افتكاك: كل ما قلّ الرقم زاد الضغط.</p><p class="src">المصدر: Understat.</p></section>';
+    }).catch(function(){});
+  })();
+  // ---- a national team's FIFA ranking since 1992 (v1/history/fifa/<id>.json, db/fifa_rank.py): rank 1 at the top
+  (function(){
+    var box = $(".elo"); if (!box) return;
+    get("history/fifa/" + box.dataset.team + ".json").then(function(d){
+      var S = d.series, W = 600, H = 150, t0 = Date.parse(S[0][0]), t1 = Date.parse(S[S.length - 1][0]), mx = Math.max.apply(null, S.map(function(x){ return x[1]; }));
+      var X = function(dt){ return (8 + (Date.parse(dt) - t0) / Math.max(1, t1 - t0) * (W - 16)).toFixed(1); }, Y = function(r){ return (12 + (r - 1) / Math.max(1, mx - 1) * (H - 30)).toFixed(1); };
+      var path = S.map(function(x, i){ return (i ? "L" : "M") + X(x[0]) + " " + Y(x[1]); }).join(""), ticks = [];
+      for (var y = Math.ceil(+S[0][0].slice(0, 4) / 5) * 5; y <= +S[S.length - 1][0].slice(0, 4); y += 5) ticks.push('<text x="' + X(y + "-01-01") + '" y="' + (H - 3) + '" class="ax">' + y + "</text>");
+      var sec = document.createElement("div");
+      sec.innerHTML = '<section class="blk"><h2>تصنيف فيفا <small>من ' + S[0][0].slice(0, 4) + "</small></h2>" +
+        '<p>الحين المركز <b class="num">' + d.now[1] + '</b>. أحسن مركز <b class="num">' + d.best[1] + '</b> (<span class="num">' + d.best[0].slice(0, 7) + '</span>)، وأسوأ مركز <span class="num">' + d.worst[1] + '</span> (<span class="num">' + d.worst[0].slice(0, 7) + "</span>).</p>" +
+        '<svg class="chart elo-c" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="تصنيف فيفا عبر السنين، المركز الأول فوق"><path d="' + path + '" class="gl2"/><circle cx="' + X(d.best[0]) + '" cy="' + Y(d.best[1]) + '" r="3.5" class="pk"/>' + ticks.join("") + "</svg>" +
+        '<p class="src">المصدر: فيفا.</p></section>';
+      box.appendChild(sec);
     }).catch(function(){});
   })();
   function run(){ var f = { home:home, comp:comp, match:match, team:team, tv:tv, studio:studio, daypage:daypage, arabs:arabs }[PAGE]; if (f) f().catch(function(){}); if (PAGE === "team" && Object.keys(window.NAT || {}).some(function(k){ return String(window.NAT[k]) === ID; })) countdown(); }
