@@ -100,6 +100,11 @@ function legacy(o){
   if (SHELF_PATH.test(o.path || "")){ const b = blocks(body); if (b.secs.length >= 4){ SEQ = 0; body = b.rest + shelf(b.secs, { title:"كل الأقسام" }); } }
   return { main:hero + `<div class="wrap body${hero ? "" : " legacy"}">${body}</div>`, tools };
 }
+// the player's portrait: grey photo over the club colour (luminosity blend), the credit the CC BY licence asks for in small type
+function phHtml(id, ph, col){
+  const c = (col && col[0]) || "#1B4A3F", who = (ph.artist || "").replace(/\s+/g, " ").trim();
+  return `<figure class="pph" style="--pc:${esc(c)}"><img src="/v1/ph/${id}.webp" alt="" width="400" height="500" fetchpriority="high"><figcaption><a href="${esc(ph.page || "")}" rel="noopener">${esc((who ? who.slice(0, 40) + " · " : "") + (ph.license || ""))}</a></figcaption></figure>`;
+}
 function page(o){
   if (!o.v3){ const l = legacy(o); o = Object.assign({}, o, { body:l.main, tools:l.tools, v3:true }); }
   const url = SITE + o.path, p0 = o.path || "", nk = /^\d+$/.test(o.nav || "") ? "comps" : o.nav === "uae" ? "nat" : o.nav || (p0 === "/" || /^\/(today|tomorrow|m)\//.test(p0) ? "home" : /^\/(competitions|c)\//.test(p0) ? "comps" : /^\/(national|uae)\//.test(p0) ? "nat" : /^\/week\//.test(p0) ? "week" : "");   // W1.9: the tab bar knows where it is
@@ -254,6 +259,9 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   S._idx = index; const comps = index.competitions, today = new Date(Date.now() + 4 * 3600e3).toISOString().slice(0, 10);
   const urls = ["/", "/competitions/"], teamIds = new Set(), matchSum = new Map();
   const teamsJson = await get("teams.json"); S.setTeams(teamsJson && teamsJson.teams || {}); S_TEAMS = (teamsJson && teamsJson.teams) || {};
+  // 463 (owner 2026-09-30 «اللعيبة كل الصور»): free portraits from photos/build.py; only players whose photo passed the identity,
+  // licence and face checks are in the index, the rest keep the plain hero
+  const PH = ((await get("ph/index.json")) || {}).players || {};
 
   // ---- 1. fetch: competitions (+ every analytics file the pipeline may have written), today, national
   const EXTRA = ["sim", "watch", "bump", "halftime", "xg", "clutch", "cards", "foreigners", "improved", "young-uae", "team-of-round", "minute-clock", "goal-bands", "referees", "lineup-ages", "rotation", "pressure", "style", "fortress", "records", "alltime", "facts", "players", "similar", "tournament-sim", "scenarios", "shots", "fatigue", "coaches", "transfers", "records-book", "seasons", "milestones", "upsets", "projections", "bracket-sim", "local-minutes", "suspensions", "first-goal", "dropped", "dependence", "xi", "signings", "absences", "alltime-table", "promoted", "late-goals", "champion-path", "games-in-hand", "attendance"];
@@ -632,7 +640,7 @@ ${nxt ? `<a class="tnm" href="/m/${nxt.id}/">${R.logo(nxt.home, "md")}<span clas
       (cx.shots && cx.shots.available !== false && cx.shots.players && cx.shots.players[id] ? S.sec("خريطة تسديداته", "", S.shotmap(cx.shots.players[id])) : "") +
       (card ? `<p><a class="btn" href="/c/${(comps.find(cc => cc.id === (p.comp || 538)) || {}).key || "uae-pro-league"}/compare/?a=${id}">قارنه بلاعب ثاني</a></p>` : "");
     const thinP = (p.minutes || 0) < 90 && !S.career(pcar[i]);   // owner item 11: thin pages stay reachable but out of the index
-    playerPages.add(String(id)); write(`p/${id}/index.html`, page({ noindex:thinP, heroExtra:p.number ? `<span class="shirt" style="--sc:${R.colOn(tm)}" aria-label="الرقم ${esc(p.number)}">${esc(p.number)}</span>` : "", art:colors[tm] ? [colors[tm], [colors[tm][1] || colors[tm][0], colors[tm][0]]] : null, path:`/p/${id}/`, page:"player", title:`${nameOf(id) || p.name}: أهدافه وأرقامه هالموسم${tt.name_ar ? " مع " + tt.name_ar : ""} | تيفو`, ld:bcLd([pc && [pc.name_ar, `/c/${pc.key}/`], tt.name_ar && [tt.name_ar, `/t/${tm}/`], [nameOf(id) || p.name, `/p/${id}/`]]), desc:`${nameOf(id) || p.name}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.`, body:body + `<section class="blk" id="pnews"><h2>آخر أخباره</h2><div class="enews" data-e="player-${id}" data-quiet="1"><p class="empty">نحمّل الأخبار…</p></div></section>` }));
+    playerPages.add(String(id)); write(`p/${id}/index.html`, page({ noindex:thinP, heroExtra:PH[id] ? phHtml(id, PH[id], colors[tm]) : p.number ? `<span class="shirt" style="--sc:${R.colOn(tm)}" aria-label="الرقم ${esc(p.number)}">${esc(p.number)}</span>` : "", art:colors[tm] ? [colors[tm], [colors[tm][1] || colors[tm][0], colors[tm][0]]] : null, path:`/p/${id}/`, page:"player", title:`${nameOf(id) || p.name}: أهدافه وأرقامه هالموسم${tt.name_ar ? " مع " + tt.name_ar : ""} | تيفو`, ld:bcLd([pc && [pc.name_ar, `/c/${pc.key}/`], tt.name_ar && [tt.name_ar, `/t/${tm}/`], [nameOf(id) || p.name, `/p/${id}/`]]), desc:`${nameOf(id) || p.name}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.`, body:body + `<section class="blk" id="pnews"><h2>آخر أخباره</h2><div class="enews" data-e="player-${id}" data-quiet="1"><p class="empty">نحمّل الأخبار…</p></div></section>` }));
     if (!thinP) urls.push(`/p/${id}/`);
   });
   R.DUPCTX = "";   // 503: back to no context
