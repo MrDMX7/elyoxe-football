@@ -1314,7 +1314,20 @@ def area_identity(A):
     if bad:
         A.add("identity", "fmmap_women_youth", "error", "ours", "s365:fmmap", f"{len(bad)} FotMob clubs are linked to a 365Scores women's/youth/B side: " +
               "; ".join(f"{tname(f)} ({f}) -> {n2 or n1}" for f, s, n1, n2 in bad[:8]))
-    # 6. placeholder birth dates (FotMob's 0001-01-01 shows «age 2025»)
+    # 6. EA FC cards and Transfermarkt records: the linked person's name must be ours (db/eafc.py and db/tmdata.py publish who
+    #    they matched: a one-word or surname-only match at another club was a namesake, e.g. Isaac Lee for Myung-Dong Lee)
+    for label, path in (("EA FC card", "ea/cards.json"), ("Transfermarkt record", "history/tm/index.json")):
+        who = (A.pub.get(path) or {}).get("who") or {}
+        odd = []
+        for k, w in who.items():
+            A.count("identity", "linked_names")
+            ours_n = (bios.get(k) or {}).get("name") or ((wb.get(k) or [None])[0] if isinstance(wb.get(k), list) else None)
+            if ours_n and w and w[0] and person_sim(ours_n, w[0]) < 0.6:
+                odd.append(f"{ours_n} ({k}) = {w[0]}")
+        if odd:
+            A.add("identity", "linked_name_differs", "warn", "ours", f"identity:{path}", f"{len(odd)} {label}s carry another name than ours (namesakes?): " + "; ".join(odd[:8]),
+                  examples=[x.split("(")[1].split(")")[0] for x in odd[:40]])
+    # 7. placeholder birth dates (FotMob's 0001-01-01 shows «age 2025»)
     ph = [k for k, b in bios.items() if b.get("born") and b["born"] < "1900"]
     phw = [k for k, b in wb.items() if isinstance(b, list) and len(b) > 1 and b[1] and b[1] < "1900"]
     A.count("identity", "birth_dates", len(bios) + len(wb))
