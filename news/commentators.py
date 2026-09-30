@@ -775,9 +775,15 @@ def load_fixtures(store, ymd, clubs_ar=None):
         a = store.get_json(f"all/{ymd}.json") or {}
     except Exception:
         a = {}
-    rows = a.get("matches") or []
+    rows = list(a.get("matches") or [])
+    for lg in a.get("leagues") if isinstance(a.get("leagues"), list) else []:     # grouped by league: the league is the comp
+        for m in (lg.get("matches") or []) if isinstance(lg, dict) else []:
+            if isinstance(m, dict):
+                rows.append({**m, "comp": m.get("comp") or lg.get("id"), "comp_name_ar": m.get("comp_name_ar") or lg.get("name_ar") or lg.get("ar"),
+                             "comp_name": m.get("comp_name") or lg.get("name")})
     fields = a.get("fields")
-    tm, cm = a.get("teams") or {}, a.get("comps") or a.get("leagues") or {}
+    tm = a.get("teams") or {}
+    cm = a.get("comps") or (a.get("leagues") if isinstance(a.get("leagues"), dict) else None) or {}
     for m in rows:
         if isinstance(m, (list, tuple)) and fields:
             m = dict(zip(fields, m))

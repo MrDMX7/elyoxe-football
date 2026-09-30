@@ -12,7 +12,8 @@
   var $ = function(s){ return document.querySelector(s); };
   function ymdOf(t){ var n = Date.parse(t); return isNaN(n) ? "" : new Date(n + 4 * 3600e3).toISOString().slice(0, 10).replace(/-/g, ""); }   // the files are UAE days
   function uaeYmd(off){ return new Date(Date.now() + 4 * 3600e3 + (off || 0) * 864e5).toISOString().slice(0, 10).replace(/-/g, ""); }
-  function file(ymd){ if (!ymd) return Promise.resolve(null); return FILES[ymd] || (FILES[ymd] = fetch("/v1/tv/" + ymd + ".json", { cache:"no-cache" }).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }).then(function(d){
+  function file(ymd){ if (!ymd || ymd < "20260930") return Promise.resolve(null);   // the first file is 30 September 2026: older days would only 403
+    return FILES[ymd] || (FILES[ymd] = fetch("/v1/tv/" + ymd + ".json", { cache:"no-cache" }).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }).then(function(d){
     if (d && d.matches) Object.keys(d.matches).forEach(function(k){ TV[k] = d.matches[k]; if (d.fixtures && d.fixtures[k]) FX[k] = d.fixtures[k]; }); return d; })); }
   function cc(){ try { var c = localStorage.getItem("tifo.country"); if (c) return c; } catch (e){} try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = (R.COUNTRIES || []).filter(function(c){ return c[2] === tz; })[0]; return hit ? hit[0] : "xx"; } catch (e){ return "xx"; } }
   // the visitor's country first, then the pan-Arab networks (beIN, شاهد…), then the other countries' channels; a named voice before «not announced»
@@ -20,7 +21,6 @@
   function voices(e){ var n = e.commentators && e.commentators.length ? e.commentators : e.commentator ? [e.commentator] : []; return n.map(esc).join(" و"); }
   function lead(es){ var s = sorted(es || []); return s.filter(function(e){ return e.commentator; })[0] || s[0] || null; }
   function done(m){ return m && m.status === "finished"; }
-  function live(m){ return m && (R.isLive ? R.isLive(m) : /live|ht/.test(m.status || "")); }
 
   // ---- styles (v3 tokens, with fallbacks so the block reads right on any skin)
   (function(){ if (document.getElementById("tvcss")) return; var st = document.createElement("style"); st.id = "tvcss";
@@ -89,7 +89,9 @@
         var per = {}, order = [];
         Object.keys((d && d.matches) || {}).forEach(function(mid){ var f = (d.fixtures || {})[mid] || {}; (d.matches[mid] || []).forEach(function(e){
           (e.commentators && e.commentators.length ? e.commentators : e.commentator ? [e.commentator] : []).forEach(function(n){
-            if (!per[n]){ per[n] = []; order.push(n); } per[n].push({ mid:mid, f:f, ch:e.channel }); }); }); });
+            if (!per[n]){ per[n] = []; order.push(n); }
+            var same = per[n].filter(function(x){ return x.mid === mid; })[0];   // one voice on شاهد and MBC Action: one line, both channels
+            if (same) same.ch += "، " + e.channel; else per[n].push({ mid:mid, f:f, ch:e.channel }); }); }); });
         if (!order.length) return "<h2>" + words[i] + "</h2><p class=\"muted\">" + (i ? "جدول بكرة ينزل عادة بعد نص الليل بتوقيت الإمارات." : "ما نزل جدول المعلقين لهاليوم للحين.") + "</p>";
         order.forEach(function(n){ per[n].sort(function(a, b){ return String(a.f.ko).localeCompare(String(b.f.ko)); }); });
         order.sort(function(a, b){ return String(per[a][0].f.ko).localeCompare(String(per[b][0].f.ko)) || a.localeCompare(b, "ar"); });
