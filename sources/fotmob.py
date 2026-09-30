@@ -18,6 +18,7 @@ Traps handled here:
 import re
 from urllib.parse import quote
 
+from compute import goal_how as GH
 from timeutil import parse_utc, parse_fotmob_local, iso, kickoff_pair
 from . import schema as S
 from .base import Source
@@ -476,6 +477,10 @@ class FotMob(Source):
                     base["score"] = {"home": ns[0], "away": ns[1]}
                 gd = e.get("goalDescription")
                 base["detail"] = gd if gd and typ == "goal" else None     # Header, Direct freekick ...
+                if typ in ("goal", "own_goal", "penalty_goal"):
+                    how = GH.describe(e)                                    # {"key", "ar"}: رأسية من ركنية …
+                    if how:
+                        base["how"] = how
             elif t == "Card":
                 card = (e.get("card") or "").lower()
                 typ = "second_yellow" if ("yellowred" in card or "second" in card) else "red" if "red" in card else "yellow"

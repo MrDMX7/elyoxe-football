@@ -306,6 +306,14 @@ def describe_all(raw, ticker=None):
     return out
 
 
+def lined(raw, ticker):
+    """Goal keys of this payload that found their line in the ticker (the others may still get one: Opta writes the
+    line a minute or so after the goal)."""
+    evs = ((((raw or {}).get("content") or {}).get("matchFacts") or {}).get("events") or {}).get("events") or []
+    goals = [e for e in evs if e.get("type") == "Goal" and not e.get("isPenaltyShootoutEvent")]
+    return {goal_key(goals[i]) for i in assign(goals, goal_lines(ticker))} if ticker else set()
+
+
 def needs_ticker(raw):
     """Whether the English ticker can add anything: human commentary (rare techniques), or goals without a shot map."""
     lang = ticker_lang((((raw or {}).get("content") or {}).get("liveticker") or {}).get("langs"))

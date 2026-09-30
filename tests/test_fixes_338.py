@@ -154,12 +154,34 @@ def test_repoll_schedule_and_merge(tmp_path):
     p.repolls()
     assert fetched == [(1, "repoll")]                      # 30' once, not again at 36'
     d2 = _detail(types=("goal", "sub", "half"))
-    full2 = {"events": [dict(e) for e in d2["events"]], "coverage_events": P.coverage_events(d2)}
+    full2 = {"events": [dict(e) for e in d2["events"]], "coverage_events": P.coverage_events(d2),
+             "highlights": {"url": "https://www.youtube.com/watch?v=x", "image": None, "source": "www.youtube.com"}}
     p.plan_repoll(d2, full2, "repoll")
-    assert "1" not in p.st["repoll"]                       # complete now
+    assert "1" not in p.st["repoll"]                       # complete now (events and the highlights video)
     ids = [e["event_id"] for e in full2["events"]]
     assert "1-half-11" in ids and "1-half-12" in ids       # the old event the new copy lacked is kept
     assert next(e for e in full2["events"] if e["event_id"] == "1-goal-10")["first_seen"] == "2026-09-27T17:10:00Z"
+
+
+def test_repoll_waits_for_the_highlights_video(tmp_path):
+    """A full feed without FotMob's highlights link is fetched again after full time; a later copy without the link
+    keeps the one an earlier copy had."""
+    import poller as P
+    p = _poller(tmp_path)
+    t = [datetime(2026, 9, 27, 18, 0, tzinfo=timezone.utc)]
+    p.now_fn = lambda: t[0]
+    d = _detail(types=("goal", "sub", "yellow", "half"))
+    full = {"events": [dict(e) for e in d["events"]], "coverage_events": P.coverage_events(d), "highlights": None}
+    p.plan_repoll(d, full, "final")
+    assert "1" in p.st["repoll"]                           # complete events, no video yet
+    hl = {"url": "https://www.youtube.com/watch?v=abc", "image": "https://i.ytimg.com/vi/abc/maxresdefault.jpg", "source": "www.youtube.com"}
+    p.store.put_json("match/1.json", dict(full, highlights=hl))
+    again = {"events": [dict(e) for e in d["events"]], "coverage_events": P.coverage_events(d), "highlights": None}
+    p.plan_repoll(d, again, "repoll")
+    assert again["highlights"] == hl and "1" not in p.st["repoll"]
+    full_hl = dict(full, highlights=hl)
+    p.plan_repoll(d, full_hl, "final")
+    assert "1" not in p.st["repoll"]                       # video already there: no re-poll
 
 
 def test_live_watchdog_once_per_match(tmp_path):

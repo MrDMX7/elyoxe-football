@@ -131,6 +131,63 @@ def test_needs_ticker():
     assert GH.ticker_url(5181791, "en") == "https://data.fotmob.com/webcl/ltc/gsm/5181791_en.json.gz"
 
 
+def test_poller_reads_the_ticker_once_and_keeps_it(tmp_path, fx, monkeypatch):
+    """UAE league match (no shot map): the match file's goals get the ticker's reading; the ticker is asked once, not on
+    every 20-second fetch, and again only while a goal still lacks its line (2 min apart)."""
+    from datetime import datetime, timedelta, timezone
+    import poller as P
+    from store import Store, LocalBackend
+    raw = fx("fotmob_match_uae_5898782.json")
+    raw["content"]["liveticker"] = {"langs": "de_gen,en_gen", "teams": ["Al-Nasr SC", "Kalba FC"]}
+    ticker = {"AutoCommentaries": True, "Events": [
+        {"IncidentCode": "G", "Elapsed": 7, "ElapsedPlus": -1, "Description": "Goal! Al Nasr 0, Kalba 1. Nemanja Jovic (Kalba) header from the centre of the box to the bottom left corner. Assisted by X with a cross following a corner."},
+        {"IncidentCode": "PSG", "Elapsed": 20, "ElapsedPlus": -1, "Description": "Goal! Al Nasr 0, Kalba 2. Saman Ghoddos (Kalba) converts the penalty with a left footed shot to the bottom right corner."},
+        {"IncidentCode": "G", "Elapsed": 65, "ElapsedPlus": -1, "Description": "Goal! Al Nasr 1, Kalba 2. Abdoulaye Touré (Al Nasr) right footed shot from outside the box to the top left corner."}]}
+    asked = []
+
+    def get_json(url, headers=None, min_ttl=0):
+        asked.append(url)
+        return json.loads(json.dumps(ticker))
+    monkeypatch.setattr(P.HTTP, "get_json", get_json)
+    p = P.Poller(Store(LocalBackend(tmp_path)))
+    p.load()
+    t = [datetime(2026, 9, 27, 20, 0, tzinfo=timezone.utc)]
+    p.now_fn = lambda: t[0]
+    p.fm.match_raw = lambda mid: json.loads(json.dumps(raw))
+    p.fetch_detail(5898782, "final")
+    ev = {GH.goal_key(e): e for e in p.store.get_json("match/5898782.json")["events"] if "goal" in e["type"]}
+    assert ev["7-1229101"]["how"] == {"key": "header+corner", "ar": "رأسية من ركنية"}
+    assert ev["64-1441638"]["how"]["key"] == "right_foot+outside"       # FotMob 64', Opta 65'
+    assert ev["20-532220"]["how"]["key"] == "penalty"
+    assert "how" not in ev["77-581132"] or ev["77-581132"]["how"]["key"] == "penalty"
+    assert asked == [GH.ticker_url(5898782, "en_gen")]
+    p.fetch_detail(5898782, "repoll")                                    # 77' still has no line, but within 2 min
+    assert len(asked) == 1
+    t[0] += timedelta(minutes=3)
+    p.fetch_detail(5898782, "repoll")
+    assert len(asked) == 2                                              # asked again for the missing line
+    ev = {GH.goal_key(e): e for e in p.store.get_json("match/5898782.json")["events"] if "goal" in e["type"]}
+    assert ev["7-1229101"]["how"]["ar"] == "رأسية من ركنية"               # kept across fetches
+    for _ in range(8):
+        t[0] += timedelta(minutes=3)
+        p.fetch_detail(5898782, "repoll")
+    assert len(asked) == 6                                              # gives up after 6 tries
+
+
+def test_matchx_goal_rows_append_the_label(fx):
+    """db/matches.py: goal arrays keep their 7 fields and append [how_ar, how_key] when known (backward compatible);
+    goals FotMob does not describe take the poller's ticker reading from v1/match/<id>.json."""
+    from db import matches as MXS
+    g = [e for e in MXS.compact(fx("fotmob_match_pl_xg.json"), 1)["events"] if e[1] == "g"]
+    assert g[0][:7] == [63, "g", "h", 847983, "Lisandro Martínez", None, "own"] and g[0][7:] == ["هدف عكسي", "own_goal"]
+    assert g[1][6] is None and g[1][8] == "right_foot+long"
+    m = MXS.compact(fx("fotmob_match_uae_5898782.json"), 5898782)
+    assert [len(e) for e in m["events"] if e[1] == "g"] == [7, 9, 7, 9]      # UAE league: only the penalties are known
+    doc = {"events": [{"type": "goal", "minute": 7, "added": None, "player": {"id": 1229101}, "how": {"key": "header+corner", "ar": "رأسية من ركنية"}}]}
+    g = [e for e in MXS.fill_how(m, doc)["events"] if e[1] == "g"]
+    assert g[0][7:] == ["رأسية من ركنية", "header+corner"] and len(g[2]) == 7
+
+
 def test_cards_copy_is_identical():
     """saas/cards vendors this module for /api/tifo/match; when the cards repo sits next to this one, the copy must match."""
     here = os.path.join(os.path.dirname(HERE), "compute", "goal_how.py")

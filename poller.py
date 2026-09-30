@@ -30,8 +30,10 @@ from compute import insights as IN  # noqa: E402
 import config  # noqa: E402
 from compute import winprob as WP  # noqa: E402
 from compute import ics as ICS, magic as MAGIC, prayer as PRAYER, season as SEASON, weather as WEATHER  # noqa: E402
+from compute import allday as ALL, goal_how as GH  # noqa: E402
 from compute.venues import Venues  # noqa: E402
 from sources import schema as S  # noqa: E402
+from sources import s365 as S365  # noqa: E402
 from sources.fotmob import FotMob  # noqa: E402
 from sources.http import Http, FetchError  # noqa: E402
 from sources.uaepl import UaePL  # noqa: E402
@@ -66,9 +68,11 @@ class Poller:
         self.comps = config.competitions()
         self.comp_ids = {c["id"] for c in self.comps}
         self.comp_by_id = {c["id"]: c for c in self.comps}
+        self.comp_order = {c["id"]: i for i, c in enumerate(self.comps)}
         self.venues = Venues()
         self.probs_comps = set(self.cfg.get("history_comps", [])) | set(AN.R.UAE_CLUB_COMPS)
         self.log = []
+        self.all_at = {}              # ymd -> clock() of this run's last v1/all/<ymd>.json write
         self.requests_before = HTTP.network_calls
         self.calls_before = dict(HTTP.calls)
         self.ok_before, self.failed_before = dict(HTTP.ok), dict(HTTP.failed)
@@ -285,6 +289,10 @@ class Poller:
         self.store.put_json(f"day/{ymd}.json", {"date": ymd, "tz": "Asia/Dubai", "generated": iso(self.now()),
                                                   "matches": out, "source": self.fm.name}, cache=kind)
         self.store.ok(f"day:{'today' if kind == 'hot' else 'other'}")
+        try:
+            self.write_all(ymd, raw)                 # every match of the day, from the same request
+        except Exception as e:                       # the all-matches feed must never cost the tracked day file
+            self.store.fail("all:" + ("today" if ymd == uae_date(self.now()) else "other"), f"{type(e).__name__}: {e}")
         return out
 
     def write_live(self, today):
@@ -300,14 +308,123 @@ class Poller:
                                           "matches": keep}, cache="live", heartbeat=True)
         self.st["live_written_at"] = iso(now)
 
+    # ------------------------------------------------------------------ how each goal was scored (compute/goal_how.py)
+    def goal_how(self, d, raw):
+        """sources/fotmob.py already describes each goal from its event and shot; the English live ticker fills in what
+        they lack (no shot map: the UAE leagues and every "ratings" coverage league; human commentary: volleys, bicycle
+        kicks…). One ticker request per match at most every 2 min while a goal still has no ticker line, 6 tries per goal
+        count; the descriptions are kept in state (ltc) so every later fetch of the match reuses them."""
+        goals = [e for e in d.get("events") or [] if e.get("type") in ("goal", "own_goal", "penalty_goal")]
+        if not goals:
+            return
+        now, mid = self.now(), str(d["id"])
+        cache = self.st.setdefault("ltc", {})
+        for k in [k for k, v in cache.items() if _age_min(v.get("at"), now) > 2 * 1440]:
+            del cache[k]
+        c = dict(cache.get(mid) or {})
+        keys = [GH.goal_key(e) for e in goals]
+        if c.get("n") != len(keys):
+            c["tries"] = 0                                  # a new goal: its line gets its own tries
+        lang = GH.needs_ticker(raw)
+        missing = [k for k in keys if k not in (c.get("lines") or [])]
+        if lang and missing and c.get("tries", 0) < 6 and _age_min(c.get("at"), now) >= 2 and self.has_time(6):
+            try:
+                t = HTTP.get_json(GH.ticker_url(d["id"], lang), min_ttl=60)
+                how = GH.describe_all(raw, t)
+                lines = sorted(GH.lined(raw, t))
+                c.update({"how": {**(c.get("how") or {}), **how}, "lines": lines, "lang": lang})
+                self.store.ok("ticker")
+            except CONVERT_ERRORS as e:
+                self.store.fail("ticker", f"{mid}: {e}")
+            c.update({"at": iso(now), "n": len(keys), "tries": c.get("tries", 0) + 1})
+            cache[mid] = c
+        known, lined = c.get("how") or {}, set(c.get("lines") or [])
+        for e, k in zip(goals, keys):
+            if known.get(k) and (k in lined or not e.get("how")):   # the ticker's reading, else the event/shot one as is
+                e["how"] = known[k]
+
+    # ------------------------------------------------------------------ every match of the day (v1/all, compute/allday.py)
+    def s365_comps(self):
+        c = self.aux("all365")
+        ent = c.get("_comps") or {}
+        if _age_min(ent.get("at"), self.now()) >= 1440:
+            try:
+                ent = {"at": iso(self.now()), "ids": S365.comps_from_index(self.store.get_json("s365/index.json"))}
+            except Exception as e:
+                self.store.fail("s365:comps", f"{type(e).__name__}: {e}")
+                ent = {"at": iso(self.now()), "ids": list(S365.DEFAULT_COMPS)}
+            c["_comps"] = ent
+        return ent.get("ids") or list(S365.DEFAULT_COMPS)
+
+    def s365_day(self, ymd):
+        """The Arab leagues FotMob lacks, from 365Scores (sources/s365.py), kept per day in state/all365.json: today every
+        2 min while one of their matches is live or about to start, else every 30 min; other days every 3 h. A failed
+        fetch keeps the last good leagues."""
+        c = self.aux("all365")
+        now = self.now()
+        today = uae_date(now)
+        for k in [k for k in c if not k.startswith("_") and k < uae_date(now - timedelta(days=2))]:
+            del c[k]
+        ent = c.get(ymd) or {}
+        every = (2 if ent.get("hot") else 30) if ymd == today else 180
+        if _age_min(ent.get("at"), now) >= every and self.has_time(8):
+            ent = dict(ent, at=iso(now))
+            try:
+                lg = S365.leagues(S365.fetch_day(HTTP, self.s365_comps(), ymd))
+                ent.update(leagues=lg, hot=ALL.hot({"leagues": lg}, now, ahead_min=15))
+                self.store.ok("s365:day")
+            except CONVERT_ERRORS as e:
+                self.store.fail("s365:day", f"{ymd}: {e}")
+            c[ymd] = ent
+        return json.loads(json.dumps(ent.get("leagues") or []))      # build() sorts and trims: never the cached copy
+
+    def write_all(self, ymd, raw):
+        """v1/all/<ymd>.json from the day list already fetched for day/<ymd>.json (no extra FotMob request), and, for
+        today and yesterday, v1/all/live.json (the live rows only, for 30-second polling)."""
+        now = self.now()
+        doc = ALL.build(ymd, raw, self.names, self.comp_ids, self.comp_order, ARAB_NATIONAL, self.s365_day(ymd), now)
+        if not doc["n"]:
+            raise S.Invalid(f"all {ymd}: no matches")
+        today, yday = uae_date(now), uae_date(now - timedelta(days=1))
+        self.store.put_json(f"all/{ymd}.json", doc, cache="hot" if ymd >= yday else "warm")
+        self.store.ok("all:" + ("today" if ymd == today else "other"))
+        self.all_at[ymd] = self.clock()
+        live = self.aux("all_live")
+        for k in [k for k in live if k < yday]:
+            del live[k]
+        if ymd >= yday:
+            live[ymd] = {"at": iso(now), "hot": ALL.hot(doc, now), "rows": ALL.live_rows(doc, now)}
+            rows = [r for k in sorted(live) for r in live[k]["rows"]]
+            self.store.put_json("all/live.json", {"generated": iso(now), "live": sum(r["status"] in S.LIVE_STATUSES for r in rows),
+                                                  "days": sorted(live), "matches": rows}, cache="live")
+        return doc
+
+    def all_hot(self, ymd):
+        v = self.aux("all_live").get(ymd) or {}
+        return bool(v.get("hot")) and _age_min(v.get("at"), self.now()) < 180
+
+    def refresh_all(self, ymd):
+        try:
+            raw = self.fm.day_raw(ymd)
+            if not raw.get("leagues"):
+                raise S.Invalid(f"scoreboard {ymd} is empty")
+            self.write_all(ymd, raw)
+        except CONVERT_ERRORS as e:
+            self.store.fail("all:" + ("today" if ymd == uae_date(self.now()) else "other"), e)
+
     def fetch_detail(self, mid, why):
         try:
-            d = self.fm.match(mid)
+            raw = self.fm.match_raw(mid)
+            d = self.fm.match_from_raw(raw)
             S.validate_detail(d)
         except CONVERT_ERRORS as e:
             self.store.fail(f"match:{why}", f"{mid}: {e}")
             return None
         mid = d["id"]
+        try:
+            self.goal_how(d, raw)
+        except Exception as e:               # a ticker problem must never cost the match file
+            self.store.fail("ticker", f"{mid}: {type(e).__name__}: {e}")
         self.st.setdefault("detail_at", {})[str(mid)] = iso(self.now())
         if d.get("venue"):
             self.st.setdefault("venue_fm", {})[str(mid)] = {k: d["venue"].get(k) for k in ("name", "city", "lat", "lon")}
@@ -400,13 +517,18 @@ class Poller:
 
     # ------------------------------------------------------------------ thin-coverage re-polls after full time
     def plan_repoll(self, d, full, why):
-        """Finished match whose feed lacks subs or cards: fetch it again REPOLL_MINUTES after full time (FotMob
-        sometimes fills events in later), and keep any event an earlier copy had that the new one lacks."""
+        """Finished match whose feed lacks subs or cards, or has no highlights video yet: fetch it again REPOLL_MINUTES
+        after full time (FotMob sometimes fills events in later, and links the official highlights a while after the
+        whistle), and keep any event, or highlights link, an earlier copy had that the new one lacks."""
         mid = str(d["id"])
         rp = self.st.setdefault("repoll", {})
         cov = full["coverage_events"]
+        want = not (cov["subs"] and cov["cards"]) or not full.get("highlights")
         if why == "repoll":
             prev = self.store.get_json(f"match/{mid}.json") or {}
+            if not full.get("highlights") and prev.get("highlights"):
+                full["highlights"] = prev["highlights"]
+                want = not (cov["subs"] and cov["cards"])
             seen = {e.get("event_id"): e.get("first_seen") for e in prev.get("events") or [] if e.get("first_seen")}
             for e in full.get("events") or []:
                 if e.get("event_id") in seen:
@@ -418,10 +540,12 @@ class Poller:
             new = len(have - {e.get("event_id") for e in prev.get("events") or []})
             if new:
                 self.note(f"repoll {mid}: {new} new events from the source")
-            if cov["subs"] and cov["cards"]:
+            if full.get("highlights") and not prev.get("highlights"):
+                self.note(f"repoll {mid}: highlights video linked")
+            if not want:
                 rp.pop(mid, None)           # the feed is complete now
             return
-        if mid in rp or cov["subs"] and cov["cards"]:
+        if mid in rp or not want:
             return
         ended = ((d.get("periods") or {}).get("gameEnded")) or iso(self.now())
         if _age_min(ended, self.now()) <= 6 * 60:          # only matches that just ended, not the backfill
@@ -1098,6 +1222,8 @@ class Poller:
             "schema": S.SCHEMA_VERSION, "generated": iso(self.now()), "competitions": comps,
             "focus_teams": config.focus_teams(), "live_now": len(self.st.get("live_ids", [])),
             "files": {"live": "live.json", "day": "day/YYYYMMDD.json (UAE date)", "match": "match/{id}.json",
+                      "all": ["all/YYYYMMDD.json (every match of the UAE day: FotMob's whole list + 365Scores' Arab leagues, "
+                              "yesterday/today/tomorrow)", "all/live.json (their live rows, for 30-second polling)"],
                       "team": "team/{id}.json, team/{id}.ics", "teams": "teams.json", "health": "health.json",
                       "national": ["national/5789/qualifying.json", "national/uae-abroad.json", "national/5789/fifa.json"],
                       "h2h": "h2h/index.json", "health_analytics": "health-analytics.json",
@@ -1134,6 +1260,10 @@ class Poller:
                 self.mark("day_today")
             except CONVERT_ERRORS as e:
                 self.store.fail("day:today", e)
+        # v1/all: while any match of the day is live or about to kick off (ours or not), its list every minute
+        for ymd in (uae_date(now), uae_date(now - timedelta(days=1))):
+            if self.has_time(8) and self.all_hot(ymd) and self.clock() - self.all_at.get(ymd, -1e9) > 45:
+                self.refresh_all(ymd)
         for off, key in ((1, "day_tomorrow"), (-1, "day_yesterday")):
             if self.due(key, 60) and self.has_time(8):
                 try:

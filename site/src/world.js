@@ -210,7 +210,8 @@
         var EV = { g:"هدف", y:"إنذار", r:"طرد", s:"تبديل" };
         if ((m.events || []).length) html += '<section class="blk"><h2>أحداث المباراة</h2><ul class="mlist wev">' + m.events.map(function(e){
           var who = e[3] ? '<a href="' + playerUrl(e[3]) + '">' + esc(e[4] || "") + "</a>" : esc(e[4] || "");
-          var extra = e[1] === "g" ? (e[6] === "pen" ? " (جزاء)" : e[6] === "own" ? " (عكسي)" : "") + (e[5] ? " · صناعة " + '<a href="' + playerUrl(e[5]) + '">←</a>' : "") : e[1] === "s" ? " بدال " + esc(e[6] || "") : "";
+          // goals fetched from 2026-09-30 on carry how they were scored (e[7], compute/goal_how.py): «رأسية من ركنية»
+          var extra = e[1] === "g" ? (e[6] === "pen" ? " (جزاء)" : e[6] === "own" ? " (عكسي)" : e[7] ? ' <span class="how">' + esc(e[7]) + "</span>" : "") + (e[5] ? " · صناعة " + '<a href="' + playerUrl(e[5]) + '">←</a>' : "") : e[1] === "s" ? " بدال " + esc(e[6] || "") : "";
           return '<li class="' + e[2] + '"><span class="num">' + e[0] + '′</span> <span class="ev ' + e[1] + '">' + (EV[e[1]] || "") + "</span> " + who + extra + ' <span class="muted small">' + esc(e[2] === "h" ? hn : an) + "</span></li>"; }).join("") + "</ul></section>";
         var L = m.lineups || {};
         if (L.h || L.a) html += '<section class="blk"><h2>التشكيلة</h2><div class="hbig">' + ["h", "a"].map(function(s){ var t = L[s]; if (!t) return "<div></div>";

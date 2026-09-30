@@ -1,0 +1,859 @@
+{
+"note": "365Scores /web/games/ payloads (langId=27), trimmed: arab_20260919 = the Arab leagues FotMob lacks on 19/09/2026; postponed_20260830 = Yemen/Oman with «تأجلت»; mixed_20260930 = live, scheduled and finished games of other countries (captured ~22:30 UAE)",
+"arab_20260919": {
+"competitions": [
+{
+"id": 565,
+"name": "الدوري الأردني",
+"countryId": 119
+},
+{
+"id": 5524,
+"name": "كأس لبنان",
+"countryId": 123
+}
+],
+"countries": [
+{
+"id": 119,
+"name": "الأردن"
+},
+{
+"id": 123,
+"name": "لبنان"
+}
+],
+"games": [
+{
+"id": 4829722,
+"competitionId": 5524,
+"startTime": "2026-09-19T16:30:00+04:00",
+"statusGroup": 4,
+"statusText": "انتهت",
+"shortStatusText": "انتهت",
+"gameTime": 90.0,
+"gameTimeDisplay": "",
+"groupName": "المجموعة أ",
+"roundNum": 3,
+"homeCompetitor": {
+"id": 8288,
+"name": "الأنصار",
+"score": 2.0,
+"countryId": 123
+},
+"awayCompetitor": {
+"id": 8292,
+"name": "المبرة",
+"score": 0.0,
+"countryId": 123
+}
+},
+{
+"id": 4829724,
+"competitionId": 5524,
+"startTime": "2026-09-19T16:30:00+04:00",
+"statusGroup": 4,
+"statusText": "انتهت",
+"shortStatusText": "انتهت",
+"gameTime": 90.0,
+"gameTimeDisplay": "",
+"groupName": "المجموعة د",
+"roundNum": 3,
+"homeCompetitor": {
+"id": 8287,
+"name": "العهد",
+"score": 0.0,
+"countryId": 123
+},
+"awayCompetitor": {
+"id": 8294,
+"name": "شباب الساحل",
+"score": 1.0,
+"countryId": 123
+}
+},
+{
+"id": 4844601,
+"competitionId": 5524,
+"startTime": "2026-09-19T16:30:00+04:00",
+"statusGroup": 4,
+"statusText": "انتهت",
+"shortStatusText": "انتهت",
+"gameTime": 90.0,
+"gameTimeDisplay": "",
+"groupName": "المجموعة أ",
+"roundNum": 3,
+"homeCompetitor": {
+"id": 57092,
+"name": "برج",
+"score": 0.0,
+"countryId": 123
+},
+"awayCompetitor": {
+"id": 14923,
+"name": "السلام زغرتا",
+"score": 1.0,
+"countryId": 123
+}
+},
+{
+"id": 4845449,
+"competitionId": 5524,
+"startTime": "2026-09-19T19:00:00+04:00",
+"statusGroup": 4,
+"statusText": "انتهت",
+"shortStatusText": "انتهت",
+"gameTime": 90.0,
+"gameTimeDisplay": "",
+"groupName": "المجموعة ب",
+"roundNum": 3,
+"homeCompetitor": {
+"id": 8296,
+"name": "التضامن صور",
+"score": 2.0,
+"countryId": 123
+},
+"awayCompetitor": {
+"id": 97427,
+"name": "الرسالة طورا",
+"score": 1.0,
+"countryId": 123
+}
+},
+{
+"id": 4828355,
+"competitionId": 565,
+"startTime": "2026-09-19T20:00:00+04:00",
+"statusGroup": 4,
+"statusText": "انتهت",
+"shortStatusText": "انتهت",
+"gameTime": 90.0,
+"gameTimeDisplay": "",
+"roundNum": 3,
+"homeCompetitor": {
+"id": 8277,
+"name": "شباب الأردن",
+"score": 3.0,
+"countryId": 119
+},
+"awayCompetitor": {
+"id": 8285,
+"name": "الحسين إربد",
+"score": 3.0,
+"countryId": 119
+}
+},
+{
+"id": 4829721,
+"competitionId": 5524,
+"startTime": "2026-09-19T21:30:00+04:00",
+"statusGroup": 4,
+"statusText": "انتهت",
+"shortStatusText": "انتهت",
+"gameTime": 90.0,
+"gameTimeDisplay": "",
+"groupName": "المجموعة ب",
+"roundNum": 3,
+"homeCompetitor": {
+"id": 90323,
+"name": "جويا الرياضي",
+"score": 2.0,
+"countryId": 123
+},
+"awayCompetitor": {
+"id": 27420,
+"name": "الحكمة",
+"score": 1.0,
+"countryId": 123
+}
+}
+]
+},
+"postponed_20260830": {
+"competitions": [
+{
+"id": 5478,
+"name": "الدوري اليمني",
+"countryId": 170
+},
+{
+"id": 5480,
+"name": "الدوري العماني",
+"countryId": 117
+}
+],
+"countries": [
+{
+"id": 170,
+"name": "اليمن"
+},
+{
+"id": 117,
+"name": "عمان"
+}
+],
+"games": [
+{
+"id": 4710374,
+"competitionId": 5478,
+"startTime": "2026-08-30T17:00:00+04:00",
+"statusGroup": 4,
+"statusText": "تأجلت",
+"shortStatusText": "تأجلت",
+"gameTime": -1.0,
+"gameTimeDisplay": "",
+"roundNum": 13,
+"homeCompetitor": {
+"id": 11491,
+"name": "وحدة صنعاء",
+"score": -1.0,
+"countryId": 170
+},
+"awayCompetitor": {
+"id": 21867,
+"name": "فحمان",
+"score": -1.0,
+"countryId": 170
+}
+},
+{
+"id": 4816225,
+"competitionId": 5480,
+"startTime": "2026-08-30T17:55:00+04:00",
+"statusGroup": 4,
+"statusText": "انتهت",
+"shortStatusText": "انتهت",
+"gameTime": 90.0,
+"gameTimeDisplay": "",
+"roundNum": 1,
+"homeCompetitor": {
+"id": 12184,
+"name": "النهضة",
+"score": 1.0,
+"countryId": 117
+},
+"awayCompetitor": {
+"id": 12180,
+"name": "المصنعة",
+"score": 0.0,
+"countryId": 117
+}
+},
+{
+"id": 4816226,
+"competitionId": 5480,
+"startTime": "2026-08-30T19:05:00+04:00",
+"statusGroup": 4,
+"statusText": "انتهت",
+"shortStatusText": "انتهت",
+"gameTime": 90.0,
+"gameTimeDisplay": "",
+"roundNum": 1,
+"homeCompetitor": {
+"id": 11577,
+"name": "النصر العماني",
+"score": 2.0,
+"countryId": 117
+},
+"awayCompetitor": {
+"id": 12187,
+"name": "فنجاء",
+"score": 0.0,
+"countryId": 117
+}
+},
+{
+"id": 4814345,
+"competitionId": 5480,
+"startTime": "2026-08-30T20:15:00+04:00",
+"statusGroup": 4,
+"statusText": "انتهت",
+"shortStatusText": "انتهت",
+"gameTime": 90.0,
+"gameTimeDisplay": "",
+"roundNum": 1,
+"homeCompetitor": {
+"id": 16999,
+"name": "بهلاء",
+"score": 1.0,
+"countryId": 117
+},
+"awayCompetitor": {
+"id": 12181,
+"name": "السيب",
+"score": 3.0,
+"countryId": 117
+}
+}
+]
+},
+"mixed_20260930": {
+"competitions": [
+{
+"id": 620,
+"name": "الدرجة الأولى",
+"countryId": 109
+},
+{
+"id": 6225,
+"name": "دوري أبطال أوروبا للسيدات ",
+"countryId": 19
+},
+{
+"id": 7165,
+"name": "دوري أمم الكونكاكاف",
+"countryId": 47
+},
+{
+"id": 322,
+"name": "تصفيات كأس أوروبا U21",
+"countryId": 19
+},
+{
+"id": 5668,
+"name": "الدوري البلغاري - الدرجة الثانية",
+"countryId": 40
+},
+{
+"id": 8248,
+"name": "Division 3",
+"countryId": 6
+},
+{
+"id": 8241,
+"name": "APF Primera B",
+"countryId": 108
+}
+],
+"countries": [
+{
+"id": 171,
+"name": "آسيا"
+},
+{
+"id": 44,
+"name": "أفريقيا"
+},
+{
+"id": 4,
+"name": "ألمانيا"
+},
+{
+"id": 19,
+"name": "أوروبا"
+},
+{
+"id": 111,
+"name": "أوروغواي"
+},
+{
+"id": 2,
+"name": "إسبانيا"
+},
+{
+"id": 1,
+"name": "إنجلترا"
+},
+{
+"id": 10,
+"name": "الأرجنتين"
+},
+{
+"id": 21,
+"name": "البرازيل"
+},
+{
+"id": 147,
+"name": "السلفادور"
+},
+{
+"id": 27,
+"name": "النرويج"
+},
+{
+"id": 108,
+"name": "باراغواي"
+},
+{
+"id": 40,
+"name": "بلغاريا"
+},
+{
+"id": 113,
+"name": "بوليفيا"
+},
+{
+"id": 112,
+"name": "بيرو"
+},
+{
+"id": 28,
+"name": "تشيلي"
+},
+{
+"id": 22,
+"name": "جمهورية التشيك"
+},
+{
+"id": 54,
+"name": "دولي"
+},
+{
+"id": 47,
+"name": "شمال امريكا"
+},
+{
+"id": 65,
+"name": "غانا"
+},
+{
+"id": 140,
+"name": "غواتيمالا"
+},
+{
+"id": 110,
+"name": "فنزويلا"
+},
+{
+"id": 109,
+"name": "كولومبيا"
+},
+{
+"id": 84,
+"name": "مونتينيغرو"
+},
+{
+"id": 83,
+"name": "نيجيريا"
+},
+{
+"id": 6,
+"name": "اسرائيل"
+},
+{
+"id": 374,
+"name": "U.S. Virgin Islands"
+},
+{
+"id": 186,
+"name": "الباهاما"
+},
+{
+"id": 376,
+"name": "French Guiana"
+},
+{
+"id": 250,
+"name": "سانت مارتن"
+},
+{
+"id": 234,
+"name": "أنغيلا"
+},
+{
+"id": 252,
+"name": "أروبا"
+},
+{
+"id": 18,
+"name": "الولايات المتحدة"
+},
+{
+"id": 31,
+"name": "المكسيك"
+},
+{
+"id": 195,
+"name": "بليز"
+},
+{
+"id": 233,
+"name": "سانت فنسنت وجزر غرينادين"
+},
+{
+"id": 228,
+"name": "بابوا غينيا الجديدة"
+},
+{
+"id": 211,
+"name": "جزر سليمان"
+},
+{
+"id": 86,
+"name": "كوريا الجنوبية"
+},
+{
+"id": 35,
+"name": "الصين"
+},
+{
+"id": 61,
+"name": "فيجي"
+},
+{
+"id": 266,
+"name": "كاليدونيا الجديدة"
+},
+{
+"id": 131,
+"name": "مصر"
+},
+{
+"id": 8,
+"name": "اسكتلندا"
+},
+{
+"id": 26,
+"name": "أوكرانيا"
+},
+{
+"id": 25,
+"name": "فنلندا"
+},
+{
+"id": 9,
+"name": "أيرلندا"
+},
+{
+"id": 38,
+"name": "كرواتيا"
+},
+{
+"id": 30,
+"name": "المجر"
+},
+{
+"id": 121,
+"name": "أوزبكستان"
+},
+{
+"id": 34,
+"name": "اليابان"
+},
+{
+"id": 20,
+"name": "النمسا"
+},
+{
+"id": 23,
+"name": "الدنمارك"
+},
+{
+"id": 193,
+"name": "سيشيل"
+},
+{
+"id": 156,
+"name": "سيريلانكا"
+},
+{
+"id": 76,
+"name": "ألبانيا"
+},
+{
+"id": 42,
+"name": "ليتوانيا"
+},
+{
+"id": 33,
+"name": "سلوفاكيا"
+},
+{
+"id": 13,
+"name": "اليونان"
+},
+{
+"id": 56,
+"name": "مقدونيا الشمالية"
+},
+{
+"id": 12,
+"name": "تركيا"
+},
+{
+"id": 14,
+"name": "روسيا"
+},
+{
+"id": 126,
+"name": "الكويت"
+},
+{
+"id": 106,
+"name": "جزر الفارو"
+},
+{
+"id": 92,
+"name": "لوكسمبورج"
+},
+{
+"id": 37,
+"name": "بولندا"
+},
+{
+"id": 24,
+"name": "السويد"
+},
+{
+"id": 29,
+"name": "رومانيا"
+},
+{
+"id": 93,
+"name": "مالطا"
+},
+{
+"id": 68,
+"name": "إريتريا"
+},
+{
+"id": 134,
+"name": "جنوب أفريقيا"
+},
+{
+"id": 103,
+"name": "أندورا"
+},
+{
+"id": 32,
+"name": "أيسلندا"
+},
+{
+"id": 11,
+"name": "البرتغال"
+},
+{
+"id": 7,
+"name": "هولندا"
+},
+{
+"id": 5,
+"name": "فرنسا"
+},
+{
+"id": 3,
+"name": "إيطاليا"
+},
+{
+"id": 205,
+"name": "كوسوفو"
+},
+{
+"id": 39,
+"name": "قبرص"
+},
+{
+"id": 116,
+"name": "البحرين"
+},
+{
+"id": 170,
+"name": "اليمن"
+},
+{
+"id": 124,
+"name": "الإمارات"
+},
+{
+"id": 115,
+"name": "قطر"
+},
+{
+"id": 77,
+"name": "أذربيجان"
+},
+{
+"id": 209,
+"name": "جبل طارق"
+}
+],
+"games": [
+{
+"id": 4847198,
+"competitionId": 6225,
+"startTime": "2026-09-30T20:45:00+04:00",
+"statusGroup": 3,
+"statusText": "الشوط الثاني",
+"shortStatusText": "2",
+"gameTime": 96.0,
+"gameTimeDisplay": "90+5'",
+"roundNum": 2,
+"homeCompetitor": {
+"id": 68877,
+"name": "Hacken (W)",
+"score": 0.0,
+"countryId": 24
+},
+"awayCompetitor": {
+"id": 49802,
+"name": "يوفنتوس - سيدات",
+"score": 3.0,
+"countryId": 3
+}
+},
+{
+"id": 4848020,
+"competitionId": 8248,
+"startTime": "2026-09-30T20:50:00+04:00",
+"statusGroup": 3,
+"statusText": "الشوط الثاني",
+"shortStatusText": "2",
+"gameTime": 90.0,
+"gameTimeDisplay": "90'",
+"roundNum": 5,
+"homeCompetitor": {
+"id": 22410,
+"name": "بيتار نورديا القدس",
+"score": 0.0,
+"countryId": 6
+},
+"awayCompetitor": {
+"id": 627,
+"name": "هبوعيل الخضيرة",
+"score": 4.0,
+"countryId": 6
+}
+},
+{
+"id": 4848018,
+"competitionId": 8248,
+"startTime": "2026-09-30T20:55:00+04:00",
+"statusGroup": 3,
+"statusText": "الشوط الثاني",
+"shortStatusText": "2",
+"gameTime": 86.0,
+"gameTimeDisplay": "86'",
+"roundNum": 5,
+"homeCompetitor": {
+"id": 582,
+"name": "هبوعيل نوف هجاليل",
+"score": 2.0,
+"countryId": 6
+},
+"awayCompetitor": {
+"id": 22474,
+"name": "شباب طمرة",
+"score": 3.0,
+"countryId": 6
+}
+},
+{
+"id": 4376576,
+"competitionId": 322,
+"startTime": "2026-09-30T21:00:00+04:00",
+"statusGroup": 3,
+"statusText": "الشوط الثاني",
+"shortStatusText": "2",
+"gameTime": 80.0,
+"gameTimeDisplay": "80'",
+"roundNum": 11,
+"homeCompetitor": {
+"id": 47808,
+"name": "Kosovo U21",
+"score": 2.0,
+"countryId": 205
+},
+"awayCompetitor": {
+"id": 5157,
+"name": "Cyprus U21",
+"score": 1.0,
+"countryId": 39
+}
+},
+{
+"id": 4867642,
+"competitionId": 5668,
+"startTime": "2026-09-30T21:00:00+04:00",
+"statusGroup": 2,
+"statusText": "نتيجة نهائية فقط",
+"shortStatusText": "ن. نهائية",
+"gameTime": -1.0,
+"gameTimeDisplay": "",
+"roundNum": 11,
+"homeCompetitor": {
+"id": 25221,
+"name": "Ludogorets II",
+"score": -1.0,
+"countryId": 40
+},
+"awayCompetitor": {
+"id": 9777,
+"name": "إيتار",
+"score": -1.0,
+"countryId": 40
+}
+},
+{
+"id": 4861916,
+"competitionId": 8241,
+"startTime": "2026-09-30T22:00:00+04:00",
+"statusGroup": 2,
+"statusText": "نتيجة نهائية فقط",
+"shortStatusText": "ن. نهائية",
+"gameTime": -1.0,
+"gameTimeDisplay": "",
+"homeCompetitor": {
+"id": 68722,
+"name": "3 de Febrero F.B.C.",
+"score": -1.0,
+"countryId": 108
+},
+"awayCompetitor": {
+"id": 53441,
+"name": "Sportivo Limpeño",
+"score": -1.0,
+"countryId": 108
+}
+},
+{
+"id": 4789179,
+"competitionId": 7165,
+"startTime": "2026-09-30T00:00:00+04:00",
+"statusGroup": 4,
+"statusText": "انتهت",
+"shortStatusText": "انتهت",
+"gameTime": 90.0,
+"gameTimeDisplay": "",
+"groupName": "دوري ج - بيت 3",
+"roundNum": 2,
+"homeCompetitor": {
+"id": 29877,
+"name": "جزر العذراء الأمريكية",
+"score": 3.0,
+"countryId": 374
+},
+"awayCompetitor": {
+"id": 5609,
+"name": "جزر البهاما",
+"score": 1.0,
+"countryId": 186
+}
+},
+{
+"id": 4732068,
+"competitionId": 620,
+"startTime": "2026-09-30T00:30:00+04:00",
+"statusGroup": 4,
+"statusText": "انتهت",
+"shortStatusText": "انتهت",
+"gameTime": 90.0,
+"gameTimeDisplay": "",
+"roundNum": 3,
+"homeCompetitor": {
+"id": 8638,
+"name": "ديبورتيفو بيريرا",
+"score": 1.0,
+"countryId": 109,
+"redCards": 1
+},
+"awayCompetitor": {
+"id": 7644,
+"name": "انديبندينتي سانتا في",
+"score": 2.0,
+"countryId": 109,
+"redCards": 1
+}
+}
+]
+}
+}
