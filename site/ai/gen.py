@@ -100,6 +100,8 @@ def _fit(schema, v):   # maxLength / maxItems enforced in code, whatever the mod
     return v
 def claude_text(system, payload, schema, model="haiku", kind=None):
     import subprocess, shutil
+    if usage_log.claude_off():   # switched off by the owner: no call, the caller falls back to Gemini
+        return None
     cmd = [os.environ.get("CLAUDE_BIN") or shutil.which("claude") or os.path.expanduser("~/.local/bin/claude"), "-p", "--model", model, "--output-format", "json", "--tools", "", "--strict-mcp-config", "--disable-slash-commands",
            "--no-session-persistence", "--setting-sources", "", "--settings", '{"alwaysThinkingEnabled":false}',
            "--system-prompt", "You are Tifo's Arabic football writer. Follow the rules at the top of the message exactly. Reply with JSON only, matching the schema.",

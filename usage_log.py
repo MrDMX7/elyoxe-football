@@ -4,6 +4,14 @@ Best effort: a logging failure never touches the call it describes, and pytest r
 import json, os, time
 
 PATH = os.environ.get("ELYOXE_USAGE_LOG") or os.path.expanduser("~/.elyoxe/usage.jsonl")
+CLAUDE_OFF = os.environ.get("ELYOXE_CLAUDE_OFF") or os.path.expanduser("~/.elyoxe/claude-off")
+
+
+def claude_off():
+    """The owner's kill switch (2026-10-01, «تبند كل استخدامات الclaude مؤقتا»): while ~/.elyoxe/claude-off exists, no
+    `claude -p` runs — gen.py falls back to Gemini like any Claude failure, news keeps each story's best original
+    headline. Remove the file to switch back on. Ignored under pytest."""
+    return os.path.exists(CLAUDE_OFF) and not os.environ.get("PYTEST_CURRENT_TEST")
 
 
 def record_cli(job, out, secs):

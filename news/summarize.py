@@ -21,7 +21,7 @@ FAILS = [0]
 
 
 def claude_json(system, payload, schema, model="haiku", timeout=90):
-    if FAILS[0] >= 3:
+    if FAILS[0] >= 3 or usage_log.claude_off():   # switched off: the story keeps its best original headline
         return None
     exe = os.environ.get("CLAUDE_BIN") or shutil.which("claude") or os.path.expanduser("~/.local/bin/claude")
     cmd = [exe, "-p", "--model", model, "--output-format", "json", "--tools", "", "--strict-mcp-config", "--disable-slash-commands",
