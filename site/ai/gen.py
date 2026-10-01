@@ -16,6 +16,8 @@ maxLength (the loop-until-token-limit trap). Numbers become Emirati words only i
 import argparse, datetime as dt, hashlib, json, os, re, sys, time, urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import checks
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))   # repo root: usage_log
+import usage_log
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(HERE)
@@ -96,7 +98,7 @@ def _fit(schema, v):   # maxLength / maxItems enforced in code, whatever the mod
         try: return int(v)
         except Exception: return v
     return v
-def claude_text(system, payload, schema, model="haiku"):
+def claude_text(system, payload, schema, model="haiku", kind=None):
     import subprocess, shutil
     cmd = [os.environ.get("CLAUDE_BIN") or shutil.which("claude") or os.path.expanduser("~/.local/bin/claude"), "-p", "--model", model, "--output-format", "json", "--tools", "", "--strict-mcp-config", "--disable-slash-commands",
            "--no-session-persistence", "--setting-sources", "", "--settings", '{"alwaysThinkingEnabled":false}',
@@ -110,6 +112,7 @@ def claude_text(system, payload, schema, model="haiku"):
         r = subprocess.run(cmd, input=msg, capture_output=True, text=True, encoding="utf-8", timeout=int(os.environ.get("TIFO_CLAUDE_TIMEOUT") or 90),
                            cwd="/tmp" if os.path.isdir("/tmp") else None, env=dict(os.environ, MAX_THINKING_TOKENS="0"))   # no thinking: ~8 s instead of ~65 s
         out = json.loads(r.stdout or "{}")
+        usage_log.record_cli("gen:" + (kind or "other"), out, round(time.time() - t0, 1))
         if r.returncode or out.get("is_error"): raise RuntimeError((out.get("result") or r.stderr or "")[:200])
         res = out.get("structured_output") or json.loads(out.get("result") or "")
         req = schema.get("required") or []
@@ -133,7 +136,7 @@ def gemini(system, payload, schema, temp=0.6, tokens=4000, provider=None, kind=N
     """Generated text from the provider chosen for this kind (name kept: every kind calls it). Claude first when chosen, Gemini as fallback."""
     prov = provider or (provider_for(kind) if kind else PROVIDER); LAST_MODEL[0] = MODEL
     if prov.startswith("claude") and not CLAUDE_STOPPED:
-        cm = (prov.split(":") + ["haiku"])[1] or "haiku"; out = claude_text(system, payload, schema, cm)
+        cm = (prov.split(":") + ["haiku"])[1] or "haiku"; out = claude_text(system, payload, schema, cm, kind)
         if out is not None: LAST_MODEL[0] = "claude-" + cm; return out
     t0 = time.time(); out = gemini_api(system, payload, schema, temp, tokens)
     if out is not None: CALLS.append(("gemini", round(time.time() - t0, 1)))

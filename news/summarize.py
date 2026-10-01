@@ -3,6 +3,8 @@ owner's subscription (the way site/ai/gen.py writes match texts: no API key, no 
 and the story shows its best original headline instead; three failures in a row stop Claude for the rest of the run."""
 import json, os, shutil, subprocess, time
 
+import usage_log
+
 SYSTEM = """أنت محرر أخبار كورة في «تيفو»، موقع عربي لكل العرب. تكتب عنوان وخلاصة لقصة وحدة من عدة مصادر (عربية وأجنبية).
 القواعد:
 - لا تكتب أي معلومة مب موجودة في المصادر. لا أرقام ولا تواريخ ولا أسماء من عندك.
@@ -29,10 +31,12 @@ def claude_json(system, payload, schema, model="haiku", timeout=90):
     # the Arabic rules and the payload go over stdin: a long multi-line Arabic argument is cut short by cmd.exe on Windows
     # (claude.CMD), and stdin costs nothing on the Fold
     msg = system + "\n\nجاوب بـ JSON بس، مطابق للـ schema.\n\nالمدخلات:\n" + json.dumps(payload, ensure_ascii=False)
+    t0 = time.time()
     try:
         r = subprocess.run(cmd, input=msg, capture_output=True, text=True, encoding="utf-8",
                            timeout=timeout, cwd="/tmp" if os.path.isdir("/tmp") else None, env=dict(os.environ, MAX_THINKING_TOKENS="0"))
         out = json.loads(r.stdout or "{}")
+        usage_log.record_cli("news", out, round(time.time() - t0, 1))
         if r.returncode or out.get("is_error"):
             raise RuntimeError((out.get("result") or r.stderr or "")[:200])
         res = out.get("structured_output") or json.loads(out.get("result") or "")
