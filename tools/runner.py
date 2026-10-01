@@ -229,21 +229,45 @@ def do(job):
         return 0 if ok else 1
 
 
+ASK = os.environ.get("TIFO_ASK") or os.path.expanduser("~/workspace/automation/phone/ask.py")
+
+
+def ask(*args):
+    """automation/phone/ask.py: the owner decides by email whether the Fold takes over (2026-10-01). No ask.py = no gate."""
+    if not os.path.exists(ASK):
+        return 0
+    return subprocess.run([sys.executable, ASK, *args]).returncode
+
+
 def watch():
-    """The Fold, hourly: a job whose last good run (any host) is older than STALE runs here, until the laptop is back."""
-    rc = 0
+    """The Fold, hourly: a job whose last good run (any host) is older than STALE runs here, until the laptop is back —
+    but only once the owner has said «اي» to ask.py's email; without it the site waits for the laptop."""
+    rc, stale, laptop_back = 0, [], True
     for job, limit in STALE.items():
         st = STORE.get_state(f"runner/{job}.json") or {}
         if st.get("running") and st.get("started_at") and time.time() - datetime.fromisoformat(st["started_at"]).timestamp() < limit:
             print(f"watch: {job} is running on {st.get('running_host')} since {st['started_at']}; leaving it")
+            laptop_back &= st.get("running_host") != HOST
             continue
         last = st.get("last_ok")
         age = time.time() - datetime.fromisoformat(last).timestamp() if last else 1e9
         if age > limit:
-            print(f"watch: {job} quiet for {age / 60:.0f} min (last good on {st.get('last_ok_host')}); running it here")
-            rc |= do(job)
+            print(f"watch: {job} quiet for {age / 60:.0f} min (last good on {st.get('last_ok_host')})")
+            stale.append((job, age))
         else:
             print(f"watch: {job} fine ({age / 60:.0f} min ago on {st.get('last_ok_host')})")
+            laptop_back &= st.get("last_ok_host") != HOST
+    if not stale:
+        if laptop_back:
+            ask("clear", "tifo")
+        return 0
+    detail = "، ".join(f"{'الموقع' if j == 'site' else 'الأخبار'} من {a / 3600:.0f} ساعة" for j, a in stale)
+    if ask("gate", "tifo", detail) != 0:
+        return 0
+    for job, _ in stale:
+        print(f"watch: running {job} here")
+        rc |= do(job)
+    ask("ran", "tifo")
     return rc
 
 
