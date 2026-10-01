@@ -14,6 +14,15 @@ def claude_off():
     return os.path.exists(CLAUDE_OFF) and not os.environ.get("PYTEST_CURRENT_TEST")
 
 
+GEMINI_OFF = os.environ.get("ELYOXE_GEMINI_OFF") or os.path.expanduser("~/.elyoxe/gemini-off")
+
+
+def gemini_off():
+    """Same switch for Gemini (owner 2026-10-01, «حتى ال gemini api المؤتمت»): while ~/.elyoxe/gemini-off exists, Tifo has no
+    Gemini key, so every Gemini step (text, Tifo Cast TTS, name transliteration) takes its existing no-key path and skips."""
+    return os.path.exists(GEMINI_OFF) and not os.environ.get("PYTEST_CURRENT_TEST")
+
+
 def record_cli(job, out, secs):
     """out: the parsed `claude -p --output-format json` result. Tifo runs on the owner's subscription, so usd is the
     CLI's list-price equivalent (what the same tokens would cost on the API), not a bill."""

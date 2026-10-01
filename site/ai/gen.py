@@ -31,7 +31,9 @@ BIG5 = {47, 87, 55, 54, 53}
 
 def tifo_key():
     """Tifo's own AI Studio key, or None. Owner 2026-09-29: Tifo never touches the shared film key (it drained the prepay);
-    with no TIFO_GEMINI_API_KEY every Gemini call (text fallback, Tifo Cast TTS) is skipped, not redirected."""
+    with no TIFO_GEMINI_API_KEY every Gemini call (text fallback, Tifo Cast TTS) is skipped, not redirected.
+    ~/.elyoxe/gemini-off (usage_log.gemini_off, owner 2026-10-01) makes it None the same way."""
+    if usage_log.gemini_off(): return None
     if os.environ.get("TIFO_GEMINI_API_KEY"): return os.environ["TIFO_GEMINI_API_KEY"]
     try:
         for line in open(os.path.expanduser("~/workspace/content-pipeline/.env")):

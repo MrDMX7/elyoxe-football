@@ -579,7 +579,11 @@ def resolve_wikidata(todo, pool, teams, cache, pause, out, save):
 # --------------------------------------------------------------------------
 
 def gemini_key():
-    """Tifo's own AI Studio key, or None: never the shared film key (owner 2026-09-29)."""
+    """Tifo's own AI Studio key, or None: never the shared film key (owner 2026-09-29). None while ~/.elyoxe/gemini-off
+    exists (owner's switch, 2026-10-01): the run then fills names from Wikidata only."""
+    off = os.environ.get("ELYOXE_GEMINI_OFF") or os.path.expanduser("~/.elyoxe/gemini-off")
+    if os.path.exists(off) and not os.environ.get("PYTEST_CURRENT_TEST"):
+        return None
     if os.environ.get("TIFO_GEMINI_API_KEY"):
         return os.environ["TIFO_GEMINI_API_KEY"]
     f = Path.home() / "workspace/content-pipeline/.env"
