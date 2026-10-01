@@ -1,6 +1,6 @@
 # Tifo data audit — 2026-10-01
 
-Generated 2026-09-30T22:45:51Z by `python -m db.audit` in 187 s (freshness 6 s, matches 130 s, standings 4 s, scorers 27 s, derived 12 s, champions 5 s, identity 3 s, gaps 0 s); 171 FotMob requests (0 failed), 0 365Scores requests (errors: none), 6184 published files read. Window: the last 14 days; sample 60.
+Generated 2026-10-01T00:30:02Z by `python -m db.audit` in 240 s (freshness 6 s, matches 155 s, standings 21 s, scorers 31 s, derived 18 s, champions 5 s, identity 4 s, gaps 0 s); 168 FotMob requests (0 failed), 46 365Scores requests (errors: none), 6189 published files read. Window: the last 14 days; sample 60.
 
 Verdicts: **ours** = our code is wrong · **stale** = the source moved on and our copy didn't · **gap** = missing, fillable · **source** = the sources disagree (`favors` = which one the evidence supports) · **unknown**.
 
@@ -10,12 +10,12 @@ Verdicts: **ours** = our code is wrong · **stale** = the source moved on and ou
 |---|---|---|---|---|
 | champions | 8696 | 11 | 5 | 0 |
 | derived | 182619 | 2 | 2 | 0 |
-| freshness | 90 | 0 | 0 | 0 |
+| freshness | 91 | 0 | 0 | 0 |
 | gaps | 21637 | 0 | 1 | 15 |
 | identity | 136171 | 0 | 1 | 1 |
-| matches | 13407 | 0 | 2 | 0 |
-| scorers | 1645 | 0 | 7 | 0 |
-| standings | 5384 | 1 | 11 | 0 |
+| matches | 13404 | 0 | 2 | 0 |
+| scorers | 1645 | 0 | 8 | 0 |
+| standings | 5394 | 0 | 8 | 0 |
 
 ## matches
 
@@ -26,14 +26,9 @@ Verdicts: **ours** = our code is wrong · **stale** = the source moved on and ou
 
 ## standings
 
-### table_vs_fotmob — 1 (error, stale)
-- دوري نجوم العراق (524): 2 rows differ from FotMob's table now (our copy 2026-09-27T09:31:35Z): Al Minaa ours (8, 2, 3, 3, 8, 10, 9) FotMob (8, 3, 2, 3, 10, 9, 11); Naft Maysan ours (8, 1, 4, 3, 6, 11, 7) FotMob (8, 1, 3, 4, 5, 13, 6)
-### table_vs_365 — 11 (warn, source)
+### table_vs_365 — 8 (warn, source)
 - دوري أدنوك للمحترفين (538)  Al-Wahda: ours P5 W3 D0 L2 6-5 9 pts; 365Scores P5 W3 D0 L2 5-5 9 pts — favors **fotmob** — 365Scores' own results add up to our row: its table is out of step with its results (/c/uae-pro-league/)
 - دوري أدنوك للمحترفين (538)  Ajman: ours P5 W3 D0 L2 11-12 9 pts; 365Scores P5 W3 D0 L2 11-11 9 pts — favors **fotmob** — 365Scores' own results add up to our row: its table is out of step with its results (/c/uae-pro-league/)
-- كأس آسيا تحت 23 سنة (9571) Group D Iraq U23: ours P3 W0 D2 L1 2-3 2 pts; 365Scores P3 W1 D2 L0 1-0 5 pts — favors **unknown** — 365Scores' own results give P6 W2 D3 L1 4-4, neither its table nor ours; Thailand U23 v Iraq U23 2026-01-11: FotMob 1-1, 365Scores 1-0 «Ended» (FotMob's goal events add up to 1-1; 365Scores' goal events add up to 1-0); Iraq U23 v Australia U23 2026-01-14: FotMob 1-2, 365Scores 0-0 «Ended» (FotMob's goal events add up to 1-2; 365Scores' goal events add up to 0-0) (/c/afc-u23-asian-cup/)
-- دوري نجوم العراق (524)  Al Minaa: ours P8 W2 D3 L3 8-10 9 pts; 365Scores P8 W3 D2 L3 10-9 11 pts — favors **365** — 365Scores' table agrees with its own results: a match result differs between the sources; Al Minaa v Naft Maysan 2026-09-09: FotMob 1-1, 365Scores 3-0 «Awarded» (365Scores marks the result «Awarded» (a decision after the match); FotMob keeps the score played on the pitch; FotMob's goal events add up to 1-1; 365Scores' goal events add up to 1-0) (/c/iraq-stars-league/)
-- دوري نجوم العراق (524)  Naft Maysan: ours P8 W1 D4 L3 6-11 7 pts; 365Scores P8 W1 D3 L4 5-13 6 pts — favors **365** — 365Scores' table agrees with its own results: a match result differs between the sources; Al Minaa v Naft Maysan 2026-09-09: FotMob 1-1, 365Scores 3-0 «Awarded» (365Scores marks the result «Awarded» (a decision after the match); FotMob keeps the score played on the pitch; FotMob's goal events add up to 1-1; 365Scores' goal events add up to 1-0) (/c/iraq-stars-league/)
 - الدوري الكويتي الممتاز (529)  Al-Arabi: ours P3 W0 D2 L1 7-8 2 pts; 365Scores P3 W0 D2 L1 6-7 2 pts — favors **fotmob** — 365Scores' own results add up to our row: its table is out of step with its results (/c/kuwait-premier-league/)
 - الدوري الكويتي الممتاز (529)  Al-Salibikhaet: ours P3 W0 D2 L1 4-5 2 pts; 365Scores P3 W0 D2 L1 3-4 2 pts — favors **fotmob** — 365Scores' own results give P3 W1 D2 L0 5-4, neither its table nor ours; Al Sahel SC v Al-Salibikhaet 2026-08-27: FotMob 1-0, 365Scores 0-1 «Ended» (FotMob's goal events add up to 1-0; 365Scores' goal events add up to 0-0) (/c/kuwait-premier-league/)
 - دوري يلو السعودي (10721)  Al-Ula FC: ours P5 W5 D0 L0 10-1 15 pts; 365Scores P5 W5 D0 L0 8-1 15 pts — favors **fotmob** — 365Scores' own results add up to our row: its table is out of step with its results (/c/saudi-first-division/)
@@ -52,6 +47,8 @@ Verdicts: **ours** = our code is wrong · **stale** = the source moved on and ou
 - دوري أبطال آسيا للنخبة (525) Brayan Perea: 1 goals on our leaderboard (FotMob), 2 at 365Scores — favors **unknown** — no single match differs in the paired games (the lists count different matches) (/p/281999/)
 - الرابطة المحترفة الأولى التونسية (544) Achraf Ben Dhiaf: 2 goals on our leaderboard (FotMob), 1 at 365Scores — favors **unknown** — no single match differs in the paired games (the lists count different matches) (/p/639369/)
 - دوري يلو السعودي (10721) João Silva: 3 goals on our leaderboard (FotMob), 2 at 365Scores — favors **unknown** — no single match differs in the paired games (the lists count different matches) (/p/1356320/)
+### vs_fotmob — 1 (warn, stale)
+- الدوري الأمريكي (130): 1 of our top scorers' goals differ from FotMob now (ours 2026-09-29T22:02:47Z): Rafael Navarro 14→15.0
 
 ## derived
 
