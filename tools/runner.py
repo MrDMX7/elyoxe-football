@@ -190,7 +190,8 @@ def beat(job, ok, secs, note):
     doc = {"host": HOST, "ok": ok, "at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "seconds": round(secs), "note": str(note)[:600],
            "fails": fails, "last_ok": prev.get("last_ok") if not ok else datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "last_ok_host": prev.get("last_ok_host") if not ok else HOST, "alerted_at": prev.get("alerted_at"), "running": False}
-    if fails >= 2 and time.time() - float(prev.get("alerted_ts") or 0) > 6 * 3600:
+    alerts_off = os.path.exists(os.path.expanduser("~/.elyoxe/tifo-alerts-off"))   # owner's pause, 2026-10-02
+    if fails >= 2 and not alerts_off and time.time() - float(prev.get("alerted_ts") or 0) > 6 * 3600:
         try:
             import boto3
             boto3.client("ses", region_name=REGION).send_email(
