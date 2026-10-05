@@ -149,3 +149,42 @@ def test_audit_pairing():
 
 def test_audit_year_of_365_season():
     assert AU.y365("1973/74") == "1974" and AU.y365("1999-00") == "2000" and AU.y365("2025") == "2025"
+
+
+# ------------------------------------------------------------------ «الأرقام مدققة»: the public badge file (item 16)
+def _doc(findings, areas=AU.AREAS):
+    summary = {a: {"checked": {"rows": 1}, "findings": {}} for a in AU.AREAS}
+    summary["matches"] = {"checked": {"fixture_vs_fotmob": 210, "score_vs_365": 201}, "findings": {}}
+    summary["champions"] = {"checked": {"lists": 61}, "findings": {}}
+    return {"date": "2026-10-05", "generated": "2026-10-05T01:23:07Z", "params": {"areas": sorted(areas)}, "summary": summary,
+            "findings": findings, "requests": {"fotmob": 900}, "timing": {"matches": 192}, "notes": ["internal"]}
+
+
+def test_public_summary_counts_only_and_nothing_internal():
+    f = [{"area": "champions", "check": "duplicate_season", "level": "error", "verdict": "ours", "key": "comp:1", "msg": "secret",
+          "url": "/c/x/"},
+         {"area": "matches", "check": "file_goals_missing", "level": "warn", "verdict": "stale", "key": "match:9", "msg": "m"},
+         {"area": "gaps", "check": "x", "level": "info", "verdict": "gap", "key": "k", "msg": "i"}]
+    pub = AU.public_summary(_doc(f))
+    assert set(pub) == {"generated", "ok", "checked", "errors", "warnings", "areas"}
+    assert pub["generated"] == "2026-10-05T01:23:07Z" and pub["checked"] == 478 and pub["errors"] == 1 and pub["warnings"] == 1
+    assert pub["ok"] is False and pub["areas"]["matches"] == {"ar": "المباريات", "checked": 411, "errors": 0, "warnings": 1, "ok": True}
+    assert pub["areas"]["champions"]["ok"] is False and list(pub["areas"]) == list(AU.AREAS)
+    blob = json.dumps(pub, ensure_ascii=False)
+    assert not any(s in blob for s in ("secret", "comp:1", "/c/x/", "match:9", "fotmob", "internal", "duplicate_season"))
+    assert AU.public_summary(_doc(f[1:]))["ok"] is True                       # warnings and info alone: ok
+
+
+def test_public_summary_a_crashed_area_is_never_ok_and_partial_runs_never_publish(tmp_path):
+    from store import Store, LocalBackend
+    crash = [{"area": "standings", "check": "audit_crashed", "level": "warn", "verdict": "ours", "key": "audit:standings", "msg": "x"}]
+    assert AU.public_summary(_doc(crash))["areas"]["standings"]["ok"] is False
+    empty = _doc([])
+    empty["summary"]["gaps"]["checked"] = {}
+    assert AU.public_summary(empty)["areas"]["gaps"]["ok"] is False and AU.public_summary(empty)["ok"] is False   # checked nothing
+    store = Store(LocalBackend(tmp_path))
+    assert AU.publish(store, _doc([], ("matches",)), {"matches"}) is None and store.get_json("audit/latest.json") is None
+    pub = AU.publish(store, _doc([]), set(AU.AREAS))
+    assert store.get_json("audit/latest.json") == pub and pub["ok"] is True
+    meta = json.loads((tmp_path / "v1" / "audit" / "latest.json.meta").read_text())
+    assert meta["CacheControl"].startswith("public, max-age=3600")
