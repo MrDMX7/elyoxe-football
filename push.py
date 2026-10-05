@@ -1,32 +1,53 @@
-"""Per-team web push (item approved 2026-09-28): kickoff, goal and full-time notifications.
+"""Per-team web push (item approved 2026-09-28; video and subscriber choices item 7, 2026-10-06): kickoff, goal (with how it
+was scored), full time, and «فيديو الهدف نزل» (an official clip of the goal came out).
 
-Two halves:
-  * `plan(p, d, full)` runs inside the poller's fetch_detail (live and final details). It decides which events are
-    new for this match (kickoff, each goal event, full time), builds one Arabic payload per team and hands them to
-    the sender with ONE asynchronous Lambda invoke, so the poller never waits on push services.
+Three parts:
+  * `plan(p, d, full)` runs inside the poller's fetch_detail (live and final details). It decides which events are new for
+    this match (kickoff, each goal, full time), builds one Arabic payload per team and hands them to the sender with ONE
+    asynchronous Lambda invoke, so the poller never waits on push services.
+  * `video_jobs(md, goals)` is called by news/media.py (the journal, every 15 min) for the goals whose first official clip
+    just came out: one job per goal, handed over with `invoke`. Never from the poller's minute loop.
   * `handler(event, ctx)` is the sender (Lambda elyoxe-football-push): for each team it queries the subscriptions
-    (DynamoDB `cards`, pk TIFOPUSH#<team>, written by the cards stack's /api/tifo/push/sub), claims the
-    (match, event) mark with a conditional put (so a retried invoke or a second poller pass never sends twice),
-    and sends with pywebpush + the VAPID key from SSM. 404/410 from a push service deletes the subscription;
-    any other error is logged and skipped.
+    (DynamoDB `cards`, pk TIFOPUSH#<team>, written by the cards stack's /api/tifo/push/sub), CLAIMS the event (below), and
+    sends with pywebpush + the VAPID key from SSM to every subscription that chose that event and is not in its quiet hours.
+    404/410 from a push service deletes the subscription; any other error is logged (push service host only) and skipped.
 
-Dedupe has two layers: `push_sent` in poller.json (no invoke at all for an event already handed over) and the
-conditional TIFOPUSHSENT#<match> / <event key> item in DynamoDB (at-most-once per event, across retries).
-A goal the VAR took back before we saw it is never sent: only goal events present in the current detail, with no
-later "goal disallowed" VAR decision for that side, are pushed. Old events (first seen > 10 min ago, e.g. after a
-deploy or a backfill) are not pushed.
+Never the same event twice (2026-10-02..06: the poller timed out every minute and never saved its state, so it handed the
+same goals over every minute; the sender's claim held for an unchanged key, but a goal whose minute FotMob moved by one,
+87' -> 88' or 68' -> 67', came back under a new key and would have reached subscribers twice):
+  1. one identity per event, stable across the feed's corrections: «start», «end», a goal by the score it made («goal:2-1»;
+     the minute is carried only to tell a later second 2-1, after the first was taken back), a goal's clip by the same score
+     («video:2-1»). The scorer (FotMob's «<TBD>» filled in later) and the minute are never part of the identity;
+  2. the sender CLAIMS each event before its first send: a conditional put of TIFOPUSHSENT#<match> / <key> that a retried
+     invoke, a second poller pass, a re-run media step or a concurrent sender all lose. The same score made within
+     GOAL_TOLERANCE minutes of a claimed one is the same goal (either key format); the same score later is a new goal,
+     claimed as «goal:2-1#2». A sender that dies mid-send keeps its claim: that event's remaining subscribers miss it
+     (at most once, never twice);
+  3. the poller keeps its own marks in state/push.json, written right after each hand-over, not at the end of the run,
+     so a run that dies later does not hand the same events over again next minute. A goal the live minute has left
+     STALE_MINUTES behind (a run that died before handing it over) is history, not news.
+A goal the VAR took back before we saw it is never sent: only goal events present in the current detail, with no later
+"goal disallowed" VAR decision for that side, are pushed. Old events (first seen > 10 min ago, e.g. after a deploy or a
+backfill) are not pushed.
 """
-import json, os, time
+import json, os, re, time
 
 TABLE = os.environ.get("PUSH_TABLE", "cards")
 REGION = os.environ.get("PUSH_REGION", "ap-south-1")
+SENDER = "elyoxe-football-push"   # the sender's function name (the poller's PUSH_FUNCTION, media's default)
 SUBJECT = "mailto:hello@elyoxe.com"
 FRESH_MINUTES = 10            # a goal first seen longer ago than this is history, not news
+STALE_MINUTES = 12            # a goal this many match minutes behind the live minute is history (a run died before it)
+GOAL_TOLERANCE = 3            # the same score this close in minutes is the same goal, whatever minute the feed gives now
 KICKOFF_WINDOW = 20           # minutes after kickoff within which a "start" push still makes sense
 END_WINDOW = 60               # minutes after full time
 GOAL_TYPES = ("goal", "own_goal", "penalty_goal")
 DISALLOWED = ("goal_disallowed", "goal_disallowed_offside")
+EVENTS = ("start", "goal", "end", "video")
+DEFAULT_EVENTS = ("start", "goal", "end")      # a subscription that never chose (before 2026-10-06), and the UI's «كل شي»
 MAX_SENDS = 5000              # per invoke: the sender's 5-minute budget, ~40 ms per send with a pooled session
+JOB_TTL = {"start": 600, "goal": 600, "end": 900, "video": 1800}   # seconds a handed-over job stays worth sending
+CLAIM_DAYS = 3
 
 
 # ------------------------------------------------------------------ payloads (pure, tested)
@@ -43,6 +64,24 @@ def _score(sc):
     return f"{sc['home']} - {sc['away']}" if sc else "-"
 
 
+def total_minute(minute, added=None):
+    """67 -> 67, (45, 2) -> 47, "45+2" -> 47, "HT" -> 45; None when unknown."""
+    if minute is None:
+        return None
+    if isinstance(minute, str):
+        s = minute.strip().replace("'", "")
+        if s.upper() == "HT":
+            return 45
+        m = re.fullmatch(r"(\d{1,3})(?:\s*\+\s*(\d{1,2}))?", s)
+        if not m:
+            return None
+        return int(m.group(1)) + int(m.group(2) or 0) + int(added or 0)
+    try:
+        return int(minute) + int(added or 0)
+    except (TypeError, ValueError):
+        return None
+
+
 # FotMob sends a goal first with the scorer as «<TBD>» (player id 0) and fills the name about a minute later.
 # Seen live 2026-09-28 on 6040346: the first push read «سجّل <TBD>», and the named event got a new event_id
 # (…-goal-38-0-0 -> …-goal-38-0-854041), so the same goal was pushed twice.
@@ -53,10 +92,15 @@ def _known(pl):
     return bool(pl and pl.get("id") and str(pl.get("name") or "").strip().lower() not in PLACEHOLDERS)
 
 
-def goal_key(mid, e):
-    """A goal's identity without its scorer: team, minute and the score it made."""
-    sc = e.get("score") or {}
-    return f"goal:{mid}-{e.get('team')}-{_minute(e)}-{sc.get('home')}-{sc.get('away')}"
+def score_key(kind, sc):
+    """«goal:2-1» / «video:2-1»: a goal by the score it made; None while the feed gives no score."""
+    sc = sc or {}
+    if sc.get("home") is None or sc.get("away") is None:
+        return None
+    try:
+        return f"{kind}:{int(sc['home'])}-{int(sc['away'])}"
+    except (TypeError, ValueError):
+        return None
 
 
 def player_ar(pl, names_ar):
@@ -64,6 +108,15 @@ def player_ar(pl, names_ar):
         return None
     x = (names_ar or {}).get(str(pl.get("id")))
     return (x or {}).get("ar") if isinstance(x, dict) else x or pl.get("name")
+
+
+def _how(e):
+    """«رأسية من ركنية» (compute/goal_how.py), unless it only repeats what the line says already (penalty, own goal)."""
+    h = e.get("how") or {}
+    k, ar = str(h.get("key") or ""), str(h.get("ar") or "").strip()
+    if not ar or k.startswith("penalty") or k.startswith("own_goal"):
+        return ""
+    return ar
 
 
 def payload(kind, d, team, e=None, names_ar=None):
@@ -84,7 +137,42 @@ def payload(kind, d, team, e=None, names_ar=None):
         body = f"سجّل {who}{' من ركلة جزاء' if e['type'] == 'penalty_goal' else ''} في الدقيقة {_minute(e)}'"
     else:            # scorer not known yet: the team, never a placeholder
         body = f"هدف {side}{' من ركلة جزاء' if e['type'] == 'penalty_goal' else ''} في الدقيقة {_minute(e)}'".replace("هدف  ", "هدف ")
-    return {**base, "title": f"هدف! {h} {_score(sc)} {a}", "body": body}
+    how = _how(e)
+    return {**base, "title": f"هدف! {h} {_score(sc)} {a}", "body": body + (f" · {how}" if how else "")}
+
+
+def video_payload(md, team, e, goal_key, names_ar=None):
+    """«فيديو الهدف نزل»: the scorer and minute, then the score the goal made. The link opens the match page on that goal's clip
+    (#v=<goal key>, the key the page's goal rows carry: «45+2-<playerId>»)."""
+    mid, h, a = md["id"], _name(md.get("home")), _name(md.get("away"))
+    who = player_ar(e.get("player"), names_ar) or (f"هدف {_name(md.get(e.get('team')))}" if e.get("team") in ("home", "away") else "الهدف")
+    return {"url": f"/m/{mid}/#v={goal_key}", "tag": f"mv-{mid}", "team": team, "title": "فيديو الهدف نزل",
+            "body": f"{who} {_minute(e)}' · {h} {_score(e.get('score'))} {a}"}
+
+
+# ------------------------------------------------------------------ marks: what the poller already handed over
+# "start", "end", "goal:2-1@47" (the score the goal made @ its total minute). Older marks, from before 2026-10-06:
+# "goal:<match>-<side>-<minute[+added]>-<h>-<a>" (goal_key of 2026-09-28) are read as the same thing.
+_MARK_NEW = re.compile(r"^goal:(\d+)-(\d+)(?:#\d+)?@(\d{1,3})$")
+_MARK_OLD = re.compile(r"^goal:\d+-(?:home|away|None)-(\d{1,3})(?:\+(\d{1,2}))?-(\d+)-(\d+)$")
+
+
+def goal_marks(keys):
+    """[(home, away, total minute)] for the goal marks among `keys`."""
+    out = []
+    for k in keys or []:
+        m = _MARK_NEW.match(k)
+        if m:
+            out.append((int(m.group(1)), int(m.group(2)), int(m.group(3))))
+            continue
+        m = _MARK_OLD.match(k)
+        if m:
+            out.append((int(m.group(3)), int(m.group(4)), int(m.group(1)) + int(m.group(2) or 0)))
+    return out
+
+
+def same_goal(marks, h, a, minute):
+    return any(mh == h and ma == a and (minute is None or abs(mm - minute) <= GOAL_TOLERANCE) for mh, ma, mm in marks)
 
 
 # ------------------------------------------------------------------ which events are new (pure, tested)
@@ -94,41 +182,79 @@ def _age_min(ts, now):
     return 1e9 if t is None else (now - t).total_seconds() / 60
 
 
+def _match_minute(d, evs):
+    """The match's minute now (total, 45+2 = 47): the live minute, or for a finished match the last event's (at least 90)."""
+    st = d.get("status")
+    if st in ("live", "ht"):
+        return total_minute(d.get("minute") if d.get("minute") is not None else ("HT" if st == "ht" else None))
+    if st == "finished":
+        return max([90] + [total_minute(e.get("minute"), e.get("added")) or 0 for e in evs if e.get("type") != "added_time"])
+    return None
+
+
 def events_to_send(d, full, sent, now):
-    """[(key, kind, event|None)] for this detail, minus keys already in `sent`."""
+    """[(key, kind, event|None, total minute|None)] for this detail, minus what `sent` (marks) already has."""
     out = []
+    sent = list(sent or [])
     st = d.get("status")
     periods = d.get("periods") or {}
     if st in ("live", "ht") and "start" not in sent:
         started = periods.get("firstHalfStarted") or d.get("kickoff_utc")
         if _age_min(started, now) <= KICKOFF_WINDOW:
-            out.append(("start", "start", None))
+            out.append(("start", "start", None, None))
     evs = full.get("events") or []
     var = [e for e in evs if e.get("type") == "var" and e.get("var_outcome") in DISALLOWED]
     cur = d.get("score") or full.get("score") or {}
+    marks = goal_marks(sent)
+    now_min = _match_minute(d, evs)
     for e in evs:
         if e.get("type") not in GOAL_TYPES or not e.get("event_id"):
             continue
         es = e.get("score") or {}
-        # 6040346, 2026-09-28 20:17Z: the feed listed a «<TBD>» away goal at 49' making 2-2 while the match stood 2-1,
-        # and it was pushed. A goal the match score doesn't have yet waits (not marked, so the next pass retries).
-        if cur and es and any((es.get(k) or 0) > (cur.get(k) or 0) for k in ("home", "away")):
+        key = score_key("goal", es)
+        if not key:                     # no score on the event yet: the next pass has it
             continue
-        key = goal_key(d.get("id"), e)
-        # marks written before goal_key used the event_id, which ends in the player id: match it without that
-        stem = f"goal:{e['event_id']}".rsplit("-", 1)[0] + "-"
-        if key in sent or any(k.startswith(stem) for k in sent):
+        # 6040346, 2026-09-28 20:17Z: the feed listed a «<TBD>» away goal at 49' making 2-2 while the match stood 2-1, and it
+        # was pushed. A goal the match score doesn't have yet waits (not marked, so the next pass retries).
+        if cur and any((es.get(k) or 0) > (cur.get(k) or 0) for k in ("home", "away")):
             continue
+        mn = total_minute(e.get("minute"), e.get("added"))
+        if same_goal(marks, int(es["home"]), int(es["away"]), mn):
+            continue                    # handed over already, whatever minute or scorer the feed gives it now
         if _age_min(e.get("first_seen"), now) > FRESH_MINUTES:
             continue
+        if now_min is not None and mn is not None and now_min - mn > STALE_MINUTES:
+            continue                    # the match moved on long ago: a run that died before this goal went out
         if any(v.get("team") == e.get("team") and (v.get("minute") or 0) >= (e.get("minute") or 0) for v in var):
-            continue            # the VAR took it back
-        out.append((key, "goal", e))
+            continue                    # the VAR took it back
+        out.append((key, "goal", e, mn))
     if st == "finished" and "end" not in sent:
         ended = periods.get("gameEnded") or periods.get("secondHalfEnded")
         if _age_min(ended, now) <= END_WINDOW:
-            out.append(("end", "end", None))
+            out.append(("end", "end", None, None))
     return out
+
+
+def mark(job):
+    return f"{job['key']}@{job['min']}" if job["kind"] == "goal" and job.get("min") is not None else job["key"]
+
+
+def _job(mid, key, kind, payloads, minute=None, now=None):
+    j = {"match": int(mid), "key": key, "kind": kind, "urgency": "high" if kind == "goal" else "normal",
+         "exp": int(now if now is not None else time.time()) + JOB_TTL[kind], "payloads": payloads}
+    if minute is not None:
+        j["min"] = int(minute)
+    return j
+
+
+def _marks(p):
+    """state/push.json {match: {at, keys}}, loaded once per run; the marks poller.json carried before 2026-10-06 move here."""
+    marks = p.aux("push")
+    old = p.st.pop("push_sent", None) if isinstance(getattr(p, "st", None), dict) else None
+    for mid, v in (old or {}).items():
+        cur = marks.setdefault(mid, {"at": v.get("at"), "keys": []})
+        cur["keys"] = list(dict.fromkeys(cur["keys"] + list(v.get("keys") or [])))
+    return marks
 
 
 def plan(p, d, full, invoke=None):
@@ -136,27 +262,43 @@ def plan(p, d, full, invoke=None):
     if not os.environ.get("PUSH_FUNCTION") and invoke is None:
         return []
     mid = str(d["id"])
-    sent_all = p.st.setdefault("push_sent", {})
-    sent = sent_all.setdefault(mid, {"at": None, "keys": []})
-    todo = events_to_send(d, full, set(sent["keys"]), p.now())
+    marks = _marks(p)
+    sent = marks.setdefault(mid, {"at": None, "keys": []})
+    todo = events_to_send(d, full, sent["keys"], p.now())
     if not todo:
         return []
     names_ar = _names_ar()
     teams = [t for t in ((d.get("home") or {}).get("id"), (d.get("away") or {}).get("id")) if t]
-    jobs = []
-    for key, kind, e in todo:
-        jobs.append({"match": int(mid), "key": key, "kind": kind, "urgency": "high" if kind == "goal" else "normal",
-                     "payloads": {str(t): payload(kind, d, t, e, names_ar) for t in teams}})
+    jobs = [_job(mid, key, kind, {str(t): payload(kind, d, t, e, names_ar) for t in teams}, mn) for key, kind, e, mn in todo]
     try:
         (invoke or _invoke)({"jobs": jobs})
     except Exception as ex:          # not marked: the next pass tries again (the sender dedupes)
         p.store.fail("push", f"{mid}: invoke failed: {type(ex).__name__}: {ex}")
         return []
-    sent["keys"] += [j["key"] for j in jobs]
+    sent["keys"] += [mark(j) for j in jobs]
     sent["at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    for k in [k for k, v in sent_all.items() if v.get("at") and _age_min(v["at"], p.now()) > 3 * 1440]:
-        del sent_all[k]
+    for k in [k for k, v in marks.items() if v.get("at") and _age_min(v["at"], p.now()) > CLAIM_DAYS * 1440]:
+        del marks[k]
+    try:
+        p.aux_flush("push")          # now, not at the end of the run: a run that dies later must not hand these over again
+    except Exception as ex:          # the sender's claim still holds; the marks go out with the run's save()
+        p.store.fail("push", f"{mid}: marks not saved now: {type(ex).__name__}: {ex}")
     p.note(f"push: {mid} {', '.join(j['key'] for j in jobs)}")
+    return jobs
+
+
+def video_jobs(md, goals, names_ar=None, now=None):
+    """news/media.py: goals whose first official clip just came out ({goal key «45+2-<playerId>»: event}) -> one sender job
+    per goal, keyed by the score it made («video:2-1»). A goal without a score on its event gives no job."""
+    names_ar = _names_ar() if names_ar is None else names_ar
+    teams = [t for t in ((md.get("home") or {}).get("id"), (md.get("away") or {}).get("id")) if t]
+    jobs = []
+    for gk, e in goals.items():
+        key = score_key("video", e.get("score"))
+        if not key or not teams:
+            continue
+        jobs.append(_job(md["id"], key, "video", {str(t): video_payload(md, t, e, gk, names_ar) for t in teams},
+                         total_minute(e.get("minute"), e.get("added")), now))
     return jobs
 
 
@@ -173,10 +315,39 @@ def _names_ar():
     return _NAMES["d"]
 
 
-def _invoke(event):
+def invoke(jobs, function=None):
+    """Hand jobs to the sender: one asynchronous invoke (the caller never waits on push services)."""
     import boto3
-    boto3.client("lambda", region_name=REGION).invoke(FunctionName=os.environ["PUSH_FUNCTION"], InvocationType="Event",
-                                                     Payload=json.dumps(event, ensure_ascii=False).encode())
+    boto3.client("lambda", region_name=REGION).invoke(FunctionName=function or os.environ.get("PUSH_FUNCTION") or SENDER,
+                                                     InvocationType="Event",
+                                                     Payload=json.dumps({"jobs": jobs}, ensure_ascii=False).encode())
+
+
+def _invoke(event):
+    invoke(event["jobs"], os.environ["PUSH_FUNCTION"])
+
+
+# ------------------------------------------------------------------ subscriber choices (pure, tested)
+def wants(sub, kind):
+    ev = sub.get("events") or DEFAULT_EVENTS
+    return kind in ev
+
+
+def in_quiet(sub, now=None):
+    """Quiet hours stored with the subscription: {"s": start, "e": end} in minutes after local midnight, "o" the device's UTC
+    offset in minutes (UAE 240). 23:00-07:00 wraps midnight. No quiet hours, or a malformed value, never blocks."""
+    q = sub.get("quiet")
+    if not isinstance(q, dict):
+        return False
+    try:
+        s, e, o = int(q["s"]), int(q["e"]), int(q.get("o", 240))
+    except (KeyError, TypeError, ValueError):
+        return False
+    if not (0 <= s < 1440 and 0 <= e < 1440) or s == e or not -720 <= o <= 840:
+        return False
+    t = time.gmtime(now if now is not None else time.time())
+    local = (t.tm_hour * 60 + t.tm_min + o) % 1440
+    return s <= local < e if s < e else (local >= s or local < e)
 
 
 # ------------------------------------------------------------------ the sender (Lambda elyoxe-football-push)
@@ -193,34 +364,99 @@ def _vapid():
     return _VAPID["v"]
 
 
-def _send_one(sub, data, urgency, session=None):
+def _send_one(sub, data, urgency, session=None, ttl=600):
     """-> 'ok' | 'gone' | 'error: ...'."""
     from pywebpush import webpush, WebPushException
     key = _vapid()          # outside the try: a problem on OUR side must never read as "this subscription is broken"
     try:
         webpush({"endpoint": sub["endpoint"], "keys": {"p256dh": sub["p256dh"], "auth": sub["auth"]}},
                 data=json.dumps(data, ensure_ascii=False), vapid_private_key=key, vapid_claims={"sub": SUBJECT},
-                ttl=600, headers={"Urgency": urgency}, timeout=10, requests_session=session)
+                ttl=ttl, headers={"Urgency": urgency}, timeout=10, requests_session=session)
         return "ok"
     except WebPushException as e:
         code = getattr(e.response, "status_code", None)
         if code is None and "encrypt" in str(e).lower():
             return "gone"               # keys that cannot encrypt: a fake or broken subscription, never deliverable
         return "gone" if code in (404, 410) else f"error: HTTP {code}: {str(e)[:120]}"
-    except (ValueError, TypeError) as e:  # p256dh not a P-256 point / auth malformed: encryption fails before any request
+    except (ValueError, TypeError):     # p256dh not a P-256 point / auth malformed: encryption fails before any request
         return "gone"
     except Exception as e:              # network trouble: keep the subscription
         return f"error: {type(e).__name__}: {str(e)[:120]}"
 
 
-def _claim(table, match, key):
-    """At-most-once per (match, event): a conditional put that a retried or duplicate invoke loses."""
+def _conditional_failed(table, ex):
+    exc = getattr(getattr(getattr(table, "meta", None), "client", None), "exceptions", None)
+    cls = getattr(exc, "ConditionalCheckFailedException", None)
+    return (cls is not None and isinstance(ex, cls)) or "ConditionalCheckFailed" in type(ex).__name__ + str(ex)
+
+
+def _put_new(table, item):
     try:
-        table.put_item(Item={"pk": f"TIFOPUSHSENT#{match}", "sk": key, "ttl": int(time.time()) + 3 * 86400},
-                       ConditionExpression="attribute_not_exists(pk)")
+        table.put_item(Item=item, ConditionExpression="attribute_not_exists(pk)")
         return True
-    except table.meta.client.exceptions.ConditionalCheckFailedException:
-        return False
+    except Exception as ex:
+        if _conditional_failed(table, ex):
+            return False
+        raise
+
+
+def _claims(table, match):
+    """Every claim of the match (a strongly consistent read: a claim written a moment ago by another sender counts)."""
+    from boto3.dynamodb.conditions import Key
+    items, kw = [], {"KeyConditionExpression": Key("pk").eq(f"TIFOPUSHSENT#{match}"), "ConsistentRead": True}
+    while True:
+        r = table.query(**kw)
+        items += r.get("Items") or []
+        if not r.get("LastEvaluatedKey"):
+            return items
+        kw["ExclusiveStartKey"] = r["LastEvaluatedKey"]
+
+
+_CLAIM = re.compile(r"^(goal|video):(\d+)-(\d+)(?:#(\d+))?$")
+
+
+def _scored(item, kind):
+    """A claim of `kind` with a score: (home, away, total minute or None, generation)."""
+    sk = str(item.get("sk") or "")
+    m = _CLAIM.match(sk)
+    if m and m.group(1) == kind:
+        mn = item.get("min")
+        return int(m.group(2)), int(m.group(3)), (int(mn) if mn is not None else None), int(m.group(4) or 1)
+    m = _MARK_OLD.match(sk) if kind == "goal" else None     # claims written before 2026-10-06: goal:<match>-<side>-<min>-<h>-<a>
+    if m:
+        return int(m.group(3)), int(m.group(4)), int(m.group(1)) + int(m.group(2) or 0), 1
+    return None
+
+
+def claim(table, match, key, minute=None, now=None):
+    """At most once per event: -> the key claimed (a later second 2-1 gets «goal:2-1#2»), or None when it is already claimed.
+    The claim is written before anything is sent."""
+    now = int(now if now is not None else time.time())
+
+    def item(k):
+        it = {"pk": f"TIFOPUSHSENT#{match}", "sk": k, "at": now, "ttl": now + CLAIM_DAYS * 86400}
+        if minute is not None:
+            it["min"] = int(minute)
+        return it
+    m = _CLAIM.match(key)
+    if not m:                                   # start, end
+        return key if _put_new(table, item(key)) else None
+    kind, h, a = m.group(1), int(m.group(2)), int(m.group(3))
+    base = f"{kind}:{h}-{a}"
+    for _ in range(4):                          # a concurrent sender can take the generation we chose: look again
+        gens = []
+        for c in _claims(table, match):
+            s = _scored(c, kind)
+            if not s or (s[0], s[1]) != (h, a):
+                continue
+            if minute is None or s[2] is None or abs(s[2] - int(minute)) <= GOAL_TOLERANCE:
+                return None                     # the same goal (a minute correction, a scorer filled in, a retry)
+            gens.append(s[3])
+        gen = max(gens, default=0) + 1
+        k = base if gen == 1 else f"{base}#{gen}"
+        if _put_new(table, item(k)):
+            return k
+    return None
 
 
 def _subs(table, team):
@@ -234,26 +470,50 @@ def _subs(table, team):
         kw["ExclusiveStartKey"] = r["LastEvaluatedKey"]
 
 
-def run_jobs(jobs, table, send=None, subs_override=None):
-    """Pure enough to test: table needs put_item/delete_item/query; send(sub, data, urgency) -> status."""
-    import requests
-    send = send or (lambda s, d, u, _sess=requests.Session(): _send_one(s, d, u, _sess))
+def _arity(fn):
+    import inspect
+    try:
+        return len(inspect.signature(fn).parameters)
+    except (TypeError, ValueError):
+        return 3
+
+
+def run_jobs(jobs, table, send=None, subs_override=None, now=None):
+    """Pure enough to test: table needs put_item/delete_item/query; send(sub, data, urgency[, ttl]) -> status."""
+    if send is None:
+        import requests
+        sess = requests.Session()
+        send = lambda s, d, u, ttl=600: _send_one(s, d, u, sess, ttl)          # noqa: E731
+    with_ttl = _arity(send) >= 4
     report = []
     n = 0
+    t = time.time() if now is None else now
     for job in jobs:
-        if not _claim(table, job["match"], job["key"]):
+        kind = job.get("kind")
+        if kind not in EVENTS:
+            report.append({"key": job.get("key"), "match": job.get("match"), "skipped": "unknown kind"})
+            continue
+        if job.get("exp") and t > job["exp"]:
+            report.append({"key": job["key"], "match": job["match"], "skipped": "expired"})
+            continue
+        got = claim(table, job["match"], job["key"], job.get("min"), t)
+        if not got:
             report.append({"key": job["key"], "match": job["match"], "skipped": "already sent"})
             continue
-        done_eps, stats = set(), {"ok": 0, "gone": 0, "error": 0}
+        done_eps, stats = set(), {"ok": 0, "gone": 0, "error": 0, "quiet": 0}
         for team, data in job["payloads"].items():
             subs = subs_override if subs_override is not None else _subs(table, team)
             for s in subs:
-                if job["kind"] not in (s.get("events") or ("start", "goal", "end")) or s["endpoint"] in done_eps:
+                if not wants(s, kind) or s["endpoint"] in done_eps:
+                    continue
+                if in_quiet(s, t):
+                    done_eps.add(s["endpoint"])
+                    stats["quiet"] += 1
                     continue
                 if n >= MAX_SENDS:
                     break
                 done_eps.add(s["endpoint"])
-                r = send(s, data, job["urgency"])
+                r = send(s, data, job["urgency"], JOB_TTL.get(kind, 600)) if with_ttl else send(s, data, job["urgency"])
                 n += 1
                 if r == "ok":
                     stats["ok"] += 1
@@ -264,7 +524,7 @@ def run_jobs(jobs, table, send=None, subs_override=None):
                 else:
                     stats["error"] += 1
                     print(json.dumps({"push_error": r, "endpoint_host": s["endpoint"].split("/")[2], "match": job["match"]}))
-        report.append({"key": job["key"], "match": job["match"], **stats})
+        report.append({"key": got, "match": job["match"], **stats})
     return report
 
 
@@ -285,6 +545,6 @@ def publish_key(p):
     import boto3
     key = boto3.client("ssm", region_name=REGION).get_parameter(
         Name=os.environ.get("VAPID_PUBLIC_PARAM", "/elyoxe/tifo/vapid_public"))["Parameter"]["Value"]
-    p.store.put_json("push.json", {"publicKey": key, "events": ["start", "goal", "end"],
+    p.store.put_json("push.json", {"publicKey": key, "events": list(EVENTS), "default": list(DEFAULT_EVENTS),
                                    "subscribe": "/api/tifo/push/sub"}, cache="static")
     p.store.ok("push-key")
