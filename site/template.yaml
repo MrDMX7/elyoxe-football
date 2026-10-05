@@ -54,6 +54,23 @@ Resources:
           return r;
         }
 
+  # The API's per-IP limits (saas/cards client_ip: x-viewer-ip first) need the viewer's address. The managed
+  # AllViewerExceptHostHeader policy forwards viewer headers only, not CloudFront-Viewer-Address, and X-Forwarded-For's first
+  # entry is whatever the client wrote; this sets the real address, overwriting a header of that name from the client
+  # (the cards distribution does the same, elyoxe-cards-viewer-ip). Predictions (2026-10-06) limit registrations and
+  # recovery-code guesses per address.
+  ViewerIp:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub "${AWS::StackName}-viewer-ip"
+      AutoPublish: true
+      FunctionConfig: { Comment: "real viewer ip for the API's rate limits", Runtime: cloudfront-js-2.0 }
+      FunctionCode: |
+        function handler(event) {
+          event.request.headers['x-viewer-ip'] = { value: event.viewer.ip };
+          return event.request;
+        }
+
   StripV1:
     Type: AWS::CloudFront::Function
     Properties:
@@ -121,12 +138,14 @@ Resources:
             Compress: true
             CachePolicyId: !Ref ApiMatchCache
             OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac   # Managed-AllViewerExceptHostHeader
+            FunctionAssociations: [{ EventType: viewer-request, FunctionARN: !GetAtt ViewerIp.FunctionMetadata.FunctionARN }]
           - PathPattern: /api/tifo/*
             TargetOriginId: api
             ViewerProtocolPolicy: https-only
             AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
             CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad          # Managed-CachingDisabled
             OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac   # Managed-AllViewerExceptHostHeader
+            FunctionAssociations: [{ EventType: viewer-request, FunctionARN: !GetAtt ViewerIp.FunctionMetadata.FunctionARN }]
           - PathPattern: /v1/*
             TargetOriginId: data
             ViewerProtocolPolicy: redirect-to-https
