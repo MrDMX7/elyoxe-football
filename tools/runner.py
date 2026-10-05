@@ -152,7 +152,9 @@ def job_site(log):
     except Exception as e:
         feed = f"health unreadable: {e}"
     note = f"{now} pages published; feed {feed}"
-    return feed == "ok" and all(c == 200 for c in codes.values()), note
+    # «ok» = the pages are published and answer. The feed's own health (the poller) is reported here but alerts on its own:
+    # counting it as a site failure marked 62 published builds «failed» (2026-10-02..05) and made the Fold's watchdog ask
+    return all(c == 200 for c in codes.values()), note
 
 
 def job_journal(log):

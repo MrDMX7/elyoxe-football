@@ -6,6 +6,9 @@ Description: >
   No per-visitor compute. Same region as cinema/cards (ap-south-1).
 
 Parameters:
+  AlertTo:
+    Type: String
+    Default: hello@elyoxe.com   # deploy.sh passes the value live on the poller, so a deploy never undoes a pause
   PriceClass:
     Type: String
     Default: PriceClass_200      # includes the Middle East edge locations (Dubai, Fujairah)
@@ -107,14 +110,15 @@ Resources:
       FunctionName: elyoxe-football-poller
       CodeUri: build/lambda/
       Handler: poller.handler
-      MemorySize: 256                    # peak 164 MB measured 2026-09-26; the work is network-bound
+      MemorySize: 1024                   # 256 hit its ceiling after the 2026-10-01 features (every run timed out at 58 s and lost its
+                                         # state); 1024 also brings CPU: runs ~42 s, ~350 MB (2026-10-05)
       Timeout: 58                        # the poller stops itself at ~50 s (settings.budget_seconds)
       ReservedConcurrentExecutions: 1    # never two pollers at once
       Environment:
         Variables:
           BUCKET: !Ref DataBucket
           ALERT_FROM: tifo@elyoxe.com      # source outage alert (poller.source_watch): one mail per outage + one on recovery
-          ALERT_TO: hello@elyoxe.com
+          ALERT_TO: !Ref AlertTo
           PUSH_FUNCTION: elyoxe-football-push   # web push: one async invoke per batch of new events (push.plan)
       Policies:
         - S3CrudPolicy: {BucketName: !Ref DataBucket}
@@ -166,7 +170,7 @@ Resources:
           BUCKET: !Ref DataBucket
           ANALYTICS_BUDGET: "280"
           ALERT_FROM: tifo@elyoxe.com      # live-feed watchdog (a poller that stopped running while a match is live)
-          ALERT_TO: hello@elyoxe.com
+          ALERT_TO: !Ref AlertTo
           VAPID_PUBLIC_PARAM: /elyoxe/tifo/vapid_public   # published as /v1/push.json
       Policies:
         - S3CrudPolicy: {BucketName: !Ref DataBucket}

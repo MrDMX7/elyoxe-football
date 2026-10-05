@@ -988,6 +988,11 @@ class Poller:
         n = 0
         order = config.focus_comps() + [c["id"] for c in self.comps if c["id"] not in config.focus_comps()]
         dormant = self.st.get("dormant", {})
+        # a match whose detail fails 3 times rests a day (2026-10-05: 5629268 «match id None» took a backfill slot every run
+        # for three days); entries older than a week are forgotten
+        bad = self.st.setdefault("backfill_bad", {})
+        for k in [k for k, v in bad.items() if _age_min(v.get("at"), self.now()) > 7 * 1440]:
+            del bad[k]
         # competitions in play first, then the dormant ones (seen at least once): their finished matches had no page at all
         # (audit 2026-09-30: 1,575 of 4,124 finished matches, the World Cup 2026 and the President's Cup among them)
         order = [c for c in order if dormant.get(str(c)) is False] + [c for c in order if dormant.get(str(c)) is True]
@@ -998,9 +1003,15 @@ class Poller:
             have = self.ledger(cid)["matches"]
             for m in sorted(fx, key=lambda m: m.get("kickoff_utc") or "", reverse=True):
                 if m.get("id") and m["status"] == S.FINISHED and (have.get(str(m["id"])) or {}).get("v", 1) < SEASON.LEDGER_VERSION:
+                    b = bad.get(str(m["id"])) or {}
+                    if b.get("n", 0) >= 3 and _age_min(b.get("at"), self.now()) < 1440:
+                        continue
                     if n >= limit or not self.has_time(5):
                         return n
-                    self.fetch_detail(m["id"], "backfill")
+                    if self.fetch_detail(m["id"], "backfill") is None:
+                        bad[str(m["id"])] = {"n": b.get("n", 0) + 1, "at": iso(self.now())}
+                    else:
+                        bad.pop(str(m["id"]), None)
                     n += 1
         return n
 

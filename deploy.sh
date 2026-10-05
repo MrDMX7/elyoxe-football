@@ -74,8 +74,15 @@ print("bundle imports ok")
 EOF
 
 # 3. stack
+# the alert address live on the poller (the owner paused alerts on 2026-10-02 by pointing it at the SES simulator):
+# a deploy keeps it instead of resetting it to the template's default
+ALERT_TO_NOW=$(aws lambda get-function-configuration --region "$REGION" --function-name "$STACK-poller" \
+  --query "Environment.Variables.ALERT_TO" --output text 2>/dev/null || true)
+case "$ALERT_TO_NOW" in ""|None) ALERT_TO_NOW=hello@elyoxe.com ;; esac
+echo "alerts go to: $ALERT_TO_NOW"
 "$SAM" deploy --template-file template.yaml --stack-name "$STACK" --region "$REGION" \
   --capabilities CAPABILITY_IAM --resolve-s3 --no-confirm-changeset --no-fail-on-empty-changeset \
+  --parameter-overrides "AlertTo=$ALERT_TO_NOW" \
   --tags product=elyoxe-football
 
 FN=$(out FunctionName)
