@@ -19,9 +19,15 @@ let TAR_FILL = null;
 function fillAr(o, k){ if (!o || typeof o !== "object") return; if (Array.isArray(o)){ for (const x of o) fillAr(x, k); return; }
   if (TAR_FILL && (k === "home" || k === "away" || k === "team" || k === "opponent") && o.id != null && !o.name_ar && TAR_FILL[o.id]) o.name_ar = TAR_FILL[o.id];
   for (const kk in o) if (o[kk] && typeof o[kk] === "object") fillAr(o[kk], kk); }
+// Dev only (never set by the runner or deploy.sh): TIFO_FETCH_CACHE=<dir> keeps every /v1 answer on disk with no expiry, so two
+// builds can be compared on the same data and a targeted re-render (TIFO_ONLY) costs no network; delete the folder for fresh data.
+const FCACHE = process.env.TIFO_FETCH_CACHE ? path.resolve(process.env.TIFO_FETCH_CACHE) : "";
+const ONLY = process.env.TIFO_ONLY ? new RegExp(process.env.TIFO_ONLY) : null;   // dev only: write just the pages whose path matches
 async function get(p, tries = 4){
+  const cf = FCACHE && path.join(FCACHE, p.replace(/[?&=:]/g, "_"));
+  if (cf){ try { const t = fs.readFileSync(cf, "utf8"); if (t === "null") return null; const j = JSON.parse(t); fillAr(j); return j; } catch (e){} }
   for (let i = 0; i < tries; i++){
-    try { const r = await fetch(DATA + "/" + p, { signal:AbortSignal.timeout(25000) }); if (r.status === 404 || r.status === 403) return null; if (!r.ok) throw new Error(r.status + " " + p); const j = await r.json(); fillAr(j); return j; }
+    try { const r = await fetch(DATA + "/" + p, { signal:AbortSignal.timeout(25000) }); if (r.status === 404 || r.status === 403){ if (cf){ fs.mkdirSync(path.dirname(cf), { recursive:true }); fs.writeFileSync(cf, "null"); } return null; } if (!r.ok) throw new Error(r.status + " " + p); const t = await r.text(); const j = JSON.parse(t); if (cf){ fs.mkdirSync(path.dirname(cf), { recursive:true }); fs.writeFileSync(cf, t); } fillAr(j); return j; }
     catch (e){ if (i === tries - 1) { console.error("fetch failed", p, e.message); return null; } await new Promise(s => setTimeout(s, 1500 * (i + 1))); }
   }
 }
@@ -40,7 +46,7 @@ function cpKeep(src, dst){ fs.copyFileSync(src, dst); try { const s = fs.statSyn
 const fixAl = s => String(s == null ? "" : s).replace(/(^|[\s«(>])ال (نهيان|مكتوم|قاسمي|نعيمي|معلا|شرقي|خليفة|ثاني|سعود|صباح)(?=$|[\s»),.،<])/g, "$1آل $2");
 // QA 35/45/64/77: any player link still printing a Latin name gets the Arabic one from names/players_ar.json (one pass for every tile)
 let PNAMES = null;
-function write(rel, html){ WRITTEN.add("/" + rel.replace(/index\.html$/, "").replace(/\.html$/, ""));
+function write(rel, html){ if (ONLY && !ONLY.test("/" + rel)) return; WRITTEN.add("/" + rel.replace(/index\.html$/, "").replace(/\.html$/, ""));
   // W2.10: «لـال» -> «لل», and ISO dates in visible text become Arabic dates
   html = html.replace(/(<body[\s\S]*)$/, b => b.replace(/(<script\b[\s\S]*?<\/script>)|>([^<>]*(?:لـ ?ال|\b20\d\d-\d\d-\d\d\b|\d\.0\b)[^<>]*)(?=<)/g, (m, sc, t) => sc ? m : ">" + t.replace(/(\d)\.0\b(?![.\d])/g, "$1").replace(/لـ ?ال/g, "لل").replace(/\b(20\d\d)-(\d\d)-(\d\d)\b/g, (_, y, mo, d) => `${+d} ${MON_AR[+mo - 1]} ${y}`)));
   if (PNAMES) html = html.replace(/(<body[\s\S]*)$/, b => b.replace(/(<script\b[\s\S]*?<\/script>)|<a\b([^>]*?)href="\/p\/(\d+)\/"([^>]*)>([^<]*)<\/a>/g, (m, sc, pre, id, post, txt) => { if (sc || /[\u0600-\u06FF]/.test(txt)) return m; const ar = PNAMES[id] && PNAMES[id].ar; return ar ? `<a${pre.replace(/\s*class="lat"/, "")}href="/p/${id}/"${post.replace(/\s*class="lat"/, "")}>${esc(ar)}</a>` : m; }));
@@ -107,6 +113,7 @@ function phHtml(id, ph, col){
   return `<figure class="pph" style="--pc:${esc(c)}"><img src="/v1/ph/${id}.webp" alt="" width="400" height="500" fetchpriority="high"><figcaption><a href="${esc(ph.page || "")}" rel="noopener">${esc((who ? who.slice(0, 40) + " · " : "") + (ph.license || ""))}</a></figcaption></figure>`;
 }
 function page(o){
+  if (ONLY && o.path && !ONLY.test(o.path + (o.path.endsWith("/") ? "index.html" : ""))) return "";   // dev only (TIFO_ONLY): a page that will not be written is not assembled
   if (!o.v3){ const l = legacy(o); o = Object.assign({}, o, { body:l.main, tools:l.tools, v3:true }); }
   const url = SITE + o.path, p0 = o.path || "", nk = /^\d+$/.test(o.nav || "") ? "comps" : o.nav === "uae" ? "nat" : o.nav || (p0 === "/" || /^\/(today|tomorrow|m)\//.test(p0) ? "home" : /^\/(competitions|c)\//.test(p0) ? "comps" : /^\/(national|uae)\//.test(p0) ? "nat" : /^\/week\//.test(p0) ? "week" : "");   // W1.9: the tab bar knows where it is
   const nav = [["home", "/", "اليوم", IC.today], ["comps", "/competitions/", "البطولات", IC.comps], ["nat", "/national/", "المنتخبات", IC.nat], ["mine", "/competitions/", "فريقي", IC.mine]];
@@ -1193,9 +1200,9 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
     }
     R.DUPCTX = ""; }
   fs.mkdirSync(path.join(OUT, "og"), { recursive:true }); fs.writeFileSync(path.join(OUT, "og/jobs.json"), JSON.stringify(OGJ));
-  try { process.stdout.write(require("child_process").execFileSync("python3", [path.join(__dirname, "og.py")]).toString()); } catch (e){ console.error("og.py failed", e.message); }
+  if (!process.env.TIFO_NO_OG) try { process.stdout.write(require("child_process").execFileSync("python3", [path.join(__dirname, "og.py")]).toString()); } catch (e){ console.error("og.py failed", e.message); }   // TIFO_NO_OG: dev builds skip the share images
   // W1.9: internal links to pages this build did not write become plain text (reported, never fatal)
-  { const SKIP = /^\/(v1|assets|logo|lg|og|audio|api|embed|next)\/|^\/(sw\.js|favicon\.svg|robots\.txt|sitemap\.xml)$|^\/cast\/(feed\.xml|cover\.jpg)$/; let dead = 0; const seen = {};
+  if (!ONLY) { const SKIP = /^\/(v1|assets|logo|lg|og|audio|api|embed|next)\/|^\/(sw\.js|favicon\.svg|robots\.txt|sitemap\.xml)$|^\/cast\/(feed\.xml|cover\.jpg)$/; let dead = 0; const seen = {};
     for (const f of ALLP){ const h = fs.readFileSync(f, "utf8");
       const h2 = h.replace(/(<script\b[\s\S]*?<\/script>|<template\b[^>]*>)|<a\b([^>]*?)\shref="(\/[^"#?]*)(?:[?#][^"]*)?"([^>]*)>([\s\S]*?)<\/a>/g, (m, sc, pre, href, post, inner) => { if (sc) return m; if (SKIP.test(href) || WRITTEN.has(href) || WRITTEN.has(href.replace(/\/$/, ""))) return m; dead++; seen[href.split("/")[1]] = (seen[href.split("/")[1]] || 0) + 1; return `<span${pre}${post}>${inner}</span>`; });
       if (h2 !== h) fs.writeFileSync(f, h2); }
@@ -1219,7 +1226,7 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   // 459: the owner's numbers at an unlisted address (noindex, never in the sitemap, the search index or IndexNow), rebuilt
   // with every build from the /api/tifo/hit counters (cards table, TIFOHIT#<UAE day>). XX = a time zone outside the Arab
   // countries (or none); crawlers are not counted since 2026-09-29 (shell.js). A failed query skips the page, never the build.
-  if (!PREVIEW) try {
+  if (!PREVIEW && !process.env.TIFO_NO_DASH && !ONLY) try {
     const DASH = "o-f6546fa79ce5872b", dayAt = i => new Date(Date.now() + 4 * 36e5 - i * 864e5).toISOString().slice(0, 10), days = [...Array(14)].map((_, i) => dayAt(i));
     const q = `SELECT pk, sk, n FROM cards WHERE pk IN [${days.map(d => `'TIFOHIT#${d}'`).join(",")}]`; let items = [], tok = null;
     do { const r = JSON.parse(require("child_process").execFileSync("aws", ["dynamodb", "execute-statement", "--region", "ap-south-1", "--statement", q, "--output", "json"].concat(tok ? ["--next-token", tok] : []), { env:Object.assign({}, process.env, { PYTHONWARNINGS:"ignore" }), timeout:60000 }).toString());
@@ -1237,7 +1244,7 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   } catch (e){ console.error("dash skipped:", String(e.message || e).split("\n")[0]); }
   fs.writeFileSync(path.join(OUT, ".pages"), String(urls.length));
   // W4.7: a file whose bytes match the last build keeps that build's mtime, so `aws s3 sync` (size + mtime) uploads only what changed
-  { const MF = path.join(CACHE, "out_manifest.json"); let prev = {}; try { prev = JSON.parse(fs.readFileSync(MF, "utf8")); } catch (e){}
+  if (!ONLY) { const MF = path.join(CACHE, "out_manifest.json"); let prev = {}; try { prev = JSON.parse(fs.readFileSync(MF, "utf8")); } catch (e){}
     const next = {}; let kept = 0, fresh = 0;
     (function walk(d){ for (const e of fs.readdirSync(d, { withFileTypes:true })){ const f = path.join(d, e.name); if (e.isDirectory()){ if (e.name !== "next") walk(f); continue; }
       const rel = path.relative(OUT, f), h = crypto.createHash("md5").update(fs.readFileSync(f)).digest("hex"), p = prev[rel];
