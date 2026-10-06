@@ -41,7 +41,8 @@ module.exports = async function(X){
     const H = nm(m.home), A = nm(m.away), t = Date.parse(m.utc), vn = v.name_ar || v.name_en || v.name;
     const st = { postponed:"https://schema.org/EventPostponed", cancelled:"https://schema.org/EventCancelled" }[m.status] || "https://schema.org/EventScheduled";
     const teams = [{ "@type":"SportsTeam", name:H }, { "@type":"SportsTeam", name:A }], played = m.status === "finished" && m.home[2] != null;
-    const addr = Object.assign({ "@type":"PostalAddress" }, v.city ? { addressLocality:v.city } : {}, v.in_uae ? { addressCountry:"AE" } : v.country ? { addressCountry:v.country } : {});
+    const city = String(v.city || "").split(",")[0].trim();   // FotMob cuts the city at 32 characters («Ciudad de Córdoba, Provincia de »)
+    const addr = Object.assign({ "@type":"PostalAddress" }, city ? { addressLocality:city } : {}, v.in_uae ? { addressCountry:"AE" } : v.country ? { addressCountry:v.country } : {});
     if (!addr.addressLocality && !addr.addressCountry) addr.streetAddress = vn;   // Google wants an address; the stadium's name is the one we have
     return { "@context":"https://schema.org", "@type":"SportsEvent", name:`${H} ضد ${A}`, url:`${SITE}/m/${id}/`, startDate:m.utc, ...(m.tbd ? {} : { endDate:new Date(t + 2 * 36e5).toISOString().replace(".000", "") }), sport:"Football",
       eventStatus:st, eventAttendanceMode:"https://schema.org/OfflineEventAttendanceMode", location:{ "@type":"StadiumOrArena", name:vn, address:addr },

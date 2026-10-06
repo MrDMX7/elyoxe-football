@@ -11,9 +11,11 @@
      manifest.json       per page: [content hash, shell (asset) version, last written ms, content changed day]; the runner
                          promotes manifest.next.json to it after a good upload (a failed upload is redone next hour)
      delta/              this run's changed pages     delete.txt   pages that left the scope (S3 keys), guarded at 5 %
-   Budgets per run (env): TIFO_WORLD_NEW new pages (5000), TIFO_WORLD_FETCH profiles (12000), TIFO_WORLD_SHELL pages re-drawn only
-   because the shell changed, oldest first and only when 3 days old (3000). A page keeps the hashed assets it was written with
-   (/assets/ is never pruned). Returns the URLs (with lastmod) for sitemap-players.xml. */
+   Budgets per run (env), since every upload costs ~0.43 s from the laptop (measured 2026-10-06, whatever the concurrency):
+   TIFO_WORLD_NEW new pages (1500), TIFO_WORLD_CHG changed pages (1500: a template change re-draws all ~10k, so it takes a few
+   runs), TIFO_WORLD_FETCH profiles (12000), TIFO_WORLD_SHELL pages re-drawn only because the shell changed, oldest first and only
+   when 3 days old (1000). A page keeps the hashed assets it was written with (/assets/ is never pruned). Returns the URLs (with
+   lastmod) for sitemap-players.xml and the nationality hubs. */
 "use strict";
 const crypto = require("crypto");
 const RECENT = /^(2025\/2026|2026\/2027|2025|2026)$/;
@@ -28,7 +30,7 @@ const dayOf = ms => new Date(ms + 4 * 36e5).toISOString().slice(0, 10);
 module.exports = async function(X){
   const { get, page, esc, SITE, CACHE, fs, path, bcLd, finalize, written, NAMES_AR, FMN, WP, PH, phHtml, colors, teamPages, playerPages, S_TEAMS, ASSET_V } = X;
   const env = (k, d) => +(process.env[k] || d);
-  const NEW = env("TIFO_WORLD_NEW", 5000), FETCH = env("TIFO_WORLD_FETCH", 12000), SHELL = env("TIFO_WORLD_SHELL", 3000), SHELL_AGE = 3 * 864e5;
+  const NEW = env("TIFO_WORLD_NEW", 1500), CHG = env("TIFO_WORLD_CHG", 1500), FETCH = env("TIFO_WORLD_FETCH", 12000), SHELL = env("TIFO_WORLD_SHELL", 1000), SHELL_AGE = 3 * 864e5;
   const t0 = Date.now(), DIR = path.join(CACHE, "world"), DELTA = path.join(DIR, "delta"), rj = (f, d) => { try { return JSON.parse(fs.readFileSync(path.join(DIR, f), "utf8")); } catch (e){ return d; } };
   fs.mkdirSync(DIR, { recursive:true }); fs.rmSync(DELTA, { recursive:true, force:true }); fs.mkdirSync(DELTA, { recursive:true });
   const W = await get("world/players.json"), WI = (await get("world/index.json", 2)) || {};
@@ -75,8 +77,9 @@ module.exports = async function(X){
     const mm = (mates[club] || []).filter(x => x !== id).sort((a, c) => (prof[c].s[0] ? +prof[c].s[0][3] || 0 : 0) - (prof[a].s[0] ? +prof[a].s[0][3] || 0 : 0)).slice(0, 12);
     const mateHtml = mm.length ? `<section class="grp"><div class="gh"><h2>لاعبين في ${esc(tname(club))}</h2></div><div class="card">${mm.map(x => `<a class="row" href="/db/player/${x}/"><span class="rt"><b>${nameOf(x) ? esc(nameOf(x)) : `<span class="lat">${esc(latin(x))}</span>`}</b><small>${esc(posAr((prof[x].bio || {}).pos))}</small></span></a>`).join("")}</div></section>` : "";
     const lead = wiki && wiki[1] ? `<p class="pwiki">${esc(wiki[1].length > 700 ? wiki[1].slice(0, wiki[1].lastIndexOf(" ", 690)) + "…" : wiki[1])} <a href="https://ar.wikipedia.org/wiki/${encodeURIComponent(String(wiki[0]).replace(/ /g, "_"))}" rel="noopener">ويكيبيديا</a></p>` : "";
-    const sum = seasons.length ? `<p class="intro">${esc(title)} ${pos ? esc(pos) + " " : ""}${club ? "في " + esc(tname(club)) : ""}${cn ? "، من " + esc(cn) : ""}${age != null ? "، عمره " + age + " سنة" : ""}. لعب ${tot[0]} مباراة وسجّل ${tot[1]} هدف في ${seasons.length} ${seasons.length > 10 ? "موسم" : "مواسم"} مسجّلة.</p>` : "";
-    const html = `<p class="crumbs"><a href="/db/">الموسوعة</a>${club ? "، " + tlink(club) : ""}</p>${nm ? `<h1>${esc(nm)}</h1>` : `<h1 class="lat">${esc(la)}</h1>`}<p class="season">${[pos && esc(pos), club && esc(tname(club)), cn && esc(cn), nm && la && `<span class="lat">${esc(la)}</span>`].filter(Boolean).join(" · ")}</p>` +
+    const n = (k, w) => k === 1 ? w[0] + (w[3] ? " " + w[3] : "") : k === 2 ? w[1] : `${k} ${k >= 3 && k <= 10 ? w[2] : w[0]}`;   // 1 · 2 · 3-10 · 11+
+    const sum = seasons.length ? `<p class="intro">${esc(title)} ${pos ? esc(pos) + " " : ""}${club ? "في " + esc(tname(club)) : ""}${cn ? "، من " + esc(cn) : ""}${age != null ? "، عمره " + age + " سنة" : ""}. لعب ${n(tot[0], ["مباراة", "مباراتين", "مباريات", "وحدة"])}${tot[1] ? ` وسجّل ${n(tot[1], ["هدف", "هدفين", "أهداف", "واحد"])}` : ""} في ${n(seasons.length, ["موسم", "موسمين", "مواسم", "واحد"])}.</p>` : "";
+    const html = `<p class="crumbs"><a href="/db/">الموسوعة</a>${club ? "، " + tlink(club) : ""}</p>${nm ? `<h1>${esc(nm)}</h1>` : `<h1 class="lat">${esc(la)}</h1>`}<p class="season">${[pos && esc(pos), club && esc(tname(club)), cn && `<a href="/db/players/${esc(String(b.cc).toLowerCase())}/">${esc(cn)}</a>`, nm && la && `<span class="lat">${esc(la)}</span>`].filter(Boolean).join(" · ")}</p>` +
       `<div class="sx">${sum}${lead}${bio.length ? `<section class="grp"><div class="gh"><h2>بطاقته</h2></div><div class="card"><dl class="bio">${bio.map(r => `<div><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`).join("")}</dl></div></section>` : ""}` +
       tbl(seasons, "مسيرته موسم بموسم") + tbl(t.n.filter(s => s[1] || s[2]), "مع المنتخب") + tro + mateHtml + `<p class="src">المسيرة والبطاقة من FotMob${lead ? "، والنبذة من ويكيبيديا" : ""}. <a href="/db/player/?id=${id}">مبارياته وانتقالاته في الموسوعة</a></p></div>`;
     const person = Object.assign({ "@context":"https://schema.org", "@type":"Person", name:title, url:`${SITE}/db/player/${id}/`, jobTitle:"لاعب كرة قدم" }, nm && la ? { alternateName:la } : {}, b.born && b.born >= "1900" ? { birthDate:b.born } : {},
@@ -86,10 +89,13 @@ module.exports = async function(X){
   }
   const next = {}, now = Date.now(), urls = [], fresh = []; let nNew = 0, nChg = 0, nShell = 0, nKeep = 0, bytes = 0;
   const shellOld = inScope.filter(id => man[id] && man[id][1] !== ASSET_V && now - man[id][2] > SHELL_AGE).sort((a, b) => man[a][2] - man[b][2]), shellOK = new Set(shellOld.slice(0, SHELL));
-  for (const id of inScope){
+  // new pages first, then the ones written longest ago: a page held back by a budget is the first one written next run
+  const order = inScope.slice().sort((a, b) => (man[a] ? man[a][2] : 0) - (man[b] ? man[b][2] : 0));
+  for (const id of order){
     const P = body(id), h = sha(P.title + P.desc + P.html + JSON.stringify(P.ld)), m = man[id];
     const isNew = !m, changed = m && m[0] !== h, shell = m && !changed && shellOK.has(id);
     if (isNew && nNew >= NEW) continue;   // the first run spreads the backlog over a few hours; out of scope until written
+    if (changed && nChg >= CHG){ next[id] = m; urls.push({ u:`/db/player/${id}/`, lm:m[3] }); written(`/db/player/${id}`); continue; }   // a template change re-draws every page: over a few runs
     if (isNew || changed || shell){
       const html = finalize(page({ path:`/db/player/${id}/`, page:"ref", title:P.title, desc:P.desc, ld:P.ld, art:colors[P.club] ? [colors[P.club], [colors[P.club][1] || colors[P.club][0], colors[P.club][0]]] : null, heroExtra:PH[id] ? phHtml(id, PH[id], colors[P.club]) : "", body:P.html }));
       const f = path.join(DELTA, "db/player", id, "index.html"); fs.mkdirSync(path.dirname(f), { recursive:true }); fs.writeFileSync(f, html); bytes += html.length;
@@ -106,5 +112,8 @@ module.exports = async function(X){
   fs.writeFileSync(path.join(DIR, "manifest.next.json"), JSON.stringify(next));
   const st = { candidates:cand.length, fetched, failed, waiting:cand.filter(p => meta.done[p[0]] !== gen).length, scope:inScope.length, pages:Object.keys(next).length, new:nNew, changed:nChg, shell:nShell, kept:nKeep, deleted:guard ? 0 : gone2.length, mb:+(bytes / 1e6).toFixed(1), s:+((Date.now() - t0) / 1000).toFixed(1) };
   console.log("world stage:", JSON.stringify(st));
-  return { urls, fresh, stats:st };
+  // the nationality hubs build.cjs writes into out/ (/db/players/<cc>/): every published page, by country, then club
+  const hubs = {}; Object.keys(next).forEach(id => { const t = prof[id]; if (!t) return; const cc = (t.bio || {}).cc || "XXX", club = clubOf(id);
+    (hubs[cc] = hubs[cc] || []).push([id, nameOf(id) || latin(id), club, tname(club), posAr((t.bio || {}).pos)]); });
+  return { urls, fresh, stats:st, hubs };
 };
