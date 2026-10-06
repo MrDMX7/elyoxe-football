@@ -63,9 +63,12 @@ media:
     - {key: yt_onsport, channel: UCo2TvjBHS1BtyIkeGGTMe6w, name: "أون سبورت", lang: ar, kind: broadcaster, comps: [519, 9941, 10314], why: "@ONSporteg, 3.78M, verified: United Media Services, Egyptian league broadcaster"}
     - {key: yt_sportsunited, channel: UCNyKhK1GI6CUbJ-BDtJ44DA, name: "المتحدة للرياضة", lang: ar, kind: broadcaster, comps: [519, 9941, 10314], why: "@SportsUnitedeg, 1.52M, verified: markets the Egyptian clubs' TV and digital rights; posts each goal"}
     - {key: yt_arryadia, channel: UCRN5ho3UGhUi7ZCBe2G2f2w, name: "الرياضية المغربية", lang: ar, kind: broadcaster, comps: [530, 11840], why: "@ArryadiaTv, 1.58M: SNRT's official sports channel, Botola broadcaster"}
+    - {key: yt_sharjahsports, channel: UCdF4bi6osRgJ_rXwCTGG3ZQ, name: "الشارقة الرياضية", lang: ar, kind: broadcaster, comps: [538, 329], why: "@SharjahSportsTV, 122K: قناة الشارقة الرياضية، ناقل دوري أدنوك وكأس الخليج في الإمارات (2026-10-06)"}
+    - {key: yt_dubaisports, channel: UCmJr9VRnC8Q1TCIrf2G8bcg, name: "دبي الرياضية", lang: ar, kind: broadcaster, comps: [538, 329], why: "@dubaisports, verified: قناة دبي الرياضية (2026-10-06)"}
     - {key: yt_tod, channel: UCvuPuKPukGd8S2qr4msLAuQ, name: "TOD", lang: en, kind: broadcaster, why: "@tod_bybein, 637K, verified: القناة الرسمية لـ TOD by beIN"}
     # leagues and confederations
     - {key: yt_saudiproleague, channel: UCqXAWrjSgLb0EPa_icPt-pw, name: "دوري روشن", lang: ar, kind: league, comps: [536], why: "@-saudiproleague, 812K, verified: القناة الرسمية لدوري روشن السعودي"}
+    - {key: yt_uaeproleague, channel: UC3mQCPDzpRstR58t9nfQ_Ew, name: "دوري أدنوك", lang: ar, kind: league, comps: [538], why: "@uaeproleague, 41K: قناة رابطة المحترفين الإماراتية (2026-10-06)"}
     - {key: yt_qsl, channel: UC55yDKHTJcYllsWMSlYMWrg, name: "دوري نجوم قطر", lang: ar, kind: league, comps: [535, 11018], why: "@QSLTV, 61K: مؤسسة دوري نجوم قطر, the league's own channel"}
     - {key: yt_ligue1, channel: UCQsH5XtIc9hONE1BQjucM0g, name: "الدوري الفرنسي", lang: fr, kind: league, comps: [53], why: "@Ligue1, 3.4M, verified: la chaîne officielle de la Ligue 1 McDonald's"}
     - {key: yt_mls, channel: UCSZbXT5TLLW_i-5W8FZpFsg, name: "الدوري الأمريكي", lang: en, kind: league, comps: [130, 10043], why: "@mls, 2.37M, verified: official"}
