@@ -49,15 +49,33 @@ def player_teams(store, comps):
     return out
 
 
+def stage_item(story, items_by_id):
+    """The headline that reached the story's stage, when it is «agreed» or further: the card shows that one beside its stage (an
+    «official» beside «Ronaldinho is why Raphinha joined Barça» told a story the headline did not), Arabic first, then earliest."""
+    if C.STAGE_RANK.get(story.get("stage"), -1) < C.STAGE_RANK["agreed"]:
+        return None
+    xs = sorted((items_by_id[i] for i in story["items"] if i in items_by_id and items_by_id[i].get("stage") == story["stage"]),
+                key=lambda it: (it.get("lang") != "ar", it.get("at") or ""))
+    return xs[0] if xs else None
+
+
+def subjects(story):
+    """Who the story is about: the people and clubs its first headline names (cluster seed), else its anchor."""
+    return story.get("seed") or story.get("anchor") or story["entities"]
+
+
 def display(story, items_by_id, D):
     srcs = K.sources_of(story, items_by_id)
     sm = story.get("summary") or {}
     ar = next((s for s in srcs if s["lang"] == "ar"), None)
-    title, tlang = (sm.get("title_ar"), "ar") if sm.get("title_ar") else ((ar["title"], "ar") if ar else ((srcs[0]["title"], srcs[0]["lang"]) if srcs else ("", "")))
+    si = stage_item(story, items_by_id)
+    title, tlang = ((sm.get("title_ar"), "ar") if sm.get("title_ar") else (si["title"], si["lang"]) if si else
+                    ((ar["title"], "ar") if ar else ((srcs[0]["title"], srcs[0]["lang"]) if srcs else ("", ""))))
+    subj = subjects(story)
     return {"id": story["id"], "kind": story["kind"], "stage": story.get("stage"), "here_we_go": bool(story.get("here_we_go")),
             "title": title, "title_lang": tlang, "summary": sm.get("summary_ar"), "image": story.get("image"),
-            "entities": [{"kind": k, "id": i, "name": D.names.get((k, i), "")} for k, i in (story.get("anchor") or story["entities"])],
-            "mentions": [{"kind": k, "id": i, "name": D.names.get((k, i), "")} for k, i in story["entities"] if [k, i] not in (story.get("anchor") or [])],
+            "entities": [{"kind": k, "id": i, "name": D.names.get((k, i), "")} for k, i in subj],
+            "mentions": [{"kind": k, "id": i, "name": D.names.get((k, i), "")} for k, i in story["entities"] if [k, i] not in subj],
             "sources": srcs, "reliability": K.reliability(srcs), "first_at": story["first_at"], "last_at": story["last_at"]}
 
 
@@ -84,13 +102,14 @@ def transfers(stories, items_by_id, D):
     for s in stories:
         if s["kind"] != "transfer":
             continue
-        for k, i in (s.get("anchor") or []):
+        for k, i in subjects(s):   # the stage is the story's subjects', never every player a merged headline named (Güler, 2026-10-06)
             if k != "player":
                 continue
             p = by_player.setdefault(i, {"player": {"id": i, "name": D.names.get(("player", i), "")}, "stage": None, "stories": []})
             srcs = K.sources_of(s, items_by_id)
+            si = stage_item(s, items_by_id)
             p["stories"].append({"id": s["id"], "stage": s.get("stage"), "at": s["first_at"], "first": srcs[0]["name"] if srcs else None,
-                                 "title": (s.get("summary") or {}).get("title_ar") or (srcs[0]["title"] if srcs else "")})
+                                 "title": (s.get("summary") or {}).get("title_ar") or (si["title"] if si else (srcs[0]["title"] if srcs else ""))})
             if C.STAGE_RANK.get(s.get("stage"), -1) > C.STAGE_RANK.get(p["stage"], -1):
                 p["stage"] = s.get("stage")
     for p in by_player.values():
