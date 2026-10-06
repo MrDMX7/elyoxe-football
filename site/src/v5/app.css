@@ -102,8 +102,8 @@ main{display:block;max-width:calc(var(--maxw) + 2 * var(--gut));margin:0 auto;pa
 .row{position:relative;display:flex;align-items:center;gap:12px;min-height:48px;padding:11px 16px;font-size:17px;line-height:22px}
 a.row,button.row{width:100%;text-align:start;transition:background .15s}
 a.row:active,button.row:active,.mr:active,.hd-row:active{background:var(--fill)}
-.card > * + *::before,.sepd > * + *::before{content:"";position:absolute;top:0;inset-inline:16px 0;border-top:.5px solid var(--sep)}
-.card > .ins + *::before,.card > * + .ins::before{inset-inline-start:58px}
+.card:not(.lc) > * + *::before,.sepd > * + *::before{content:"";position:absolute;top:0;inset-inline:16px 0;border-top:.5px solid var(--sep)}
+.card:not(.lc) > .ins + *::before,.card:not(.lc) > * + .ins::before{inset-inline-start:58px}
 .row .ic{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--c,#8E8E93);color:#fff}
 .row .ic svg{width:19px;height:19px}
 .row .lg{width:28px;height:28px;object-fit:contain;flex:none}
@@ -407,13 +407,13 @@ a.bl:active{background:var(--fill)}
 .sf .clr[hidden]{display:none}
 
 /* ---------------------------------------------------------------- sheets (<dialog>) */
-.sheet{position:fixed;inset:auto 0 0;width:100%;max-width:560px;max-height:min(88vh,860px);margin:0 auto;padding:0 0 calc(12px + env(safe-area-inset-bottom));border:0;border-radius:22px 22px 0 0;background:var(--bg);color:var(--label);overflow:hidden auto;overscroll-behavior:contain;transform:translateY(100%);transition:transform .42s var(--spring),overlay .42s allow-discrete,display .42s allow-discrete}
-.sheet[open]{transform:none}
-@starting-style{.sheet[open]{transform:translateY(100%)}}
-.sheet::backdrop{background:rgba(0,0,0,0);transition:background .3s,overlay .3s allow-discrete,display .3s allow-discrete}
-.sheet[open]::backdrop{background:rgba(0,0,0,.36)}
-@starting-style{.sheet[open]::backdrop{background:rgba(0,0,0,0)}}
-.sheet.closing{transform:translateY(100%)}
+dialog.sheet{position:fixed;inset:auto 0 0;width:100%;max-width:560px;max-height:min(88vh,860px);margin:0 auto;padding:0 0 calc(12px + env(safe-area-inset-bottom));border:0;border-radius:22px 22px 0 0;background:var(--bg);color:var(--label);overflow:hidden auto;overscroll-behavior:contain;transform:translateY(100%);transition:transform .42s var(--spring),overlay .42s allow-discrete,display .42s allow-discrete}
+dialog.sheet[open]{transform:none}
+@starting-style{dialog.sheet[open]{transform:translateY(100%)}}
+dialog.sheet::backdrop{background:rgba(0,0,0,0);transition:background .3s,overlay .3s allow-discrete,display .3s allow-discrete}
+dialog.sheet[open]::backdrop{background:rgba(0,0,0,.36)}
+@starting-style{dialog.sheet[open]::backdrop{background:rgba(0,0,0,0)}}
+dialog.sheet.closing{transform:translateY(100%)}
 .sh-grab{width:36px;height:5px;margin:7px auto 0;border-radius:3px;background:var(--label3)}
 .sh-hd{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px 12px;background:var(--bg)}
 .sh-hd h2{font-size:20px;line-height:25px;font-weight:700;outline:none}
@@ -503,3 +503,172 @@ a.chip::after,button.chip::after{inset:-8px -2px}
 .nw .ents{position:relative;z-index:1}
 
 .seg.none .seg-th{opacity:0}
+
+/* ================================================================ production rollout (site/redesign/v5/ROLLOUT.md)
+   What the preview did not need: the match island, the first visit, install, the audit line, every match in the world, the
+   legacy content containers (.lc, styled by content.css), the goal moment, cinema and second screen, media.js's video sheet,
+   view transitions. */
+[hidden]{display:none!important}
+html:has(body.sheet-on){overflow:hidden}
+#homelist.dim,#roundlist.dim{opacity:.45;transition:opacity .2s}
+.chip.enc{background:var(--fill);color:var(--label2);height:24px;font-size:12px}
+.chip.lvc{background:var(--live-bg);color:var(--live);height:22px;padding:0 8px;font-size:12px;font-weight:600}
+.ghs{color:var(--label2);font-size:13px;white-space:nowrap}
+.sh-sub{display:block;margin-top:2px;color:var(--label2);font-size:13px;line-height:17px;font-weight:400}
+.nospoil .shown .sc.hide{filter:none;opacity:1}
+
+/* large title extras (legacy pages): the crumb kicker, a competition logo, the season line */
+.lt-k{margin:0 0 2px;color:var(--label2);font-size:13px;line-height:18px}
+.lt-k a{color:var(--accent)}
+.lt-k a + a::before{content:"·";margin-inline:6px;color:var(--label3)}
+.lt-t{min-width:0}
+.lt .lt-s{margin-top:4px}
+.lt-lg{width:44px;height:44px;object-fit:contain;flex:none;margin-bottom:4px}
+.lt-x{flex:none}
+.hdr-k{margin:0 0 6px;color:var(--label2);font-size:13px}
+.hdr-k a{color:var(--accent)}
+
+/* the legacy containers: grouped cards hold the old block's HTML; the sheets' copies sit on a card too */
+.sxs .sxb{background:var(--bg2);border-radius:var(--r);padding:12px 16px}
+.lc.mounts > * + *{margin-top:14px}
+.faq .gl{padding:2px 16px 14px}
+.faq dt{margin-top:12px;font-weight:600;font-size:15px;line-height:21px}
+.faq dd{margin:4px 0 0;color:var(--label2);font-size:15px;line-height:22px}
+.shprev{display:block;width:100%;height:auto;aspect-ratio:1200/630;object-fit:cover;border-radius:14px;margin-bottom:12px;background:var(--fill)}
+.embc{display:block;width:calc(100% - 32px);margin:8px 16px;padding:10px;border:0;border-radius:10px;background:var(--fill);color:var(--label);font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;direction:ltr;resize:none}
+.mine-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 16px 22px;text-align:center}
+.mine-empty b{font-size:17px}
+.mine-empty p{font-size:15px;line-height:21px}
+.mine-ic{display:grid;place-items:center;width:56px;height:56px;border-radius:16px;background:var(--accent-bg);color:var(--accent)}
+.mine-ic svg{width:28px;height:28px}
+
+/* footer: the audit line and every page */
+.foot .audit{margin-bottom:8px;color:var(--label2)}
+.foot .ab{display:inline-flex;align-items:center;gap:4px;margin-inline-end:4px;padding:2px 9px 2px 8px;border-radius:11px;background:var(--accent-bg);color:var(--accent);font-weight:600}
+.foot .ab svg{width:12px;height:12px}
+.fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 4px;margin:14px auto;max-width:560px}
+.fnav a{padding:4px 6px}
+.foot p + p{margin-top:6px}
+
+/* اليوم: the national team's countdown, a feature card's countdown, every match in the world */
+.natcd{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 16px}
+.natcd small{display:block;margin-top:2px;color:var(--accent);font-size:13px;font-weight:600}
+.fc-cd{margin-top:8px;text-align:center;color:var(--accent);font-size:13px;font-weight:600}
+.wl > summary .rv{color:var(--label2);font-size:15px}
+#world{margin-top:26px}
+#world:empty{display:none}
+
+/* the match header: the prayer line, the media button, a stale page, the pick's result, the goal moment */
+.prayl{margin-top:6px;color:var(--label2);font-size:13px}
+.prayl:empty,.mslot:empty{display:none}
+.mslot{margin-top:12px}
+.hdr .mslot .mdh{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 18px;border:0;border-radius:22px;background:var(--accent);color:var(--on-accent);font:600 15px var(--font);cursor:pointer}
+.ev .mdw{position:relative;min-height:26px;padding:0 10px;border:0;border-radius:13px;background:var(--accent-bg);color:var(--accent);font:600 12px var(--font)}
+.ev .mdw::after{content:"";position:absolute;inset:-9px -4px}
+.stalen{margin-top:8px;color:var(--label2);font-size:12.5px}
+html.stale .mr.is-live .sc,html.stale .mh .sc,html.stale .fc .sc{opacity:.45;transition:opacity .3s}
+.pickres{margin-top:8px;color:var(--loss);font-size:13px;font-weight:600}
+.pickres.ok{color:var(--win)}
+.hdr.goal::after{content:"";position:absolute;inset:calc(-1 * (var(--navh) + env(safe-area-inset-top))) 0 0;z-index:-1;background:var(--gc,var(--accent));opacity:0;animation:v5gflash 2.2s var(--ease)}
+@keyframes v5gflash{12%{opacity:.32}100%{opacity:0}}
+.gtext{position:absolute;top:34%;z-index:3;display:flex;flex-direction:column;align-items:center;gap:2px;max-width:70%;padding:10px 20px;border-radius:18px;background:var(--gc,var(--accent));color:var(--gci,#fff);box-shadow:0 12px 30px rgba(0,0,0,.25);pointer-events:none}
+.gtext b{font-size:28px;line-height:32px;font-weight:800}
+.gtext span{font-size:13px;line-height:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.gtext.fr{inset-inline-start:16px;animation:v5gin-r 2.4s var(--spring) forwards}
+.gtext.fl{inset-inline-end:16px;animation:v5gin-l 2.4s var(--spring) forwards}
+@keyframes v5gin-r{0%{transform:translateX(70px);opacity:0}16%{transform:none;opacity:1}82%{opacity:1}100%{opacity:0}}
+@keyframes v5gin-l{0%{transform:translateX(-70px);opacity:0}16%{transform:none;opacity:1}82%{opacity:1}100%{opacity:0}}
+
+/* «جزيرة المباراة»: the live score of a followed team under the nav bar, on every page */
+.island{position:fixed;z-index:41;top:calc(env(safe-area-inset-top) + var(--navh) + 4px);inset-inline:0;display:flex;align-items:center;gap:8px;width:max-content;max-width:calc(100% - 24px);height:44px;margin:0 auto;padding:0 4px 0 14px;border-radius:22px;background:#0B0B0C;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.22),inset 0 0 0 .5px rgba(255,255,255,.12);font-size:14px;line-height:18px;font-weight:600;animation:v5isin .45s var(--spring);view-transition-name:island}
+@keyframes v5isin{from{transform:scale(.6);opacity:0}}
+.island .is-t{display:flex;align-items:center;gap:6px;min-width:0}
+.island .is-n{max-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.island .cr{width:20px;height:20px}
+.island .is-m{display:flex;flex-direction:column;align-items:center;min-width:54px}
+.island .sc{font-size:17px;line-height:20px;color:#fff}
+.island .st,.island .st.live{font-size:10.5px;line-height:12px;color:#FF6961}
+.island .dot{width:5px;height:5px;background:#FF453A}
+.island .is-more{padding:0 6px;border-radius:10px;background:rgba(255,255,255,.16);font-size:11px;line-height:20px}
+.island .is-x,.instask .is-x{position:relative;flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;color:rgba(255,255,255,.72)}
+.island .is-x svg,.instask .is-x svg{width:12px;height:12px}
+.island .is-x::after,.instask .is-x::after{content:"";position:absolute;inset:-4px}
+.island.goal{animation:v5isgoal 1s var(--spring)}
+@keyframes v5isgoal{30%{transform:scale(1.12);box-shadow:0 0 0 6px color-mix(in srgb,#35D07F 55%,transparent)}}
+.island-on main{padding-top:calc(var(--navh) + env(safe-area-inset-top) + 54px)}
+.island-on .segbar{top:calc(var(--navh) + env(safe-area-inset-top) + 50px)}
+.island-on .hdr-wash,.island-on .hdr.goal::after{top:calc(-1 * (var(--navh) + env(safe-area-inset-top) + 54px))}
+
+/* install: the quiet card above the tab bar, and the sheet */
+.instask{position:fixed;z-index:44;inset-inline:0;bottom:calc(max(10px,env(safe-area-inset-bottom)) + 70px);display:flex;align-items:center;gap:10px;width:calc(100% - 24px);max-width:440px;margin:0 auto;padding:10px 8px 10px 12px;border-radius:20px;background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);box-shadow:var(--tb-shadow),inset 0 0 0 .5px var(--glass-b);animation:v5isin .45s var(--spring)}
+.instask img{width:40px;height:40px;border-radius:10px;flex:none}
+.instask > span{flex:1;min-width:0;font-size:14px;line-height:18px}
+.instask small{display:block;color:var(--label2);font-size:12.5px;line-height:16px}
+.instask .pill{flex:none;padding:0 16px;font-size:14px}
+.instask .is-x{color:var(--label2)}
+.inst-hero{display:flex;align-items:center;gap:14px;padding:4px 4px 0}
+.inst-ic{flex:none;display:grid;place-items:center;width:64px;height:64px;border-radius:15px;background:#0B8246}
+.inst-ic .mark{grid-template-columns:repeat(3,10px);gap:3px}
+.inst-ic .mark i{width:10px;height:10px;border-radius:2.5px;background:#fff}
+.inst-ic .mark i:nth-child(2),.inst-ic .mark i:nth-child(6),.inst-ic .mark i:nth-child(7){background:#7CF0B4}
+.inst-ic .mark i:nth-child(3),.inst-ic .mark i:nth-child(5){background:rgba(255,255,255,.45)}
+.inst-hero p{color:var(--label2);font-size:15px;line-height:21px}
+.inst-ios .rt{font-size:15px;line-height:26px}
+.kbd{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:7px;background:var(--fill);font-weight:600;vertical-align:1px}
+.kbd svg{width:15px;height:15px}
+
+/* the first visit */
+#sh-onb .note{margin-bottom:6px}
+#onbr .picks{margin-bottom:14px}
+#onbr .empty{padding:12px}
+.ccs{display:flex;flex-wrap:wrap;gap:8px}
+.ccb{min-height:44px;padding:0 16px;border-radius:22px;background:var(--bg2);font-size:15px;font-weight:500}
+.ccb[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.onb-acts{position:sticky;bottom:0;display:flex;gap:10px;margin:18px -16px 0;padding:12px 16px 4px;background:var(--bg)}
+.onb-acts .pill{flex:1}
+
+/* search: the voice button sits next to the clear button */
+.sf .mic{inset-inline-end:40px}
+.sf:has(.mic) input{padding-inline-end:76px}
+
+/* the lineup builder */
+.pitchw{padding:12px}
+button.pp{background:none;border:0;cursor:pointer;min-height:44px}
+
+/* cinema: the score, the minute and the last event, full screen */
+.cine{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:24px;background:#000;color:#fff;text-align:center}
+.cine > .is-x{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:12px;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff}
+.cine > .is-x svg{width:14px;height:14px}
+.cine .ct3{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:4vw}
+.cine .ct3 > span{display:flex;flex-direction:column;align-items:center;gap:12px;font-size:clamp(18px,3vw,34px);font-weight:700}
+.cine .cs .sc{font-size:clamp(64px,16vw,200px);line-height:1;font-weight:800;color:#fff}
+.cine .cs .sc.ko{font-size:clamp(40px,10vw,120px)}
+.cine p{margin-top:3vh;color:rgba(255,255,255,.75);font-size:clamp(16px,2.6vw,28px)}
+.cine .st,.cine .st.live{font-size:inherit;line-height:inherit}
+
+/* the second screen: the header and the events, big, nothing else */
+body.second .nav,body.second .tabbar,body.second .island,body.second .segbar,body.second .foot,body.second .instask{display:none!important}
+body.second main > :not(.hdr):not(.pane[data-p="ov"]){display:none!important}
+body.second .pane[data-p="ov"]{display:block!important}
+body.second .pane[data-p="ov"] > :not(:has(#ev)){display:none!important}
+body.second main{padding-top:calc(16px + env(safe-area-inset-top))}
+body.second .mh .sc{font-size:min(22vw,120px);line-height:1.05}
+.second-x{position:fixed;z-index:50;inset-inline:0;bottom:calc(16px + env(safe-area-inset-bottom));width:max-content;margin:0 auto;box-shadow:var(--tb-shadow)}
+
+/* media.js's video sheet (a <div class="sheet mvsh">) and the scrim the v5 client draws under such sheets */
+.scrim5{position:fixed;inset:0;z-index:59;background:rgba(0,0,0,.36)}
+.mvsh{position:fixed;z-index:60;inset:auto 0 0;display:block;max-width:560px;max-height:92svh;margin:0 auto;overflow:auto;border-radius:22px 22px 0 0;background:var(--bg);color:var(--label);box-shadow:0 -10px 40px rgba(0,0,0,.2)}
+.mvsh .sh-in{background:none!important;color:inherit!important;padding:0 16px calc(16px + env(safe-area-inset-bottom))!important}
+.mvsh .sh-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0 12px}
+.mvsh .sh-h h2{font-size:20px;line-height:25px;font-weight:700}
+.mvsh .x{min-height:36px;padding:0 14px;border:0;border-radius:18px;background:var(--fill);color:var(--label);font:600 14px var(--font)}
+.mvsh .mvp,.mvsh .mvx{border-radius:14px;overflow:hidden}
+.mvsh .mvm,.mvsh .mvt{color:var(--label2)!important}
+.mvsh .mvl button{border-radius:16px;border-color:var(--sep)!important;color:var(--label)!important;min-height:36px}
+.mvsh .mvl button[aria-pressed=true]{background:var(--accent)!important;color:var(--on-accent)!important;border-color:var(--accent)!important}
+
+/* app-like navigation: pages cross-fade (where the browser can), the tab bar and the island stay put */
+@view-transition{navigation:auto}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.2s;animation-timing-function:var(--ease)}
+.tabbar{view-transition-name:tabbar}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
