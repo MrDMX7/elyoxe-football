@@ -203,6 +203,9 @@
   };
   var byKick = function (a, b) { return String(a.kickoff_utc || "").localeCompare(String(b.kickoff_utc || "")) || (a.id - b.id); };
   U.byKick = byKick;
+  // what a day list shows of each match, hashed: the page carries the build's, the browser redraws only when its own differs
+  U.sig = function (ms) { var s = ""; (ms || []).forEach(function (m) { s += m.id + ":" + m.status + ":" + (m.score ? m.score.home + "-" + m.score.away : "") + ":" + (m.minute || "") + ":" + (m.kickoff_utc || "") + "|"; });
+    var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36) + "." + (ms || []).length; };
   // matches grouped by competition: a competition with one of my teams first, then the index order (the UAE first)
   U.groups = function (ms, o) {
     o = o || {}; var g = {}, order = [];

@@ -31,7 +31,7 @@
     var isArab = function (m) { return (o.arab && (o.arab[m.home.id] || o.arab[m.away.id])) || (o.arabComp && o.arabComp[m.comp]); };
     if (f === "live") list = ms.filter(U.isLive);
     else if (f === "arab") list = ms.filter(isArab);
-    var top = f === "all" && !o.noFeature ? P.featured(ms, o) : null, mineM = top && o.mine && (o.mine[top.home.id] || o.mine[top.away.id]);
+    var top = f === "all" && !o.noFeature ? (o.featId && ms.filter(function (m) { return String(m.id) === String(o.featId); })[0]) || P.featured(ms, o) : null, mineM = top && o.mine && (o.mine[top.home.id] || o.mine[top.away.id]);
     var head = top ? '<section class="grp" id="feat"><div class="gh"><h2>' + (mineM ? "فريقك" : U.isLive(top) ? "مباشر الحين" : top.status === "finished" ? "أبرز نتيجة" : "أبرز مباراة") + "</h2></div>" + U.fcard(top) + '<div id="natcd"></div></section>' : "";
     var empty = f === "live" ? "ما في مباريات مباشرة الحين." : f === "arab" ? "ما في مباريات عربية في هاليوم." : "ما في مباريات في هاليوم.";
     return head + '<section class="grp" id="daylist"><div class="gh"><h2>' + (f === "live" ? "مباشر" : f === "arab" ? "مباريات العرب" : "مبارياتنا") + '</h2><span class="num">' + (list.length ? list.length + " مباراة" : "") + "</span></div>" + '<div class="stack">' + U.dayList(list, { mine: o.mine, spoil: o.spoil, empty: o.world && f !== "all" && !list.length ? empty.replace("هاليوم", "بطولاتنا") : empty }) + "</div></section>";

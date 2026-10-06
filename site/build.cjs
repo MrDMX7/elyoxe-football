@@ -103,7 +103,7 @@ function page(o){
   // W4.7: a match page carries the build stamp (and the stale-dimming script) only near kickoff; an old result or a far fixture is
   // byte-identical from build to build, so the hourly sync skips it
   const liveish = ["home", "match", "comp", "team", "daypage"].includes(o.page) && (o.page !== "match" || o.near !== false);
-  const og = o.og === undefined ? "tifo" : o.og, tools = toolRows((v.tools != null ? v.tools : o.tools) || "");
+  const og = o.og || "tifo", tools = toolRows((v.tools != null ? v.tools : o.tools) || "");
   const share = /id="sh-share"/.test(v.sheets || "") ? "" : P5.shareSheet({ html:tools + `<button type="button" class="row" id="secpick"><span class="rt">صورة لأي قسم</span>${U.chev}</button>`, after:'<div id="secpicks" class="card mt" hidden></div>' });
   const sheets = (v.sheets || "") + share + P5.installSheet() + (o.page === "home" || o.page === "daypage" ? P5.onbSheet() : "");
   const legacy = !NOLEGACY.has(o.page) || o.legacy;
@@ -649,7 +649,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   const ARABCOMP = {}; compData.forEach(({ c }) => { const iso = R.compCountry(c); if (ARABC.has(iso) || [329, 10242, 11156, 10474].includes(c.id)) ARABCOMP[c.id] = 1; });
   const homeV5 = (ymd, ms, o) => { o = o || {}; const arab = {}; (ms || []).forEach(m => [m.home.id, m.away.id].forEach(id => { if (ARABT[id]) arab[id] = 1; }));
     const v = P5.home({ matches:ms || [], ymd, arab, arabComp:ARABCOMP, h1:o.h1, h1x:o.h1x, world:o.world, fromTifo:o.fromTifo || "" });
-    v.data = { day:ymd.replace(/-/g, ""), today, world:o.world ? 1 : 0, arab:Object.keys(ARABT).map(Number), arabComp:Object.keys(ARABCOMP).map(Number) }; return v; };
+    v.data = { day:ymd.replace(/-/g, ""), today, world:o.world ? 1 : 0, arab:Object.keys(ARABT).map(Number), arabComp:Object.keys(ARABCOMP).map(Number), sig:U.sig(ms || []) }; return v; };   // sig: the browser keeps this list when its data is the same
   const writeHome = () => {
     const edHtml = ED.join(""), bdays = (edHtml.match(/<div id="bdays"[^>]*><\/div>/) || [""])[0];
     const ed = blocks(edHtml).secs.filter(sc => sc.title);
@@ -869,6 +869,10 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     (md.events || []).forEach(e => [e.player, e.assist, e.player_out].forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); }));
     if (md.lineups) ["home", "away"].forEach(sd => md.lineups[sd] && [].concat(md.lineups[sd].starters || [], md.lineups[sd].subs || [], md.lineups[sd].unavailable || []).forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); }));
     [md.home.id, md.away.id].forEach(tid => { const tj = teamById.get(tid); ((tj && tj.squad) || []).forEach(g => (g.players || []).forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); })); });   // squads: live subs/scorers stay Arabic
+    // the players of this match that have a page (window.PP): the browser's live redraws link only those, as the build's dead-link pass does
+    const mpp = {}, addP = p => { if (p && p.id && allPlayers[p.id]) mpp[p.id] = 1; }; (md.events || []).forEach(e => [e.player, e.assist, e.player_out].forEach(addP));
+    if (md.lineups) ["home", "away"].forEach(sd => md.lineups[sd] && [].concat(md.lineups[sd].starters || [], md.lineups[sd].subs || [], md.lineups[sd].unavailable || []).forEach(addP));
+    [md.home.id, md.away.id].forEach(tid => { const tj = teamById.get(tid); ((tj && tj.squad) || []).forEach(g => (g.players || []).forEach(addP)); });
     const recent = Date.parse(md.kickoff_utc || 0), ogOn = uaeMatch || (recent > Date.now() - 3 * 864e5 && recent < Date.now() + 7 * 864e5 && [538, 11027, 329, 525, 9469, 536, 47, 87, 42].includes(md.comp));
     // 426: one valid SportsEvent — no nested superEvent (Google read it as a second event with no date or place); the competition is the
     // organizer and part of the description; image, endDate (kickoff + 2 h) and performer where the data has them
@@ -910,7 +914,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     const mT = played ? `نتيجة مباراة ${H0} و${A0} ${md.score.home}-${md.score.away} في ${cN} | تيفو` : `موعد مباراة ${H0} و${A0} في ${cN}${ww ? " والقناة الناقلة" : ""} | تيفو`;
     const mD = played ? `${md.status === "finished" ? "انتهت" : "مباشر:"} مباراة ${H0} و${A0} ${md.score.home}-${md.score.away} في ${cN}: الأهداف والأحداث والتشكيلة والإحصائيات والمواجهات السابقة.` : `موعد مباراة ${H0} و${A0} في ${cN} ${when}${ww ? "، والقناة الناقلة" : ""}، مع التشكيلة والأرقام والمواجهات السابقة.`;
     const mck = (comps.find(cc => cc.id === md.comp) || {}).key, mBc = bcLd([mck && [cN, `/c/${mck}/`], [`${H0} و${A0}`, `/m/${id}/`]]);
-    write(`m/${id}/index.html`, page({ v5, near:R.isLive(md) || (md.status === "finished" && Date.now() - Date.parse(md.kickoff_utc || 0) < 4 * 36e5),   /* QA 4: an upcoming match is never marked stale (its time is not live data) */ og:ogOn ? "m-" + id : "match", ogv:ogOn && md.status === "finished" && md.score ? `ft-${md.score.home}-${md.score.away}` : "", path:`/m/${id}/`, page:"match", nav:"home", attrs:` data-id="${id}"`, names, title:mT, desc:mD, ld:[ld].concat(faqQ.length ? [{ "@context":"https://schema.org", "@type":"FAQPage", mainEntity:faqQ.map(q => ({ "@type":"Question", name:q[0], acceptedAnswer:{ "@type":"Answer", text:q[1] } })) }] : [], [mBc]) }));
+    write(`m/${id}/index.html`, page({ v5, near:R.isLive(md) || (md.status === "finished" && Date.now() - Date.parse(md.kickoff_utc || 0) < 4 * 36e5),   /* QA 4: an upcoming match is never marked stale (its time is not live data) */ og:ogOn ? "m-" + id : "match", ogv:ogOn && md.status === "finished" && md.score ? `ft-${md.score.home}-${md.score.away}` : "", path:`/m/${id}/`, page:"match", nav:"home", attrs:` data-id="${id}"`, names, pp:mpp, title:mT, desc:mD, ld:[ld].concat(faqQ.length ? [{ "@context":"https://schema.org", "@type":"FAQPage", mainEntity:faqQ.map(q => ({ "@type":"Question", name:q[0], acceptedAnswer:{ "@type":"Answer", text:q[1] } })) }] : [], [mBc]) }));
     urls.push(`/m/${id}/`);
     if (uaeMatch && (md.status === "scheduled" || Date.parse(md.kickoff_utc) > Date.now() - 3 * 864e5)){
       const nums = [probs ? `توقعات تيفو: ${Math.round(probs.home * 100)}% فوز ${md.home.name_ar}، ${Math.round(probs.draw * 100)}% تعادل، ${Math.round(probs.away * 100)}% فوز ${md.away.name_ar}.` : "", ...((factsByMatch[id] || []).map(f => String(f.text_ar).replace(/\s*\(بيانات FotMob\)/g, "")))].filter(Boolean);

@@ -512,6 +512,7 @@ a.chip::after,button.chip::after{inset:-8px -2px}
 html:has(body.sheet-on){overflow:hidden}
 #homelist.dim,#roundlist.dim{opacity:.45;transition:opacity .2s}
 .chip.enc{background:var(--fill);color:var(--label2);height:24px;font-size:12px}
+span.row > .chev,span.ld > .chev{display:none}   /* a link the build unlinked (no page): no chevron */
 .chip.lvc{background:var(--live-bg);color:var(--live);height:22px;padding:0 8px;font-size:12px;font-weight:600}
 .ghs{color:var(--label2);font-size:13px;white-space:nowrap}
 .sh-sub{display:block;margin-top:2px;color:var(--label2);font-size:13px;line-height:17px;font-weight:400}
@@ -656,7 +657,8 @@ body.second main > :not(.hdr):not(.pane[data-p="ov"]){display:none!important}
 body.second .pane[data-p="ov"]{display:block!important}
 body.second .pane[data-p="ov"] > :not(:has(#ev)){display:none!important}
 body.second main{padding-top:calc(16px + env(safe-area-inset-top))}
-body.second .mh .sc{font-size:min(22vw,120px);line-height:1.05}
+body.second .mh-mid > .sc{font-size:min(17vw,120px);line-height:1.05}
+body.second .mh-t b{overflow-wrap:normal;word-break:keep-all}
 .second-x{position:fixed;z-index:50;inset-inline:0;bottom:calc(16px + env(safe-area-inset-bottom));width:max-content;margin:0 auto;box-shadow:var(--tb-shadow)}
 
 /* media.js's video sheet (a <div class="sheet mvsh">) and the scrim the v5 client draws under such sheets */

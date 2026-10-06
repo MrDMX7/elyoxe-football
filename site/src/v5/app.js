@@ -185,12 +185,28 @@
   var H = { ms: null, day: V.day, filter: "all", todayN: V.day, world: null, wlv: {}, open: ls.json("tifo.allopen", {}) }, BC = null, ARAB = {}, ARABC = {}, TF = null;
   (V.arab || []).forEach(function (id) { ARAB[id] = 1; }); (V.arabComp || []).forEach(function (id) { ARABC[id] = 1; });
   function ymdOf(n) { return n.replace(/(\d{4})(\d\d)(\d\d)/, "$1-$2-$3"); }
+  // a redraw that keeps every row whose score and state did not change (same node: nothing repaints, nothing moves); a list with
+  // other rows or another order is drawn again whole
+  function patchList(box, html) {
+    var t = D.createElement("div"); t.innerHTML = html; localize(t); var A = [].slice.call(box.children), Bn = [].slice.call(t.children);
+    if (!A.length || A.length !== Bn.length || A.some(function (x, i) { return x.id !== Bn[i].id; })) { box.innerHTML = html; return; }
+    var heads = function (r) { return $$(".gh, .hd-row", r).map(function (x) { return x.textContent; }).join("|"); }, key = function (r) { var m = $(".mr-m", r) || $(".fc-body", r) || r, f = $(".fc-top .st", r); return m.textContent + "|" + (f ? f.textContent : ""); };
+    A.forEach(function (o, s) { var n = Bn[s], a = $$("[data-mid]", o), b = $$("[data-mid]", n);
+      if (a.length !== b.length || heads(o) !== heads(n) || a.some(function (x, i) { return x.dataset.mid !== b[i].dataset.mid || x.tagName !== b[i].tagName || x.className.replace(/\s*shown/, "") !== b[i].className; })) { o.parentNode.replaceChild(n, o); return; }
+      a.forEach(function (x, i) { if (key(x) !== key(b[i])) x.parentNode.replaceChild(b[i], x); }); });
+  }
   function renderHome() {
     var box = $("#homelist"); if (!box || !H.ms) return;
-    box.innerHTML = P.homeList(H.ms, { filter: H.filter, arab: ARAB, arabComp: ARABC, mine: mineMap(), spoil: prefOn("nospoil"), world: !!H.world }); localize(box); cdAttach(box); natCountdown();
+    patchList(box, P.homeList(H.ms, { filter: H.filter, arab: ARAB, arabComp: ARABC, mine: mineMap(), spoil: prefOn("nospoil"), world: !!H.world, featId: !mineMap() && NOW() < H.pinUntil ? H.pinFeat : null })); localize(box); cdAttach(box); natCountdown();
     var n = H.ms.filter(U.isLive).length + (H.world ? worldLive() : 0), c = $("#livecnt"); if (c) { c.textContent = n; c.hidden = !n; }
     renderWorld(); mineHome(); fire("tifo:day", { ms: H.ms, off: H.day === H.todayN ? 0 : 1, live: { matches: H.ms.filter(U.isLive) } });
   }
+  // the first data of the page: the build's list stays (no redraw, so nothing moves and the first paint stays the largest) when it
+  // shows the same matches the same way: same day and data, no favourites to put first, no hidden scores
+  function homeFresh() { var box = $("#homelist");
+    if (!box || H.day !== V.day || !V.sig || U.sig(H.ms) !== V.sig || H.filter !== "all" || mineMap() || prefOn("nospoil")) return renderHome();
+    cdAttach(box); natCountdown(); var n = H.ms.filter(U.isLive).length, c = $("#livecnt"); if (c) { c.textContent = n; c.hidden = !n; }
+    renderWorld(); mineHome(); fire("tifo:day", { ms: H.ms, off: H.day === H.todayN ? 0 : 1, live: { matches: H.ms.filter(U.isLive) } }); }
   function worldLive() { var n = 0; (H.world && H.world.leagues || []).forEach(function (lg) { if (lg.ours) return; lg.matches.forEach(function (m) { var l = H.wlv[m.id], s = (l && l.status) || m.status; if (s === "live" || s === "ht") n++; }); }); return n; }
   function renderWorld() { var box = $("#world"); if (!box) return; if (!H.world) { if (!box.dataset.open) box.innerHTML = ""; return; }
     var ours = {}; (H.ms || []).forEach(function (m) { ours[m.id] = 1; });
@@ -210,18 +226,19 @@
   function homeInit() {
     var t = new Date(NOW() + 4 * 36e5).toISOString().slice(0, 10), tn = t.replace(/-/g, ""), box = $("#homelist");
     var isTomorrow = PG === "daypage" && /\/tomorrow\//.test(location.pathname), want = isTomorrow ? new Date(NOW() + 4 * 36e5 + 864e5).toISOString().slice(0, 10).replace(/-/g, "") : tn;
-    H.todayN = tn; var saved = (ss.get("tifo.home." + location.pathname) || "").split("|");   // back to this page: the day and filter it was on
+    H.todayN = tn; var f0 = $("#feat .fc[data-mid]"); H.pinFeat = f0 && f0.dataset.mid; H.pinUntil = NOW() + 60e3;   // the build's featured match holds for a minute
+    var saved = (ss.get("tifo.home." + location.pathname) || "").split("|");   // back to this page: the day and filter it was on
     if (saved[0] && /^\d{8}$/.test(saved[0])) want = saved[0]; if (saved[1] && /^(all|live|arab)$/.test(saved[1])) H.filter = saved[1];
     var q = new URLSearchParams(location.search); if (q.get("f") === "live") H.filter = "live"; var qd = { yesterday: -1, tomorrow: 1 }[q.get("d")]; if (qd) want = new Date(NOW() + 4 * 36e5 + qd * 864e5).toISOString().slice(0, 10).replace(/-/g, "");
     if (want !== V.day || tn !== V.today.replace(/-/g, "")) { H.day = want; var dd = $("#days"); if (dd) dd.outerHTML = P.days(ymdOf(want)); var s = $("#daysub"); if (s) s.textContent = U.dname(ymdOf(want) + "T12:00:00+04:00"); if (box && want !== V.day) box.classList.add("dim"); }
     if (H.filter !== "all") selectSegOnly($('.seg[data-seg="f"]'), H.filter);
-    get("day/" + H.day + ".json", true).then(function (j) { H.ms = j.matches || []; return H.day === H.todayN ? mergeLive() : null; }).then(function () { if (box) box.classList.remove("dim"); renderHome(); worldMaybe(); }).catch(function () { if (box) box.classList.remove("dim"); });
+    get("day/" + H.day + ".json", true).then(function (j) { H.ms = j.matches || []; return H.day === H.todayN ? mergeLive() : null; }).then(function () { if (box) box.classList.remove("dim"); homeFresh(); worldMaybe(); }).catch(function () { if (box) box.classList.remove("dim"); });
     var sel = $("#days .day[aria-selected=true]"); if (sel) sel.scrollIntoView({ inline: "center", block: "nearest" });
     // live: our list every 20 s and the world's every 30 s while something is live or about to start, every 2 minutes otherwise
     (function tick() { var live = (H.ms || []).some(function (m) { var k = Date.parse(m.kickoff_utc); return U.isLive(m) || (m.status === "scheduled" && k - NOW() < 15 * 60e3 && k > NOW() - 3 * 36e5); }) || (H.world && worldLive());
       setTimeout(function () { if (D.hidden || H.day !== H.todayN || !H.ms) return tick(); Promise.all([mergeLive(), worldLiveLoad()]).then(function () { renderHome(); tick(); }); }, live ? 20000 : 120000); })();
     D.addEventListener("visibilitychange", function () { if (!D.hidden && H.day === H.todayN && H.ms) Promise.all([mergeLive(), worldLiveLoad()]).then(renderHome); });
-    loadBC(); bdays();
+    bdays();   // the channels file (bc) loads only where a page shows channels
   }
   // «فريقك» on اليوم: each followed team not already on today's list — live, the result of the last day, or the next match
   var TN = {}; function tnGet(id) { return TN[id] || (TN[id] = fetch("/tn/" + id + ".json").then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })); }
@@ -260,6 +277,8 @@
     D.addEventListener("visibilitychange", function () { if (!D.hidden && MD && (U.isLive(MD) || MD.status === "scheduled")) run(true); });
   }
   function matchPaint(md, was) {
+    if (was && !was._seen && was.status === "finished" && md.status === "finished" && was.score && md.score && was.score.home === md.score.home && was.score.away === md.score.away) { md._seen = 1; stamp(md.generated); fire("tifo:match", md); return; }   // nothing new since the build
+    md._seen = 1;
     if (was && cat(was.status) === "S" && cat(md.status) !== "S") matchGoesLive();
     var mh = $("#mh"); if (mh) mh.innerHTML = U.matchHead(md);
     var ev = $("#ev"); if (ev) ev.innerHTML = U.events(md);
@@ -267,8 +286,11 @@
     var lu = $("#lu"); if (lu && md.lineups && md.lineups.home && (md.lineups.home.starters || []).length) { var sel = $('.seg[data-seg="lu"] button[aria-selected="true"]'), k = sel && sel.dataset.t; lu.innerHTML = U.lineups(md); if (k) selectSegOnly($('.seg[data-seg="lu"]', lu), k), $$('.pane[data-g="lu"]', lu).forEach(function (p) { p.hidden = p.dataset.p !== k; }); }
     var cu = $("#catchup"); if (cu && window.TR && window.TR.catchup && cat(md.status) !== "S") { var h = window.TR.catchup(md); if (h) { cu.innerHTML = h; cu.hidden = false; } }
     var nt = $("#navt"); if (nt) nt.innerHTML = '<span dir="rtl">' + U.esc(U.matchTitle(md)) + "</span>";
-    localize(); goalWatch(md); liveTable(md); pickSettle(md); fire("tifo:match", md);
+    ["#mh", "#ev", "#lu", "#stx"].forEach(function (s) { unlinkDead($(s)); }); localize(); goalWatch(md); liveTable(md); pickSettle(md); fire("tifo:match", md);
   }
+  // a player without a page is plain text (window.PP: the players of this page that have one), as the build's dead-link pass leaves it
+  function unlinkDead(root) { var PP = window.PP; if (!PP || !root) return; $$('a[href^="/p/"]', root).forEach(function (a) { var m = /^\/p\/(\d+)\//.exec(a.getAttribute("href")); if (!m || PP[m[1]]) return;
+    var s = D.createElement("span"); for (var i = 0; i < a.attributes.length; i++) if (a.attributes[i].name !== "href") s.setAttribute(a.attributes[i].name, a.attributes[i].value); while (a.firstChild) s.appendChild(a.firstChild); a.parentNode.replaceChild(s, a); }); }
   // kickoff on an open page: المباراة gets its events block, الأرقام appears, the pick and «شو على المحك» step aside
   function matchGoesLive() {
     var ov = $('.pane[data-g="m"][data-p="ov"]'); if (ov && !$("#ev")) { var s = D.createElement("section"); s.className = "grp"; s.innerHTML = '<div class="gh"><h2>الأحداث</h2></div><div id="ev"></div>'; ov.insertBefore(s, ov.firstChild); var lt = D.createElement("div"); lt.id = "ltable"; s.after(lt); }
