@@ -19,6 +19,9 @@ const HOME = os.homedir(), HERE = __dirname, ROOT = path.join(HERE, '..');
 const PW = [path.join(HOME, 'workspace/content-pipeline/node_modules/playwright-core'), 'playwright-core', 'playwright'];
 let chromium; for (const p of PW) { try { chromium = require(p).chromium; break; } catch (e) {} }
 const STATE = path.join(HERE, '.x-mood.json'), LOCK = path.join(HERE, '.x-mood.lock');
+// X's «rate limit» page (2026-10-06 00:00, the final's last minutes): both readers rest 45 minutes on the one session they share
+const COOL = path.join(HERE, '.x-cooldown.json'), REST = 45 * 60e3;
+const resting = () => { try { const c = JSON.parse(fs.readFileSync(COOL, 'utf8')); return c.until > Date.now() ? c : null; } catch (e) { return null; } };
 const PROFILE = path.join(HOME, 'workspace/automation/browse/profiles/x-mood');
 const JAR = path.join(HOME, 'workspace/automation/browse/profiles/x-reader/x-cookies.json');
 const BUCKET = process.env.FOOTBALL_BUCKET || 'elyoxe-football-574771023173-ap-south-1';
@@ -154,6 +157,7 @@ const unlock = () => { try { if (JSON.parse(fs.readFileSync(LOCK, 'utf8')).pid =
 
 (async () => {
   if (!chromium) { console.error('playwright-core not found'); process.exit(2); }
+  const rest = resting(); if (rest) { log('X rate-limited the session at', new Date(rest.at).toISOString().slice(11, 16), '- resting until', new Date(rest.until).toISOString().slice(11, 16)); return; }
   if (!lock()) { log('another run holds the lock'); return; }
   const t0 = Date.now(); let ctx = null, page = null;
   const watchdog = setTimeout(() => { console.error('[mood] watchdog: past the longest match window, giving up'); unlock(); process.exit(3); }, MAX_RUN + 10 * 60e3); watchdog.unref();
@@ -179,7 +183,11 @@ const unlock = () => { try { if (JSON.parse(fs.readFileSync(LOCK, 'utf8')).pid =
           // the side's name with a football word (a bare country name brings politics, ads and airlines), without the other side
           const other = side === 'home' ? 'away' : 'home', q = `"${names[side]}" (${BALL.join(' OR ')}) -"${names[other]}" lang:ar -filter:retweets`;
           let got = [];
-          try { got = await search(page, q); } catch (e) { log('stop:', e.message); throw e; }
+          try { got = await search(page, q); } catch (e) {
+            log('stop:', e.message);
+            if (/rate limited/.test(e.message)) fs.writeFileSync(COOL, JSON.stringify({ at: Date.now(), until: Date.now() + REST, by: 'mood' }));
+            throw e;
+          }
           let fresh = 0;
           for (const p of got) {
             if (st.posts[p.id] || p.lang && p.lang !== 'ar' && p.lang !== 'und') continue;

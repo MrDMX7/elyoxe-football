@@ -57,19 +57,19 @@ media:
   youtube:
     # MENA rights holders, Arabic
     - {key: yt_bein, channel: UCJUCcJUeh0Cz2xyKwkw5Q1w, name: "بي إن سبورتس", lang: ar, kind: broadcaster, why: "@beINSPORTS, 18.7M, verified: The Official Account for beIN SPORTS Channels in MENA"}
-    - {key: yt_adsports, channel: UCF8Fpc7bPHC8Jrflci-mUiQ, name: "أبوظبي الرياضية", lang: ar, kind: broadcaster, why: "@adsportstv, 959K, verified: الحساب الرسمي لقنوات أبوظبي الرياضية; FotMob links its Gulf Cup highlights"}
-    - {key: yt_ksasports, channel: UCLo2xigvxv9ksxp78AyCBTw, name: "القنوات الرياضية السعودية", lang: ar, kind: broadcaster, why: "@Riyadiyatv, 1.78M, verified: الحساب الرسمي للقنوات الرياضية السعودية"}
-    - {key: yt_thmanyah, channel: UCj-2hfXdYPPNcLqcBeW3y8g, name: "رياضة ثمانية", lang: ar, kind: broadcaster, comps: [536, 9942, 10074, 10721], why: "@thmanyahsports, 599K: Saudi league rights holder (النقل الحصري للدوري والبطولات السعودية)"}
-    - {key: yt_onsport, channel: UCo2TvjBHS1BtyIkeGGTMe6w, name: "أون سبورت", lang: ar, kind: broadcaster, comps: [519, 9941, 10314], why: "@ONSporteg, 3.78M, verified: United Media Services, Egyptian league broadcaster"}
-    - {key: yt_sportsunited, channel: UCNyKhK1GI6CUbJ-BDtJ44DA, name: "المتحدة للرياضة", lang: ar, kind: broadcaster, comps: [519, 9941, 10314], why: "@SportsUnitedeg, 1.52M, verified: markets the Egyptian clubs' TV and digital rights; posts each goal"}
-    - {key: yt_arryadia, channel: UCRN5ho3UGhUi7ZCBe2G2f2w, name: "الرياضية المغربية", lang: ar, kind: broadcaster, comps: [530, 11840], why: "@ArryadiaTv, 1.58M: SNRT's official sports channel, Botola broadcaster"}
-    - {key: yt_sharjahsports, channel: UCdF4bi6osRgJ_rXwCTGG3ZQ, name: "الشارقة الرياضية", lang: ar, kind: broadcaster, comps: [538, 329], why: "@SharjahSportsTV, 122K: قناة الشارقة الرياضية، ناقل دوري أدنوك وكأس الخليج في الإمارات (2026-10-06)"}
-    - {key: yt_dubaisports, channel: UCmJr9VRnC8Q1TCIrf2G8bcg, name: "دبي الرياضية", lang: ar, kind: broadcaster, comps: [538, 329], why: "@dubaisports, verified: قناة دبي الرياضية (2026-10-06)"}
+    - {key: yt_adsports, channel: UCF8Fpc7bPHC8Jrflci-mUiQ, name: "أبوظبي الرياضية", lang: ar, kind: broadcaster, country: ae, why: "@adsportstv, 959K, verified: الحساب الرسمي لقنوات أبوظبي الرياضية; FotMob links its Gulf Cup highlights"}
+    - {key: yt_ksasports, channel: UCLo2xigvxv9ksxp78AyCBTw, name: "القنوات الرياضية السعودية", lang: ar, kind: broadcaster, country: sa, why: "@Riyadiyatv, 1.78M, verified: الحساب الرسمي للقنوات الرياضية السعودية"}
+    - {key: yt_thmanyah, channel: UCj-2hfXdYPPNcLqcBeW3y8g, name: "رياضة ثمانية", lang: ar, kind: broadcaster, country: sa, comps: [536, 9942, 10074, 10721], why: "@thmanyahsports, 599K: Saudi league rights holder (النقل الحصري للدوري والبطولات السعودية)"}
+    - {key: yt_onsport, channel: UCo2TvjBHS1BtyIkeGGTMe6w, name: "أون سبورت", lang: ar, kind: broadcaster, country: eg, comps: [519, 9941, 10314], why: "@ONSporteg, 3.78M, verified: United Media Services, Egyptian league broadcaster"}
+    - {key: yt_sportsunited, channel: UCNyKhK1GI6CUbJ-BDtJ44DA, name: "المتحدة للرياضة", lang: ar, kind: broadcaster, country: eg, comps: [519, 9941, 10314], why: "@SportsUnitedeg, 1.52M, verified: markets the Egyptian clubs' TV and digital rights; posts each goal"}
+    - {key: yt_arryadia, channel: UCRN5ho3UGhUi7ZCBe2G2f2w, name: "الرياضية المغربية", lang: ar, kind: broadcaster, country: ma, comps: [530, 11840], why: "@ArryadiaTv, 1.58M: SNRT's official sports channel, Botola broadcaster"}
+    - {key: yt_sharjahsports, channel: UCdF4bi6osRgJ_rXwCTGG3ZQ, name: "الشارقة الرياضية", lang: ar, kind: broadcaster, country: ae, comps: [538, 329], why: "@SharjahSportsTV, 122K: قناة الشارقة الرياضية، ناقل دوري أدنوك وكأس الخليج في الإمارات (2026-10-06)"}
+    - {key: yt_dubaisports, channel: UCmJr9VRnC8Q1TCIrf2G8bcg, name: "دبي الرياضية", lang: ar, kind: broadcaster, country: ae, comps: [538, 329], why: "@dubaisports, verified: قناة دبي الرياضية (2026-10-06)"}
     - {key: yt_tod, channel: UCvuPuKPukGd8S2qr4msLAuQ, name: "TOD", lang: en, kind: broadcaster, why: "@tod_bybein, 637K, verified: القناة الرسمية لـ TOD by beIN"}
     # leagues and confederations
-    - {key: yt_saudiproleague, channel: UCqXAWrjSgLb0EPa_icPt-pw, name: "دوري روشن", lang: ar, kind: league, comps: [536], why: "@-saudiproleague, 812K, verified: القناة الرسمية لدوري روشن السعودي"}
-    - {key: yt_uaeproleague, channel: UC3mQCPDzpRstR58t9nfQ_Ew, name: "دوري أدنوك", lang: ar, kind: league, comps: [538], why: "@uaeproleague, 41K: قناة رابطة المحترفين الإماراتية (2026-10-06)"}
-    - {key: yt_qsl, channel: UC55yDKHTJcYllsWMSlYMWrg, name: "دوري نجوم قطر", lang: ar, kind: league, comps: [535, 11018], why: "@QSLTV, 61K: مؤسسة دوري نجوم قطر, the league's own channel"}
+    - {key: yt_saudiproleague, channel: UCqXAWrjSgLb0EPa_icPt-pw, name: "دوري روشن", lang: ar, kind: league, country: sa, comps: [536], why: "@-saudiproleague, 812K, verified: القناة الرسمية لدوري روشن السعودي"}
+    - {key: yt_uaeproleague, channel: UC3mQCPDzpRstR58t9nfQ_Ew, name: "دوري أدنوك", lang: ar, kind: league, country: ae, comps: [538], why: "@uaeproleague, 41K: قناة رابطة المحترفين الإماراتية (2026-10-06)"}
+    - {key: yt_qsl, channel: UC55yDKHTJcYllsWMSlYMWrg, name: "دوري نجوم قطر", lang: ar, kind: league, country: qa, comps: [535, 11018], why: "@QSLTV, 61K: مؤسسة دوري نجوم قطر, the league's own channel"}
     - {key: yt_ligue1, channel: UCQsH5XtIc9hONE1BQjucM0g, name: "الدوري الفرنسي", lang: fr, kind: league, comps: [53], why: "@Ligue1, 3.4M, verified: la chaîne officielle de la Ligue 1 McDonald's"}
     - {key: yt_mls, channel: UCSZbXT5TLLW_i-5W8FZpFsg, name: "الدوري الأمريكي", lang: en, kind: league, comps: [130, 10043], why: "@mls, 2.37M, verified: official"}
     - {key: yt_afchub, channel: UCnj0TjaM0wyxkAWW_nz8_1g, name: "الاتحاد الآسيوي", lang: en, kind: confed, comps: [525, 10622, 9469, 9470], why: "@TheAFCHub, 2.28M, verified: the home of AFC club competitions"}
@@ -77,10 +77,10 @@ media:
     - {key: yt_caf, channel: UCr5K057x3mHroPHsNk9OiwA, name: "الاتحاد الأفريقي", lang: en, kind: confed, comps: [526, 9468, 289, 10608, 10196], why: "@CAF_TV, 2.65M, verified: CAF's own channel"}
     - {key: yt_uefa, channel: UCyGa1YEx9ST66rYrJTGIKOw, name: "يويفا", lang: en, kind: confed, comps: [42, 73, 10216, 9806, 50, 10195], why: "@UEFA, 7.2M, verified: the official UEFA channel"}
     # national federations: their own team's matches
-    - {key: yt_saudint, channel: UCSSHK4M_OXOCtrAqbgvUHnw, name: "المنتخب السعودي", lang: ar, kind: federation, team: 7795, why: "@saudint1, 188K: القناة الرسمية للمنتخب السعودي الأول; highlights minutes after each match"}
-    - {key: yt_qfa, channel: UCur_OGrIuNr1KxMq-6Q96SA, name: "الاتحاد القطري", lang: ar, kind: federation, team: 5902, why: "@QFA, 54.8K: the Qatar Football Association's channel"}
-    - {key: yt_jfa, channel: UCmXLDU8dDuHqZLRoIGVd6qg, name: "الاتحاد الأردني", lang: ar, kind: federation, team: 5816, why: "@JFA-TV, 393K, verified: القناة الرسمية للاتحاد الأردني; FotMob links its Jordan-Syria highlights"}
-    - {key: yt_pfa, channel: UCFJWxIpDw4oN4DXybfx_uJA, name: "الاتحاد الفلسطيني", lang: ar, kind: federation, team: 6333, why: "@PFA-TV, 7K: القناة الرسمية للاتحاد الفلسطيني لكرة القدم"}
+    - {key: yt_saudint, channel: UCSSHK4M_OXOCtrAqbgvUHnw, name: "المنتخب السعودي", lang: ar, kind: federation, country: sa, team: 7795, why: "@saudint1, 188K: القناة الرسمية للمنتخب السعودي الأول; highlights minutes after each match"}
+    - {key: yt_qfa, channel: UCur_OGrIuNr1KxMq-6Q96SA, name: "الاتحاد القطري", lang: ar, kind: federation, country: qa, team: 5902, why: "@QFA, 54.8K: the Qatar Football Association's channel"}
+    - {key: yt_jfa, channel: UCmXLDU8dDuHqZLRoIGVd6qg, name: "الاتحاد الأردني", lang: ar, kind: federation, country: jo, team: 5816, why: "@JFA-TV, 393K, verified: القناة الرسمية للاتحاد الأردني; FotMob links its Jordan-Syria highlights"}
+    - {key: yt_pfa, channel: UCFJWxIpDw4oN4DXybfx_uJA, name: "الاتحاد الفلسطيني", lang: ar, kind: federation, country: ps, team: 6333, why: "@PFA-TV, 7K: القناة الرسمية للاتحاد الفلسطيني لكرة القدم"}
     - {key: yt_england, channel: UCNT2e7Og56vm5_V-yJWvglA, name: "منتخب إنجلترا", lang: en, kind: federation, team: 8491, why: "@england, 3.24M, verified: the official home of the England team"}
     - {key: yt_sefutbol, channel: UCJ2F8qpzHRk3RdJZ4YXLbxQ, name: "منتخب إسبانيا", lang: es, kind: federation, team: 6720, why: "@Sefutbol, 540K, verified: el medio oficial de la Selección"}
     - {key: yt_dfb, channel: UCfMo0xj-sbdzHuzxvKdu1hw, name: "منتخب ألمانيا", lang: de, kind: federation, team: 8570, why: "@DFB, 689K, verified: offizieller Kanal des DFB"}

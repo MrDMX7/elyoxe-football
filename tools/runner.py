@@ -4,6 +4,7 @@ hourly check that runs a job itself when the laptop's heartbeat for it has gone 
 
     python -m tools.runner site        hourly: AI content (site/ai/gen.py), build, guard, publish, health
     python -m tools.runner journal     every 15 min: news, videos, commentators (python -m news.run)
+    python -m tools.runner streams     every 5 min: «شوفها مباشر ببلاش», the free official live streams (python -m news.streams)
     python -m tools.runner names       weekly: Arabic names for new players (names/build_names.py), committed
     python -m tools.runner week        Thursday 15:00: «تيفو الأسبوع» images (site/weekly.py)
     python -m tools.runner newsletter  Thursday 18:00: the weekly newsletter (newsletter/send.py)
@@ -201,6 +202,12 @@ def job_journal(log):
     return rc == 0, tail
 
 
+def job_streams(log):
+    # a stream is looked for while its match is near (75 min before kickoff to 3.5 h after): ~10-20 YouTube Live tabs a run
+    rc, tail = run(log, [PY, "-m", "news.streams"], timeout=5 * 60)
+    return rc == 0, tail
+
+
 def job_names(log):
     rc, tail = run(log, [PY, "build_names.py"], cwd=ROOT / "names", timeout=3 * 3600)
     if rc == 0 and subprocess.run(["git", "status", "--porcelain", "--", "names/"], cwd=ROOT, capture_output=True, text=True).stdout.strip():
@@ -221,7 +228,7 @@ def job_newsletter(log):
     return rc == 0, tail
 
 
-JOBS = {"site": job_site, "journal": job_journal, "names": job_names, "week": job_week, "newsletter": job_newsletter}
+JOBS = {"site": job_site, "journal": job_journal, "streams": job_streams, "names": job_names, "week": job_week, "newsletter": job_newsletter}
 
 
 # ------------------------------------------------------------------ heartbeat, alerts, the Fold's watchdog

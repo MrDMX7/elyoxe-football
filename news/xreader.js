@@ -18,6 +18,9 @@ const WIN = process.platform === 'win32', HOME = os.homedir();
 const PW = [path.join(HOME, 'workspace/content-pipeline/node_modules/playwright-core'), 'playwright-core', 'playwright'];
 let chromium; for (const p of PW) { try { chromium = require(p).chromium; break; } catch (e) {} }
 const HERE = __dirname, INBOX = path.join(HERE, '.x-inbox.json');
+// X's «rate limit» page: both readers (this and news/xmood.js) rest 45 minutes on the one session they share
+const COOL = path.join(HERE, '.x-cooldown.json'), REST = 45 * 60e3;
+const resting = () => { try { const c = JSON.parse(fs.readFileSync(COOL, 'utf8')); return c.until > Date.now() ? c : null; } catch (e) { return null; } };
 const SRC_PROFILE = path.join(HOME, 'workspace/automation/browse/profiles/elyoxe-social');
 const PROFILE = path.join(HOME, 'workspace/automation/browse/profiles/x-reader');
 const BUCKET = process.env.FOOTBALL_BUCKET || 'elyoxe-football-574771023173-ap-south-1';
@@ -99,6 +102,7 @@ setTimeout(() => { console.error('[x] watchdog: still running after 10 min, givi
 
 (async () => {
   if (!chromium) { console.error('playwright-core not found'); process.exit(2); }
+  const rest = resting(); if (rest && !a.includes('--export-cookies')) { log('X rate-limited the session at', new Date(rest.at).toISOString().slice(11, 16), '- resting until', new Date(rest.until).toISOString().slice(11, 16)); return; }
   const cfg = config(), inbox = fs.existsSync(INBOX) ? JSON.parse(fs.readFileSync(INBOX, 'utf8')) : { cursor: 0, last_run: null, items: [], errors: {} };
   if (!arg('--handles') && !a.includes('--export-cookies') && inbox.last_run && (Date.now() - Date.parse(inbox.last_run)) / 6e4 < cfg.min_minutes) { log('ran', inbox.last_run, '- skip'); return; }
   let pick;
@@ -147,6 +151,9 @@ setTimeout(() => { console.error('[x] watchdog: still running after 10 min, givi
         if (a.includes('--debug')) { await page.screenshot({ path: `/tmp/x-${acc.handle}.png` }).catch(() => {}); log('url', page.url(), '|', body.replace(/\s+/g, ' ').slice(0, 400)); }
         if (!got.length) inbox.errors[acc.handle] = /doesn.t exist|account is suspended/i.test(body) ? 'no such account' : /rate limit|try again/i.test(body) ? 'rate limited' : 'no posts seen';
         else delete inbox.errors[acc.handle];
+        if (inbox.errors[acc.handle] === 'rate limited') {   // stop at the first one, and the mood reader rests too
+          fs.writeFileSync(COOL, JSON.stringify({ at: Date.now(), until: Date.now() + REST, by: 'reader' })); log('RATE LIMITED: resting', REST / 60e3, 'min'); break;
+        }
       } catch (e) { inbox.errors[acc.handle] = String(e.message || e).slice(0, 120); }
       page.off('response', onResp);
       const fresh = got.slice(0, cfg.max_posts).filter(p => !seen.has(p.id));
