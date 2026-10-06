@@ -195,7 +195,9 @@ def publish_stage(log, bucket, name):
 
 
 def job_journal(log):
-    rc, tail = run(log, [PY, "-m", "news.run"], timeout=20 * 60)
+    # 30 min: a run killed at the limit loses all its work, and while the site job uploads a whole new site (every page changed:
+    # the SEO footer and the v5 shell on 2026-10-06) the journal's S3 writes share the uplink and a run took 16 min (954 s)
+    rc, tail = run(log, [PY, "-m", "news.run"], timeout=30 * 60)
     return rc == 0, tail
 
 
