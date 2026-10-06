@@ -978,7 +978,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     // matches within a day of now (rebuilt hourly), not on the archive's thousands
     const fanJs = !md.time_tbd && Math.abs(Date.parse(md.kickoff_utc || 0) - Date.now()) < 30 * 36e5 ? [ENG.mosaic, ENG.mood] : [];   // the stand, and «نبض الجمهور» (bold idea 9: /v1/mood/<id>.json from news/xmood.js)
     // «رجل المباراة بصوت الجمهور» (src/motm.js) votes from the whistle until 48 h after the end: from a day before kickoff to 52 h after
-    const coachJs = ENG.coach && !md.time_tbd && Date.parse(md.kickoff_utc || 0) > Date.now() - 2 * 864e5 && Date.parse(md.kickoff_utc || 0) < Date.now() + 3 * 864e5 && (((teamById.get(md.home.id) || {}).squad || []).length || ((teamById.get(md.away.id) || {}).squad || []).length) ? [ENG.coach] : [];   // «مدرّب الكنبة» (second list 3): from 3 days before to 2 after
+    const coachJs = ENG.coach && !md.time_tbd && Date.parse(md.kickoff_utc || 0) > Date.now() - 2 * 864e5 && Date.parse(md.kickoff_utc || 0) < Date.now() + 3 * 864e5 && (((teamById.get(md.home.id) || {}).squad || []).length || ((teamById.get(md.away.id) || {}).squad || []).length) ? [ENG.coach] : [];   // «مدرّب الدكة» (second list 3): from 3 days before to 2 after
     const koT = Date.parse(md.kickoff_utc || 0), motmJs = !md.time_tbd && koT > Date.now() - 52 * 36e5 && koT < Date.now() + 30 * 36e5 ? [ENG.motm] : [];
     // 444: «موعد مباراة X و Y» before it, «نتيجة مباراة X و Y» once it has a score
     const cN = md.comp_name_ar || R.compName(index, md.comp), H0 = PN(md.home), A0 = PN(md.away), played = !!(md.score && (md.status === "finished" || R.isLive(md)));
