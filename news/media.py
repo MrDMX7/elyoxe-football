@@ -1110,8 +1110,73 @@ def needed(chs, matches):
     return out
 
 
-def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None, log=print):
-    """One run: read what is needed, match, write the media files that changed. Returns a summary dict."""
+VIDEO_FRESH_H = 6            # «فيديو الهدف نزل»: a clip of a goal older than this is not news any more
+
+
+def _hand_over(jobs):
+    import push as PUSH
+    PUSH.invoke(jobs)
+
+
+def video_push(st, matches, clip_goals, t, hand_over, log=print):
+    """«فيديو الهدف نزل» (item 7, 2026-10-06): the goals whose FIRST official clip came out since the last run go to the push
+    sender, one job per goal (push.video_jobs: keyed by the score the goal made, «video:2-1»), handed over in one invoke.
+    Here, in the journal step that attaches the clips (every 15 min), never in the poller's minute loop.
+
+    Once per goal, three ways: state/news/media.json `video_push.done` lists the goal keys handed over (written with the run's
+    state), the sender claims «video:<score>» in DynamoDB before it sends (a re-run after a run that died, or a goal key the
+    feed rewrote, 87' -> 88', loses that claim), and a goal older than VIDEO_FRESH_H is marked done, never sent. The very
+    first run (no `since` yet) only records what is attached already: those clips came out before this feature."""
+    vp = st.setdefault("video_push", {})
+    first = "since" not in vp
+    done = vp.setdefault("done", {})
+    by_id = {m["id"]: m for m in matches}
+    jobs, marks = [], []
+    for mid, keys in clip_goals.items():
+        md = by_id.get(mid)
+        have = done.setdefault(str(mid), [])
+        new = [k for k in keys if k not in have]
+        if not md or not new:
+            continue
+        if first:
+            have += new
+            continue
+        evs = {goal_key(e): e for e in goals_of(md)}
+        fresh = {}
+        for k in new:
+            e = evs.get(k)
+            if not e:
+                continue                                   # the goal's key moved in the match file: the next run has it
+            gt = e.get("lb")
+            if not gt or t - gt > timedelta(hours=VIDEO_FRESH_H):
+                have.append(k)                             # history: never sent
+                continue
+            fresh[k] = e
+        if fresh:
+            import push as PUSH
+            js = PUSH.video_jobs(md, fresh, now=t.timestamp())
+            jobs += js
+            marks += [(str(mid), k) for k in fresh]
+    if first:
+        vp["since"] = iso(t)
+    if jobs:
+        try:
+            hand_over(jobs)
+        except Exception as e:                             # not marked: the next run hands them over again (the sender dedupes)
+            log(json.dumps({"video_push_error": f"{type(e).__name__}: {str(e)[:160]}"}, ensure_ascii=False))
+            return {"jobs": 0, "error": True}
+        for mid, k in marks:
+            done[mid].append(k)
+    live = {str(m["id"]) for m in matches}
+    for k in [k for k in done if k not in live]:
+        del done[k]
+    return {"jobs": len(jobs), "baseline": first}
+
+
+def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None, log=print, push="auto"):
+    """One run: read what is needed, match, write the media files that changed. Returns a summary dict.
+    push: "auto" = hand new goal clips to the web push sender when this is production (S3) and not a dry run; None = never;
+    a callable(jobs) = that (tests)."""
     t0 = time.time()
     t = t or now()
     st = store.get_state(STATE) or {}
@@ -1172,7 +1237,7 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
         del oe[k]
     gen = iso(t)
     outs = st.setdefault("out", {})
-    written, recent = 0, []
+    written, recent, clip_goals = 0, [], {}
     for md in matches:
         r = found.get(md["id"])
         if not r:
@@ -1201,6 +1266,8 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
         goals = {k: sorted(pack(l), key=lambda c: (0 if c.get("embed") else 1, 0 if c.get("lang") == "ar" else 1, -(c.get("conf") or 0), c.get("published") or ""))
                  for k, l in r["goals"].items()}
         goals = {k: l for k, l in goals.items() if l}
+        if goals:
+            clip_goals[md["id"]] = list(goals)
         if not hl and not goals and str(md["id"]) not in outs:
             continue
         doc = {"generated": gen, "match": md["id"], "highlights": hl, "goals": goals}
@@ -1221,8 +1288,11 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
     if st.get("recent_hash") != rh and not dry:
         store.put_json("media/recent.json", rdoc, cache="hot")
         st["recent_hash"] = rh
+    hand = None if dry or push is None else push if callable(push) else \
+        _hand_over if type(getattr(store, "b", None)).__name__ == "S3Backend" and os.environ.get("TIFO_VIDEO_PUSH", "1") != "0" else None
+    vres = video_push(st, matches, clip_goals, t, hand, log) if hand else None
     st["run"] = {"at": gen, "matches": len(matches), "channels": len(want), "videos": len(vids), "with_media": len(recent),
-                 "written": written, "errors": errs, "secs": round(time.time() - t0, 1)}
+                 "written": written, "errors": errs, "secs": round(time.time() - t0, 1), **({"video_push": vres} if vres else {})}
     if not dry:
         store.put_state(STATE, st)
     if explain is not None:
@@ -1237,6 +1307,7 @@ def main(argv=None):
     from store import Store, S3Backend, LocalBackend
     ap = argparse.ArgumentParser()
     ap.add_argument("--local"); ap.add_argument("--dry", action="store_true"); ap.add_argument("--explain", nargs="?", const="all")
+    ap.add_argument("--no-push", action="store_true", help="never hand goal clips to the web push sender («فيديو الهدف نزل»)")
     a = ap.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -1244,7 +1315,7 @@ def main(argv=None):
     store = Store(LocalBackend(a.local)) if a.local else Store(S3Backend(bucket))
     cfg = yaml.safe_load(open(os.path.join(HERE, "sources.yaml"), encoding="utf-8"))
     xbox = store.get_state("news/x-inbox.json") or {}
-    res = step(store, cfg, xbox=xbox, dry=a.dry, explain=a.explain)
+    res = step(store, cfg, xbox=xbox, dry=a.dry, explain=a.explain, push=None if a.no_push else "auto")
     print(json.dumps(res, ensure_ascii=False))
     return 0
 

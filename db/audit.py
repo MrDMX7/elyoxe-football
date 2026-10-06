@@ -30,7 +30,8 @@ Verdicts: ours (our code is wrong), stale (the source moved on, our copy didn't)
 sources disagree; `favors` says which one the evidence supports and `evidence` why), unknown.
 Levels: error (a visitor sees a wrong number), warn (probably wrong or out of date), info.
 
-Out: state/audit/<yyyy-mm-dd>.json (private, Store.put_state) and docs/AUDIT-DATA-<yyyy-mm-dd>.md.
+Out: state/audit/<yyyy-mm-dd>.json (private, Store.put_state) and docs/AUDIT-DATA-<yyyy-mm-dd>.md; after a full run (every
+area, uploads on) also v1/audit/latest.json, public, counts only, for the site's «الأرقام مدققة» badge (public_summary).
 Gentle: FotMob and 365Scores each at most 2 requests a second; 365Scores answers are cached on disk (db/.cache/audit/).
 """
 import argparse, difflib, gzip, hashlib, json, os, re, sys, threading, time, urllib.error, urllib.request
@@ -1440,6 +1441,47 @@ def markdown(A, doc):
     return "\n".join(L) + "\n"
 
 
+AREA_AR = {"freshness": "تحديث البيانات", "matches": "المباريات", "standings": "جداول الترتيب", "scorers": "الهدافين",
+           "derived": "المواجهات وتاريخ الأندية", "champions": "الأبطال", "identity": "هوية اللاعبين والأندية", "gaps": "النواقص"}
+
+
+def public_summary(doc):
+    """«الأرقام مدققة» (item 16, 2026-10-06): the day's audit as counts only, for the site's badge (v1/audit/latest.json).
+    {generated, ok, checked, errors, warnings, areas: {area: {ar, checked, errors, warnings, ok}}}. No findings, no keys,
+    no URLs, no messages, no timings: a visitor sees how much was checked and how much is still wrong, nothing internal.
+    `ok` = no error left (a warning is a doubt or a source disagreement, an error is a number a visitor would see wrong);
+    an area whose checks crashed, or that checked nothing, is never ok."""
+    lv = {}
+    crashed = set()
+    for f in doc.get("findings") or []:
+        a = f.get("area")
+        c = lv.setdefault(a, {"error": 0, "warn": 0})
+        if f.get("level") in c:
+            c[f["level"]] += 1
+        if f.get("check") == "audit_crashed":
+            crashed.add(a)
+    areas = {}
+    for a in AREAS:
+        if a not in (doc.get("params") or {}).get("areas", AREAS):
+            continue
+        s = (doc.get("summary") or {}).get(a) or {}
+        n = sum(int(v) for v in (s.get("checked") or {}).values())
+        e, w = lv.get(a, {}).get("error", 0), lv.get(a, {}).get("warn", 0)
+        areas[a] = {"ar": AREA_AR[a], "checked": n, "errors": e, "warnings": w, "ok": e == 0 and n > 0 and a not in crashed}
+    errors, warnings = sum(x["errors"] for x in areas.values()), sum(x["warnings"] for x in areas.values())
+    return {"generated": doc.get("generated"), "ok": all(x["ok"] for x in areas.values()) and bool(areas),
+            "checked": sum(x["checked"] for x in areas.values()), "errors": errors, "warnings": warnings, "areas": areas}
+
+
+def publish(store, doc, areas):
+    """Public only after a full audit (every area): a partial or local run never replaces the day's badge."""
+    if set(areas) != set(AREAS):
+        return None
+    pub = public_summary(doc)
+    store.put_json("audit/latest.json", pub, cache="static", heartbeat=True)    # heartbeat: `generated` = this audit's
+    return pub
+
+
 def run(store, areas, days=14, sample=60, verbose=True):
     A = Audit(store, days=days, sample=sample, verbose=verbose)
     fns = {"freshness": area_freshness, "matches": area_matches, "standings": area_standings, "scorers": area_scorers,
@@ -1482,6 +1524,7 @@ def main(argv=None):
         f.write(md)
     if not a.no_upload:
         store.put_state(f"audit/{doc['date']}.json", doc)
+        publish(store, doc, areas)                       # «الأرقام مدققة»: v1/audit/latest.json, counts only
     lv = Counter(f["level"] for f in A.findings)
     print(f"audit {doc['date']}: {lv['error']} errors, {lv['warn']} warnings, {lv['info']} info in {doc['seconds']} s -> {out}")
     return 0
