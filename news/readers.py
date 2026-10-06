@@ -4,8 +4,8 @@
 
 `id` is a hash of the canonical URL, so the same article from two queries or two runs is one item.
 Stdlib only (RSS 2.0, Atom, Media RSS); a failing source is reported and skipped, never fatal."""
-import hashlib, html, os, re, urllib.parse, urllib.request, xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+import gzip, hashlib, html, json, os, re, threading, urllib.parse, urllib.request, xml.etree.ElementTree as ET
+from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 
 UA = "Mozilla/5.0 (compatible; TifoNews/1.0; +https://tifo.elyoxe.com)"
@@ -85,11 +85,134 @@ def fetch(url, timeout=20):
 
 
 def read_source(src):
-    """One source (rss or a gnews query) -> (items, error or None)."""
+    """One source (rss or a gnews query) -> (items, error or None). A YouTube channel whose feed fails is read from its own
+    pages (youtube_page)."""
     try:
         return parse_feed(fetch(src["url"]), src), None
     except Exception as e:
-        return [], f"{type(e).__name__}: {str(e)[:120]}"
+        err = f"{type(e).__name__}: {str(e)[:120]}"
+    if src.get("kind") == "youtube":
+        try:
+            return youtube_page(src), None
+        except Exception as e:
+            return [], f"{err}; page: {type(e).__name__}: {str(e)[:80]}"
+    return [], err
+
+
+# ------------------------------------------------------------------ YouTube without its feed
+# YouTube's /feeds/videos.xml answered 404 for every channel from 2026-10-06 ~03:00 UTC (a platform-wide outage, on and off
+# since 10-04; YouTube's own channel too, from two networks), which emptied the goal videos and the clubs' video news.
+# The channel's Videos tab gives each video's age («4 days ago»), its Shorts tab none; both are public pages, read like a
+# visitor would (no key, no sign-in). A video keeps the time of its first sighting, so an age rounded to the hour or the
+# day does not drift between runs; a short counts from the run that first saw it (the journal reads every 15 min), and the
+# shorts already up when a channel is first read this way are recorded without a time and never listed.
+YT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36"
+YT_SEEN = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".cache", "yt-seen.json")
+AGO = re.compile(r"(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago", re.I)
+UNIT = {"second": 1, "minute": 60, "hour": 3600, "day": 86400, "week": 7 * 86400, "month": 30 * 86400, "year": 365 * 86400}
+_SEEN, _LOCK = {}, threading.Lock()     # vid -> first-seen ISO time ("?<time>": up before our first read); "ch:<id>:shorts" -> read
+
+
+def _iso(t):
+    return t.astimezone(timezone.utc).isoformat()[:19] + "Z"
+
+
+def _seen():
+    if not _SEEN:
+        try:
+            _SEEN.update(json.load(open(YT_SEEN, encoding="utf-8")))
+        except (OSError, ValueError):
+            _SEEN["_"] = "loaded"
+    return _SEEN
+
+
+def _save_seen(now):
+    cut = _iso(now - timedelta(days=45))
+    for k in [k for k, v in _SEEN.items() if k != "_" and isinstance(v, str) and v.lstrip("?") < cut]:
+        del _SEEN[k]
+    os.makedirs(os.path.dirname(YT_SEEN), exist_ok=True)
+    tmp = YT_SEEN + f".{threading.get_ident()}.tmp"
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(_SEEN, f)
+    os.replace(tmp, YT_SEEN)
+
+
+def _yt_html(cid, tab, timeout=20):
+    req = urllib.request.Request(f"https://www.youtube.com/channel/{cid}/{tab}?hl=en&gl=US",
+                                 headers={"User-Agent": YT_UA, "Accept-Language": "en-US,en;q=0.9", "Accept-Encoding": "gzip"})
+    r = urllib.request.urlopen(req, timeout=timeout)
+    b = r.read()
+    return (gzip.decompress(b) if r.headers.get("Content-Encoding") == "gzip" else b).decode("utf-8", "replace")
+
+
+def _yt_data(page):
+    m = re.search(r"var ytInitialData\s*=\s*(\{.*?\});\s*</script>", page, re.S)
+    if not m:
+        raise ValueError("no ytInitialData (a consent or check page)")
+    return json.loads(m.group(1))
+
+
+def _all(o, key, out):
+    if isinstance(o, dict):
+        if key in o:
+            out.append(o[key])
+            return out
+        for v in o.values():
+            _all(v, key, out)
+    elif isinstance(o, list):
+        for v in o:
+            _all(v, key, out)
+    return out
+
+
+def youtube_page(src, now=None):
+    """A channel's Videos and Shorts tabs -> items in parse_feed's shape (same URLs as the feed's, so the same ids)."""
+    cid = urllib.parse.parse_qs(urllib.parse.urlsplit(src["url"]).query).get("channel_id", [""])[0]
+    if not cid:
+        raise ValueError("no channel id")
+    now = now or datetime.now(timezone.utc)
+    vids = _all(_yt_data(_yt_html(cid, "videos")), "lockupViewModel", [])
+    try:
+        shorts = _all(_yt_data(_yt_html(cid, "shorts")), "shortsLockupViewModel", [])
+    except Exception:
+        shorts = None                    # the videos are worth listing alone
+    out = []
+
+    def add(vid, title, at, link):
+        out.append({"id": item_id(link), "src": src["key"], "kind": "youtube", "lang": src["lang"], "tier": src["tier"],
+                    "source": src["name"], "title": title[:300], "desc": "", "url": link,
+                    "image": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg", "at": at, "query": src.get("query"), "owner": src.get("owner")})
+    with _LOCK:
+        seen = _seen()
+        for lv in vids:
+            md = (lv.get("metadata") or {}).get("lockupMetadataViewModel") or {}
+            vid, title = lv.get("contentId"), ((md.get("title") or {}).get("content") or "").strip()
+            if not vid or not title or lv.get("contentType") not in (None, "LOCKUP_CONTENT_TYPE_VIDEO"):
+                continue
+            ago = None
+            for row in ((md.get("metadata") or {}).get("contentMetadataViewModel") or {}).get("metadataRows") or []:
+                for part in row.get("metadataParts") or []:
+                    m = AGO.search(part.get("accessibilityLabel") or (part.get("text") or {}).get("content") or "")
+                    if m:
+                        ago = int(m.group(1)) * UNIT[m.group(2).lower()]
+            if ago is None:              # live now, or a premiere still ahead
+                continue
+            seen.setdefault(vid, _iso(now - timedelta(seconds=ago)))
+            if not seen[vid].startswith("?"):
+                add(vid, title, seen[vid], "https://www.youtube.com/watch?v=" + vid)
+        if shorts is not None:
+            first = f"ch:{cid}:shorts" not in seen
+            for sh in shorts:
+                vid = ((((sh.get("onTap") or {}).get("innertubeCommand") or {}).get("reelWatchEndpoint")) or {}).get("videoId")
+                title = (((sh.get("overlayMetadata") or {}).get("primaryText") or {}).get("content") or "").strip()
+                if not vid or not title:
+                    continue
+                seen.setdefault(vid, ("?" if first else "") + _iso(now))
+                if not seen[vid].startswith("?"):
+                    add(vid, title, seen[vid], "https://www.youtube.com/shorts/" + vid)
+            seen[f"ch:{cid}:shorts"] = _iso(now)
+        _save_seen(now)
+    return out
 
 
 def youtube_source(y):
