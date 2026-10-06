@@ -1,4 +1,4 @@
-/* تيفو «مدرّب الكنبة» (owner's second list, 3, 2026-10-06): before kickoff the fan sets his XI and formation for one of the two
+/* تيفو «مدرّب الدكة» (owner's second list, 3, 2026-10-06): before kickoff the fan sets his XI and formation for one of the two
    teams, and after the match it is set beside the coach's: how many of his eleven started, the two formations, and once the
    whistle went the FotMob ratings of his picks who played against the coach's starters («تشكيلتك أحسن؟»), as an image to share.
    Kept on the phone only (localStorage tifo.coach.<match>: {t, f, p: {slot: player}, at}); it locks at kickoff (an edit after
@@ -67,13 +67,13 @@
     if (!BOX) return;
     var team = S && TEAMS.filter(function (t) { return t.id === S.t; })[0];
     if (!S || !team) {
-      BOX.innerHTML = '<div class="gh"><h2>مدرّب الكنبة</h2></div><div class="card lc"><p>قبل صافرة البداية سوّ تشكيلتك وخطتك، وبعد المباراة نحطها جنب تشكيلة المدرب الحقيقية: تشكيلتك أحسن؟</p>' +
+      BOX.innerHTML = '<div class="gh"><h2>مدرّب الدكة</h2></div><div class="card lc"><p>قبل صافرة البداية سوّ تشكيلتك وخطتك، وبعد المباراة نحطها جنب تشكيلة المدرب الحقيقية: تشكيلتك أحسن؟</p>' +
         '<div class="th-acts" style="flex-wrap:wrap">' + TEAMS.map(function (t) { return '<button type="button" class="pill pri" data-team="' + t.id + '">تشكيلة ' + esc(t.n) + "</button>"; }).join("") + "</div></div>";
       return;
     }
     var R = locked() ? real() : null, hits = null;
     if (R) { hits = {}; R.mine.forEach(function (id) { hits[id] = R.starters.indexOf(id) >= 0; }); }
-    var head = '<div class="gh"><h2>مدرّب الكنبة: ' + esc(team.n) + '</h2><span class="num">' + S.f + "</span></div>";
+    var head = '<div class="gh"><h2>مدرّب الدكة: ' + esc(team.n) + '</h2><span class="num">' + S.f + "</span></div>";
     var body = "";
     if (!locked()) {
       body = (EDIT ? U.seg("cf", Object.keys(F).map(function (f) { return [f, f]; }), S.f, { sm: 1 }) : "") + '<div class="card pitchw mt">' + pitch(S.f, S.p, null, null) + '<p class="gf">' + picked() + " من 11" + (EDIT ? " · اضغط مركز واختر لاعب" : "") + "</p></div>" +
@@ -104,7 +104,7 @@
     var draw = function () {
     x.fillStyle = "#123F2C"; x.fillRect(0, 0, W, H);
     var t = function (s, px, y, o) { o = o || {}; x.direction = o.dir || "rtl"; x.textAlign = o.align || "center"; x.fillStyle = o.color || "#F6F7F2"; x.font = (o.w || 600) + " " + o.size + 'px "' + (o.fam || "Readex Pro") + '"'; x.fillText(s, px, y); };
-    t("مدرّب الكنبة · " + (team ? team.n : ""), W / 2, 100, { w: 800, size: 50, fam: "Noto Kufi Arabic" });
+    t("مدرّب الدكة · " + (team ? team.n : ""), W / 2, 100, { w: 800, size: 50, fam: "Noto Kufi Arabic" });
     t((V.hn || "") + " ضد " + (V.an || ""), W / 2, 160, { size: 32, color: "#C7D5CD" });
     var mine = slots(S.f).map(function (s) { return S.p[s.n]; }).filter(Boolean), col = function (ids, cx, title, hit) {
       t(title, cx, 250, { w: 700, size: 36, color: "#7CF0B4" });
@@ -118,7 +118,7 @@
     };
     (D.fonts && D.fonts.load ? Promise.all(['800 50px "Noto Kufi Arabic"', '600 38px "Readex Pro"', '700 36px "Readex Pro"'].map(function (q) { return D.fonts.load(q, "تيفو 0"); })).catch(function () {}) : Promise.resolve()).then(function () { draw(); c.toBlob(function (b) {
       if (!b) return; var name = "tifo-coach-" + MID + ".png", fl = window.File ? new File([b], name, { type: "image/png" }) : null;
-      if (fl && navigator.canShare && navigator.canShare({ files: [fl] })) { navigator.share({ files: [fl], title: "مدرّب الكنبة" }).catch(function () {}); return; }
+      if (fl && navigator.canShare && navigator.canShare({ files: [fl] })) { navigator.share({ files: [fl], title: "مدرّب الدكة" }).catch(function () {}); return; }
       var a = D.createElement("a"); a.href = URL.createObjectURL(b); a.download = name; B.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
     }, "image/png"); });
   }
