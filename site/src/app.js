@@ -3,6 +3,7 @@
 (function(){
   "use strict";
   var R = window.TR, B = document.body, PAGE = B.dataset.page, ID = B.dataset.id, V = "/v1/";
+  var V5 = !!B.dataset.v5;   // the v5 shell (src/v5/app.js) owns the page: this bundle only wires the old widgets inside it (site/redesign/v5/ROLLOUT.md)
   var $ = function(s){ return document.querySelector(s); };
   // 347: sampled error beacon (1 in 5 page views, at most 3 reports): message, file path and line only
   (function(){ if (Math.random() > 0.2) return; var n = 0; function send(m, s, l, c){ if (n++ >= 3) return; try { fetch("/api/tifo/err", { method:"POST", keepalive:true, headers:{ "content-type":"application/json" }, body:JSON.stringify({ m:String(m || "").slice(0, 300), s:s || "", l:l || null, c:c || null, p:location.pathname, v:(document.querySelector('script[src*="/assets/app."]') || {}).src ? document.querySelector('script[src*="/assets/app."]').src.split("app.")[1].slice(0, 10) : "" }) }).catch(function(){}); } catch (e){} }
@@ -25,7 +26,7 @@
   function country(){ try { var c = localStorage.getItem("tifo.country"); if (c) return c; } catch (e){} var tz = ""; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e){} var hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; return hit ? hit[0] : "xx"; }
   function applyCountry(){ var c = country(), row = R.COUNTRIES.filter(function(x){ return x[0] === c; })[0]; try { R.TZ = row ? row[2] : Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e){ R.TZ = "Asia/Dubai"; }
     var b = $("#ctry"); if (b) b.textContent = "بلدك: " + (row ? row[1] : "—") + " · غيّر"; R.localize(document); }
-  applyCountry();
+  applyCountry(); if (V5) document.addEventListener("tifo:country", applyCountry);   // v5 picks the country
   // QA 2026-09-28: the country picker and search are real sheets (history entry, scrim, inert page, «سكّر»); picking a country closes
   // its sheet through the sheet system, so the page behind is never left inert
   var cb = $("#ctry"); if (cb) cb.onclick = function(){ var sh = $("#ctrysh"), box = $("#ctrybody"); if (!sh || !box || !window.TifoSheet) return; var cur = country();
@@ -178,18 +179,21 @@
     // results for picks past kickoff + 2.5 h, from the match file, at most 3 per page load
     catchUp:function(){ var o = PK.all(), due = Object.keys(o).filter(function(id){ return o[id].r == null && Date.now() - Date.parse(o[id].ko) > 2.5 * 36e5; }).slice(0, 3);
       return Promise.all(due.map(function(id){ return get("match/" + id + ".json").then(function(m){ PK.settle(m); if (m.status === "cancelled" || m.status === "postponed"){ var x = PK.all(); delete x[id]; PK.save(x); } }).catch(function(){}); })); } };
-  (function(){ var box = $("#pick"); if (!box) return; var id = +box.dataset.mid, ko = Date.parse(box.dataset.kick), btns = [].slice.call(box.querySelectorAll("[data-p]")), msg = $("#pickm");
+  (function(){ var box = $("#pick"); if (!box || V5) return; var id = +box.dataset.mid, ko = Date.parse(box.dataset.kick), btns = [].slice.call(box.querySelectorAll("[data-p]")), msg = $("#pickm");
     function gone(){ return Date.now() >= ko; } function paint(){ var p = PK.all()[id]; btns.forEach(function(b){ b.setAttribute("aria-pressed", p && p.p === b.dataset.p ? "true" : "false"); }); if (msg) msg.textContent = p ? "توقعك: " + (p.p === "d" ? "تعادل" : btns.filter(function(b){ return b.dataset.p === p.p; })[0].textContent) + ". نشوف بعد النهاية." : ""; }
     if (gone()){ box.hidden = true; return; } paint();
     box.addEventListener("click", function(e){ var b = e.target.closest("[data-p]"); if (!b || gone()) return; var o = PK.all(); o[id] = { p:b.dataset.p, ko:box.dataset.kick, h:+box.dataset.h, a:+box.dataset.a }; PK.save(o); paint(); });
     document.addEventListener("tifo:match", function(e){ if (e.detail && e.detail.status !== "scheduled"){ box.hidden = true; var sk = $("#stakes"); if (sk) sk.hidden = true; } });
     setTimeout(function(){ if (gone()) box.hidden = true; }, Math.max(0, Math.min(ko - Date.now(), 2147483000))); })();
   // on a finished match page: settle the pick and say it in the hero (absolutely placed, so nothing moves)
-  document.addEventListener("tifo:match", function(e){ var m = e.detail; if (!m || m.status !== "finished" || $(".pickres")) return; var p = PK.settle(m); if (!p || p.r == null) return; var hin = $(".mhero .hero-in"); if (!hin) return;
+  document.addEventListener("tifo:match", function(e){ var m = e.detail; if (V5 || !m || m.status !== "finished" || $(".pickres")) return; var p = PK.settle(m); if (!p || p.r == null) return; var hin = $(".mhero .hero-in"); if (!hin) return;
     var n = document.createElement("p"); n.className = "pickres" + (p.r ? " ok" : ""); n.textContent = p.r ? "توقعك طلع صح" : "توقعك طلع غلط"; hin.appendChild(n); });
 
   // ---- competition: standings (live), fixtures, leaders
+  // v5: the page draws its own table, rounds and leaders (src/v5/app.js); here only «شو لو؟», which needs both files
+  function compV5(){ if (!$("#whatif")) return Promise.resolve(); var cid = +B.dataset.comp; return Promise.all([get("comp/" + cid + "/standings.json"), get("comp/" + cid + "/fixtures.json")]).then(function(r){ whatif(r[0], r[1]); }); }
   function comp(){
+    if (V5) return compV5();
     var cid = +B.dataset.comp;
     // W2.11: after the first load a competition page polls only the table and live.json; fixtures and scorers come once
     var first = !comp._fx;
@@ -233,18 +237,25 @@
   var MD = null; try { var ms0 = document.getElementById("msum"); if (ms0) MD = JSON.parse(ms0.textContent); } catch (e){}
   // 3D lineup pitch (103): three.js loads only on demand
   var FULL = null, P3 = null, pbtn = $("#p3dbtn");
+  // a button's words: a v5 row keeps its icon and chevron and changes its label (.rt)
+  function label(b, t){ var r = b.querySelector(".rt"); (r || b).textContent = t; }
+  if (pbtn && V5 && navigator.deviceMemory && navigator.deviceMemory <= 3){ var pg0 = pbtn.closest(".grp"); (pg0 || pbtn).hidden = true; }   // W4.7: no 3D on phones with 3 GB or less
   if (pbtn) pbtn.onclick = function(){
-    var box = $("#p3d"); if (!FULL || !box) return;
-    if (P3){ P3.dispose(); P3 = null; box.innerHTML = ""; box.classList.remove("p3d"); pbtn.textContent = "شوفها على ملعب ثلاثي الأبعاد"; return; }
-    pbtn.disabled = true; pbtn.textContent = "نجهّز الملعب…";
-    import(pbtn.dataset.src).then(function(m){ P3 = m.mount(box, FULL); pbtn.textContent = "سكّر الملعب"; pbtn.disabled = false; box.scrollIntoView({ block:"nearest" }); })
-      .catch(function(){ pbtn.textContent = "ما قدرنا نفتح الملعب، جرّب مرة ثانية"; pbtn.disabled = false; });
+    var box = $("#p3d"); if (!box) return;
+    if (!FULL){ if (!V5) return; pbtn.disabled = true; get("match/" + ID + ".json").then(function(md){ FULL = md; pbtn.disabled = false; pbtn.onclick(); }).catch(function(){ pbtn.disabled = false; label(pbtn, "ما قدرنا نفتح الملعب، جرّب مرة ثانية"); }); return; }   // v5: the detail comes on the tap
+    if (P3){ P3.dispose(); P3 = null; box.innerHTML = ""; box.classList.remove("p3d"); label(pbtn, "شوفها على ملعب ثلاثي الأبعاد"); return; }
+    pbtn.disabled = true; label(pbtn, "نجهّز الملعب…");
+    import(pbtn.dataset.src).then(function(m){ P3 = m.mount(box, FULL); label(pbtn, "سكّر الملعب"); pbtn.disabled = false; box.scrollIntoView({ block:"nearest" }); })
+      .catch(function(){ label(pbtn, "ما قدرنا نفتح الملعب، جرّب مرة ثانية"); pbtn.disabled = false; });
   };
   var sb = $("#storybtn"); if (sb) sb.onclick = function(){ if (MD && window.TifoShare){ sb.disabled = true; window.TifoShare.story(MD).then(function(){ sb.disabled = false; }); } };
   // QA 14: a page opened long before kickoff waits (no detail fetch, no 404) and wakes 75 min before; a 404 near kickoff retries
   function wake(md){ var t = md && Date.parse(md.kickoff_utc); if (!md || md.status !== "scheduled" || !t) return false; var d = t - Date.now() - 75 * 60e3; if (d <= 0) return false; poll(match, Math.min(d, 2147483000)); return true; }
   function nearKick(md){ var t = md && Date.parse(md.kickoff_utc); return !!t && (R.isLive(md) || (md.status === "scheduled" && t - Date.now() < 90 * 60e3 && t > Date.now() - 4 * 3600e3)); }
+  // v5: the page refreshes itself and announces every refresh («tifo:match», src/v5/app.js); its detail feeds the 3D pitch
+  function matchV5(){ if (!matchV5.on){ matchV5.on = 1; document.addEventListener("tifo:match", function(e){ var md = e.detail; if (md && md.lineups){ FULL = md; MD = md; } }); } return Promise.resolve(); }
   function match(){
+    if (V5) return matchV5();
     if (MD && !MD._full && wake(MD)) return Promise.resolve();
     return Promise.all([index(), get("match/" + ID + ".json")]).then(function(r){
       var idx = r[0], md = r[1];
@@ -273,7 +284,10 @@
       poll(daypage, (r[2].matches || []).length ? 20e3 : 120e3); }).catch(function(){ retry(daypage); }); }
 
   // ---- team
+  // v5: fixtures, squad and «تابع» are the page's own (src/v5/app.js); the wallpaper needs the coming matches, fetched on the tap
+  function teamV5(){ var wp = $("#wpbtn"); if (wp) wp.onclick = function(){ if (!window.TifoShare) return; wp.disabled = true; get("team/" + ID + ".json").then(function(t){ return window.TifoShare.wallpaper({ id:t.id, name:t.name_ar || t.name }, R.teamFixtures(t).next); }).catch(function(){}).then(function(){ wp.disabled = false; }); }; return Promise.resolve(); }
   function team(){
+    if (V5) return teamV5();
     var btn = $("#mybtn");
     function isFav(){ return favs().some(function(x){ return x.t === "team" && x.id === +ID; }); }
     function paint(){ if (!btn) return; var on = isFav(); btn.textContent = on ? (mine() === +ID ? "فريقي ✓" : "في مفضلتي ✓") : (favs().length ? "ضيفه لمفضلتي" : "هذا فريقي"); btn.classList.toggle("on", on); }
@@ -297,7 +311,7 @@
   var pv = $("#prev"), nx = $("#next");
   if (pv && nx && PAGE === "home"){ pv.onclick = function(){ dayOff--; home(); }; nx.onclick = function(){ dayOff++; home(); }; }
   // W3.6: webcal:// does nothing on Android Chrome; Google Calendar subscribes to the same feed by cid
-  var ics = $("#ics"); if (ics){ var wc = "webcal://" + location.host + "/v1/team/" + ID + ".ics"; ics.href = /Android/i.test(navigator.userAgent) ? "https://calendar.google.com/calendar/r?cid=" + wc : wc; if (/Android/i.test(navigator.userAgent)){ ics.target = "_blank"; ics.rel = "noopener"; } }
+  var ics = $("#ics"); if (ics && !V5){ var wc = "webcal://" + location.host + "/v1/team/" + ID + ".ics"; ics.href = /Android/i.test(navigator.userAgent) ? "https://calendar.google.com/calendar/r?cid=" + wc : wc; if (/Android/i.test(navigator.userAgent)){ ics.target = "_blank"; ics.rel = "noopener"; } }
   // ---- countdown to the national team's next match (62), on home and /uae/
   var CD = null;
   // W2.4: the countdown follows the visitor's national team (window.NAT, iso2 -> team id), built once, then only the digits change
@@ -351,7 +365,7 @@
   var spoilReady = false; function spoilSet(on){ var was = document.body.classList.contains("nospoil"); if (spoilReady && was !== !!on) setTimeout(function(){ document.dispatchEvent(new CustomEvent("tifo:nospoil", { detail:!!on })); }, 0); document.body.classList.toggle("nospoil", on); if (sp) sp.setAttribute("aria-pressed", on); try { localStorage.setItem("tifo.nospoil", on ? "1" : ""); } catch (e){} }
   try { spoilSet(localStorage.getItem("tifo.nospoil") === "1"); } catch (e){} spoilReady = true;
   if (sp) sp.onclick = function(){ spoilSet(!document.body.classList.contains("nospoil")); };
-  document.addEventListener("click", function(e){ if (!document.body.classList.contains("nospoil")) return; var t = e.target.closest(".chip,.board .dg"); if (t && !t.classList.contains("shown")){ e.preventDefault(); t.classList.add("shown"); } }, true);
+  document.addEventListener("click", function(e){ if (!document.body.classList.contains("nospoil")) return; var t = e.target.closest(V5 ? ".lc .chip,.lc .board .dg" : ".chip,.board .dg"); if (t && !t.classList.contains("shown")){ e.preventDefault(); t.classList.add("shown"); } }, true);
 
   // distance from your emirate (45): remembered choice, rough driving time at ~90 km/h
   function dist(){ var em = "dubai"; try { em = localStorage.getItem("tifo.emirate") || "dubai"; } catch (e){}
@@ -373,13 +387,13 @@
     clearInterval(window._commT); if (!on) return; var lis = p.querySelectorAll("li"), i = 0; lis.forEach(function(l){ l.classList.remove("hot1"); });
     window._commT = setInterval(function(){ lis.forEach(function(l){ l.classList.remove("hot1"); }); if (lis[i]) { lis[i].classList.add("hot1"); lis[i].scrollIntoView({ block:"center", behavior:"smooth" }); } i = (i + 1) % lis.length; }, 8000); });
   // service worker (202)
-  if ("serviceWorker" in navigator) try { navigator.serviceWorker.register("/sw.js"); } catch (e){}
+  if (!V5 && "serviceWorker" in navigator) try { navigator.serviceWorker.register("/sw.js"); } catch (e){}
   // «بس مباريات العرب» (234)
   function arabOnly(){ try { return localStorage.getItem("tifo.arab") === "1"; } catch (e){ return false; } }
   var ab = $("#arabonly"); if (ab){ ab.setAttribute("aria-pressed", arabOnly()); ab.onclick = function(){ try { localStorage.setItem("tifo.arab", arabOnly() ? "" : "1"); } catch (e){} ab.setAttribute("aria-pressed", arabOnly()); home(); }; }
   // second screen (223): only the scoreboard, the match line and the numbers, big, screen kept awake
   var sb2 = $("#secondbtn"), wl = null;
-  if (sb2) sb2.onclick = function(){ var on = !document.body.classList.contains("second"); document.body.classList.toggle("second", on); sb2.textContent = on ? "سكّر الشاشة الثانية" : "الشاشة الثانية";
+  if (sb2 && !V5) sb2.onclick = function(){ var on = !document.body.classList.contains("second"); document.body.classList.toggle("second", on); sb2.textContent = on ? "سكّر الشاشة الثانية" : "الشاشة الثانية";
     if (on && navigator.wakeLock) navigator.wakeLock.request("screen").then(function(l){ wl = l; }).catch(function(){}); else if (wl){ wl.release(); wl = null; } };
   // 250: per-section share buttons became the page sheet's «صورة لأي قسم» (v3, src/shell.js)
   // 235 round story: the table re-sorts as each result lands (FLIP via --i row index)
@@ -394,7 +408,7 @@
   // 204/205: where to watch in the visitor's country (research/broadcast_by_country.json); UAE list with a note when missing
   var BCD = null; function bcData(){ return BCD ? Promise.resolve(BCD) : fetch("/assets/bc." + B.dataset.bc + ".json").then(function(r){ return r.json(); }).then(function(x){ BCD = x; return x; }).catch(function(){ return {}; }); }
   function freeIn(comp){ var c = country(), e = BCD && BCD[c] && BCD[c][comp]; if (!e || !e.b || !e.b.length) return true; return e.b.some(function(b){ return b[1]; }); }   // unknown channel: keep it (W1.2b)
-  (function(){ var box = $("#wwbox"); if (!box) return; var c = country(); if (c === "AE" || c === "xx") return;
+  (function(){ var box = $("#wwbox"); if (!box || (V5 && PAGE === "match")) return; var c = country();   // v5 match pages draw their own (#chbox) if (c === "AE" || c === "xx") return;
     bcData().then(function(d){ var row = R.COUNTRIES.filter(function(x){ return x[0] === c; })[0], e = d[c] && d[c][box.dataset.comp]; if (!e || !e.b.length) { var n = box.querySelector("h2"); if (n) n.insertAdjacentHTML("afterend", '<p class="note">ما لقينا معلومة مؤكدة لـ' + (row ? row[1] : "بلدك") + '، وهذي القنوات في الإمارات.</p>'); return; }
       box.innerHTML = '<section class="blk"><h2>وين تنقل في ' + (row ? row[1] : "بلدك") + '</h2><ul class="bc">' + e.b.map(function(b){ return "<li><b>" + R.esc(b[0]) + "</b>" + (b[1] ? "" : ' <span class="enc">مشفرة</span>') + (b[5] ? ' <span class="muted small">' + R.esc(b[5]) + "</span>" : "") + (b[2] ? ' <span class="num">' + b[2] + "</span> " + R.esc(b[3] || "") : "") + (b[4] ? ' <a class="src" href="' + R.esc(b[4]) + '" rel="noopener">المصدر</a>' : "") + "</li>"; }).join("") + "</ul>" + (e.q && e.q !== "high" ? '<p class="src">ثقة المعلومة: ' + (e.q === "medium" ? "متوسطة" : "قليلة") + "، تأكد من القناة قبل المباراة.</p>" : "") + "</section>"; }); })();
   function freeOnly(){ try { return localStorage.getItem("tifo.free") === "1"; } catch (e){ return false; } }
@@ -419,12 +433,12 @@
       $("#cout").innerHTML = line("مباريات", x.g, y.g, 1, i) + line("فوز", x.w, y.w, 1, i) + line("تعادل", x.d, y.d, 0, i) + line("خسارة", x.l, y.l, -1, i) + line("نقاط بالمباراة", x.ppg, y.ppg, 1, f2) + line("مواسم", Object.keys(x.s).length, Object.keys(y.s).length, 1, i) + '<p class="small">' + R.esc(C[a.value].n) + ": " + R.esc(Object.keys(x.c).join("، ")) + '</p><p class="small">' + R.esc(C[b.value].n) + ": " + R.esc(Object.keys(y.c).join("، ")) + "</p>"; }
     a.onchange = b.onchange = draw; draw(); }); })();
   // 293: a toast when a favourite club scores while any page is open (skipped in no-spoiler mode)
-  (function(){ var teams = favs().filter(function(x){ return x.t === "team"; }).map(function(x){ return x.id; }); if (!teams.length) return; var seen = {};
+  (function(){ var teams = favs().filter(function(x){ return x.t === "team"; }).map(function(x){ return x.id; }); if (!teams.length || V5) return; var seen = {};
     function check(){ if (document.hidden) return; fetch("/v1/live.json", { cache:"no-cache" }).then(function(r){ return r.json(); }).then(function(l){ (l.matches || []).forEach(function(m){ [["home", m.home], ["away", m.away]].forEach(function(x){ if (teams.indexOf(x[1].id) < 0 || !m.score) return; var k = m.id + x[0], g = m.score[x[0]]; if (seen[k] != null && g > seen[k] && !document.body.classList.contains("nospoil")) toast("⚽ هدف لـ" + R.tname(x[1]) + "! " + m.score.home + " - " + m.score.away, "/m/" + m.id + "/"); seen[k] = g; }); }); }).catch(function(){}); }
     function toast(t, href){ var d = document.createElement("a"); d.className = "toast"; d.href = href; d.textContent = t; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 9000); }
     check(); setInterval(check, 30000); })();
   // 294: optional club colours from the first favourite
-  function theme(){ var on = false; try { on = localStorage.getItem("tifo.theme") === "1"; } catch (e){} var f = favs().filter(function(x){ return x.t === "team"; })[0], c = f && (window.TC || {})[f.id];
+  function theme(){ if (V5) return; var on = false; try { on = localStorage.getItem("tifo.theme") === "1"; } catch (e){} var f = favs().filter(function(x){ return x.t === "team"; })[0], c = f && (window.TC || {})[f.id];
     var st = document.documentElement.style; if (on && c){ var h = c[0], n = parseInt(h.slice(1), 16), l = (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255; st.setProperty("--club1", h); document.body.classList.add("clubtheme"); document.body.style.setProperty("--club2", c[1] || h); } else { st.removeProperty("--club1"); document.body.classList.remove("clubtheme"); } }   // W2.3: the club theme tints the key art only, never --dune
   theme(); document.addEventListener("click", function(e){ if (!e.target.closest("#themebtn")) return; try { localStorage.setItem("tifo.theme", localStorage.getItem("tifo.theme") === "1" ? "" : "1"); } catch (x){} theme(); });
   // 184 newsletter: form anywhere with .nlform; confirm/unsubscribe results via ?ok= / ?bye=
@@ -493,6 +507,7 @@
   //      stories (v1/news/e/<kind>-<id>.json), and [data-social] adds the official videos (v1/news/social/…). Rendered here, not
   //      prebuilt: the stories change every 15 minutes and the pages hourly.
   (function(){
+    if (V5) return;   // v5 lists the stories itself (src/v5/app.js: /news/ and the .enews panes)
     var KIND = { transfer:"انتقالات", injury:"إصابة", presser:"مؤتمر صحفي", statement:"تصريحات", official:"رسمي", match:"مباراة", other:"خبر" };
     var STAGE = { rumour:"إشاعة", talks:"مفاوضات", agreed:"اتفاق", here_we_go:"Here we go", official:"رسمي" };
     var HREF = { team:"/t/", player:"/p/", coach:"/coach/" };

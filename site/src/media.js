@@ -72,7 +72,7 @@
     var hl = M.highlights || [], own = D.querySelector(".mdh-own"), ex = theirs();
     ex.forEach(function(a){ a.classList.toggle("mdh", !!hl.length); });
     // the search link («شوف الملخص الرسمي» on the channel) steps aside for a real video
-    [].slice.call(D.querySelectorAll("p.hlink")).forEach(function(p){ if (!p.querySelector("a.hlbtn")) p.hidden = !!hl.length; });
+    [].slice.call(D.querySelectorAll("p.hlink,a.hlsearch")).forEach(function(p){ if (!p.querySelector("a.hlbtn")) p.hidden = !!hl.length; });   // v5: the search row (.hlsearch)
     if (!hl.length || ex.length){ if (own) own.remove(); return; }
     if (own) return;
     var hb = D.createElement("button"); hb.type = "button"; hb.innerHTML = '<i aria-hidden="true">▶</i> الملخص';
@@ -127,6 +127,6 @@
   // every 30 s; /db/ once its fetch is back)
   // (in the observer's own microtask: the buttons are back before the next frame, and a page in a background tab gets them too)
   function soon(){ paint(); if (!timer && hot()) plan(); }
-  ["events", "hlbtn", "world", "lve", "lvhl", "lvh"].forEach(function(id){ var el = D.getElementById(id); if (el) new MutationObserver(soon).observe(el, { childList:true, subtree:true }); });
+  ["events", "ev", "mh", "hlbtn", "world", "lve", "lvhl", "lvh"].forEach(function(id){ var el = D.getElementById(id); if (el) new MutationObserver(soon).observe(el, { childList:true, subtree:true }); });   // v5: #ev (events) and #mh (the header)
   load();
 })();
