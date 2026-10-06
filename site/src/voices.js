@@ -114,4 +114,12 @@
     });
   }
   root.TifoVoices = { load: load, page: page, list: list, picker: picker, mount: mount, favs: favs, setFavs: setFavs, decorate: decorate, when: when };
+  // on its own: wires the pills and switches the page carries (a commentator's page, the picker in «المزيد»), marks the match rows
+  // a favourite voice calls, and marks them again when a list redraws (v5's app.js, src/days.js); nothing to do without favourites
+  function boot() {
+    mount(D); if (!favs().length) return; decorate(D);
+    var q = 0, main = D.getElementById("main");
+    if (main && "MutationObserver" in window) new MutationObserver(function () { if (q) return; q = setTimeout(function () { q = 0; decorate(D); }, 300); }).observe(main, { childList: true, subtree: true });
+  }
+  if (D.readyState === "loading") D.addEventListener("DOMContentLoaded", boot); else boot();
 })(typeof window !== "undefined" ? window : this);

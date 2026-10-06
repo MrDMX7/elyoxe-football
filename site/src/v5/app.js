@@ -185,6 +185,20 @@
   var H = { ms: null, day: V.day, filter: "all", todayN: V.day, world: null, wlv: {}, open: ls.json("tifo.allopen", {}) }, BC = null, ARAB = {}, ARABC = {}, TF = null;
   (V.arab || []).forEach(function (id) { ARAB[id] = 1; }); (V.arabComp || []).forEach(function (id) { ARABC[id] = 1; });
   function ymdOf(n) { return n.replace(/(\d{4})(\d\d)(\d\d)/, "$1-$2-$3"); }
+  // a day is the visitor's own calendar day (v3's QA 23, lost in the v5 rollout and restored 2026-10-06): the poller's day files are
+  // UAE days, so a visitor west of the UAE needs that day's file and the next one (Morocco's evening is the UAE's night), east of it
+  // the one before; the matches kept are the ones that kick off on the visitor's date (a match with no time yet, by its UAE date)
+  function dShift(Y, k) { var p = ymdOf(Y).split("-").map(Number); return new Date(Date.UTC(p[0], p[1] - 1, p[2] + k)).toISOString().slice(0, 10).replace(/-/g, ""); }
+  function tzOff(Y) { var iso = ymdOf(Y) + "T12:00:00.000Z", p = U.parts(iso); return p ? Math.round((Date.UTC(p.y, p.mo - 1, p.d, +p.h, +p.mi) - Date.parse(iso)) / 60000) : 240; }
+  function loadDay(Y, fresh) {
+    var off = tzOff(Y), files = off < 240 ? [Y, dShift(Y, 1)] : off > 240 ? [dShift(Y, -1), Y] : [Y], want = ymdOf(Y);
+    return Promise.all(files.map(function (f) { return get("day/" + f + ".json", fresh).catch(function () { return null; }); })).then(function (js) {
+      if (!js.some(Boolean)) throw new Error("no day file");
+      var seen = {}, out = [];
+      js.forEach(function (j) { ((j && j.matches) || []).forEach(function (m) { if (seen[m.id]) return; seen[m.id] = 1;
+        var d = m.time_tbd || !m.kickoff_utc ? String(m.kickoff_uae || "").slice(0, 10) : U.ymd(m.kickoff_utc); if (d === want) out.push(m); }); });
+      return { matches: out }; });
+  }
   // a redraw that keeps every row whose score and state did not change (same node: nothing repaints, nothing moves); a list with
   // other rows or another order is drawn again whole
   function patchList(box, html) {
@@ -216,7 +230,7 @@
   function selectDay(b) { $$("#days .day").forEach(function (x) { x.setAttribute("aria-selected", String(x === b)); }); H.day = b.dataset.d; var s = $("#daysub"); if (s) s.textContent = U.dname(ymdOf(H.day) + "T12:00:00+04:00");
     b.scrollIntoView({ inline: "center", block: "nearest", behavior: RM ? "auto" : "smooth" }); var box = $("#homelist"); if (box) box.classList.add("dim");
     ss.set("tifo.home." + location.pathname, H.day + "|" + H.filter); H.world = null; H.wlv = {};
-    get("day/" + H.day + ".json", H.day === H.todayN).then(function (j) { H.ms = j.matches || []; return H.day === H.todayN ? mergeLive() : null; }).then(function () { if (box) box.classList.remove("dim"); renderHome(); worldMaybe(); })
+    loadDay(H.day, H.day === H.todayN).then(function (j) { H.ms = j.matches || []; return H.day === H.todayN ? mergeLive() : null; }).then(function () { if (box) box.classList.remove("dim"); renderHome(); worldMaybe(); })
       .catch(function () { if (box) { box.classList.remove("dim"); box.innerHTML = '<div class="card"><p class="empty">ما قدرنا نحمّل هاليوم.</p></div>'; } }); }
   function mergeLive() { return get("live.json", true).then(function (l) { var Lm = {}; (l.matches || []).forEach(function (m) { Lm[m.id] = m; }); cfg.now = NOW(); H.ms = H.ms.map(function (m) { return Lm[m.id] ? Object.assign({}, m, Lm[m.id]) : m; }); stamp(l.generated); }).catch(function () {}); }
   function worldLoad() { var y = H.day; return get("all/" + y + ".json", y === H.todayN).then(function (doc) { if (y !== H.day) return; H.world = doc; renderHome(); }).catch(function () { var box = $("#world"); if (box && box.dataset.open) box.innerHTML = ""; }); }
@@ -224,15 +238,15 @@
   function worldMaybe() { var box = $("#world"); if (!box) return; if (box.dataset.open) { worldLoad(); return; }
     idle(function () { if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) { io.disconnect(); if (!H.world) worldLoad(); } }, { rootMargin: "600px 0px" }); io.observe(box); } else worldLoad(); }); }   // after the page settles: the world list is the biggest file
   function homeInit() {
-    var t = new Date(NOW() + 4 * 36e5).toISOString().slice(0, 10), tn = t.replace(/-/g, ""), box = $("#homelist");
-    var isTomorrow = PG === "daypage" && /\/tomorrow\//.test(location.pathname), want = isTomorrow ? new Date(NOW() + 4 * 36e5 + 864e5).toISOString().slice(0, 10).replace(/-/g, "") : tn;
+    var t = U.ymd(new Date(NOW()).toISOString()) || new Date(NOW() + 4 * 36e5).toISOString().slice(0, 10), tn = t.replace(/-/g, ""), box = $("#homelist");   // the visitor's date
+    var isTomorrow = PG === "daypage" && /\/tomorrow\//.test(location.pathname), want = isTomorrow ? dShift(tn, 1) : tn;
     H.todayN = tn; var f0 = $("#feat .fc[data-mid]"); H.pinFeat = f0 && f0.dataset.mid; H.pinUntil = NOW() + 60e3;   // the build's featured match holds for a minute
     var saved = (ss.get("tifo.home." + location.pathname) || "").split("|");   // back to this page: the day and filter it was on
     if (saved[0] && /^\d{8}$/.test(saved[0])) want = saved[0]; if (saved[1] && /^(all|live|arab)$/.test(saved[1])) H.filter = saved[1];
-    var q = new URLSearchParams(location.search); if (q.get("f") === "live") H.filter = "live"; var qd = { yesterday: -1, tomorrow: 1 }[q.get("d")]; if (qd) want = new Date(NOW() + 4 * 36e5 + qd * 864e5).toISOString().slice(0, 10).replace(/-/g, "");
+    var q = new URLSearchParams(location.search); if (q.get("f") === "live") H.filter = "live"; var qd = { yesterday: -1, tomorrow: 1 }[q.get("d")]; if (qd) want = dShift(tn, qd);
     if (want !== V.day || tn !== V.today.replace(/-/g, "")) { H.day = want; var dd = $("#days"); if (dd) dd.outerHTML = P.days(ymdOf(want)); var s = $("#daysub"); if (s) s.textContent = U.dname(ymdOf(want) + "T12:00:00+04:00"); if (box && want !== V.day) box.classList.add("dim"); }
     if (H.filter !== "all") selectSegOnly($('.seg[data-seg="f"]'), H.filter);
-    get("day/" + H.day + ".json", true).then(function (j) { H.ms = j.matches || []; return H.day === H.todayN ? mergeLive() : null; }).then(function () { if (box) box.classList.remove("dim"); homeFresh(); worldMaybe(); }).catch(function () { if (box) box.classList.remove("dim"); });
+    loadDay(H.day, true).then(function (j) { H.ms = j.matches || []; return H.day === H.todayN ? mergeLive() : null; }).then(function () { if (box) box.classList.remove("dim"); homeFresh(); worldMaybe(); }).catch(function () { if (box) box.classList.remove("dim"); });
     var sel = $("#days .day[aria-selected=true]"); if (sel) sel.scrollIntoView({ inline: "center", block: "nearest" });
     // live: our list every 20 s and the world's every 30 s while something is live or about to start, every 2 minutes otherwise
     (function tick() { var live = (H.ms || []).some(function (m) { var k = Date.parse(m.kickoff_utc); return U.isLive(m) || (m.status === "scheduled" && k - NOW() < 15 * 60e3 && k > NOW() - 3 * 36e5); }) || (H.world && worldLive());
@@ -605,10 +619,12 @@
       if (Notification.permission === "denied") { var m3 = $("#pushm"); if (m3) m3.textContent = "التنبيهات مقفولة لتيفو. تقدر تسمح لها من إعدادات المتصفح."; return; } go(); });
     if (new URLSearchParams(location.search).get("notify") === "1") setTimeout(function () { openSheet(sh); }, 300);
     if (PUSHOK) idle(function () { if (!PKEY) pushKey().catch(function () {}); }); }
-  function pushTeamChanged(tid, on) { if (on || !PUSHOK) return; var s = pushSt(); if ((s.teams || {})[tid]) { delete s.teams[tid]; ls.set("tifo.push", JSON.stringify(s)); pushSync(tid); } }
+  // src/notify.js (TifoNotify, owner item 7) owns the subscription where it is loaded: it also sends the video switch and the quiet
+  // hours, which a sync from here would drop
+  function pushTeamChanged(tid, on) { if (on || !PUSHOK) return; if (window.TifoNotify) { try { window.TifoNotify.set(tid, []).catch(function () {}); } catch (e) {} return; } var s = pushSt(); if ((s.teams || {})[tid]) { delete s.teams[tid]; ls.set("tifo.push", JSON.stringify(s)); pushSync(tid); } }
   // after «تابع» on a team: where push works, offer its alerts once a session; elsewhere the install card
   function afterFollow(tid) { if (PG === "team" && PUSHOK && !ss.get("tifo.pushasked") && !(pushSt().teams || {})[tid]) { ss.set("tifo.pushasked", "1"); setTimeout(function () { openSheet("sh-notify"); }, 600); } else instAsk(); }
-  D.addEventListener("tifo:nospoil", function () { if (!PUSHOK) return; Object.keys(pushSt().teams || {}).forEach(function (tid) { pushSync(+tid); }); });
+  D.addEventListener("tifo:nospoil", function () { if (!PUSHOK || window.TifoNotify) return; Object.keys(pushSt().teams || {}).forEach(function (tid) { pushSync(+tid); }); });   // TifoNotify resyncs on its own
 
   // ================================================================== the share sheet's tools: an image of any section, the embed code, a player's card, cinema
   function closeShare() { var d = $("#sh-share"); if (d && d.open) closeSheet(d, true); }
