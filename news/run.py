@@ -100,6 +100,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--local"); ap.add_argument("--no-llm", action="store_true"); ap.add_argument("--no-media", action="store_true")
     ap.add_argument("--no-tv", action="store_true", help="skip «منو يعلّق؟» (news/commentators.py)")
+    ap.add_argument("--no-push", action="store_true", help="the media step hands no goal clip to the web push sender")
     a = ap.parse_args(argv)
     t0 = time.time()
     store = Store(LocalBackend(a.local)) if a.local else Store(S3Backend(BUCKET))
@@ -202,7 +203,7 @@ def main(argv=None):
         try:
             from news import media
             yt = {s["key"]: got for got, err, s in batches if s and s.get("kind") == "youtube" and not err}
-            res = media.step(store, cfg, prefetched=yt, xbox=xbox)
+            res = media.step(store, cfg, prefetched=yt, xbox=xbox, push=None if a.no_push else "auto")   # «فيديو الهدف نزل»
             print(json.dumps({"media": {k: v for k, v in res.items() if k != "found"}}, ensure_ascii=False))
         except Exception as e:
             print(json.dumps({"media_error": f"{type(e).__name__}: {str(e)[:200]}"}, ensure_ascii=False))

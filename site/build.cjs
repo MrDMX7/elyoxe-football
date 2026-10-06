@@ -46,22 +46,25 @@ function cpKeep(src, dst){ fs.copyFileSync(src, dst); try { const s = fs.statSyn
 const fixAl = s => String(s == null ? "" : s).replace(/(^|[\s«(>])ال (نهيان|مكتوم|قاسمي|نعيمي|معلا|شرقي|خليفة|ثاني|سعود|صباح)(?=$|[\s»),.،<])/g, "$1آل $2");
 // QA 35/45/64/77: any player link still printing a Latin name gets the Arabic one from names/players_ar.json (one pass for every tile)
 let PNAMES = null;
-function write(rel, html){ if (ONLY && !ONLY.test("/" + rel)){ fs.mkdirSync(path.dirname(path.join(OUT, rel)), { recursive:true }); return; }   /* dev (TIFO_ONLY): the folder still exists for files written next to the page (cast/feed.xml) */ WRITTEN.add("/" + rel.replace(/index\.html$/, "").replace(/\.html$/, ""));
+function write(rel, html){ if (ONLY && !ONLY.test("/" + rel)){ fs.mkdirSync(path.dirname(path.join(OUT, rel)), { recursive:true }); return; }   /* dev (TIFO_ONLY): the folder still exists for files written next to the page (cast/feed.xml) */ WRITTEN.add("/" + rel.replace(/index\.html$/, "").replace(/\.html$/, "")); html = fixHtml(html);
+  if (/<body[^>]*data-page="match"/.test(html) || rel === "db/match/index.html" || rel === "live/index.html") html = html.replace(/<\/body>(?![\s\S]*<\/body>)/, (write.media = write.media || (() => { const js = fs.readFileSync(path.join(__dirname, "src/media.js"), "utf8"), v = hash(js); fs.mkdirSync(path.join(OUT, "assets"), { recursive:true }); fs.writeFileSync(path.join(OUT, `assets/media.${v}.js`), js); return `<script src="/assets/media.${v}.js" defer></script>`; })()) + "</body>");   // official videos by the goals and the match: src/media.js reads v1/media/<id>.json (news/media.py)
+  const f = path.join(OUT, rel); fs.mkdirSync(path.dirname(f), { recursive:true }); if (SEARCH_V) html = html.replace("__SV__", SEARCH_V);   // pages written after the search index (404, offline) get its version too
+  fs.writeFileSync(f, COLOR_V ? html.replace("__CV__", COLOR_V) : html); if (!COLOR_V) EARLY.push(f); ALLP.push(f); }
+// the visible-text fixes every page gets (write() above; lib/world_stage.cjs's pages, written outside out/, too)
+function fixHtml(html){
   // W2.10: «لـال» -> «لل», and ISO dates in visible text become Arabic dates
   html = html.replace(/(<body[\s\S]*)$/, b => b.replace(/(<script\b[\s\S]*?<\/script>)|>([^<>]*(?:لـ ?ال|\b20\d\d-\d\d-\d\d\b|\d\.0\b)[^<>]*)(?=<)/g, (m, sc, t) => sc ? m : ">" + t.replace(/(\d)\.0\b(?![.\d])/g, "$1").replace(/لـ ?ال/g, "لل").replace(/\b(20\d\d)-(\d\d)-(\d\d)\b/g, (_, y, mo, d) => `${+d} ${MON_AR[+mo - 1]} ${y}`)));
   if (PNAMES) html = html.replace(/(<body[\s\S]*)$/, b => b.replace(/(<script\b[\s\S]*?<\/script>)|<a\b([^>]*?)href="\/p\/(\d+)\/"([^>]*)>([^<]*)<\/a>/g, (m, sc, pre, id, post, txt) => { if (sc || /[\u0600-\u06FF]/.test(txt)) return m; const ar = PNAMES[id] && PNAMES[id].ar; return ar ? `<a${pre.replace(/\s*class="lat"/, "")}href="/p/${id}/"${post.replace(/\s*class="lat"/, "")}>${esc(ar)}</a>` : m; }));
   html = html.replace(/(<body[\s\S]*)$/, b => b.replace(/(<script\b[\s\S]*?<\/script>)|>([^<>]*ال (?:نهيان|مكتوم|قاسمي|نعيمي|معلا|شرقي|خليفة|ثاني|سعود|صباح)[^<>]*)(?=<)/g, (m, sc, t) => sc ? m : ">" + fixAl(t)));
   html = html.replace(/(<body[\s\S]*)$/, b => b.replace(/(<script\b[\s\S]*?<\/script>)|>([^<>]*(?:المجموعة [A-J]\b|\bGrp\b)[^<>]*)(?=<)/g, (m, sc, t) => { if (sc) return m; GRPS++; return ">" + t.replace(/المجموعة ([A-J])\b/g, (_, l) => R.groupOrd(l)).replace(/\bGrp\.?\s*([A-J])\b/g, (_, l) => R.groupOrd(l)).replace(/\bGrp\.?/g, "المجموعة"); }));
   html = html.replace(/(<body[\s\S]*)$/, b => b.replace(/(<script\b[\s\S]*?<\/script>|<style\b[\s\S]*?<\/style>)|>([^<>]+)(?=<)/g, (m, sc, t) => { if (sc || !LEAK.test(t)) return m; LEAK.lastIndex = 0; LEAKS++; return ">" + t.replace(LEAK, "").replace(/\s{2,}/g, " "); }));
-  if (/<body[^>]*data-page="match"/.test(html) || rel === "db/match/index.html" || rel === "live/index.html") html = html.replace(/<\/body>(?![\s\S]*<\/body>)/, (write.media = write.media || (() => { const js = fs.readFileSync(path.join(__dirname, "src/media.js"), "utf8"), v = hash(js); fs.mkdirSync(path.join(OUT, "assets"), { recursive:true }); fs.writeFileSync(path.join(OUT, `assets/media.${v}.js`), js); return `<script src="/assets/media.${v}.js" defer></script>`; })()) + "</body>");   // official videos by the goals and the match: src/media.js reads v1/media/<id>.json (news/media.py)
-  const f = path.join(OUT, rel); fs.mkdirSync(path.dirname(f), { recursive:true }); if (SEARCH_V) html = html.replace("__SV__", SEARCH_V);   // pages written after the search index (404, offline) get its version too
-  fs.writeFileSync(f, COLOR_V ? html.replace("__CV__", COLOR_V) : html); if (!COLOR_V) EARLY.push(f); ALLP.push(f); }
+  return html; }
 const ALLP = [], OGJ = [];   // share-preview jobs for og.py (169)   // every page: the search index version is known only at the end, patched in then
 const EARLY = [];   // pages written before the club colours were known: patched once COLOR_V exists
 const hash = s => crypto.createHash("sha1").update(s).digest("hex").slice(0, 10);
 
 const BUILT = new Date().toISOString(); let BCBY = {}; const FONTS = {};   // W1.1e: pages older than 2 min dim their live digits until the first good poll
-let CC_V = "", ASSET_V = "", COLOR_V = "", SEARCH_V = "", BC_V = "", TV_V = "";
+let CC_V = "", ASSET_V = "", COLOR_V = "", SEARCH_V = "", BC_V = "", TV_V = "", DAYS_V = "", GS_V = "";
 // W3.1: the stand at first paint — each hero's mosaic as a tiny PNG (1 px per card) inlined as a data URI, drawn pixelated under a
 // 2 px night grid by CSS before any JS runs; the canvas takes over only for motion. Same bands, stripes and calm palette as keyart.js.
 const zlib = require("zlib");
@@ -94,7 +97,13 @@ const V5 = require("./lib/v5.cjs")({ esc, U, LIVE_IDS });
 let V5_V = { css:"", js:"", cfg:"", legacy:"" }, AUDIT = null, APPLE_SPLASH = "";   // v5 asset hashes; v1/audit/latest.json when the last data audit passed
 // the page's own tools (buttons and links from the body's tool rows and o.tools) as rows of the «شارك» sheet, ids kept for app.js
 const toolRows = h => String(h || "").replace(/<(button|a)\b([^>]*)>([\s\S]*?)<\/\1>/g, (m, tag, at, inner) => `<${tag}${at.replace(/\sclass="[^"]*"/, "")} class="row"><span class="rt">${inner}</span>${U.chev}</${tag}>`);
-const NOLEGACY = new Set(["home", "daypage", "all", "news", "mine", "more", "search", "comps", "db", "league", "none", "offline"]);   // pages that need none of render.js / app.js
+const NOLEGACY = new Set(["home", "daypage", "days", "all", "news", "mine", "more", "search", "comps", "db", "league", "none", "offline"]);   // pages that need none of render.js / app.js
+// lib/world_stage.cjs's encyclopedia player pages (legacy bodies) still draw the v3 portrait
+// the player's portrait: grey photo over the club colour (luminosity blend), the credit the CC BY licence asks for in small type
+function phHtml(id, ph, col){
+  const c = (col && col[0]) || "#1B4A3F", who = (ph.artist || "").replace(/\s+/g, " ").trim();
+  return `<figure class="pph" style="--pc:${esc(c)}"><img src="/v1/ph/${id}.webp" alt="" width="400" height="500" fetchpriority="high"><figcaption><a href="${esc(ph.page || "")}" rel="noopener">${esc((who ? who.slice(0, 40) + " · " : "") + (ph.license || ""))}</a></figcaption></figure>`;
+}
 // o: {path, page, title, desc, noindex, og, ogv, ld, names, pp, attrs, nav, near, legacy, v5 | body (+ tools, lg, heroExtra), head, js}
 // (site/redesign/v5/ROLLOUT.md §page): head = extra <head> HTML, js = extra script URLs (deferred, after the v5 and legacy bundles)
 function page(o){
@@ -121,7 +130,7 @@ ${U.nav(v.nav)}
 <main id="main"${v.cls ? ` class="${v.cls}"` : ""}>${v.body}${/<footer class="foot"/.test(v.body) ? "" : U.foot()}</main>
 ${U.tabbar(v.tab != null ? v.tab : V5.tabOf(o))}
 ${sheets}<div class="toast" id="toast" role="status" aria-live="polite"></div><div id="alive" class="vh" aria-live="polite" aria-atomic="true"></div>
-${o.names ? `<script>window.PN=${JSON.stringify(o.names).replace(/</g, "\\u003c")}${o.pp ? ";window.PP=" + JSON.stringify(o.pp) : ""}</script>` : ""}<script>window.V5=${JSON.stringify(V5D).replace(/</g, "\\u003c")}</script><script src="/assets/colors.__CV__.js" defer></script><script src="/assets/v5cfg.${V5_V.cfg}.js" defer></script><script src="/assets/app5.${V5_V.js}.js" defer></script>${legacy ? `<script src="/assets/legacy.${V5_V.legacy}.js" defer></script>` : ""}${o.page === "compare" ? `<script src="/assets/compare.${ASSET_V}.js" defer></script>` : ""}${o.page === "studio" ? `<script src="/assets/share.${ASSET_V}.js" defer></script>` : ""}${o.page === "lab" ? `<script src="/assets/lab.${ASSET_V}.js" defer></script>` : ""}${o.page === "messi" ? `<script src="/assets/messi.${ASSET_V}.js" defer></script>` : ""}${o.page === "world" ? `<script src="/assets/world.${ASSET_V}.js" defer></script>` : ""}${o.page === "live" ? `<script src="/assets/allmatches.${ASSET_V}.js" defer></script>` : ""}${TV_V && ["home", "match", "daypage", "tvc", "all", "live"].includes(o.page) ? `<script src="/assets/tv.${TV_V}.js" defer></script>` : ""}${(o.js || []).map(s => `<script src="${s}" defer></script>`).join("")}</body></html>`;
+${o.names ? `<script>window.PN=${JSON.stringify(o.names).replace(/</g, "\\u003c")}${o.pp ? ";window.PP=" + JSON.stringify(o.pp) : ""}</script>` : ""}<script>window.V5=${JSON.stringify(V5D).replace(/</g, "\\u003c")}</script><script src="/assets/colors.__CV__.js" defer></script><script src="/assets/v5cfg.${V5_V.cfg}.js" defer></script><script src="/assets/app5.${V5_V.js}.js" defer></script>${legacy ? `<script src="/assets/legacy.${V5_V.legacy}.js" defer></script>` : ""}${o.page === "compare" ? `<script src="/assets/compare.${ASSET_V}.js" defer></script>` : ""}${o.page === "studio" ? `<script src="/assets/share.${ASSET_V}.js" defer></script>` : ""}${o.page === "lab" ? `<script src="/assets/lab.${ASSET_V}.js" defer></script>` : ""}${o.page === "messi" ? `<script src="/assets/messi.${ASSET_V}.js" defer></script>` : ""}${o.page === "world" ? `<script src="/assets/world.${ASSET_V}.js" defer></script>` : ""}${o.page === "live" ? `<script src="/assets/allmatches.${ASSET_V}.js" defer></script>` : ""}${TV_V && ["home", "match", "daypage", "tvc", "all", "live"].includes(o.page) ? `<script src="/assets/tv.${TV_V}.js" defer></script>` : ""}${o.page === "days" && DAYS_V ? `<script src="/assets/days.${DAYS_V}.js" defer></script>` : ""}${[].concat(o.js || [], o.scripts || []).map(s => `<script src="${s}" defer></script>`).join("")}</body></html>`;
 }
 // the v3 tab strip and panes in v5 form (a segmented control and .pane sections); a lazy group's hidden panes are <template>s
 // until first shown (W4.7), unless they hold a widget app.js wires at start-up
@@ -219,6 +228,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     if (bad.length) console.error(`warn: ${bad.length} colour-meaning slips in CSS (e.g. ${bad.slice(0, 4).join(" | ")})`); }
   const v3js = fs.readFileSync(path.join(__dirname, "src/v3.js"), "utf8"), kajs = fs.readFileSync(path.join(__dirname, "src/keyart.js"), "utf8"), shjs = fs.readFileSync(path.join(__dirname, "src/shell.js"), "utf8");
   const alljs = fs.readFileSync(path.join(__dirname, "src/allmatches.js"), "utf8"); css += "\n" + fs.readFileSync(path.join(__dirname, "src/allmatches.css"), "utf8");   // /all/ + /live/ (every match)
+  css += "\n" + fs.readFileSync(path.join(__dirname, "src/seo.css"), "utf8");   // owner items 9-11 (2026-10-06): the day pages, the Arab leagues, the encyclopedia (v5 markup dressed for v3)
   ASSET_V = hash(css + rjs + ajs + sjs + cmp + shr + p3d + m3d + mjs + wjs + labjs + v3js + kajs + shjs + alljs); fs.writeFileSync(path.join(OUT, `assets/allmatches.${ASSET_V}.js`), alljs); fs.writeFileSync(path.join(OUT, `assets/v3.${ASSET_V}.js`), v3js); fs.writeFileSync(path.join(OUT, `assets/keyart.${ASSET_V}.js`), kajs); fs.writeFileSync(path.join(OUT, `assets/shell.${ASSET_V}.js`), shjs); fs.writeFileSync(path.join(OUT, `assets/lab.${ASSET_V}.js`), labjs); fs.writeFileSync(path.join(OUT, `assets/pitch3d.${ASSET_V}.js`), p3d); fs.writeFileSync(path.join(OUT, `assets/messi3d.${ASSET_V}.js`), m3d); fs.writeFileSync(path.join(OUT, `assets/messi.${ASSET_V}.js`), mjs); fs.writeFileSync(path.join(OUT, `assets/world.${ASSET_V}.js`), wjs); fs.writeFileSync(path.join(OUT, `assets/compare.${ASSET_V}.js`), cmp); fs.writeFileSync(path.join(OUT, `assets/share.${ASSET_V}.js`), shr);   // content-hashed file names: CloudFront's cache key ignores query strings
   fs.writeFileSync(path.join(OUT, `assets/tifo.${ASSET_V}.css`), css); fs.writeFileSync(path.join(OUT, `assets/render.${ASSET_V}.js`), rjs); fs.writeFileSync(path.join(OUT, `assets/app.${ASSET_V}.js`), ajs); fs.writeFileSync(path.join(OUT, `assets/stand.${ASSET_V}.js`), sjs);
   { const tv = fs.readFileSync(path.join(__dirname, "src/tv.js"), "utf8"); TV_V = hash(tv); fs.writeFileSync(path.join(OUT, `assets/tv.${TV_V}.js`), tv); }   // «منو يعلّق؟»: src/tv.js paints v1/tv/<ymd>.json (news/commentators.py) on match pages, day lists and /commentators/
@@ -230,6 +240,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     let eb = null; for (const m of ES){ try { eb = require(m); break; } catch (e){} }
     const min = (js, define) => { if (!eb) return js; try { return eb.transformSync(js, { minify:true, target:"es2017", charset:"utf8", define:define || {} }).code; } catch (e){ console.error("v5: js not minified:", String(e.message).split("\n")[0]); return js; } };
     let c5 = fs.readFileSync(path.join(__dirname, "src/v5/app.css"), "utf8") + "\n" + fs.readFileSync(path.join(__dirname, "src/v5/content.css"), "utf8");
+    { const seo = fs.readFileSync(path.join(__dirname, "src/seo.css"), "utf8"), cut = seo.indexOf("/* ---- v3 dress */");   // the search pages (items 9-11): seo.css's structure, then their v5 dress
+      c5 += "\n" + (cut > 0 ? seo.slice(0, cut) : "") + "\n" + fs.readFileSync(path.join(__dirname, "src/v5/sx.css"), "utf8"); }
     c5 = `@font-face{font-family:"Noto Kufi Arabic";src:url(${FONTS.kufi}) format("woff2");font-weight:800;font-display:swap}@font-face{font-family:"Readex Pro";src:url(${FONTS.readex}) format("woff2");font-weight:400 600;font-display:swap}@font-face{font-family:"Barlow Condensed";src:url(${FONTS.barlow}) format("woff2");font-weight:700;font-display:swap}\n`
       + c5.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\n\s*/g, "\n").replace(/\n+/g, "\n");
     V5_V.css = hash(c5); fs.writeFileSync(path.join(OUT, `assets/app.${V5_V.css}.css`), c5);
@@ -237,6 +249,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     V5_V.js = hash(j5); fs.writeFileSync(path.join(OUT, `assets/app5.${V5_V.js}.js`), j5);
     const lj = min([rjs, v3js, ajs].join("\n;\n")); V5_V.legacy = hash(lj); fs.writeFileSync(path.join(OUT, `assets/legacy.${V5_V.legacy}.js`), lj);
     console.log(`v5 assets: css ${(zlib.gzipSync(c5).length / 1024).toFixed(1)} KB gz, app5 ${(zlib.gzipSync(j5).length / 1024).toFixed(1)} KB gz, legacy ${(zlib.gzipSync(lj).length / 1024).toFixed(1)} KB gz${eb ? "" : " (not minified)"}`); }
+  { const dj = fs.readFileSync(path.join(__dirname, "src/days.js"), "utf8"); DAYS_V = hash(dj); fs.writeFileSync(path.join(OUT, `assets/days.${DAYS_V}.js`), dj); }   // owner item 9: the day pages' renderer, shared with lib/seo_days.cjs
+  { const gj = fs.readFileSync(path.join(__dirname, "src/goalshare.js"), "utf8"); GS_V = hash(gj); fs.writeFileSync(path.join(OUT, `assets/goalshare.${GS_V}.js`), gj); }   // owner item 11: share one goal from its row
   // the mark: a 3x3 tifo of cards (chalk, pulse, dune on night pitch)
   // the mark: v5's 3x3 «tifo» of rounded cards (white, two quiet, three light pitch green) on pitch green (site/redesign/v5/icons.py)
   const cellsSvg = ["#fff", "#7CF0B4", "#ffffff70", "#fff", "#ffffff70", "#7CF0B4", "#7CF0B4", "#fff", "#fff"].map((c, i) => `<rect x="${7 + (i % 3) * 6.5}" y="${7 + Math.floor(i / 3) * 6.5}" width="5.4" height="5.4" rx="1.3" fill="${c}"/>`).join("");
@@ -333,7 +347,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   let dl = 0;
   await pool([...logoIds], 8, async id => {
     const f = path.join(CACHE, "logo", id + ".png");
-    if (!fs.existsSync(f)){ try { const r = await fetch(`https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png`); if (r.ok){ fs.writeFileSync(f, Buffer.from(await r.arrayBuffer())); dl++; } } catch (e){} }
+    if (!fs.existsSync(f)){ try { const r = await fetch(`https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png`, { signal:AbortSignal.timeout(20000) }); if (r.ok){ fs.writeFileSync(f, Buffer.from(await r.arrayBuffer())); dl++; } } catch (e){} }
     if (fs.existsSync(f)) cpKeep(f, path.join(OUT, "logo", id + ".png"));
   });
   try { require("child_process").execFileSync("python3", [path.join(__dirname, "logo_colors.py")], { stdio:"ignore" }); } catch (e){ console.error("logo_colors.py failed; neutral colours"); }
@@ -345,6 +359,9 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   compData.forEach(({ c, st, fx }) => { const iso = R.compCountry(c); if (!(ARABC.has(iso) || [329, 10242, 11156, 10474].includes(c.id))) return; (fx && fx.matches || []).forEach(m => { ARABT[m.home.id] = 1; ARABT[m.away.id] = 1; }); (st && st.groups || []).forEach(g => g.rows.forEach(r => { ARABT[r.team.id] = 1; })); });
   // W2.4 country engine: iso2 -> national team (arabs/national.json), iso2 -> top league, and the tournament being played now
   const NATJ = await get("arabs/national.json", 1), NAT = {}; ((NATJ && NATJ.teams) || []).forEach(t => { if (t.iso2 && t.team) NAT[t.iso2] = t.team; }); if (!NAT.AE) NAT.AE = 5789;
+  // owner item 9: «مباراة <فريق> اليوم» pages (lib/seo_days.cjs) for the biggest Arab and European clubs, Messi's, and every Arab national team
+  const BIGT = [102117, 102111, 102119, 102124, 102101, 102122, 102123, 2529, 101918, 8577, 2530, 101919, 101916, 101745, 80591, 517894, 102049, 102050, 8153, 6366, 6353, 101895, 203826, 101656, 101659,
+    8633, 8634, 9906, 8456, 8650, 10260, 9825, 8455, 9823, 9847, 9885, 8564, 8636, 960720].concat(Object.values(NAT).map(Number)), BIGS = new Set(BIGT);
   // W3.4: the UAE's first channel per competition (the prerender); the client swaps in the visitor's country
   const CHN_AE = {}; for (const [cid, e] of Object.entries(BCBY.AE || {})) if (cid !== "_c" && e && e.b && e.b.length) CHN_AE[cid] = [e.b[0][0], e.b.some(x => x[1]) ? 1 : 0]; R.CHN = CHN_AE;
   // W2.7: clubs sharing an Arabic name carry their country
@@ -373,7 +390,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   { const a = await get("audit/latest.json", 1); AUDIT = a && a.ok === true && a.generated && !(a.errors > 0) ? a : null;
     const badge = AUDIT ? `<p class="audit"><span class="ab">${U.icon("check", "", 2.6)}الأرقام مدققة</span> آخر تدقيق ${U.tm(AUDIT.generated, "dt")}${AUDIT.checked ? ` · <span class="num">${U.nf(AUDIT.checked)}</span> رقم` : ""}</p>` : "";
     U.cfg.footer = badge + `<p><span class="updated" id="updated"></span> تيفو بدون مراهنات. البيانات من FotMob ورابطة المحترفين الإماراتية.</p>` +
-      `<nav class="fnav" aria-label="روابط تيفو">${[["/", "اليوم"], ["/today/", "مباريات اليوم"], ["/tomorrow/", "مباريات بكرة"], ["/all/", "كل مباريات العالم"], ["/week/", "مباريات الأسبوع"], ["/countdowns/", "كم باقي؟"], ["/watch/", "وين تنقل"], ["/commentators/", "منو يعلّق"], ["/news/", "الأخبار"], ["/competitions/", "كل البطولات"], ["/c/uae-pro-league/", "دوري أدنوك"], ["/national/", "المنتخبات"], ["/arabs/", "العرب"], ["/db/", "موسوعة الأندية واللاعبين"], ["/legends/", "الأساطير"], ["/memorable/", "مباريات ما تنتسى"], ["/thisday/", "هذا اليوم"], ["/tv/", "شاشة المجلس"], ["/tv/?mine=1", "وضع المتابعة"], ["/studio/", "ستوديو التيفو"], ["/lab/", "المختبر"], ["/stadiums/", "الملاعب"], ["/laws/", "قانون الكورة"], ["/glossary/", "القاموس"], ["/cast/", "تيفو كاست"], ["/newsletter/", "النشرة"], ["/more/", "كل الصفحات"]].map(l => `<a href="${l[0]}">${l[1]}</a>`).join("")}</nav>` +
+      `<nav class="fnav" aria-label="روابط تيفو">${[["/", "اليوم"], ["/today/", "مباريات اليوم"], ["/tomorrow/", "مباريات بكرة"], ["/all/", "كل مباريات العالم"], ["/yesterday/", "نتائج أمس"], ["/matches/", "جدول المباريات"], ["/week/", "مباريات الأسبوع"], ["/countdowns/", "كم باقي؟"], ["/watch/", "وين تنقل"], ["/commentators/", "منو يعلّق"], ["/news/", "الأخبار"], ["/competitions/", "كل البطولات"], ["/c/uae-pro-league/", "دوري أدنوك"], ["/national/", "المنتخبات"], ["/arabs/", "العرب"], ["/db/", "موسوعة الأندية واللاعبين"], ["/legends/", "الأساطير"], ["/memorable/", "مباريات ما تنتسى"], ["/thisday/", "هذا اليوم"], ["/tv/", "شاشة المجلس"], ["/tv/?mine=1", "وضع المتابعة"], ["/studio/", "ستوديو التيفو"], ["/lab/", "المختبر"], ["/stadiums/", "الملاعب"], ["/laws/", "قانون الكورة"], ["/glossary/", "القاموس"], ["/cast/", "تيفو كاست"], ["/newsletter/", "النشرة"], ["/more/", "كل الصفحات"]].map(l => `<a href="${l[0]}">${l[1]}</a>`).join("")}</nav>` +
       `<p>من استوديو <a href="https://elyoxe.com/">Elyoxe</a></p>`; }
   // the shared browser config: competitions, the first-visit picks (Arab national teams + the leading clubs of each Arab league),
   // the countries with their time zones, the audit
@@ -408,7 +425,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // every club's full history (db/history.py: results since 1888 + our FotMob archive); the tab loads its file in the browser
   const HIDX = ((await get("history/index.json")) || {}).clubs || {};
   // every club and squad player complete from FotMob (db/fotmob_profiles.py): trophies with seasons, stadium; bio of every player
-  const FMT = ((await get("history/fm/teams.json")) || {}).teams || {}, FMP = ((await get("history/fm/players.json")) || {}).players || {};
+  const FMT = ((await get("history/fm/teams.json")) || {}).teams || {}, FMPJ = (await get("history/fm/players.json")) || {}, FMP = FMPJ.players || {};
   const EAC = ((await get("ea/cards.json")) || {}).cards || {};   // EA SPORTS FC 27 cards matched to our players (db/eafc.py)
   const TMI = ((await get("history/tm/index.json")) || {}).players || {};   // players with a Transfermarkt record (db/tmdata.py)
   // Arabic Wikipedia's lead for players and clubs tied to a Wikidata item (db/wiki_ar.py)
@@ -739,7 +756,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     const months = (tmonth[i] || []).filter(mo => mo && mo.results && mo.results.length).map(mo => [mo.month, MON_AR[+mo.month.slice(5) - 1] + " " + mo.month.slice(0, 4)]);
     const tools = `${f.next.length ? '<button type="button" id="wpbtn">خلفية للجوال بمبارياته</button>' : ""}<a href="/t/${t.id}/poster/">بوستر الموسم للطباعة</a>`;
     const v5 = P5.team(t, { row:lrow, st:lrow && lrow.st, trophies:club.tro.length ? club.tro : null, trophiesSrc:club.src, card:club.card.length ? club.card : null, wiki:WC[id] ? wiki5(WC[id]) : "",
-      x:{ months, squad:squad5, hist:hist5, share:P5.shareSheet({ html:toolRows(tools) + `<button type="button" class="row" id="secpick"><span class="rt">صورة لأي قسم</span>${U.chev}</button>`, after:'<div id="secpicks" class="card mt" hidden></div>' }) } });
+      x:{ months, squad:squad5, hist:hist5, fxExtra:BIGS.has(+t.id) ? U.grp("", U.rows([{ href:`/t/${t.id}/today/`, icon:"calendar", c:"#34C759", t:"مباراته اليوم", sub:"الموعد والقناة الناقلة والمعلق" }]), { cls:"mt2" }) : "", share:P5.shareSheet({ html:toolRows(tools) + `<button type="button" class="row" id="secpick"><span class="rt">صورة لأي قسم</span>${U.chev}</button>`, after:'<div id="secpicks" class="card mt" hidden></div>' }) } });
     v5.data = { id:t.id, nat:isNat ? 1 : 0 };
     const names = {}; ((t.squad) || []).forEach(g => (g.players || []).forEach(p => { if (p && p.id && nameOf(p.id)) names[p.id] = nameOf(p.id); }));
     const pp = {}; ((t.squad) || []).forEach(g => (g.players || []).forEach(p => { if (p && p.id && allPlayers[p.id]) pp[p.id] = 1; }));
@@ -801,6 +818,11 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   const withDetail = new Set(mids.filter(id => { const m = matchSum.get(id); return m.status === "finished" || R.isLive(m) || (Date.parse(m.kickoff_utc) - Date.now() < 3 * 864e5 && Date.parse(m.kickoff_utc) > Date.now() - 864e5); }));
   const det = await pool([...withDetail], 8, id => get(`match/${id}.json`, 1));
   const D = new Map(); [...withDetail].forEach((id, i) => { if (det[i]) D.set(id, det[i]); });
+  const OGM = new Set();   // matches with their own share card (og/m-<id>.png); the day pages' SportsEvent images point at them
+  // item 11: the share stage (lib/share_stage.cjs): what its last good upload holds, and the goal clips of the last 48 h (news/media.py)
+  const SHARE = require("./lib/share_stage.cjs"), SHPUB = SHARE.published({ CACHE, fs, path }), SHJ = [], SHG = [], STUBS = [], CLIPS = {};
+  { const mr = await get("media/recent.json", 1), withG = ((mr && mr.matches) || []).filter(m => m.goals > 0).map(m => m.id), mf = await pool(withG, 6, i => get(`media/${i}.json`, 1));
+    withG.forEach((i, k) => { if (mf[k] && mf[k].goals) CLIPS[i] = new Set(Object.keys(mf[k].goals)); }); }
   for (const id of mids){
     { const mc = comps.find(cc => cc.id === (matchSum.get(id) || {}).comp); R.DUPCTX = (mc && mc.country && mc.country.name_ar) || ""; }   // 503: a league match drops its own country's tag
     const md0 = D.get(id) || matchSum.get(id), uaeMatchTop = R.UAE_COMPS.indexOf(md0.comp) >= 0 || md0.home.id === 5789 || md0.away.id === 5789;
@@ -874,16 +896,33 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     if (md.lineups) ["home", "away"].forEach(sd => md.lineups[sd] && [].concat(md.lineups[sd].starters || [], md.lineups[sd].subs || [], md.lineups[sd].unavailable || []).forEach(addP));
     [md.home.id, md.away.id].forEach(tid => { const tj = teamById.get(tid); ((tj && tj.squad) || []).forEach(g => (g.players || []).forEach(addP)); });
     const recent = Date.parse(md.kickoff_utc || 0), ogOn = uaeMatch || (recent > Date.now() - 3 * 864e5 && recent < Date.now() + 7 * 864e5 && [538, 11027, 329, 525, 9469, 536, 47, 87, 42].includes(md.comp));
+    // item 11: every other match gets its card through the share stage (og/s/m-<id>.png, uploaded once, newest first under og.py's
+    // budget) and every goal of the last 7 days a card and a share page /m/<id>/g/<n>/; a page shows a staged card once it is published
+    const cardJ = { key:"m-" + id, home:md.home.name_ar || md.home.name, away:md.away.name_ar || md.away.name, home_id:md.home.id, away_id:md.away.id, hc:colors[md.home.id], ac:colors[md.away.id], comp:md.comp_name_ar || R.compName(index, md.comp), score:md.score && md.status === "finished" ? `${md.score.away} - ${md.score.home}` : null, time:md.score && md.status === "finished" ? null : R.hhmm(md.kickoff_uae), sub:md.score && md.status === "finished" ? "انتهت" : R.dayLabel(R.ymd(md.kickoff_uae)) + " بتوقيت الإمارات" };
+    if (!ogOn) SHJ.push([Math.abs(recent - Date.now()), Object.assign({ stage:true }, cardJ)]);
+    const mOg = ogOn ? "m-" + id : SHPUB["og:m-" + id] ? "s/m-" + id : "match";
+    const gstub = []; { const gs = (md.events || []).filter(e => /^(goal|penalty_goal|own_goal)$/.test(e.type)), fresh = recent > Date.now() - 7 * 864e5 && md.status !== "scheduled";
+      gs.forEach((e, i) => { const n = i + 1, who = (e.player && (nameOf(e.player.id) || e.player.name)) || "", mn = e.minute + (e.added ? "+" + e.added : ""), sc0 = e.score || {}, gk = `${mn}-${(e.player && e.player.id) || 0}`;
+        if (!fresh || !e.score){ if (SHPUB[`g:${id}/${n}`]) { gstub.push(n); WRITTEN.add(`/m/${id}/g/${n}`); } return; }   // a goal without the score after it gets no card
+        const how = e.type === "penalty_goal" ? "من ركلة جزاء" : e.type === "own_goal" ? "" : (e.how && e.how.ar) || "", clip = !!(CLIPS[id] && CLIPS[id].has(gk));
+        SHG.push([recent, { key:`g-${id}-${n}`, kind:"goal", stage:true, home:cardJ.home, away:cardJ.away, home_id:md.home.id, away_id:md.away.id, hc:cardJ.hc, ac:cardJ.ac, comp:cardJ.comp, sh:sc0.home ?? "", sa:sc0.away ?? "", side:e.team, who, minute:mn, how, own:e.type === "own_goal", clip }]);
+        // og:image: the share stage puts the goal's own card in place of __GIMG__ once og.py has drawn it, else the match's card
+        const gimg = "__GIMG__", H1 = cardJ.home, A1 = cardJ.away, gt = `${e.type === "own_goal" ? "هدف عكسي" : "هدف"} ${who} ${mn}'`, gsc = `${H1} ${sc0.home ?? ""} - ${sc0.away ?? ""} ${A1}`, to = `/m/${id}/#g${n}`;
+        STUBS.push({ mid:id, n, card:`g-${id}-${n}`, img:`${SITE}/og/${mOg}.png`, site:SITE, html:`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(gt)} | ${esc(gsc)} | تيفو</title><meta name="description" content="${esc(`${gt}${how ? "، " + how : ""}: ${gsc} في ${cardJ.comp}.${clip ? " شاهد الهدف على تيفو." : ""}`)}"><meta name="robots" content="noindex"><link rel="canonical" href="${SITE}/m/${id}/">` +
+          `<meta property="og:type" content="website"><meta property="og:site_name" content="تيفو"><meta property="og:title" content="${esc(gt)} · ${esc(gsc)}"><meta property="og:description" content="${esc(`${cardJ.comp}${how ? " · " + how : ""}${clip ? " · شاهد الهدف" : ""}`)}"><meta property="og:url" content="${SITE}/m/${id}/g/${n}/"><meta property="og:locale" content="ar_AE"><meta property="og:image" content="${gimg}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">` +
+          `<meta http-equiv="refresh" content="0;url=${to}"><script>location.replace(${JSON.stringify(to)})</script><style>body{background:#0A2620;color:#F6F7F2;font:16px system-ui;padding:2rem}a{color:#F6F7F2}</style></head><body><p><a href="${to}">${esc(gt)}: ${esc(gsc)}</a></p></body></html>` });
+        gstub.push(n); WRITTEN.add(`/m/${id}/g/${n}`); }); }
     // 426: one valid SportsEvent — no nested superEvent (Google read it as a second event with no date or place); the competition is the
     // organizer and part of the description; image, endDate (kickoff + 2 h) and performer where the data has them
     const ld = (() => { const st = { postponed:"https://schema.org/EventPostponed", cancelled:"https://schema.org/EventCancelled" }[md.status] || "https://schema.org/EventScheduled", H = md.home.name_ar || md.home.name, A = md.away.name_ar || md.away.name, v = md.venue || {};   // 348
       const cn = md.comp_name_ar || R.compName(index, md.comp) || "", rd = md.round && /^\d+$/.test(String(md.round)) ? "الجولة " + md.round : md.round ? R.stageAr(md.round) : "", t0 = Date.parse(md.kickoff_utc || "");
       const teams = [{ "@type":"SportsTeam", name:H }, { "@type":"SportsTeam", name:A }], vn = fixAl(v.name_ar || v.name_en || v.name || "");
       return { "@context":"https://schema.org", "@type":"SportsEvent", name:`${H} ضد ${A}`, url:`${SITE}/m/${id}/`, startDate:md.kickoff_uae || md.kickoff_utc, ...(t0 && !md.time_tbd ? { endDate:new Date(t0 + 2 * 36e5).toISOString() } : {}), sport:"Football", eventStatus:st, eventAttendanceMode:"https://schema.org/OfflineEventAttendanceMode",
-        image:[`${SITE}/og/${ogOn ? "m-" + id : "match"}.png`], description:[md.status === "finished" && md.score ? `انتهت ${H} ${md.score.home} - ${md.score.away} ${A}` : `${H} ضد ${A}`, cn, rd].filter(Boolean).join(" · "),
+        image:[`${SITE}/og/${mOg}.png`], description:[md.status === "finished" && md.score ? `انتهت ${H} ${md.score.home} - ${md.score.away} ${A}` : `${H} ضد ${A}`, cn, rd].filter(Boolean).join(" · "),
         homeTeam:teams[0], awayTeam:teams[1], competitor:teams, performer:teams, ...(cn ? { organizer:{ "@type":"SportsOrganization", name:cn, url:R.compKey(index, md.comp) ? `${SITE}/c/${R.compKey(index, md.comp)}/` : SITE } } : {}),
-        ...(vn ? { location:{ "@type":"StadiumOrArena", name:vn, ...(v.city || v.country || v.in_uae ? { address:{ "@type":"PostalAddress", ...(v.city ? { addressLocality:v.city } : {}), ...(v.country || v.in_uae ? { addressCountry:v.in_uae ? "AE" : v.country } : {}) } } : {}), ...(v.lat != null ? { geo:{ "@type":"GeoCoordinates", latitude:v.lat, longitude:v.lon } } : {}) } } : {}) }; })();
-    if (ogOn) OGJ.push({ key:"m-" + id, home:md.home.name_ar || md.home.name, away:md.away.name_ar || md.away.name, home_id:md.home.id, away_id:md.away.id, hc:colors[md.home.id], ac:colors[md.away.id], comp:md.comp_name_ar || R.compName(index, md.comp), score:md.score && md.status === "finished" ? `${md.score.away} - ${md.score.home}` : null, time:md.score && md.status === "finished" ? null : R.hhmm(md.kickoff_uae), sub:md.score && md.status === "finished" ? "انتهت" : R.dayLabel(R.ymd(md.kickoff_uae)) + " بتوقيت الإمارات", ...(md.status === "finished" ? { sizes:["story", "feed", "x"] } : {}) });   // 381: platform sizes for results
+        ...(vn ? { location:{ "@type":"StadiumOrArena", name:vn, ...(v.city || v.country || v.in_uae ? { address:{ "@type":"PostalAddress", ...(v.city ? { addressLocality:String(v.city).split(",")[0].trim() } : {}), ...(v.country || v.in_uae ? { addressCountry:v.in_uae ? "AE" : v.country } : {}) } } : {}), ...(v.lat != null ? { geo:{ "@type":"GeoCoordinates", latitude:v.lat, longitude:v.lon } } : {}) } } : {}) }; })();
+    if (ogOn && OGM.add(+id)) OGJ.push(Object.assign({}, cardJ, md.status === "finished" ? { sizes:["story", "feed", "x"] } : {}));   // 381: platform sizes for results
+    if (mOg !== "match") OGM.add(+id);
     // v5 match page (src/v5/pages.js P.match): the club-colour header with the score, then المباراة (قبل المباراة) · التشكيلة · الأرقام
     // · المواجهات. The v3 page's analysis blocks are rows in «بالتفصيل» that open their sheets; the win-probability curve, the exact
     // scores, the pressure and the firsts are v5's own sheets; the FAQ stays on the page (folded) for search
@@ -898,7 +937,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     const p3d5 = md.lineups && md.lineups.home ? U.grp("", U.row({ btn:1, icon:"grid", c:"#34C759", t:"شوفها على ملعب ثلاثي الأبعاد", attrs:` id="p3dbtn" data-src="/assets/pitch3d.${ASSET_V}.js"` }) + '<div id="p3d"></div>', { cls:"p3dg" }) : "";
     const hk = [md.home.id, md.away.id].sort((a, b) => a - b).join("-");
     const sized5 = ogOn && md.status === "finished" ? `<div class="row ins"><span class="ic" style="--c:#FF2D55">${U.icon("image", "", 2)}</span><span class="rt">صورة النتيجة<small>${[["story", "ستوري"], ["feed", "بوست"], ["x", "إكس"]].map(z => `<a href="/og/m-${id}-${z[0]}.png" download="tifo-${id}-${z[0]}.png">${z[1]}</a>`).join(" · ")}</small></span></div>` : "";
-    const share5 = P5.shareSheet({ top:`<img class="shprev" src="/og/${ogOn ? "m-" + id : "match"}.png" alt="" width="1200" height="630" loading="lazy">`,
+    const share5 = P5.shareSheet({ top:`<img class="shprev" src="/og/${mOg}.png" alt="" width="1200" height="630" loading="lazy">`,
       acts:[["image", "صورة للستوري", ' id="storybtn"'], ["tv", "شاشة المجلس", "", `/tv/?m=${id}`], ["phone", "الشاشة الثانية", ' id="secondbtn"']].concat(uaeMatchTop ? [["shirt", "عدّة صانع المحتوى", "", `/m/${id}/kit/`]] : []),
       html:sized5 + (md.lineups && md.lineups.home ? U.row({ btn:1, icon:"people", c:"#5856D6", t:"بطاقة لاعب", sub:"أداء أي لاعب في المباراة", attrs:' id="pcardbtn"' }) : "") + U.row({ btn:1, icon:"tv", c:"#1C7C54", t:"وضع السينما", sub:"النتيجة والدقيقة بخط كبير", attrs:" data-cine" }) +
         U.row({ btn:1, icon:"link", c:"#0A84FF", t:"ضمّن المباراة في موقعك", attrs:` id="embedbtn" data-src="/embed/m/?id=${id}&d=${esc(dd)}" data-h="260"` }) + U.row({ btn:1, icon:"image", c:"#8E8E93", t:"صورة لأي قسم", attrs:' id="secpick"' }),
@@ -914,7 +953,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     const mT = played ? `نتيجة مباراة ${H0} و${A0} ${md.score.home}-${md.score.away} في ${cN} | تيفو` : `موعد مباراة ${H0} و${A0} في ${cN}${ww ? " والقناة الناقلة" : ""} | تيفو`;
     const mD = played ? `${md.status === "finished" ? "انتهت" : "مباشر:"} مباراة ${H0} و${A0} ${md.score.home}-${md.score.away} في ${cN}: الأهداف والأحداث والتشكيلة والإحصائيات والمواجهات السابقة.` : `موعد مباراة ${H0} و${A0} في ${cN} ${when}${ww ? "، والقناة الناقلة" : ""}، مع التشكيلة والأرقام والمواجهات السابقة.`;
     const mck = (comps.find(cc => cc.id === md.comp) || {}).key, mBc = bcLd([mck && [cN, `/c/${mck}/`], [`${H0} و${A0}`, `/m/${id}/`]]);
-    write(`m/${id}/index.html`, page({ v5, near:R.isLive(md) || (md.status === "finished" && Date.now() - Date.parse(md.kickoff_utc || 0) < 4 * 36e5),   /* QA 4: an upcoming match is never marked stale (its time is not live data) */ og:ogOn ? "m-" + id : "match", ogv:ogOn && md.status === "finished" && md.score ? `ft-${md.score.home}-${md.score.away}` : "", path:`/m/${id}/`, page:"match", nav:"home", attrs:` data-id="${id}"`, names, pp:mpp, title:mT, desc:mD, ld:[ld].concat(faqQ.length ? [{ "@context":"https://schema.org", "@type":"FAQPage", mainEntity:faqQ.map(q => ({ "@type":"Question", name:q[0], acceptedAnswer:{ "@type":"Answer", text:q[1] } })) }] : [], [mBc]) }));
+    v5.body = v5.body.replace('<div id="ev">', `<div id="ev" data-gstub="${gstub.join(",")}">`);   // item 11: the goals whose page /m/<id>/g/<n>/ was published (src/goalshare.js)
+    write(`m/${id}/index.html`, page({ v5, near:R.isLive(md) || (md.status === "finished" && Date.now() - Date.parse(md.kickoff_utc || 0) < 4 * 36e5),   /* QA 4: an upcoming match is never marked stale (its time is not live data) */ og:mOg, ogv:mOg !== "match" && md.status === "finished" && md.score ? `ft-${md.score.home}-${md.score.away}` : "", path:`/m/${id}/`, page:"match", nav:"home", attrs:` data-id="${id}"`, names, pp:mpp, title:mT, desc:mD, js:[`/assets/goalshare.${GS_V}.js`], ld:[ld].concat(faqQ.length ? [{ "@context":"https://schema.org", "@type":"FAQPage", mainEntity:faqQ.map(q => ({ "@type":"Question", name:q[0], acceptedAnswer:{ "@type":"Answer", text:q[1] } })) }] : [], [mBc]) }));
     urls.push(`/m/${id}/`);
     if (uaeMatch && (md.status === "scheduled" || Date.parse(md.kickoff_utc) > Date.now() - 3 * 864e5)){
       const nums = [probs ? `توقعات تيفو: ${Math.round(probs.home * 100)}% فوز ${md.home.name_ar}، ${Math.round(probs.draw * 100)}% تعادل، ${Math.round(probs.away * 100)}% فوز ${md.away.name_ar}.` : "", ...((factsByMatch[id] || []).map(f => String(f.text_ar).replace(/\s*\(بيانات FotMob\)/g, "")))].filter(Boolean);
@@ -1001,11 +1041,11 @@ ${items}
         body:`<p class="crumbs"><a href="/c/${c.key}/">${esc(c.name_ar)}</a></p><h1>الجولة ${esc(k)}</h1>` + (fin.length ? `<div class="pstats"><div><b>${fin.length}</b><span>مباراة خلصت</span></div><div><b>${goals}</b><span>هدف</span></div><div><b>${fin.length ? (goals / fin.length).toFixed(1) : 0}</b><span>بالمباراة</span></div></div>` : "") + R.roundList(ms) + (fin.length && stIds(c.id).length ? S.sec("قصة الجولة", "الترتيب يتغيّر مع كل نتيجة", S.roundStory(fx, k, stIds(c.id))) : "") + (tor ? S.sec("تشكيلة الجولة", "", tor) : "") + `<p class="tools">${(() => { const nr = rr.order.filter(x => /^\d+$/.test(String(x))), i = nr.indexOf(k); return (i > 0 ? `<a class="btn" href="/c/${c.key}/r/${nr[i - 1]}/">الجولة اللي قبل</a>` : "") + (i >= 0 && i < nr.length - 1 ? `<a class="btn" href="/c/${c.key}/r/${nr[i + 1]}/">الجولة اللي بعد</a>` : ""); })()}</p>` })); urls.push(`/c/${c.key}/r/${k}/`); } }
   R.DUPCTX = "";   // 503: back to no context
 
-  // ---- 198: pages for the most-searched phrases — the v5 «اليوم» page with that day selected (one page, three titles for search);
-  // /all/ is the same page with every match in the world open (the poller's v1/all: FotMob's whole day + 365Scores' Arab leagues)
-  { const tmr = new Date(Date.now() + 4 * 3600e3 + 864e5).toISOString().slice(0, 10), dayT = await get(`day/${tmr.replace(/-/g, "")}.json`) || { matches:[] };
-    [["today", "اليوم", today, day], ["tomorrow", "بكرة", tmr, dayT]].forEach(([slug, word, d, dd]) => {
-      write(`${slug}/index.html`, page({ v5:homeV5(d, dd.matches, { h1:`مباريات ${word}` }), path:`/${slug}/`, page:"daypage", nav:"home", title:`مباريات ${word} ${R.dayLabel(d)}: المواعيد والقنوات الناقلة | تيفو`, desc:`كل مباريات ${word} ${R.dayLabel(d)} بتوقيت بلدك: الدوريات العربية، والدوري الإنجليزي والإسباني، وأبطال آسيا وأوروبا، مع القنوات الناقلة والنتايج مباشر.` })); urls.push(`/${slug}/`); }); }
+  // ---- 198 / owner item 9 (2026-10-06): «مباريات اليوم والقنوات الناقلة والمعلقين» — /today/, /tomorrow/, /yesterday/, /matches/<date>/,
+  // /matches/ and «مباراة <فريق> اليوم» (lib/seo_days.cjs over v1/all + v1/tv; rows by src/days.js, which the browser re-runs live)
+  const DAYS = await require("./lib/seo_days.cjs")({ get, pool, write, page, esc, SITE, CACHE, fs, path, bcLd, comps, BCBY, LG365, matchSum, details:D, matchPages:new Set(mids.map(String)),
+    logoOk:id => logoIds.has(+id), ogOf:id => `${SITE}/og/${OGM.has(+id) ? "m-" + id : "match"}.png`, teamPages, byTeam, S_TEAMS, R, index, bigTeams:BIGT });
+  DAYS.urls.forEach(u => urls.push(u));
   // every match of the day (owner 2026-09-30); the browser keeps it live (v1/all/live.json every 30 s)
   write("all/index.html", page({ v5:homeV5(today, day.matches, { h1:"كل المباريات", world:1 }), path:"/all/", page:"all", nav:"home", title:"كل المباريات اليوم مباشر: كل الدوريات في العالم | تيفو",
     desc:"كل مباريات اليوم في العالم مباشر: مئات المباريات من كل الدوريات والبطولات، والدوريات العربية كلها، بالنتيجة والدقيقة أول بأول وبتوقيت بلدك." }));
@@ -1099,25 +1139,54 @@ ${items}
     const keys = Object.keys(by).map(Number).sort((a, b) => { const ia = AR.indexOf(a), ib = AR.indexOf(b); if (ia >= 0 || ib >= 0) return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); return ((CN[a] || [""])[0] || "").localeCompare((CN[b] || [""])[0] || "", "ar"); });
     const byCountry = keys.map(cc => [(CN[cc] || [""])[0] || "دولية", by[cc].sort((a, b) => b[5] - a[5]).map(c => [c[0], c[1], c[6], c[7], c[5], c[8]])]);
     const v5 = P5.db({ nComps:(S365I.comps || []).length, nClubs:(WI.clubs || []).length + (S365I.teams || []).filter(t => !t[4]).length, nPlayers:(WI.n_players || 0) + (S365I.players || []).length, byCountry }); v5.data = {};
+    v5.body = v5.body.replace('<div id="widle">', U.grp("", U.row({ href:"/db/players/", icon:"people", c:"#5856D6", t:"اللاعبين حسب الجنسية", sub:"كل دولة ولاعبينها في الموسوعة" })) + '<div id="widle">');   // main's nationality hubs
     write("db/index.html", page({ v5, path:"/db/", page:"db", title:"موسوعة تيفو: كل أندية ولاعبين العالم | تيفو", desc:"آلاف الأندية من 94 دولة وعشرات الآلاف من اللاعبين: الألقاب، الملاعب، التشكيلات، المسيرة موسم بموسم." })); urls.push("/db/"); }
   write("db/club/index.html", page({ path:"/db/club/", page:"world", noindex:true, title:"نادي | موسوعة تيفو", desc:"بطاقة النادي من موسوعة تيفو.", body:'<p class="crumbs"><a href="/db/">الموسوعة</a></p><h1 id="wt">نحمّل…</h1><div id="world" data-kind="club"></div>' }));
   write("db/match/index.html", page({ path:"/db/match/", page:"world", noindex:true, title:"مباراة | موسوعة تيفو", desc:"تفاصيل المباراة من موسوعة تيفو.", body:'<p class="crumbs"><a href="/db/">الموسوعة</a></p><h1 id="wt">نحمّل…</h1><div id="world" data-kind="match"></div>' }));
   write("db/player/index.html", page({ path:"/db/player/", page:"world", noindex:true, title:"لاعب | موسوعة تيفو", desc:"بطاقة اللاعب من موسوعة تيفو.", body:'<p class="crumbs"><a href="/db/">الموسوعة</a></p><h1 id="wt">نحمّل…</h1><div id="world" data-kind="player"></div>' }));
   // every competition's champions through history as a real page (db/scores365.py): 5 champions or more, no youth competitions
-  { const tl = t => { const f = SID2F[t]; return f && S_TEAMS[f] ? `/t/${f}/` : `/db/team/?id=${t}`; }, CN = S365I.countries || {};
+  // owner item 10 (2026-10-06): a league with a live season on 365Scores (the Arab leagues FotMob lacks) leads with the season
+  // (lib/seo_leagues.cjs: table, next matches, results, scorers), and each of its clubs gets a static /db/team/<id>/
+  const LDOCS = {}; await pool([...LG365], 8, async cid => { LDOCS[cid] = await get(`s365/comp/${cid}.json`, 1); });
+  const ST365 = new Map(), ST365C = {}; { const SLt = require("./lib/seo_leagues.cjs")({ page, write, SITE, bcLd, teamLink:() => "" }), ids = new Set();
+    for (const [cid, d] of Object.entries(LDOCS)){ const s = d && d.live && SLt.season(cid, d); if (s) s.teams.forEach(t => { ids.add(+t); if (!ST365C[t] && !d.ko) ST365C[t] = { id:+cid, name:d.name }; }); }
+    const tf = await pool([...ids], 8, id => SID2F[id] && S_TEAMS[SID2F[id]] ? null : get(`s365/team/${id}.json`, 1));   // a club with a FotMob page keeps /t/<id>/
+    [...ids].forEach((id, i) => { const t = tf[i]; if (t && t.name && ((t.games || []).length || (t.squad || []).length)) ST365.set(id, t); }); }   // only clubs whose page gets written are linked
+  { const tl = t => { const f = SID2F[t]; return f && S_TEAMS[f] ? `/t/${f}/` : ST365.has(+t) ? `/db/team/${t}/` : `/db/team/?id=${t}`; }, CN = S365I.countries || {};
+    const SL = require("./lib/seo_leagues.cjs")({ page, write, SITE, bcLd, teamLink:tl });
+    const tbl = (rows, N) => `<div class="tscroll"><table class="tbl"><thead><tr><th>#</th><th>الفريق</th><th>لعب</th><th>فوز</th><th>تعادل</th><th>خسارة</th><th>له-عليه</th><th>نقاط</th></tr></thead><tbody>${rows.map(r => `<tr><td class="num">${r[0] == null ? "" : r[0]}</td><td><a href="${tl(r[1])}">${esc(N[r[1]] || "")}</a>${r[9] != null ? ` <span class="muted small">${esc(r[9])}</span>` : ""}</td>${[2, 3, 4, 5].map(i => `<td class="num">${r[i] == null ? "" : r[i]}</td>`).join("")}<td class="num"><bdi dir="ltr">${r[6] == null ? "" : r[6]}-${r[7] == null ? "" : r[7]}</bdi></td><td class="num">${r[8] == null ? "" : Math.round(r[8])}</td></tr>`).join("")}</tbody></table></div>`;
     const dstr = s => { const d = s ? new Date(s) : null; return d && !isNaN(d) ? d.toLocaleDateString("ar-AE-u-nu-latn", { year:"numeric", month:"short", day:"numeric", timeZone:"Asia/Dubai" }) : ""; };
+    const grow = (g, N) => `<li><span class="num muted small">${esc(dstr(g[1]))}</span> <a href="${tl(g[4])}">${esc(N[g[4]] || "")}</a> ${g[6] == null ? "" : `<a href="/db/game/?id=${g[0]}"><bdi dir="rtl" class="num">${g[6]} - ${g[7]}</bdi></a>`} <a href="${tl(g[5])}">${esc(N[g[5]] || "")}</a></li>`;
     const logo365 = id => "https://imagecache.365scores.com/image/upload/f_png,w_128,h_128,c_limit,q_auto:eco,dpr_2,d_Competitions:default1.png/Competitions/" + id;
-    let nL = 0;
-    await pool([...LG365], 8, async cid => { const d = await get(`s365/comp/${cid}.json`, 1); if (!d || !(d.champions || []).length) return;
+    let nL = 0, nS = 0;
+    await pool([...LG365], 8, async cid => { const d = LDOCS[cid]; if (!d || !(d.champions || []).length) return;
       const N = Object.assign({}, d.names || {}), CH = d.champions, won = CH.filter(r => r[1]); if (won.length < 5) return;
-      for (const k of Object.keys(N)){ const f = SID2F[k]; if (f && S_TEAMS[f] && S_TEAMS[f].name_ar) N[k] = S_TEAMS[f].name_ar; }
+      for (const k of Object.keys(N)){ const f = SID2F[k]; if (f && S_TEAMS[f] && S_TEAMS[f].name_ar) N[k] = S_TEAMS[f].name_ar; }   // our Arabic name for a club we know
       const cnt = new Map(); won.forEach(r => cnt.set(r[1], (cnt.get(r[1]) || 0) + 1));
-      const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]), mx = top[0][1], first = CH[CH.length - 1][0], last = CH[0][0];
-      const country = d.country || (CN[d.cc] || [""])[0];
-      const v5 = P5.league(Object.assign({}, d, { id:cid, names:N, country }), { team:tl, logo:logo365(cid), results:true, all:true, date:dstr }); v5.data = { id:cid };
-      write(`db/league/${cid}/index.html`, page({ v5, path:`/db/league/${cid}/`, page:"league", title:`أبطال ${d.name} عبر التاريخ من ${first} | تيفو`, desc:`كل أبطال ${d.name}${country ? " في " + country : ""} من ${first} لين ${last}: ${won.length} موسم، والأكثر تتويجاً ${N[top[0][0]] || ""} بـ${mx} لقب.`, ld:bcLd([["الموسوعة", "/db/"], [`أبطال ${d.name}`, `/db/league/${cid}/`]]) }));
-      urls.push(`/db/league/${cid}/`); nL++; });
-    console.log(`competition champion pages: ${nL}`); }
+      const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]), mx = top[0][1], first = CH[CH.length - 1][0], last = CH[0][0], cols = d.cols || [], T = d.tables || {}, L = d.live;
+      const country = d.country || (CN[d.cc] || [""])[0], SS = L ? SL.season(cid, d) : null;   // item 10: the season first where 365 has one
+      if (!SS){ const v5 = P5.league(Object.assign({}, d, { id:cid, names:N, country }), { team:tl, logo:logo365(cid), results:true, all:true, date:dstr }); v5.data = { id:cid };
+        write(`db/league/${cid}/index.html`, page({ v5, path:`/db/league/${cid}/`, page:"league", title:`أبطال ${d.name} عبر التاريخ من ${first} | تيفو`, desc:`كل أبطال ${d.name}${country ? " في " + country : ""} من ${first} لين ${last}: ${won.length} موسم، والأكثر تتويجاً ${N[top[0][0]] || ""} بـ${mx} لقب.`, ld:bcLd([["الموسوعة", "/db/"], [`أبطال ${d.name}`, `/db/league/${cid}/`]]) }));
+        urls.push(`/db/league/${cid}/`); nL++; return; }
+      const body = (SS ? `<p class="crumbs"><a href="/db/">الموسوعة</a>${country ? "، " + esc(country) : ""}</p><h1>${esc(SS.h1)}</h1><p class="season">${SS.sub}</p><div class="sx">${SS.html}</div><h2 class="sxh">أبطال ${esc(d.name)} عبر التاريخ</h2>` +
+        `<p>فاز بها <b class="num">${cnt.size}</b> ${cnt.size > 10 ? "فريق" : "فرق"} في <b class="num">${won.length}</b> موسم من <b class="num">${esc(first)}</b> لين <b class="num">${esc(last)}</b>، وأكثرهم ${esc(N[top[0][0]] || "")} بـ<b class="num">${mx}</b> ${mx > 10 ? "لقب" : "ألقاب"}.</p>`
+        : `<p class="crumbs"><a href="/db/">الموسوعة</a></p><h1>أبطال ${esc(d.name)}</h1><p class="season">${[country && esc(country), d.name_en && `<span class="lat">${esc(d.name_en)}</span>`, `كل الأبطال من <b class="num">${esc(first)}</b> لين <b class="num">${esc(last)}</b>`].filter(Boolean).join(" · ")}</p>` +
+        `<p>فاز بها <b class="num">${cnt.size}</b> ${cnt.size > 10 ? "فريق" : "فرق"} في <b class="num">${won.length}</b> موسم، وأكثرهم ${esc(N[top[0][0]] || "")} بـ<b class="num">${mx}</b> ${mx > 10 ? "لقب" : "ألقاب"}.</p>` +
+        (L && (L.table || []).length ? `<section class="blk"><h2>الترتيب الحين</h2>${tbl(L.table, N)}</section>` : "") +
+        (L && (L.results || []).length ? `<section class="blk"><h2>آخر النتايج</h2><ul class="mlist wgm">${L.results.slice(0, 20).map(g => grow(g, N)).join("")}</ul></section>` : "")) +
+        `<section class="blk"><h2>الأكثر تتويجاً</h2><ul class="bars">${top.slice(0, 15).map(([t, n]) => `<li><span><a href="${tl(t)}">${esc(N[t] || "")}</a></span><i style="--w:${Math.round(n / mx * 100)}%"></i><b class="num">${n}</b></li>`).join("")}</ul></section>` +
+        `<section class="blk"><h2>كل الأبطال <small>${won.length}</small></h2><div class="tscroll"><table class="tbl"><thead><tr><th>الموسم</th><th>البطل</th>${cols.map(x => `<th>${esc(x)}</th>`).join("")}</tr></thead><tbody>${CH.map(r => `<tr><td class="num">${esc(r[0])}</td><td>${r[1] ? `<a href="${tl(r[1])}">${esc(N[r[1]] || "")}</a>` : '<span class="muted">—</span>'}</td>${cols.map((x, i) => `<td class="num">${esc((r[2] || [])[i] == null ? "" : r[2][i])}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>` +
+        (Object.keys(T).length ? `<section class="blk"><h2>الترتيب النهائي موسم بموسم</h2>${Object.keys(T).sort().reverse().map((s, i) => `<details${i ? "" : " open"}><summary class="num">${esc(s)}</summary>${tbl(T[s], N)}</details>`).join("")}</section>` : "") +
+        `<p class="src">من 365Scores. آخر تحديث <span class="num">${esc(d.generated || "")}</span>.</p>`;
+      write(`db/league/${cid}/index.html`, page({ path:`/db/league/${cid}/`, page:"league", title:SS ? SS.title : `أبطال ${d.name} عبر التاريخ من ${first} | تيفو`, desc:SS ? SS.desc : `كل أبطال ${d.name}${country ? " في " + country : ""} من ${first} لين ${last}: ${won.length} موسم، والأكثر تتويجاً ${N[top[0][0]] || ""} بـ${mx} لقب.`,
+        ld:bcLd([["الموسوعة", "/db/"], [d.name, `/db/league/${cid}/`]]), body }));
+      urls.push(`/db/league/${cid}/`); nL++; if (SS) nS++; });
+    // the clubs of those leagues: /db/team/<id>/ (squad, next matches, results, titles)
+    let nT = 0; for (const [id, t] of ST365){ const cm = ST365C[id], P = SL.team(t, cm);
+      write(`db/team/${id}/index.html`, page({ path:`/db/team/${id}/`, title:P.title, desc:P.desc, ld:bcLd([["الموسوعة", "/db/"], cm && [cm.name, `/db/league/${cm.id}/`], [t.name, `/db/team/${id}/`]]),
+        body:`<p class="crumbs"><a href="/db/">الموسوعة</a>${cm ? `، <a href="/db/league/${cm.id}/">${esc(cm.name)}</a>` : ""}</p><h1>${esc(P.h1)}</h1><p class="season">${P.sub}</p><div class="sx">${P.html}<p class="src">من 365Scores.</p></div>` }));
+      urls.push(`/db/team/${id}/`); nT++; }
+    console.log(`competition champion pages: ${nL} (${nS} lead with their live season), 365 club pages: ${nT}`); }
   for (const [k, t, d] of [["league", "بطولة", "أبطال البطولة من أول موسم، والجداول النهائية، ونتايج الموسم."], ["team", "فريق", "ألقاب الفريق في كل بطولة، ولاعبينه ومبارياته."],
     ["game", "مباراة", "التشكيلة والأهداف والكروت."], ["athlete", "لاعب", "مسيرة اللاعب موسم بموسم وألقابه وانتقالاته."]])
     write(`db/${k}/index.html`, page({ path:`/db/${k}/`, page:"world", noindex:true, title:`${t} | موسوعة تيفو`, desc:d, body:`<p class="crumbs"><a href="/db/">الموسوعة</a></p><h1 id="wt">نحمّل…</h1><div id="world" data-kind="${k}"></div>` }));
@@ -1202,6 +1271,23 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   OGJ.push({ key:"match", home:"مباراة على تيفو", sub:"النتيجة مباشر، التشكيلة، الأحداث، ووين تنقل في بلدك", hc:["#0A2620", "#14403A"] });   // W4.5: the generic match card
   OGJ.push({ key:"tifo", home:"تيفو", sub:"نتايج المباريات مباشر لكل العرب، بتوقيت بلدك", hc:["#0A2620", "#123A31"] });   // W1.10: the default share image
 
+  // ---- owner item 10 (2026-10-06): the encyclopedia's player pages /db/player/<id>/, a stage of their own (lib/world_stage.cjs): it writes only
+  // the pages whose content changed into cache/world/delta/, which tools/runner.py uploads; never in out/, so neither rebuilt nor re-synced every hour.
+  // Not in --preview (its noindex pages would be recorded as published).
+  const WORLD = PREVIEW || process.env.TIFO_WORLD === "0" ? { urls:[], stats:{ skipped:true } } : await require("./lib/world_stage.cjs")({ get, pool, page, esc, SITE, CACHE, fs, path, bcLd,
+    finalize:h => fixHtml(h).replace("__SV__", SEARCH_V).replace("__CV__", COLOR_V), written:u => WRITTEN.add(u), NAMES_AR, FMN, WP, PH, phHtml, colors, teamPages, playerPages, S_TEAMS, ASSET_V, fmGen:FMPJ.generated || "" });
+  // their crawl path: /db/players/ (every nationality) and /db/players/<cc>/ (its players by club), small and in out/
+  { const H = WORLD.hubs || {}, CN = FMN.countries || {}, ccs = Object.keys(H).filter(cc => CN[cc] && H[cc].length).sort((a, b) => H[b].length - H[a].length);
+    const pl = n => n === 1 ? "لاعب واحد" : n === 2 ? "لاعبين" : `<span class="num">${n}</span> ${n <= 10 ? "لاعبين" : "لاعب"}`, AR = /[؀-ۿ]/;
+    for (const cc of ccs){ const by = new Map(); H[cc].forEach(x => { const k = x[2] || 0; if (!by.has(k)) by.set(k, []); by.get(k).push(x); });
+      const groups = [...by.values()].sort((a, b) => b.length - a.length || String(a[0][3]).localeCompare(String(b[0][3]), "ar")), c = CN[cc], p = `/db/players/${cc.toLowerCase()}/`;
+      const body = `<p class="crumbs"><a href="/db/">الموسوعة</a>، <a href="/db/players/">اللاعبين حسب الجنسية</a></p><h1>لاعبو ${esc(c)} في أندية العالم</h1><p class="season">${pl(H[cc].length)} لعبوا موسم 2025/26 أو 2026/27</p><div class="sx">` +
+        groups.map(g => `<section class="grp"><div class="gh"><h2>${g[0][2] ? (AR.test(g[0][3]) ? esc(g[0][3]) : `<span class="lat">${esc(g[0][3])}</span>`) : "بدون نادي"}</h2><span class="nn">${g.length}</span></div><div class="card">${g.sort((a, b) => String(a[1]).localeCompare(String(b[1]), "ar")).map(x => `<a class="row" href="/db/player/${x[0]}/"><span class="rt"><b>${AR.test(x[1]) ? esc(x[1]) : `<span class="lat">${esc(x[1])}</span>`}</b>${x[4] ? `<small>${esc(x[4])}</small>` : ""}</span></a>`).join("")}</div></section>`).join("") + "</div>";
+      write(p.slice(1) + "index.html", page({ path:p, page:"ref", title:`لاعبو ${c} في أندية العالم: الأسماء والمسيرة | تيفو`, desc:`${H[cc].length} لاعب من ${c} لعبوا هالموسم أو اللي قبله في أندية العالم، ولكل واحد صفحة بمسيرته موسم بموسم وأرقامه وألقابه.`, ld:bcLd([["الموسوعة", "/db/"], ["اللاعبين حسب الجنسية", "/db/players/"], [c, p]]), body }));
+      urls.push(p); }
+    if (ccs.length){ write("db/players/index.html", page({ path:"/db/players/", page:"ref", title:"لاعبين كرة القدم حسب الجنسية: موسوعة تيفو | تيفو", desc:`${Object.values(H).reduce((a, l) => a + l.length, 0)} لاعب من ${ccs.length} دولة لعبوا موسم 2025/26 أو 2026/27، مرتبين حسب الجنسية والنادي.`, ld:bcLd([["الموسوعة", "/db/"], ["اللاعبين حسب الجنسية", "/db/players/"]]),
+      body:`<p class="crumbs"><a href="/db/">الموسوعة</a></p><h1>اللاعبين حسب الجنسية</h1><p class="season">${ccs.length} دولة</p><div class="sx"><section class="grp"><div class="card">${ccs.map(cc => `<a class="row" href="/db/players/${cc.toLowerCase()}/"><span class="rt">${esc(CN[cc])}</span><span class="rv">${H[cc].length}</span></a>`).join("")}</div></section></div>` })); urls.push("/db/players/"); } }
+
   // ---- 8. competitions list, robots, sitemap, 404
   const groups = [["uae", "الإمارات"], ["gulf", "الخليج"], ["asia", "آسيا"], ["africa", "أفريقيا"], ["national", "المنتخبات"], ["arab", "العرب"], ["europe", "أوروبا"], ["americas", "الأمريكيتين"], ["world", "العالم"]];
   { const byC = {}; comps.forEach(c => { const cc = c.country && c.country.iso2; if (cc && R.COUNTRIES.some(x => x[0] === cc)) (byC[cc] = byC[cc] || []).push(c); });
@@ -1244,8 +1330,11 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
       if (!thinC) urls.push(`/country/${slug}/`);
     }
     R.DUPCTX = ""; }
+  // item 11: the staged cards after the hourly ones: the newest goals first, then every other match nearest its kick-off first
+  SHG.sort((a, b) => b[0] - a[0]).forEach(x => OGJ.push(x[1])); SHJ.sort((a, b) => a[0] - b[0]).forEach(x => OGJ.push(x[1]));
   fs.mkdirSync(path.join(OUT, "og"), { recursive:true }); fs.writeFileSync(path.join(OUT, "og/jobs.json"), JSON.stringify(OGJ));
-  if (!process.env.TIFO_NO_OG) try { process.stdout.write(require("child_process").execFileSync("python3", [path.join(__dirname, "og.py")]).toString()); } catch (e){ console.error("og.py failed", e.message); }   // TIFO_NO_OG: dev builds skip the share images
+  if (!process.env.TIFO_NO_OG) try { process.stdout.write(require("child_process").execFileSync("python3", [path.join(__dirname, "og.py")], { maxBuffer:64 << 20 }).toString()); } catch (e){ console.error("og.py failed", e.message); }   // TIFO_NO_OG: dev builds skip the share images
+  const SHST = PREVIEW ? null : SHARE.run({ CACHE, fs, path, stubs:STUBS });   // the cards og.py staged and the goal pages, for tools/runner.py to upload once
   // W1.9: internal links to pages this build did not write become plain text (reported, never fatal)
   if (!ONLY) { const SKIP = /^\/(v1|assets|logo|lg|og|audio|api|embed|next)\/|^\/(sw\.js|favicon\.svg|robots\.txt|sitemap\.xml)$|^\/cast\/(feed\.xml|cover\.jpg)$/; let dead = 0; const seen = {};
     for (const f of ALLP){ const h = fs.readFileSync(f, "utf8");
@@ -1267,7 +1356,7 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   // (/tn/<id>.json, the league table), then every page it has saved; the browser fills both (src/v5/app.js)
   write("offline/index.html", page({ v5:{ nav:{ brand:1, title:"ما في نت" }, tab:"", data:{}, body:'<div class="lt"><h1>ما في نت الحين</h1><p>هذا اللي محفوظ في جوالك من آخر مرة فتحت تيفو.</p></div><section class="grp" id="offmine" hidden></section>' + U.grp("الصفحات المحفوظة", '<div id="offl"><div class="row"><span class="rt muted">نشوف المحفوظ…</span></div></div>') + U.foot() }, path:"/offline/", page:"offline", noindex:true, title:"ما في نت | تيفو", desc:"" }));   // W1.11: the service worker's kill switch
   fs.writeFileSync(path.join(OUT, "sw.js"), fs.readFileSync(path.join(__dirname, "src/sw.js"), "utf8").replace("__V__", ASSET_V));
-  fs.writeFileSync(path.join(OUT, "robots.txt"), PREVIEW ? "User-agent: *\nDisallow: /\n" : `User-agent: *\nDisallow: /next/\nAllow: /\nSitemap: ${SITE}/sitemap.xml\nSitemap: ${SITE}/sitemap-recent.xml\n`);
+  fs.writeFileSync(path.join(OUT, "robots.txt"), PREVIEW ? "User-agent: *\nDisallow: /\n" : `User-agent: *\nDisallow: /next/\nAllow: /\nSitemap: ${SITE}/sitemap.xml\nSitemap: ${SITE}/sitemap-recent.xml\nSitemap: ${SITE}/sitemap-days.xml\nSitemap: ${SITE}/sitemap-players.xml\n`);
   // W4.6: the 404 offers search and today's matches instead of a dead end
   write("404.html", page({ v5:{ nav:{ back:"/", backLabel:"اليوم", title:"" }, tab:"", data:{}, body:'<div class="lt"><h1>الصفحة مب موجودة</h1><p>يمكن الرابط تغيّر. دوّر عن اللي تباه، أو شوف مباريات اليوم.</p></div>' + U.grp("", U.rows([{ href:"/search/", icon:"search", c:"#0A84FF", t:"دوّر في تيفو" }, { href:"/", icon:"today", c:"#34C759", t:"مباريات اليوم" }, { href:"/competitions/", icon:"comps", c:"#FF9500", t:"كل البطولات" }])) + '<div id="day404"></div>' + U.foot() }, path:"/404", page:"none", title:"الصفحة مب موجودة | تيفو", desc:"" }));
   // 425: site/static/* is copied to the out/ root unchanged (Search Console's google<token>.html lives there), keeping its mtime
@@ -1306,8 +1395,12 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
     // 446: the pages Google should look at first: matches from 3 days back to 7 ahead, their competitions, today/tomorrow
     const now = Date.now(), recentM = [...matchSum.values()].filter(m => m && m.id != null && m.kickoff_utc && Math.abs(Date.parse(m.kickoff_utc) - now - 2 * 864e5) <= 5 * 864e5).map(m => `/m/${m.id}/`);
     const recentC = [...new Set([...matchSum.values()].filter(m => m && m.kickoff_utc && Math.abs(Date.parse(m.kickoff_utc) - now - 2 * 864e5) <= 5 * 864e5).map(m => m.comp))].map(id => (comps.find(c => c.id === id) || {}).key).filter(Boolean).map(k => `/c/${k}/`);
-    const inSm = new Set(uniq); fs.writeFileSync(path.join(OUT, "sitemap-recent.xml"), sm(["/", "/today/", "/tomorrow/"].concat(recentC, recentM).filter((u, i, a) => inSm.has(u) && a.indexOf(u) === i)));
+    const inSm = new Set(uniq); fs.writeFileSync(path.join(OUT, "sitemap-recent.xml"), sm(["/", "/today/", "/tomorrow/", "/yesterday/"].concat(recentC, recentM).filter((u, i, a) => inSm.has(u) && a.indexOf(u) === i)));
+    // owner item 9: the day pages on their own short sitemap (the evergreen three, every dated day, the hub, «مباراة <فريق> اليوم»)
+    fs.writeFileSync(path.join(OUT, "sitemap-days.xml"), sm(DAYS.urls.filter((u, i, a) => inSm.has(u) && a.indexOf(u) === i)));
+    // owner item 10: the encyclopedia's player pages, each with the day its content last changed (lib/world_stage.cjs's manifest)
+    fs.writeFileSync(path.join(OUT, "sitemap-players.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` + WORLD.urls.map(x => `<url><loc>${esc(SITE + x.u)}</loc>${x.lm ? `<lastmod>${x.lm}</lastmod>` : ""}</url>`).join("\n") + "\n</urlset>\n");
     // 445: pages whose bytes changed in this build, for deploy.sh to hand to IndexNow (Bing, Yandex…) after the sync
-    fs.writeFileSync(path.join(CACHE, "indexnow.txt"), uniq.filter(u => { const e = next[relOf(u)], p = prev[relOf(u)]; return e && (!p || p[0] !== e[0]); }).map(u => SITE + encodeURI(decodeURI(u))).join("\n")); }
+    fs.writeFileSync(path.join(CACHE, "indexnow.txt"), uniq.filter(u => { const e = next[relOf(u)], p = prev[relOf(u)]; return e && (!p || p[0] !== e[0]); }).concat(WORLD.fresh || []).map(u => SITE + encodeURI(decodeURI(u))).join("\n")); }
   console.log(`built ${urls.length} pages: ${comps.length} competitions, ${tcount} teams, ${pcount} players, ${mids.length} matches (${D.size} with detail), logos ${logoIds.size} (${dl} new) in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 })().catch(e => { console.error(e); process.exit(1); });

@@ -265,6 +265,9 @@
     o = o || {}; var ev = (md.events || []).filter(function (e) { return e.type !== "added_time" && !/^shootout/.test(e.type); });
     if (!ev.length) return '<div class="card">' + U.empty(md.status === "scheduled" ? "المباراة ما بدت." : "ما في أحداث مسجّلة للحين.") + "</div>";
     var key = function (e) { return e.minute * 100 + (e.added || 0) + (e.type === "half" ? 50 : 0); };
+    // item 11: goals numbered in the order the match file lists them, like the build's goal pages /m/<id>/g/<n>/ and v3's R.events
+    // (id="g<n>" is the anchor of a goal's share link, src/goalshare.js)
+    var GL = (md.events || []).filter(function (e) { return /^(goal|penalty_goal|own_goal)$/.test(e.type); });
     ev = ev.slice().sort(function (a, b) { return key(a) - key(b); });
     if (isLive(md)) ev.reverse();
     var li = ev.map(function (e) {
@@ -277,6 +280,7 @@
       else if (EVT[e.type]) sub = EVT[e.type];
       var side = e.team === "away" ? "away" : "home";
       var gk = /^(goal|penalty_goal|own_goal)$/.test(e.type) && e.player && e.player.id ? ' data-goal-key="' + esc(evMin(e)) + "-" + esc(e.player.id) + '"' : "";   // src/media.js puts «▶ شاهد» on the goals it has a clip for
+      var gn = GL.indexOf(e) + 1; if (gn) gk += ' id="g' + gn + '" data-gn="' + gn + '"';
       return '<li class="' + side + (/goal/.test(e.type) && e.type !== "missed_penalty" ? " goal" : "") + '"' + gk + '><span class="em">' + '<bdi dir="ltr">' + esc(evMin(e)) + "'</bdi></span><span class=\"eb\">" + evIcon(e.type) + '<span class="et who">' + who + (sub ? "<small>" + sub + "</small>" : "") + "</span></span></li>";
     }).join("");
     var sh = (md.events || []).filter(function (e) { return /^shootout/.test(e.type); });

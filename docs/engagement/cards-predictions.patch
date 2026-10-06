@@ -1,0 +1,1693 @@
+diff --git a/src/app.py b/src/app.py
+--- a/src/app.py
++++ b/src/app.py
+@@ -19,14 +19,16 @@
+   POST /api/tifo/hit                {path,country,ret} -> 204, daily aggregate counters (tifo.elyoxe.com)
+   GET  /api/tifo/match?id=<FotMob id> | ?id=365:<365Scores id> -> any match, live (src/tifo_match.py; cached on the id)
+   GET  /api/tifo/push/key                              -> {publicKey} (VAPID)
+-  POST|DELETE /api/tifo/push/sub    {team|teams, events, subscription|endpoint} -> 204
++  POST|DELETE /api/tifo/push/sub    {team|teams, events, quiet, subscription|endpoint} -> 204
++  …    /api/tifo/predict/*                             -> «توقع وتحدى ربعك» (src/tifo_predict.py)
+ 
+ Table «cards» (pk, sk):
+   USER#email | PROFILE                     USER#email | EVENT#eid  {title}
+   EVENT#eid  | META  {owner, doc, door_key}   EVENT#eid | GUEST#gid {...}
+   TOKEN#t    | TOKEN {eid, gid}             LOGIN#sha256(code) | LOGIN {email, ttl}
+   TIFOHIT#yyyy-mm-dd | N / P#<prefix> / RET#<bucket> / C#<ISO2>  {n, ttl}
+-  TIFOPUSH#<team>    | sha256(endpoint)[:32]  {team, endpoint, p256dh, auth, events, created, ttl}
++  TIFOPUSH#<team>    | sha256(endpoint)[:32]  {team, endpoint, p256dh, auth, events, quiet, created, ttl}
++  TP#…               | …                      predictions: players, picks, leagues (src/tifo_predict.py)
+ """
+ import base64, datetime, hashlib, hmac, html, json, os, re, secrets, time
+ 
+@@ -2081,11 +2083,15 @@
+ 
+ # ---- tifo web push: subscriptions per team; the pipeline's sender reads them (pywebpush + the VAPID private key)
+ #   GET    /api/tifo/push/key                                   -> {publicKey}   (SSM /elyoxe/tifo/vapid_public)
+-#   POST   /api/tifo/push/sub {team, events:[start,goal,end], subscription:{endpoint, keys:{p256dh, auth}}} -> 204
++#   POST   /api/tifo/push/sub {team, events:[start,goal,end,video], quiet:{s,e,o}, subscription:{endpoint, keys:{p256dh, auth}}} -> 204
+ #   DELETE /api/tifo/push/sub {team | teams:[...], endpoint}   -> 204
+-#   TIFOPUSH#<team> | <sha256(endpoint)[:32]>  {team, endpoint, p256dh, auth, events, created, ttl = +180 days}
++#   TIFOPUSH#<team> | <sha256(endpoint)[:32]>  {team, endpoint, p256dh, auth, events, quiet?, created, ttl = +180 days}
++#   events: what this subscription wants for that team (item 7, 2026-10-06: «الأهداف بس» = [goal], «كل شي» = [start, goal, end],
++#   plus video = «فيديو الهدف نزل»); none given = start, goal, end. quiet: hours with no push at all, s/e minutes after local
++#   midnight and o the device's UTC offset in minutes (saas/football push.py in_quiet), re-sent by the page when it changes.
+ #   Per-IP limit TIFOPUSH_IP_HOURLY (keyed by an HMAC of the IP, never the IP) + TIFOPUSH_DAILY overall.
+-TIFOPUSH_EVENTS = ("start", "goal", "end")
++TIFOPUSH_EVENTS = ("start", "goal", "end", "video")
++TIFOPUSH_DEFAULT = ("start", "goal", "end")
+ TIFOPUSH_IP_HOURLY = 30
+ TIFOPUSH_DAILY = 20_000
+ PUSH_HOSTS = ("fcm.googleapis.com", "android.googleapis.com", "updates.push.services.mozilla.com", "push.services.mozilla.com",
+@@ -2118,10 +2124,19 @@
+         return resp(204, None)
+     keys = sub.get("keys") or {}; p256, auth = str(keys.get("p256dh") or ""), str(keys.get("auth") or "")
+     if not (re.fullmatch(r"[A-Za-z0-9_-]{80,100}={0,2}", p256) and re.fullmatch(r"[A-Za-z0-9_-]{16,24}={0,2}", auth)): raise HttpError(400, "اشتراك غير صالح")
+-    ev = [e for e in (b.get("events") or TIFOPUSH_EVENTS) if e in TIFOPUSH_EVENTS] or list(TIFOPUSH_EVENTS)
++    ev = list(dict.fromkeys(e for e in (b.get("events") or TIFOPUSH_DEFAULT) if e in TIFOPUSH_EVENTS)) or list(TIFOPUSH_DEFAULT)
++    q = _push_quiet(b.get("quiet"))
+     for t in teams:
+-        table.put_item(Item={"pk": f"TIFOPUSH#{t}", "sk": sk, "team": t, "endpoint": ep, "p256dh": p256, "auth": auth, "events": ev, "created": now, "ttl": now + 180 * 86400})
++        item = {"pk": f"TIFOPUSH#{t}", "sk": sk, "team": t, "endpoint": ep, "p256dh": p256, "auth": auth, "events": ev, "created": now, "ttl": now + 180 * 86400}
++        if q: item["quiet"] = q
++        table.put_item(Item=item)
+     return resp(204, None)
++def _push_quiet(q):
++    """{"s": from, "e": to} in minutes after local midnight, "o" the device's UTC offset in minutes; None when absent or malformed."""
++    if not isinstance(q, dict): return None
++    try: s, e, o = int(q.get("s")), int(q.get("e")), int(q.get("o", 240))
++    except (TypeError, ValueError): return None
++    return {"s": s, "e": e, "o": o} if 0 <= s < 1440 and 0 <= e < 1440 and s != e and -720 <= o <= 840 else None
+ 
+ TIFO_SITE = "https://tifo.elyoxe.com"
+ def _tifo_mail(to, subject, html_body, text):
+@@ -2163,6 +2178,12 @@
+         return subs_run(event)
+     if event.get("report") == "weekly":   # EventBridge, Monday 04:00 UTC
+         return weekly_report(event)
++    if event.get("tifo_predict") == "score":   # EventBridge, every 10 min: score the finished matches (src/tifo_predict.py)
++        import tifo_predict
++        return tifo_predict.score_due()
++    if event.get("tifo_predict") == "recheck" and str(event.get("match") or "").isdigit():   # by hand: a late awarded result
++        import tifo_predict
++        return tifo_predict.recheck(int(event["match"]))
+     method = event.get("requestContext", {}).get("http", {}).get("method", "GET")
+     path = event.get("rawPath", "/")
+     parts = [p for p in path.split("/") if p]
+@@ -2228,6 +2249,9 @@
+             return tifo_push_key()
+         if p == ["tifo", "push", "sub"] and method in ("POST", "DELETE"):
+             return tifo_push_sub(event, method)
++        if p[:2] == ["tifo", "predict"]:           # «توقع وتحدى ربعك» (src/tifo_predict.py)
++            import tifo_predict
++            return tifo_predict.route(event, method, p[2:])
+         if p == ["tifo", "subscribe"] and method == "POST":
+             return tifo_subscribe(event)
+         if p == ["tifo", "confirm"] and method == "GET":
+diff --git a/src/tifo_badwords.py b/src/tifo_badwords.py
+new file mode 100644
+--- /dev/null
++++ b/src/tifo_badwords.py
+@@ -0,0 +1,150 @@
++"""Nicknames for «توقع وتحدى ربعك» (tifo_predict.py): the only text a player types, so the only text we filter.
++
++nick(raw) -> (clean nickname, None) or (None, the reason in Arabic). A nickname is 2-20 characters of Arabic or Latin
++letters, Western digits, spaces, «_», «.», «-» (Arabic-Indic digits become Western ones), at least two letters, at most four
++digits (no phone numbers), no link or handle, no name that passes for Tifo's staff, and nothing from the lists below.
++
++How a nickname is read before the lists (so «ك.ل.ب», «كـــلب», «كلللب», «sh1t» and «fuuuck» are caught):
++  Arabic   tashkeel and tatweel out, every hamza seat to its letter (أ إ آ ٱ -> ا, ؤ -> و, ئ -> ي, ى -> ي, ة -> ه, ء out),
++           Persian letters to Arabic (گ -> ك, ڤ -> ف, پ -> ب, چ -> ج), a letter repeated in a row counted once
++  Latin    lower case, leetspeak digits to letters (0 o, 1 i, 3 e, 4 a, 5 s, 7 t, 8 b, 9 g, @ a, $ s), a second reading for
++           Arabizi (2 a, 3 a, 5 kh, 6 t, 7 h, 8 gh, 9 q) and a third with the digits dropped; a letter of a listed word may be
++           repeated («fuuuck»), a doubled one must stay doubled («nigg», never «Nigel»)
++  STEMS    match anywhere in the letters run together (spaces and punctuation out): long, unambiguous stems
++  WORDS    match a whole word, or the whole nickname run together: words that sit inside innocent ones
++           («كس» in «مكسيك» and «عكس», «زب» in «حزب», «نيك» in «تكنيك», «sex» in «Essex», «slut» in «Slutsky»,
++           «cunt» in «Scunthorpe», «khawal» in «Khawaldeh»)
++The lists hold the common insults, obscenities and slurs of the Gulf, Levantine, Egyptian and Maghrebi dialects plus English
++and Arabizi, and the names of staff. A false positive costs a player one retry with another nickname; a miss is on every
++table of every league that player joins.
++"""
++import re, unicodedata
++
++NICK_MIN, NICK_MAX = 2, 20
++
++AR_STEMS = """
++كسمك كسختك كساختك كسامك كسخت كسيمك منيوك منيوج متناك انيكك انيجك نيكني نيجني ينيكك ينيجك طيز شرموط شراميط قحب عاهر لوطي
++لواط مخنث ديوث ممحون معرص متعرص خنزير خنازير زنجي زنوج مهبل اغتصب اغتصاب يلعن ملعون سكس ابنالكلب بنتالكلب ابنالحرام
++يلعندين صهيون داعش هتلر نازي روافض رافضي نواصب ناصبي صفوي مجوسي
++"""
++AR_WORDS = """
++كس كسك كسي كسه كسها زب زبي زبك زبه زبر عير عيري عيرك اير ايري ايرك نيك نيج ينيك ينيج انيك انيج نياك نياج خول شاذ زاني زانيه
++زنا عرص عرصه قضيب بز بزي تيز كلب الكلب كلاب كلبه يا_كلب حمار الحمار حمير حيوان حقير واطي وسخ وسخه زباله قذر سافل منحط
++تافه خرا خري زق سحاق سحاقيه كافر كفار كفره يهود يهودي بورن بورنو ارهابي
++"""
++LAT_STEMS = """
++fuck fuk fck shit bitch biatch cocksuck dickhead pussy whore faggot nigg asshole bastard motherf wank dildo porn hitler penis
++vagina boob kosom kusom ksomak kosomk sharmo sharmu gahb qahb kahb manyok manyuk manyouk manyook metnak mitnak khanzir khanzeer
++"""
++LAT_WORDS = """
++cunt slut dick cock fag rape sex sexy nazi nazis isis tits anal kys kos kus zeb zib zob zebi zbi teez neek nayek ayre ayri kalb
++hmar hamar khawal
++"""
++STAFF_STEMS = "tifo تيفو elyoxe اليوكس administrator moderator"
++STAFF_WORDS = "admin مشرف مشرفين اداره الاداره ادمن الادمن رسمي official support staff system"
++LINKS = re.compile(r"(?i)https?|www\.|\.(com|net|org|ae|sa|me|io|co)\b|t\.me|wa\.me|@|\bsnap|\binsta|\btiktok|\btelegram")
++
++_TASHKEEL = re.compile("[" + chr(0x0610) + "-" + chr(0x061A) + chr(0x064B) + "-" + chr(0x065F) + chr(0x0670) + chr(0x06D6) + "-"
++                       + chr(0x06ED) + chr(0x0640) + "]")
++_FOLD = str.maketrans({"أ": "ا", "إ": "ا", "آ": "ا", "ٱ": "ا", "ى": "ي", "ة": "ه", "ؤ": "و", "ئ": "ي", "ڤ": "ف", "ڨ": "ج",
++                       "گ": "ك", "ک": "ك", "پ": "ب", "چ": "ج", "ی": "ي", "ھ": "ه", "ء": None})
++_AR_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹", "01234567890123456789")
++_LEET = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "8": "b", "9": "g", "@": "a", "$": "s"})
++_ARABIZI = [("5", "kh"), ("7", "h"), ("3", "a"), ("2", "a"), ("6", "t"), ("8", "gh"), ("9", "q")]
++_AR_LETTERS = "ء-يپچڤکگھی"
++_ALLOWED = re.compile(r"^[A-Za-z0-9" + _AR_LETTERS + r" _.\-]+$")
++_LETTER = re.compile(r"[A-Za-z" + _AR_LETTERS + r"]")
++_AR = re.compile(r"[" + _AR_LETTERS + r"]")
++
++
++def _squeeze(s):
++    return re.sub(r"(.)\1+", r"\1", s)
++
++
++def fold_ar(s):
++    """Arabic letters only, one form each, a repeated letter once."""
++    s = _TASHKEEL.sub("", s).translate(_FOLD)
++    return _squeeze("".join(c for c in s if "ء" <= c <= "ي"))
++
++
++def _words(text):
++    return [w for w in re.split(r"[\s_.\-]+", text) if w]
++
++
++def _ar_set(block):
++    return {fold_ar(w.replace("_", "")) for w in block.split()}
++
++
++def _lat_rx(word):
++    """«nigg» -> n+i+g{2,}: each letter may repeat, a doubled letter stays doubled."""
++    return "".join(re.escape(m.group(1)) + ("+" if len(m.group(0)) == 1 else "{%d,}" % len(m.group(0)))
++                   for m in re.finditer(r"(.)\1*", word))
++
++
++def _lat(block):
++    ws = block.split()
++    return re.compile("|".join(_lat_rx(w) for w in ws)), re.compile("^(?:" + "|".join(_lat_rx(w) for w in ws) + ")$")
++
++
++AR_S, AR_W = _ar_set(AR_STEMS), _ar_set(AR_WORDS)
++LAT_S, _ = _lat(LAT_STEMS)
++_, LAT_W = _lat(LAT_WORDS)
++STAFF_AR_S = _ar_set(" ".join(w for w in STAFF_STEMS.split() if _AR.search(w)))
++STAFF_AR_W = _ar_set(" ".join(w for w in STAFF_WORDS.split() if _AR.search(w)))
++STAFF_LAT_S, _ = _lat(" ".join(w for w in STAFF_STEMS.split() if not _AR.search(w)))
++_, STAFF_LAT_W = _lat(" ".join(w for w in STAFF_WORDS.split() if not _AR.search(w)))
++
++
++def _latin_readings(nick):
++    raw = [w for w in _words(nick.lower()) if not _AR.search(w)]
++    leet = [re.sub(r"[^a-z]", "", w.translate(_LEET)) for w in raw]
++    arz = []
++    for w in raw:
++        for a, b in _ARABIZI:
++            w = w.replace(a, b)
++        arz.append(re.sub(r"[^a-z]", "", w))
++    bare = [re.sub(r"[^a-z]", "", w) for w in raw]
++    return [[w for w in ws if w] for ws in (leet, arz, bare)]
++
++
++def bad(nick):
++    """True when the nickname carries an insult, an obscenity, a slur or a staff name, in any reading."""
++    ar = [fold_ar(w) for w in _words(nick) if _AR.search(w)]
++    ar = [w for w in ar if w]
++    run = _squeeze("".join(ar))
++    if ar and (any(s in run for s in AR_S | STAFF_AR_S) or set(ar) & (AR_W | STAFF_AR_W) or run in AR_W | STAFF_AR_W):
++        return True
++    for ws in _latin_readings(nick):
++        if not ws:
++            continue
++        lrun = "".join(ws)
++        if LAT_S.search(lrun) or STAFF_LAT_S.search(lrun):
++            return True
++        if any(LAT_W.match(w) or STAFF_LAT_W.match(w) for w in ws + [lrun]):
++            return True
++    return False
++
++
++def nick(raw):
++    """-> (nickname, None) or (None, reason)."""
++    s = unicodedata.normalize("NFKC", str(raw or "")).translate(_AR_DIGITS)
++    s = re.sub("[​-‏‪-‮⁦-⁩﻿]", "", s)          # bidi and zero-width marks
++    s = re.sub(r"\s+", " ", _TASHKEEL.sub("", s)).strip()
++    if LINKS.search(s):
++        return None, "الاسم ما يكون فيه رابط ولا حساب"
++    if len(s) < NICK_MIN or len(s) > NICK_MAX:
++        return None, f"الاسم من {NICK_MIN} لين {NICK_MAX} حرف"
++    if not _ALLOWED.match(s):
++        return None, "الاسم حروف وأرقام بس"
++    if len(re.findall(r"\d", s)) > 4:
++        return None, "الاسم ما يكون رقم تلفون"
++    if len(_LETTER.findall(s)) < 2:
++        return None, "الاسم لازم يكون فيه حرفين على الأقل"
++    if bad(s):
++        return None, "اختار اسم ثاني"
++    return s, None
++
++
++def norm(s):
++    """The form two nicknames are compared in (a league shows a tag when two members share it)."""
++    return fold_ar(s) + "|" + re.sub(r"[^a-z0-9]", "", str(s).lower())
+diff --git a/src/tifo_predict.py b/src/tifo_predict.py
+new file mode 100644
+--- /dev/null
++++ b/src/tifo_predict.py
+@@ -0,0 +1,864 @@
++"""«توقع وتحدى ربعك»: score predictions with friends on tifo.elyoxe.com, no signup (Tifo item 8, owner 2026-10-06).
++
++Play: guess the score of an upcoming match. 5 points for the exact score, 3 for the right goal difference (a draw with
++another score included), 2 for the right winner or draw, 0 otherwise. The score is the final one before penalties (extra
++time counts) as Tifo's own match file (v1/match/<id>.json) has it, a result awarded after the match included (saas/football
++compute/awarded.py). A pick locks at kickoff: this server's clock against the kickoff in Tifo's data.
++
++Identity: a nickname and a device key. POST /me makes a player and returns, once, a token the device keeps and a
++10-character recovery code the player writes down; the code gives another phone its own token. No account, email or
++password; keys and codes are kept only as HMACs (the cards secret), never an IP (rate limits key an HMAC of it, for an hour
++or two days).
++Leagues: private, joined through a link shared on WhatsApp (https://tifo.elyoxe.com/predict/?j=<invite>), named from a fixed
++list (no free text beyond nicknames), up to LEAGUE_CAP members, LEAGUES_MAX leagues a player, CREATE_DAY new leagues a day.
++A league counts the picks its members make in its competitions (every competition when it names none), from the moment
++they are members.
++
++Routes (the tifo distribution sends /api/tifo/* here with X-Origin-Key; a player is the header X-Tifo-Player: <pid>.<key>)
++  POST   /api/tifo/predict/me        {nick}            -> 201 {pid, token, code, nick}
++  GET    /api/tifo/predict/me        player            -> {pid, nick, pts, ex, df, oc, n, np, leagues, picks}
++  PATCH  /api/tifo/predict/me        player {nick}     -> {nick}
++  POST   /api/tifo/predict/recover   {code}            -> {pid, token, nick}
++  POST   /api/tifo/predict/code      player            -> {code}       a new recovery code; the old one stops working
++  PUT    /api/tifo/predict/pick      player {match, h, a} -> {match, h, a, at, ko}         409 once the match kicked off
++  GET    /api/tifo/predict/match?id= player            -> {match, ko, locked, pick, result, pts, k}
++  GET    /api/tifo/predict/picks?ids=1,2,…  player     -> {picks: {match: {h, a, pts, k}}}   (day lists, up to 60 ids)
++  POST   /api/tifo/predict/league    player {name, comps} -> 201 {lid, name, owner_nick, invite, url}
++  GET    /api/tifo/predict/league?id=<lid>[&match=<id>] member -> {league, members (ranked), me[, match]}
++  POST   /api/tifo/predict/join      player {invite}   -> {lid, name, owner_nick, already}
++  POST   /api/tifo/predict/leave     player {lid}      -> 204
++  GET    /api/tifo/predict/invite?code=               -> {name, owner_nick, n, cap, full}
++  EventBridge every 10 minutes {"tifo_predict": "score"} -> score_due(): finished matches, then the awarded re-checks
++  by hand {"tifo_predict": "recheck", "match": <id>}       -> recheck(): a result decided long after the match
++
++Table «cards» (pk, sk), single table, pay per request:
++  TP#P#<pid>      | META             {nick, nk, keys:[hmac…], code: hmac, created, seen, pts, ex, df, oc, n, np, lg:[lid…], ttl}
++  TP#P#<pid>      | PK#<ko>#<match>  {match, h, a, at, ko, comp, home, away, pts, k, sv, rh, ra, ttl}   «توقعاتي», by kickoff
++  TP#M#<match>    | P#<pid>          {h, a, at, psk, comp, pts, k, sv, lg, ttl}                       a match's picks (scoring)
++  TP#M#<match>    | RESULT           {h, a, st, v, at, ttl}                                          the result scored, version v
++  TP#CODE#<hmac>  | META             {pid}
++  TP#L#<lid>      | META             {name, owner, owner_nick, comps, n, invite, created, ttl}
++  TP#L#<lid>      | M#<pid>          {nick, joined, pts, ex, df, oc, n, ttl}
++  TP#INV#<invite> | META             {lid}
++  TP#PEND         | <ko>#<match>     {match, ko, ttl}         a match with picks waiting for its result
++  TP#RECHECK      | <due>#<match>    {match, ttl}             a scored match read again at +1 and +3 days (awarded results)
++  RL#tp-… | <hmac(ip) or pid>#<hour|day>  and  STAT#tp-… | D#<day>    rate-limit counters with a TTL
++k: x exact, d goal difference, o winner or draw, m missed, v void (postponed or cancelled for good). sv: the result version a
++pick was scored at; scoring a pick is one transaction (the pick at version v, the player's and its leagues' totals) that a
++second run loses, so a scoring run that dies half-way is simply run again.
++"""
++import hashlib, hmac, json, re, secrets, time
++from datetime import datetime, timedelta, timezone
++
++import app as A
++
++EXACT, DIFF, OUTCOME = 5, 3, 2
++LEAGUE_CAP, LEAGUES_MAX, CREATE_DAY, JOIN_DAY, RENAME_DAY, CODE_DAY = 50, 20, 3, 20, 3, 3
++DEVICE_KEYS = 5
++COMPS_MAX = 5
++GOALS_MAX = 20
++PICK_AHEAD_DAYS = 30
++SITE = "https://tifo.elyoxe.com"
++LEAGUE_NAMES = ["دوري الربع", "دوري الشباب", "دوري العايلة", "دوري الدوام", "دوري الشلة", "دوري الديوانية", "دوري المجلس",
++                "دوري الفريج", "دوري الجامعة", "دوري الكشتة"]
++LIMITS = {   # name: (cap, window) — window "h" an hour, "d" a UAE-agnostic UTC day
++    "reg_ip_h": (5, "h"), "reg_ip_d": (20, "d"), "reg_d": (5000, "d"), "rec_ip_h": (10, "h"), "rec_d": (3000, "d"),
++    "auth_ip_h": (30, "h"), "w_p_h": (150, "h"), "w_ip_h": (600, "h"), "r_ip_h": (1200, "h"), "picks_d": (300_000, "d"),
++    "league_p_d": (CREATE_DAY, "d"), "join_p_d": (JOIN_DAY, "d"), "nick_p_d": (RENAME_DAY, "d"), "code_p_d": (CODE_DAY, "d"),
++    "inv_ip_h": (120, "h"),
++}
++SCORE_AFTER = timedelta(minutes=105)     # a match is looked at for its result this long after kickoff
++RECHECK_AFTER = (timedelta(days=1), timedelta(days=3), timedelta(days=7))   # db/matches.py rewrites 3 days of match pages daily
++GIVE_UP = timedelta(days=14)             # a match with no result this long after its kickoff: its picks are void
++PEND_SCAN, PEND_FETCH = 300, 40          # due matches looked at per run, Tifo match files read per run
++PEND_AGAIN = timedelta(minutes=30)       # a due match that was not final is read again after this (no head-of-line block)
++VOID_AFTER = timedelta(days=3)           # cancelled / abandoned this long: void
++PICK_DAYS = 400                          # picks and players stay this long after their last kickoff / activity
++CROCK = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
++FINAL = ("finished", "awarded")
++VOIDING = ("cancelled", "abandoned")
++
++
++class Err(Exception):
++    def __init__(self, status, msg):
++        super().__init__(msg)
++        self.status, self.msg = status, msg
++
++
++def now():
++    return datetime.now(timezone.utc)
++
++
++def iso(t):
++    return t.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
++
++
++def parse(s):
++    try:
++        t = datetime.fromisoformat(str(s).replace("Z", "+00:00"))
++        return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
++    except (TypeError, ValueError):
++        return None
++
++
++def tifo_get(path, ttl=60):
++    """Tifo's public data (the data distribution), through the cards Lambda's small cache."""
++    return A._tifo_get(path, ttl)
++
++
++def _int(x):
++    """DynamoDB numbers come back as Decimal."""
++    try:
++        return int(x)
++    except (TypeError, ValueError):
++        return 0
++
++
++def _plain(o):
++    from decimal import Decimal
++    if isinstance(o, Decimal):
++        return int(o) if o == int(o) else float(o)
++    if isinstance(o, dict):
++        return {k: _plain(v) for k, v in o.items()}
++    if isinstance(o, (list, tuple)):
++        return [_plain(v) for v in o]
++    if isinstance(o, set):
++        return sorted(_plain(v) for v in o)
++    return o
++
++
++# ------------------------------------------------------------------ the table
++class _Expr:
++    """Placeholders for every attribute name and value (ttl, name, status… are reserved words in DynamoDB)."""
++    def __init__(self):
++        self.names, self.values, self._n = {}, {}, {}
++
++    def n(self, attr):
++        if attr not in self._n:
++            k = f"#a{len(self._n)}"
++            self._n[attr], self.names[k] = k, attr
++        return self._n[attr]
++
++    def v(self, val):
++        k = f":v{len(self.values)}"
++        self.values[k] = val
++        return k
++
++    def update(self, add=None, set_=None, append=None, remove=None):
++        sets = [f"{self.n(a)} = {self.v(x)}" for a, x in (set_ or {}).items()]
++        sets += [f"{self.n(a)} = list_append(if_not_exists({self.n(a)}, {self.v([])}), {self.v(list(x))})" for a, x in (append or {}).items()]
++        parts = ["SET " + ", ".join(sets)] if sets else []
++        adds = [f"{self.n(a)} {self.v(x)}" for a, x in (add or {}).items()]
++        if adds:
++            parts.append("ADD " + ", ".join(adds))
++        if remove:
++            parts.append("REMOVE " + ", ".join(self.n(a) for a in remove))
++        return " ".join(parts)
++
++    def cond(self, cond):
++        out = []
++        for c in cond or []:
++            if c == "absent":
++                out.append(f"attribute_not_exists({self.n('pk')})")
++            elif c == "present":
++                out.append(f"attribute_exists({self.n('pk')})")
++            elif c[0] == "lt":         # missing counts as below
++                out.append(f"(attribute_not_exists({self.n(c[1])}) OR {self.n(c[1])} < {self.v(c[2])})")
++            elif c[0] == "eq":
++                out.append(f"{self.n(c[1])} = {self.v(c[2])}")
++            elif c[0] == "size_lt":
++                out.append(f"(attribute_not_exists({self.n(c[1])}) OR size({self.n(c[1])}) < {self.v(c[2])})")
++            else:
++                raise ValueError(c)
++        return " AND ".join(out) or None
++
++    def kw(self, serialize=None):
++        out = {}
++        if self.names:
++            out["ExpressionAttributeNames"] = self.names
++        if self.values:
++            out["ExpressionAttributeValues"] = {k: serialize(v) for k, v in self.values.items()} if serialize else self.values
++        return out
++
++
++class DB:
++    """The cards table: items through the boto3 resource, transactions through its client. Conditions are a list of
++    "absent" | "present" | ("lt", attr, n) | ("eq", attr, v) | ("size_lt", attr, n), all of them must hold."""
++    def __init__(self, table):
++        self.t, self.c = table, table.meta.client
++
++    @staticmethod
++    def _failed(e):
++        return getattr(e, "response", {}).get("Error", {}).get("Code") == "ConditionalCheckFailedException"
++
++    def get(self, pk, sk, consistent=False):
++        it = self.t.get_item(Key={"pk": pk, "sk": sk}, ConsistentRead=consistent).get("Item")
++        return _plain(it) if it else None
++
++    def put(self, item, cond=None):
++        e = _Expr()
++        c = e.cond(cond)
++        try:
++            self.t.put_item(Item=item, **({"ConditionExpression": c} if c else {}), **e.kw())
++            return True
++        except A.ClientError as x:
++            if self._failed(x):
++                return False
++            raise
++
++    def update(self, pk, sk, add=None, set_=None, append=None, remove=None, cond=None, ret=False):
++        e = _Expr()
++        u = e.update(add, set_, append, remove)
++        c = e.cond(cond)
++        try:
++            r = self.t.update_item(Key={"pk": pk, "sk": sk}, UpdateExpression=u, **({"ConditionExpression": c} if c else {}), **e.kw(),
++                                   **({"ReturnValues": "ALL_NEW"} if ret else {}))
++            return _plain(r.get("Attributes")) if ret else True
++        except A.ClientError as x:
++            if self._failed(x):
++                return None if ret else False
++            raise
++
++    def delete(self, pk, sk, cond=None):
++        e = _Expr()
++        c = e.cond(cond)
++        try:
++            self.t.delete_item(Key={"pk": pk, "sk": sk}, **({"ConditionExpression": c} if c else {}), **e.kw())
++            return True
++        except A.ClientError as x:
++            if self._failed(x):
++                return False
++            raise
++
++    def query(self, pk, prefix=None, upto=None, limit=None, desc=False, consistent=False):
++        from boto3.dynamodb.conditions import Key
++        kc = Key("pk").eq(pk)
++        if prefix is not None:
++            kc = kc & Key("sk").begins_with(prefix)
++        elif upto is not None:
++            kc = kc & Key("sk").lte(upto)
++        kw = {"KeyConditionExpression": kc, "ScanIndexForward": not desc, "ConsistentRead": consistent}
++        out = []
++        while True:
++            if limit:
++                kw["Limit"] = limit - len(out)
++            r = self.t.query(**kw)
++            out += r.get("Items") or []
++            if not r.get("LastEvaluatedKey") or (limit and len(out) >= limit):
++                return [_plain(i) for i in out]
++            kw["ExclusiveStartKey"] = r["LastEvaluatedKey"]
++
++    def batch_get(self, keys):
++        out, todo = [], [{"pk": p, "sk": s} for p, s in dict.fromkeys(keys)]
++        name = self.t.name
++        while todo:
++            chunk, todo = todo[:100], todo[100:]
++            req = {name: {"Keys": chunk}}
++            for _ in range(5):
++                r = A.ddb.batch_get_item(RequestItems=req)
++                out += (r.get("Responses") or {}).get(name) or []
++                req = r.get("UnprocessedKeys") or {}
++                if not req:
++                    break
++                time.sleep(0.2)
++        return [_plain(i) for i in out]
++
++    def transact(self, ops):
++        """All or nothing. -> (True, []) or (False, [reason code per op]) when a condition failed."""
++        from boto3.dynamodb.types import TypeSerializer
++        ser = TypeSerializer().serialize
++        name, items = self.t.name, []
++        for op in ops:
++            e = _Expr()
++            c = e.cond(op.get("cond"))
++            base = {"TableName": name, **({"ConditionExpression": c} if c else {})}
++            if "put" in op:
++                x = {"Put": {**base, "Item": {k: ser(v) for k, v in op["put"].items()}}}
++            elif "update" in op:
++                u = e.update(op.get("add"), op.get("set"), op.get("append"), op.get("remove"))
++                x = {"Update": {**base, "Key": {"pk": ser(op["update"][0]), "sk": ser(op["update"][1])}, "UpdateExpression": u}}
++            elif "delete" in op:
++                x = {"Delete": {**base, "Key": {"pk": ser(op["delete"][0]), "sk": ser(op["delete"][1])}}}
++            else:
++                x = {"ConditionCheck": {**base, "Key": {"pk": ser(op["check"][0]), "sk": ser(op["check"][1])}}}
++            next(iter(x.values())).update(e.kw(ser))
++            items.append(x)
++        try:
++            self.c.transact_write_items(TransactItems=items)
++            return True, []
++        except A.ClientError as x:
++            if x.response.get("Error", {}).get("Code") == "TransactionCanceledException":
++                return False, [r.get("Code") for r in x.response.get("CancellationReasons") or []]
++            raise
++
++
++_DB = []
++
++
++def db():
++    if not _DB:
++        _DB.append(DB(A.table))
++    return _DB[0]
++
++
++# ------------------------------------------------------------------ small helpers
++def _rand(n):
++    return "".join(secrets.choice(CROCK) for _ in range(n))
++
++
++def _mac(s):
++    return hmac.new(A.secret(), str(s).encode(), hashlib.sha256).hexdigest()[:40]
++
++
++def _code_norm(s):
++    """Crockford: case-free, I/L read as 1, O as 0, separators ignored."""
++    s = re.sub(r"[\s\-_.]", "", str(s or "")).upper().translate(str.maketrans("ILO", "110"))
++    return s if re.fullmatch(f"[{CROCK}]{{6,16}}", s) else None
++
++
++def _code_show(c):
++    return f"{c[:5]}-{c[5:]}"
++
++
++def _iph(event):
++    return hmac.new(A.secret(), A.client_ip(event).encode(), hashlib.sha256).hexdigest()[:16]
++
++
++def limit(name, who, t=None):
++    """One more of `name` for `who` in its window; Err 429 when over the cap."""
++    cap, win = LIMITS[name]
++    t = t or now()
++    slot = t.strftime("%Y%m%d%H") if win == "h" else t.strftime("%Y%m%d")
++    ttl = int(t.timestamp()) + (7200 if win == "h" else 2 * 86400)
++    pk = f"STAT#tp-{name}" if who is None else f"RL#tp-{name}"
++    sk = f"D#{slot}" if who is None else f"{who}#{slot}"
++    if not db().update(pk, sk, add={"n": 1}, set_={"ttl": ttl}, cond=[("lt", "n", cap)]):
++        raise Err(503 if who is None else 429, "الخدمة مشغولة، جرّب بعدين" if who is None else "طلبات وايد، جرّب بعد شوي")
++
++
++def _body(event):
++    try:
++        return A.body_json(event)
++    except Exception:
++        raise Err(400, "الطلب غير صالح")
++
++
++def _resp(status, body=None):
++    if status == 204:
++        return {"statusCode": 204, "headers": {"cache-control": "no-store"}, "body": ""}
++    return {"statusCode": status, "headers": {"content-type": "application/json; charset=utf-8", "cache-control": "no-store"},
++            "body": json.dumps(_plain(body), ensure_ascii=False)}
++
++
++def _ttl(t, days=PICK_DAYS):
++    return int(t.timestamp()) + days * 86400
++
++
++def _team(t):
++    t = t or {}
++    return {"id": t.get("id"), "name": t.get("name_ar") or t.get("name") or ""}
++
++
++def _sign(x):
++    return (x > 0) - (x < 0)
++
++
++def points(ph, pa, h, a):
++    """(points, kind): 5 exact, 3 goal difference, 2 winner or draw, 0."""
++    if ph == h and pa == a:
++        return EXACT, "x"
++    if ph - pa == h - a:
++        return DIFF, "d"
++    if _sign(ph - pa) == _sign(h - a):
++        return OUTCOME, "o"
++    return 0, "m"
++
++
++# ------------------------------------------------------------------ players
++def player(event, t=None):
++    """The player of X-Tifo-Player: <pid>.<key>, or Err 401."""
++    raw = ((event.get("headers") or {}).get("x-tifo-player") or "").strip()
++    m = re.fullmatch(f"([{CROCK}]{{12}})\\.([{CROCK}]{{26}})", raw)
++    if not m:
++        raise Err(401, "سجّل اسمك أول")
++    p = db().get(f"TP#P#{m.group(1)}", "META", consistent=True)     # a player made a second ago must be found
++    h = _mac(m.group(2))
++    if not p or not any(hmac.compare_digest(h, k) for k in p.get("keys") or []):
++        limit("auth_ip_h", _iph(event), t)
++        raise Err(401, "هالجهاز مب مسجّل، استرجع حسابك بالرمز")
++    p["pid"] = m.group(1)
++    return p
++
++
++def register(event, t):
++    nick, why = _nick(_body(event).get("nick"))
++    iph = _iph(event)
++    for name, who in (("reg_ip_h", iph), ("reg_ip_d", iph), ("reg_d", None)):
++        limit(name, who, t)
++    key = _rand(26)
++    for _ in range(5):
++        pid, code = _rand(12), _rand(10)
++        if not db().put({"pk": f"TP#CODE#{_mac(code)}", "sk": "META", "pid": pid}, cond=["absent"]):
++            continue
++        if db().put({"pk": f"TP#P#{pid}", "sk": "META", "nick": nick, "nk": _nk(nick), "keys": [_mac(key)], "code": _mac(code),
++                     "created": iso(t), "seen": iso(t), "pts": 0, "ex": 0, "df": 0, "oc": 0, "n": 0, "np": 0, "lg": [], "ttl": _ttl(t)},
++                    cond=["absent"]):
++            return _resp(201, {"pid": pid, "token": f"{pid}.{key}", "code": _code_show(code), "nick": nick})
++        db().delete(f"TP#CODE#{_mac(code)}", "META")
++    raise Err(503, "صار خطأ، جرّب مرة ثانية")
++
++
++def _nick(raw):
++    import tifo_badwords as W
++    nick, why = W.nick(raw)
++    if why:
++        raise Err(400, why)
++    return nick, None
++
++
++def _nk(nick):
++    import tifo_badwords as W
++    return W.norm(nick)
++
++
++def recover(event, t):
++    iph = _iph(event)
++    limit("rec_ip_h", iph, t)
++    limit("rec_d", None, t)
++    code = _code_norm(_body(event).get("code"))
++    hit = db().get(f"TP#CODE#{_mac(code)}", "META", consistent=True) if code else None
++    p = db().get(f"TP#P#{hit['pid']}", "META") if hit else None
++    if not p:
++        raise Err(404, "الرمز غلط، تأكد منه")
++    key = _rand(26)
++    keys = (list(p.get("keys") or []) + [_mac(key)])[-DEVICE_KEYS:]
++    db().update(f"TP#P#{hit['pid']}", "META", set_={"keys": keys, "seen": iso(t), "ttl": _ttl(t)}, cond=["present"])
++    return _resp(200, {"pid": hit["pid"], "token": f"{hit['pid']}.{key}", "nick": p.get("nick")})
++
++
++def new_code(event, p, t):
++    limit("code_p_d", p["pid"], t)
++    for _ in range(5):
++        code = _rand(10)
++        if db().put({"pk": f"TP#CODE#{_mac(code)}", "sk": "META", "pid": p["pid"]}, cond=["absent"]):
++            break
++    else:
++        raise Err(503, "صار خطأ، جرّب مرة ثانية")
++    db().update(f"TP#P#{p['pid']}", "META", set_={"code": _mac(code)}, cond=["present"])
++    if p.get("code"):
++        db().delete(f"TP#CODE#{p['code']}", "META")
++    return _resp(200, {"code": _code_show(code)})
++
++
++def rename(event, p, t):
++    nick, _ = _nick(_body(event).get("nick"))
++    limit("nick_p_d", p["pid"], t)
++    db().update(f"TP#P#{p['pid']}", "META", set_={"nick": nick, "nk": _nk(nick), "seen": iso(t)}, cond=["present"])
++    for lid in p.get("lg") or []:          # the leagues show the new name
++        db().update(f"TP#L#{lid}", f"M#{p['pid']}", set_={"nick": nick}, cond=["present"])
++    return _resp(200, {"nick": nick})
++
++
++def me(p):
++    picks = db().query(f"TP#P#{p['pid']}", prefix="PK#", desc=True, limit=80)
++    lg = [x for x in db().batch_get([(f"TP#L#{lid}", "META") for lid in p.get("lg") or []])]
++    by = {x["pk"][5:]: x for x in lg}
++    leagues = [_league_pub(lid, by[lid]) for lid in p.get("lg") or [] if lid in by]
++    out = {k: _int(p.get(k)) for k in ("pts", "ex", "df", "oc", "n", "np")}
++    return _resp(200, {"pid": p["pid"], "nick": p.get("nick"), **out, "leagues": leagues,
++                       "picks": [{"match": _int(x.get("match")), "h": _int(x.get("h")), "a": _int(x.get("a")), "ko": x.get("ko"), "comp": x.get("comp"),
++                                  "home": x.get("home"), "away": x.get("away"), "pts": x.get("pts"), "k": x.get("k"),
++                                  "res": [x["rh"], x["ra"]] if x.get("rh") is not None else None} for x in picks if x.get("match")]})
++
++
++# ------------------------------------------------------------------ picks
++def _match(mid, ttl=30):
++    md = tifo_get(f"match/{mid}.json", ttl)
++    if not isinstance(md, dict) or md.get("id") != mid:
++        raise Err(404, "ما لقينا المباراة")
++    return md
++
++
++def _locked(md, t):
++    ko = parse(md.get("kickoff_utc"))
++    return md.get("status") != "scheduled" or not ko or t >= ko
++
++
++def pick(event, p, t):
++    b = _body(event)
++    try:
++        mid, h, a = int(b.get("match")), int(b.get("h")), int(b.get("a"))
++    except (TypeError, ValueError):
++        raise Err(400, "التوقع غير صالح")
++    if not (0 < mid < 10 ** 12) or not (0 <= h <= GOALS_MAX and 0 <= a <= GOALS_MAX):
++        raise Err(400, "التوقع غير صالح")
++    limit("w_p_h", p["pid"], t)
++    limit("w_ip_h", _iph(event), t)
++    limit("picks_d", None, t)
++    md = _match(mid)
++    ko = parse(md.get("kickoff_utc"))
++    if md.get("time_tbd") or md.get("date_tbd"):
++        raise Err(409, "موعد المباراة ما تحدد للحين")
++    if md.get("status") in ("postponed",) + VOIDING:
++        raise Err(409, "المباراة تأجلت أو ألغيت")
++    if _locked(md, t):
++        raise Err(409, "انقفل التوقع، المباراة بدت")
++    if ko - t > timedelta(days=PICK_AHEAD_DAYS):
++        raise Err(409, "بدري، التوقع يفتح قبل المباراة بشهر")
++    old = db().get(f"TP#M#{mid}", f"P#{p['pid']}", consistent=True)
++    psk = (old or {}).get("psk") or f"PK#{iso(ko)}#{mid}"
++    at, ttl = iso(t), _ttl(ko)
++    ops = [{"put": {"pk": f"TP#M#{mid}", "sk": f"P#{p['pid']}", "h": h, "a": a, "at": at, "psk": psk, "comp": md.get("comp"), "ttl": ttl}},
++           {"put": {"pk": f"TP#P#{p['pid']}", "sk": psk, "match": mid, "h": h, "a": a, "at": at, "ko": md.get("kickoff_utc"),
++                    "comp": md.get("comp"), "comp_name": md.get("comp_name_ar") or "", "home": _team(md.get("home")),
++                    "away": _team(md.get("away")), "ttl": ttl}},
++           {"update": (f"TP#P#{p['pid']}", "META"), "add": {"np": 0 if old else 1}, "set": {"seen": at, "ttl": _ttl(t)}, "cond": ["present"]}]
++    ok, _ = db().transact(ops)
++    if not ok:
++        raise Err(409, "ما انحفظ التوقع، جرّب مرة ثانية")
++    db().put({"pk": "TP#PEND", "sk": f"{iso(ko)}#{mid}", "match": mid, "ko": iso(ko), "ttl": _ttl(ko, 30)}, cond=["absent"])
++    return _resp(200, {"match": mid, "h": h, "a": a, "at": at, "ko": md.get("kickoff_utc")})
++
++
++def match_view(event, p, t):
++    q = event.get("queryStringParameters") or {}
++    try:
++        mid = int(q.get("id"))
++    except (TypeError, ValueError):
++        raise Err(400, "المباراة؟")
++    limit("r_ip_h", _iph(event), t)
++    md = _match(mid, 60)
++    mine = db().get(f"TP#M#{mid}", f"P#{p['pid']}")
++    res = db().get(f"TP#M#{mid}", "RESULT")
++    return _resp(200, {"match": mid, "ko": md.get("kickoff_utc"), "locked": _locked(md, t),
++                       "pick": {"h": mine["h"], "a": mine["a"], "at": mine.get("at")} if mine else None,
++                       "result": {"h": res.get("h"), "a": res.get("a"), "st": res.get("st")} if res else None,
++                       "pts": (mine or {}).get("pts"), "k": (mine or {}).get("k")})
++
++
++def picks_view(event, p, t):
++    q = event.get("queryStringParameters") or {}
++    ids = [int(x) for x in re.findall(r"\d{1,12}", str(q.get("ids") or ""))][:60]
++    limit("r_ip_h", _iph(event), t)
++    got = db().batch_get([(f"TP#M#{mid}", f"P#{p['pid']}") for mid in ids])
++    return _resp(200, {"picks": {x["pk"][5:]: {"h": x["h"], "a": x["a"], "pts": x.get("pts"), "k": x.get("k")} for x in got}})
++
++
++# ------------------------------------------------------------------ leagues
++def _league_pub(lid, L):
++    return {"lid": lid, "name": LEAGUE_NAMES[_int(L.get("name")) % len(LEAGUE_NAMES)], "owner_nick": L.get("owner_nick"), "n": _int(L.get("n")),
++            "comps": [_int(c) for c in L.get("comps") or []], "invite": L.get("invite"), "url": f"{SITE}/predict/?j={L.get('invite')}", "cap": LEAGUE_CAP}
++
++
++def create_league(event, p, t):
++    b = _body(event)
++    try:
++        name = int(b.get("name"))
++        comps = [int(c) for c in (b.get("comps") or [])]
++    except (TypeError, ValueError):
++        raise Err(400, "اختار اسم الدوري من القائمة")
++    if not 0 <= name < len(LEAGUE_NAMES) or len(comps) > COMPS_MAX or any(not 0 < c < 10 ** 7 for c in comps):
++        raise Err(400, "اختار اسم الدوري من القائمة")
++    if len(p.get("lg") or []) >= LEAGUES_MAX:
++        raise Err(409, f"وصلت حد الدوريات ({LEAGUES_MAX})")
++    limit("league_p_d", p["pid"], t)
++    limit("w_ip_h", _iph(event), t)
++    for _ in range(5):
++        lid, inv = _rand(10), _rand(8)
++        ops = [{"put": {"pk": f"TP#INV#{inv}", "sk": "META", "lid": lid}, "cond": ["absent"]},
++               {"put": {"pk": f"TP#L#{lid}", "sk": "META", "name": name, "owner": p["pid"], "owner_nick": p.get("nick"), "comps": sorted(set(comps)),
++                        "n": 1, "invite": inv, "created": iso(t), "ttl": _ttl(t)}, "cond": ["absent"]},
++               {"put": {"pk": f"TP#L#{lid}", "sk": f"M#{p['pid']}", "nick": p.get("nick"), "joined": iso(t), "pts": 0, "ex": 0, "df": 0,
++                        "oc": 0, "n": 0, "ttl": _ttl(t)}},
++               {"update": (f"TP#P#{p['pid']}", "META"), "append": {"lg": [lid]}, "set": {"seen": iso(t)},
++                "cond": ["present", ("size_lt", "lg", LEAGUES_MAX)]}]
++        ok, why = db().transact(ops)
++        if ok:
++            L = db().get(f"TP#L#{lid}", "META", consistent=True)
++            return _resp(201, _league_pub(lid, L))
++        if why[-1:] == ["ConditionalCheckFailed"]:
++            raise Err(409, f"وصلت حد الدوريات ({LEAGUES_MAX})")
++    raise Err(503, "صار خطأ، جرّب مرة ثانية")
++
++
++def _invite(code):
++    c = _code_norm(code)
++    hit = db().get(f"TP#INV#{c}", "META") if c and len(c) == 8 else None
++    if not hit:
++        raise Err(404, "رابط الدوري مب صالح")
++    L = db().get(f"TP#L#{hit['lid']}", "META")
++    if not L:
++        raise Err(404, "الدوري انحذف")
++    return hit["lid"], L
++
++
++def invite_view(event, t):
++    limit("inv_ip_h", _iph(event), t)
++    lid, L = _invite((event.get("queryStringParameters") or {}).get("code"))
++    pub = _league_pub(lid, L)
++    return _resp(200, {k: pub[k] for k in ("name", "owner_nick", "n", "cap")} | {"full": pub["n"] >= LEAGUE_CAP})
++
++
++def join(event, p, t):
++    lid, L = _invite(_body(event).get("invite"))
++    if lid in (p.get("lg") or []):
++        return _resp(200, {**_league_pub(lid, L), "already": True})
++    if len(p.get("lg") or []) >= LEAGUES_MAX:
++        raise Err(409, f"وصلت حد الدوريات ({LEAGUES_MAX})")
++    limit("join_p_d", p["pid"], t)
++    limit("w_ip_h", _iph(event), t)
++    ops = [{"update": (f"TP#L#{lid}", "META"), "add": {"n": 1}, "set": {"ttl": _ttl(t)}, "cond": ["present", ("lt", "n", LEAGUE_CAP)]},
++           {"put": {"pk": f"TP#L#{lid}", "sk": f"M#{p['pid']}", "nick": p.get("nick"), "joined": iso(t), "pts": 0, "ex": 0, "df": 0, "oc": 0,
++                    "n": 0, "ttl": _ttl(t)}, "cond": ["absent"]},
++           {"update": (f"TP#P#{p['pid']}", "META"), "append": {"lg": [lid]}, "set": {"seen": iso(t)},
++            "cond": ["present", ("size_lt", "lg", LEAGUES_MAX)]}]
++    ok, why = db().transact(ops)
++    if not ok:
++        if why and why[0] == "ConditionalCheckFailed":
++            raise Err(409, f"الدوري مليان ({LEAGUE_CAP} لاعب)")
++        if len(why) > 1 and why[1] == "ConditionalCheckFailed":
++            return _resp(200, {**_league_pub(lid, L), "already": True})
++        raise Err(409, f"وصلت حد الدوريات ({LEAGUES_MAX})")
++    return _resp(200, {**_league_pub(lid, dict(L, n=_int(L.get("n")) + 1)), "already": False})
++
++
++def leave(event, p, t):
++    lid = str(_body(event).get("lid") or "")
++    if lid not in (p.get("lg") or []):
++        raise Err(404, "مب عضو في هالدوري")
++    limit("w_p_h", p["pid"], t)
++    ok, _ = db().transact([{"delete": (f"TP#L#{lid}", f"M#{p['pid']}"), "cond": ["present"]},
++                           {"update": (f"TP#L#{lid}", "META"), "add": {"n": -1}, "cond": ["present"]},
++                           {"update": (f"TP#P#{p['pid']}", "META"), "set": {"lg": [x for x in p["lg"] if x != lid]}, "cond": ["present"]}])
++    if not ok:                              # the membership or the league was gone already: just forget it
++        db().update(f"TP#P#{p['pid']}", "META", set_={"lg": [x for x in p["lg"] if x != lid]}, cond=["present"])
++    L = db().get(f"TP#L#{lid}", "META", consistent=True)
++    if L and _int(L.get("n")) <= 0:         # the last one out: the league and its link go
++        db().delete(f"TP#INV#{L.get('invite')}", "META")
++        db().delete(f"TP#L#{lid}", "META", cond=[("lt", "n", 1)])
++    return _resp(204)
++
++
++def rank(members):
++    """Most points, then exact scores, then goal differences, then winners; ties share a rank."""
++    key = lambda m: (-_int(m.get("pts")), -_int(m.get("ex")), -_int(m.get("df")), -_int(m.get("oc")))   # noqa: E731
++    out, last, r = [], None, 0
++    for i, m in enumerate(sorted(members, key=lambda m: (key(m), m.get("joined") or "", m.get("nick") or ""))):
++        if key(m) != last:
++            r, last = i + 1, key(m)
++        out.append(dict(m, rank=r))
++    return out
++
++
++def league_view(event, p, t):
++    q = event.get("queryStringParameters") or {}
++    lid = str(q.get("id") or "")
++    if lid not in (p.get("lg") or []):
++        raise Err(404, "مب عضو في هالدوري")
++    limit("r_ip_h", _iph(event), t)
++    L = db().get(f"TP#L#{lid}", "META")
++    if not L:
++        raise Err(404, "الدوري انحذف")
++    ms = [dict(m, pid=m["sk"][2:]) for m in db().query(f"TP#L#{lid}", prefix="M#")]
++    tags = {}
++    for m in ms:                             # two members with one nickname: a short tag tells them apart
++        tags.setdefault(_nk(m.get("nick") or ""), []).append(m["pid"])
++    members = [{"pid": m["pid"], "nick": m.get("nick"), "tag": m["pid"][-3:] if len(tags.get(_nk(m.get("nick") or ""), [])) > 1 else None,
++                "pts": _int(m.get("pts")), "ex": _int(m.get("ex")), "df": _int(m.get("df")), "oc": _int(m.get("oc")), "n": _int(m.get("n")),
++                "rank": m["rank"], "me": m["pid"] == p["pid"]} for m in rank(ms)]
++    out = {"league": _league_pub(lid, L), "members": members, "me": p["pid"]}
++    if q.get("match"):
++        try:
++            mid = int(q["match"])
++        except ValueError:
++            raise Err(400, "المباراة؟")
++        md = _match(mid, 60)
++        got = db().batch_get([(f"TP#M#{mid}", f"P#{m['pid']}") for m in members])
++        if _locked(md, t):                   # after kickoff everybody's pick shows; before it only how many picked
++            out["match"] = {"id": mid, "locked": True, "picks": {x["sk"][2:]: [x["h"], x["a"], x.get("pts"), x.get("k")] for x in got}}
++        else:
++            out["match"] = {"id": mid, "locked": False, "picked": len(got)}
++    return _resp(200, out)
++
++
++# ------------------------------------------------------------------ scoring (EventBridge, every 10 minutes)
++def _result(md):
++    sc = md.get("score") or {}
++    if md.get("status") in FINAL and sc.get("home") is not None and sc.get("away") is not None:
++        return int(sc["home"]), int(sc["away"])
++    return None
++
++
++def score_match(mid, md, version, budget_end=None, log=print):
++    """Score every pick of the match at `version` (1 the first time, +1 when an awarded result changes the score). One
++    transaction per pick: the pick (only if still below this version), the player's totals, the totals of the leagues it
++    counts in. A run that dies half-way leaves the rest for the next run, and never counts a pick twice.
++    -> (scored picks, complete?)"""
++    res = _result(md)
++    if res is None:
++        return 0, False
++    h, a = res
++    picks = db().query(f"TP#M#{mid}", prefix="P#", consistent=True)
++    todo = [x for x in picks if _int(x.get("sv")) < version]
++    players = {x["pk"][5:]: x for x in db().batch_get([(f"TP#P#{x['sk'][2:]}", "META") for x in todo])}
++    lids = {lid for pl in players.values() for lid in pl.get("lg") or []}
++    leagues = {x["pk"][5:]: x for x in db().batch_get([(f"TP#L#{lid}", "META") for lid in lids])}
++    comp, n, t = md.get("comp"), 0, now()
++    for x in todo:
++        if budget_end and time.time() > budget_end:
++            return n, False
++        pid = x["sk"][2:]
++        pl = players.get(pid)
++        pts, k = points(_int(x["h"]), _int(x["a"]), h, a)
++        old_pts, old_k = (_int(x.get("pts")), x.get("k")) if _int(x.get("sv")) else (0, None)
++        dk = {f: (1 if k == c else 0) - (1 if old_k == c else 0) for f, c in (("ex", "x"), ("df", "d"), ("oc", "o"))}
++        add = {"pts": pts - old_pts, **dk, "n": 0 if old_k else 1}
++        mine = list((pl or {}).get("lg") or [])
++        counts = [lid for lid in mine if lid in leagues and (not leagues[lid].get("comps") or comp in [_int(c) for c in leagues[lid]["comps"]])]
++        if old_k:                             # a re-score moves only the leagues that counted it the first time
++            counts = [lid for lid in (x.get("lg") or []) if lid in mine]
++        with_player, with_list = bool(pl), bool(x.get("psk"))
++        for _ in range(3):
++            tagged = [("pick", {"update": (f"TP#M#{mid}", x["sk"]), "set": {"pts": pts, "k": k, "sv": version, "lg": counts},
++                                "cond": ["present", ("lt", "sv", version)]})]
++            if with_list:                     # the copy «توقعاتي» lists
++                tagged.append(("list", {"update": (f"TP#P#{pid}", x["psk"]), "set": {"pts": pts, "k": k, "sv": version, "rh": h, "ra": a},
++                                        "cond": ["present"]}))
++            if with_player:
++                tagged.append(("player", {"update": (f"TP#P#{pid}", "META"), "add": add, "set": {"ttl": _ttl(t)}, "cond": ["present"]}))
++                tagged += [(("league", lid), {"update": (f"TP#L#{lid}", f"M#{pid}"), "add": add, "set": {"ttl": _ttl(t)}, "cond": ["present"]})
++                           for lid in counts]
++            ok, why = db().transact([op for _, op in tagged])
++            if ok:
++                n += 1
++                break
++            gone = {tagged[i][0] for i, w in enumerate(why) if w == "ConditionalCheckFailed" and i < len(tagged)}
++            if "pick" in gone:
++                break                         # scored already at this version (another run got there first)
++            # what went away under us (a membership left, an expired copy): score without it, never count anything twice
++            with_list = with_list and "list" not in gone
++            if "player" in gone:
++                with_player, counts = False, []
++            counts = [lid for lid in counts if ("league", lid) not in gone]
++            log(json.dumps({"tp_score_retry": mid, "gone": sorted(str(g) for g in gone)}))
++        else:
++            return n, False
++    return n, True
++
++
++def _void(mid, version):
++    for x in db().query(f"TP#M#{mid}", prefix="P#", consistent=True):
++        if _int(x.get("sv")) >= version:
++            continue
++        if db().update(f"TP#M#{mid}", x["sk"], set_={"k": "v", "pts": 0, "sv": version}, cond=["present", ("lt", "sv", version)]) and x.get("psk"):
++            db().update(f"TP#P#{x['sk'][2:]}", x["psk"], set_={"k": "v", "pts": 0, "sv": version}, cond=["present"])
++
++
++def score_due(t=None, budget=60, log=print):
++    """Finished matches with picks (TP#PEND), then the awarded re-checks (TP#RECHECK). Cheap: one query each, one Tifo match
++    file per due match, nothing at all when no match is due."""
++    t = t or now()
++    end = time.time() + budget
++    out = {"due": 0, "scored": 0, "picks": 0, "void": 0, "moved": 0, "rechecked": 0, "waiting": 0}
++    for it in db().query("TP#PEND", upto=f"{iso(t - SCORE_AFTER)}#~", limit=PEND_SCAN):
++        if time.time() > end or out["due"] >= PEND_FETCH:
++            break
++        chk = parse(it.get("chk"))
++        if chk and t - chk < PEND_AGAIN:        # looked at a moment ago and still not final: the newer ones go first
++            continue
++        out["due"] += 1
++        mid, ko = _int(it.get("match")), parse(it.get("ko"))
++        md = tifo_get(f"match/{mid}.json", 0)
++        st = (md or {}).get("status")
++        if isinstance(md, dict) and st == "scheduled" and parse(md.get("kickoff_utc")) and parse(md["kickoff_utc"]) > ko:
++            nko = parse(md["kickoff_utc"])     # moved to a later day: wait for the new kickoff
++            db().put({"pk": "TP#PEND", "sk": f"{iso(nko)}#{mid}", "match": mid, "ko": iso(nko), "ttl": _ttl(nko, 30)})
++            db().delete("TP#PEND", it["sk"])
++            out["moved"] += 1
++            continue
++        if isinstance(md, dict) and _result(md):
++            cur = db().get(f"TP#M#{mid}", "RESULT", consistent=True)
++            v = _int((cur or {}).get("v")) or 1
++            n, done = score_match(mid, md, v, end, log)
++            out["picks"] += n
++            if done:
++                h, a = _result(md)
++                db().put({"pk": f"TP#M#{mid}", "sk": "RESULT", "h": h, "a": a, "st": st, "v": v, "at": iso(t), "ttl": _ttl(t)})
++                for after in RECHECK_AFTER:
++                    db().put({"pk": "TP#RECHECK", "sk": f"{iso(t + after)}#{mid}", "match": mid, "ttl": _ttl(t + after, 7)})
++                db().delete("TP#PEND", it["sk"])
++                out["scored"] += 1
++            continue
++        if (st in VOIDING and t - ko > VOID_AFTER) or t - ko > GIVE_UP:
++            _void(mid, 1)
++            db().put({"pk": f"TP#M#{mid}", "sk": "RESULT", "st": "void", "v": 1, "at": iso(t), "ttl": _ttl(t)})
++            db().delete("TP#PEND", it["sk"])
++            out["void"] += 1
++            continue
++        db().update("TP#PEND", it["sk"], set_={"chk": iso(t)}, cond=["present"])     # live still, or no file yet
++        out["waiting"] += 1
++    for it in db().query("TP#RECHECK", upto=f"{iso(t)}#~", limit=40):
++        if time.time() > end:
++            break
++        mid = _int(it.get("match"))
++        md = tifo_get(f"match/{mid}.json", 0)
++        cur = db().get(f"TP#M#{mid}", "RESULT", consistent=True)
++        res = _result(md) if isinstance(md, dict) else None
++        if res and cur and cur.get("st") != "void" and (res != (_int(cur.get("h")), _int(cur.get("a")))):
++            v = _int(cur.get("v")) + 1          # an awarded result (or a late correction): the difference moves every total
++            n, done = score_match(mid, md, v, end, log)
++            out["picks"] += n
++            if not done:
++                continue                       # the next run carries on from the same version
++            db().put({"pk": f"TP#M#{mid}", "sk": "RESULT", "h": res[0], "a": res[1], "st": md.get("status"), "v": v, "at": iso(t), "ttl": _ttl(t)})
++        db().delete("TP#RECHECK", it["sk"])
++        out["rechecked"] += 1
++    if any(out.values()):
++        log(json.dumps({"tifo_predict_score": out}))
++    return out
++
++
++def recheck(mid, t=None):
++    """By hand, for a result decided long after the match ({"tifo_predict": "recheck", "match": <id>} to the function, once
++    the match file has it: python -m db.matches --refresh-ids <id> in saas/football): read it again now."""
++    t = t or now()
++    db().put({"pk": "TP#RECHECK", "sk": f"{iso(t)}#{int(mid)}", "match": int(mid), "ttl": _ttl(t, 7)})
++    return score_due(t)
++
++
++# ------------------------------------------------------------------ routing (called from app.handler)
++def route(event, method, rest):
++    t = now()
++    try:
++        r = rest[0] if rest else ""
++        if r == "me" and method == "POST" and len(rest) == 1:
++            return register(event, t)
++        if r == "recover" and method == "POST":
++            return recover(event, t)
++        if r == "invite" and method == "GET":
++            return invite_view(event, t)
++        p = player(event, t)
++        if r == "me" and method == "GET":
++            limit("r_ip_h", _iph(event), t)
++            return me(p)
++        if r == "me" and method == "PATCH":
++            return rename(event, p, t)
++        if r == "code" and method == "POST":
++            return new_code(event, p, t)
++        if r == "pick" and method == "PUT":
++            return pick(event, p, t)
++        if r == "match" and method == "GET":
++            return match_view(event, p, t)
++        if r == "picks" and method == "GET":
++            return picks_view(event, p, t)
++        if r == "league" and method == "POST":
++            return create_league(event, p, t)
++        if r == "league" and method == "GET":
++            return league_view(event, p, t)
++        if r == "join" and method == "POST":
++            return join(event, p, t)
++        if r == "leave" and method == "POST":
++            return leave(event, p, t)
++        raise Err(404, "غير موجود")
++    except Err as e:
++        return _resp(e.status, {"error": e.msg})
+diff --git a/template.yaml b/template.yaml
+--- a/template.yaml
++++ b/template.yaml
+@@ -168,6 +168,11 @@
+         WeeklyReport:
+           Type: Schedule
+           Properties: { Schedule: "cron(0 4 ? * MON *)", Input: '{"report": "weekly"}', Description: "Elyoxe weekly traction email" }
++        # tifo.elyoxe.com «توقع وتحدى ربعك» (src/tifo_predict.py): scores the matches with picks once Tifo's match file is final;
++        # one query and nothing else when no match is due
++        TifoPredictScore:
++          Type: Schedule
++          Properties: { Schedule: "rate(10 minutes)", Input: '{"tifo_predict": "score"}', Description: "Tifo predictions: score finished matches" }
+ 
+   FfmpegLayer:
+     Type: AWS::Serverless::LayerVersion
+diff --git a/tests/test_tifo_api.py b/tests/test_tifo_api.py
+--- a/tests/test_tifo_api.py
++++ b/tests/test_tifo_api.py
+@@ -80,3 +80,16 @@
+     assert codes == [204, 204, 204, 429]
+     assert app.handler(ev("POST", "/api/tifo/push/sub", {"team": 1, "subscription": SUB}, ip="5.6.7.8"), None)["statusCode"] == 204
+     assert not any("1.2.3.4" in json.dumps(v) or "1.2.3.4" in k[1] for k, v in fake.items.items())
++
++
++def test_push_choices_video_and_quiet_hours_are_stored(fake):
++    # item 7 (2026-10-06): «الأهداف بس» / «كل شي» / «فيديو الهدف نزل», and quiet hours stored with the subscription
++    r = app.handler(ev("POST", "/api/tifo/push/sub", {"teams": [102122, 5789], "events": ["goal", "video", "goal", "spam"],
++                                                     "quiet": {"s": 0, "e": 420, "o": 240}, "subscription": SUB}), None)
++    assert r["statusCode"] == 204
++    items = [v for k, v in fake.items.items() if k[0].startswith("TIFOPUSH#")]
++    assert len(items) == 2 and all(i["events"] == ["goal", "video"] and i["quiet"] == {"s": 0, "e": 420, "o": 240} for i in items)
++    for q in ({"s": 0, "e": 0}, {"s": "x"}, {"s": 1500, "e": 60}, {"s": 60, "e": 120, "o": 9999}, "night"):
++        app.handler(ev("POST", "/api/tifo/push/sub", {"team": 7, "quiet": q, "subscription": SUB}), None)
++        item = fake.items[("TIFOPUSH#7", items[0]["sk"])]
++        assert "quiet" not in item and item["events"] == ["start", "goal", "end"]      # malformed: none; no choice: the old three
+diff --git a/tests/test_tifo_badwords.py b/tests/test_tifo_badwords.py
+new file mode 100644
+--- /dev/null
++++ b/tests/test_tifo_badwords.py
+@@ -0,0 +1,38 @@
++"""Nicknames for «توقع وتحدى ربعك»: what gets through, what doesn't. Run: python3 -m pytest tests/test_tifo_badwords.py"""
++import os, sys
++sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
++import tifo_badwords as W
++
++GOOD = ["بو راشد", "عيناوي_للأبد", "Abu Saif", "الإماراتي 7", "ريال مدريد", "حزب العين", "مكسيك 1986", "عكس التيار", "تكنيك",
++        "Nigel", "Essex Boy", "Slutsky fan", "Scunthorpe", "Khawaldeh", "Nazir", "خولة", "كلباء", "حمارنة", "Dickson", "Hancock",
++        "شاذلي", "اسحاق", "Bob", "بورنموث", "Badminton", "فرج", "عبدالله", "الله كريم", "Nik", "Kostas", "Ayrton"]
++BAD = ["كلب", "يا كلب", "ك.ل.ب", "كـــلب", "كللللب", "حمار", "الحمار", "شرموطة", "شرمووطه", "قحبة", "كس امك", "كسمك", "زب",
++       "طيزك", "منيوك", "متناك", "عرص", "fuck", "f u c k", "fuuuck", "sh1t", "b1tch", "nigga", "NiGGer", "kos omak", "kosomak",
++       "sharmoota", "9a7ba", "gahba", "zebi", "تيفو", "Tifo Official", "admin", "مشرف", "الإدارة", "Elyoxe", "hitler", "داعش",
++       "slut", "cunt", "porn star", "sexy", "Kos 2", "z3bi"]
++
++
++def test_good_nicknames_pass():
++    for n in GOOD:
++        got, why = W.nick(n)
++        assert got and why is None, (n, why)
++
++
++def test_bad_nicknames_are_refused():
++    for n in BAD:
++        got, why = W.nick(n)
++        assert got is None and why, n
++
++
++def test_shape_rules():
++    assert W.nick("a")[1] == "الاسم من 2 لين 20 حرف"
++    assert W.nick("x" * 21)[1] == "الاسم من 2 لين 20 حرف"
++    assert W.nick("ali@x")[1] == "الاسم ما يكون فيه رابط ولا حساب" and W.nick("www.x.com")[1] == "الاسم ما يكون فيه رابط ولا حساب"
++    assert W.nick("0501234567")[1] == "الاسم ما يكون رقم تلفون" and W.nick("علي 050123456")[1] == "الاسم ما يكون رقم تلفون"
++    assert W.nick("12")[1] == "الاسم لازم يكون فيه حرفين على الأقل"
++    assert W.nick("علي 😀")[1] == "الاسم حروف وأرقام بس"
++    assert W.nick("  بو   راشد  ") == ("بو راشد", None)
++    assert W.nick("سيف ٢٠٢٦") == ("سيف 2026", None)                        # Western digits only
++    assert W.nick("محمّد") == ("محمد", None)                                 # tashkeel out
++    assert W.nick("علي‏") == ("علي", None)                             # bidi marks out
++    assert W.norm("أحمد") == W.norm("احمد")
+diff --git a/tests/test_tifo_predict.py b/tests/test_tifo_predict.py
+new file mode 100644
+--- /dev/null
++++ b/tests/test_tifo_predict.py
+@@ -0,0 +1,500 @@
++"""«توقع وتحدى ربعك» (src/tifo_predict.py) against an in-memory table that keeps DynamoDB's promises: conditional writes and
++all-or-nothing transactions. No AWS. Run: python3 -m pytest tests/test_tifo_predict.py"""
++import copy, json, os, sys, threading
++from datetime import datetime, timedelta, timezone
++sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
++os.environ.setdefault("AWS_DEFAULT_REGION", "ap-south-1")
++import pytest
++import app
++import tifo_predict as TP
++
++T0 = datetime(2026, 10, 10, 12, 0, tzinfo=timezone.utc)
++
++
++class Killed(BaseException):
++    """The Lambda timing out in the middle of a run."""
++
++
++class MemDB:
++    def __init__(self):
++        self.items, self.lock, self.tx, self.kill_at = {}, threading.RLock(), 0, None
++
++    @staticmethod
++    def ok(it, cond):
++        for c in cond or []:
++            if c == "absent" and it is not None or c == "present" and it is None:
++                return False
++            if isinstance(c, tuple):
++                v = (it or {}).get(c[1])
++                if c[0] == "lt" and v is not None and not v < c[2]:
++                    return False
++                if c[0] == "eq" and v != c[2]:
++                    return False
++                if c[0] == "size_lt" and v is not None and not len(v) < c[2]:
++                    return False
++        return True
++
++    def _upd(self, key, add=None, set_=None, append=None, remove=None):
++        it = self.items.get(key) or {"pk": key[0], "sk": key[1]}
++        for a, v in (set_ or {}).items():
++            it[a] = copy.deepcopy(v)
++        for a, v in (append or {}).items():
++            it[a] = list(it.get(a) or []) + list(v)
++        for a, v in (add or {}).items():
++            it[a] = it.get(a, 0) + v
++        for a in remove or []:
++            it.pop(a, None)
++        self.items[key] = it
++
++    def get(self, pk, sk, consistent=False):
++        return copy.deepcopy(self.items.get((pk, sk)))
++
++    def put(self, item, cond=None):
++        with self.lock:
++            k = (item["pk"], item["sk"])
++            if not self.ok(self.items.get(k), cond):
++                return False
++            self.items[k] = copy.deepcopy(item)
++            return True
++
++    def update(self, pk, sk, add=None, set_=None, append=None, remove=None, cond=None, ret=False):
++        with self.lock:
++            if not self.ok(self.items.get((pk, sk)), cond):
++                return None if ret else False
++            self._upd((pk, sk), add, set_, append, remove)
++            return copy.deepcopy(self.items[(pk, sk)]) if ret else True
++
++    def delete(self, pk, sk, cond=None):
++        with self.lock:
++            if not self.ok(self.items.get((pk, sk)), cond):
++                return False
++            self.items.pop((pk, sk), None)
++            return True
++
++    def query(self, pk, prefix=None, upto=None, limit=None, desc=False, consistent=False):
++        rows = sorted((v for (p, s), v in self.items.items() if p == pk and (prefix is None or s.startswith(prefix)) and (upto is None or s <= upto)),
++                      key=lambda v: v["sk"], reverse=desc)
++        return copy.deepcopy(rows[:limit] if limit else rows)
++
++    def batch_get(self, keys):
++        return [copy.deepcopy(self.items[k]) for k in dict.fromkeys(keys) if k in self.items]
++
++    def transact(self, ops):
++        with self.lock:
++            if self.kill_at is not None and self.tx >= self.kill_at:
++                raise Killed()
++            keys = [(o["put"]["pk"], o["put"]["sk"]) if "put" in o else tuple(o.get("update") or o.get("delete") or o.get("check")) for o in ops]
++            why = ["None" if self.ok(self.items.get(k), o.get("cond")) else "ConditionalCheckFailed" for k, o in zip(keys, ops)]
++            if any(w != "None" for w in why):
++                return False, why
++            for k, o in zip(keys, ops):
++                if "put" in o:
++                    self.items[k] = copy.deepcopy(o["put"])
++                elif "update" in o:
++                    self._upd(k, o.get("add"), o.get("set"), o.get("append"), o.get("remove"))
++                elif "delete" in o:
++                    self.items.pop(k, None)
++            self.tx += 1
++            return True, []
++
++
++def md(mid, ko, status="scheduled", score=None, comp=538, **kw):
++    return {"id": mid, "status": status, "kickoff_utc": ko, "comp": comp, "comp_name_ar": "دوري أدنوك",
++            "home": {"id": 1, "name": "Al Ain", "name_ar": "العين"}, "away": {"id": 2, "name": "Al Wahda", "name_ar": "الوحدة"},
++            "score": {"home": score[0], "away": score[1]} if score else None, **kw}
++
++
++@pytest.fixture
++def W(monkeypatch):
++    mem = MemDB()
++    clock = [T0]
++    matches = {}
++    monkeypatch.setattr(TP, "db", lambda: mem)
++    monkeypatch.setattr(TP, "now", lambda: clock[0])
++    monkeypatch.setattr(TP, "tifo_get", lambda path, ttl=60: copy.deepcopy(matches.get(path)))
++    monkeypatch.setattr(app, "secret", lambda: b"k" * 32)
++
++    class World:
++        pass
++    w = World()
++    w.mem, w.clock, w.matches = mem, clock, matches
++    w.match = lambda m: matches.__setitem__(f"match/{m['id']}.json", m)
++    return w
++
++
++def call(method, path, body=None, token=None, ip="1.2.3.4", q=None):
++    h = {"x-viewer-ip": ip}
++    if token:
++        h["x-tifo-player"] = token
++    ev = {"rawPath": path, "requestContext": {"http": {"method": method, "sourceIp": ip}}, "headers": h, "body": json.dumps(body or {})}
++    if q:
++        ev["queryStringParameters"] = q
++    r = app.handler(ev, None)
++    return r["statusCode"], (json.loads(r["body"]) if r.get("body") else None)
++
++
++def join_player(nick, ip="1.2.3.4"):
++    s, b = call("POST", "/api/tifo/predict/me", {"nick": nick}, ip=ip)
++    assert s == 201, b
++    return b
++
++
++# ------------------------------------------------------------------ identity
++def test_a_player_is_a_nickname_and_a_device_key_with_a_recovery_code(W):
++    p = join_player("بو راشد")
++    assert set(p) == {"pid", "token", "code", "nick"} and len(p["pid"]) == 12 and len(p["code"]) == 11 and p["code"][5] == "-"
++    s, me = call("GET", "/api/tifo/predict/me", token=p["token"])
++    assert s == 200 and me["nick"] == "بو راشد" and me["pts"] == 0 and me["leagues"] == [] and me["picks"] == []
++    stored = json.dumps(W.mem.items[(f"TP#P#{p['pid']}", "META")], ensure_ascii=False)
++    assert p["token"].split(".")[1] not in stored and p["code"].replace("-", "") not in stored     # only HMACs are kept
++    assert "1.2.3.4" not in json.dumps({str(k): v for k, v in W.mem.items.items()}, ensure_ascii=False)   # no IP at rest
++    assert call("GET", "/api/tifo/predict/me")[0] == 401
++    assert call("GET", "/api/tifo/predict/me", token=p["pid"] + "." + "A" * 26)[0] == 401
++    # another phone: the code gives it its own key; the first phone keeps working
++    s, rec = call("POST", "/api/tifo/predict/recover", {"code": p["code"].lower().replace("-", " ")})
++    assert s == 200 and rec["pid"] == p["pid"] and rec["token"] != p["token"]
++    assert call("GET", "/api/tifo/predict/me", token=rec["token"])[0] == 200 and call("GET", "/api/tifo/predict/me", token=p["token"])[0] == 200
++    s, c2 = call("POST", "/api/tifo/predict/code", token=p["token"])
++    assert s == 200 and call("POST", "/api/tifo/predict/recover", {"code": p["code"]})[0] == 404     # the old code stops working
++    assert call("POST", "/api/tifo/predict/recover", {"code": c2["code"]})[0] == 200
++
++
++def test_nicknames_are_filtered_and_registration_is_rate_limited(W):
++    s, b = call("POST", "/api/tifo/predict/me", {"nick": "يا كلب"})
++    assert s == 400 and b["error"] == "اختار اسم ثاني"
++    assert call("POST", "/api/tifo/predict/me", {"nick": "admin"})[0] == 400
++    assert call("POST", "/api/tifo/predict/me", {"nick": "x"})[0] == 400
++    codes = [call("POST", "/api/tifo/predict/me", {"nick": f"لاعب {i}"}, ip="9.9.9.9")[0] for i in range(6)]
++    assert codes == [201] * 5 + [429]                                          # 5 a hour from one address
++    assert call("POST", "/api/tifo/predict/me", {"nick": "غيره"}, ip="8.8.8.8")[0] == 201
++
++
++def test_recovery_codes_cannot_be_guessed(W):
++    codes = [call("POST", "/api/tifo/predict/recover", {"code": f"AAAAA-AAAA{i}"})[0] for i in range(11)]
++    assert codes == [404] * 10 + [429]
++
++
++def test_rename_reaches_the_league_tables(W):
++    p = join_player("سيف")
++    s, L = call("POST", "/api/tifo/predict/league", {"name": 0}, token=p["token"])
++    assert call("PATCH", "/api/tifo/predict/me", {"nick": "بو سيف"}, token=p["token"]) == (200, {"nick": "بو سيف"})
++    assert W.mem.items[(f"TP#L#{L['lid']}", f"M#{p['pid']}")]["nick"] == "بو سيف"
++    assert call("PATCH", "/api/tifo/predict/me", {"nick": "شرموط"}, token=p["token"])[0] == 400
++
++
++# ------------------------------------------------------------------ picks
++def test_a_pick_locks_at_kickoff_by_the_servers_clock(W):
++    p = join_player("حمد")
++    W.match(md(101, "2026-10-10T16:00:00Z"))
++    s, b = call("PUT", "/api/tifo/predict/pick", {"match": 101, "h": 2, "a": 1}, token=p["token"])
++    assert s == 200 and (b["h"], b["a"]) == (2, 1)
++    assert call("PUT", "/api/tifo/predict/pick", {"match": 101, "h": 3, "a": 1}, token=p["token"])[0] == 200      # changed before kickoff
++    me = call("GET", "/api/tifo/predict/me", token=p["token"])[1]
++    assert me["np"] == 1 and [(x["match"], x["h"], x["a"]) for x in me["picks"]] == [(101, 3, 1)]
++    assert me["picks"][0]["home"] == {"id": 1, "name": "العين"}
++    W.clock[0] = datetime(2026, 10, 10, 16, 0, tzinfo=timezone.utc)                                       # kickoff: locked
++    s, b = call("PUT", "/api/tifo/predict/pick", {"match": 101, "h": 0, "a": 0}, token=p["token"])
++    assert s == 409 and b["error"] == "انقفل التوقع، المباراة بدت"
++    W.clock[0] = T0
++    W.match(md(101, "2026-10-10T16:00:00Z", "live"))                                                         # the data says live
++    assert call("PUT", "/api/tifo/predict/pick", {"match": 101, "h": 0, "a": 0}, token=p["token"])[0] == 409
++    W.match(md(102, "2026-10-11T16:00:00Z", time_tbd=True))
++    assert call("PUT", "/api/tifo/predict/pick", {"match": 102, "h": 0, "a": 0}, token=p["token"])[1]["error"] == "موعد المباراة ما تحدد للحين"
++    W.match(md(103, "2026-12-30T16:00:00Z"))
++    assert call("PUT", "/api/tifo/predict/pick", {"match": 103, "h": 0, "a": 0}, token=p["token"])[0] == 409
++    W.match(md(104, "2026-10-11T16:00:00Z", "postponed"))
++    assert call("PUT", "/api/tifo/predict/pick", {"match": 104, "h": 0, "a": 0}, token=p["token"])[1]["error"] == "المباراة تأجلت أو ألغيت"
++    assert call("PUT", "/api/tifo/predict/pick", {"match": 999, "h": 0, "a": 0}, token=p["token"])[0] == 404
++    for bad in ({"match": 101, "h": -1, "a": 0}, {"match": 101, "h": 21, "a": 0}, {"match": "x", "h": 1, "a": 0}):
++        assert call("PUT", "/api/tifo/predict/pick", bad, token=p["token"])[0] == 400
++    s, v = call("GET", "/api/tifo/predict/match", token=p["token"], q={"id": "101"})
++    assert s == 200 and v["locked"] is True and v["pick"]["h"] == 3
++
++
++def test_picks_are_rate_limited_per_player(W, monkeypatch):
++    monkeypatch.setitem(TP.LIMITS, "w_p_h", (3, "h"))
++    p = join_player("مطر")
++    W.match(md(101, "2026-10-10T16:00:00Z"))
++    codes = [call("PUT", "/api/tifo/predict/pick", {"match": 101, "h": i, "a": 0}, token=p["token"])[0] for i in range(4)]
++    assert codes == [200, 200, 200, 429]
++
++
++# ------------------------------------------------------------------ leagues
++def test_league_by_link_cap_and_leaving(W, monkeypatch):
++    monkeypatch.setattr(TP, "LEAGUE_CAP", 3)
++    a, b, c, d = (join_player(n, ip=f"1.1.1.{i}") for i, n in enumerate(["سالم", "خالد", "علي", "حمدان"]))
++    assert call("POST", "/api/tifo/predict/league", {"name": "دوري الأبطال"}, token=a["token"])[0] == 400   # no free text
++    s, L = call("POST", "/api/tifo/predict/league", {"name": 0, "comps": [538]}, token=a["token"])
++    assert s == 201 and L["name"] == "دوري الربع" and L["owner_nick"] == "سالم" and L["url"] == f"https://tifo.elyoxe.com/predict/?j={L['invite']}"
++    s, pre = call("GET", "/api/tifo/predict/invite", q={"code": L["invite"].lower()})
++    assert s == 200 and pre == {"name": "دوري الربع", "owner_nick": "سالم", "n": 1, "cap": 3, "full": False}
++    assert call("POST", "/api/tifo/predict/join", {"invite": L["invite"]}, token=b["token"])[1]["already"] is False
++    assert call("POST", "/api/tifo/predict/join", {"invite": L["invite"]}, token=b["token"])[1]["already"] is True
++    assert call("POST", "/api/tifo/predict/join", {"invite": L["invite"]}, token=c["token"])[0] == 200
++    s, full = call("POST", "/api/tifo/predict/join", {"invite": L["invite"]}, token=d["token"])
++    assert s == 409 and "مليان" in full["error"]
++    assert call("POST", "/api/tifo/predict/join", {"invite": "ZZZZZZZZ"}, token=d["token"])[0] == 404
++    s, lv = call("GET", "/api/tifo/predict/league", token=b["token"], q={"id": L["lid"]})
++    assert s == 200 and sorted(m["nick"] for m in lv["members"]) == sorted(["سالم", "خالد", "علي"]) and lv["league"]["n"] == 3
++    assert {m["rank"] for m in lv["members"]} == {1} and [m["me"] for m in lv["members"]].count(True) == 1    # 0 points each: one rank
++    assert call("GET", "/api/tifo/predict/league", token=d["token"], q={"id": L["lid"]})[0] == 404             # not a member
++    for x in (b, c, a):
++        assert call("POST", "/api/tifo/predict/leave", {"lid": L["lid"]}, token=x["token"])[0] == 204
++    assert (f"TP#L#{L['lid']}", "META") not in W.mem.items and (f"TP#INV#{L['invite']}", "META") not in W.mem.items
++    assert call("GET", "/api/tifo/predict/me", token=a["token"])[1]["leagues"] == []
++
++
++def test_leagues_per_player_and_per_day(W, monkeypatch):
++    monkeypatch.setattr(TP, "LEAGUES_MAX", 2)
++    p = join_player("راشد")
++    assert [call("POST", "/api/tifo/predict/league", {"name": i}, token=p["token"])[0] for i in range(3)] == [201, 201, 409]
++    q = join_player("ماجد", ip="2.2.2.2")
++    assert [call("POST", "/api/tifo/predict/league", {"name": 1}, token=q["token"])[0] for i in range(2)] == [201, 201]
++    monkeypatch.setattr(TP, "LEAGUES_MAX", 20)
++    assert [call("POST", "/api/tifo/predict/league", {"name": 1}, token=q["token"])[0] for i in range(2)] == [201, 429]   # 3 a day
++
++
++def test_friends_picks_show_only_after_kickoff(W):
++    a, b = join_player("سالم"), join_player("خالد", ip="5.5.5.5")
++    L = call("POST", "/api/tifo/predict/league", {"name": 2}, token=a["token"])[1]
++    call("POST", "/api/tifo/predict/join", {"invite": L["invite"]}, token=b["token"])
++    W.match(md(101, "2026-10-10T16:00:00Z"))
++    call("PUT", "/api/tifo/predict/pick", {"match": 101, "h": 1, "a": 0}, token=a["token"])
++    call("PUT", "/api/tifo/predict/pick", {"match": 101, "h": 2, "a": 2}, token=b["token"])
++    lv = call("GET", "/api/tifo/predict/league", token=a["token"], q={"id": L["lid"], "match": "101"})[1]
++    assert lv["match"] == {"id": 101, "locked": False, "picked": 2}
++    W.clock[0] = datetime(2026, 10, 10, 16, 1, tzinfo=timezone.utc)
++    lv = call("GET", "/api/tifo/predict/league", token=a["token"], q={"id": L["lid"], "match": "101"})[1]
++    assert lv["match"]["locked"] is True and lv["match"]["picks"] == {a["pid"]: [1, 0, None, None], b["pid"]: [2, 2, None, None]}
++
++
++# ------------------------------------------------------------------ scoring
++def _season(W):
++    """Three players, two leagues (one of them only for the UAE league), three matches."""
++    a, b, c = join_player("سالم"), join_player("خالد", ip="5.5.5.5"), join_player("علي", ip="6.6.6.6")
++    L1 = call("POST", "/api/tifo/predict/league", {"name": 0}, token=a["token"])[1]
++    L2 = call("POST", "/api/tifo/predict/league", {"name": 1, "comps": [538]}, token=b["token"])[1]
++    for x in (b, c):
++        call("POST", "/api/tifo/predict/join", {"invite": L1["invite"]}, token=x["token"])
++    call("POST", "/api/tifo/predict/join", {"invite": L2["invite"]}, token=a["token"])
++    W.match(md(101, "2026-10-10T14:00:00Z"))
++    W.match(md(102, "2026-10-10T15:00:00Z", comp=47))
++    W.match(md(103, "2026-10-10T16:00:00Z"))
++    picks = [(a, {101: (2, 1), 102: (1, 1), 103: (0, 2)}), (b, {101: (3, 2), 102: (0, 0), 103: (1, 0)}), (c, {101: (0, 1), 102: (2, 0)})]
++    for p, ms in picks:
++        for mid, (h, x) in ms.items():
++            assert call("PUT", "/api/tifo/predict/pick", {"match": mid, "h": h, "a": x}, token=p["token"])[0] == 200
++    return a, b, c, L1, L2
++
++
++def _finish(W, at):
++    W.match(md(101, "2026-10-10T14:00:00Z", "finished", (2, 1)))           # a: exact 5 · b: difference 3 · c: miss 0
++    W.match(md(102, "2026-10-10T15:00:00Z", "finished", (3, 3), comp=47))  # a: difference 3 · b: difference 3 · c: miss 0
++    W.match(md(103, "2026-10-10T16:00:00Z", "finished", (0, 1)))           # a: winner 2 · b: miss 0 · c: no pick
++    W.clock[0] = at
++
++
++def totals(W, p):
++    m = W.mem.items[(f"TP#P#{p['pid']}", "META")]
++    return m["pts"], m["ex"], m["df"], m["oc"], m["n"]
++
++
++def member(W, L, p):
++    m = W.mem.items[(f"TP#L#{L['lid']}", f"M#{p['pid']}")]
++    return m["pts"], m["ex"], m["df"], m["oc"], m["n"]
++
++
++def test_points_exact_difference_winner_and_league_competitions(W):
++    a, b, c, L1, L2 = _season(W)
++    assert TP.points(2, 1, 2, 1) == (5, "x") and TP.points(3, 2, 2, 1) == (3, "d") and TP.points(1, 1, 3, 3) == (3, "d")
++    assert TP.points(3, 0, 2, 1) == (2, "o") and TP.points(0, 0, 1, 0) == (0, "m")
++    W.clock[0] = datetime(2026, 10, 10, 15, 30, tzinfo=timezone.utc)
++    assert TP.score_due(log=lambda s: None)["scored"] == 0                  # nothing final yet (101 kicked off 90 min ago)
++    _finish(W, datetime(2026, 10, 10, 18, 0, tzinfo=timezone.utc))
++    out = TP.score_due(log=lambda s: None)
++    assert out["scored"] == 3 and out["picks"] == 8
++    assert totals(W, a) == (10, 1, 1, 1, 3) and totals(W, b) == (6, 0, 2, 0, 3) and totals(W, c) == (0, 0, 0, 0, 2)
++    assert member(W, L1, a) == (10, 1, 1, 1, 3) and member(W, L1, c) == (0, 0, 0, 0, 2)
++    assert member(W, L2, a) == (7, 1, 0, 1, 2) and member(W, L2, b) == (3, 0, 1, 0, 2)         # L2 counts 538 only, not 102
++    lv = call("GET", "/api/tifo/predict/league", token=c["token"], q={"id": L1["lid"]})[1]
++    assert [(m["nick"], m["pts"], m["rank"]) for m in lv["members"]] == [("سالم", 10, 1), ("خالد", 6, 2), ("علي", 0, 3)]
++    me = call("GET", "/api/tifo/predict/me", token=a["token"])[1]
++    assert {x["match"]: (x["pts"], x["k"], x["res"]) for x in me["picks"]} == {101: (5, "x", [2, 1]), 102: (3, "d", [3, 3]), 103: (2, "o", [0, 1])}
++    assert TP.score_due(log=lambda s: None)["scored"] == 0 and totals(W, a) == (10, 1, 1, 1, 3)          # once only
++    v = call("GET", "/api/tifo/predict/match", token=a["token"], q={"id": "101"})[1]
++    assert v["result"] == {"h": 2, "a": 1, "st": "finished"} and v["pts"] == 5 and v["k"] == "x"
++
++
++def test_a_scoring_run_that_dies_half_way_never_counts_a_pick_twice(W):
++    a, b, c, L1, L2 = _season(W)
++    _finish(W, datetime(2026, 10, 10, 18, 0, tzinfo=timezone.utc))
++    for kill in (1, 2, 3):                                                 # die after k of the 8 picks, again and again
++        W.mem.kill_at = W.mem.tx + kill
++        with pytest.raises(Killed):
++            TP.score_due(log=lambda s: None)
++    W.mem.kill_at = None
++    TP.score_due(log=lambda s: None)
++    TP.score_due(log=lambda s: None)
++    assert totals(W, a) == (10, 1, 1, 1, 3) and totals(W, b) == (6, 0, 2, 0, 3) and totals(W, c) == (0, 0, 0, 0, 2)
++    assert member(W, L1, a) == (10, 1, 1, 1, 3) and member(W, L2, a) == (7, 1, 0, 1, 2) and member(W, L2, b) == (3, 0, 1, 0, 2)
++    assert not W.mem.query("TP#PEND")
++
++
++def test_two_scoring_runs_at_once_count_each_pick_once(W):
++    a, b, c, L1, L2 = _season(W)
++    _finish(W, datetime(2026, 10, 10, 18, 0, tzinfo=timezone.utc))
++    gate, real, held = threading.Barrier(2, timeout=10), W.mem.query, set()
++
++    def query(pk, prefix=None, **kw):                  # both runs hold the same unscored picks before either scores one
++        rows = real(pk, prefix=prefix, **kw)
++        if pk.startswith("TP#M#") and prefix == "P#" and (threading.current_thread().name, pk) not in held:
++            held.add((threading.current_thread().name, pk))
++            gate.wait()
++        return rows
++    W.mem.query = query
++    ts = [threading.Thread(target=TP.score_due, kwargs={"log": lambda s: None}, name=f"run{i}") for i in range(2)]
++    for t in ts:
++        t.start()
++    for t in ts:
++        t.join()
++    W.mem.query = real
++    assert len(held) == 6                              # 3 matches, read by both runs before any write
++    TP.score_due(log=lambda s: None)
++    assert totals(W, a) == (10, 1, 1, 1, 3) and totals(W, b) == (6, 0, 2, 0, 3) and member(W, L1, a) == (10, 1, 1, 1, 3)
++
++
++def test_an_awarded_result_moves_every_total_by_the_difference(W):
++    a, b, c, L1, L2 = _season(W)
++    _finish(W, datetime(2026, 10, 10, 18, 0, tzinfo=timezone.utc))
++    TP.score_due(log=lambda s: None)
++    d = join_player("متأخر", ip="7.7.7.7")                                   # joins L1 after 101 was scored
++    call("POST", "/api/tifo/predict/join", {"invite": L1["invite"]}, token=d["token"])
++    # Iraq-style: 101 played 2-1, awarded 0-3 by the federation (compute/awarded.py: status awarded, the decision's score)
++    W.match(md(101, "2026-10-10T14:00:00Z", "awarded", (0, 3)))
++    W.clock[0] = datetime(2026, 10, 11, 18, 1, tzinfo=timezone.utc)
++    out = TP.score_due(log=lambda s: None)
++    assert out["rechecked"] >= 1
++    # 101 at 0-3: a (2-1) 0 · b (3-2) 0 · c (0-1) winner 2
++    assert totals(W, a) == (5, 0, 1, 1, 3) and totals(W, b) == (3, 0, 1, 0, 3) and totals(W, c) == (2, 0, 0, 1, 2)
++    assert member(W, L1, a) == (5, 0, 1, 1, 3) and member(W, L2, a) == (2, 0, 0, 1, 2) and member(W, L1, c) == (2, 0, 0, 1, 2)
++    assert member(W, L1, d) == (0, 0, 0, 0, 0)                               # the late member's table never moved
++    assert W.mem.items[("TP#M#101", "RESULT")]["v"] == 2
++    W.clock[0] = datetime(2026, 10, 17, 18, 1, tzinfo=timezone.utc)
++    TP.score_due(log=lambda s: None)                                         # the +3 and +7 days looks: nothing new
++    assert totals(W, a) == (5, 0, 1, 1, 3) and not W.mem.query("TP#RECHECK")
++    # decided a month later, by hand: the match file is refreshed, then {"tifo_predict": "recheck", "match": 101}
++    W.match(md(101, "2026-10-10T14:00:00Z", "awarded", (2, 1)))
++    W.clock[0] = datetime(2026, 11, 12, 9, 0, tzinfo=timezone.utc)
++    app.handler({"tifo_predict": "recheck", "match": "101"}, None)
++    assert totals(W, a) == (10, 1, 1, 1, 3) and W.mem.items[("TP#M#101", "RESULT")]["v"] == 3
++
++
++def test_postponed_waits_cancelled_is_void(W):
++    p = join_player("حمد")
++    W.match(md(201, "2026-10-10T14:00:00Z"))
++    W.match(md(202, "2026-10-10T14:00:00Z"))
++    for mid in (201, 202):
++        call("PUT", "/api/tifo/predict/pick", {"match": mid, "h": 1, "a": 0}, token=p["token"])
++    W.match(md(201, "2026-10-17T14:00:00Z"))                                 # moved a week
++    W.match(md(202, "2026-10-10T14:00:00Z", "cancelled"))
++    W.clock[0] = datetime(2026, 10, 10, 18, 0, tzinfo=timezone.utc)
++    assert TP.score_due(log=lambda s: None)["moved"] == 1
++    W.clock[0] = datetime(2026, 10, 14, 18, 0, tzinfo=timezone.utc)
++    assert TP.score_due(log=lambda s: None)["void"] == 1
++    assert W.mem.items[("TP#M#202", f"P#{p['pid']}")]["k"] == "v" and totals(W, p) == (0, 0, 0, 0, 0)
++    W.match(md(201, "2026-10-17T14:00:00Z", "finished", (1, 0)))
++    W.clock[0] = datetime(2026, 10, 17, 18, 0, tzinfo=timezone.utc)
++    assert TP.score_due(log=lambda s: None)["scored"] == 1 and totals(W, p) == (5, 1, 0, 0, 1)
++
++
++def test_a_league_row_or_a_list_copy_gone_under_the_scorer_never_stops_the_pick(W):
++    a, b, c, L1, L2 = _season(W)
++    _finish(W, datetime(2026, 10, 10, 18, 0, tzinfo=timezone.utc))
++    del W.mem.items[(f"TP#L#{L2['lid']}", f"M#{a['pid']}")]                  # a's L2 row vanished, his player row still lists L2
++    psk = W.mem.items[("TP#M#103", f"P#{a['pid']}")]["psk"]
++    del W.mem.items[(f"TP#P#{a['pid']}", psk)]                              # and the «توقعاتي» copy of one pick expired
++    TP.score_due(log=lambda s: None)
++    assert totals(W, a) == (10, 1, 1, 1, 3) and member(W, L1, a) == (10, 1, 1, 1, 3)
++    assert (f"TP#L#{L2['lid']}", f"M#{a['pid']}") not in W.mem.items and (f"TP#P#{a['pid']}", psk) not in W.mem.items   # nothing recreated
++    assert len(call("GET", "/api/tifo/predict/me", token=a["token"])[1]["picks"]) == 2
++
++
++def test_matches_stuck_without_a_result_never_block_the_newer_ones(W, monkeypatch):
++    monkeypatch.setattr(TP, "PEND_FETCH", 3)
++    p = join_player("حمد")
++    for i in range(4):                                                       # four older matches FotMob never closes
++        W.match(md(300 + i, f"2026-10-10T13:{i * 10:02d}:00Z"))
++        assert call("PUT", "/api/tifo/predict/pick", {"match": 300 + i, "h": 1, "a": 0}, token=p["token"])[0] == 200
++        W.match(md(300 + i, f"2026-10-10T13:{i * 10:02d}:00Z", "live"))
++    W.match(md(399, "2026-10-10T15:00:00Z"))
++    call("PUT", "/api/tifo/predict/pick", {"match": 399, "h": 1, "a": 0}, token=p["token"])
++    W.match(md(399, "2026-10-10T15:00:00Z", "finished", (1, 0)))
++    W.clock[0] = datetime(2026, 10, 10, 18, 0, tzinfo=timezone.utc)
++    first = TP.score_due(log=lambda s: None)
++    assert first["due"] == 3 and first["waiting"] == 3 and first["scored"] == 0      # three files read, none final
++    W.clock[0] = datetime(2026, 10, 10, 18, 10, tzinfo=timezone.utc)
++    assert TP.score_due(log=lambda s: None)["scored"] == 1 and totals(W, p) == (5, 1, 0, 0, 1)
++
++
++def test_the_schedule_event_reaches_the_scorer(W, monkeypatch):
++    seen = []
++    monkeypatch.setattr(TP, "score_due", lambda: seen.append(1) or {"due": 0})
++    assert app.handler({"tifo_predict": "score"}, None) == {"due": 0} and seen == [1]
++
++
++# ------------------------------------------------------------------ the production table layer builds valid requests
++class _Rec:
++    """boto3 Table and client stand-ins that check every placeholder is defined and every value serialized."""
++    def __init__(self):
++        self.calls = []
++        self.name = "cards"
++        rec = self
++
++        class C:
++            def transact_write_items(self, TransactItems):
++                rec.calls.append(("tx", TransactItems))
++                for it in TransactItems:
++                    body = next(iter(it.values()))
++                    rec.check(body.get("UpdateExpression", "") + " " + body.get("ConditionExpression", ""), body)
++                    for v in (body.get("ExpressionAttributeValues") or {}).values():
++                        assert isinstance(v, dict) and len(v) == 1                         # {"N": "5"}, {"S": …}, {"L": …}
++        self.meta = type("M", (), {"client": C()})
++
++    def check(self, expr, kw):
++        import re
++        for ph in re.findall(r"#a\d+", expr):
++            assert ph in (kw.get("ExpressionAttributeNames") or {}), (ph, expr)
++        for ph in re.findall(r":v\d+", expr):
++            assert ph in (kw.get("ExpressionAttributeValues") or {}), (ph, expr)
++
++    def update_item(self, **kw):
++        self.calls.append(("update", kw))
++        self.check(kw["UpdateExpression"] + " " + kw.get("ConditionExpression", ""), kw)
++        return {}
++
++    def put_item(self, **kw):
++        self.calls.append(("put", kw))
++        self.check(kw.get("ConditionExpression", ""), kw)
++        return {}
++
++
++def test_dynamodb_requests_are_well_formed():
++    r = _Rec()
++    d = TP.DB(r)
++    d.update("RL#tp-x", "a#1", add={"n": 1}, set_={"ttl": 5}, cond=[("lt", "n", 5)])
++    u = r.calls[-1][1]
++    assert u["UpdateExpression"] == "SET #a0 = :v0 ADD #a1 :v1" and u["ConditionExpression"] == "(attribute_not_exists(#a1) OR #a1 < :v2)"
++    assert u["ExpressionAttributeNames"] == {"#a0": "ttl", "#a1": "n"}
++    d.put({"pk": "a", "sk": "b"}, cond=["absent"])
++    assert r.calls[-1][1]["ConditionExpression"] == "attribute_not_exists(#a0)" and r.calls[-1][1]["ExpressionAttributeNames"] == {"#a0": "pk"}
++    ok, _ = d.transact([{"put": {"pk": "a", "sk": "b", "n": 1, "lg": [], "home": {"id": None, "name": "x"}}, "cond": ["absent"]},
++                        {"update": ("TP#P#X", "META"), "append": {"lg": ["L1"]}, "add": {"np": 1}, "set": {"seen": "t"},
++                         "cond": ["present", ("size_lt", "lg", 20)]},
++                        {"delete": ("TP#L#1", "M#X"), "cond": ["present"]}])
++    assert ok and len(r.calls[-1][1]) == 3
++    up = r.calls[-1][1][1]["Update"]
++    names = {v: k for k, v in up["ExpressionAttributeNames"].items()}
++    assert f"{names['lg']} = list_append(if_not_exists({names['lg']}, " in up["UpdateExpression"] and f"ADD {names['np']} " in up["UpdateExpression"]
++    assert up["ConditionExpression"] == f"attribute_exists({names['pk']}) AND (attribute_not_exists({names['lg']}) OR size({names['lg']}) < :v0)"
++    assert up["ExpressionAttributeValues"][":v0"] == {"N": "20"} and up["Key"] == {"pk": {"S": "TP#P#X"}, "sk": {"S": "META"}}
++    assert r.calls[-1][1][0]["Put"]["Item"]["home"] == {"M": {"id": {"NULL": True}, "name": {"S": "x"}}}

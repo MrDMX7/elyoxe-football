@@ -24,8 +24,27 @@ sync_assets(){ aws s3 sync out/assets "s3://$BUCKET/assets" --region $REGION --o
 sync_logos(){ aws s3 sync out/logo "s3://$BUCKET/logo" --region $REGION --only-show-errors --cache-control "public,max-age=604800"; }
 sync_assets || { echo "assets sync hiccup; retrying" >&2; sleep 5; sync_assets; }   # one retry, as for the pages: a single S3 blip failed the 23:25 run
 sync_logos || { echo "logo sync hiccup; retrying" >&2; sleep 5; sync_logos; }
-sync_pages(){ aws s3 sync out "s3://$BUCKET" --region $REGION --only-show-errors --delete --exclude "assets/*" --exclude "logo/*" --exclude "next/*" --exclude "google*.html" --cache-control "public,max-age=60"; }
+sync_pages(){ aws s3 sync out "s3://$BUCKET" --region $REGION --only-show-errors --delete --exclude "assets/*" --exclude "logo/*" --exclude "next/*" --exclude "google*.html" --exclude "db/player/[0-9]*" --exclude "og/s/*" --exclude "m/*/g/*" --cache-control "public,max-age=60"; }
 sync_pages || { echo "sync hiccup; retrying" >&2; sleep 5; sync_pages; }   # transient S3 stream errors on a few thousand small files
+# owner items 10-11: the stages that live outside out/ (cache/world: the encyclopedia's /db/player/<id>/; cache/share: share cards og/s/ and
+# goal pages /m/<id>/g/<n>/) write only their new or changed files to <stage>/delta/: uploaded as they are (no listing), what left the
+# stage deleted, then the manifest promoted (the same steps as tools/runner.py publish_stage)
+publish_stage(){ local d="cache/$1"; [ -f "$d/manifest.next.json" ] || return 0
+  if [ -d "$d/delta" ] && [ -n "$(find "$d/delta" -type f -print -quit)" ]; then
+    aws s3 cp "$d/delta" "s3://$BUCKET" --recursive --region $REGION --only-show-errors --cache-control "public,max-age=60" || { echo "$1 upload failed; redone next run" >&2; return 0; }
+  fi
+  if [ -s "$d/delete.txt" ]; then
+    python3 - "$BUCKET" "$REGION" "$d" <<'PY' || echo "$1 deletions failed (not fatal)" >&2
+import json, subprocess, sys
+bucket, region, d = sys.argv[1], sys.argv[2], sys.argv[3]
+keys = [k.strip() for k in open(d + "/delete.txt", encoding="utf-8") if k.strip()]
+for i in range(0, len(keys), 1000):
+    open(d + "/delete.json", "w", encoding="utf-8").write(json.dumps({"Objects": [{"Key": k} for k in keys[i:i + 1000]], "Quiet": True}))
+    subprocess.run(["aws", "s3api", "delete-objects", "--bucket", bucket, "--region", region, "--delete", "file://" + d + "/delete.json"], check=True)
+PY
+  fi
+  mv -f "$d/manifest.next.json" "$d/manifest.json"; }
+publish_stage world; publish_stage share
 echo "$NOW" > cache/last_pages
 # W4.7: pages, /og/, /tn/ and sw.js are served with max-age=60 (CachingOptimized honours it) and /assets/ is content-hashed, so the cache
 # refreshes on its own; only the worker and the home page are purged, instead of evicting every crest and card each hour

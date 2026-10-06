@@ -109,12 +109,13 @@ module.exports = function (X) {
   // every <tag attr…>…</tag> out of html into `into`
   function takeOut(html, tag, attr, into) { let out = "", i = 0, s; const open = "<" + tag + " " + attr; while ((s = html.indexOf(open, i)) >= 0) { const e = endOf(html, s, tag); out += html.slice(i, s); into.push(html.slice(s, e)); i = e; } return out + html.slice(i); }
   // the old HTML between blocks goes in a .lc container (content.css), except a v5 grouped list a builder put there (build.cjs
-  // shelf()): it stays v5. Only top-level ones (no open <div> around them) are taken out, so the old HTML stays balanced
+  // shelf()) or a search page's <div class="sx"> (lib/seo_days.cjs, seo_leagues.cjs, world_stage.cjs: v5 markup throughout):
+  // they stay v5. Only top-level ones (no open <div> around them) are taken out, so the old HTML stays balanced
   function split5(html) {
-    const out = [], depth = s => (s.match(/<div\b/g) || []).length - (s.match(/<\/div>/g) || []).length;
-    let i = 0, buf = "", s, from = 0;
-    while ((s = html.indexOf('<section class="grp', from)) >= 0) {
-      const e = endOf(html, s, "section"); from = e;
+    const out = [], depth = s => (s.match(/<div\b/g) || []).length - (s.match(/<\/div>/g) || []).length, OPEN = /<section class="grp|<div class="sx[" ]/g;
+    let i = 0, buf = "", s, from = 0, mt;
+    while ((OPEN.lastIndex = from, mt = OPEN.exec(html))) {
+      s = mt.index; const e = endOf(html, s, mt[0][1] === "s" ? "section" : "div"); from = e;
       if (depth(buf + html.slice(i, s))) continue;   // inside an old wrapper: leave it there
       buf += html.slice(i, s); if (buf.trim()) out.push('<div class="lc lcx">' + buf + "</div>"); buf = "";
       out.push(html.slice(s, e)); i = e;

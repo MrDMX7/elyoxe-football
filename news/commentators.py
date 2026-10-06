@@ -1184,6 +1184,13 @@ def run(store, now=None, log=print, force_day=None, article_html=None, dry=False
                                   "fixtures": len(fixtures_of(d))}
         if not dry:
             store.put_json(f"tv/{ymd(d)}.json", doc, cache="warm")
+    # item 3 (2026-10-06): the index across days, v1/tv/commentators.json (news/tvindex.py); a failure there never costs the days
+    if not force_day and article_html is None:
+        try:
+            from news import tvindex
+            tvindex.update(store, built, fixtures_of, now, dry=dry, log=log)
+        except Exception as e:
+            errors["index"] = f"{type(e).__name__}: {str(e)[:200]}"
     keep = (today - timedelta(days=3)).isoformat()
     state["articles"] = {k: v for k, v in arts.items() if k >= keep}
     state["feeds"] = {k: {d: v for d, v in per.items() if d >= keep} for k, per in feeds.items()}

@@ -281,12 +281,22 @@
     md._seen = 1;
     if (was && cat(was.status) === "S" && cat(md.status) !== "S") matchGoesLive();
     var mh = $("#mh"); if (mh) mh.innerHTML = U.matchHead(md);
+    meylis(md);
     var ev = $("#ev"); if (ev) ev.innerHTML = U.events(md);
     var st = $("#stx"); if (st && md.stats && md.stats.length) st.innerHTML = U.stats(md) + (U.momentum(md) ? U.grp("الضغط", '<div style="padding:12px 12px 4px">' + U.momentum(md) + "</div>") : "");
     var lu = $("#lu"); if (lu && md.lineups && md.lineups.home && (md.lineups.home.starters || []).length) { var sel = $('.seg[data-seg="lu"] button[aria-selected="true"]'), k = sel && sel.dataset.t; lu.innerHTML = U.lineups(md); if (k) selectSegOnly($('.seg[data-seg="lu"]', lu), k), $$('.pane[data-g="lu"]', lu).forEach(function (p) { p.hidden = p.dataset.p !== k; }); }
     var cu = $("#catchup"); if (cu && window.TR && window.TR.catchup && cat(md.status) !== "S") { var h = window.TR.catchup(md); if (h) { cu.innerHTML = h; cu.hidden = false; } }
     var nt = $("#navt"); if (nt) nt.innerHTML = '<span dir="rtl">' + U.esc(U.matchTitle(md)) + "</span>";
     ["#mh", "#ev", "#lu", "#stx"].forEach(function (s) { unlinkDead($(s)); }); localize(); goalWatch(md); liveTable(md); pickSettle(md); fire("tifo:match", md);
+  }
+  // الميلس (meylis.elyoxe.com): the match's voice room, offered from 3 h before kickoff until full time (v3's shell.js had it, 2026-10-06)
+  function meylis(md) {
+    var hd = $("header.hdr"), box = hd && $(".mh-ml", hd), ko = Date.parse(md.kickoff_utc || "");
+    var near = U.isLive(md) || (md.status === "scheduled" && ko > 0 && ko - NOW() < 3 * 36e5);
+    if (hd && near && !box) { box = D.createElement("div"); box.className = "th-acts mh-ml";
+      box.innerHTML = '<a class="pill" href="https://meylis.elyoxe.com/r/' + encodeURIComponent(V.id || md.id) + '" rel="noopener">سولفها فالميلس</a>';
+      var meta = $(".mh-meta", hd); if (meta) meta.after(box); else hd.appendChild(box); }
+    else if (box && !near) box.remove();
   }
   // a player without a page is plain text (window.PP: the players of this page that have one), as the build's dead-link pass leaves it
   function unlinkDead(root) { var PP = window.PP; if (!PP || !root) return; $$('a[href^="/p/"]', root).forEach(function (a) { var m = /^\/p\/(\d+)\//.exec(a.getAttribute("href")); if (!m || PP[m[1]]) return;
