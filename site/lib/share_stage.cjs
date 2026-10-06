@@ -20,8 +20,10 @@ function run(X){
   let staged = []; try { staged = JSON.parse(fs.readFileSync(path.join(CACHE, "og", "staged.json"), "utf8")); } catch (e){}
   for (const [key, file] of staged){ if (man["og:" + key] === file) continue; const src = path.join(CACHE, "og", file); if (!fs.existsSync(src)) continue;
     const dst = path.join(DELTA, "og", "s", key + ".png"); fs.mkdirSync(path.dirname(dst), { recursive:true }); fs.copyFileSync(src, dst); next["og:" + key] = file; cards++; }
-  for (const s of stubs || []){ const k = `g:${s.mid}/${s.n}`, h = sha(s.html); if (man[k] === h) continue;
-    const dst = path.join(DELTA, "m", String(s.mid), "g", String(s.n), "index.html"); fs.mkdirSync(path.dirname(dst), { recursive:true }); fs.writeFileSync(dst, s.html); next[k] = h; pages++; }
+  // a goal page shows its own card as soon as og.py has rendered it (this run or before), else the match's card (s.img)
+  const have = new Set(staged.map(x => x[0]));
+  for (const s of stubs || []){ const k = `g:${s.mid}/${s.n}`, html = s.html.replace("__GIMG__", have.has(s.card) || man["og:" + s.card] ? `${s.site}/og/s/${s.card}.png` : s.img), h = sha(html); if (man[k] === h){ continue; }
+    const dst = path.join(DELTA, "m", String(s.mid), "g", String(s.n), "index.html"); fs.mkdirSync(path.dirname(dst), { recursive:true }); fs.writeFileSync(dst, html); next[k] = h; pages++; }
   fs.writeFileSync(path.join(DIR, "manifest.next.json"), JSON.stringify(next)); fs.writeFileSync(path.join(DIR, "delete.txt"), "");
   const st = { staged:staged.length, cards, pages, published:Object.keys(man).length, s:+((Date.now() - t0) / 1000).toFixed(1) };
   console.log("share stage:", JSON.stringify(st)); return st;
