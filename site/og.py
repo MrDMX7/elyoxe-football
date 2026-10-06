@@ -1,8 +1,12 @@
 """Share-preview images (feature 169): 1200x630 PNGs in the Tifo identity for WhatsApp/X/Telegram link previews.
 Reads out/og/jobs.json (written by build.cjs: [{key, kind, home, away, score, time, comp, colors...}]) and renders each
 into cache/og/<key>.png, skipping keys whose content hash hasn't changed; copies them to out/og/. Pillow + raqm (Arabic
-shaping), fonts in site/fonts (OFL: Noto Kufi Arabic, Barlow Condensed, Readex Pro). Club crests from cache/logo."""
-import hashlib, json, os, random, shutil, sys
+shaping), fonts in site/fonts (OFL: Noto Kufi Arabic, Barlow Condensed, Readex Pro). Club crests from cache/logo.
+Owner item 11 (2026-10-06): a goal card (kind "goal": the score after it, the crests, scorer and minute, how it went in, «شاهد
+الهدف» when there is a clip), and "stage" jobs (every other match, every goal): rendered into the same cache but not copied into
+out/ each hour; cache/og/staged.json lists them for build.cjs's share stage, which uploads a card once, when it is new or changed.
+New staged cards are capped per run (TIFO_OG_NEW, default 300, ~0.2 s each), newest first as build.cjs orders them."""
+import functools, hashlib, json, os, random, shutil, sys
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -10,6 +14,7 @@ OUT, CACHE = os.path.join(HERE, "out"), os.path.join(HERE, "cache")
 NIGHT, NIGHT2, CHALK, DUNE, PULSE = (10, 38, 32), (18, 58, 49), (246, 247, 242), (176, 122, 59), (16, 160, 75)
 W, H = 1200, 630
 
+@functools.lru_cache(maxsize=None)   # a TrueType face per (file, size, weight), loaded once: half of a card's render time was font loading
 def font(name, size, var=None):
     f = ImageFont.truetype(os.path.join(HERE, "fonts", name), size, layout_engine=ImageFont.Layout.RAQM)
     if var:
@@ -48,6 +53,7 @@ def fit(d, text, mk, size, maxw):
         size -= 2
     return mk(size)
 
+@functools.lru_cache(maxsize=1024)   # the same crests come back on many cards (read only: paste never changes them)
 def logo(path, size):
     try:
         im = Image.open(path).convert("RGBA"); im.thumbnail((size, size)); return im
@@ -81,6 +87,33 @@ def render(j):
     d.text((60, H - 62), "tifo.elyoxe.com", font=DIG(34), fill=(185, 199, 192), anchor="lm")
     return im
 
+# item 11: a goal. The score after it (home's number on the right, as on every Tifo scoreboard; the scoring side's number in
+# pulse green), the crests and names, «هدف <scorer> <minute>'», how it went in, and «شاهد الهدف» when news/media.py found a clip.
+LRI, PDI = "⁦", "⁩"   # the minute («45+2'») as one left-to-right run inside the Arabic line
+def render_goal(j):
+    im = Image.new("RGB", (W, H), NIGHT); d = ImageDraw.Draw(im)
+    hc = [hexrgb(c) for c in (j.get("hc") or ["#5C6660"])]; ac = [hexrgb(c) for c in (j.get("ac") or ["#3D4A44"])]
+    stand(d, 0, 0, W, 140, 28, hc, ac, j["key"]); d.rectangle([0, 140, W, H], fill=NIGHT)
+    if j.get("comp"): d.text((W / 2, 176), j["comp"], font=TXT(28), fill=(185, 199, 192), anchor="mm", direction="rtl", language="ar")
+    for side, x in (("home", W - 200), ("away", 200)):
+        lg = logo(os.path.join(CACHE, "logo", f"{j[side + '_id']}.png"), 116)
+        if lg: im.paste(lg, (int(x - lg.width / 2), 206), lg)
+        d.text((x, 352), j[side], font=fit(d, j[side], KUFI, 34, 330), fill=CHALK, anchor="mm", direction="rtl", language="ar")
+    hot, cold = PULSE, CHALK
+    d.text((W / 2 + 92, 266), str(j["sh"]), font=DIG(124), fill=hot if j.get("side") == "home" else cold, anchor="mm")
+    d.text((W / 2, 262), "-", font=DIG(100), fill=(185, 199, 192), anchor="mm")
+    d.text((W / 2 - 92, 266), str(j["sa"]), font=DIG(124), fill=hot if j.get("side") == "away" else cold, anchor="mm")
+    line = ("هدف عكسي: " if j.get("own") else "هدف ") + j.get("who", "") + (" " + LRI + j["minute"] + "'" + PDI if j.get("minute") else "")
+    d.text((W / 2, 428), line, font=fit(d, line, KUFI, 46, W - 160), fill=CHALK, anchor="mm", direction="rtl", language="ar")
+    if j.get("how"): d.text((W / 2, 484), j["how"], font=fit(d, j["how"], TXT, 30, W - 200), fill=(185, 199, 192), anchor="mm", direction="rtl", language="ar")
+    if j.get("clip"):   # the play mark is drawn (the Arabic faces have no ▶), first in reading order: on the right
+        t = "شاهد الهدف"; f = KUFI(28); tw = d.textlength(t, font=f, direction="rtl", language="ar"); x0, x1 = W / 2 - tw / 2 - 24, W / 2 + tw / 2 + 52
+        d.rectangle([x0, 516, x1, 562], fill=CHALK); d.text(((x0 + x1) / 2 - 14, 539), t, font=f, fill=NIGHT, anchor="mm", direction="rtl", language="ar")
+        d.polygon([(x1 - 18, 539), (x1 - 34, 529), (x1 - 34, 549)], fill=NIGHT)
+    mark(d, W - 150, H - 70, 13); d.text((W - 182, H - 49), "تيفو", font=KUFI(34), fill=CHALK, anchor="rm", direction="rtl", language="ar")
+    d.text((60, H - 49), "tifo.elyoxe.com", font=DIG(30), fill=(185, 199, 192), anchor="lm")
+    return im
+
 # 381: platform sizes for big results (job field "sizes": any of story/feed/x) -> out/og/<key>-<size>.png
 SIZES = {"story": (1080, 1920), "feed": (1080, 1350), "x": (1600, 900)}
 def render_sized(j, w, h):
@@ -108,10 +141,16 @@ def render_sized(j, w, h):
     return im
 
 def main():
-    jobs = json.load(open(os.path.join(OUT, "og", "jobs.json"))); os.makedirs(os.path.join(CACHE, "og"), exist_ok=True); new = 0
+    jobs = json.load(open(os.path.join(OUT, "og", "jobs.json"), encoding="utf-8")); os.makedirs(os.path.join(CACHE, "og"), exist_ok=True); new = 0
+    staged, budget, waiting = [], int(os.environ.get("TIFO_OG_NEW", "300")), 0
     for j in jobs:
         h = hashlib.sha1(json.dumps(j, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:10]
         cf = os.path.join(CACHE, "og", f"{j['key']}-{h}.png")
+        if j.get("stage"):   # item 11: rendered here, published once by build.cjs's share stage (cache/og/staged.json), never copied into out/
+            if not os.path.exists(cf):
+                if budget <= 0: waiting += 1; continue
+                (render_goal(j) if j.get("kind") == "goal" else render(j)).save(cf); budget -= 1; new += 1   # default zlib level: optimize=True cost 0.3 s a card for 2 %
+            staged.append([j["key"], os.path.basename(cf)]); continue
         if not os.path.exists(cf):
             render(j).save(cf, optimize=True); new += 1
         shutil.copy2(cf, os.path.join(OUT, "og", f"{j['key']}.png"))   # W4.7: keep the cache mtime so s3 sync skips unchanged cards
@@ -125,7 +164,9 @@ def main():
     if os.path.isdir(wk):
         for f in os.listdir(wk):
             if f.endswith((".png", ".json")) and not f.startswith("players_"): shutil.copy2(os.path.join(wk, f), os.path.join(OUT, "og", f))
-    print(f"og: {len(jobs)} images ({new} new)")
+    with open(os.path.join(CACHE, "og", "staged.json"), "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(staged, fh)
+    print(f"og: {len(jobs)} images ({new} new; {len(staged)} staged for the share stage, {waiting} waiting for a later run)")
 
 if __name__ == "__main__":
     main()
