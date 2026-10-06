@@ -941,3 +941,5 @@ body.hasprayl .tile.pray{display:none}
 .v3 .eaps{display:flex;flex-wrap:wrap;gap:.35rem}.v3 .eap{border:1px solid var(--line);padding:.1rem .45rem;font-size:.8rem}.v3 .eap.plus{border-color:var(--mg,#F0BC5A)}
 .v3 .eac h4{margin:.8rem 0 .2rem;font-size:.85rem;color:var(--stone)}
 @media (max-width:30rem){.v3 .eag{grid-template-columns:1fr}.v3 .eao{justify-self:start}}
+/* الميلس link on live/near-kickoff match pages (shell.js heroState): its own full-width row so the hero buttons keep their size on phones */
+#mh~.hero-acts{flex-wrap:wrap}.hero-acts .mlink{flex-basis:100%}

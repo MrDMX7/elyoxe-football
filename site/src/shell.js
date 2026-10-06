@@ -290,7 +290,12 @@
   // 357: the match hero follows the state: countdown before kickoff, a soft pulse in play, the final + recap after
   var cdEl = null, cdT = null;
   function heroState(md){ if (!md || PAGE !== "match") return; var st = R.isLive(md) ? "live" : md.status === "finished" ? "final" : md.status === "scheduled" ? "pre" : "other";
-    B.dataset.state = st; var box = $("#mh .sc"); if (!box) return;
+    B.dataset.state = st;
+    // الميلس (meylis.elyoxe.com): a voice room per match, offered from 3 h before kickoff until full time
+    var acts = $("#mh ~ .hero-acts"), ml = acts && acts.querySelector(".mlink"), near = st === "live" || (st === "pre" && md.kickoff_utc && Date.parse(md.kickoff_utc) - Date.now() < 3 * 36e5);
+    if (acts && near && !ml){ ml = document.createElement("a"); ml.className = "ghost mlink"; ml.href = "https://meylis.elyoxe.com/r/" + B.dataset.id; ml.rel = "noopener"; ml.textContent = "سولفها فالميلس"; acts.appendChild(ml); }
+    else if (ml && !near) ml.remove();
+    var box = $("#mh .sc"); if (!box) return;
     if (st === "pre" && md.kickoff_utc && !md.time_tbd){ if (!cdEl || !box.contains(cdEl)){ cdEl = box.querySelector(".mcd"); if (!cdEl){ cdEl = document.createElement("span"); cdEl.className = "mcd"; box.appendChild(cdEl); } }
       var tick = function(){ var d = Date.parse(md.kickoff_utc) - Date.now(); if (d <= 0){ cdEl.textContent = "على وشك تبدا"; return; } var dd = Math.floor(d / 864e5), hh = Math.floor(d / 36e5) % 24, mm = Math.floor(d / 6e4) % 60, ss = Math.floor(d / 1e3) % 60, p2 = function(n){ return n < 10 ? "0" + n : n; };
         cdEl.innerHTML = "تبدا بعد " + (dd ? R.n(dd, ["يوم", "يومين", "أيام", "يوم"]) + " و" : "") + '<bdi dir="ltr" class="num">' + p2(hh) + ":" + p2(mm) + ":" + p2(ss) + "</bdi>"; };   /* QA 98: no Latin «d» */
