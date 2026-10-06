@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 STATE = os.path.join(HERE, ".cache", "refresh.json")
+STAGE_LIMIT = 4 * 3600
 STAGES = [   # name, module, args, every (days)
     ("rsssf", "db.rsssf", ["--upload"], 30),                       # Arab leagues' old seasons (before db.history, which merges them)
     ("transfers", "history.transfermarkt", ["--upload"], 7),
@@ -57,13 +58,20 @@ def main(argv=None):
         if not due:
             continue
         t0 = time.time()
-        r = subprocess.run([sys.executable, "-m", mod] + args, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                           env=dict(os.environ, PYTHONIOENCODING="utf-8"))
-        tail = (r.stdout or "").strip().splitlines()[-1:] or (r.stderr or "").strip().splitlines()[-1:]
-        st[name] = dict(st.get(name, {}), last_at=now, secs=round(time.time() - t0), rc=r.returncode, tail=(tail[0] if tail else "")[:200])
-        if r.returncode == 0:
+        print(f"{name}: started {datetime.now(timezone.utc).isoformat()[:16]}Z", flush=True)
+        # a stage that hangs must not hold the rest for days (2026-10-06: a build and the X reader each hung 4 h on a stalled
+        # connection). 4 h is past any stage's normal run (matches: 44 min on 10-05, over 2 h on 10-06 on this laptop's slow disk)
+        try:
+            r = subprocess.run([sys.executable, "-m", mod] + args, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                               env=dict(os.environ, PYTHONIOENCODING="utf-8"), timeout=STAGE_LIMIT)
+            rc, out, err = r.returncode, r.stdout, r.stderr
+        except subprocess.TimeoutExpired as e:
+            rc, out, err = 124, "", f"timed out after {STAGE_LIMIT}s"
+        tail = (out or "").strip().splitlines()[-1:] or (err or "").strip().splitlines()[-1:]
+        st[name] = dict(st.get(name, {}), last_at=now, secs=round(time.time() - t0), rc=rc, tail=(tail[0] if tail else "")[:200])
+        if rc == 0:
             st[name]["ok_at"] = now
-        print(f"{name}: rc={r.returncode} {st[name]['secs']}s {st[name]['tail']}")
+        print(f"{name}: rc={rc} {st[name]['secs']}s {st[name]['tail']}", flush=True)
         os.makedirs(os.path.dirname(STATE), exist_ok=True)
         json.dump(st, open(STATE, "w", encoding="utf-8", newline="\n"), indent=1)
     return 0
