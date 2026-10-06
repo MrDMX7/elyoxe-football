@@ -1,0 +1,29 @@
+/* The search pages' own blocks in v5 (owner items 9-11): «مباريات اليوم» (lib/seo_days.cjs + src/days.js), the Arab leagues
+   (lib/seo_leagues.cjs), the encyclopedia and nationality hubs (lib/world_stage.cjs). They write v5 markup inside
+   <div class="sx">, which lib/v5.cjs keeps out of the legacy layer; app.css styles the groups, rows and tables, src/seo.css's
+   first block the structure, and these rules the few parts app.css has no component for. */
+.sx .sxh{margin:26px 16px 7px;color:var(--label2);font-size:13px;line-height:18px;font-weight:500}
+.sx .intro{margin:2px 4px 14px;color:var(--label2);font-size:15px;line-height:22px}
+.sx .intro b{color:var(--label);font-weight:600}
+.sx .dnav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.sx .dnav a,.sx .dnav span{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:18px;background:var(--fill);color:var(--label);font-size:15px;font-weight:500;text-decoration:none}
+.sx .dnav span[aria-current]{background:var(--accent);color:var(--on-accent);font-weight:600}
+.sx .dfil{margin:0 0 4px}
+.sx .dfil button[aria-pressed="true"]{background:var(--thumb);box-shadow:var(--thumb-sh);font-weight:600}
+.sx .dfil button[aria-pressed="true"]::before,.sx .dfil button[aria-pressed="true"] + button::before{opacity:0}
+.sx .dfil .num{margin-inline-start:4px}
+.sx .mx{padding:0 12px 10px;color:var(--label2);font-size:12.5px;line-height:18px}
+.sx .tvx,.sx .clk{overflow-wrap:anywhere}
+.sx .gsub{padding:10px 16px 4px;color:var(--label2)}
+.sx .lk{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 0}
+.sx .lk .btn{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:22px;background:var(--fill);color:var(--accent);font-size:15px;font-weight:600;text-decoration:none}
+.sx .faq .card{padding:0 16px}
+.sx .faq details{border-block-end:1px solid var(--sep)}
+.sx .faq details:last-child{border-block-end:0}
+.sx .faq summary{padding:12px 0;color:var(--label);font-size:15px}
+.sx .faq details p{color:var(--label2);font-size:15px;line-height:22px}
+.sx .src{margin:14px 4px 0;color:var(--label3);font-size:12px}
+/* standings with every column (# · team · played · W D L · for against · +/- · points): on a phone the five between played and
+   +/- give way, as in v5's own league table, and a long name ends in an ellipsis instead of running over the numbers */
+.sx .tbl .tm a{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:44px}
+@media (max-width:560px){.sx .tbl:has(th:nth-child(10)) :is(th,td):nth-child(n+4):nth-child(-n+8){display:none}}

@@ -385,6 +385,7 @@
     "heart problems":"مشاكل في القلب", "stomach problems":"مشاكل في المعدة", "achilles tendon surgery":"عملية في وتر أكيليس", "broken arm":"كسر في الذراع", "herniated disc":"انزلاق غضروفي",
     "foot surgery":"عملية في القدم", "bone edema":"وذمة عظمية", "internal ligament tear":"تمزق في الرباط الداخلي", "tonsillitis":"التهاب اللوزتين", "broken leg":"كسر في الساق", "finger injury":"إصابة في الإصبع",
     "arm injury":"إصابة في الذراع", "syndesmosis ligament tear":"تمزق في الرباط الظنبوبي الشظوي", "thigh muscle strain":"شد في عضلة الفخذ", "calf muscle strain":"شد في عضلة السمانة", "shoulder dislocation":"خلع في الكتف" };
+  R.injAr = function(n){ return TM_INJ[String(n || "").toLowerCase()] || n; };   // v5 player pages (src/v5/pages.js) name injuries in Arabic too
   var tmSeason = function(s){ var m = /^(\d{2})\/(\d{2})$/.exec(s || ""); return m ? (+m[1] > 60 ? "19" : "20") + m[1] + "/" + m[2] : s || ""; };
   R.tmSections = function(d){
     if (!d) return "";
