@@ -242,6 +242,24 @@ def test_a_live_match_file_read_before_the_clip_cannot_place_it():
     assert run("ksa", title, "2026-09-29T19:11:00Z", [later])[0] == {6052048: ["69-102"]}
 
 
+def test_a_broadcasters_x_account_is_held_to_its_competitions():
+    # 2026-10-07: AD Sports on X (`kind: broadcaster`, comps [538, 329]) for the Gulf Cup; a clip of another competition is not its
+    acc = [{"handle": "ADSportsTV", "name": "أبوظبي الرياضية", "lang": "ar", "tier": "official", "kind": "broadcaster", "comps": [538, 329]},
+           {"handle": "uaefa_ae", "name": "اتحاد الإمارات", "lang": "ar", "tier": "official", "team": 5789},
+           {"handle": "kooora", "name": "كووورة", "lang": "ar", "tier": "paper"}]
+    chs = {c["key"]: c for c in M.x_channels(acc)}
+    assert set(chs) == {"x_adsportstv", "x_uaefa_ae"}                                  # press is never a video source
+    assert chs["x_adsportstv"]["comps"] == {538, 329} and chs["x_adsportstv"]["kind"] == "broadcaster" and chs["x_adsportstv"]["team"] is None
+    assert chs["x_uaefa_ae"]["team"] == 5789 and chs["x_uaefa_ae"]["comps"] is None
+    box = {"items": [{"id": "1", "handle": "ADSportsTV", "text": "ملخص مباراة السعودية 2 - 0 العراق | كأس الخليج", "at": "2026-09-29T21:00:00Z",
+                      "video": True, "url": "https://x.com/ADSportsTV/status/1", "image": None}]}
+    v = M.x_videos(box, acc)
+    out = M.attach(v, MATCHES, N, dict(CH, **chs))
+    assert list(out) == [KSA_IRQ["id"]] and out[KSA_IRQ["id"]]["highlights"]
+    inter = dict(box["items"][0], id="2", text="ملخص مباراة إنتر ميلان 3 - 2 نابولي", url="https://x.com/ADSportsTV/status/2")
+    assert M.attach(M.x_videos({"items": [inter]}, acc), MATCHES, N, dict(CH, **chs)) == {}     # Serie A is not AD Sports'
+
+
 def test_x_posts_only_with_a_video_from_an_official_account():
     box = {"items": [{"id": "1", "handle": "SaudiNT", "text": "هدف عبدالله الحمدان في مرمى العراق ⚽️", "at": "2026-09-29T19:10:00.000Z",
                       "url": "https://x.com/SaudiNT/status/1", "video": True, "tier": "official"},

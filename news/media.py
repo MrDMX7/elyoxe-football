@@ -630,9 +630,12 @@ def x_videos(box, accounts):
 
 
 def x_channels(accounts):
+    """The official X accounts as channels. A broadcaster's (`kind: broadcaster`, 2026-10-07) is held to its competitions
+    (`comps: [...]`) like its YouTube channel: a clip of a match outside them is not its."""
     return [{"key": "x_" + a["handle"].lower(), "id": a["handle"], "name": a.get("name") or a["handle"], "lang": a.get("lang", "en"),
-             "kind": "club" if a.get("team") else "league" if a.get("comp") else "confed", "team": int(a["team"]) if a.get("team") else None,
-             "comps": {int(a["comp"])} if a.get("comp") else None, "journal": True, "platform": "x"}
+             "kind": a.get("kind") or ("club" if a.get("team") else "league" if a.get("comp") or a.get("comps") else "confed"),
+             "team": int(a["team"]) if a.get("team") else None,
+             "comps": {int(c) for c in (a.get("comps") or ([a["comp"]] if a.get("comp") else []))} or None, "journal": True, "platform": "x"}
             for a in accounts or [] if a.get("tier") == "official"]
 
 
