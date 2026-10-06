@@ -120,7 +120,9 @@ function page(o){
   const share = /id="sh-share"/.test(v.sheets || "") ? "" : P5.shareSheet({ html:tools + `<button type="button" class="row" id="secpick"><span class="rt">صورة لأي قسم</span>${U.chev}</button>`, after:'<div id="secpicks" class="card mt" hidden></div>' });
   const sheets = (v.sheets || "") + share + P5.installSheet() + (o.page === "home" || o.page === "daypage" ? P5.onbSheet() : "");
   const legacy = !NOLEGACY.has(o.page) || o.legacy;
-  const V5D = Object.assign({ page:o.page, id:null, built:BUILT }, v.data || {});
+  // the build time only where the page reads it (v5 app.js: a live page's first poll, a team's fixtures, a table 30 min old): on
+  // every page it made every page new every hour (2026-10-06: 30,631 of 34,300 files uploaded each build, 1-2 h each)
+  const V5D = Object.assign({ page:o.page, id:null }, liveish ? { built:BUILT } : {}, v.data || {});
   return `<!doctype html><html lang="ar" dir="rtl"${liveish ? ` data-built="${BUILT}"` : ""}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">${LITE.GUARD}${liveish ? '<script>(function(){var h=document.documentElement;if(Date.now()-Date.parse(h.dataset.built)>12e4)h.classList.add("stale")})()</script>' : ""}
 <title>${esc(o.title)}</title><meta name="description" content="${esc(o.desc)}">${PREVIEW || o.noindex ? '<meta name="robots" content="noindex">' : `<link rel="canonical" href="${url}">`}
 <meta property="og:title" content="${esc(o.title)}"><meta property="og:description" content="${esc(o.desc)}"><meta property="og:url" content="${url}"><meta property="og:locale" content="ar_AE"><meta property="og:site_name" content="تيفو">${og ? `<meta property="og:image" content="${SITE}/og/${og}.png${o.ogv ? "?v=" + o.ogv : ""}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">` : ""}
