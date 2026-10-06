@@ -23,6 +23,8 @@ from news import readers as RD, entities as E, classify as C, cluster as K, summ
 
 BUCKET = os.environ.get("BUCKET", "elyoxe-football-574771023173-ap-south-1")
 STATE = "news/state.json"
+# the rules the state was clustered with: a change re-classifies the kept items and clusters them again (cluster.rebuild)
+RULES = 2   # 2026-10-06: «official» only when the headline says it (classify.official); stories on their first headline
 
 
 def now():
@@ -169,7 +171,16 @@ def main(argv=None):
 
     steps["link"] = round(time.time() - t1, 1); t1 = time.time()
     # ---- stories
-    touched = K.assign(stories, fresh)
+    rebuilt_named = set()
+    if state.get("rules") != RULES:         # the stage and story rules changed: the kept items again, from scratch
+        for it in items.values():
+            it.update(C.classify({"title": it["title"], "tier": "paper"}) if it.get("social") else C.classify(it))
+        stories, touched, rebuilt_named = K.rebuild(stories, items)
+        state["rules"] = RULES
+        print(json.dumps({"rules": RULES, "rebuilt_stories": len(touched)}))
+    else:
+        touched = {}
+    touched.update(K.assign(stories, fresh))
     steps["cluster"] = round(time.time() - t1, 1); t1 = time.time()
     # ---- Arabic headline + summary: new stories and stories that gained two or more items since their summary
     todo = [s for s in touched.values() if not s.get("summary") or len(s["items"]) >= s.get("summary_items", 0) + 2]
@@ -193,7 +204,7 @@ def main(argv=None):
     newest = sorted(stories.values(), key=lambda s: s["last_at"] or "", reverse=True)
     gen = iso(now())
     store.put_json("news/latest.json", {"generated": gen, "stories": [display(s, items, D) for s in newest[: st.get("latest_count", 150)]]}, cache="hot")
-    ents = {tuple(e) for s in touched.values() for e in (s.get("anchor") or [])}
+    ents = {tuple(e) for s in touched.values() for e in (s.get("anchor") or [])} | rebuilt_named
     for k, i in ents:     # a page lists the stories whose HEADLINE names it
         mine = [s for s in newest if [k, i] in (s.get("anchor") or [])][: st.get("entity_count", 40)]
         store.put_json(f"news/e/{k}-{i}.json", {"generated": gen, "entity": {"kind": k, "id": i, "name": D.names.get((k, i), "")},
