@@ -3,7 +3,7 @@
    cache/og/staged.json; this stage puts a card into cache/share/delta/og/s/<key>.png only when it is new or changed, and the goal
    pages /m/<id>/g/<n>/ (a share target with the goal's own card, sending people on to /m/<id>/#g<n>) only when their bytes
    change. tools/runner.py uploads the delta with `aws s3 cp` and promotes manifest.next.json; the main `sync --delete` excludes
-   og/s/* and m/*/g/*, so a card or a goal page is uploaded once, not re-synced every hour, and stays up once published.
+   og/s/ and the m/<id>/g/<n>/ pages, so a card or a goal page is uploaded once, not re-synced every hour, and stays up once published.
      published()   what the last good upload holds ({"og:<key>": file, "g:<id>/<n>": hash}), read before the pages are written
      run()         after og.py: the delta and manifest.next.json */
 "use strict";
