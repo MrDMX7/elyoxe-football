@@ -7,7 +7,7 @@
    own card ringed. The device key is a random string in localStorage (tifo.fan), never an account; the card it raised is
    remembered per match (tifo.fan.<id>). Open from 3 h before kickoff until 2 h after the end, as the server; drawn on the v5
    match page under «توقعك للنتيجة», on the v5 tokens. Copy: light Emirati, Western digits. */
-(function () {
+(function run() {
   "use strict";
   var D = document, B = D.body;
   if (!B || B.dataset.page !== "match" || !window.fetch || !window.HTMLCanvasElement) return;
@@ -29,7 +29,11 @@
     if (status === "finished" || status === "awarded") return t < ko + 4 * HOUR;
     return t < ko + 6 * HOUR;
   }
-  if (!isOpen()) return;
+  if (!isOpen()) {   // a page opened before the stand (a final's page stays open for hours): the stand rises at its time on it too
+    var wait = Date.parse(V.ko) - 3 * HOUR - Date.now();
+    if (wait > 0 && wait < 24 * HOUR && !/postponed|cancelled|abandoned/.test(status)) setTimeout(run, wait + 2000);
+    return;
+  }
 
   // ------------------------------------------------------------------ the stand: one shuffled order per side
   function order(seed) {
