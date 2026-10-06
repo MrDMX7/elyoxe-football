@@ -79,18 +79,30 @@ class Log:
 
 
 def run(log, cmd, cwd=ROOT, timeout=None):
-    """Run a command, its output into the log; (return code, the output's tail)."""
+    """Run a command, its output into the log; (return code, the output's tail). On a timeout the whole process tree goes and
+    what it printed so far is logged: the 19:49 build of 2026-10-06 hung 4 h with nothing in the log to say where, and a child
+    of node's still holding the pipe kept the runner waiting 10 more minutes after node was killed."""
     env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONWARNINGS="ignore")
     env.setdefault("HOME", str(Path.home()))          # Task Scheduler gives no HOME; scripts join paths onto it
     # IPv4 first: this laptop's IPv6 path is slower and once left a build waiting on a dead connection for 4 hours (2026-10-06)
     env["NODE_OPTIONS"] = (env.get("NODE_OPTIONS", "") + " --dns-result-order=ipv4first").strip()
     log.w("$ " + " ".join(str(c) for c in cmd))
+    p = subprocess.Popen([str(c) for c in cmd], cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
+                         errors="replace", env=env)
     try:
-        p = subprocess.run([str(c) for c in cmd], cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
-                           errors="replace", timeout=timeout, env=env)
+        out, _ = p.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/PID", str(p.pid), "/T", "/F"], capture_output=True)
+        else:
+            p.kill()
+        try:
+            out, _ = p.communicate(timeout=120)   # a retried communicate() keeps what was read before the timeout
+        except subprocess.TimeoutExpired:
+            out = "(its output was not readable after the kill)"
+        log.w((out or "")[-6000:])
         log.w(f"timed out after {timeout}s"); return 124, "timeout"
-    out = p.stdout or ""
+    out = out or ""
     log.w(out[-12000:])
     return p.returncode, "\n".join(out.strip().splitlines()[-4:])
 
