@@ -255,7 +255,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   { const dj = fs.readFileSync(path.join(__dirname, "src/days.js"), "utf8"); DAYS_V = hash(dj); fs.writeFileSync(path.join(OUT, `assets/days.${DAYS_V}.js`), dj); }   // owner item 9: the day pages' renderer, shared with lib/seo_days.cjs
   { const gj = fs.readFileSync(path.join(__dirname, "src/goalshare.js"), "utf8"); GS_V = hash(gj); fs.writeFileSync(path.join(OUT, `assets/goalshare.${GS_V}.js`), gj); }   // owner item 11: share one goal from its row
   { const w = f => { const j = fs.readFileSync(path.join(__dirname, `src/${f}.js`), "utf8"), v = hash(j); fs.writeFileSync(path.join(OUT, `assets/${f}.${v}.js`), j); return `/assets/${f}.${v}.js`; };
-    ENG = { notify:w("notify"), predict:w("predict"), voices:w("voices"), mosaic:w("mosaic"), motm:w("motm"), globe:w("globe"), poster:w("poster"), trail:w("trail"), rewind:w("rewind") }; }   // items 7, 8, 3; «اصنع التيفو» (bold idea 1); «رجل المباراة بصوت الجمهور» (second list 2); «كل مباراة لوحة فنية» (bold idea 10)
+    ENG = { notify:w("notify"), predict:w("predict"), voices:w("voices"), mosaic:w("mosaic"), motm:w("motm"), globe:w("globe"), poster:w("poster"), trail:w("trail"), rewind:w("rewind"), scout:w("scout") }; }   // items 7, 8, 3; «اصنع التيفو» (bold idea 1); «رجل المباراة بصوت الجمهور» (second list 2); «كل مباراة لوحة فنية» (bold idea 10)
   // the mark: a 3x3 tifo of cards (chalk, pulse, dune on night pitch)
   // the mark: v5's 3x3 «tifo» of rounded cards (white, two quiet, three light pitch green) on pitch green (site/redesign/v5/icons.py)
   const cellsSvg = ["#fff", "#7CF0B4", "#ffffff70", "#fff", "#ffffff70", "#7CF0B4", "#7CF0B4", "#fff", "#fff"].map((c, i) => `<rect x="${7 + (i % 3) * 6.5}" y="${7 + Math.floor(i / 3) * 6.5}" width="5.4" height="5.4" rx="1.3" fill="${c}"/>`).join("");
@@ -829,6 +829,12 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   const withDetail = new Set(mids.filter(id => { const m = matchSum.get(id); return m.status === "finished" || R.isLive(m) || (Date.parse(m.kickoff_utc) - Date.now() < 3 * 864e5 && Date.parse(m.kickoff_utc) > Date.now() - 864e5); }));
   const det = await pool([...withDetail], 8, id => get(`match/${id}.json`, 1));
   const D = new Map(); [...withDetail].forEach((id, i) => { if (det[i]) D.set(id, det[i]); });
+  // «كشّاف تيفو» (owner bold idea 6): the young Arab players' pool and their points per match (lib/scout.cjs), for /scout/ and
+  // the Cards Lambda (saas/cards src/tifo_scout.py reads scout/points.json)
+  const SCOUT = require("./lib/scout.cjs"), SCD = SCOUT.build(D.values(), { natTeams:new Set(Object.values(NAT).map(Number)), nameOf });
+  SCD.pool.players.forEach(p => { if (playerPages.has(String(p.id))) p.pg = 1; });
+  write("scout/pool.json", JSON.stringify(SCD.pool)); write("scout/points.json", JSON.stringify(SCD.points));
+  console.log(`scout: ${SCD.pool.players.length} young Arab players, ${Object.values(SCD.points.players).reduce((n, m) => n + m.length, 0)} appearances`);
   const OGM = new Set();   // matches with their own share card (og/m-<id>.png); the day pages' SportsEvent images point at them
   // item 11: the share stage (lib/share_stage.cjs): what its last good upload holds, and the goal clips of the last 48 h (news/media.py)
   const SHARE = require("./lib/share_stage.cjs"), SHPUB = SHARE.published({ CACHE, fs, path }), SHJ = [], SHG = [], STUBS = [], CLIPS = {};
@@ -1242,6 +1248,17 @@ ${items}
   // «تيفو ريوايند» (owner bold idea 5): the season as stories, from what the visitor's device kept (src/trail.js, src/rewind.js)
   write("rewind/index.html", page({ v5:{ nav:{ back:"/more/", backLabel:"المزيد", title:"تيفو ريوايند", trail:"" }, body:'<div class="lt"><h1>تيفو ريوايند</h1><p>موسمك مع تيفو قصص تشاركها: المباريات اللي تابعتها، والأهداف اللي شفتها تدخل، وتوقعاتك، وفريقك. تتجمع على جوالك بس، بدون حساب.</p></div><div id="rw"><section class="grp"><div class="card"><p class="empty">نجمع قصتك…</p></div></section></div>' + U.foot(), tab:"more", sheets:"", data:{} },
     path:"/rewind/", page:"rewind", noindex:true, js:[ENG.rewind], title:"تيفو ريوايند: موسمك مع تيفو | تيفو", desc:"موسمك مع تيفو قصص تشاركها: المباريات اللي تابعتها، والأهداف اللي شفتها، وتوقعاتك. محفوظة على جوالك بدون حساب." }));
+  // «كشّاف تيفو» (owner bold idea 6): five young Arab players a scout (src/scout.js; the game is the Cards Lambda's)
+  { const RU = SCOUT.RULES, rules = [["لعب", RU.played], ["لعب 60 دقيقة أو أكثر", "+" + RU.sixty + " زيادة"], ["سجّل هدف (الجزاء يحسب، العكسي لا)", RU.goal], ["صنع هدف", RU.assist], ["تقييمه 8 أو أكثر", RU.r8], ["تقييمه من 7", RU.r7], ["انطلب للمنتخب (حتى لو ما لعب)", RU.squad]];
+    const body = '<div class="lt"><h1>كشّاف تيفو</h1><p>اختر خمس مواهب عربية شابة (' + RU.maxAge + ' سنة وأقل)، وكل ما لمعوا زادت نقاطك: أهداف، ودقايق، وتقييم، واستدعاء للمنتخب. وترتيب لأحسن الكشّافين طول الموسم.</p><p class="note" id="sc-when" hidden></p></div>' +
+      '<div id="sc"><p class="note" id="sc-msg" role="status" hidden></p>' +
+      '<section class="grp"><div class="gh"><h2>خمستك</h2></div><div id="sc-five"><div class="card"><p class="empty">نحمّل…</p></div></div></section>' +
+      `<section class="grp"><div class="gh"><h2>المواهب</h2></div><div class="sf">${U.icon("search")}<input type="search" id="sc-q" placeholder="لاعب أو نادي" aria-label="دوّر لاعب" autocomplete="off"></div><div id="sc-cc" style="display:flex;gap:8px;overflow-x:auto;padding:0 0 12px;scrollbar-width:none"></div><div id="sc-pool"></div></section>` +
+      '<section class="grp"><div class="gh"><h2>ترتيب الكشّافين</h2></div><div id="sc-board"></div></section>' +
+      `<section class="grp"><div class="gh"><h2>كيف تنحسب النقاط</h2></div><div class="card lc"><p>في كل مباراة للاعب وهو في خمستك:</p><ul>${rules.map(r => `<li>${r[0]}: <b class="num">${typeof r[1] === "number" ? "+" + r[1] : r[1]}</b></li>`).join("")}</ul>` +
+      '<p>النقاط تنحسب من لحظة ما تختار اللاعب (مباراة بدأت ما تنحسب) لين ما تشيله، واللي جمعه معك قبل ما تشيله يبقى لك. تقدر تشيل 3 لاعبين في الأسبوع، وتعبئة المكان الفاضي ما تحسب. الأرقام من ملفات مباريات تيفو نفسها، وتتحدّث كل ساعة.</p></div></section></div>' + U.foot();
+    write("scout/index.html", page({ v5:{ nav:{ back:"/more/", backLabel:"المزيد", title:"كشّاف تيفو", trail:"" }, body, tab:"more", sheets:"", data:{ cc:Object.fromEntries(R.COUNTRIES.map(c => [c[0], c[1]])) } },
+      path:"/scout/", page:"scout", noindex:true, js:[ENG.scout], title:"كشّاف تيفو: اختر خمس مواهب عربية | تيفو", desc:"اختر خمس مواهب عربية شابة، ونقاطك تزيد كل ما لمعوا: أهداف ودقايق وتقييم واستدعاء للمنتخب. وترتيب لأحسن الكشّافين." })); }
 
   // ---- Arab-world pages (build_arabs.cjs): national teams, Arabs abroad, derbies, clashes, streaks, guide, archive…
   const AW = await require("./build_arabs.cjs")({ get, pool, write, page, urls, shelf, blocks, stub, NAT, coachAr, msum:id => matchSum.get(id), R, S, esc, index, teamsJson, teamPages, playerPages, matchPages:new Set(mids), NAMES_AR, fs, path, OUT, CACHE, H2H, BC });
@@ -1336,7 +1353,7 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
       const mine = P5.mine(pick.slice(0, 48)); mine.data = {}; write("mine/index.html", page({ v5:mine, path:"/mine/", page:"mine", noindex:true, title:"فريقي | تيفو", desc:"فرقك اللي تتابعها: مبارياتها ونتايجها وترتيبها، وتنبيه لكل هدف." }));
       const more = P5.more({ audit:AUDIT ? { at:AUDIT.generated, n:AUDIT.checked || 0 } : null, voices:VK.length ? VCM.picker(VIX) : "" }); more.data = {};
       { const rw = U.row({ href:"/rewind/", icon:"hist", c:"#FF9500", t:"تيفو ريوايند", sub:"موسمك قصص تشاركها، من جوالك وبدون حساب" }), n0 = more.body.length;   // bold idea 5, under «توقعاتي»
-        more.body = more.body.replace(/(<a class="row ins" href="\/predict\/">[\s\S]*?<\/a>)/, "$1" + rw); if (more.body.length === n0) console.log("warn: the rewind row found no «توقعاتي» row on /more/"); } write("more/index.html", page({ v5:more, path:"/more/", page:"more", title:"كل صفحات تيفو والإعدادات | تيفو", desc:"كل أقسام تيفو في مكان واحد: المباريات، العرب، التاريخ، الأدوات، والإعدادات (بلدك، بدون حرق، صوت الهدف، تيفو على شاشة جوالك)." })); urls.push("/more/");
+        more.body = more.body.replace(/(<a class="row ins" href="\/predict\/">[\s\S]*?<\/a>)/, "$1" + rw + U.row({ href:"/scout/", icon:"star", c:"#5856D6", t:"كشّاف تيفو", sub:"اختر خمس مواهب عربية، ونقاطك تزيد كل ما لمعوا" })); if (more.body.length === n0) console.log("warn: the rewind row found no «توقعاتي» row on /more/"); } write("more/index.html", page({ v5:more, path:"/more/", page:"more", title:"كل صفحات تيفو والإعدادات | تيفو", desc:"كل أقسام تيفو في مكان واحد: المباريات، العرب، التاريخ، الأدوات، والإعدادات (بلدك، بدون حرق، صوت الهدف، تيفو على شاشة جوالك)." })); urls.push("/more/");
       const sr = P5.search([["الإمارات", "/t/5789/"], ["دوري أدنوك", "/c/uae-pro-league/"], ["كأس الخليج", "/c/gulf-cup/"], ["العين", "/t/102117/"], ["الوصل", "/t/102111/"], ["الهلال", "/t/2529/"], ["الأهلي المصري", "/t/101745/"], ["ميسي", "/p/30981/"], ["رونالدو", "/p/30893/"]]); sr.data = {};
       write("search/index.html", page({ v5:sr, path:"/search/", page:"search", noindex:true, title:"بحث | تيفو", desc:"دوّر على أي فريق أو لاعب أو بطولة أو مدرب في تيفو." })); }
     // 448: a page per Arab country at /country/<iso>/ (not /<iso>/: /tn/ is the thumbnails folder): the next 7 days of its
