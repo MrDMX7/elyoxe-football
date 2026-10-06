@@ -134,7 +134,10 @@ def main(argv=None):
     except (OSError, ValueError):
         xbox = s3box
     state["x"] = {"reader_last_run": s3box.get("last_run"), "reader_errors": s3box.get("errors"), "posts": len(xbox.get("items") or [])}
+    # where a run's time goes (2026-10-06: runs grew from ~90 s to 10-20 min and half of them timed out at 20)
+    t1 = time.time(); steps = {"start": round(t1 - t0, 1)}
     batches = [RD.read_source(s) + (s,) for s in srcs] + [(RD.x_posts(xbox), None, {"key": "x"})]
+    steps["fetch"] = round(time.time() - t1, 1); t1 = time.time()
     for got, err, s in batches:
         if err:
             errors[s.get("query") or s["key"]] = err
@@ -164,8 +167,10 @@ def main(argv=None):
             items[it["id"]] = it
             fresh.append(it)
 
+    steps["link"] = round(time.time() - t1, 1); t1 = time.time()
     # ---- stories
     touched = K.assign(stories, fresh)
+    steps["cluster"] = round(time.time() - t1, 1); t1 = time.time()
     # ---- Arabic headline + summary: new stories and stories that gained two or more items since their summary
     todo = [s for s in touched.values() if not s.get("summary") or len(s["items"]) >= s.get("summary_items", 0) + 2]
     todo.sort(key=lambda s: s["last_at"] or "", reverse=True)
@@ -180,6 +185,7 @@ def main(argv=None):
                     s["stage"] = res["stage"]
                 done += 1
 
+    steps["summaries"] = round(time.time() - t1, 1); t1 = time.time()
     # ---- prune, then publish
     items = {k: v for k, v in items.items() if (v.get("at") or "") >= cutoff}
     scut = iso(now() - timedelta(days=st.get("keep_clusters_days", 10)))
@@ -194,8 +200,9 @@ def main(argv=None):
                                                 "stories": [display(s, items, D) for s in mine]}, cache="warm")
     social(store, items, D, gen, st.get("social_count", 24))
     store.put_json("news/transfers.json", {"generated": gen, "players": transfers(newest, items, D)[:200]}, cache="warm")
+    steps["publish"] = round(time.time() - t1, 1)
     state.update({"items": items, "stories": stories, "run": {"at": gen, "fresh": len(fresh), "stories_touched": len(touched),
-                  "summaries": done, "errors": errors, "secs": round(time.time() - t0, 1)}})
+                  "summaries": done, "errors": errors, "secs": round(time.time() - t0, 1), "steps": steps, "entities": len(ents)}})
     store.put_state(STATE, state)
     print(json.dumps(state["run"], ensure_ascii=False))
     # ---- official videos by the matches and their goals (news/media.py): the journal's YouTube feeds are reused, never fatal
