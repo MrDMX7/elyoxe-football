@@ -75,14 +75,22 @@ def test_events_to_send_new_only_fresh_and_not_disallowed():
     assert keys(PUSH.events_to_send(fin, fin, {"start", "goal:6052086-home-23-1-0"}, NOW)) == ["end"]   # a mark of 2026-09-28's format
 
 
-def test_a_minute_correction_is_the_same_goal_a_later_same_score_is_a_new_one():
-    # 2026-10-01..05 (CloudWatch, elyoxe-football-push): goal:5071384-away-87-0-2 then -88-0-2 twenty seconds later, and
-    # 6040250 32'/33', 1000020532 79'/78', 5181865 26'/25'. 5181830 (Greece v Netherlands): a 1-0 at 13' that the feed then
-    # dropped, and the real 1-0 at 23' ten minutes later
+def test_a_minute_correction_is_the_same_goal_a_later_same_score_after_a_takeback_is_a_new_one():
+    # 2026-10-01..06 (the sender's logs): 21 goals claimed twice under a moved minute: 5071384 87'/88' twenty seconds apart,
+    # 17 more by one minute, 1000019556 86'/90' by four. 5181830 (Greece v Netherlands): a 1-0 at 13' the feed then dropped
+    # (the score back to 0-0), and the real 1-0 at 23'; its 2-2 at 65' went to the VAR, the real 2-2 came at 89'
     d = _d(events=[dict(GOAL, minute=24)], minute="25")
     assert PUSH.events_to_send(d, d, ["start", "goal:1-0@23"], NOW) == []
-    d = _d(events=[dict(GOAL, minute=26)], minute="27")
-    assert keys(PUSH.events_to_send(d, d, ["start", "goal:1-0@13"], NOW)) == ["goal:1-0"]
+    d = _d(events=[dict(GOAL, minute=27)], minute="28")
+    assert PUSH.events_to_send(d, d, ["start", "goal:1-0@23"], NOW) == []                       # +4: a correction, never a goal
+    assert PUSH.events_to_send(d, d, ["start", "goal:1-0@13"], NOW) == []                       # far, but nobody saw it go
+    todo = PUSH.events_to_send(d, d, ["start", "goal:1-0@13"], NOW, back=["1-0"])
+    assert keys(todo) == ["goal:1-0"] and todo[0][4] is True                                   # seen taken back and far: again
+    d = _d(events=[dict(GOAL, minute=17)], minute="18")
+    assert PUSH.events_to_send(d, d, ["start", "goal:1-0@13"], NOW, back=["1-0"]) == []         # a flicker and +4: the same
+    assert PUSH.takebacks(["goal:1-0@13", "goal:2-0@30"], [], {"home": 1, "away": 0}) == ["2-0"]
+    assert PUSH.takebacks(["goal:1-0@13", "goal:2-0@30"], ["2-0"], {"home": 1, "away": 0}) == []    # counted once
+    assert PUSH.takebacks(["goal:1-0@13"], [], {"home": 1, "away": 1}) == [] and PUSH.takebacks(["goal:1-0@13"], [], None) == []
 
 
 def test_a_goal_the_live_minute_left_far_behind_is_history():
@@ -170,8 +178,10 @@ def test_run_jobs_dedupes_across_retries_and_cleans_gone(monkeypatch):
     assert rep[0]["ok"] == 2 and rep[0]["gone"] == 1 and t.deleted == [("TIFOPUSH#5789", "h2")]
     again = PUSH.run_jobs([job], t, send=send)                                      # a retried invoke
     assert again[0]["skipped"] == "already sent" and len(sent) == 3
-    moved = PUSH.run_jobs([dict(job, min=24)], t, send=send)                        # FotMob moved the goal to 24'
+    moved = PUSH.run_jobs([dict(job, min=27)], t, send=send)                        # FotMob moved the goal to 27'
     assert moved[0]["skipped"] == "already sent" and len(sent) == 3
+    flicker = PUSH.run_jobs([dict(job, min=27, again=True)], t, send=send)          # «again» but 4 minutes: the same goal
+    assert flicker[0]["skipped"] == "already sent" and len(sent) == 3
 
 
 def test_subscriber_choices_events_video_and_quiet_hours(monkeypatch):
@@ -223,6 +233,28 @@ def test_plan_marks_state_and_invokes_once(tmp_path):
     d2 = _d(events=[GOAL, dict(GOAL, minute=30, event_id="6052086-goal-30-0-1", score={"home": 2, "away": 0})], score=(2, 0), minute="31")
     assert PUSH.plan(p, d2, d2, invoke=boom) == []                                  # not marked: retried next pass
     assert [j["key"] for j in PUSH.plan(p, d2, d2, invoke=calls.append)] == ["goal:2-0"]
+
+
+def test_plan_sees_a_goal_taken_back_and_hands_the_next_one_at_that_score_over(tmp_path):
+    import poller as P
+    from store import Store, LocalBackend
+    p = P.Poller(Store(LocalBackend(tmp_path)))
+    p.load()
+    calls = []
+    at = lambda h, m: datetime(2026, 9, 30, h, m, tzinfo=timezone.utc)                  # noqa: E731
+    p.now_fn = lambda: at(18, 30)
+    g13 = dict(GOAL, minute=13, first_seen="2026-09-30T18:29:30Z")
+    d = _d(events=[g13], minute="14")
+    assert [j["key"] for j in PUSH.plan(p, d, d, invoke=calls.append)] == ["start", "goal:1-0"]
+    p.now_fn = lambda: at(18, 33)
+    d0 = _d(events=[], score=(0, 0), minute="17")                                      # the VAR took it: 0-0
+    assert PUSH.plan(p, d0, d0, invoke=calls.append) == [] and p.aux("push")["6052086"]["back"] == ["1-0"]
+    p.now_fn = lambda: at(18, 41)
+    g23 = dict(GOAL, minute=23, event_id="6052086-goal-23-0-99", first_seen="2026-09-30T18:40:30Z")
+    d1 = _d(events=[g23], minute="24")
+    jobs = PUSH.plan(p, d1, d1, invoke=calls.append)
+    assert [(j["key"], j.get("again")) for j in jobs] == [("goal:1-0", True)]
+    assert PUSH.plan(p, d1, d1, invoke=calls.append) == [] and len(calls) == 2              # once
 
 
 def test_plan_takes_over_the_marks_poller_json_carried(tmp_path):

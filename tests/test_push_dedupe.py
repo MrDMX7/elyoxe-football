@@ -225,15 +225,17 @@ def test_two_senders_racing_for_one_goal_send_it_once(world):
     assert phones.twice() == {} and table.claims() == ["goal:1-0"]
 
 
-def test_a_second_goal_at_the_same_score_after_the_first_was_taken_back_is_sent(world):
+def test_the_sender_takes_a_second_goal_at_a_score_only_on_both_signs(world):
     # 5181830 Greece v Netherlands, 2026-10-01: a 1-0 at 13' that the feed dropped, the real 1-0 at 23'
     store, table, phones, root = world
-    job = lambda m: {"match": MID, "key": "goal:1-0", "min": m, "kind": "goal", "urgency": "high",            # noqa: E731
-                     "payloads": {str(H): {"kind_": f"goal:1-0@{m}"}}}
+    job = lambda m, again=False: {"match": MID, "key": "goal:1-0", "min": m, "kind": "goal", "urgency": "high", "again": again,   # noqa: E731
+                                  "payloads": {str(H): {"kind_": f"goal:1-0@{m}"}}}
     PUSH.run_jobs([job(13)], table, send=phones.send)
     PUSH.run_jobs([job(14)], table, send=phones.send)                  # the 13' one, moved a minute: the same goal
-    PUSH.run_jobs([job(23)], table, send=phones.send)                  # a new goal at the same score
-    PUSH.run_jobs([job(23)], table, send=phones.send)
+    PUSH.run_jobs([job(23)], table, send=phones.send)                  # far, but the poller did not see it taken back
+    PUSH.run_jobs([job(17, True)], table, send=phones.send)            # taken back, but 4 minutes: a correction
+    PUSH.run_jobs([job(23, True)], table, send=phones.send)            # taken back and 10 minutes on: a second goal
+    PUSH.run_jobs([job(23, True)], table, send=phones.send)
     assert table.claims() == ["goal:1-0", "goal:1-0#2"]
     assert phones.got["a"] == ["goal:1-0@13", "goal:1-0@23"]
 
@@ -241,7 +243,47 @@ def test_a_second_goal_at_the_same_score_after_the_first_was_taken_back_is_sent(
 def test_claims_written_before_2026_10_06_still_count():
     table = Dynamo([{"pk": f"TIFOPUSHSENT#{MID}", "sk": f"goal:{MID}-home-87-0-2", "ttl": 0}])
     assert PUSH.claim(table, MID, "goal:0-2", 88) is None
-    assert PUSH.claim(table, MID, "goal:0-2", 95) == "goal:0-2#2"
+    assert PUSH.claim(table, MID, "goal:0-2", 95) is None
+    assert PUSH.claim(table, MID, "goal:0-2", 95, again=True) == "goal:0-2#2"
+
+
+# A real match's feed as the poller saw it, minute by minute: 1000019556 (86' -> 90' -> 86'), 5181830 (a 1-0 taken back,
+# the score at 0-0, the real 1-0 ten minutes later) and a score that flickers down for one pass while the goal is moved
+TWISTS = [
+    (5, detail("5", [goal(4, 1, 0)], (1, 0))),
+    (6, detail("6", [], (0, 0))),                                      # a flicker: the goal and the score gone for a pass
+    (7, detail("7", [goal(6, 1, 0)], (1, 0))),                         # back, two minutes later: the same goal
+    (20, detail("20", [goal(6, 1, 0), goal(19, 2, 0, 88, "Ali")], (2, 0))),
+    (22, detail("22", [goal(6, 1, 0)], (1, 0))),                       # the VAR takes the 2-0
+    (31, detail("31", [goal(6, 1, 0), goal(30, 2, 0, 89, "Saeed")], (2, 0))),   # the real 2-0
+    (33, detail("33", [goal(6, 1, 0), goal(34, 2, 0, 89, "Saeed")], (2, 0))),   # its minute moved 30' -> 34'
+    (34, detail("34", [goal(6, 1, 0), goal(30, 2, 0, 89, "Saeed")], (2, 0))),   # and back
+]
+
+
+def test_corrections_flickers_and_a_real_second_goal_at_one_score_with_every_run_dying(world, monkeypatch):
+    store, table, phones, root = world
+    invoke = sender_for(table, phones)
+    for minute, d in TWISTS:
+        run_minute(store, monkeypatch, T0 + timedelta(minutes=minute), d, invoke)
+    # the 1-0 once (its flicker and move never re-sent); two different 2-0 goals, 19' (taken back) and 30', each once (its
+    # 30' -> 34' -> 30' move never re-sent)
+    assert phones.got == {"a": ["start", "goal:1-0", "goal:2-0", "goal:2-0"], "b": ["goal:1-0", "goal:2-0", "goal:2-0"],
+                          "c": ["start", "goal:1-0", "goal:2-0", "goal:2-0"], "d": ["start", "goal:1-0", "goal:2-0", "goal:2-0"]}
+    assert table.claims() == ["goal:1-0", "goal:2-0", "goal:2-0#2", "start"]
+    mins = sorted(int(v["min"]) for (p, s), v in table.items.items() if s.startswith("goal:2-0"))
+    assert mins == [19, 30]
+
+
+def test_the_same_twists_with_a_poller_that_remembers_nothing_never_send_twice(world, monkeypatch):
+    # with no marks the poller cannot know the 30' 2-0 is a second goal: it is lost (at most once), nothing goes twice
+    store, table, phones, root = world
+    invoke = sender_for(table, phones)
+    for minute, d in TWISTS:
+        for f in ("push.json", "poller.json"):
+            (root / "state" / f).unlink(missing_ok=True)
+        run_minute(store, monkeypatch, T0 + timedelta(minutes=minute), d, invoke)
+    assert phones.twice() == {} and phones.got["a"] == ["start", "goal:1-0", "goal:2-0"]
 
 
 def _media_world(tmp_path, monkeypatch):

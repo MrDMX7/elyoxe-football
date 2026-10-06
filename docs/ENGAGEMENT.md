@@ -57,11 +57,14 @@ payload `{title, body, url, tag, team}`, `url` same-origin.
 **What arrives:** kickoff «بدت المباراة / الإمارات - قطر»; goal «هدف! الإمارات 1 - 0 قطر / سجّل X في الدقيقة 23' · رأسية من ركنية»;
 full time «انتهت: الإمارات 2 - 1 قطر / <competition>»; video «فيديو الهدف نزل / X 23' · الإمارات 1 - 0 قطر».
 
-**Never twice** (the 2026-10-02..06 timeouts handed the same goals over every minute): a goal's identity is the score it
-made (`goal:2-1`), so a minute moved by FotMob (87' -> 88') or a scorer filled in later is the same goal; the sender claims
-each event in DynamoDB (`TIFOPUSHSENT#<match>`, conditional put after a consistent read) before its first send; the poller
-writes its marks to `state/push.json` right after the hand-over. Videos come from the journal's media step, never from the
-poller's minute loop. Details: `push.py` docstring, `docs/SCHEMA.md` § Web push; proof: `tests/test_push_dedupe.py`.
+**Never twice** (the 2026-10-02..06 timeouts handed the same goals over every minute; the existing claim turned all 1,845
+repeats away, but 21 goals went out twice under a minute FotMob had moved): a goal's identity is the score it made
+(`goal:2-1`), so a moved minute (87' -> 88', 86' -> 90') or a scorer filled in later is the same goal; the same score
+counts as a second goal only when the poller saw the first one taken back and the minutes are more than 6 apart; the
+sender claims each event in DynamoDB (`TIFOPUSHSENT#<match>`, conditional put after a consistent read) before its first
+send; the poller writes its marks to `state/push.json` right after the hand-over. Videos come from the journal's media
+step, never from the poller's minute loop. Details: `push.py` docstring, `docs/SCHEMA.md` § Web push; proof:
+`tests/test_push_dedupe.py`.
 
 ## 8. «توقع وتحدى ربعك»: predictions with friends
 

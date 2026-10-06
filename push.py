@@ -12,20 +12,24 @@ Three parts:
     sends with pywebpush + the VAPID key from SSM to every subscription that chose that event and is not in its quiet hours.
     404/410 from a push service deletes the subscription; any other error is logged (push service host only) and skipped.
 
-Never the same event twice (2026-10-02..06: the poller timed out every minute and never saved its state, so it handed the
-same goals over every minute; the sender's claim held for an unchanged key, but a goal whose minute FotMob moved by one,
-87' -> 88' or 68' -> 67', came back under a new key and would have reached subscribers twice):
-  1. one identity per event, stable across the feed's corrections: «start», «end», a goal by the score it made («goal:2-1»;
-     the minute is carried only to tell a later second 2-1, after the first was taken back), a goal's clip by the same score
-     («video:2-1»). The scorer (FotMob's «<TBD>» filled in later) and the minute are never part of the identity;
-  2. the sender CLAIMS each event before its first send: a conditional put of TIFOPUSHSENT#<match> / <key> that a retried
-     invoke, a second poller pass, a re-run media step or a concurrent sender all lose. The same score made within
-     GOAL_TOLERANCE minutes of a claimed one is the same goal (either key format); the same score later is a new goal,
-     claimed as «goal:2-1#2». A sender that dies mid-send keeps its claim: that event's remaining subscribers miss it
-     (at most once, never twice);
-  3. the poller keeps its own marks in state/push.json, written right after each hand-over, not at the end of the run,
-     so a run that dies later does not hand the same events over again next minute. A goal the live minute has left
-     STALE_MINUTES behind (a run that died before handing it over) is history, not news.
+Never the same event twice. 2026-10-01..06 (the sender's own logs): the poller timed out every minute and handed the same
+events over again and again; the sender's claim turned away all 1,845 repeats of an unchanged key, but 21 goals were
+claimed twice because FotMob had moved their minute (87' -> 88' and 17 more by one minute, 86' -> 90' by four), which made
+a new key. So:
+  1. one identity per event, stable across the feed's corrections: «start», «end», a goal by the score it made («goal:2-1»),
+     a goal's clip by the same score («video:2-1»). The scorer (FotMob's «<TBD>» filled in later) and the minute are never
+     part of it. The same score again is a second goal («goal:2-1#2») only on two independent signs: the poller SAW the
+     first one taken back (the match score went below it after it was handed over: state/push.json `back`), and the two
+     minutes are more than SAME_GOAL_SPREAD apart (seen: 13' then 23', 65' then 89', 35' then 83'). A correction is
+     never both; a duplicate would need a score flicker and a correction of more than 6 minutes at once;
+  2. the sender CLAIMS each event before its first send: a conditional put of TIFOPUSHSENT#<match> / <key> after a
+     consistent read of the match's claims, which a retried invoke, a second poller pass, a re-run media step or a
+     concurrent sender all lose; a second goal at a claimed score is claimed only when the job says the poller saw the
+     takeback and every claim at that score is more than SAME_GOAL_SPREAD minutes away. A sender that dies mid-send keeps
+     its claim: that event's remaining subscribers miss it (at most once, never twice);
+  3. the poller keeps its own marks in state/push.json, written right after each hand-over or takeback, not at the end
+     of the run, so a run that dies later does not hand the same events over again next minute. A goal the live minute
+     has left STALE_MINUTES behind (a run that died before handing it over) is history, not news.
 A goal the VAR took back before we saw it is never sent: only goal events present in the current detail, with no later
 "goal disallowed" VAR decision for that side, are pushed. Old events (first seen > 10 min ago, e.g. after a deploy or a
 backfill) are not pushed.
@@ -38,7 +42,7 @@ SENDER = "elyoxe-football-push"   # the sender's function name (the poller's PUS
 SUBJECT = "mailto:hello@elyoxe.com"
 FRESH_MINUTES = 10            # a goal first seen longer ago than this is history, not news
 STALE_MINUTES = 12            # a goal this many match minutes behind the live minute is history (a run died before it)
-GOAL_TOLERANCE = 3            # the same score this close in minutes is the same goal, whatever minute the feed gives now
+SAME_GOAL_SPREAD = 6          # minutes: the same score this close is the same goal (corrections seen: 1 and 4; re-scores: 10+)
 KICKOFF_WINDOW = 20           # minutes after kickoff within which a "start" push still makes sense
 END_WINDOW = 60               # minutes after full time
 GOAL_TYPES = ("goal", "own_goal", "penalty_goal")
@@ -151,8 +155,10 @@ def video_payload(md, team, e, goal_key, names_ar=None):
 
 
 # ------------------------------------------------------------------ marks: what the poller already handed over
-# "start", "end", "goal:2-1@47" (the score the goal made @ its total minute). Older marks, from before 2026-10-06:
-# "goal:<match>-<side>-<minute[+added]>-<h>-<a>" (goal_key of 2026-09-28) are read as the same thing.
+# state/push.json {match: {at, keys, back}}. keys: "start", "end", "goal:2-1@47" (the score the goal made @ its total minute;
+# a second goal at that score is a second mark). back: "2-1" once for each time the poller saw the match score go below a
+# score it had handed over (a goal taken back). Older marks, from before 2026-10-06, "goal:<match>-<side>-<minute[+added]>-
+# <h>-<a>" (goal_key of 2026-09-28), are read as the same thing.
 _MARK_NEW = re.compile(r"^goal:(\d+)-(\d+)(?:#\d+)?@(\d{1,3})$")
 _MARK_OLD = re.compile(r"^goal:\d+-(?:home|away|None)-(\d{1,3})(?:\+(\d{1,2}))?-(\d+)-(\d+)$")
 
@@ -171,8 +177,27 @@ def goal_marks(keys):
     return out
 
 
-def same_goal(marks, h, a, minute):
-    return any(mh == h and ma == a and (minute is None or abs(mm - minute) <= GOAL_TOLERANCE) for mh, ma, mm in marks)
+def goal_verdict(marks, back, h, a, minute):
+    """A goal at score h-a: "new" (nothing handed over at that score), "again" (every goal handed over at that score was
+    seen taken back AND this minute is more than SAME_GOAL_SPREAD from each of theirs: a second goal), or None (the goal
+    handed over already, under a corrected minute or scorer)."""
+    at = [mm for mh, ma, mm in marks if (mh, ma) == (h, a)]
+    if not at:
+        return "new"
+    if list(back or []).count(f"{h}-{a}") >= len(at) and minute is not None and all(abs(mm - minute) > SAME_GOAL_SPREAD for mm in at):
+        return "again"
+    return None
+
+
+def takebacks(keys, back, cur):
+    """The scores handed over that the match score no longer reaches (below it on a side), each counted once per goal."""
+    if not cur or cur.get("home") is None or cur.get("away") is None:
+        return []
+    n = {}
+    for h, a, _ in goal_marks(keys):
+        n[(h, a)] = n.get((h, a), 0) + 1
+    back = list(back or [])
+    return [f"{h}-{a}" for (h, a), k in n.items() if back.count(f"{h}-{a}") < k and (int(cur["home"]) < h or int(cur["away"]) < a)]
 
 
 # ------------------------------------------------------------------ which events are new (pure, tested)
@@ -192,8 +217,9 @@ def _match_minute(d, evs):
     return None
 
 
-def events_to_send(d, full, sent, now):
-    """[(key, kind, event|None, total minute|None)] for this detail, minus what `sent` (marks) already has."""
+def events_to_send(d, full, sent, now, back=()):
+    """[(key, kind, event|None, total minute|None, again)] for this detail, minus what `sent` (marks) already has. `back`:
+    the takebacks the poller saw (state/push.json); again = a second goal at a score already handed over."""
     out = []
     sent = list(sent or [])
     st = d.get("status")
@@ -201,7 +227,7 @@ def events_to_send(d, full, sent, now):
     if st in ("live", "ht") and "start" not in sent:
         started = periods.get("firstHalfStarted") or d.get("kickoff_utc")
         if _age_min(started, now) <= KICKOFF_WINDOW:
-            out.append(("start", "start", None, None))
+            out.append(("start", "start", None, None, False))
     evs = full.get("events") or []
     var = [e for e in evs if e.get("type") == "var" and e.get("var_outcome") in DISALLOWED]
     cur = d.get("score") or full.get("score") or {}
@@ -219,7 +245,8 @@ def events_to_send(d, full, sent, now):
         if cur and any((es.get(k) or 0) > (cur.get(k) or 0) for k in ("home", "away")):
             continue
         mn = total_minute(e.get("minute"), e.get("added"))
-        if same_goal(marks, int(es["home"]), int(es["away"]), mn):
+        verdict = goal_verdict(marks, back, int(es["home"]), int(es["away"]), mn)
+        if verdict is None:
             continue                    # handed over already, whatever minute or scorer the feed gives it now
         if _age_min(e.get("first_seen"), now) > FRESH_MINUTES:
             continue
@@ -227,11 +254,11 @@ def events_to_send(d, full, sent, now):
             continue                    # the match moved on long ago: a run that died before this goal went out
         if any(v.get("team") == e.get("team") and (v.get("minute") or 0) >= (e.get("minute") or 0) for v in var):
             continue                    # the VAR took it back
-        out.append((key, "goal", e, mn))
+        out.append((key, "goal", e, mn, verdict == "again"))
     if st == "finished" and "end" not in sent:
         ended = periods.get("gameEnded") or periods.get("secondHalfEnded")
         if _age_min(ended, now) <= END_WINDOW:
-            out.append(("end", "end", None, None))
+            out.append(("end", "end", None, None, False))
     return out
 
 
@@ -239,11 +266,13 @@ def mark(job):
     return f"{job['key']}@{job['min']}" if job["kind"] == "goal" and job.get("min") is not None else job["key"]
 
 
-def _job(mid, key, kind, payloads, minute=None, now=None):
+def _job(mid, key, kind, payloads, minute=None, now=None, again=False):
     j = {"match": int(mid), "key": key, "kind": kind, "urgency": "high" if kind == "goal" else "normal",
          "exp": int(now if now is not None else time.time()) + JOB_TTL[kind], "payloads": payloads}
     if minute is not None:
         j["min"] = int(minute)
+    if again:
+        j["again"] = True               # the poller saw the first goal at this score taken back
     return j
 
 
@@ -257,6 +286,13 @@ def _marks(p):
     return marks
 
 
+def _flush(p, mid):
+    try:
+        p.aux_flush("push")          # now, not at the end of the run: a run that dies later must not lose these
+    except Exception as ex:          # the sender's claim still holds; the marks go out with the run's save()
+        p.store.fail("push", f"{mid}: marks not saved now: {type(ex).__name__}: {ex}")
+
+
 def plan(p, d, full, invoke=None):
     """Called from Poller.fetch_detail. Marks and hands over new events; never raises into the poller."""
     if not os.environ.get("PUSH_FUNCTION") and invoke is None:
@@ -264,12 +300,19 @@ def plan(p, d, full, invoke=None):
     mid = str(d["id"])
     marks = _marks(p)
     sent = marks.setdefault(mid, {"at": None, "keys": []})
-    todo = events_to_send(d, full, sent["keys"], p.now())
+    back = sent.setdefault("back", [])
+    gone = takebacks(sent["keys"], back, d.get("score") or full.get("score"))
+    if gone:                         # a goal handed over is no longer in the score: the VAR (or the feed) took it back
+        back += gone
+        p.note(f"push: {mid} taken back {', '.join(gone)}")
+        _flush(p, mid)
+    todo = events_to_send(d, full, sent["keys"], p.now(), back)
     if not todo:
         return []
     names_ar = _names_ar()
     teams = [t for t in ((d.get("home") or {}).get("id"), (d.get("away") or {}).get("id")) if t]
-    jobs = [_job(mid, key, kind, {str(t): payload(kind, d, t, e, names_ar) for t in teams}, mn) for key, kind, e, mn in todo]
+    jobs = [_job(mid, key, kind, {str(t): payload(kind, d, t, e, names_ar) for t in teams}, mn, again=again)
+            for key, kind, e, mn, again in todo]
     try:
         (invoke or _invoke)({"jobs": jobs})
     except Exception as ex:          # not marked: the next pass tries again (the sender dedupes)
@@ -279,11 +322,8 @@ def plan(p, d, full, invoke=None):
     sent["at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     for k in [k for k, v in marks.items() if v.get("at") and _age_min(v["at"], p.now()) > CLAIM_DAYS * 1440]:
         del marks[k]
-    try:
-        p.aux_flush("push")          # now, not at the end of the run: a run that dies later must not hand these over again
-    except Exception as ex:          # the sender's claim still holds; the marks go out with the run's save()
-        p.store.fail("push", f"{mid}: marks not saved now: {type(ex).__name__}: {ex}")
-    p.note(f"push: {mid} {', '.join(j['key'] for j in jobs)}")
+    _flush(p, mid)
+    p.note(f"push: {mid} {', '.join(j['key'] + ('+' if j.get('again') else '') for j in jobs)}")
     return jobs
 
 
@@ -428,9 +468,11 @@ def _scored(item, kind):
     return None
 
 
-def claim(table, match, key, minute=None, now=None):
-    """At most once per event: -> the key claimed (a later second 2-1 gets «goal:2-1#2»), or None when it is already claimed.
-    The claim is written before anything is sent."""
+def claim(table, match, key, minute=None, now=None, again=False):
+    """At most once per event: -> the key claimed, or None when that event is claimed already. Written before anything is
+    sent. A score already claimed is the same goal (a minute correction, a scorer filled in, a retry, a second planner),
+    unless the job says the poller saw the first one taken back (`again`) and every claim at that score is more than
+    SAME_GOAL_SPREAD minutes away: then it is a second goal, «goal:2-1#2». Videos have no second generation."""
     now = int(now if now is not None else time.time())
 
     def item(k):
@@ -444,15 +486,11 @@ def claim(table, match, key, minute=None, now=None):
     kind, h, a = m.group(1), int(m.group(2)), int(m.group(3))
     base = f"{kind}:{h}-{a}"
     for _ in range(4):                          # a concurrent sender can take the generation we chose: look again
-        gens = []
-        for c in _claims(table, match):
-            s = _scored(c, kind)
-            if not s or (s[0], s[1]) != (h, a):
-                continue
-            if minute is None or s[2] is None or abs(s[2] - int(minute)) <= GOAL_TOLERANCE:
-                return None                     # the same goal (a minute correction, a scorer filled in, a retry)
-            gens.append(s[3])
-        gen = max(gens, default=0) + 1
+        same = [s for s in (_scored(c, kind) for c in _claims(table, match)) if s and (s[0], s[1]) == (h, a)]
+        if same and (kind != "goal" or not again or minute is None
+                     or any(s[2] is None or abs(s[2] - int(minute)) <= SAME_GOAL_SPREAD for s in same)):
+            return None
+        gen = max((s[3] for s in same), default=0) + 1
         k = base if gen == 1 else f"{base}#{gen}"
         if _put_new(table, item(k)):
             return k
@@ -496,7 +534,7 @@ def run_jobs(jobs, table, send=None, subs_override=None, now=None):
         if job.get("exp") and t > job["exp"]:
             report.append({"key": job["key"], "match": job["match"], "skipped": "expired"})
             continue
-        got = claim(table, job["match"], job["key"], job.get("min"), t)
+        got = claim(table, job["match"], job["key"], job.get("min"), t, bool(job.get("again")))
         if not got:
             report.append({"key": job["key"], "match": job["match"], "skipped": "already sent"})
             continue
