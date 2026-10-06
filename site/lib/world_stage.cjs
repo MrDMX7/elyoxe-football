@@ -89,8 +89,10 @@ module.exports = async function(X){
   }
   const next = {}, now = Date.now(), urls = [], fresh = []; let nNew = 0, nChg = 0, nShell = 0, nKeep = 0, bytes = 0;
   const shellOld = inScope.filter(id => man[id] && man[id][1] !== ASSET_V && now - man[id][2] > SHELL_AGE).sort((a, b) => man[a][2] - man[b][2]), shellOK = new Set(shellOld.slice(0, SHELL));
-  // new pages first, then the ones written longest ago: a page held back by a budget is the first one written next run
-  const order = inScope.slice().sort((a, b) => (man[a] ? man[a][2] : 0) - (man[b] ? man[b][2] : 0));
+  // new pages first (the best known first: a Wikipedia lead, then the most matches in 2025/26-2026/27), then the ones written
+  // longest ago: a page held back by a budget is the first one written next run
+  const apps = id => prof[id].s.filter(s => RECENT.test(String(s[0]))).reduce((a, s) => a + (+s[3] || 0), 0) + (WP[id] ? 1e4 : 0);
+  const order = inScope.slice().sort((a, b) => (man[a] ? man[a][2] : 0) - (man[b] ? man[b][2] : 0) || (man[a] || man[b] ? 0 : apps(b) - apps(a)));
   for (const id of order){
     const P = body(id), h = sha(P.title + P.desc + P.html + JSON.stringify(P.ld)), m = man[id];
     const isNew = !m, changed = m && m[0] !== h, shell = m && !changed && shellOK.has(id);
