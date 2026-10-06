@@ -76,6 +76,8 @@ module.exports = function (X) {
     let body = o.body || "", tools = o.tools || "";
     // rows of buttons only (print, image, compare…) move to the «شارك» sheet; link rows stay where they are
     body = body.replace(/<p class="tools(?: noprint)?">((?:\s*<button\b[^>]*>[^<]*<\/button>)+)\s*<\/p>/g, (m, bs) => { tools += bs; return ""; });
+    // data scripts in front of the title (/week/'s #wkdata) stay in the body, after the title
+    const lead = (body.match(/^\s*(?:<script\b[^>]*>[\s\S]*?<\/script>\s*)+/) || [""])[0]; body = body.slice(lead.length);
     const m = body.match(/^\s*(<p class="crumbs">([\s\S]*?)<\/p>)?\s*(<h1\b([^>]*)>([\s\S]*?)<\/h1>)\s*(<p class="(?:season|muted)[^"]*">([\s\S]*?)<\/p>)?/);
     let back = null, crumbs = "", head = "";
     if (m) {
@@ -88,17 +90,37 @@ module.exports = function (X) {
       head = '<div class="lt' + (lg || extra ? " lt-row" : "") + '"><div class="lt-t">' + crumbs + "<h1" + h1a + ">" + m[5] + "</h1>" + (m[7] ? '<p class="lt-s">' + m[7] + "</p>" : "") + "</div>" + lg + extra + "</div>";
       o._h1 = strip(m[5]);
     }
+    // sheets a builder put in the body (build.cjs shelf()) join the page's sheets before the blocks are read
+    const moved = []; body = takeOut(body, "dialog", 'class="sheet"', moved);
     const b = blocks(body), shelfy = SHELF_PATH.test(o.path || "") && b.secs.length >= 4;
     let main = "", sheets = "";
     if (shelfy) {
       const sr = secRows(b.secs, { prefix: "h" });
-      main = b.parts.filter(x => x.html != null).map(x => x.html.trim() ? '<div class="lc lcx">' + x.html + "</div>" : "").join("") + U.grp("كل الأقسام", sr.rows, { cls: "mt2" });
+      main = b.parts.filter(x => x.html != null).map(x => x.html.trim() ? split5(x.html) : "").join("") + U.grp("كل الأقسام", sr.rows, { cls: "mt2" });
       sheets = sr.sheets;
     } else {
-      main = b.parts.map(x => x.sec != null ? grp(b.secs[x.sec]) : x.html.trim() ? '<div class="lc lcx">' + x.html + "</div>" : "").join("");
+      main = b.parts.map(x => x.sec != null ? grp(b.secs[x.sec]) : x.html.trim() ? split5(x.html) : "").join("");
     }
     return { nav: { back: back ? back.href : "/more/", backLabel: back ? back.label : "المزيد", title: esc(o._h1 || ""), trail: U.navLink("search", "بحث", "/search/") + U.navBtn("share", "شارك", ' data-sheet="sh-share"') },
-      body: head + main, tab: tabOf(o), sheets, tools };
+      body: head + lead.trim() + main, tab: tabOf(o), sheets: sheets + moved.join(""), tools };
+  }
+  // the end of the element that opens at `s` (same tag, nesting counted)
+  function endOf(html, s, tag) { const tr = new RegExp("<(/?)" + tag + "\\b[^>]*>", "g"); tr.lastIndex = s; let d = 0, t; while ((t = tr.exec(html))) { d += t[1] ? -1 : 1; if (!d) return tr.lastIndex; } return html.length; }
+  // every <tag attr…>…</tag> out of html into `into`
+  function takeOut(html, tag, attr, into) { let out = "", i = 0, s; const open = "<" + tag + " " + attr; while ((s = html.indexOf(open, i)) >= 0) { const e = endOf(html, s, tag); out += html.slice(i, s); into.push(html.slice(s, e)); i = e; } return out + html.slice(i); }
+  // the old HTML between blocks goes in a .lc container (content.css), except a v5 grouped list a builder put there (build.cjs
+  // shelf()): it stays v5. Only top-level ones (no open <div> around them) are taken out, so the old HTML stays balanced
+  function split5(html) {
+    const out = [], depth = s => (s.match(/<div\b/g) || []).length - (s.match(/<\/div>/g) || []).length;
+    let i = 0, buf = "", s, from = 0;
+    while ((s = html.indexOf('<section class="grp', from)) >= 0) {
+      const e = endOf(html, s, "section"); from = e;
+      if (depth(buf + html.slice(i, s))) continue;   // inside an old wrapper: leave it there
+      buf += html.slice(i, s); if (buf.trim()) out.push('<div class="lc lcx">' + buf + "</div>"); buf = "";
+      out.push(html.slice(s, e)); i = e;
+    }
+    buf += html.slice(i); if (buf.trim()) out.push('<div class="lc lcx">' + buf + "</div>");
+    return out.join("");
   }
 
   return { blocks, secRows, grp, iconFor, legacy5, tabOf, strip, isLiveSec };

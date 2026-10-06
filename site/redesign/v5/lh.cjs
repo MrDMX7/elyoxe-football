@@ -3,12 +3,14 @@
 "use strict";
 const { execFileSync } = require("child_process"), fs = require("fs"), os = require("os"), path = require("path");
 const args = process.argv.slice(2), oi = args.indexOf("--out"), OUT = oi >= 0 ? args[oi + 1] : "";
-const paths = args.filter((a, i) => a.startsWith("/") && args[i - 1] !== "--out");
+const paths = args.filter((a, i) => a.startsWith("/") && !["--out", "--v5", "--live"].includes(args[i - 1]));
 const PAGES = paths.length ? paths : ["/", "/m/6052086/", "/c/uae-pro-league/", "/t/102111/", "/p/30893/", "/news/"];
 const LH = process.env.LH || path.join(process.env.APPDATA || "", "npm", "node_modules", "lighthouse", "cli", "index.js");
 const env = Object.assign({}, process.env, { CHROME_PATH: process.env.CHROME_PATH || "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe" });
 const res = {};
-for (const p of PAGES) for (const [side, url] of [["v5", "https://tifo.elyoxe.com/next" + p], ["live", "https://tifo.elyoxe.com" + p]]) {
+// production rollout: --v5 <origin> --live <origin> compare two local servers of the same data (the new build and the old one)
+const og = k => { const i = args.indexOf("--" + k); return i >= 0 ? args[i + 1] : ""; }, V5O = og("v5"), LIVEO = og("live");
+for (const p of PAGES) for (const [side, url] of [["v5", V5O ? V5O + p : "https://tifo.elyoxe.com/next" + p], ["live", (LIVEO || "https://tifo.elyoxe.com") + p]]) {
   const f = path.join(os.tmpdir(), "lh_v5_" + side + ".json");
   try {
     try { fs.unlinkSync(f); } catch (e) {}

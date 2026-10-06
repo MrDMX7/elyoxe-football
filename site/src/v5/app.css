@@ -554,12 +554,14 @@ html:has(body.sheet-on){overflow:hidden}
 .natcd{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 16px}
 .natcd small{display:block;margin-top:2px;color:var(--accent);font-size:13px;font-weight:600}
 .fc-cd{margin-top:8px;text-align:center;color:var(--accent);font-size:13px;font-weight:600}
+.card.fc > * + *::before{content:none}
 .wl > summary .rv{color:var(--label2);font-size:15px}
 #world{margin-top:26px}
 #world:empty{display:none}
 
 /* the match header: the prayer line, the media button, a stale page, the pick's result, the goal moment */
 .prayl{margin-top:6px;color:var(--label2);font-size:13px}
+.mh-cd{margin-top:10px;color:var(--accent);font-size:15px;font-weight:600}
 .prayl:empty,.mslot:empty{display:none}
 .mslot{margin-top:12px}
 .hdr .mslot .mdh{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 18px;border:0;border-radius:22px;background:var(--accent);color:var(--on-accent);font:600 15px var(--font);cursor:pointer}
@@ -579,9 +581,11 @@ html.stale .mr.is-live .sc,html.stale .mh .sc,html.stale .fc .sc{opacity:.45;tra
 @keyframes v5gin-r{0%{transform:translateX(70px);opacity:0}16%{transform:none;opacity:1}82%{opacity:1}100%{opacity:0}}
 @keyframes v5gin-l{0%{transform:translateX(-70px);opacity:0}16%{transform:none;opacity:1}82%{opacity:1}100%{opacity:0}}
 
-/* «جزيرة المباراة»: the live score of a followed team under the nav bar, on every page */
-.island{position:fixed;z-index:41;top:calc(env(safe-area-inset-top) + var(--navh) + 4px);inset-inline:0;display:flex;align-items:center;gap:8px;width:max-content;max-width:calc(100% - 24px);height:44px;margin:0 auto;padding:0 4px 0 14px;border-radius:22px;background:#0B0B0C;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.22),inset 0 0 0 .5px rgba(255,255,255,.12);font-size:14px;line-height:18px;font-weight:600;animation:v5isin .45s var(--spring);view-transition-name:island}
-@keyframes v5isin{from{transform:scale(.6);opacity:0}}
+/* «جزيرة المباراة»: the live score of a followed team, floating above the tab bar on every page (a mini player: nothing on the
+   page moves when it comes or goes) */
+.island{position:fixed;z-index:44;bottom:calc(max(10px,env(safe-area-inset-bottom)) + 70px);inset-inline:0;display:flex;align-items:center;gap:8px;width:max-content;max-width:calc(100% - 24px);height:44px;margin:0 auto;padding:0 4px 0 14px;border-radius:22px;background:#0B0B0C;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.22),inset 0 0 0 .5px rgba(255,255,255,.12);font-size:14px;line-height:18px;font-weight:600;animation:v5isin .45s var(--spring);view-transition-name:island}
+@keyframes v5isin{from{transform:translateY(16px) scale(.92);opacity:0}}
+@media (prefers-color-scheme:dark){.island{background:#2C2C2E;box-shadow:0 8px 24px rgba(0,0,0,.5),inset 0 0 0 .5px rgba(255,255,255,.14)}}
 .island .is-t{display:flex;align-items:center;gap:6px;min-width:0}
 .island .is-n{max-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .island .cr{width:20px;height:20px}
@@ -595,9 +599,9 @@ html.stale .mr.is-live .sc,html.stale .mh .sc,html.stale .fc .sc{opacity:.45;tra
 .island .is-x::after,.instask .is-x::after{content:"";position:absolute;inset:-4px}
 .island.goal{animation:v5isgoal 1s var(--spring)}
 @keyframes v5isgoal{30%{transform:scale(1.12);box-shadow:0 0 0 6px color-mix(in srgb,#35D07F 55%,transparent)}}
-.island-on main{padding-top:calc(var(--navh) + env(safe-area-inset-top) + 54px)}
-.island-on .segbar{top:calc(var(--navh) + env(safe-area-inset-top) + 50px)}
-.island-on .hdr-wash,.island-on .hdr.goal::after{top:calc(-1 * (var(--navh) + env(safe-area-inset-top) + 54px))}
+.island-on main{padding-bottom:calc(170px + env(safe-area-inset-bottom))}
+.island-on .toast{bottom:calc(150px + env(safe-area-inset-bottom))}
+.island-on .instask{display:none}
 
 /* install: the quiet card above the tab bar, and the sheet */
 .instask{position:fixed;z-index:44;inset-inline:0;bottom:calc(max(10px,env(safe-area-inset-bottom)) + 70px);display:flex;align-items:center;gap:10px;width:calc(100% - 24px);max-width:440px;margin:0 auto;padding:10px 8px 10px 12px;border-radius:20px;background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);box-shadow:var(--tb-shadow),inset 0 0 0 .5px var(--glass-b);animation:v5isin .45s var(--spring)}

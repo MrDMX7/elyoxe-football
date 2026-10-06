@@ -10,7 +10,8 @@
 const { chromium } = require(process.env.PW || "C:/Users/requi/workspace/content-pipeline/node_modules/playwright-core");
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf("--" + k); return i >= 0 ? args[i + 1] : d; };
 const BASE = opt("base", "http://localhost:8795"), OUT = opt("out", "");
-const PAGES = (opt("pages", "") || "/next/ /next/m/live/ /next/m/6052086/ /next/m/1000020522/ /next/c/uae-pro-league/ /next/c/gulf-cup/ /next/t/102111/ /next/t/5789/ /next/p/30893/ /next/p/721345/ /next/db/ /next/db/league/549/ /next/news/ /next/search/ /next/more/ /next/competitions/ /next/mine/").split(/\s+/).filter(Boolean);
+const PAGES = (opt("pages", "") ||   // production: --pages "/ /m/<id>/ …" against a local server of site/out
+   "/next/ /next/m/live/ /next/m/6052086/ /next/m/1000020522/ /next/c/uae-pro-league/ /next/c/gulf-cup/ /next/t/102111/ /next/t/5789/ /next/p/30893/ /next/p/721345/ /next/db/ /next/db/league/549/ /next/news/ /next/search/ /next/more/ /next/competitions/ /next/mine/").split(/\s+/).filter(Boolean);
 const WIDTHS = [360, 390, 430, 768, 1280];
 (async () => {
   const b = await chromium.launch({ channel: "msedge" }), report = { pages: {}, fails: [] };
@@ -27,7 +28,9 @@ const WIDTHS = [360, 390, 430, 768, 1280];
       const hs = await pg.evaluate(async () => {
         const segs = [...document.querySelectorAll(".seg")], out = [];
         const check = tag => { const W = innerWidth, sw = document.documentElement.scrollWidth; if (sw > W) out.push(tag + ": scrollWidth " + sw + " > " + W);
-          const skip = el => el.closest(".days,.rounds,.vids,.tblw,dialog:not([open]),[hidden],details:not([open]) > :not(summary)");
+          const skip = el => { if (el.closest(".days,.rounds,.vids,.tblw,dialog:not([open]),[hidden],details:not([open]) > :not(summary)")) return true;
+            // production: anything inside a horizontal scroller (the old blocks' .tblwrap, .tscroll…) scrolls there, not the page
+            for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) { const ox = getComputedStyle(a).overflowX; if (ox === "auto" || ox === "scroll") return true; } return false; };
           for (const el of document.querySelectorAll("main *,header *,nav *")) { if (skip(el)) continue; const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue; if (r.right > W + 1.5 || r.left < -1.5) { out.push(tag + ": " + el.tagName.toLowerCase() + "." + [...el.classList].join(".") + " spans " + Math.round(r.left) + "→" + Math.round(r.right)); if (out.length > 6) break; } } };
         check("first");
         for (const s of segs) for (const btn of s.querySelectorAll("button[data-t]")) { btn.click(); await new Promise(r => setTimeout(r, 60)); check(s.dataset.seg + ":" + btn.dataset.t); }
@@ -39,7 +42,7 @@ const WIDTHS = [360, 390, 430, 768, 1280];
         // tap targets, one sample of each kind of control, hit-tested on screen
         const tt = await pg.evaluate(async () => {
           const out = [], seen = {}, NAVH = (document.getElementById("nav") || { offsetHeight: 52 }).offsetHeight, TB = document.querySelector(".tabbar");
-          const inText = el => el.closest(".gf,.foot,.wiki,.src,.note p,.note,.pv,.nw .src,.ea-meta,p.sub") && el.tagName === "A";
+          const inText = el => el.closest(".gf,.foot,.wiki,.src,.note p,.note,.pv,.nw .src,.ea-meta,p.sub,.lc p,.lc li,.lc td,.lc dd,.lc small,.lc .small,.lc h3,.lt-k,.hdr-k") && el.tagName === "A";   // production: links in the old blocks' running text
           const els = [...document.querySelectorAll("main a[href], main button, main summary, main input, header a[href], header button, nav.tabbar a")].filter(el => { const r = el.getBoundingClientRect(); return r.width && r.height && !el.closest("[hidden],dialog,details:not([open]) > :not(summary)") && !inText(el); });
           for (const el of els) {
             const sig = el.tagName + "." + [...el.classList].sort().join(".") + "|" + (el.parentElement ? el.parentElement.className : "");

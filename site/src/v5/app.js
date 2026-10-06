@@ -48,7 +48,7 @@
   function stamp(g) { var el = $("#updated"); if (el && g) { var d = new Date(g), t = d.toLocaleTimeString("ar-AE-u-nu-latn", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: cfg.tz || "Asia/Dubai" });
       el.textContent = "آخر تحديث " + (U.ymd(d.toISOString()) === cfg.today ? "" : U.dname(d.toISOString(), 1) + " ") + t + "."; }
     D.documentElement.classList.remove("stale"); fire("tifo:fresh", g); }
-  (function () { var H = D.documentElement; if (!H.classList.contains("stale") || !H.dataset.built) return; var n = D.createElement("p"); n.className = "stalen"; n.textContent = "آخر تحديث للصفحة " + new Date(H.dataset.built).toLocaleTimeString("ar-AE-u-nu-latn", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Asia/Dubai" }) + "، نجيب الجديد…";
+  (function () { var H = D.documentElement; if (!H.classList.contains("stale") || !H.dataset.built || !/^(home|daypage|all|match)$/.test(PG)) return; var n = D.createElement("p"); n.className = "stalen"; n.textContent = "آخر تحديث للصفحة " + new Date(H.dataset.built).toLocaleTimeString("ar-AE-u-nu-latn", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Asia/Dubai" }) + "، نجيب الجديد…";
     var at = $(".hdr") || $(".lt"); if (at) at.appendChild(n); D.addEventListener("tifo:fresh", function () { n.remove(); }, { once: true }); setTimeout(function () { n.remove(); }, 15000); })();
 
   // ------------------------------------------------------------------ nav bar: the large title (or entity header) scrolls under it
@@ -56,7 +56,7 @@
   function navH() { return NAV ? NAV.getBoundingClientRect().height : 52; }
   function observeNav() {
     if (!NAV || !("IntersectionObserver" in window)) return;
-    var tgt = $(".lt h1") || $("#mh .mh") || $(".hdr h1") || $(".hdr");
+    var tgt = $(".lt h1") || $("#mh") || $(".hdr h1") || $(".hdr");
     if (tgt) new IntersectionObserver(function (es) { es.forEach(function (e) { NAV.classList.toggle("stuck", !e.isIntersecting); }); }, { rootMargin: "-" + Math.round(navH()) + "px 0px 0px 0px" }).observe(tgt); else NAV.classList.add("stuck");
     $$(".segbar").forEach(function (sb) { if (sb._obs) return; sb._obs = 1; var s = D.createElement("i"); s.style.cssText = "display:block;height:1px;margin-bottom:-1px"; sb.parentNode.insertBefore(s, sb);
       new IntersectionObserver(function (es) { es.forEach(function (e) { var st = !e.isIntersecting && e.boundingClientRect.top < navH() + 2; sb.classList.toggle("stuck", st); if (NAV) NAV.classList.toggle("merge", st); }); }, { rootMargin: "-" + Math.round(navH()) + "px 0px 0px 0px" }).observe(s); });
@@ -206,7 +206,7 @@
   function worldLoad() { var y = H.day; return get("all/" + y + ".json", y === H.todayN).then(function (doc) { if (y !== H.day) return; H.world = doc; renderHome(); }).catch(function () { var box = $("#world"); if (box && box.dataset.open) box.innerHTML = ""; }); }
   function worldLiveLoad() { if (!H.world || H.day !== H.todayN) return Promise.resolve(); return get("all/live.json", true).then(function (lv) { var by = {}; (lv.matches || []).forEach(function (r) { by[r.id] = r; }); H.wlv = by; }).catch(function () {}); }
   function worldMaybe() { var box = $("#world"); if (!box) return; if (box.dataset.open) { worldLoad(); return; }
-    if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) { io.disconnect(); if (!H.world) worldLoad(); } }, { rootMargin: "600px 0px" }); io.observe(box); } else worldLoad(); }
+    idle(function () { if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) { io.disconnect(); if (!H.world) worldLoad(); } }, { rootMargin: "600px 0px" }); io.observe(box); } else worldLoad(); }); }   // after the page settles: the world list is the biggest file
   function homeInit() {
     var t = new Date(NOW() + 4 * 36e5).toISOString().slice(0, 10), tn = t.replace(/-/g, ""), box = $("#homelist");
     var isTomorrow = PG === "daypage" && /\/tomorrow\//.test(location.pathname), want = isTomorrow ? new Date(NOW() + 4 * 36e5 + 864e5).toISOString().slice(0, 10).replace(/-/g, "") : tn;
@@ -246,6 +246,8 @@
   function cat(st) { return st === "live" || st === "ht" ? "L" : st === "finished" || st === "awarded" ? "F" : "S"; }
   function matchInit() {
     pickInit(); chBox(); prayer(); rememberOpened();
+    // 357: before kickoff the header counts down (within four days), then the live score takes over
+    if (MD && MD.status === "scheduled" && !MD.time_tbd && MD.kickoff_utc) { var dko = Date.parse(MD.kickoff_utc) - NOW(), mh0 = $("#mh"); if (mh0 && dko > 0 && dko < 4 * 864e5) { var cdp = D.createElement("p"); cdp.className = "mh-cd"; cdp.dataset.cdko = MD.kickoff_utc; cdp.innerHTML = "تبدا بعد " + cdText(dko); mh0.after(cdp); } }
     if (!V.id) return;
     var timer = null, run = function (first) { if (D.hidden && !first) return;
       get("match/" + V.id + ".json", true).then(function (md) { cfg.now = NOW(); var was = MD; MD = md; matchPaint(md, was); stamp(md.generated);
@@ -273,6 +275,7 @@
     var seg = $('.seg[data-seg="m"]'); if (seg) { var b0 = $('button[data-t="ov"] .sl', seg); if (b0) b0.textContent = "المباراة";
       if (!$('button[data-t="st"]', seg)) { var b = D.createElement("button"); b.type = "button"; b.setAttribute("role", "tab"); b.dataset.t = "st"; b.setAttribute("aria-selected", "false"); b.innerHTML = '<span class="sl">الأرقام</span>'; var h2h = $('button[data-t="h2h"]', seg); seg.insertBefore(b, h2h); seg.style.setProperty("--n", $$("button[data-t]", seg).length);
         var lup = $('.pane[data-g="m"][data-p="lu"]'), p = D.createElement("section"); p.className = "pane"; p.dataset.g = "m"; p.dataset.p = "st"; p.hidden = true; p.innerHTML = '<div id="stx"></div>'; if (lup) lup.after(p); } }
+    var cd0 = $(".mh-cd"); if (cd0) cd0.remove();
     ["#pick", "#stakes"].forEach(function (s) { var el = $(s); if (el) { var g = el.closest(".grp") || el; g.hidden = true; } });
   }
   // the goal moment: the score flips, the header flashes in the scorer's colour, «هدف» slides in from his side; one polite announcement; the whistle
@@ -351,7 +354,7 @@
     if (!$("#tfx")) return; var ids = {}; $$("#tfeat [data-mid], #tfx [data-mid]").forEach(function (a) { ids[a.dataset.mid] = 1; }); var age = V.built ? NOW() - Date.parse(V.built) : 0;
     cdAttachTeam();
     get("live.json", true).then(function (l) { var Lm = {}, hit = false; (l.matches || []).forEach(function (m) { Lm[m.id] = m; if (ids[m.id]) hit = true; });
-      if (!hit && age < 30 * 60e3) return;
+      if (!hit && age < 30 * 60e3) { D.documentElement.classList.remove("stale"); return; }
       return get("team/" + V.id + ".json", true).then(function (t) { cfg.now = NOW(); t.fixtures = (t.fixtures || []).map(function (m) { return m && Lm[m.id] ? Object.assign({}, m, Lm[m.id]) : m; }); TF = t; var tf = P.teamFx(t); $("#tfeat").innerHTML = tf.feat; $("#tfx").innerHTML = tf.fx; localize(); cdAttachTeam(); stamp(t.generated); }); }).catch(function () {});
     var ics = $("#ics"); if (ics && /Android/i.test(navigator.userAgent)) { ics.href = "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent("webcal://" + location.host + "/v1/team/" + V.id + ".ics"); ics.target = "_blank"; ics.rel = "noopener"; } else if (ics) ics.href = "webcal://" + location.host + "/v1/team/" + V.id + ".ics";
     pushInit();
@@ -359,7 +362,7 @@
   function cdAttachTeam() { var a = $("#tfeat .fc[data-mid]"); if (!a || $(".fc-cd", a)) return; var t = D.querySelector("#tfeat time[data-u]"), sc = $(".sc.ko", a); if (!t || !sc) return; var ko = t.dataset.u, d = Date.parse(ko) - NOW(); if (!(d > 0 && d < 4 * 864e5)) return;
     var el = D.createElement("div"); el.className = "fc-cd"; el.dataset.cdko = ko; el.innerHTML = "تبدا بعد " + cdText(d); a.appendChild(el); }
   function compInit() {
-    var age = V.built ? NOW() - Date.parse(V.built) : 0; if (age < 30 * 60e3 || !V.comp) return; var box = $("#ctab");
+    var age = V.built ? NOW() - Date.parse(V.built) : 0; if (age < 30 * 60e3 || !V.comp) { D.documentElement.classList.remove("stale"); return; } var box = $("#ctab");
     if (box) get("comp/" + V.comp + "/standings.json", true).then(function (st) { var b = $('.seg[data-seg="tv"] button[aria-selected="true"]'); box.innerHTML = P.compTable(st, box.dataset.single === "1", b && b.dataset.t); localize(box); stamp(st.generated); }).catch(function () {});
     var rl = $("#roundlist"); if (rl) get("comp/" + V.comp + "/fixtures.json", true).then(function (j) { FX = U.rounds(j); var b = $("#rounds button[aria-selected=true]"), k = b ? b.dataset.r : FX.cur; rl.innerHTML = U.roundMatches(FX.by[k] || []); localize(rl); }).catch(function () {});
   }
@@ -458,7 +461,7 @@
   function islandCands() { var ids = {}; teamIds().forEach(function (id) { ids["t" + id] = 1; }); ls.json("tifo.opened", []).forEach(function (o) { if (NOW() - Date.parse(o.ko) < 4 * 36e5 && Date.parse(o.ko) - NOW() < 15 * 60e3) ids["m" + o.id] = 1; }); return ids; }
   function island() {
     var el = $("#island"); if (!el) return; clearTimeout(IS.t);
-    if (!prefOn("island") || BOT) { el.hidden = true; B.classList.remove("island-on"); return; }
+    if (!prefOn("island")) { el.hidden = true; B.classList.remove("island-on"); return; }
     var c = islandCands(); if (!Object.keys(c).length) { el.hidden = true; B.classList.remove("island-on"); return; }
     Promise.all([get("live.json", true).catch(function () { return { matches: [] }; }), teamIds().length ? get("all/live.json", true).catch(function () { return { matches: [] }; }) : { matches: [] }]).then(function (r) {
       var x = ls.json("tifo.island.x", {}), mine = teamIds(), list = [];
@@ -652,9 +655,13 @@
     (function () { var fl = $(".natflags"); if (!fl) return; var cc = country(), nid = (window.NAT || {})[cc], me = $("#natme"), mb = $("#natmeb");
       if (!nid) { if (me) me.hidden = true; } else tnGet(nid).then(function (t) { if (!t || !mb) return; mb.innerHTML = '<a class="hd-row" href="/t/' + nid + '/">' + U.crest(t, "md") + '<span class="rt"><span>' + U.tname(t) + "</span></span>" + U.chev + "</a>" + (t.last ? U.mrow(t.last, { date: 1, team: nid }) : "") + (t.next ? U.mrow(t.next, { date: 1 }) : ""); localize(mb); var f = fl.querySelector('[data-cc="' + cc + '"]'); if (f) f.classList.add("me"); }); })();
     // /week/: the pinned «مباراة الأسبوع» counts down to its kickoff
+    // 417: «تيفو الأسبوع» on /week/ when the build had no weekly file yet, or a newer week is out (render.js draws it)
+    (function () { var pair = $("#wkpair"), T = window.TR; if (!pair || !T || !T.weekCard) return; var have = $("#wkcard");
+      fetch("/og/week-latest.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(function (j) { if (!j || !(j.items || []).length || (have && have.dataset.week === j.week)) return;
+        var t = D.createElement("div"); t.innerHTML = T.weekCard(j, { links: false }); var card = t.firstElementChild; if (!card) return; if (have) have.replaceWith(card); else pair.appendChild(card); if (T.localize) T.localize(card); }).catch(function () {}); })();
     (function () { var pin = $("#mow"), cd = $("#mowcd"); if (!pin || !cd || !pin.dataset.kick) return; cd.dataset.cdko = pin.dataset.kick; })();
     // QA 70/78: «مباراة الليلة في 60 ثانية» follows the viewer's clock
-    $$("b[data-kick]").forEach(function (el) { var t = Date.parse(el.dataset.kick), w = U.relDay(new Date(t).toISOString()) || U.dname(new Date(t).toISOString()); if (w) el.textContent = "مباراة " + (w === "اليوم" && new Date(t).getHours() >= 17 ? "الليلة" : w) + " في 60 ثانية"; });
+    $$("b[data-kick]").forEach(function (el) { if (window.TR && window.TR.dayWord) { el.textContent = "مباراة " + window.TR.dayWord(el.dataset.kick) + " في 60 ثانية"; return; } var t = Date.parse(el.dataset.kick), w = U.relDay(new Date(t).toISOString()) || U.dname(new Date(t).toISOString()); if (w) el.textContent = "مباراة " + (w === "اليوم" && new Date(t).getHours() >= 17 ? "الليلة" : w) + " في 60 ثانية"; });
     // W3.4: the visitor's channel on every row that shows one (.chn[data-comp]); the prerender shows the UAE's
     (function () { var els = $$(".chn[data-comp]"); if (!els.length) return; var cc = country(); if (!cc || cc === "AE" || cc === "xx") return; loadBC().then(function (bc) { var m = (bc || {})[cc] || {}; els.forEach(function (el) { var e = m[el.dataset.comp]; if (!e || !e.b || !e.b.length) { el.hidden = true; return; } el.hidden = false; el.innerHTML = U.esc(e.b[0][0]) + (e.b.some(function (x) { return x[1]; }) ? "" : " <b>مشفرة</b>"); }); }); })();
     // the live clock on legacy rows (render.js .lmin): each ticking minute moves every second between polls
@@ -698,7 +705,7 @@
   else if (PG === "search") searchInit();
   else if (PG === "db") dbInit();
   else if (PG === "offline") offlinePage();
-  legacyPages();
+  if (LEGACY) D.addEventListener("DOMContentLoaded", legacyPages); else legacyPages();   // render.js (window.TR) runs after this bundle
   var cur = $(".pane:not([hidden])"); if (cur) { lazyNews(cur); playerMounts(cur); }
   var rs = $("#rounds button[aria-selected=true]"); if (rs) rs.scrollIntoView({ inline: "center", block: "nearest" });
   island(); onbMaybe(); carMode(); instPaint(); instAsk(); offlineKeep();

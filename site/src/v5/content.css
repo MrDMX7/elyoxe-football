@@ -1320,3 +1320,4 @@ body[data-page="poster"]{background:#fff}
 :is(.lc .lvh,.lvh .lc) .board .tm{color:var(--ink)}
 :is(.lc #lvhl,#lvhl .lc) .hlink{margin-block:0 .8rem}
 :is(.lc ul.ev,ul.ev .lc) .how{color:var(--tert)}
+.card.lc .catchup,.card.lc .why,.card.lc .quick{background:none;border:0;padding:0;margin:0}.card.lc .catchup > b:first-child{display:none}.card.lc .catchup p,.card.lc .why p{font-size:15px;line-height:1.6;max-inline-size:none}.lc .blk,.lc .tscroll,.lc .tblwrap,.lc .hopp,.card.lc{overflow-x:auto;-webkit-overflow-scrolling:touch}.lc .tbl td,.lc .tbl th{white-space:normal}.lc .tdnav .ib{min-width:44px;min-height:44px;padding:0 10px}
