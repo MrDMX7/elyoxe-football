@@ -106,7 +106,7 @@
     if (t.id === "sc-save") {
       if (!DRAFT.length) return toast("اختر لاعب واحد على الأقل");
       t.disabled = true;
-      return api("PUT", API + "squad", { players: DRAFT }).then(function (j) { ME = j; DRAFT = saved(); toast("انحفظت خمستك. النقاط تنحسب من مبارياتهم الياية."); paintFive(); paintPool(); paintBoard(); })
+      return api("PUT", API + "squad", { players: DRAFT }).then(function (j) { ME = j; DRAFT = saved(); ls.set("tifo.scout.saved", "1");   /* «كشّاف» badge (src/badges.js) */ toast("انحفظت خمستك. النقاط تنحسب من مبارياتهم الياية."); paintFive(); paintPool(); paintBoard(); })
         .catch(function (x) { t.disabled = false; toast(x.message); });
     }
     if (t.dataset.cc != null) { FILTER.c = t.dataset.cc; SHOW = 40; chips(); paintPool(); return; }
