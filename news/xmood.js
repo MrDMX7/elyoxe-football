@@ -30,7 +30,7 @@ const log = (...x) => console.log('[mood]', new Date().toISOString().slice(11, 1
 // ------------------------------------------------------------------ moods
 const norm = (s) => String(s || '').toLowerCase().replace(/[ً-ٰٟـ]/g, '').replace(/[إأآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي');
 const MOOD = {
-  happy: { w: ['هدف', 'جول', 'كفو', 'كفوو', 'ابداع', 'ابدع', 'رهيب', 'روعه', 'عظمه', 'وحش', 'اسطوره', 'فخر', 'مبروك', 'الحمدلله', 'الحمد لله', 'فزنا',
+  happy: { w: ['كفو', 'كفوو', 'ابداع', 'ابدع', 'رهيب', 'روعه', 'عظمه', 'وحش', 'اسطوره', 'فخر', 'مبروك', 'الحمدلله', 'الحمد لله', 'فزنا',
                'فوز', 'بطل', 'ابطال', 'يا سلام', 'ياسلام', 'ممتع', 'تاريخي', 'احسنت', 'برافو', 'يستاهل', 'هيبه', 'تاهل', 'تاهلنا', 'فرحه', 'فرحان',
                'مبسوط', 'افضل', 'الافضل', 'عز', 'يا حلو', 'جميل'],
            e: ['😍', '🥳', '🎉', '🔥', '❤', '💚', '🤍', '💛', '💙', '👏', '💪', '😁', '😄', '🙌', '🏆', '👑', '😎', '🎊', '🤩'] },
@@ -44,6 +44,17 @@ const MOOD = {
 const MW = {}; Object.keys(MOOD).forEach(k => { MW[k] = MOOD[k].w.map(norm); });
 // commerce rides on match hashtags (subscriptions, tickets for sale, coupons): never a fan's mood
 const SALE = ['عرض', 'اشتراك', 'السعر', 'ريال', 'درهم', 'للبيع', 'ابيع', 'ابيعهم', 'خصم', 'كود', 'تذاكر', 'تذكره', 'متجر', 'توصيل', 'سجل الحين', 'رابط'].map(norm);
+// whose fans wrote it: a national team's flag or nickname (the Saudi fan who writes «هدف ثاني على الإمارات 🔥 الأخضر» is not a
+// UAE fan; 2026-10-06 the UAE side read «فرحان» while 2-0 down)
+const NICK = { SA: ['الاخضر', 'الصقور'], AE: ['الابيض', 'عيال زايد'], QA: ['العنابي'], KW: ['الازرق'], BH: ['الاحمر البحريني'], OM: ['الاحمر العماني'],
+  IQ: ['اسود الرافدين'], JO: ['النشامى'], EG: ['الفراعنه'], MA: ['اسود الاطلس'], DZ: ['محاربي الصحراء'], TN: ['نسور قرطاج'], LY: ['فرسان المتوسط'],
+  SY: ['نسور قاسيون'], PS: ['الفدائي'], LB: ['رجال الارز'], YE: ['اليمن'] };
+const flag = (iso) => iso && iso.length === 2 ? String.fromCodePoint(...[...iso.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : null;
+function cheers(text, iso) {   // does the post show this side's flag or nickname?
+  if (!iso) return false;
+  const f = flag(iso), t = ' ' + norm(text).replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ') + ' ';
+  return (f && text.includes(f)) || (NICK[iso] || []).some(w => t.includes(' ' + norm(w) + ' '));
+}
 const BALL = ['منتخب', 'مباراة', 'المباراة', 'هدف', 'النهائي', 'خليجي', 'الحكم', 'جمهور', 'الجمهور', 'المدرب', 'شوط', 'كأس', 'الدوري', 'لاعب'];
 function mood(text) {
   const t = ' ' + norm(text).replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ') + ' ', s = {};
@@ -148,6 +159,7 @@ const unlock = () => { try { if (JSON.parse(fs.readFileSync(LOCK, 'utf8')).pid =
   const watchdog = setTimeout(() => { console.error('[mood] watchdog: past the longest match window, giving up'); unlock(); process.exit(3); }, MAX_RUN + 10 * 60e3); watchdog.unref();
   try {
     const comps = watchSet(), nat = await getJson('arabs/national.json'), nationals = new Set(((nat && nat.teams) || []).map(t => t.team));
+    const ISO = {}; ((nat && nat.teams) || []).forEach(t => { if (t.team && t.iso2) ISO[t.team] = t.iso2; });
     const state = fs.existsSync(STATE) ? JSON.parse(fs.readFileSync(STATE, 'utf8')) : {};
     do {
       const ms = await watched(comps, nationals);
@@ -174,7 +186,11 @@ const unlock = () => { try { if (JSON.parse(fs.readFileSync(LOCK, 'utf8')).pid =
             if (SALE.some(w => (' ' + norm(p.text).replace(/[^\p{L}\p{N}\s]/gu, ' ') + ' ').includes(' ' + w + ' '))) { st.posts[p.id] = { side, at: p.at, m: null, skip: 1 }; continue; }
             // before kickoff a reply to an account or a score is a prediction (brands run contests), not a mood
             if (pre && (/^\s*@/.test(p.text) || /\d\s*[-/:]\s*\d/.test(p.text.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))))) { st.posts[p.id] = { side, at: p.at, m: null, skip: 1 }; continue; }
-            const md = mood(p.text); st.posts[p.id] = { side, at: p.at, m: md }; fresh++;
+            // the side it cheers for: its own flag or nickname keeps it, the other side's moves it there, both or neither keep the search's
+            const mine = cheers(p.text, ISO[m[side].id]), theirs = cheers(p.text, ISO[m[other].id]);
+            const to = theirs && !mine ? other : side;
+            if (mine && theirs) { st.posts[p.id] = { side, at: p.at, m: null, skip: 1 }; continue; }
+            const md = mood(p.text); st.posts[p.id] = { side: to, at: p.at, m: md }; fresh++;
             if (a.includes('--show')) log(side, md || '—', p.text.replace(/\s+/g, ' ').slice(0, 110));
           }
           log(`#${m.id} ${names[side]}: ${got.length} posts, ${fresh} new`);
