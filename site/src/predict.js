@@ -43,7 +43,7 @@
       '<p class="gf">' + RULES + ' <a href="/predict/">تحدّى ربعك</a></p></section>';
   }
   function dialog(id, title, inner) {
-    return '<dialog class="sheet tp-sheet" id="' + id + '" aria-labelledby="' + id + '-t"><div class="sh-grab" aria-hidden="true"></div><header class="sh-hd"><h2 id="' + id + '-t" tabindex="-1">' + title +
+    return '<dialog class="sheet tp-sheet" id="' + id + '" aria-labelledby="' + id + '-t"><div class="sh-grab" aria-hidden="true"></div><header class="sh-hd"><h2 id="' + id + '-t" tabindex="-1" autofocus>' + title +
       '</h2><button type="button" class="sh-x" data-close aria-label="سكّر">' + CLOSE + '</button></header><div class="sh-bd">' + inner + "</div></dialog>";
   }
   function row(o) {

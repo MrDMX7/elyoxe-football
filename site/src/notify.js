@@ -47,7 +47,7 @@
       '<p class="gf nf-msg" data-nf-msg aria-live="polite"></p></div>';
   }
   function sheet(team) {
-    return '<dialog class="sheet" id="sh-notify" aria-labelledby="sh-notify-t"><div class="sh-grab" aria-hidden="true"></div><header class="sh-hd"><h2 id="sh-notify-t" tabindex="-1">نبّهني</h2>' +
+    return '<dialog class="sheet" id="sh-notify" aria-labelledby="sh-notify-t"><div class="sh-grab" aria-hidden="true"></div><header class="sh-hd"><h2 id="sh-notify-t" tabindex="-1" autofocus>نبّهني</h2>' +
       '<button type="button" class="sh-x" data-close aria-label="سكّر">' + CLOSE + '</button></header><div class="sh-bd">' + body(team) + "</div></dialog>";
   }
 
