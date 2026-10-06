@@ -142,3 +142,23 @@ def test_rebuild_splits_a_story_the_old_rules_chained():
     assert gone["id"] in K.rebuild({gone["id"]: gone}, items)[0]       # no item of it kept: it stays until it ages out
     gone.update(kind="transfer", stage="official")
     assert K.rebuild({gone["id"]: gone}, items)[0][gone["id"]]["stage"] is None   # but an «official» it cannot check is not claimed
+
+
+def test_a_story_credits_its_stage_to_its_subjects_and_shows_the_headline_that_reached_it():
+    # 2026-10-06: Güler went out as «official» through Raphinha's story (a merged tweet named him), under the headline
+    # «رونالدينيو سبب انتقال رافينيا إلى برشلونة»
+    from news import run as R
+    a = _item("1", "Lionel Messi transfer to Manchester City talked up", kind="transfer", at="2026-09-29T10:00:00Z")
+    b = _item("2", "Official: Lionel Messi and Cristiano Ronaldo sign for Manchester City", kind="transfer", at="2026-09-29T11:00:00Z")
+    for x in (a, b):
+        x.update(C.classify(x))
+    stories = {}
+    K.assign(stories, [a, b])
+    (s,) = stories.values()
+    assert s["stage"] == "official"
+    items = {"1": a, "2": b}
+    t = {p["player"]["id"]: p["stage"] for p in R.transfers([s], items, D)}
+    assert t == {30981: "official"}                                    # Messi; Ronaldo only came in with the second headline
+    card = R.display(s, items, D)
+    assert card["title"].startswith("Official:") and {e["id"] for e in card["entities"]} == {30981, 8456}
+    assert 500004 in {m["id"] for m in card["mentions"]}
