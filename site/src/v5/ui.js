@@ -486,12 +486,20 @@
   var KIND = { transfer: "انتقالات", injury: "إصابة", presser: "مؤتمر صحفي", statement: "تصريحات", official: "رسمي", match: "مباراة", other: "خبر" };
   var STAGE = { rumour: "إشاعة", talks: "مفاوضات", agreed: "اتفاق", here_we_go: "Here we go", official: "رسمي" };
   U.KIND = KIND;
+  // «مؤشر صحة الإشاعة» (owner's second list 4): the journal's score for a transfer story (news/run.py credibility), as a bar and a word
+  var CBEST = { official: "منها حساب رسمي", journalist: "منها صحفي معروف بدقته", paper: "منها صحف معروفة", aggregator: "مواقع تنقل عن غيرها بس" };
+  U.cred = function (s) {
+    var c = s.cred; if (!c || s.kind !== "transfer") return "";
+    var w = s.stage === "official" ? "مؤكدة" : c.v >= 75 ? "قوية" : c.v >= 50 ? "متوسطة" : "ضعيفة", lv = c.v >= 75 ? "hi" : c.v >= 50 ? "md" : "lo";
+    return '<p class="cred ' + lv + '"><span class="crb" aria-hidden="true"><i style="width:' + Math.max(6, Math.min(100, +c.v || 0)) + '%"></i></span>' +
+      "<span>" + (s.stage === "official" ? "الصفقة " : "صحة الإشاعة: ") + "<b>" + w + "</b><small> · " + (c.n === 1 ? "مصدر واحد" : c.n === 2 ? "مصدرين" : c.n + (c.n % 100 >= 3 && c.n % 100 <= 10 ? " مصادر" : " مصدر")) + "، " + (CBEST[c.best] || "") + "</small></span></p>";
+  };
   U.newsCard = function (s) {
     var src = s.sources || [], first = src[0] || {}, ar = s.title_lang === "ar", tag = KIND[s.kind] || "خبر";
     var ents = (s.entities || []).slice(0, 4).map(function (e) { var href = e.kind === "team" ? L("t", e.id) : e.kind === "player" ? L("p", e.id) : null; return href ? '<a class="chip" href="' + href + '">' + (e.kind === "team" ? U.crest({ id: e.id }).replace('class="cr"', 'class="lg"') : "") + esc(e.name) + "</a>" : '<span class="chip">' + esc(e.name) + "</span>"; }).join("");
     return '<article class="nw"><p class="nw-k"><span class="tg ' + esc(s.kind) + '">' + tag + (s.kind === "transfer" && s.stage ? " · " + esc(STAGE[s.stage] || s.stage) : "") + "</span>" + (s.here_we_go ? '<span class="hwg">Here we go</span>' : "") + '<time data-u="' + esc(s.last_at || "") + '" data-f="ago">' + U.ago(s.last_at) + "</time></p>" +
       "<h3" + (ar ? "" : ' dir="auto"') + '><a href="' + esc(first.url || "#") + '" rel="noopener" target="_blank">' + esc(s.title) + "</a></h3>" + (s.summary ? '<p class="sm">' + esc(s.summary) + "</p>" : "") + (ents ? '<div class="ents">' + ents + "</div>" : "") +
-      '<p class="src">' + (src.length > 1 ? src.length + " مصادر: " : "المصدر: ") + src.slice(0, 3).map(function (x) { return esc(x.name); }).join("، ") + "</p></article>";
+      U.cred(s) + '<p class="src">' + (src.length > 1 ? src.length + " مصادر: " : "المصدر: ") + src.slice(0, 3).map(function (x) { return esc(x.name); }).join("، ") + "</p></article>";
   };
   U.vids = function (list) { return '<div class="vids">' + list.map(function (v) { return '<a class="vid" href="' + esc(v.url) + '" rel="noopener" target="_blank">' + (v.image ? '<img src="' + esc(v.image) + '" alt="" loading="lazy" width="220" height="124">' : "") + '<span dir="auto">' + esc(v.title) + "</span><small>" + esc(v.channel || "") + (v.platform === "x" ? " على X" : " على يوتيوب") + " · " + U.ago(v.at) + "</small></a>"; }).join("") + "</div>"; };
 
