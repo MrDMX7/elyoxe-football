@@ -285,17 +285,6 @@ def main(argv=None):
                 osk = eng_sk.get(efold(oname))
                 ms.append([d, key_of.get(osk) or ("s:" + osk if osk else "e:" + oname), h, gf, ga, comp])
             ms.sort(key=lambda m: m[0])
-        # one row per game: the dataset files some continental games a second time under the league of a club that played them
-        # (Al Shorta's AFC Champions League game of 2023-12-05 under «iraq», Peñarol v Nacional's Libertadores game of 1969-04-26
-        # under «uruguay»: audit 2026-10-05). The same date, opponent, venue and score is one game, kept under its continental label
-        uniq = {}
-        for m in ms:
-            k = (m[0], str(m[1]), m[2], m[3], m[4])
-            if k not in uniq or (m[5] in INTL and uniq[k][5] not in INTL):
-                uniq[k] = m
-        if len(uniq) < len(ms):
-            stats["the same game twice in the dataset (one kept)"] += len(ms) - len(uniq)
-            ms = sorted(uniq.values(), key=lambda m: m[0])
         # RSSSF matches only where no other source has this club on that date (±2 days) against that opponent
         rs = RS.get(str(fid)) or {}
         if rs.get("matches"):
@@ -328,6 +317,18 @@ def main(argv=None):
             ms.append(row)
             have[o].append(row)
             stats["archive games added"] += 1
+        # one row per game, once every source is in (the opponent fix above can make two rows one): the dataset files some
+        # continental games a second time under a club's league (Al Shorta's AFC Champions League game of 2023-12-05 under
+        # «iraq», Peñarol v Nacional's Libertadores game of 1969-04-26 under «uruguay»: audit 2026-10-05). The same date,
+        # opponent, venue and score is one game, kept under its continental label
+        uniq = {}
+        for m in ms:
+            k = (m[0], str(m[1]), m[2], m[3], m[4])
+            if k not in uniq or (m[5] in INTL and uniq[k][5] not in INTL):
+                uniq[k] = m
+        if len(uniq) < len(ms):
+            stats["the same game twice (one kept)"] += len(ms) - len(uniq)
+            ms = list(uniq.values())
         ms.sort(key=lambda m: m[0])
         if not ms:
             continue
