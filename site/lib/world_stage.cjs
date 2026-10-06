@@ -85,7 +85,7 @@ module.exports = async function(X){
     const person = Object.assign({ "@context":"https://schema.org", "@type":"Person", name:title, url:`${SITE}/db/player/${id}/`, jobTitle:"لاعب كرة قدم" }, nm && la ? { alternateName:la } : {}, b.born && b.born >= "1900" ? { birthDate:b.born } : {},
       b.h ? { height:{ "@type":"QuantitativeValue", value:b.h, unitCode:"CMT" } } : {}, cn ? { nationality:{ "@type":"Country", name:cn } } : {}, club ? { affiliation:{ "@type":"SportsTeam", name:tname(club) } } : {}, PH[id] ? { image:`${SITE}/v1/ph/${id}.webp` } : {});
     return { title:`${title}: مسيرته وأرقامه${club ? " مع " + tname(club) : ""} | تيفو`, desc:`${title}${pos ? "، " + pos : ""}${club ? " في " + tname(club) : ""}${cn ? " من " + cn : ""}${age != null ? "، عمره " + age + " سنة" : ""}: مسيرته موسم بموسم بالمباريات والأهداف${t.t.length ? "، وألقابه" : ""}${wiki ? "، ونبذة من ويكيبيديا" : ""}.`,
-      html, ld:[bcLd([["الموسوعة", "/db/"], club && [tname(club), teamPages.has(+club) ? `/t/${club}/` : null], [title, `/db/player/${id}/`]]), person], club };
+      html, ld:[bcLd([["الموسوعة", "/db/"], club && teamPages.has(+club) && [tname(club), `/t/${club}/`], [title, `/db/player/${id}/`]]), person], club };   // a crumb needs an indexable page: the club's only when it has one
   }
   const next = {}, now = Date.now(), urls = [], fresh = []; let nNew = 0, nChg = 0, nShell = 0, nKeep = 0, bytes = 0;
   const shellOld = inScope.filter(id => man[id] && man[id][1] !== ASSET_V && now - man[id][2] > SHELL_AGE).sort((a, b) => man[a][2] - man[b][2]), shellOK = new Set(shellOld.slice(0, SHELL));
