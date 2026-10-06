@@ -93,6 +93,10 @@ function posts(json, handle) {
   return out;
 }
 
+// a run takes ~1 min (6 at worst). On 2026-10-06 one hung before its first line with Edge open (02:39) and kept the log open,
+// so every later run failed on the redirect for 4 h. Past 10 min it gives up; Playwright's exit handler kills the Edge it launched
+setTimeout(() => { console.error('[x] watchdog: still running after 10 min, giving up'); process.exit(3); }, 10 * 60e3).unref();
+
 (async () => {
   if (!chromium) { console.error('playwright-core not found'); process.exit(2); }
   const cfg = config(), inbox = fs.existsSync(INBOX) ? JSON.parse(fs.readFileSync(INBOX, 'utf8')) : { cursor: 0, last_run: null, items: [], errors: {} };
@@ -157,7 +161,7 @@ function posts(json, handle) {
   if (!a.includes('--dry')) {
     fs.writeFileSync(INBOX, JSON.stringify(inbox));
     // the whole inbox (last 800 posts) overwrites the copy in S3; news.run skips the posts it already has by id
-    if (a.includes('--upload')) execSync(`aws s3 cp "${INBOX}" s3://${BUCKET}/state/news/x-inbox.json --content-type application/json --cache-control no-store --only-show-errors`, { stdio: 'inherit' });
+    if (a.includes('--upload')) execSync(`aws s3 cp "${INBOX}" s3://${BUCKET}/state/news/x-inbox.json --content-type application/json --cache-control no-store --only-show-errors`, { stdio: 'inherit', timeout: 120000 });   // execSync blocks the watchdog
   }
   log('done:', added, 'new posts from', pick.length, 'accounts');
 })().catch(e => { console.error(e); process.exit(1); });
