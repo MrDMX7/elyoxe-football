@@ -166,8 +166,9 @@
   setInterval(poll, POLL);
   D.addEventListener("visibilitychange", function () { if (!D.hidden) poll(); });
 
-  // a goal on the page's live data (v5's app.js fires tifo:match with the match file on every poll)
-  var last = V.sc ? { h: +V.sc[0], a: +V.sc[1] } : null;
+  // a goal on the page's live data (v5's app.js fires tifo:match with the match file on every poll); counted from the first
+  // poll's score, not the page's: the page is built up to an hour earlier, and a goal in between must not erupt on opening it
+  var last = null;
   D.addEventListener("tifo:match", function (e) {
     var md = e.detail || {}, sc = md.score; if (md.status) status = md.status;
     if (!sc) return;
