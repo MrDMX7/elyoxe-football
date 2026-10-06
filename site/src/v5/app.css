@@ -678,3 +678,4 @@ body.second .mh-t b{overflow-wrap:normal;word-break:keep-all}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.2s;animation-timing-function:var(--ease)}
 .tabbar{view-transition-name:tabbar}
 @media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
+.nw .cred{display:flex;align-items:center;gap:8px;margin:8px 0 0;font-size:13px;color:var(--label2)}.nw .cred b{color:var(--label)}.nw .crb{flex:none;width:56px;height:6px;border-radius:3px;background:var(--fill2);overflow:hidden}.nw .crb i{display:block;height:100%;border-radius:3px;background:var(--draw)}.nw .cred.md .crb i{background:#FF9F0A}.nw .cred.hi .crb i{background:var(--win)}

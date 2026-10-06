@@ -59,6 +59,28 @@ def stage_item(story, items_by_id):
     return xs[0] if xs else None
 
 
+TIER_NAMES = {3: "official", 2: "journalist", 1: "paper", 0: "aggregator"}
+
+
+def credibility(story, srcs):
+    """«مؤشر صحة الإشاعة» (owner's second list 4, 2026-10-06): how much a transfer story can be believed, 0-100, from its
+    strongest outlet (an official account 90, a journalist with a record 65, a paper 40, an aggregator 15), how many outlets
+    carry it (each outlet past the first above an aggregator +8, up to +24; aggregators +2, up to +6) and how far the deal got
+    (talks +5, agreed +10, «here we go» at least 92, official 100). -> {v, n, best} for a transfer story, else None."""
+    if story["kind"] != "transfer":
+        return None
+    tiers = [K.TIER_RANK.get(x["tier"], 0) for x in srcs]
+    best = max(tiers, default=0)
+    if story.get("stage") == "official":
+        return {"v": 100, "n": len(srcs), "best": TIER_NAMES[best]}
+    strong, weak = sum(1 for t in tiers if t >= 1), sum(1 for t in tiers if t == 0)
+    weak -= 1 if best == 0 else 0                     # the outlets past the first: an aggregator alone corroborates nothing
+    v = {3: 90, 2: 65, 1: 40, 0: 15}[best] + min(24, 8 * max(0, strong - 1)) + min(6, 2 * weak) + {"talks": 5, "agreed": 10}.get(story.get("stage"), 0)
+    if story.get("here_we_go"):
+        v = max(v, 92)
+    return {"v": min(99, v), "n": len(srcs), "best": TIER_NAMES[best]}
+
+
 def subjects(story):
     """Who the story is about: the people and clubs its first headline names (cluster seed), else its anchor."""
     return story.get("seed") or story.get("anchor") or story["entities"]
@@ -76,7 +98,7 @@ def display(story, items_by_id, D):
             "title": title, "title_lang": tlang, "summary": sm.get("summary_ar"), "image": story.get("image"),
             "entities": [{"kind": k, "id": i, "name": D.names.get((k, i), "")} for k, i in subj],
             "mentions": [{"kind": k, "id": i, "name": D.names.get((k, i), "")} for k, i in story["entities"] if [k, i] not in subj],
-            "sources": srcs, "reliability": K.reliability(srcs), "first_at": story["first_at"], "last_at": story["last_at"]}
+            "sources": srcs, "reliability": K.reliability(srcs), "cred": credibility(story, srcs), "first_at": story["first_at"], "last_at": story["last_at"]}
 
 
 def social(store, items, D, gen, n):

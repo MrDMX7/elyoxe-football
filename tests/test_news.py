@@ -162,3 +162,16 @@ def test_a_story_credits_its_stage_to_its_subjects_and_shows_the_headline_that_r
     card = R.display(s, items, D)
     assert card["title"].startswith("Official:") and {e["id"] for e in card["entities"]} == {30981, 8456}
     assert 500004 in {m["id"] for m in card["mentions"]}
+
+
+def test_the_rumour_meter():
+    # «مؤشر صحة الإشاعة» (owner's second list 4): the strongest outlet, how many carry it, how far the deal got
+    from news import run as R
+    src = lambda *tiers: [{"tier": t} for t in tiers]
+    tr = lambda **kw: dict({"kind": "transfer", "stage": "rumour"}, **kw)
+    assert R.credibility(tr(), src("aggregator"))["v"] == 15                               # one site copying another: weak
+    assert R.credibility(tr(), src("paper", "aggregator", "aggregator", "aggregator"))["v"] == 46
+    assert R.credibility(tr(stage="talks"), src("journalist", "paper", "paper")) == {"v": 86, "n": 3, "best": "journalist"}
+    assert R.credibility(tr(here_we_go=True), src("journalist"))["v"] == 92
+    assert R.credibility(tr(stage="official"), src("paper"))["v"] == 100
+    assert R.credibility({"kind": "injury"}, src("paper")) is None
