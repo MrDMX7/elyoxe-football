@@ -255,7 +255,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   { const dj = fs.readFileSync(path.join(__dirname, "src/days.js"), "utf8"); DAYS_V = hash(dj); fs.writeFileSync(path.join(OUT, `assets/days.${DAYS_V}.js`), dj); }   // owner item 9: the day pages' renderer, shared with lib/seo_days.cjs
   { const gj = fs.readFileSync(path.join(__dirname, "src/goalshare.js"), "utf8"); GS_V = hash(gj); fs.writeFileSync(path.join(OUT, `assets/goalshare.${GS_V}.js`), gj); }   // owner item 11: share one goal from its row
   { const w = f => { const j = fs.readFileSync(path.join(__dirname, `src/${f}.js`), "utf8"), v = hash(j); fs.writeFileSync(path.join(OUT, `assets/${f}.${v}.js`), j); return `/assets/${f}.${v}.js`; };
-    ENG = { notify:w("notify"), predict:w("predict"), voices:w("voices"), mosaic:w("mosaic") }; }   // items 7, 8, 3; «اصنع التيفو» (bold idea 1)
+    ENG = { notify:w("notify"), predict:w("predict"), voices:w("voices"), mosaic:w("mosaic"), motm:w("motm") }; }   // items 7, 8, 3; «اصنع التيفو» (bold idea 1); «رجل المباراة بصوت الجمهور» (second list 2)
   // the mark: a 3x3 tifo of cards (chalk, pulse, dune on night pitch)
   // the mark: v5's 3x3 «tifo» of rounded cards (white, two quiet, three light pitch green) on pitch green (site/redesign/v5/icons.py)
   const cellsSvg = ["#fff", "#7CF0B4", "#ffffff70", "#fff", "#ffffff70", "#7CF0B4", "#7CF0B4", "#fff", "#fff"].map((c, i) => `<rect x="${7 + (i % 3) * 6.5}" y="${7 + Math.floor(i / 3) * 6.5}" width="5.4" height="5.4" rx="1.3" fill="${c}"/>`).join("");
@@ -956,6 +956,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     // «اصنع التيفو» (src/mosaic.js) opens 3 h before kickoff and closes 2 h after the end: its script goes on the pages of
     // matches within a day of now (rebuilt hourly), not on the archive's thousands
     const fanJs = !md.time_tbd && Math.abs(Date.parse(md.kickoff_utc || 0) - Date.now()) < 30 * 36e5 ? [ENG.mosaic] : [];
+    // «رجل المباراة بصوت الجمهور» (src/motm.js) votes from the whistle until 48 h after the end: from a day before kickoff to 52 h after
+    const koT = Date.parse(md.kickoff_utc || 0), motmJs = !md.time_tbd && koT > Date.now() - 52 * 36e5 && koT < Date.now() + 30 * 36e5 ? [ENG.motm] : [];
     // 444: «موعد مباراة X و Y» before it, «نتيجة مباراة X و Y» once it has a score
     const cN = md.comp_name_ar || R.compName(index, md.comp), H0 = PN(md.home), A0 = PN(md.away), played = !!(md.score && (md.status === "finished" || R.isLive(md)));
     const when = !md.kickoff_uae ? "والموعد ما تأكد" : R.dayLabel(R.ymd(md.kickoff_uae)) + (md.time_tbd ? "، والساعة ما تأكدت" : ` الساعة ${R.hhmm(md.kickoff_uae)} بتوقيت الإمارات`);
@@ -963,7 +965,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     const mD = played ? `${md.status === "finished" ? "انتهت" : "مباشر:"} مباراة ${H0} و${A0} ${md.score.home}-${md.score.away} في ${cN}: الأهداف والأحداث والتشكيلة والإحصائيات والمواجهات السابقة.` : `موعد مباراة ${H0} و${A0} في ${cN} ${when}${ww ? "، والقناة الناقلة" : ""}، مع التشكيلة والأرقام والمواجهات السابقة.`;
     const mck = (comps.find(cc => cc.id === md.comp) || {}).key, mBc = bcLd([mck && [cN, `/c/${mck}/`], [`${H0} و${A0}`, `/m/${id}/`]]);
     v5.body = v5.body.replace('<div id="ev">', `<div id="ev" data-gstub="${gstub.join(",")}">`);   // item 11: the goals whose page /m/<id>/g/<n>/ was published (src/goalshare.js)
-    write(`m/${id}/index.html`, page({ v5, near:R.isLive(md) || (md.status === "finished" && Date.now() - Date.parse(md.kickoff_utc || 0) < 4 * 36e5),   /* QA 4: an upcoming match is never marked stale (its time is not live data) */ og:mOg, ogv:mOg !== "match" && md.status === "finished" && md.score ? `ft-${md.score.home}-${md.score.away}` : "", path:`/m/${id}/`, page:"match", nav:"home", attrs:` data-id="${id}"`, names, pp:mpp, title:mT, desc:mD, js:[`/assets/goalshare.${GS_V}.js`].concat(fanJs), ld:[ld].concat(faqQ.length ? [{ "@context":"https://schema.org", "@type":"FAQPage", mainEntity:faqQ.map(q => ({ "@type":"Question", name:q[0], acceptedAnswer:{ "@type":"Answer", text:q[1] } })) }] : [], [mBc]) }));
+    write(`m/${id}/index.html`, page({ v5, near:R.isLive(md) || (md.status === "finished" && Date.now() - Date.parse(md.kickoff_utc || 0) < 4 * 36e5),   /* QA 4: an upcoming match is never marked stale (its time is not live data) */ og:mOg, ogv:mOg !== "match" && md.status === "finished" && md.score ? `ft-${md.score.home}-${md.score.away}` : "", path:`/m/${id}/`, page:"match", nav:"home", attrs:` data-id="${id}"`, names, pp:mpp, title:mT, desc:mD, js:[`/assets/goalshare.${GS_V}.js`].concat(fanJs, motmJs), ld:[ld].concat(faqQ.length ? [{ "@context":"https://schema.org", "@type":"FAQPage", mainEntity:faqQ.map(q => ({ "@type":"Question", name:q[0], acceptedAnswer:{ "@type":"Answer", text:q[1] } })) }] : [], [mBc]) }));
     urls.push(`/m/${id}/`);
     if (uaeMatch && (md.status === "scheduled" || Date.parse(md.kickoff_utc) > Date.now() - 3 * 864e5)){
       const nums = [probs ? `توقعات تيفو: ${Math.round(probs.home * 100)}% فوز ${md.home.name_ar}، ${Math.round(probs.draw * 100)}% تعادل، ${Math.round(probs.away * 100)}% فوز ${md.away.name_ar}.` : "", ...((factsByMatch[id] || []).map(f => String(f.text_ar).replace(/\s*\(بيانات FotMob\)/g, "")))].filter(Boolean);
