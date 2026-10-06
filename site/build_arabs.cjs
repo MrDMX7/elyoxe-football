@@ -258,7 +258,7 @@ module.exports = async function(X){
   // logos referenced above that the main build did not fetch
   await pool([...logos].filter(Boolean), 8, async id => {
     const f = path.join(CACHE, "logo", id + ".png"), o = path.join(OUT, "logo", id + ".png"); if (fs.existsSync(o)) return;
-    if (!fs.existsSync(f)){ try { const r = await fetch(`https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png`); if (r.ok) fs.writeFileSync(f, Buffer.from(await r.arrayBuffer())); } catch (e){} }
+    if (!fs.existsSync(f)){ try { const r = await fetch(`https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png`, { signal:AbortSignal.timeout(20000) }); if (r.ok) fs.writeFileSync(f, Buffer.from(await r.arrayBuffer())); } catch (e){} }
     if (fs.existsSync(f)) fs.copyFileSync(f, o);
   });
   return { home, search, natHist, natSq, mowWeek };

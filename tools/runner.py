@@ -81,6 +81,8 @@ def run(log, cmd, cwd=ROOT, timeout=None):
     """Run a command, its output into the log; (return code, the output's tail)."""
     env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONWARNINGS="ignore")
     env.setdefault("HOME", str(Path.home()))          # Task Scheduler gives no HOME; scripts join paths onto it
+    # IPv4 first: this laptop's IPv6 path is slower and once left a build waiting on a dead connection for 4 hours (2026-10-06)
+    env["NODE_OPTIONS"] = (env.get("NODE_OPTIONS", "") + " --dns-result-order=ipv4first").strip()
     log.w("$ " + " ".join(str(c) for c in cmd))
     try:
         p = subprocess.run([str(c) for c in cmd], cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",

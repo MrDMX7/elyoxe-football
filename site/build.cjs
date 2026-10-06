@@ -347,7 +347,7 @@ const vpane = (group, key, html, first) => `<section data-group="${group}" data-
   let dl = 0;
   await pool([...logoIds], 8, async id => {
     const f = path.join(CACHE, "logo", id + ".png");
-    if (!fs.existsSync(f)){ try { const r = await fetch(`https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png`); if (r.ok){ fs.writeFileSync(f, Buffer.from(await r.arrayBuffer())); dl++; } } catch (e){} }
+    if (!fs.existsSync(f)){ try { const r = await fetch(`https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png`, { signal:AbortSignal.timeout(20000) }); if (r.ok){ fs.writeFileSync(f, Buffer.from(await r.arrayBuffer())); dl++; } } catch (e){} }
     if (fs.existsSync(f)) cpKeep(f, path.join(OUT, "logo", id + ".png"));
   });
   try { require("child_process").execFileSync("python3", [path.join(__dirname, "logo_colors.py")], { stdio:"ignore" }); } catch (e){ console.error("logo_colors.py failed; neutral colours"); }
