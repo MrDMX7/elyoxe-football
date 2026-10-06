@@ -29,7 +29,7 @@ module.exports = async function(X){
   const keys = {}; comps.forEach(c => { keys[c.id] = c.key; });
   const l365 = [...LG365].map(Number);
   const ctxOf = d => ({ ymd:d, keys, l365, bc:BCBY, tv:tvs[d], tz:"Asia/Dubai", hasPage:id => matchPages.has(String(id)), logoOk });
-  const ld0 = (name, url) => bcLd([["مباريات اليوم", "/today/"], name && [name, url]]);
+  const ld0 = (name, url) => bcLd([["جدول المباريات", "/matches/"], [name, url]]);   // as the visible crumbs: the hub, then the day
 
   // ---- the parts of a day page
   const featured = doc => { const all = []; ((doc && doc.leagues) || []).forEach(lg => (lg.matches || []).forEach(m => all.push([lg, m]))); return all; };
