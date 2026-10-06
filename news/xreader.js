@@ -7,6 +7,10 @@
 //
 // Rotation: every run reads the accounts marked `every: true` plus the next `per_run` from the list (news/sources.yaml `x:`),
 // so ~5 profile loads per run. Runs no more often than `min_minutes` apart, whatever calls it.
+// Live first (owner 2026-10-07 «ممتاز كمل», after the Gulf Cup final's clips came hours late): while a match is on or finished
+// in the last 3 h (v1/live.json), the official accounts tied to it (its clubs', federations', league's, and the broadcasters'
+// with its competition in `comps:`) are read first, `hot_per_run` at a time in turn, the rotation shrinks to `live_per_run`,
+// and runs may come every `live_minutes`. `--plan` prints the pick and stops.
 //
 // Where it runs (owner 2026-09-30: «نخلي شغلة تويتر… على اللابتوب عشان ما يخلص جرج التلفون»): the LAPTOP, every 30 min from
 // Task Scheduler (news/xreader-task.vbs, hidden), Edge in a window parked off-screen; `--upload` puts the inbox at
@@ -36,10 +40,49 @@ function config() {
   const accounts = [];
   for (const line of blk.split('\n')) {
     const m = line.match(/^\s*-\s*\{(.*)\}\s*(#.*)?$/); if (!m) continue;
-    const o = {}; for (const kv of m[1].matchAll(/(\w+):\s*("([^"]*)"|[^,]+)/g)) o[kv[1]] = kv[3] !== undefined ? kv[3] : kv[2].trim();
+    const o = {};
+    for (const kv of m[1].matchAll(/(\w+):\s*(\[[^\]]*\]|"([^"]*)"|[^,]+)/g)) {   // `comps: [538, 329]` is a list
+      const v = kv[3] !== undefined ? kv[3] : kv[2].trim();
+      o[kv[1]] = v[0] === '[' ? v.slice(1, -1).split(',').map(x => x.trim()).filter(Boolean) : v;
+    }
     accounts.push(o);
   }
-  return { per_run: num('per_run', 4), min_minutes: num('min_minutes', 28), max_posts: num('max_posts', 20), accounts };
+  return { per_run: num('per_run', 4), min_minutes: num('min_minutes', 28), max_posts: num('max_posts', 20),
+           live_minutes: num('live_minutes', 13), hot_per_run: num('hot_per_run', 5), live_per_run: num('live_per_run', 2), accounts };
+}
+
+const DATA = 'https://d1n5aqaqkowltp.cloudfront.net', AFTER_H = 3;
+async function hotSet() {
+  // the matches on now or finished in the last AFTER_H hours: goal clips come during the match, the summary after it
+  const H = { teams: new Set(), comps: new Set() };
+  try {
+    const r = await fetch(DATA + '/v1/live.json', { signal: AbortSignal.timeout(20000) }), j = r.ok ? await r.json() : null;
+    for (const m of (j && j.matches) || []) {
+      const on = m.status === 'live' || m.status === 'ht' || (m.status === 'finished' && Date.now() - Date.parse(m.kickoff_utc || 0) < AFTER_H * 36e5);
+      if (!on) continue;
+      [m.home && m.home.id, m.away && m.away.id].forEach(t => { if (t) H.teams.add(+t); });
+      if (m.comp) H.comps.add(+m.comp);
+    }
+  } catch (e) { log('live matches not read:', String(e.message || e).slice(0, 80)); }
+  return H;
+}
+const ids = (x, one, many) => [].concat(x[one] ? [x[one]] : [], x[many] || []).map(Number);
+const isHot = (x, H) => x.tier === 'official' && x.every !== 'true' &&
+  (ids(x, 'team', 'teams').some(t => H.teams.has(t)) || ids(x, 'comp', 'comps').some(c => H.comps.has(c)));
+
+function plan(cfg, inbox, H) {
+  // the accounts of this run: `every`, then the live matches' (in turn), then the rotation; each once
+  const every = cfg.accounts.filter(x => x.every === 'true'), hot = cfg.accounts.filter(x => isHot(x, H)), rest = cfg.accounts.filter(x => x.every !== 'true');
+  const turn = (list, key, n) => {
+    if (!list.length || n <= 0) return [];
+    const c = (inbox[key] || 0) % list.length; inbox[key] = (c + n) % list.length;
+    return list.slice(c, c + n).concat(list.slice(0, Math.max(0, c + n - list.length)));
+  };
+  const seen = new Set(), pick = [];
+  for (const x of every.concat(turn(hot, 'hot_cursor', cfg.hot_per_run), turn(rest, 'cursor', hot.length ? cfg.live_per_run : cfg.per_run))) {
+    if (!seen.has(x.handle.toLowerCase())) { seen.add(x.handle.toLowerCase()); pick.push(x); }
+  }
+  return { pick, hot };
 }
 
 function seedProfile() {
@@ -96,23 +139,20 @@ function posts(json, handle) {
   return out;
 }
 
-// a run takes ~1 min (6 at worst). On 2026-10-06 one hung before its first line with Edge open (02:39) and kept the log open,
-// so every later run failed on the redirect for 4 h. Past 10 min it gives up; Playwright's exit handler kills the Edge it launched
-setTimeout(() => { console.error('[x] watchdog: still running after 10 min, giving up'); process.exit(3); }, 10 * 60e3).unref();
-
-(async () => {
+async function main() {
   if (!chromium) { console.error('playwright-core not found'); process.exit(2); }
   const rest = resting(); if (rest && !a.includes('--export-cookies')) { log('X rate-limited the session at', new Date(rest.at).toISOString().slice(11, 16), '- resting until', new Date(rest.until).toISOString().slice(11, 16)); return; }
   const cfg = config(), inbox = fs.existsSync(INBOX) ? JSON.parse(fs.readFileSync(INBOX, 'utf8')) : { cursor: 0, last_run: null, items: [], errors: {} };
-  if (!arg('--handles') && !a.includes('--export-cookies') && inbox.last_run && (Date.now() - Date.parse(inbox.last_run)) / 6e4 < cfg.min_minutes) { log('ran', inbox.last_run, '- skip'); return; }
+  const H = arg('--handles') || a.includes('--export-cookies') ? null : await hotSet();
+  const live = H ? cfg.accounts.some(x => isHot(x, H)) : false, gap = live ? cfg.live_minutes : cfg.min_minutes;
+  if (H && !a.includes('--plan') && inbox.last_run && (Date.now() - Date.parse(inbox.last_run)) / 6e4 < gap) { log('ran', inbox.last_run, '- skip'); return; }
   let pick;
   if (arg('--handles')) pick = arg('--handles').split(',').map(h => cfg.accounts.find(x => x.handle.toLowerCase() === h.toLowerCase()) || { handle: h, name: h, lang: 'en', tier: 'journalist' });
-  else {
-    const every = cfg.accounts.filter(x => x.every === 'true'), rest = cfg.accounts.filter(x => x.every !== 'true');
-    const cur = (inbox.cursor || 0) % Math.max(1, rest.length);
-    pick = every.concat(rest.slice(cur, cur + cfg.per_run), rest.slice(0, Math.max(0, cur + cfg.per_run - rest.length)));
-    inbox.cursor = (cur + cfg.per_run) % Math.max(1, rest.length);
+  else if (H) {
+    const p = plan(cfg, inbox, H); pick = p.pick;
+    if (p.hot.length) log('live first:', p.hot.length, 'accounts of the matches on (competitions ' + [...H.comps].join(',') + ')');
   }
+  if (a.includes('--plan')) { log('pick:', (pick || []).map(x => x.handle).join(', ')); return; }
   seedProfile(); if (!WIN) xvfb();
   const ctx = await chromium.launchPersistentContext(PROFILE, WIN ? {
     // Edge, a real window parked off-screen: never headless, never in the owner's way
@@ -157,7 +197,8 @@ setTimeout(() => { console.error('[x] watchdog: still running after 10 min, givi
       } catch (e) { inbox.errors[acc.handle] = String(e.message || e).slice(0, 120); }
       page.off('response', onResp);
       const fresh = got.slice(0, cfg.max_posts).filter(p => !seen.has(p.id));
-      fresh.forEach(p => { seen.add(p.id); inbox.items.push(Object.assign(p, { lang: acc.lang || 'en', tier: acc.tier || 'journalist', team: acc.team || null, comp: acc.comp || null, source: acc.name || p.name })); });
+      // a broadcaster's post is press to the journal (its «رسمي» is not the club's), but its videos are official to news/media.py
+      fresh.forEach(p => { seen.add(p.id); inbox.items.push(Object.assign(p, { lang: acc.lang || 'en', tier: acc.kind === 'broadcaster' ? 'paper' : acc.tier || 'journalist', team: acc.team || null, comp: acc.comp || null, source: acc.name || p.name })); });
       added += fresh.length;
       log('@' + acc.handle, got.length, 'posts,', fresh.length, 'new', inbox.errors[acc.handle] ? '(' + inbox.errors[acc.handle] + ')' : '');
       await page.waitForTimeout(2500 + Math.random() * 2500);   // a person's pace between profiles
@@ -171,4 +212,12 @@ setTimeout(() => { console.error('[x] watchdog: still running after 10 min, givi
     if (a.includes('--upload')) execSync(`aws s3 cp "${INBOX}" s3://${BUCKET}/state/news/x-inbox.json --content-type application/json --cache-control no-store --only-show-errors`, { stdio: 'inherit', timeout: 120000 });   // execSync blocks the watchdog
   }
   log('done:', added, 'new posts from', pick.length, 'accounts');
-})().catch(e => { console.error(e); process.exit(1); });
+}
+
+if (require.main === module) {
+  // a run takes ~1 min (6 at worst). On 2026-10-06 one hung before its first line with Edge open (02:39) and kept the log open,
+  // so every later run failed on the redirect for 4 h. Past 10 min it gives up; Playwright's exit handler kills the Edge it launched
+  setTimeout(() => { console.error('[x] watchdog: still running after 10 min, giving up'); process.exit(3); }, 10 * 60e3).unref();
+  main().catch(e => { console.error(e); process.exit(1); });
+}
+module.exports = { config, plan, isHot };
