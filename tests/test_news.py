@@ -75,6 +75,18 @@ def test_classify_kinds_and_transfer_stages():
     assert not C.other_sport({"title": "الزمالك يفوز على الأهلي"})
 
 
+def test_official_only_when_the_headline_says_the_deal_is_done():
+    # 2026-10-06: «أرسنال وريال مدريد وبرشلونة يدخلون سباق ضم هالاند» went out as رسمي (one loose «official» in the cluster)
+    for t in ["Oficial: el Madrid ficha a Olise", "رسمياً.. الهلال يعلن التعاقد مع روبن نيفيز",
+              "Arsenal complete the signing of Eze from Crystal Palace", "OFFICIAL: Liverpool sign Isak for record fee"]:
+        assert C.classify({"title": t})["stage"] == "official", t
+    for t in ["تجديد عقد رافينها مع برشلونة.. وموعد الإعلان الرسمي", "عرض رسمي من النصر لتجديد عقد العقيدي",
+              "Official bid from Chelsea for Garnacho rejected", "Man United confirm interest in a transfer for Osimhen",
+              "Arda Güler's new deal at Real Madrid will be also officially signed soon."]:
+        assert C.classify({"title": t})["stage"] != "official", t
+    assert C.classify({"title": "Transfer news", "desc": "The deal is official, says the agent"})["stage"] != "official"   # a description never
+
+
 def _item(i, title, lang="en", kind="other", at="2026-09-29T10:00:00Z", source="BBC Sport"):
     it = {"id": i, "title": title, "lang": lang, "kind": kind, "at": at, "source": source, "url": "u" + i, "tier": "paper"}
     it["anchor"] = [list(e) for e in E.link(D, title)]
@@ -99,3 +111,34 @@ def test_womens_items_are_told_apart():
     assert C.womens({"title": "Resumen del Barça Femení"})
     assert C.womens({"title": "PRESS CONFERENCE | Renée Slegers previews Chelsea clash", "desc": "Watch it live. #arsenal #awfc Subscribe"})
     assert not C.womens({"title": "Arteta press conference ahead of Newcastle"})
+
+
+def _chain():
+    a = _item("1", "Lionel Messi wants Manchester City move", kind="transfer", at="2026-09-29T10:00:00Z")
+    b = _item("2", "Lionel Messi and Cristiano Ronaldo to Manchester City?", kind="transfer", at="2026-09-29T11:00:00Z")
+    c = _item("3", "Cristiano Ronaldo hints at a move", kind="transfer", at="2026-09-29T12:00:00Z")
+    return a, b, c
+
+
+def test_a_story_is_anchored_on_its_first_headline_not_on_all_it_took_in():
+    # 2026-10-06: «Haaland and Arsenal» took in Raphinha through a shared club, then Raphinha's items, then Arteta's contract
+    stories = {}
+    K.assign(stories, list(_chain()))
+    assert {tuple(sorted(s["items"])) for s in stories.values()} == {("1", "2"), ("3",)}   # Ronaldo came in with item 2, not the story
+
+
+def test_rebuild_splits_a_story_the_old_rules_chained():
+    a, b, c = _chain()
+    old = K.new_story(a)
+    for x in (b, c):
+        K.add(old, x)
+    old.pop("seed")                                                   # as the old rules left it in the state
+    items = {x["id"]: x for x in (a, b, c)}
+    stories, rebuilt, named = K.rebuild({old["id"]: old}, items)
+    assert {tuple(sorted(s["items"])) for s in stories.values()} == {("1", "2"), ("3",)}
+    assert ("player", 500004) in named                               # Ronaldo's page is written again without the Messi story
+    gone = K.new_story(_item("9", "Lionel Messi scores", kind="match", at="2026-09-20T10:00:00Z"))
+    gone["items"] = ["9"]
+    assert gone["id"] in K.rebuild({gone["id"]: gone}, items)[0]       # no item of it kept: it stays until it ages out
+    gone.update(kind="transfer", stage="official")
+    assert K.rebuild({gone["id"]: gone}, items)[0][gone["id"]]["stage"] is None   # but an «official» it cannot check is not claimed

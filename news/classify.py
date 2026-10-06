@@ -1,7 +1,7 @@
 """What a news item is about, from its headline and description, in the six languages the sources use.
 
 kind: transfer | injury | presser | statement | official | match | other
-stage (transfers): rumour < talks < agreed < here_we_go < official   (the furthest stage any word shows)
+stage (transfers): rumour < talks < agreed < here_we_go < official   (official only when the headline says it is done: official())
 Rules only: cheap, predictable, and the Claude summary may refine a story's stage later."""
 import re
 from .entities import norm
@@ -23,8 +23,26 @@ KIND_WORDS = {
               "resumen", "goles", "victoria", "empate", "derrota", "resume", "victoire", "sieg", "niederlage", "vittoria", "sconfitta",
               "يفوز", "فوز", "تعادل", "خساره", "يسحق", "يكتسح", "ملخص", "اهداف مباراه", "ثنائيه", "ثلاثيه", "رباعيه", "خماسيه"],
 }
+# «official» needs the HEADLINE to say the deal is done. A word like «official», «confirmed» or «رسمي» anywhere is not enough
+# (owner 2026-10-06: «أرسنال وريال مدريد وبرشلونة يدخلون سباق ضم هالاند» went out as رسمي): «عرض رسمي» is an official bid,
+# «موعد الإعلان الرسمي» an announcement still to come, «confirmed interest» a rumour. So: the headline opens with the word
+# («Oficial: el Madrid ficha a Olise», «رسمياً.. الهلال يعلن…»), or names the completion («completes the signing», «يعلن التعاقد»,
+# «رسميا» beside a signing verb), and carries no word of a deal still open (a bid, a race, interest, an announcement to come).
+OFFICIAL_OPEN = ["official", "oficial", "officiel", "offiziell", "ufficiale", "رسميا", "رسمي", "done deal"]
+OFFICIAL_DONE = ["officially", "completes", "complete the signing", "completed the signing", "completes the signing", "complete signing",
+                 "unveiled", "signs for", "has signed", "announce the signing", "announces the signing", "confirm the signing",
+                 "confirms the signing", "confirmed the signing", "es oficial", "ficha por", "nuevo jugador del", "s engage", "wechselt zu",
+                 "ufficializzato", "يعلن التعاقد", "يعلن ضم", "يعلن رسميا", "ينضم رسميا", "يوقع رسميا", "اعلن التعاقد", "اعلن ضم"]
+AR_SIGN = ["يعلن", "اعلن", "ينضم", "انضم", "يوقع", "وقع", "يضم", "ضم", "التعاقد", "تعاقد", "انتقال"]   # with «رسميا» anywhere
+NOT_DONE = ["official offer", "official bid", "official approach", "oferta oficial", "offre officielle", "offerta ufficiale",
+            "عرض رسمي", "الاعلان الرسمي", "race", "interest", "interested", "monitor", "monitoring", "keen", "eyeing", "target", "linked",
+            "rumour", "rumor", "carrera", "interes", "interesse", "interessato", "pourrait", "could", "would", "set to", "close to",
+            "سباق", "يراقب", "مهتم", "اهتمام", "يسعى", "يرغب", "يدرس", "مرشح", "يستهدف", "قريب من", "يقترب", "مفاوضات", "عرض",
+            "موعد", "قد", "ربما", "تقارير", "تقرير",
+            # still to come: «will be officially signed soon» (Arda Güler, 2026-10-06), «fichará por»
+            "soon", "will", "expected", "pending", "coming", "tomorrow", "next week", "fichara", "firmara", "signera",
+            "قريبا", "سيعلن", "سيوقع", "سينضم", "ينتظر", "مرتقب", "خلال ساعات", "الساعات المقبله", "غدا"]
 STAGE_WORDS = [
-    ("official", ["official", "officially", "confirmed", "completes", "unveiled", "oficial", "officiel", "offiziell", "ufficiale", "رسميا", "يعلن التعاقد", "رسمي"]),
     ("here_we_go", ["here we go"]),
     ("agreed", ["agreed", "agreement", "deal done", "medical", "acuerdo", "reconocimiento medico", "accord", "einigung", "accordo",
                 "اتفاق", "اتفق", "الكشف الطبي", "يقترب"]),
@@ -33,6 +51,17 @@ STAGE_WORDS = [
 ]
 _K = {k: [norm(w) for w in ws] for k, ws in KIND_WORDS.items()}
 _S = [(s, [norm(w) for w in ws]) for s, ws in STAGE_WORDS]
+_OPEN, _DONE, _AR_SIGN, _NOT = ({norm(w) for w in OFFICIAL_OPEN}, [norm(w) for w in OFFICIAL_DONE], {norm(w) for w in AR_SIGN},
+                                [norm(w) for w in NOT_DONE])
+
+
+def official(title):
+    """The headline says the deal is done (OFFICIAL_*), and nothing in it says the deal is still open (NOT_DONE)."""
+    t = norm(title or "")
+    w = t.split()
+    if not w or _has(t, _NOT):
+        return False
+    return w[0] in _OPEN or " ".join(w[:2]) in _OPEN or _has(t, _DONE) or ("رسميا" in w and any(x in _AR_SIGN for x in w))
 ORDER = ["transfer", "injury", "presser", "official", "statement", "match"]
 
 
@@ -52,8 +81,8 @@ def classify(item):
     stage = None
     if kind == "transfer" or hwg:
         kind = "transfer"
-        stage = "rumour"
-        for s, ws in _S:
+        stage = "official" if official(item.get("title")) else "rumour"
+        for s, ws in ([] if stage == "official" else _S):
             if (s == "here_we_go" and hwg) or (s != "here_we_go" and _has(t, ws)):
                 stage = s; break
     return {"kind": kind, "stage": stage, "here_we_go": hwg}
