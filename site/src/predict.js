@@ -269,5 +269,7 @@
   function page(r) { PAGE = r; if (!r.dataset.tpOn) { r.dataset.tpOn = "1"; r.classList.add("tp-page"); r.addEventListener("click", act); } return load(); }
 
   root.TifoPredict = { block: block, mount: mount, page: page, me: me, token: token, NAMES: NAMES, COMPS: COMPS, RULES: RULES };
-  if (D.readyState === "loading") D.addEventListener("DOMContentLoaded", function () { mount(); }); else mount();
+  // the match blocks on a page, and «توقعاتي» where the page has its element (/predict/, data-predict-page)
+  function boot() { mount(); var pg = D.querySelector("[data-predict-page]"); if (pg) page(pg); }
+  if (D.readyState === "loading") D.addEventListener("DOMContentLoaded", boot); else boot();
 })(typeof window !== "undefined" ? window : this);
