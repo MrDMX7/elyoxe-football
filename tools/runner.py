@@ -121,8 +121,11 @@ def job_site(log):
     syncs = [
         (["s3", "sync", "out/assets", f"s3://{bucket}/assets", "--region", REGION, "--only-show-errors", "--cache-control", "public,max-age=31536000,immutable"], "assets"),
         (["s3", "sync", "out/logo", f"s3://{bucket}/logo", "--region", REGION, "--only-show-errors", "--cache-control", "public,max-age=604800"], "logos"),
+        # the stages' files (below) live outside out/: the encyclopedia's db/player/<id>/, the share cards og/s/ and the goal pages
+        # m/<id>/g/<n>/; the --delete must not take them
         (["s3", "sync", "out", f"s3://{bucket}", "--region", REGION, "--only-show-errors", "--delete", "--exclude", "assets/*", "--exclude", "logo/*",
-          "--exclude", "next/*", "--exclude", "google*.html", "--cache-control", "public,max-age=60"], "pages"),
+          "--exclude", "next/*", "--exclude", "google*.html", "--exclude", "db/player/[0-9]*", "--exclude", "og/s/*", "--exclude", "m/*/g/*",
+          "--cache-control", "public,max-age=60"], "pages"),
     ]
     for args, what in syncs:
         rc, tail = run(log, [AWS] + args, cwd=SITE, timeout=3 * 3600)
@@ -131,6 +134,7 @@ def job_site(log):
             rc, tail = run(log, [AWS] + args, cwd=SITE, timeout=3 * 3600)   # one retry: S3 stream blips on thousands of files
         if rc:
             return False, f"{what} sync failed: {tail}"
+    world = publish_stage(log, bucket, "world") + publish_stage(log, bucket, "share")
     lastf.write_text(str(now))
     run(log, [AWS, "cloudfront", "create-invalidation", "--distribution-id", dist, "--paths", "/sw.js", "/", "--query", "Invalidation.Id", "--output", "text"], timeout=120)
     ix = CACHE / "indexnow.txt"
@@ -151,10 +155,41 @@ def job_site(log):
         feed = "ok" if h.get("ok") and age < 3600 else f"FAILING {','.join(h.get('failing', []))} age {age / 60:.0f} min"
     except Exception as e:
         feed = f"health unreadable: {e}"
-    note = f"{now} pages published; feed {feed}"
+    note = f"{now} pages published{world}; feed {feed}"
     # «ok» = the pages are published and answer. The feed's own health (the poller) is reported here but alerts on its own:
     # counting it as a site failure marked 62 published builds «failed» (2026-10-02..05) and made the Fold's watchdog ask
     return all(c == 200 for c in codes.values()), note
+
+
+def publish_stage(log, bucket, name):
+    """A build stage that lives outside out/ (owner items 10-11, 2026-10-06): site/cache/world/ (the encyclopedia's /db/player/<id>/,
+    site/lib/world_stage.cjs) and site/cache/share/ (share cards og/s/ and goal pages /m/<id>/g/<n>/, site/lib/share_stage.cjs).
+    Uploads only this run's new or changed files (<stage>/delta/, `s3 cp`: nothing already up is listed or compared), deletes what
+    left the stage (delete.txt, guarded at 5 % by the stage), then promotes manifest.next.json. A failed upload keeps the old
+    manifest, so the next build writes the same files again. Never fails the site job; the note says what happened."""
+    wd = CACHE / name
+    delta, nxt = wd / "delta", wd / "manifest.next.json"
+    if not nxt.exists():
+        return ""
+    n = sum(1 for p in delta.rglob("*") if p.is_file()) if delta.is_dir() else 0
+    t0 = time.time()
+    if n:
+        args = [AWS, "s3", "cp", str(delta), f"s3://{bucket}", "--recursive", "--region", REGION, "--only-show-errors", "--cache-control", "public,max-age=60"]
+        rc, tail = run(log, args, cwd=SITE, timeout=3 * 3600)
+        if rc:
+            time.sleep(5)
+            rc, tail = run(log, args, cwd=SITE, timeout=3 * 3600)
+        if rc:
+            return f"; {name} upload failed ({tail.splitlines()[-1] if tail else rc}), redone next run"
+    dl = wd / "delete.txt"
+    keys = [k.strip() for k in dl.read_text(encoding="utf-8").splitlines() if k.strip()] if dl.exists() else []
+    for i in range(0, len(keys), 1000):
+        jf = wd / "delete.json"
+        jf.write_text(json.dumps({"Objects": [{"Key": k} for k in keys[i:i + 1000]], "Quiet": True}), encoding="utf-8")
+        run(log, [AWS, "s3api", "delete-objects", "--bucket", bucket, "--region", REGION, "--delete", "file://" + str(jf).replace("\\", "/")], cwd=SITE, timeout=600)
+    nxt.replace(wd / "manifest.json")
+    log.w(f"{name}: {n} files uploaded, {len(keys)} deleted in {time.time() - t0:.0f}s")
+    return f"; {name}: {n} up, {len(keys)} removed"
 
 
 def job_journal(log):

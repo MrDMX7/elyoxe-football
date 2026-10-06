@@ -50,8 +50,10 @@
   R.events = function(md){
     R.arNames(md);
     var ev = md.events || []; if (!ev.length) return '<p class="empty">' + (md.status === "scheduled" ? "المباراة ما بدت." : "ما في أحداث مسجّلة.") + "</p>";
-    var rows = [];
-    ev.forEach(function(e){ var last = rows[rows.length - 1];
+    var rows = [], gn = 0, GN = [];
+    // item 11: goals numbered in the order they went in (id="g<n>"): the anchor of the goal's share link /m/<id>/g/<n>/ (src/goalshare.js)
+    ev.forEach(function(e, i){ if (/^(goal|penalty_goal|own_goal)$/.test(e.type)) GN[i] = ++gn; });
+    ev.forEach(function(e, i){ if (GN[i]) e = Object.assign({ _gn:GN[i] }, e); var last = rows[rows.length - 1];
       if (e.type === "sub" && last && last.sub && last.team === e.team && last.minute === e.minute && (last.added || 0) === (e.added || 0)){ last.list.push(e); return; }
       rows.push(e.type === "sub" ? { sub:true, team:e.team, minute:e.minute, added:e.added, list:[e] } : { e:e }); });
     if (R.isLive(md)) rows.reverse();   // W2.6: while live, the newest event on top
@@ -73,6 +75,7 @@
       var k = e && /goal/.test(e.type) ? " g" : "", eid = esc((e && e.event_id) || (r.list ? r.list.map(function(x){ return x.event_id || ""; }).join("+") : ""));
       // hook for goal clips: data-goal-key="<minute as shown, 45+2>-<player id>" (penalty shoot-out kicks have none)
       var gk = e && /goal/.test(e.type) && !/^shootout/.test(e.type) ? ' data-goal-key="' + esc(e.minute + (e.added ? "+" + e.added : "") + "-" + ((e.player && e.player.id) || 0)) + '"' : "";
+      if (e && e._gn) gk += ' id="g' + e._gn + '" data-gn="' + e._gn + '"';
       return team === "home" ? '<li class="' + k + '" data-eid="' + eid + '"' + gk + '><span class="h">' + body + '</span><span class="mn">' + mn + "</span><span></span></li>" : '<li class="' + k + '" data-eid="' + eid + '"' + gk + '><span></span><span class="mn">' + mn + "</span><span>" + body + "</span></li>";
     }).join("") + '</ul>' + (noSubs(md) ? '<p class="na">التبديلات ما وصلتنا من المصدر لهالمباراة</p>' : "") + '<p class="src"><a href="/laws/">ليش ألغى الحكم هدف أو صفّر بلنتي؟ قانون الكورة بالإماراتي</a></p>';
   };

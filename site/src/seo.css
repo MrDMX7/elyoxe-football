@@ -1,0 +1,94 @@
+/* ===== Search and share pages (owner 2026-10-06, items 9-11): «مباريات اليوم» (src/days.js), the Arab leagues and encyclopedia
+   pages (site/lib/seo_leagues.cjs, site/lib/world_stage.cjs). Their markup is v5's (site/redesign/v5/src/ui.js: .grp > .gh +
+   .card, a.mr rows, .row, .tbl), so the v5 shell styles it unchanged; the rules under body.v3 dress it for the v3 shell (night
+   pitch, chalk, flat, no radius). The first block is structure both shells need. */
+.sx .mw{position:relative}
+.sx .mx{margin:0;padding:0 .2rem .6rem;font-size:.76rem;line-height:1.55;text-align:center}
+.sx .mx > span{display:block}
+.sx .rcd{display:inline-block;inline-size:.45rem;block-size:.62rem;margin-inline-start:.3rem;background:#D8343F;vertical-align:-.05rem}
+.sx .gsub{margin:0;padding:.55rem .2rem .15rem;font-size:.76rem;font-weight:600}
+.sx #dlist[data-f="live"] .mw:not(.is-live),.sx #dlist[data-f="live"] .dl:not(.has-live),.sx #dlist[data-f="live"] .gsub,.sx #dlist[data-f="arab"] .dl:not([data-arab]){display:none}
+.sx .lvn,.sx .gh .nn{display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap;flex:none}
+.sx details.dl > summary{cursor:pointer;list-style:none}
+.sx details.dl > summary::-webkit-details-marker{display:none}
+.sx details.dl > summary::after{content:"+";flex:none;inline-size:1.4rem;text-align:center;font-weight:700;opacity:.7}
+.sx details.dl[open] > summary::after{content:"−"}
+.sx .faq details{border-block-end:1px solid var(--line-2,#8E8E9333)}
+.sx .faq summary{cursor:pointer;padding:.7rem 0;font-weight:600;list-style-position:inside}
+.sx .faq details p{margin:0 0 .8rem}
+.sx .dnav{display:flex;flex-wrap:wrap;gap:.4rem;margin:.2rem 0 .9rem}
+.sx .dnav a,.sx .dnav span{padding:.35rem .8rem;font-size:.85rem;white-space:nowrap}
+.sx .tvx,.sx .clk{white-space:normal}
+.sx .ptab{inline-size:100%;border-collapse:collapse}
+@media (prefers-reduced-motion:no-preference){.sx .st.live .dot{animation:sxp 1.6s ease-in-out infinite}}
+@keyframes sxp{50%{opacity:.35}}
+
+/* ---- v3 dress */
+body.v3 .sxh{font-size:1.1rem;margin:2rem 0 .2rem}
+body.v3 .sxh::before{display:none}
+body.v3 .sx{--sx-line:var(--line);--sx-line2:var(--line-2)}
+body.v3 .sx .intro{color:var(--tert);margin:0 0 1rem;max-inline-size:68ch}
+body.v3 .sx .grp{margin-block:1.6rem 0}
+body.v3 .sx .grp:first-child{margin-block-start:.4rem}
+body.v3 .sx .gh{display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;padding-block:.5rem .45rem;border-block-end:1px solid var(--line)}
+body.v3 .sx .gh h2{font-size:.98rem;line-height:1.4;margin:0;font-weight:700}
+body.v3 .sx .gh h2::before{display:none}
+body.v3 .sx .gh h2 a{color:var(--ink);border-block-end:1px solid var(--line)}
+body.v3 .sx .gh h2 small{font-weight:400;color:var(--stone);font-size:.78rem;margin-inline-start:.35rem}
+body.v3 .sx .gh .nn{color:var(--stone);font-size:.85rem}
+body.v3 .sx .gh .lvn{color:var(--live-text);font-size:.8rem;font-weight:600}
+body.v3 .sx .card{background:none;padding:0}
+body.v3 .sx .mw{border-block-end:1px solid var(--line-2)}
+body.v3 .sx .mw:hover{background:#F6F7F20a}
+body.v3 .sx a.mr{display:grid;grid-template-columns:minmax(0,1fr) 5.4rem minmax(0,1fr);align-items:center;gap:.45rem;min-block-size:3.3rem;padding-block:.6rem .45rem;color:var(--ink);text-decoration:none}
+body.v3 .sx .mr-t{display:flex;align-items:center;gap:.5rem;min-inline-size:0}
+body.v3 .sx .mr-t.h{justify-content:flex-end;text-align:end}
+body.v3 .sx .mr-t.a{justify-content:flex-start;text-align:start}
+body.v3 .sx .mr-t .tn{font-size:.9rem;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+body.v3 .sx .mr-t.w .tn{font-weight:700}
+body.v3 .sx .mr-t.l .tn{color:var(--tert)}
+body.v3 .sx img.cr{inline-size:1.5rem;block-size:1.5rem;object-fit:contain;flex:none}
+body.v3 .sx .mr-m{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1rem;min-block-size:2.5rem;background:var(--board);text-align:center;padding:.2rem .1rem}
+body.v3 .sx .mw.is-live .mr-m{background:var(--pulse);color:var(--ground)}
+body.v3 .sx .mr-m .sc{font-family:var(--digits);font-weight:700;font-size:1.3rem;line-height:1.1;white-space:nowrap;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+body.v3 .sx .mr-m .sc.ko{font-size:1.15rem}
+body.v3 .sx .mr-m .sc.tbd{color:var(--stone)}
+body.v3 .sx .mw:not(.is-live) .mr-m:has(.sc.ko){background:none;border:1px solid var(--line)}
+body.v3 .sx .mr-m .st{font-size:.7rem;line-height:1.2;color:var(--tert);white-space:nowrap;display:inline-flex;align-items:center;gap:.25rem}
+body.v3 .sx .mw.is-live .mr-m .st{color:var(--ground);font-weight:700}
+body.v3 .sx .st .dot{display:inline-block;inline-size:.4rem;block-size:.4rem;background:currentColor}
+body.v3 .sx .mx{color:var(--stone)}
+body.v3 .sx .mx b{color:var(--tert);font-family:var(--digits);font-weight:700;font-size:.85rem}
+body.v3 .sx .gsub{color:var(--tert)}
+body.v3 .sx .gf{margin:.5rem 0 0;font-size:.78rem;line-height:1.6;color:var(--stone)}
+body.v3 .sx .dfil{margin-block:.2rem .6rem}
+body.v3 .sx .dfil .num{margin-inline-start:.25rem;color:var(--live-text)}
+body.v3 .sx .dnav a{border:1px solid var(--line);color:var(--ink)}
+body.v3 .sx .dnav span{border:1px solid var(--ink);background:var(--ink);color:var(--bg);font-weight:600}
+body.v3 .sx .faq .card{border-block-start:1px solid var(--line)}
+body.v3 .sx .lk{display:flex;flex-wrap:wrap;gap:.5rem;margin-block:1.4rem 0}
+/* rows (v5 .row) and tables (v5 .tbl) for the league and encyclopedia pages */
+body.v3 .sx .row{display:flex;align-items:center;gap:.7rem;min-block-size:2.9rem;padding-block:.45rem;border-block-end:1px solid var(--line-2);color:var(--ink)}
+body.v3 .sx a.row:hover{background:#F6F7F20a}
+body.v3 .sx .row .rt,body.v3 .sx .ld .rt{flex:1;min-inline-size:0;border:0;padding:0;background:none;font-family:var(--font-text);font-weight:400;font-size:inherit}
+body.v3 .sx .row .rt small{display:block;color:var(--stone);font-size:.78rem}
+body.v3 .sx .row .rv{flex:none;font-family:var(--digits);font-weight:700;font-size:1.1rem}
+body.v3 .sx .tblw{overflow-x:auto;scrollbar-width:thin}
+body.v3 .sx table.tbl{inline-size:100%;border-collapse:collapse;font-size:.9rem}
+body.v3 .sx table.tbl th{font-weight:400;color:var(--stone);font-size:.75rem;padding:.35rem .25rem;border-block-end:1px solid var(--line);text-align:center;white-space:nowrap}
+body.v3 .sx table.tbl td{padding:.42rem .25rem;border-block-end:1px solid var(--line-2);text-align:center;font-family:var(--digits);font-weight:700;white-space:nowrap}
+body.v3 .sx table.tbl td.tm,body.v3 .sx table.tbl th.tm{text-align:start;font-family:var(--font-text);font-weight:400}
+body.v3 .sx table.tbl td.tm a{display:inline-flex;align-items:center;gap:.45rem;color:var(--ink)}
+body.v3 .sx table.tbl td.pts{font-size:1.05rem}
+body.v3 .sx table.tbl .t2{font-family:var(--font-text);font-weight:400;text-align:start;white-space:normal}
+body.v3 .sx .ld{display:grid;grid-template-columns:1.6rem minmax(0,1fr) auto;align-items:center;gap:.6rem;padding-block:.45rem;border-block-end:1px solid var(--line-2);color:var(--ink)}
+body.v3 .sx .ld .rk{color:var(--stone);font-family:var(--digits);font-weight:700}
+body.v3 .sx .ld small{display:block;color:var(--stone);font-size:.78rem}
+body.v3 .sx .ld .v{font-family:var(--digits);font-weight:700;font-size:1.2rem}
+body.v3 .sx .seg{display:inline-flex;max-inline-size:100%;overflow-x:auto}
+body.v3 .sx .bio{display:grid;grid-template-columns:repeat(auto-fill,minmax(9rem,1fr));gap:.1rem 1rem;margin:0}
+body.v3 .sx .bio div{padding-block:.45rem;border-block-end:1px solid var(--line-2)}
+body.v3 .sx .bio dt{color:var(--stone);font-size:.75rem}
+body.v3 .sx .bio dd{margin:0;font-weight:600}
+body.v3 .sx .pwiki{color:var(--tert);max-inline-size:68ch}
+@media (min-width:880px){body.v3 .sx a.mr{grid-template-columns:minmax(0,1fr) 6rem minmax(0,1fr)}body.v3 .sx .mr-t .tn{font-size:.95rem}}
