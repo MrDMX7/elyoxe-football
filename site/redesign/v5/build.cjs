@@ -6,7 +6,7 @@
    same data by src/app.js with the same src/ui.js + src/pages.js. */
 "use strict";
 const fs = require("fs"), path = require("path"), crypto = require("crypto");
-const U = require("./src/ui.js"), P = require("./src/pages.js");
+const U = require("../../src/v5/ui.js"), P = require("../../src/v5/pages.js");
 const ROOT = __dirname, OUT = path.join(ROOT, "out"), CACHE = path.join(ROOT, "cache"), REPO = path.resolve(ROOT, "../../..");
 const SITE = "https://tifo.elyoxe.com", BASE = "/next";
 // --snap <dir>: saved live copies of match/6052086.json (UAE v Qatar, 30 Sep); v5/snap/ keeps the one the preview uses
@@ -142,9 +142,9 @@ function write(rel, html) {
 
   // ---------------------------------------------------------------- assets: CSS, one JS bundle, the shared config
   fs.mkdirSync(path.join(OUT, "assets"), { recursive: true });
-  const css = fs.readFileSync(path.join(ROOT, "src/app.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\n\s*/g, "\n").replace(/\n+/g, "\n");
+  const css = fs.readFileSync(path.join(ROOT, "../../src/v5/app.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\n\s*/g, "\n").replace(/\n+/g, "\n");
   const CSSV = hash(css); fs.writeFileSync(path.join(OUT, `assets/app.${CSSV}.css`), css);
-  let js = ["ui.js", "pages.js", "app.js"].map(f => fs.readFileSync(path.join(ROOT, "src", f), "utf8")).join("\n;\n");
+  let js = ["ui.js", "pages.js", "app.js"].map(f => fs.readFileSync(path.join(ROOT, "../../src/v5", f), "utf8")).join("\n;\n");
   // minified with a local esbuild when one is on the machine (ESBUILD=<module dir>); the unminified bundle works the same
   try { const eb = require(process.env.ESBUILD || "C:/Users/requi/workspace/studio/Remotion_Studio/node_modules/esbuild"); js = eb.transformSync(js, { minify: true, target: "es2017", charset: "utf8" }).code; } catch (e) { console.log("js not minified:", e.message.split("\n")[0]); }
   const JSV = hash(js); fs.writeFileSync(path.join(OUT, `assets/app.${JSV}.js`), js);

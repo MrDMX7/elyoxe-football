@@ -51,6 +51,8 @@
   var L = U.link = function (kind, id) {
     var b = cfg.base, P = cfg.pre;
     if (id == null || id === "") return b + "/";
+    // production (cfg.pre null): every entity has its own page; the build's dead-link pass unlinks the few that don't
+    if (!P) { if (kind === "c") { var cc = cfg.cn[id]; return cc ? b + "/c/" + cc[0] + "/" : b + "/competitions/"; } return kind === "l" ? (cfg.lgs && !cfg.lgs[id] ? b + "/db/league/?id=" + id : b + "/db/league/" + id + "/") : /^[mtp]$/.test(kind) ? b + "/" + kind + "/" + id + "/" : b + "/"; }
     if (kind === "m") return P.m[id] ? b + "/m/" + id + "/" : b + "/m/?id=" + id;
     if (kind === "t") return P.t[id] ? b + "/t/" + id + "/" : b + "/t/?id=" + id;
     if (kind === "p") return P.p[id] ? b + "/p/" + id + "/" : b + "/p/?id=" + id;
@@ -126,7 +128,9 @@
   U.tnameT = function (t) { return t ? (t.name_ar || cfg.tn[t.id] || t.name || "") : ""; };
   U.pname = function (p) { if (!p) return ""; var ar = p.id != null && cfg.pn[p.id]; return ar ? esc(ar) : '<span class="lat">' + esc(p.name || "") + "</span>"; };
   U.pnameT = function (p) { return p ? ((p.id != null && cfg.pn[p.id]) || p.name || "") : ""; };
-  U.crest = function (t, cls) { if (!t || !t.id) return '<span class="cr ' + (cls || "") + '"></span>'; var big = /\b(lg|xl)\b/.test(cls || ""); return '<img class="cr' + (cls ? " " + cls : "") + '" src="/logo/' + (big ? t.id + ".png" : "96/" + t.id + ".webp") + '" alt="" width="24" height="24"' + (big ? "" : ' loading="lazy"') + ' onerror="if(!this.dataset.f){this.dataset.f=1;this.src=\'/logo/' + t.id + '.png\'}else this.style.visibility=\'hidden\'">'; };
+  U.crest = function (t, cls) { if (!t || !t.id || t.nocrest) return '<span class="cr ' + (cls || "") + '"></span>';
+    if (t.logo) return '<img class="cr' + (cls ? " " + cls : "") + '" src="' + esc(t.logo) + '" alt="" width="24" height="24" loading="lazy" onerror="this.style.visibility=\'hidden\'">';   /* 365Scores' crests, as the encyclopedia shows them */
+    var big = /\b(lg|xl)\b/.test(cls || ""); return '<img class="cr' + (cls ? " " + cls : "") + '" src="/logo/' + (big ? t.id + ".png" : "96/" + t.id + ".webp") + '" alt="" width="24" height="24"' + (big ? "" : ' loading="lazy"') + ' onerror="if(!this.dataset.f){this.dataset.f=1;this.src=\'/logo/' + t.id + '.png\'}else this.style.visibility=\'hidden\'">'; };
   U.lg = function (cid, cls) { return '<img class="' + (cls || "lg") + '" src="/lg/' + cid + '.png" alt="" width="22" height="22" loading="lazy" onerror="this.style.visibility=\'hidden\'">'; };
   function lumi(h) { var n = parseInt(String(h).slice(1, 7), 16); if (isNaN(n)) return .5; var f = function (v) { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(n >> 16 & 255) + .7152 * f(n >> 8 & 255) + .0722 * f(n & 255); }
   U.col = function (id, i) { var c = cfg.tc[id]; return c ? (c[i || 0] || c[0]) : (i ? "#F2F2F7" : "#8E8E93"); };
@@ -186,7 +190,7 @@
     o = o || {};
     var w = winner(m), mine = o.mine && (o.mine[m.home.id] || o.mine[m.away.id]);
     var side = function (t, k, win, lose) { var n = '<span class="tn">' + (t.placeholder && U.slot(t) ? esc(U.slot(t)) : U.tname(t)) + "</span>", c = U.crest(t); return '<span class="mr-t ' + k + (win ? " w" : lose ? " l" : "") + '">' + (k === "h" ? n + c : c + n) + "</span>"; };
-    return '<a class="mr' + (mine ? " mine" : "") + (isLive(m) ? " is-live" : "") + '" href="' + L("m", m.id) + '" data-mid="' + m.id + '">' + side(m.home, "h", w === 1, w === 2) + '<span class="mr-m">' + mid(m, o.spoil ? "hide" : "") + caption(m, o) + "</span>" + side(m.away, "a", w === 2, w === 1) + "</a>";
+    return '<a class="mr' + (mine ? " mine" : "") + (isLive(m) ? " is-live" : "") + '" href="' + esc(m.href || L("m", m.id)) + '" data-mid="' + esc(m.id) + '">' + side(m.home, "h", w === 1, w === 2) + '<span class="mr-m">' + mid(m, o.spoil ? "hide" : "") + caption(m, o) + "</span>" + side(m.away, "a", w === 2, w === 1) + "</a>";
   };
   U.slot = function (t) { var m = /^(winner|loser)\s+(sf|qf|r16|semi[- ]?final|quarter[- ]?final)\s*(\d+)/i.exec(String((t && t.name) || "")); if (!m) return null; var st = /^s/i.test(m[2]) ? "نص النهائي" : /^q/i.test(m[2]) ? "ربع النهائي" : "دور الـ16"; return (/^w/i.test(m[1]) ? "الفايز من " : "الخسران من ") + st + " " + m[3]; };
   // a competition's block in a day list: header row (logo, name, round) + its matches
@@ -218,7 +222,7 @@
   // ------------------------------------------------------------------ feature card (my team / the day's top match)
   U.fcard = function (m, kick) {
     var pc = U.pair(m.home.id, m.away.id);
-    return '<a class="card fc" style="--h:' + pc[0] + ";--a:" + pc[1] + '" href="' + L("m", m.id) + '" data-mid="' + m.id + '"><div class="fc-top">' + U.lg(m.comp) + "<span>" + esc(kick || U.compName(m.comp, m)) + "</span>" + (isLive(m) ? caption(m) : m.status === "finished" ? '<span class="st">' + U.statusWord(m) + "</span>" : '<span class="st">' + (m.date_tbd ? "" : tm(m.kickoff_uae || m.kickoff_utc, "r")) + "</span>") + "</div>" +
+    return '<a class="card fc" style="--h:' + pc[0] + ";--a:" + pc[1] + '" href="' + esc(m.href || L("m", m.id)) + '" data-mid="' + esc(m.id) + '"><div class="fc-top">' + U.lg(m.comp) + "<span>" + esc(kick || U.compName(m.comp, m)) + "</span>" + (isLive(m) ? caption(m) : m.status === "finished" ? '<span class="st">' + U.statusWord(m) + "</span>" : '<span class="st">' + (m.date_tbd ? "" : tm(m.kickoff_uae || m.kickoff_utc, "r")) + "</span>") + "</div>" +
       '<div class="fc-body"><span class="fc-t">' + U.crest(m.home, "lg") + "<span>" + U.tname(m.home) + '</span></span><span class="mr-m">' + mid(m) + '</span><span class="fc-t">' + U.crest(m.away, "lg") + "<span>" + U.tname(m.away) + "</span></span></div>" +
       '<div class="fc-sub">' + esc(U.compName(m.comp, m)) + (U.roundLabel(m) ? " · " + esc(U.roundLabel(m)) : "") + "</div></a>";
   };
@@ -269,7 +273,8 @@
       else if (e.type === "var") { who = "<b>الفار: " + (VAR_AR[e.var_outcome] || "مراجعة") + "</b>"; sub = e.player ? U.pname(e.player) : ""; }
       else if (EVT[e.type]) sub = EVT[e.type];
       var side = e.team === "away" ? "away" : "home";
-      return '<li class="' + side + (/goal/.test(e.type) && e.type !== "missed_penalty" ? " goal" : "") + '"><span class="em">' + '<bdi dir="ltr">' + esc(evMin(e)) + "'</bdi></span><span class=\"eb\">" + evIcon(e.type) + '<span class="et">' + who + (sub ? "<small>" + sub + "</small>" : "") + "</span></span></li>";
+      var gk = /^(goal|penalty_goal|own_goal)$/.test(e.type) && e.player && e.player.id ? ' data-goal-key="' + esc(evMin(e)) + "-" + esc(e.player.id) + '"' : "";   // src/media.js puts «▶ شاهد» on the goals it has a clip for
+      return '<li class="' + side + (/goal/.test(e.type) && e.type !== "missed_penalty" ? " goal" : "") + '"' + gk + '><span class="em">' + '<bdi dir="ltr">' + esc(evMin(e)) + "'</bdi></span><span class=\"eb\">" + evIcon(e.type) + '<span class="et who">' + who + (sub ? "<small>" + sub + "</small>" : "") + "</span></span></li>";
     }).join("");
     var sh = (md.events || []).filter(function (e) { return /^shootout/.test(e.type); });
     var pens = sh.length ? U.grp("ركلات الترجيح", '<ol class="ev">' + sh.map(function (e) { return '<li class="' + (e.team === "away" ? "away" : "home") + '"><span class="em">' + (e.type === "shootout_goal" ? "✓" : "✗") + '</span><span class="eb">' + evIcon(e.type) + '<span class="et"><b>' + U.pname(e.player) + "</b></span></span></li>"; }).join("") + "</ol>") : "";
@@ -382,7 +387,8 @@
     var w = md.weather; if (w && w.available && w.temp_c != null) rows.push({ icon: "sun", c: "#FF9F0A", t: "الطقس", v: '<span class="num">' + Math.round(w.temp_c) + "°</span>" + (w.humidity != null ? " · رطوبة " + '<span class="num">' + w.humidity + "%</span>" : "") + (HEAT[w.heat_category] ? " · " + HEAT[w.heat_category] : "") });
     var pr = md.prayer; if (pr && pr.clashes && pr.clashes.length) pr.clashes.forEach(function (c) { rows.push({ icon: "moon", c: "#0A84FF", t: "صلاة " + (PRAY[c.prayer] || c.prayer), v: '<span class="num">' + esc(c.at_uae) + "</span> · " + (c.segment === "halftime" ? "وقت الاستراحة" : "الدقيقة " + '<span class="num">' + c.minute_of_play + "</span>") }); });
     if (o.ch) rows.push({ icon: "tv", c: "#AF52DE", t: "وين تنقل", v: o.ch, attrs: ' data-ch="' + md.comp + '"' });
-    if (md.highlights && md.highlights.url) rows.push({ icon: "play", c: "#FF3B30", t: "شوف الملخص", href: md.highlights.url, ext: 1 });
+    if (md.highlights && md.highlights.url) rows.push({ icon: "play", c: "#FF3B30", t: "شوف الملخص", href: md.highlights.url, ext: 1, cls: "hlrow hlbtn" });   // media.js opens its video sheet from a.hlbtn
+    else if (o.hl) rows.push({ icon: "play", c: "#FF3B30", t: "شوف الملخص الرسمي", sub: o.hlsub || "", href: o.hl, ext: 1, cls: "hlrow hlsearch" });   // hidden by media.js once a real video is in
     return U.rows(rows);
   };
 
@@ -493,7 +499,8 @@
   U.navBtn = function (icon, label, attrs) { return '<button type="button" class="nb icon" aria-label="' + esc(label) + '"' + (attrs || "") + ">" + I(icon, "", 2) + "</button>"; };
   U.navLink = function (icon, label, href) { return '<a class="nb icon" aria-label="' + esc(label) + '" href="' + href + '">' + I(icon, "", 2) + "</a>"; };
   U.sheet = function (id, title, body) { return '<dialog class="sheet" id="' + id + '" aria-labelledby="' + id + '-t"><div class="sh-grab" aria-hidden="true"></div><header class="sh-hd"><h2 id="' + id + '-t" tabindex="-1" autofocus>' + title + '</h2><button type="button" class="sh-x" data-close aria-label="سكّر">' + I("close", "", 2.6) + '</button></header><div class="sh-bd">' + body + "</div></dialog>"; };
-  U.foot = function (extra) { return '<footer class="foot">' + (extra || "") + '<p>تيفو بدون مراهنات. البيانات من FotMob ورابطة المحترفين الإماراتية.</p><p>من استوديو <a href="https://elyoxe.com/">Elyoxe</a></p></footer>'; };
+  // the footer: the page's own note, then the site's (production sets cfg.footer: the audit badge, «آخر تحديث», the sitemap links)
+  U.foot = function (extra) { return '<footer class="foot">' + (extra || "") + (cfg.footer || '<p>تيفو بدون مراهنات. البيانات من FotMob ورابطة المحترفين الإماراتية.</p><p>من استوديو <a href="https://elyoxe.com/">Elyoxe</a></p>') + "</footer>"; };
 
   if (typeof module !== "undefined" && module.exports) module.exports = U; else root.U5 = U;
 })(typeof window !== "undefined" ? window : this);
