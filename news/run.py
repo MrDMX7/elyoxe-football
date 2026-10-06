@@ -266,6 +266,18 @@ def main(argv=None):
             print(json.dumps({"media": {k: v for k, v in res.items() if k != "found"}}, ensure_ascii=False))
         except Exception as e:
             print(json.dumps({"media_error": f"{type(e).__name__}: {str(e)[:200]}"}, ensure_ascii=False))
+    # «شوفها مباشر ببلاش» (news/streams.py): the runner's `streams` job reads the Live tabs every 5 min; this is its fallback
+    # when that job is quiet (the laptop off, the Fold's journal), never fatal
+    if not a.no_media:
+        try:
+            beat = store.get_state("runner/streams.json") or {}
+            last = datetime.fromisoformat(beat["last_ok"]) if beat.get("last_ok") else None
+            if not last or (datetime.now(timezone.utc) - last).total_seconds() > 15 * 60:
+                from news import streams as SR
+                res = SR.step(store, cfg)
+                print(json.dumps({"streams": {k: v for k, v in res.items() if k != "found"}}, ensure_ascii=False))
+        except Exception as e:
+            print(json.dumps({"streams_error": f"{type(e).__name__}: {str(e)[:200]}"}, ensure_ascii=False))
     # «منو يعلّق؟»: channels and commentators per match (v1/tv/<ymd>.json). Its own state and pace (the sitemap every 30 min,
     # an article at most hourly); a failure there never costs the news run
     if not a.no_tv:

@@ -19,3 +19,4 @@ db/.cache/
 .worktrees/
 news/.cache/
 docs/AUDIT-DATA-*.md
+news/.x-cooldown.json
