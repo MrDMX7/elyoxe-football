@@ -155,6 +155,13 @@ class Poller:
             self._aux_sig[name] = json.dumps(self._aux[name], sort_keys=True)
         return self._aux[name]
 
+    def aux_flush(self, name):
+        """Write a side state file now, not at the end of the run: push marks (state/push.json) must outlive a run that
+        times out later in the minute (2026-10-02..06: every run died at 58 s and the same goals were handed over again)."""
+        obj = self.aux(name)
+        self.store.put_state(f"{name}.json", obj)
+        self._aux_sig[name] = json.dumps(obj, sort_keys=True)
+
     def save(self):
         for name, obj in self._aux.items():
             if json.dumps(obj, sort_keys=True) != self._aux_sig.get(name):
