@@ -137,6 +137,16 @@ EN_ALIAS = {"wolves": "wolverhampton wanderers", "spurs": "tottenham hotspur", "
             "psg": "paris saint germain", "qpr": "queens park rangers", "brighton": "brighton hove albion", "wba": "west bromwich albion"}
 
 
+# 365 team id -> FotMob team id, checked by hand where the names alone can't decide (2026-10-06). Espérance: 365's «الترجي» /
+# «Esperance ST» sits inside both «الترجي التونسي» (Espérance) and «الترجي الجرجيسي» (Zarzis), so Tunisia's all-time table
+# missed its titles in 11 of 16 seasons. A rule that takes one language's single hit got Espérance, Zenit, CSKA 1948 and
+# Luqueño right, but it also mapped Plymouth Argyle to Plymouth Parkway and cost Dinamo Zagreb its pair, so these are listed instead.
+FM_FIX = {8235: 8153,      # Esperance ST -> Espérance (الترجي التونسي)
+          1075: 8698,      # Zenit -> Zenit St. Petersburg
+          53248: 944215,   # CSKA 1948 Sofia -> CSKA 1948
+          8778: 49687}     # Sportivo Luqueño -> Luqueño
+
+
 def fotmob_map(teams, countries):
     """365 team id -> FotMob team id, by folded English name (or Arabic) inside the same country, one to one only."""
     def jget(u):
@@ -198,6 +208,8 @@ def fotmob_map(teams, countries):
                 hits = {f for f in by_cc.get(ck, []) if (e and subset(e, fm[f][0])) or (r and subset(r, fm[f][1]))}
                 if len(hits) == 1:
                     cand = hits.pop()
+        if cand is None and sid in FM_FIX:                            # 4. a pair checked by hand
+            cand = FM_FIX[sid]
         # 3. a national team: its name is its country's (never a club across borders)
         if cand is None and national:
             hits = set(nat.get(e, [])) | set(nat.get(r, []))

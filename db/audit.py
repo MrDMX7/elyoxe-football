@@ -1080,10 +1080,17 @@ def area_derived(A):
         if str(i) in nat:
             bad["history_national_team"].append(str(i))
         ms = (mf or {}).get("matches") or []
-        c2 = Counter((m[0], str(m[1])) for m in ms)
+        # the same game twice (date, opponent, venue and score) is ours; the same date, opponent and venue with two scores is the
+        # historical source's (two games it dates alike: River v Boca 1972-12-10); a home and an away game on one date are two
+        # legs the source dates alike (2026-10-06: 621 of the 679 «duplicates» were those, the French league of the 1930s)
+        c2 = Counter((m[0], str(m[1]), m[2], m[3], m[4]) for m in ms)
         n2 = sum(n - 1 for n in c2.values() if n > 1)
         if n2:
             bad["history_duplicate_rows"].append(f"{i} ({h.get('name')}): {n2}")
+        c3 = Counter((m[0], str(m[1]), m[2]) for m in ms)
+        n3 = sum(n - 1 for n in c3.values() if n > 1) - n2
+        if n3 > 0:
+            bad["history_same_date_scores"].append(f"{i} ({h.get('name')}): {n3}")
         if any(str(m[1]) == str(i) for m in ms):
             bad["history_self_match"].append(f"{i} ({h.get('name')})")
         names = h.get("names") or {}
@@ -1095,7 +1102,9 @@ def area_derived(A):
                 have[datetime.fromisoformat(m[0]).toordinal()].append(m)
             except (TypeError, ValueError):
                 pass
-        miss = 0
+        # a game after the history's last date is newer than the history (db/history.py runs weekly): reported as such, not as
+        # missing (2026-10-06: all 40 «missing» games of the 45 flagged clubs were played after their history was built)
+        miss, behind, until = 0, 0, str(h.get("until") or "")
         for r in arch.get(int(i), []):
             home = r[3] == int(i)
             gf, ga, opp = (r[5], r[6], r[4]) if home else (r[6], r[5], r[3])
@@ -1104,28 +1113,45 @@ def area_derived(A):
             except (TypeError, ValueError):
                 continue
             if not any(str(x[1]) == str(opp) or (x[3], x[4]) == (gf, ga) for dd in (-1, 0, 1) for x in have.get(d0 + dd, [])):
-                miss += 1
+                if until and str(r[1]) > until:
+                    behind += 1
+                else:
+                    miss += 1
         A.count("derived", "history_archive_rows", len(arch.get(int(i), [])))
         if miss:
             bad["history_archive_missing"].append((miss, f"{i} ({h.get('name')}): {miss}"))
+        if behind:
+            bad["history_behind"].append(f"{i} ({h.get('name')}): {behind} after {until}")
         pos = Counter(p[0] for p in h.get("positions") or [])
         if any(n > 1 for n in pos.values()):
             bad["history_two_positions"].append(f"{i} ({h.get('name')})")
     labels = {"history_totals": ("error", "totals don't add up"), "history_national_team": ("error", "a national team has a club history"),
-              "history_duplicate_rows": ("error", "the same match (date + opponent) listed twice"), "history_self_match": ("error", "a club plays itself"),
+              "history_duplicate_rows": ("error", "the same game (date, opponent, venue, score) listed twice"), "history_self_match": ("error", "a club plays itself"),
+              "history_same_date_scores": ("warn", "two games against one opponent at one venue on one date, with two scores (the historical source's dates)"),
+              "history_behind": ("info", "games of our archive played after the history was built (db/history.py runs weekly)"),
               "history_blank_opponent": ("warn", "an opponent without a name"), "history_archive_missing": ("error", "matches of our own archive missing"),
               "history_two_positions": ("error", "two league positions in one season (two clubs merged)")}
     for chk, items in bad.items():
         if chk == "history_archive_missing":
             items = [x[1] for x in sorted(items, reverse=True)]
         lv, txt = labels[chk]
-        A.add("derived", chk, lv, "ours", f"history:{chk}", f"{len(items)} of {len(ids)} club histories: {txt}: " + "; ".join(items[:8]), examples=[str(x).split(" ")[0] for x in items[:40]])
+        A.add("derived", chk, lv, "source" if chk == "history_same_date_scores" else "stale" if chk == "history_behind" else "ours", f"history:{chk}", f"{len(items)} of {len(ids)} club histories: {txt}: " + "; ".join(items[:8]), examples=[str(x).split(" ")[0] for x in items[:40]])
 
 
 # ------------------------------------------------------------------ champions
 JUNK = re.compile(r"^\W*\d+\W*$|^(tbd|tba|n/?a|none|nan|-|—)$|no (champion|winner)|not (held|awarded|played|completed|finished)|cancel|abandon|void|"
                   r"league \d{4}|\(.*(winner|runner|cup|league|champion).*\)|لا فائز|بدون فائز|ألغي", re.I)
 SPLIT_YEARS = {112, 268, 55, 44, 130, 329}  # genuinely two champions in one year: Argentina's Apertura/Clausura, Brazil's old splits, Serie A 1922, Copa 1959, MLS, the Gulf Cup's two 2004 editions
+# competitions 365Scores titles by the season's START year where our lists (and the year the match was played) use the end:
+# the Egyptian Super Cup «2020» on 365 is the 2020–21 edition, played on 21 September 2021 (Tala'ea El Gaish 0–0, 3–2 on
+# penalties, Al Ahly: Wikipedia's list of finals), which our list has under 2021 (checked 2026-10-06)
+S365_START_YEAR = {10314}
+# seasons with no champion that 365Scores leaves out of its list instead of listing them void (checked 2026-10-06)
+VOID_SEASONS = {524: {"2013/2014": "Wikipedia: winners «Not awarded», the season ended prematurely (June 2014)",
+                      "2019/2020": "Wikipedia: officially cancelled on 3 June 2020 (protests, then COVID-19)"}}
+# season keys of our archive that are a stage, not a season (no title of their own)
+NOT_A_SEASON = {529: {"2020": "the 15-team first stage of 2020–21; the league itself is our «2021» (Wikipedia: 15 October 2020 – "
+                              "17 May 2021, 90 matches, won by Al-Arabi)"}}
 
 
 def y365(t):
@@ -1184,6 +1210,8 @@ def area_champions(A):
         th, void = defaultdict(set), set()
         for r in x.get("champions") or []:
             y = y365(r[0])
+            if y and cid in S365_START_YEAR:
+                y = str(int(y) + 1)
             if not r[1]:
                 void.add(y)
             elif len(r) > 2 and r[2]:
@@ -1224,8 +1252,8 @@ def area_champions(A):
         n_titles = sum(r.get("titles") or 0 for r in at.get("table") or [])
         cur = max(ss)
         x = (fm.get("comps") or {}).get(str(cid)) or {"champions": []}
-        void = {str(r[0]).replace("-", "/") for r in x.get("champions") or [] if not r[1]}
-        done = [s for s in ss if s != cur and s not in void]
+        void = {str(r[0]).replace("-", "/") for r in x.get("champions") or [] if not r[1]} | set(VOID_SEASONS.get(cid, {}))
+        done = [s for s in ss if s != cur and s not in void and s not in NOT_A_SEASON.get(cid, {})]
         if n_titles != len(done):
             A.add("champions", "alltime_titles", "error", "ours", f"comp:{cid}", f"{A.comp[cid]['name_ar']} ({cid}): the all-time table counts {n_titles} titles for {len(done)} completed, non-void seasons (the season in play or a cancelled one counted)")
 

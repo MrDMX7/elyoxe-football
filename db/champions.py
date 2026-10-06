@@ -163,7 +163,7 @@ def main(argv=None):
         for r in x365.get("champions") or []:
             if r[1] and r[2]:
                 won365.setdefault(end_year(r[0]), set()).add(r[2])
-        seen, champs, bad = set(), [], set()
+        seen, champs, bad, stg = set(), [], set(), []
         for b in rows:
             v = lambda k: (b.get(k) or {}).get("value")
             if v("res") and v("res").rsplit("/", 1)[1] not in WIN:
@@ -179,13 +179,28 @@ def main(argv=None):
             if not y or y in void or k in seen:
                 continue
             seen.add(k)
-            champs.append([y, w, v("wAr") or v("wEn"), by_qid.get(w)])
+            champs.append([y, w, v("wAr") or v("wEn"), by_qid.get(w)]); stg.append(k[2])
+        # one champion a season (and stage): Wikidata can carry a second «winner» on a season item (LaLiga 2014–15 also names
+        # Real Betis, that season's Segunda champion: audit duplicate_season 2026-10-05). 365Scores' winner decides, else our own
+        # points table; a season neither settles keeps both, and the audit lists it
+        tab = table_champions(store, cid) if cid in TABLE_LEAGUES else {}
+        groups, drop = {}, set()
+        for i, x in enumerate(champs):
+            groups.setdefault((x[0], stg[i]), []).append(i)
+        for (y, _), ix in groups.items():
+            if len({champs[i][1] for i in ix}) < 2:
+                continue
+            ref = won365.get(y) or ({tab[y]} if y in tab else set())
+            keep = [i for i in ix if champs[i][3] is not None and champs[i][3] in ref]
+            if keep:
+                drop.update(i for i in ix if i not in keep)
+        champs = [x for i, x in enumerate(champs) if i not in drop]
         # the seasons Wikidata has no winner for yet: from our own archive's points table (single-table leagues only), never
         # for a season 365 marks void or names another winner for
         if cid in TABLE_LEAGUES:
             have = {x[0] for x in champs}
             fm2 = {f: q for q, f in by_qid.items()}
-            for y, fid in table_champions(store, cid).items():
+            for y, fid in tab.items():
                 if y not in have and y not in void and (y not in won365 or fid in won365[y]):
                     t = teams.get(str(fid)) or {}
                     champs.append([y, fm2.get(fid) or f"fm:{fid}", t.get("name_ar") or t.get("name"), fid, "table"])
