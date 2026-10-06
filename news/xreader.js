@@ -12,7 +12,7 @@
 // with its competition in `comps:`) are read first, `hot_per_run` at a time in turn, the rotation shrinks to `live_per_run`,
 // and runs may come every `live_minutes`. `--plan` prints the pick and stops.
 //
-// Where it runs (owner 2026-09-30: «نخلي شغلة تويتر… على اللابتوب عشان ما يخلص جرج التلفون»): the LAPTOP, every 30 min from
+// Where it runs (owner 2026-09-30: «نخلي شغلة تويتر… على اللابتوب عشان ما يخلص جرج التلفون»): the LAPTOP, every 15 min (2026-10-07; a run with no live match waits min_minutes) from
 // Task Scheduler (news/xreader-task.vbs, hidden), Edge in a window parked off-screen; `--upload` puts the inbox at
 // s3://…/state/news/x-inbox.json and the Fold's news.run reads it from there. The Fold can still run it by hand (Xvfb).
 // The laptop's session comes from the Fold's reader profile: `ssh fold "node …/xreader.js --export-cookies" > <profile>/x-cookies.json`.
