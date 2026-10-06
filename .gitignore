@@ -10,6 +10,9 @@ samconfig.toml
 .env
 news/.x-inbox.json
 news/.x-reader.log
+news/.x-mood.json
+news/.x-mood.log
+news/.x-mood.lock
 history/.cache/
 db/.cache/
 .claude/worktrees/

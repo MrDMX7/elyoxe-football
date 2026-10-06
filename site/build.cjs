@@ -258,7 +258,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   { const dj = fs.readFileSync(path.join(__dirname, "src/days.js"), "utf8"); DAYS_V = hash(dj); fs.writeFileSync(path.join(OUT, `assets/days.${DAYS_V}.js`), dj); }   // owner item 9: the day pages' renderer, shared with lib/seo_days.cjs
   { const gj = fs.readFileSync(path.join(__dirname, "src/goalshare.js"), "utf8"); GS_V = hash(gj); fs.writeFileSync(path.join(OUT, `assets/goalshare.${GS_V}.js`), gj); }   // owner item 11: share one goal from its row
   { const w = f => { const j = fs.readFileSync(path.join(__dirname, `src/${f}.js`), "utf8"), v = hash(j); fs.writeFileSync(path.join(OUT, `assets/${f}.${v}.js`), j); return `/assets/${f}.${v}.js`; };
-    ENG = { notify:w("notify"), predict:w("predict"), voices:w("voices"), mosaic:w("mosaic"), motm:w("motm"), globe:w("globe"), poster:w("poster"), trail:w("trail"), rewind:w("rewind"), scout:w("scout"), cam:w("cam"), coach:w("coach"), badges:w("badges") }; }   // items 7, 8, 3; «اصنع التيفو» (bold idea 1); «رجل المباراة بصوت الجمهور» (second list 2); «كل مباراة لوحة فنية» (bold idea 10)
+    ENG = { notify:w("notify"), predict:w("predict"), voices:w("voices"), mosaic:w("mosaic"), motm:w("motm"), globe:w("globe"), poster:w("poster"), trail:w("trail"), rewind:w("rewind"), scout:w("scout"), cam:w("cam"), coach:w("coach"), badges:w("badges"), mood:w("mood") }; }   // items 7, 8, 3; «اصنع التيفو» (bold idea 1); «رجل المباراة بصوت الجمهور» (second list 2); «كل مباراة لوحة فنية» (bold idea 10)
   // the mark: a 3x3 tifo of cards (chalk, pulse, dune on night pitch)
   // the mark: v5's 3x3 «tifo» of rounded cards (white, two quiet, three light pitch green) on pitch green (site/redesign/v5/icons.py)
   const cellsSvg = ["#fff", "#7CF0B4", "#ffffff70", "#fff", "#ffffff70", "#7CF0B4", "#7CF0B4", "#fff", "#fff"].map((c, i) => `<rect x="${7 + (i % 3) * 6.5}" y="${7 + Math.floor(i / 3) * 6.5}" width="5.4" height="5.4" rx="1.3" fill="${c}"/>`).join("");
@@ -976,7 +976,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
       hc:((teamById.get(md.home.id) || {}).squad || []).length ? 1 : 0, ac:((teamById.get(md.away.id) || {}).squad || []).length ? 1 : 0 };   // hc/ac: a squad to pick from (src/coach.js)   // cn: the season trail (src/trail.js)
     // «اصنع التيفو» (src/mosaic.js) opens 3 h before kickoff and closes 2 h after the end: its script goes on the pages of
     // matches within a day of now (rebuilt hourly), not on the archive's thousands
-    const fanJs = !md.time_tbd && Math.abs(Date.parse(md.kickoff_utc || 0) - Date.now()) < 30 * 36e5 ? [ENG.mosaic] : [];
+    const fanJs = !md.time_tbd && Math.abs(Date.parse(md.kickoff_utc || 0) - Date.now()) < 30 * 36e5 ? [ENG.mosaic, ENG.mood] : [];   // the stand, and «نبض الجمهور» (bold idea 9: /v1/mood/<id>.json from news/xmood.js)
     // «رجل المباراة بصوت الجمهور» (src/motm.js) votes from the whistle until 48 h after the end: from a day before kickoff to 52 h after
     const coachJs = ENG.coach && !md.time_tbd && Date.parse(md.kickoff_utc || 0) > Date.now() - 2 * 864e5 && Date.parse(md.kickoff_utc || 0) < Date.now() + 3 * 864e5 && (((teamById.get(md.home.id) || {}).squad || []).length || ((teamById.get(md.away.id) || {}).squad || []).length) ? [ENG.coach] : [];   // «مدرّب الكنبة» (second list 3): from 3 days before to 2 after
     const koT = Date.parse(md.kickoff_utc || 0), motmJs = !md.time_tbd && koT > Date.now() - 52 * 36e5 && koT < Date.now() + 30 * 36e5 ? [ENG.motm] : [];
