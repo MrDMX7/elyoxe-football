@@ -44,7 +44,10 @@ OFF = {"postponed", "cancelled", "canceled", "abandoned", "suspended"}   # a fin
 LIVE_OK = set(M.phrases(["live", "livestream", "live stream", "watch live", "en vivo", "en directo", "en direct", "in diretta",
                          "diretta", "مباشر", "بث مباشر", "البث المباشر", "full match", "full game", "المباراة كاملة",
                          "partido completo", "match complet", "partita completa", "jogo completo", "ganzes spiel"]))
-NEG = [p for p in M.NEG_ALWAYS if p not in LIVE_OK] + M.phrases(["replay", "re-live", "إعادة", "اعادة", "مسجل", "مسجلة"])
+NEG = [p for p in M.NEG_ALWAYS if p not in LIVE_OK] + M.phrases(["replay", "re-live", "إعادة", "اعادة", "مسجل", "مسجلة",
+                                                                  # a channel's studio before or after the match (media's list has only
+                                                                  # «الاستوديو التحليلي»)
+                                                                  "استوديو", "ستوديو", "الاستوديو", "بعد المباراة", "بعد اللقاء", "ما بعد المباراة"])
 READER_FRESH_MIN = 45     # the X reader's last run: older and none of its broadcasts are believed
 BC_FRESH_MIN = 150        # a broadcast seen RUNNING is believed this long, the length of a match (and only while it is on)
 BC_ID = re.compile(r"^[A-Za-z0-9]{6,30}$")
