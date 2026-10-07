@@ -1612,8 +1612,26 @@ class Poller:
         if gap <= limit:
             self.store.ok("live-watchdog", note=f"live.json {gap:.0f} s old")
             return
+        # who was alerted is also kept in a state file of its own, written before the mail goes: the run's own state is saved at
+        # its end, and on 2026-10-01/02 the runs that mailed timed out (256 MB) before saving it, so the next minute mailed
+        # again: ~200 mails. Now at most one mail per match, even from a run that dies right after sending it
+        key = f"live-watchdog-{self.role}.json"
+        try:
+            kept = self.store.get_state(key) or {}
+        except Exception:
+            kept = {}
+        for m, at in kept.items():
+            if m in live:
+                state.setdefault(m, at)
         todo = sorted(m for m in live if m not in state)
         if not todo:
+            return
+        for m in todo:
+            state[m] = iso(now)
+        try:
+            self.store.put_state(key, {m: at for m, at in state.items() if m in live})
+        except Exception as e:
+            self.store.fail("live-watchdog", f"alert record not saved, no mail: {type(e).__name__}: {e}")
             return
         who = "the poller has not run" if self.role == "analytics" else "the previous runs did not write it"
         body = (f"live.json توقف: آخر تحديث قبل {gap:.0f} ثانية ({last} UTC) والمباريات {', '.join(todo)} شغالة.\n"
@@ -1622,10 +1640,14 @@ class Poller:
         try:
             (self.mailer or _ses_send)(f"Tifo: live feed stalled {gap:.0f} s", body)
         except Exception as e:
+            for m in todo:                       # nothing went out: the next minute tries again
+                state.pop(m, None)
+            try:
+                self.store.put_state(key, {m: at for m, at in state.items() if m in live})
+            except Exception:
+                pass
             self.store.fail("live-watchdog", f"mail not sent: {type(e).__name__}: {e}")
             return
-        for m in todo:
-            state[m] = iso(now)
         self.store.fail("live-watchdog", f"live.json {gap:.0f} s old while live (alerted: {', '.join(todo)})")
         self.note(f"live watchdog: stall of {gap:.0f} s mailed")
 

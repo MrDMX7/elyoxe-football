@@ -203,6 +203,23 @@ def test_live_watchdog_once_per_match(tmp_path):
     assert p.st["stall_alerted"] == {}
 
 
+def test_live_watchdog_never_mails_twice_when_a_run_dies_after_mailing(tmp_path):
+    # 2026-10-01/02: the run that mailed timed out before its state was saved, so every next minute mailed again (~200)
+    mail = _Mail()
+    t = datetime(2026, 10, 1, 19, 0, tzinfo=timezone.utc)
+    for i in range(3):                                   # three runs, each with a fresh (lost) run state
+        p = _poller(tmp_path)
+        p.mailer, p.now_fn = mail, (lambda i=i: t.replace(minute=i))
+        p.st.update({"live_ids": ["6052085"], "live_written_at": "2026-10-01T18:55:00Z", "stall_alerted": {}})
+        p.live_watchdog()
+    assert len(mail.sent) == 1
+    p = _poller(tmp_path)                                 # the match is over: a later stall of another match alerts again
+    p.mailer, p.now_fn = mail, (lambda: t.replace(hour=21))
+    p.st.update({"live_ids": ["7000001"], "live_written_at": "2026-10-01T20:55:00Z", "stall_alerted": {}})
+    p.live_watchdog()
+    assert len(mail.sent) == 2
+
+
 def test_live_watchdog_analytics_reads_live_json(tmp_path):
     p = _poller(tmp_path, "analytics")
     mail = _Mail()
