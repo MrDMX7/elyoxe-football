@@ -429,13 +429,21 @@ def area_freshness(A):
 
 
 # ------------------------------------------------------------------ matches
+def _none_last(t):
+    """Sort key for a signature tuple: a missing minute or player id (None) sorts after any value instead of raising. A card
+    with neither crashed the whole matches area on 2026-10-07 («'<' not supported between instances of 'int' and 'NoneType'»),
+    which hid «الأرقام مدققة» on every page; the tuples themselves are kept, so ours and FotMob's still compare as before."""
+    return tuple((x is None, 0 if x is None else x) for x in t)
+
+
 def _goal_sig(evs):
-    return sorted((e["type"], e.get("minute"), e.get("added") or 0, _pid(e.get("player")), _pid(e.get("assist")))
-                  for e in evs or [] if e.get("type") in G)
+    return sorted(((e["type"], e.get("minute"), e.get("added") or 0, _pid(e.get("player")), _pid(e.get("assist")))
+                   for e in evs or [] if e.get("type") in G), key=_none_last)
 
 
 def _card_sig(evs):
-    return sorted((e["type"], e.get("minute"), e.get("added") or 0, _pid(e.get("player"))) for e in evs or [] if e.get("type") in CARDS)
+    return sorted(((e["type"], e.get("minute"), e.get("added") or 0, _pid(e.get("player"))) for e in evs or [] if e.get("type") in CARDS),
+                  key=_none_last)
 
 
 def _side_goals(evs):

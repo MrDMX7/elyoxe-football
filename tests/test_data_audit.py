@@ -188,3 +188,17 @@ def test_public_summary_a_crashed_area_is_never_ok_and_partial_runs_never_publis
     assert store.get_json("audit/latest.json") == pub and pub["ok"] is True
     meta = json.loads((tmp_path / "v1" / "audit" / "latest.json.meta").read_text())
     assert meta["CacheControl"].startswith("public, max-age=3600")
+
+
+def test_card_and_goal_signatures_sort_with_a_missing_minute_or_player():
+    # 2026-10-07: a card with no minute (or no player id) crashed the matches area, so «الأرقام مدققة» left every page
+    from db import audit as AU
+    card = AU.CARDS if isinstance(AU.CARDS, str) else next(iter(AU.CARDS))
+    goal = next(iter(AU.G))
+    evs = [{"type": card, "minute": 30, "player": {"id": 7}}, {"type": card, "minute": None, "player": None},
+           {"type": card, "minute": 12, "player": {"id": 3}}]
+    sig = AU._card_sig(evs)
+    assert [x[1] for x in sig] == [12, 30, None]
+    assert AU._card_sig(list(reversed(evs))) == sig                      # the order the events came in never matters
+    gs = AU._goal_sig([{"type": goal, "minute": None, "player": {"id": 1}}, {"type": goal, "minute": 5, "player": None, "assist": {"id": 2}}])
+    assert [x[1] for x in gs] == [5, None]
