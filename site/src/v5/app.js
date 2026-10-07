@@ -461,7 +461,8 @@
   function fold(s) { return String(s || "").toLowerCase().replace(/[أإآٱا]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/[ً-ْـ]/g, "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim(); }
   // search: the site's index (assets/search.<v>.json), loaded on first focus; matches, teams, players, competitions, coaches, referees, pages
   var SIDX = null;
-  function sidx() { if (SIDX) return Promise.resolve(SIDX); var v = B.dataset.sv; if (!v || /^_/.test(v)) return Promise.reject(); return getx("/assets/search." + v + ".json").then(function (j) { var S = j.s || []; SIDX = (j.i || []).map(function (i) { return { t: i[0], ar: i[1], la: i[2], u: i[3], sub: (typeof i[4] === "number" ? S[i[4]] : i[4]) || "", cc: i[5] || "", ko: i[6] || "", k: fold(i[1]) + " " + fold(i[2]) }; }); return SIDX; }); }
+  function sidx() { if (SIDX) return Promise.resolve(SIDX); var v = B.dataset.sv;   /* the index's version: on <body> before 2026-10-07, in /search-v.json since */
+    return (v && !/^_/.test(v) ? Promise.resolve(v) : getx("/search-v.json").then(function (j) { if (!j || !j.v) throw 0; return j.v; })).then(function (v) { return getx("/assets/search." + v + ".json"); }).then(function (j) { var S = j.s || []; SIDX = (j.i || []).map(function (i) { return { t: i[0], ar: i[1], la: i[2], u: i[3], sub: (typeof i[4] === "number" ? S[i[4]] : i[4]) || "", cc: i[5] || "", ko: i[6] || "", k: fold(i[1]) + " " + fold(i[2]) }; }); return SIDX; }); }
   function searchInit() {
     var q = $("#q"), x = $("#qx"), out = $("#sres"), idleBox = $("#sidle"); if (!q) return;
     var TY = { c: "البطولات", t: "الفرق والمنتخبات", p: "اللاعبين", m: "المباريات", k: "المدربين", f: "الحكام", r: "الصفحات" }, ORD = ["t", "c", "m", "p", "k", "r", "f"], CC = country();
@@ -535,8 +536,9 @@
   // ================================================================== the first visit: ten seconds to make اليوم yours (teams + country)
   function onbOpen(force) {
     var sh = $("#sh-onb"); if (!sh) { if (force) location.href = "/mine/"; return; }
-    var picks = C.picks || [], grid = $("#onbpicks"), cc = $("#onbcc");
-    if (grid && !grid.childElementCount) grid.innerHTML = P.picks(picks.slice(0, 30).map(function (p) { return { id: p[0], name_ar: p[1] }; })).replace(/^<div class="picks">|<\/div>$/g, "");
+    var grid = $("#onbpicks"), cc = $("#onbcc");
+    var fill = function (picks) { if (!grid || grid.childElementCount || !picks) return; grid.innerHTML = P.picks(picks.slice(0, 30).map(function (p) { return { id: p[0], name_ar: p[1] }; })).replace(/^<div class="picks">|<\/div>$/g, ""); paintFav(); };
+    if (grid && !grid.childElementCount) { if (C.picks) fill(C.picks); else getx("/picks.json").then(fill, function () {}); }   /* in the config before 2026-10-07 */
     if (cc && !cc.childElementCount) { var cur = country(); cc.innerHTML = (C.countries || []).map(function (c) { return '<button type="button" class="ccb" data-occ="' + c[0] + '" aria-pressed="' + (c[0] === cur) + '">' + U.esc(c[1]) + "</button>"; }).join(""); }
     paintFav(); openSheet(sh);
     var q = $("#onbq"), out = $("#onbr");
@@ -731,6 +733,16 @@
     dayLabel: function (ymd, today) { var x = window.TR.dayParts(ymd, today); return x.rel ? x.rel + "، " + x.date : x.date; },
     hl: function (md) { var u = md && md.highlights && md.highlights.url; return u && /^https:\/\//.test(u) ? '<p class="hlink"><a class="btn hlbtn" href="' + U.esc(u) + '" target="_blank" rel="noopener">▶ الملخص</a></p>' : ""; } };
   // share images (src/share.js: story, wallpaper, any section, lists) load the first time one is asked for
+  // «الأرقام مدققة»: the footer's badge from the last data audit (db/audit.py, v1/audit/latest.json), only when it passed; filled here
+  // and not in the page since 2026-10-07, so an audit never changes every page
+  idle(function () {
+    var el = $("#auditb"); if (!el) return;
+    getx("/v1/audit/latest.json").then(function (a) {
+      if (!a || a.ok !== true || !a.generated || a.errors > 0) return;
+      el.innerHTML = '<span class="ab">' + U.icon("check", "", 2.6) + "الأرقام مدققة</span> آخر تدقيق " + U.tm(a.generated, "dt") + (a.checked ? ' · <span class="num">' + U.nf(a.checked) + "</span> رقم" : "");
+      el.hidden = false;
+    }).catch(function () {});
+  });
   if (!window.TifoShare && C.share) (function () { var pr = null, load = function () { return pr || (pr = new Promise(function (ok, no) { var s = D.createElement("script"); s.src = "/assets/share." + C.share + ".js"; s.onload = function () { ok(window.TifoShare); }; s.onerror = function () { pr = null; no(new Error("share.js")); }; D.head.appendChild(s); })); };
     var st = { lazy: true, preload: function () { load().catch(function () {}); } }; ["story", "wallpaper", "banner", "out", "card", "listCard"].forEach(function (k) { st[k] = function () { var a = arguments; return load().then(function (T) { return T[k].apply(T, a); }); }; }); window.TifoShare = st; })();
   D.addEventListener("click", function (e) { if (e.target.closest && e.target.closest('[data-sheet="sh-share"]') && window.TifoShare && window.TifoShare.preload) window.TifoShare.preload(); }, true);

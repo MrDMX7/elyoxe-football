@@ -130,7 +130,7 @@ function page(o){
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">${["home", "daypage", "all", "mine", "more"].includes(o.page) ? APPLE_SPLASH : ""}
 <link rel="stylesheet" href="/assets/app.${V5_V.css}.css">${o.page === "match" || o.page === "messi" ? '<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>' : ""}${(o.ld ? [].concat(o.ld) : []).map(l => `<script type="application/ld+json">${JSON.stringify(l).replace(/</g, "\\u003c")}</script>`).join("")}
 <script type="speculationrules">{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":"/v1/*"}},{"not":{"href_matches":"/api/*"}}]},"eagerness":"moderate"},{"source":"document","where":{"selector_matches":".tabbar a"},"eagerness":"eager"}]}</script>${o.head || ""}</head>
-<body data-page="${o.page}" data-v5="1" data-bc="${BC_V}"${R.DUPCTX ? ` data-dupctx="${esc(R.DUPCTX)}"` : ""}${CC_V ? ` data-ccm="${CC_V}"` : ""} data-sv="__SV__"${o.attrs || ""}>
+<body data-page="${o.page}" data-v5="1" data-bc="${BC_V}"${R.DUPCTX ? ` data-dupctx="${esc(R.DUPCTX)}"` : ""}${CC_V ? ` data-ccm="${CC_V}"` : ""}${o.attrs || ""}>
 <a class="skip" href="#main">تخطَّ للمحتوى</a><a class="island" id="island" href="/" hidden aria-live="off"></a>
 ${U.nav(v.nav)}
 <main id="main"${v.cls ? ` class="${v.cls}"` : ""}>${v.body}${/<footer class="foot"/.test(v.body) ? "" : U.foot()}</main>
@@ -396,7 +396,9 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // a quiet «الأرقام مدققة» with its time, only when the last audit passed; absent or failed, nothing is said. The footer keeps every
   // link the v3 footer had (crawl paths), as one quiet wrapped list
   { const a = await get("audit/latest.json", 1); AUDIT = a && a.ok === true && a.generated && !(a.errors > 0) ? a : null;
-    const badge = AUDIT ? `<p class="audit"><span class="ab">${U.icon("check", "", 2.6)}الأرقام مدققة</span> آخر تدقيق ${U.tm(AUDIT.generated, "dt")}${AUDIT.checked ? ` · <span class="num">${U.nf(AUDIT.checked)}</span> رقم` : ""}</p>` : "";
+    // 2026-10-07: the badge is filled in the browser from v1/audit/latest.json (app.js): with its time in every page's footer, each
+    // audit, and every flip between passed and failed, re-uploaded all 30k pages
+    const badge = `<p class="audit" id="auditb" hidden></p>`;
     U.cfg.footer = badge + `<p><span class="updated" id="updated"></span> تيفو بدون مراهنات. البيانات من FotMob ورابطة المحترفين الإماراتية.</p>` +
       `<nav class="fnav" aria-label="روابط تيفو">${[["/", "اليوم"], ["/today/", "مباريات اليوم"], ["/tomorrow/", "مباريات بكرة"], ["/all/", "كل مباريات العالم"], ["/yesterday/", "نتائج أمس"], ["/matches/", "جدول المباريات"], ["/week/", "مباريات الأسبوع"], ["/countdowns/", "كم باقي؟"], ["/watch/", "وين تنقل"], ["/commentators/", "منو يعلّق"], ["/news/", "الأخبار"], ["/competitions/", "كل البطولات"], ["/c/uae-pro-league/", "دوري أدنوك"], ["/national/", "المنتخبات"], ["/arabs/", "العرب"], ["/db/", "موسوعة الأندية واللاعبين"], ["/legends/", "الأساطير"], ["/memorable/", "مباريات ما تنتسى"], ["/thisday/", "هذا اليوم"], ["/tv/", "شاشة المجلس"], ["/tv/?mine=1", "وضع المتابعة"], ["/studio/", "ستوديو التيفو"], ["/lab/", "المختبر"], ["/stadiums/", "الملاعب"], ["/laws/", "قانون الكورة"], ["/glossary/", "القاموس"], ["/cast/", "تيفو كاست"], ["/newsletter/", "النشرة"], ["/more/", "كل الصفحات"]].map(l => `<a href="${l[0]}">${l[1]}</a>`).join("")}</nav>` +
       `<p>من استوديو <a href="https://elyoxe.com/">Elyoxe</a></p>`; }
@@ -408,7 +410,10 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     R.COUNTRIES.forEach(c => { const d = compData.find(x => x.c.kind === "league" && x.c.country && x.c.country.iso2 === c[0] && x.st && x.st.groups && !x.st.composite); if (!d) return; (d.st.groups[0].rows || []).slice(0, TOPN[c[0]] || 3).forEach(r => add(r.team.id, c[0])); });
     { const cc = {}; compData.forEach(({ c, st }) => { const iso = c.country && c.country.iso2; if (!iso || c.kind !== "league" || cc[iso] || !st || st.composite || !st.groups || !st.groups[0]) return; const ids = st.groups[0].rows.map(r => r.team.id); if (ids.length) cc[iso] = ids.slice(0, 20).map(id => [id, (S_TEAMS[id] || {}).name_ar || TAR[id] || (S_TEAMS[id] || {}).name || ""]); });
       const cj = JSON.stringify(cc); CC_V = hash(cj); fs.writeFileSync(path.join(OUT, `assets/cc.${CC_V}.json`), cj); }   // every Arab league's clubs (the «فريقك» crest grid)
-    const V5C = { cn:U.cfg.cn, picks:pick, countries:R.COUNTRIES.map(c => [c[0], c[1], c[2]]), audit:AUDIT ? { at:AUDIT.generated, n:AUDIT.checked || 0 } : null, share:ASSET_V };   // share: src/share.js, loaded on the first share image
+    // 2026-10-07: only what moves rarely, since every page links this file by its hash: the teams to pick from move with the tables
+    // (/picks.json, read when the picker opens) and the audit was read by no browser code
+    const V5C = { cn:U.cfg.cn, countries:R.COUNTRIES.map(c => [c[0], c[1], c[2]]), share:ASSET_V };   // share: src/share.js, loaded on the first share image
+    fs.writeFileSync(path.join(OUT, "picks.json"), JSON.stringify(pick));
     const vj = "window.V5C=" + JSON.stringify(V5C).replace(/</g, "\\u003c") + ";"; V5_V.cfg = hash(vj); fs.writeFileSync(path.join(OUT, `assets/v5cfg.${V5_V.cfg}.js`), vj); }
 
   const stIdsOf = st => st && !st.composite && st.groups && st.groups[0] ? st.groups[0].rows.map(r => r.team.id) : [];
@@ -1313,7 +1318,10 @@ ${items}
     AW.search.forEach(x => items.push(x.length > 4 ? x : x.concat(["", ""])));
     // W3.11: sublines go in one table ({s:[…], i:[[type, ar, latin, url, sub#, cc, kickoff?]]}); a latin equal to the Arabic is dropped
     const subs = [], si = new Map(); for (const it of items){ if (it[2] === it[1]) it[2] = ""; const s = it[4] || ""; if (!si.has(s)){ si.set(s, subs.length); subs.push(s); } it[4] = si.get(s); }
-    const sj = JSON.stringify({ s:subs, i:items }); SEARCH_V = hash(sj); fs.writeFileSync(path.join(OUT, `assets/search.${SEARCH_V}.json`), sj); }
+    const sj = JSON.stringify({ s:subs, i:items }); SEARCH_V = hash(sj); fs.writeFileSync(path.join(OUT, `assets/search.${SEARCH_V}.json`), sj);
+    // 2026-10-07: the version lives in /search-v.json (max-age 60), not on every page: the index holds the next 8 days' matches, so it
+    // moves with every kickoff change, and as `data-sv` on <body> it made half the hourly builds re-upload all 30k pages
+    fs.writeFileSync(path.join(OUT, "search-v.json"), JSON.stringify({ v:SEARCH_V })); }
 
   // ---- 379: embeds for other sites (iframe): a league table and a live match, fetched from /v1, a link back to Tifo
   { const ehead = t => `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${t}</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><style>@font-face{font-family:"Readex Pro";src:url(${FONTS.readex}) format("woff2");font-weight:400 600;font-display:swap}@font-face{font-family:"Barlow Condensed";src:url(${FONTS.barlow}) format("woff2");font-weight:700;font-display:swap}</style><style>:root{--ground:#0A2620;--text:#F6F7F2;--text-2:#B9C7C0;--text-3:#A7B6AF;--rule-2:#F6F7F214;--live-text:#5BE08F}body{margin:0;background:var(--ground);color:var(--text);font:400 14px "Readex Pro",system-ui,sans-serif}a{color:inherit;text-decoration:none}.w{padding:10px 12px}.h{display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-bottom:6px}.h a{font-size:12px;color:var(--text-2)}table{width:100%;border-collapse:collapse}td,th{padding:6px 4px;border-bottom:1px solid var(--rule-2);text-align:center;font:700 15px "Barlow Condensed",sans-serif}th{font:400 11px "Readex Pro";color:var(--text-3)}td.t{text-align:start;font:400 14px "Readex Pro"}img{width:18px;height:18px;vertical-align:-4px;margin-inline-end:6px}.m{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;text-align:center}.m img{width:44px;height:44px;display:block;margin:0 auto 6px}.s{font:700 44px "Barlow Condensed",sans-serif;display:flex;gap:8px;justify-content:center;align-items:center}.s i{font-style:normal}.s .ko{font:600 13px "Readex Pro",sans-serif;color:var(--text-2)}.st{font-size:12px;color:var(--text-2)}.live{color:var(--live-text)}</style></head><body><div class="w" id="w">…</div>`;
