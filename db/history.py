@@ -56,6 +56,22 @@ def fetch():
         print("dataset downloaded", len(raw) // 1024 // 1024, "MB")
 
 
+FM_NAMES = os.path.join(CACHE, "fm_team_names.json")   # {FotMob id: its own name} for opponents no other source names
+
+
+def fm_name(tid, cache, fm):
+    """FotMob's own name for a team none of the sources names (2026-10-07: 30 club histories showed an id where an opponent's
+    name belongs, Al Ahly's cup opponents Al Tersana and Bani Sweef among them). Cached for good; a failed fetch is asked again
+    next run."""
+    k = str(tid)
+    if k not in cache:
+        try:
+            cache[k] = (((fm.team_raw(int(tid)) or {}).get("details") or {}).get("name")) or ""
+        except Exception:
+            return None
+    return cache[k] or None
+
+
 def fotmob_archive(store):
     rows, y = [], date.today().year + 1
     for a in range(2010, y):
@@ -241,6 +257,12 @@ def main(argv=None):
         fm_ar = (json.load(open(os.path.join(CACHE, "fm_ar.json"), encoding="utf-8")).get("Participants")) or {}
     except (OSError, ValueError):
         fm_ar = {}
+    try:
+        fm_names = json.load(open(FM_NAMES, encoding="utf-8"))
+    except (OSError, ValueError):
+        fm_names = {}
+    from sources import fotmob as FMS
+    fm_client = FMS.FotMob()
     fm_by_club = defaultdict(list)                                           # every archive game of a club, any date
     for r in fmr:
         fm_by_club[r[3]].append(r)
@@ -349,6 +371,11 @@ def main(argv=None):
                 t, w = teams.get(o) or {}, world.get(o) or [None, None, None]
                 names[o] = (t.get("name_ar") or w[1] or fm_ar.get(o) or t.get("name") or w[2]
                             or (cw.get(int(o)) or o).rsplit(" (", 1)[0])   # a linked club we have no page for
+                if names[o] == o and o.isdigit():
+                    nm = fm_name(o, fm_names, fm_client)
+                    if nm:
+                        names[o] = nm
+                        stats["opponents named by FotMob's team page"] += 1
                 if names[o] == o:
                     stats["opponents still named by id"] += 1
         comps = {}
@@ -372,6 +399,11 @@ def main(argv=None):
             print(json.dumps({k: doc[k] for k in ("name", "since", "total", "by_decade", "scope")}, ensure_ascii=False)[:900]); print(doc["opponents"][:8]); print(wins[:3])
     if (a.upload or a.out) and not a.club:
         put("history/index.json", {"generated": date.today().isoformat(), "clubs": index, "dataset_until": last.isoformat()})
+    try:
+        with open(FM_NAMES, "w", encoding="utf-8", newline="\n") as f:
+            json.dump(fm_names, f, ensure_ascii=False)
+    except OSError:
+        pass
     print(dict(stats))
     print(f"{len(index)} club histories" + (" uploaded" if a.upload and not a.out else f" written under {a.out}" if a.out else ""))
     return 0
