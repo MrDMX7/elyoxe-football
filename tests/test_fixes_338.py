@@ -363,3 +363,24 @@ def test_minimal_match_file_for_upcoming(tmp_path):
     p.store.written.clear()
     p.minimal_match_files([dict(m, kickoff_utc="2026-09-29T18:00:00Z")])
     assert "match/77.json" not in p.store.written          # never over a real detail
+
+
+def test_a_match_fotmob_has_no_data_for_is_noted_rested_and_never_fails_the_feed(tmp_path):
+    # 2026-10-05..07: FotMob answered {"error": true, "message": "Data not found"} for 5629268 (MAT Tetouan - Fath Casablanca,
+    # a Moroccan cup tie of May); the backfill failed on it every day and the whole feed showed «FAILING match:backfill»
+    p = _poller(tmp_path)
+    p.now_fn = lambda: datetime(2026, 10, 7, 3, 0, tzinfo=timezone.utc)
+    calls = []
+    p.fm.match_raw = lambda mid: calls.append(mid) or {"error": True, "message": "Data not found", "matchId": str(mid)}
+    p.store.fail("match:backfill", "5629268: match id None")        # what the feed said before
+    assert p.fetch_detail(5629268, "backfill") is None
+    assert p.store.health["match:backfill"]["ok"] is True and "no data" in p.store.health["match:backfill"]["note"]
+    assert "5629268" in p.st["detail_gone"]
+    # the backfill skips it for GONE_DAYS (and never counts it as a failure)
+    cid = 11840
+    p.st["dormant"] = {str(cid): False}
+    p.fixture_cache[cid] = [{"id": 5629268, "status": "finished", "kickoff_utc": "2026-05-15T15:00:00Z"}]
+    assert p.backfill(5) == 0 and calls == [5629268] and "5629268" not in p.st.get("backfill_bad", {})
+    p.now_fn = lambda: datetime(2026, 11, 7, 3, 0, tzinfo=timezone.utc)      # a month on: asked again
+    p.backfill(5)
+    assert calls == [5629268, 5629268]
