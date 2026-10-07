@@ -556,6 +556,17 @@ def main(argv=None):
             if r[5] is not None and (not a.comp or r[2] == a.comp):
                 ids.append(r[0])
                 arch_comp[r[0]] = r[2]
+    # the archive is rebuilt once a day by the analytics function (arabs.archive_index, at a drifting hour: 14:45 UAE on
+    # 2026-10-07), after this stage's 04:30 run, so last evening's matches waited a day and a half for the logs (the Gulf Cup
+    # final: Al-Buraikan's goal missing from his log, 2 of his 3). The competitions' own fixtures add the finished ones now
+    if not a.season:
+        for cid in comp_ids:
+            if a.comp and cid != a.comp:
+                continue
+            for m in (store.get_json(f"comp/{cid}/fixtures.json") or {}).get("matches") or []:
+                if m.get("status") == "finished" and m.get("id") and m.get("score") and m["id"] not in arch_comp:
+                    ids.append(m["id"])
+                    arch_comp[m["id"]] = cid
     ids = sorted(set(ids), reverse=True)
     if a.limit:
         ids = ids[:a.limit]
