@@ -87,6 +87,7 @@ def run(log, cmd, cwd=ROOT, timeout=None):
     # IPv4 first: this laptop's IPv6 path is slower and once left a build waiting on a dead connection for 4 hours (2026-10-06)
     env["NODE_OPTIONS"] = (env.get("NODE_OPTIONS", "") + " --dns-result-order=ipv4first").strip()
     log.w("$ " + " ".join(str(c) for c in cmd))
+    t0 = time.time()                                   # every step's time in the log (2026-10-07: where a 45-min site job goes)
     p = subprocess.Popen([str(c) for c in cmd], cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
                          errors="replace", env=env)
     try:
@@ -104,6 +105,7 @@ def run(log, cmd, cwd=ROOT, timeout=None):
         log.w(f"timed out after {timeout}s"); return 124, "timeout"
     out = out or ""
     log.w(out[-12000:])
+    log.w(f"[{time.time() - t0:.0f} s, exit {p.returncode}]")
     return p.returncode, "\n".join(out.strip().splitlines()[-4:])
 
 
