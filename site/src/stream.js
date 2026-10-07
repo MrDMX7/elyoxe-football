@@ -3,7 +3,8 @@
    holders, leagues, federations and clubs of news/sources.yaml; live now; the title naming both teams) and published as
    /v1/streams.json. Here: on top of the overview, a 16:9 player that loads YouTube only on a tap (youtube-nocookie), the channel
    and the stream's own title (the commentator is often in it), and the other channels when there are more. A stream whose channel
-   turned embedding off opens on YouTube. A national channel often blocks its stream abroad, so the viewer's own country's channel
+   turned embedding off opens on YouTube, and an official account's live broadcast on X (platform "x", 2026-10-07) is a card
+   that opens it on X. A national channel often blocks its stream abroad, so the viewer's own country's channel
    comes first (his time zone says which; the channel's `cc` is its country in news/sources.yaml). The file is read every 2
    minutes from 75 minutes before kickoff until 3.5 hours after
    (not while the tab is hidden); a file older than 30 minutes says nothing (its job stopped), and the section goes when its
@@ -46,24 +47,32 @@
     return true;
   }
   function cur() { for (var i = 0; i < LIST.length; i++) if (LIST[i].id === CUR) return LIST[i]; return LIST[0]; }
+  var isX = function (s) { return s.platform === "x"; };
+  var href = function (s) { return isX(s) ? "https://x.com/i/broadcasts/" + s.id.slice(1) : "https://www.youtube.com/watch?v=" + s.id; };
+  var thumb = function (s) {
+    if (!isX(s)) return "https://i.ytimg.com/vi/" + s.id + "/hqdefault_live.jpg";
+    return /^https:\/\/pbs\.twimg\.com\/[\w\/.?=&%-]+$/.test(s.thumb || "") ? s.thumb : "";
+  };
   function viewers(s) { return s.watching ? '<span class="num">' + esc(s.watching) + "</span> يتابعون" : ""; }
   function poster(s) {
-    var inner = "<b>مباشر</b><i></i><em>" + esc(s.channel) + "</em>", bg = ' style="background-image:url(\'https://i.ytimg.com/vi/' + s.id + '/hqdefault_live.jpg\')"';
-    return s.embed !== false ? '<button type="button" class="flp" data-flp' + bg + ' aria-label="شغّل البث المباشر من ' + esc(s.channel) + '">' + inner + "</button>"
-      : '<a class="flp" href="' + esc(s.url) + '" target="_blank" rel="noopener"' + bg + ' aria-label="افتح البث المباشر في يوتيوب">' + inner + "</a>";
+    var where = isX(s) ? "X" : "يوتيوب", t = thumb(s), bg = t ? ' style="background-image:url(\'' + esc(t) + '\')"' : "";
+    var inner = "<b>مباشر</b><i></i><em>" + esc(s.channel) + (isX(s) ? " · يفتح على X" : "") + "</em>";
+    return s.embed !== false && !isX(s) ? '<button type="button" class="flp" data-flp' + bg + ' aria-label="شغّل البث المباشر من ' + esc(s.channel) + '">' + inner + "</button>"
+      : '<a class="flp" href="' + esc(href(s)) + '" target="_blank" rel="noopener"' + bg + ' aria-label="افتح البث المباشر على ' + where + '">' + inner + "</a>";
   }
   function frame(s) {
     return '<iframe src="https://www.youtube-nocookie.com/embed/' + s.id + '?autoplay=1&playsinline=1&rel=0" title="' + esc(s.title || s.channel) + '" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
   }
   function draw() {
     var s = cur(); CUR = s.id;
-    BOX.innerHTML = '<div class="gh"><h2>شوفها مباشر ببلاش</h2><span class="num" style="font-size:12px">بث رسمي على يوتيوب</span></div>' +
+    var hasX = LIST.some(isX), hasY = LIST.some(function (x) { return !isX(x); });
+    BOX.innerHTML = '<div class="gh"><h2>شوفها مباشر ببلاش</h2><span class="num" style="font-size:12px">بث رسمي على ' + (hasX && hasY ? "يوتيوب وX" : hasX ? "X" : "يوتيوب") + "</span></div>" +
       '<div class="card flv"><div data-fls>' + (PLAYING ? frame(s) : poster(s)) + "</div>" +
       '<div class="row"><span class="rt"><b>' + esc(s.channel) + "</b>" + (LIST.length > 1 ? "" : '<small dir="auto">' + esc(s.title) + "</small>") + "</span>" +
-      '<span class="rv"><a href="' + esc(s.url) + '" target="_blank" rel="noopener">يوتيوب</a></span></div></div>' +
+      '<span class="rv"><a href="' + esc(href(s)) + '" target="_blank" rel="noopener">' + (isX(s) ? "X" : "يوتيوب") + "</a></span></div></div>" +
       (LIST.length > 1 ? '<div class="card" style="margin-top:8px">' + LIST.map(function (x) {
         return '<button type="button" class="row" data-fli="' + x.id + '" aria-pressed="' + (x.id === s.id) + '"><span class="rt"><b>' + esc(x.channel) + '</b><small dir="auto">' + esc(x.title) + "</small></span>" +
-          '<span class="rv">' + viewers(x) + "</span></button>";
+          '<span class="rv">' + (isX(x) ? '<span class="num">X</span>' : viewers(x)) + "</span></button>";
       }).join("") + "</div>" : "") +
       '<p class="gf">من القنوات الرسمية بس.' + (LIST.length > 1 ? " بعض القنوات تحجب البث برّا بلدها، فإذا ما اشتغل عندك جرّب قناة ثانية." : " بعض القنوات تحجب البث برّا بلدها.") + "</p>";
   }
@@ -72,7 +81,7 @@
     if (p) { PLAYING = true; draw(); return; }
     if (r && r.dataset.fli !== CUR) {
       CUR = r.dataset.fli;
-      var s = cur(); if (s.embed === false) PLAYING = false;
+      var s = cur(); if (s.embed === false || isX(s)) PLAYING = false;
       draw();
     }
   }
@@ -87,7 +96,9 @@
     if (D.hidden) return;
     fetch("/v1/streams.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       var fresh = j && j.matches && Date.now() - Date.parse(j.generated || 0) < 30 * MIN;
-      show((fresh && j.matches[String(V.id)] || []).filter(function (s) { return s && /^[\w-]{11}$/.test(s.id || "") && s.channel; }));
+      show((fresh && j.matches[String(V.id)] || []).filter(function (s) {
+        return s && s.channel && (s.platform === "x" ? /^x[A-Za-z0-9]{6,30}$/.test(s.id || "") : /^[\w-]{11}$/.test(s.id || ""));
+      }));
     }).catch(function () {});
   }
   function start() {
