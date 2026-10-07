@@ -50,6 +50,9 @@ NOT_READY_RETRY = 30             # minutes: an analytics step whose inputs were 
 CONVERT_ERRORS = (FetchError, S.Invalid, KeyError, TypeError, ValueError, IndexError, AttributeError)
 
 
+GONE_DAYS = 30        # a match FotMob has no data for is asked again after this long
+
+
 def _age_min(ts, now):
     t = parse_utc(ts) if isinstance(ts, str) else None
     return 1e9 if t is None else (now - t).total_seconds() / 60
@@ -431,6 +434,13 @@ class Poller:
     def fetch_detail(self, mid, why):
         try:
             raw = self.fm.match_raw(mid)
+            if isinstance(raw, dict) and raw.get("error") and not raw.get("general") and not raw.get("header"):
+                # FotMob keeps no data for this match any more ({"error": true, "message": "Data not found"}): 5629268, a Moroccan
+                # cup tie of May, failed the backfill — and so the whole feed's health, «match:backfill» — from 2026-10-05 to 10-07.
+                # Not our feed failing: noted, rested GONE_DAYS by the backfill, and the step stays ok
+                self.st.setdefault("detail_gone", {})[str(mid)] = {"at": iso(self.now()), "msg": str(raw.get("message"))[:80]}
+                self.store.ok(f"match:{why}", note=f"{mid}: FotMob has no data ({str(raw.get('message'))[:60]})")
+                return None
             d = self.fm.match_from_raw(raw)
             S.validate_detail(d)
         except CONVERT_ERRORS as e:
@@ -1000,6 +1010,9 @@ class Poller:
         bad = self.st.setdefault("backfill_bad", {})
         for k in [k for k, v in bad.items() if _age_min(v.get("at"), self.now()) > 7 * 1440]:
             del bad[k]
+        gone = self.st.setdefault("detail_gone", {})        # FotMob's «Data not found»: asked again after GONE_DAYS
+        for k in [k for k, v in gone.items() if _age_min(v.get("at"), self.now()) > GONE_DAYS * 1440]:
+            del gone[k]
         # competitions in play first, then the dormant ones (seen at least once): their finished matches had no page at all
         # (audit 2026-09-30: 1,575 of 4,124 finished matches, the World Cup 2026 and the President's Cup among them)
         order = [c for c in order if dormant.get(str(c)) is False] + [c for c in order if dormant.get(str(c)) is True]
@@ -1011,11 +1024,11 @@ class Poller:
             for m in sorted(fx, key=lambda m: m.get("kickoff_utc") or "", reverse=True):
                 if m.get("id") and m["status"] == S.FINISHED and (have.get(str(m["id"])) or {}).get("v", 1) < SEASON.LEDGER_VERSION:
                     b = bad.get(str(m["id"])) or {}
-                    if b.get("n", 0) >= 3 and _age_min(b.get("at"), self.now()) < 1440:
+                    if (b.get("n", 0) >= 3 and _age_min(b.get("at"), self.now()) < 1440) or str(m["id"]) in gone:
                         continue
                     if n >= limit or not self.has_time(5):
                         return n
-                    if self.fetch_detail(m["id"], "backfill") is None:
+                    if self.fetch_detail(m["id"], "backfill") is None and str(m["id"]) not in gone:
                         bad[str(m["id"])] = {"n": b.get("n", 0) + 1, "at": iso(self.now())}
                     else:
                         bad.pop(str(m["id"]), None)
