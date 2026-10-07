@@ -384,3 +384,21 @@ def test_a_match_fotmob_has_no_data_for_is_noted_rested_and_never_fails_the_feed
     p.now_fn = lambda: datetime(2026, 11, 7, 3, 0, tzinfo=timezone.utc)      # a month on: asked again
     p.backfill(5)
     assert calls == [5629268, 5629268]
+
+
+def test_match_of_the_week_with_a_club_whose_country_is_unknown(tmp_path, monkeypatch):
+    # 2026-10-05..07: «unsupported operand type(s) for *: 'int' and 'NoneType'» — a club known Arab only through the aux
+    # country map (team_country None) made the Arab-vs-Arab flag None, and no pick was made for the week
+    import extra2 as X2
+    p = _poller(tmp_path, "analytics")
+    now = datetime(2026, 10, 7, 12, 0, tzinfo=timezone.utc)
+    p.now_fn = lambda: now
+    m = {"id": 9001, "status": "scheduled", "kickoff_utc": "2026-10-08T16:00:00Z", "round": "5",
+         "home": {"id": 102117, "name": "Al-Ain"}, "away": {"id": 777001, "name": "Unknown FC"}, "probs": {"home": 0.5, "away": 0.25}}
+    p.comps = [{"id": 538}]
+    monkeypatch.setattr(p, "fixtures", lambda cid: [m] if cid == 538 else [])
+    monkeypatch.setattr(p, "team_country", lambda tid: {"iso2": "AE"} if tid == 102117 else None)
+    monkeypatch.setattr(p, "aux", lambda name: {"777001": {"iso2": "AE"}} if name == "team_country" else {})
+    X2.match_of_week(p)
+    doc = p.store.get_json("arabs/match-of-week.json")
+    assert doc and doc["pick"]["match"] == 9001 and doc["pick"]["arab_vs_arab"] is False

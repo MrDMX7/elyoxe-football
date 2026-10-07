@@ -1,5 +1,8 @@
 /* Lighthouse mobile (simulated slow 4G + 4x CPU, the default) on the published preview and the live page it replaces, one run at a
-   time. node site/redesign/v5/lh.cjs [--out lh.json] [paths…]   (needs the lighthouse CLI; CHROME_PATH may point at Edge) */
+   time. node site/redesign/v5/lh.cjs [--out lh.json] [paths…]   (needs the lighthouse CLI; CHROME_PATH may point at Edge)
+   2026-10-07: the runs of 10-01 and 10-06 left 69 headless Edge browsers behind (617 processes, ~10 GB): chrome-launcher could not
+   end them on this laptop, ~170 stayed stuck in termination (exited, one thread left in the driver) until a reboot. Hence
+   --disable-gpu (the Iris Xe GPU process is the likely hang); after a run, check `Get-Process msedge` for lighthouse.* profiles. */
 "use strict";
 const { execFileSync } = require("child_process"), fs = require("fs"), os = require("os"), path = require("path");
 const args = process.argv.slice(2), oi = args.indexOf("--out"), OUT = oi >= 0 ? args[oi + 1] : "";
@@ -15,7 +18,7 @@ for (const p of PAGES) for (const [side, url] of [["v5", V5O ? V5O + p : "https:
   try {
     try { fs.unlinkSync(f); } catch (e) {}
     // on Windows chrome-launcher often fails to delete its temp profile after the run (EPERM): the report is already written
-    try { execFileSync(process.execPath, [LH, url, "--quiet", "--only-categories=performance", "--form-factor=mobile", "--chrome-flags=--headless=new --no-sandbox", "--output=json", "--output-path=" + f], { env, stdio: "ignore", timeout: 240000 }); } catch (e) { if (!fs.existsSync(f)) throw e; }
+    try { execFileSync(process.execPath, [LH, url, "--quiet", "--only-categories=performance", "--form-factor=mobile", "--chrome-flags=--headless=new --no-sandbox --disable-gpu", "--output=json", "--output-path=" + f], { env, stdio: "ignore", timeout: 240000 }); } catch (e) { if (!fs.existsSync(f)) throw e; }
     const d = JSON.parse(fs.readFileSync(f, "utf8")), a = d.audits;
     const r = { perf: Math.round(d.categories.performance.score * 100), fcp: Math.round(a["first-contentful-paint"].numericValue), lcp: Math.round(a["largest-contentful-paint"].numericValue), tbt: Math.round(a["total-blocking-time"].numericValue), cls: +a["cumulative-layout-shift"].numericValue.toFixed(3), si: Math.round(a["speed-index"].numericValue), bytes: Math.round(a["total-byte-weight"].numericValue / 1024) };
     (res[p] = res[p] || {})[side] = r; console.log(p, side, JSON.stringify(r));

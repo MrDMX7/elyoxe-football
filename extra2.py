@@ -87,7 +87,8 @@ def match_of_week(p):
             # «مواجهة عربية» = two Arab sides from DIFFERENT countries (two national teams, or clubs of two countries);
             # a domestic league game is not one
             ch, ca = (p.team_country(h) or {}).get("iso2"), (p.team_country(a) or {}).get("iso2")
-            cross = both_arab and (national or (ch and ca and ch != ca))
+            # bool(): with one side's country unknown this was None, and «12 * None» stopped every pick from 2026-10-05
+            cross = bool(both_arab and (national or (ch and ca and ch != ca)))
             stakes = 0.0
             if h in rank and a in rank and rank[h][1] > 1:
                 n_ = rank[h][1]
