@@ -151,6 +151,22 @@ x:
     - {handle: QFA, name: "الاتحاد القطري", lang: ar, tier: official, country: qa, team: 5902}
     - {handle: JordanFA, name: "الاتحاد الأردني", lang: ar, tier: official, country: jo, team: 5816}
     - {handle: Palestine_fa, name: "الاتحاد الفلسطيني", lang: ar, tier: official, country: ps, team: 6333}
+    # 2026-10-07 (owner's pick 4): Arab clubs' own accounts, for their goal clips. Each handle is the one the club's official
+    # website links (its site from Wikidata P856); a handle only Wikidata gives is added after its X bio was read
+    - {handle: aljazirafc, name: "الجزيرة", lang: ar, tier: official, country: ae, team: 102101}
+    - {handle: shabab_alahlifc, name: "شباب الأهلي", lang: ar, tier: official, country: ae, team: 102119}
+    - {handle: AlWaslSC, name: "الوصل", lang: ar, tier: official, country: ae, team: 102111}
+    - {handle: alwahdafcc, name: "الوحدة", lang: ar, tier: official, country: ae, team: 102122}
+    - {handle: ALNasrSC, name: "النصر الإماراتي", lang: ar, tier: official, country: ae, team: 102123}
+    - {handle: baniyasclub, name: "بني ياس", lang: ar, tier: official, country: ae, team: 182933}
+    - {handle: ALAHLI_FC, name: "الأهلي السعودي", lang: ar, tier: official, country: sa, team: 2530}
+    - {handle: AlShababSaudiFC, name: "الشباب السعودي", lang: ar, tier: official, country: sa, team: 101916}
+    - {handle: ettifaq, name: "الاتفاق", lang: ar, tier: official, country: sa, team: 101915}
+    - {handle: AlAhly, name: "الأهلي المصري", lang: ar, tier: official, country: eg, team: 101745}
+    - {handle: pyramidsfc, name: "بيراميدز", lang: ar, tier: official, country: eg, team: 517894}
+    - {handle: alsaddsc, name: "السد", lang: ar, tier: official, country: qa, team: 101895}
+    - {handle: duhailsc, name: "الدحيل", lang: ar, tier: official, country: qa, team: 203826}
+    - {handle: ALGHARAFACLUB, name: "الغرافة", lang: ar, tier: official, country: qa, team: 101897}
 
 # Google News in Arabic, one query per entity: the Arabic and UAE press (البيان، الإمارات اليوم، الاتحاد…) without a feed of
 # their own. `run.py` asks a rotating slice each run (gnews_per_run), so every query comes round about hourly.
