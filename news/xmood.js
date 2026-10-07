@@ -98,6 +98,9 @@ function postsOf(json) {   // every post a search result carries: id, text, time
   const out = [];
   const visit = (o) => {
     if (!o || typeof o !== 'object') return;
+    // X wraps some posts in TweetWithVisibilityResults, the inner one without a __typename (news/xreader.js missed 12 of AD
+    // Sports' 20 that way until 2026-10-07): read them too
+    if (o.__typename === 'TweetWithVisibilityResults' && o.tweet) return visit(Object.assign({ __typename: 'Tweet' }, o.tweet));
     if (o.__typename === 'Tweet' && o.legacy) {
       const L = o.legacy, n = o.note_tweet && o.note_tweet.note_tweet_results && o.note_tweet.note_tweet_results.result;
       if (!L.retweeted_status_result) out.push({ id: L.id_str || o.rest_id, text: (n && n.text) || L.full_text || '', at: Date.parse(L.created_at), lang: L.lang });
