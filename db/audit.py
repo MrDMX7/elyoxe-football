@@ -1561,6 +1561,11 @@ def main(argv=None):
     if not a.no_upload:
         store.put_state(f"audit/{doc['date']}.json", doc)
         publish(store, doc, areas)                       # «الأرقام مدققة»: v1/audit/latest.json, counts only
+        # the matches found behind their source go back to the poller (poller.audit_refetch, a few a run): FotMob's late
+        # corrections land on the page within the day instead of staying a warning (2026-10-07)
+        stale = sorted({int(f["key"].split(":", 1)[1]) for f in A.findings
+                        if f.get("verdict") == "stale" and str(f.get("key", "")).startswith("match:") and f["key"].split(":", 1)[1].isdigit()})
+        store.put_state("audit/refetch.json", {"generated": doc["generated"], "matches": stale})
     lv = Counter(f["level"] for f in A.findings)
     print(f"audit {doc['date']}: {lv['error']} errors, {lv['warn']} warnings, {lv['info']} info in {doc['seconds']} s -> {out}")
     return 0

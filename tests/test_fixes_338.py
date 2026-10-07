@@ -419,3 +419,22 @@ def test_match_of_the_week_with_a_club_whose_country_is_unknown(tmp_path, monkey
     X2.match_of_week(p)
     doc = p.store.get_json("arabs/match-of-week.json")
     assert doc and doc["pick"]["match"] == 9001 and doc["pick"]["arab_vs_arab"] is False
+
+
+def test_the_audits_stale_matches_are_fetched_again_a_few_a_run(tmp_path):
+    p = _poller(tmp_path)
+    t = [datetime(2026, 10, 7, 20, 0, tzinfo=timezone.utc)]
+    p.now_fn = lambda: t[0]
+    got = []
+    p.fetch_detail = lambda mid, why: got.append((mid, why))
+    p.store.put_state("audit/refetch.json", {"generated": "2026-10-07T08:13:49Z", "matches": [1000019544, 1000019555, 5737468]})
+    p.audit_refetch()
+    assert got == [(1000019544, "audit"), (1000019555, "audit")]
+    p.audit_refetch()
+    assert got[-1] == (5737468, "audit") and len(got) == 3
+    p.audit_refetch()
+    assert len(got) == 3                                  # done; the same audit is not read again
+    t[0] += timedelta(hours=2)
+    p.store.put_state("audit/refetch.json", {"generated": "2026-10-08T01:00:00Z", "matches": [42]})
+    p.audit_refetch()
+    assert got[-1] == (42, "audit")                       # the next audit's list

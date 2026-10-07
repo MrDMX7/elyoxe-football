@@ -608,6 +608,25 @@ class Poller:
             if len(r["done"]) >= len(REPOLL_MINUTES) or age > REPOLL_MINUTES[-1] + 120:
                 rp.pop(mid, None)
 
+    def audit_refetch(self, per_run=2):
+        """The matches the daily audit found behind their source (db/audit.py: state/audit/refetch.json; FotMob corrected a card
+        minute or a scorer days after our last fetch, past the re-poll window: Talleres v Belgrano, 2026-10-04) are fetched
+        again, per_run at a time. The list is read once an hour; a new audit's list replaces what is left of the last one."""
+        q = self.st.setdefault("audit_refetch", {"gen": None, "todo": [], "read": None})
+        if _age_min(q.get("read"), self.now()) > 60:
+            q["read"] = iso(self.now())
+            try:
+                doc = self.store.get_state("audit/refetch.json") or {}
+            except Exception:
+                doc = {}
+            if doc.get("generated") and doc["generated"] != q.get("gen"):
+                q["gen"], q["todo"] = doc["generated"], [int(m) for m in doc.get("matches") or []][:50]
+        n = 0
+        while q["todo"] and n < per_run and self.has_time(8):
+            mid = q["todo"].pop(0)
+            self.fetch_detail(mid, "audit")
+            n += 1
+
     def live_pass(self, n):
         now = self.now()
         today = uae_date(now)
@@ -1378,6 +1397,7 @@ class Poller:
             if comp.get("kind") == "league" and self.due("prev", 1440, comp["id"]):
                 self.prev_season(comp)
         self.repolls()
+        self.audit_refetch()
         if not live and self.due("dormant_check", 60) and self.has_time(10):
             self.recheck_dormant()
             self.mark("dormant_check")
