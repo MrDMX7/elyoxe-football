@@ -757,7 +757,12 @@ def area_standings(A):
             res = [(m["home"]["id"], m["away"]["id"], m["score"]["home"], m["score"]["away"]) for m in A.fixtures(cid)
                    if m.get("status") in (S.FINISHED, S.AWARDED) and m.get("score") and m.get("season", season) == season]
             T = table_from_results(res)
+            # a team playing right now: the source's table already counts the live game, our results only finished ones
+            # (2026-10-07 18:13 UAE: Al-Mosul 0-3 Al Quwa Al Jawiya in play read as two «table_vs_results» errors)
+            playing = {t for m in A.fixtures(cid) if m.get("status") in S.LIVE_STATUSES for t in (m["home"]["id"], m["away"]["id"])}
             for r in st["groups"][0]["rows"]:
+                if r["team"]["id"] in playing:
+                    continue
                 A.count("standings", "table_vs_results")
                 mine = T.get(r["team"]["id"]) or [0] * 7
                 ours = _row_tuple(r)
@@ -871,10 +876,46 @@ def area_standings(A):
                     elif not favs and theirs_t[:4] == ours_t[:4]:
                         favors = "fotmob"
                         evidence.append("every result agrees; only 365Scores' goal totals differ")
-                A.add("standings", "table_vs_365", "warn", "source", f"comp:{cid}",
+                # the league's own table settles it where we can read one (the UAE Pro League's site): ours agreeing with it is
+                # 365Scores' slip, not a warning (2026-10-07: Al-Wahda 2-3 Ajman, 365Scores lost the 90+3' goal: two rows off)
+                off = _official_rows(A, cid).get(_team_key(r["team"].get("name")))
+                level = "warn"
+                if off and tuple(off) == tuple(ours_t[:6]):
+                    level, favors = "info", "fotmob"
+                    evidence.append("the league's own table (uaepl.ae) agrees with ours")
+                elif off:
+                    evidence.append(f"the league's own table (uaepl.ae): P{off[0]} W{off[1]} D{off[2]} L{off[3]} {off[4]}-{off[5]}")
+                A.add("standings", "table_vs_365", level, "source", f"comp:{cid}",
                       f"{c['name_ar']} ({cid}) {g.get('name') or ''} {r['team']['name']}: ours P{ours_t[0]} W{ours_t[1]} D{ours_t[2]} L{ours_t[3]} {ours_t[4]}-{ours_t[5]} {ours_t[6]} pts; 365Scores P{theirs_t[0]} W{theirs_t[1]} D{theirs_t[2]} L{theirs_t[3]} {theirs_t[4]}-{theirs_t[5]} {theirs_t[6]} pts",
                       url=f"/c/{c.get('key')}/", favors=favors, evidence="; ".join(evidence) or None)
     A.log(f"standings: {A.checked['standings']['tables']} tables, {A.checked['standings']['vs_365_rows']} rows compared with 365Scores")
+
+
+def _team_key(name):
+    """«Al-Wahda», «Al Wahda», «Al Wahda FC» -> «wahda»: a club's name across sources, for the official table only."""
+    t = re.sub(r"[^a-z]", " ", (name or "").lower())
+    return " ".join(w for w in t.split() if w not in ("al", "fc", "sc", "club", "cultural", "csc", "scc")) or (name or "").lower()
+
+
+def _official_rows(A, cid):
+    """{team key: (P, W, D, L, GF, GA)} from the league's own site, where we have a reader for it (the UAE Pro League); {}
+    anywhere else or when it cannot be read. Read once per audit."""
+    cache = A.__dict__.setdefault("_official", {})
+    if cid not in cache:
+        cache[cid] = {}
+        if cid == 538:
+            try:
+                import config as CFG
+                from sources.uaepl import UaePL
+                st = UaePL().standings(next(c for c in CFG.competitions() if c["id"] == cid))
+                for g in st.get("groups") or []:
+                    for row in g.get("rows") or []:
+                        v = (row.get("played"), row.get("won"), row.get("drawn"), row.get("lost"), row.get("gf"), row.get("ga"))
+                        if all(isinstance(x, int) for x in v):
+                            cache[cid][_team_key((row.get("team") or {}).get("name"))] = v
+            except Exception as e:
+                A.log(f"standings: the UAE Pro League's own table was not read: {type(e).__name__}: {str(e)[:80]}")
+    return cache[cid]
 
 
 # ------------------------------------------------------------------ scorers
