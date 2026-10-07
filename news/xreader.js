@@ -56,7 +56,10 @@ async function hotSet() {
   // the matches on now or finished in the last AFTER_H hours: goal clips come during the match, the summary after it
   const H = { teams: new Set(), comps: new Set() };
   try {
-    const r = await fetch(DATA + '/v1/live.json', { signal: AbortSignal.timeout(20000) }), j = r.ok ? await r.json() : null;
+    // the data CDN serves v1/ at its root (/live.json; /v1/live.json is a 403, which left this set empty on 2026-10-07)
+    const r = await fetch(DATA + '/live.json', { signal: AbortSignal.timeout(20000) }), j = r.ok ? await r.json() : null;
+    if (!r.ok) log('live matches not read: HTTP', r.status);
+    H.read = ((j && j.matches) || []).length;
     for (const m of (j && j.matches) || []) {
       const on = m.status === 'live' || m.status === 'ht' || (m.status === 'finished' && Date.now() - Date.parse(m.kickoff_utc || 0) < AFTER_H * 36e5);
       if (!on) continue;
@@ -168,7 +171,7 @@ async function main() {
     const p = plan(cfg, inbox, H); pick = p.pick;
     if (p.hot.length) log('live first:', p.hot.length, 'accounts of the matches on (competitions ' + [...H.comps].join(',') + ')');
   }
-  if (a.includes('--plan')) { log('pick:', (pick || []).map(x => x.handle).join(', ')); return; }
+  if (a.includes('--plan')) { if (H) log('live.json:', H.read || 0, 'matches,', H.teams.size / 2, 'on or just finished, competitions', [...H.comps].join(',') || '-'); log('pick:', (pick || []).map(x => x.handle).join(', ')); return; }
   seedProfile(); if (!WIN) xvfb();
   const ctx = await chromium.launchPersistentContext(PROFILE, WIN ? {
     // Edge, a real window parked off-screen: never headless, never in the owner's way
