@@ -167,6 +167,17 @@ x:
     - {handle: alsaddsc, name: "السد", lang: ar, tier: official, country: qa, team: 101895}
     - {handle: duhailsc, name: "الدحيل", lang: ar, tier: official, country: qa, team: 203826}
     - {handle: ALGHARAFACLUB, name: "الغرافة", lang: ar, tier: official, country: qa, team: 101897}
+    # the same rule through the club's official YouTube channel (its About links, channel from Wikidata P2397) where the
+    # website blocks a script; lang fr where a club posts in French and Arabic (fr adds «but» to the Arabic and English words)
+    - {handle: alainfcae, name: "العين", lang: ar, tier: official, country: ae, team: 102117}
+    - {handle: alainclub, name: "نادي العين", lang: ar, tier: official, country: ae, team: 102117}
+    - {handle: Alqadsiah, name: "القادسية", lang: ar, tier: official, country: sa, team: 101919}
+    - {handle: zscofficial, name: "الزمالك", lang: ar, tier: official, country: eg, team: 80591}
+    - {handle: wacofficiel, name: "الوداد", lang: fr, tier: official, country: ma, team: 102050}
+    - {handle: ESTunis1919, name: "الترجي", lang: fr, tier: official, country: tn, team: 8153}
+    - {handle: Crbelouizdadoff, name: "شباب بلوزداد", lang: fr, tier: official, country: dz, team: 101633}
+    - {handle: jsk_tweet, name: "شبيبة القبائل", lang: fr, tier: official, country: dz, team: 101630}
+    - {handle: THEDEAN1921, name: "مولودية الجزائر", lang: fr, tier: official, country: dz, team: 6353}
 
 # Google News in Arabic, one query per entity: the Arabic and UAE press (البيان، الإمارات اليوم، الاتحاد…) without a feed of
 # their own. `run.py` asks a rotating slice each run (gnews_per_run), so every query comes round about hourly.
