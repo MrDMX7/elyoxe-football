@@ -116,20 +116,36 @@ function text(t) {   // a post's full text: long posts keep it in note_tweet
   return ((n && n.text) || (t.legacy && t.legacy.full_text) || '').replace(/\s*https:\/\/t\.co\/\w+$/, '').trim();
 }
 
+const BC_ID = /^[A-Za-z0-9]{6,30}$/;
+function broadcast(o) {
+  // a live broadcast's card (card «745291183405076480:broadcast»): id, state (RUNNING, ENDED), title, thumbnail, when read.
+  // news/streams.py lists a RUNNING one of an official account for the match its post names («شوفها مباشر ببلاش», 2026-10-07)
+  const c = o.card && o.card.legacy;
+  if (!c || !/:broadcast$/.test(c.name || '')) return null;
+  const v = {};
+  (c.binding_values || []).forEach(b => { const x = b.value || {}; v[b.key] = x.string_value || (x.image_value && x.image_value.url) || null; });
+  if (!BC_ID.test(v.broadcast_id || '')) return null;
+  return { id: v.broadcast_id, state: v.broadcast_state || null, title: String(v.broadcast_title || '').slice(0, 200),
+           thumb: v.broadcast_thumbnail_large || v.broadcast_thumbnail || null, seen: new Date().toISOString() };
+}
+
 function posts(json, handle) {
   // walk the UserTweets timeline; keep the account's own posts (no replies, no reposts), pinned or not
   const out = [];
   const visit = (o) => {
     if (!o || typeof o !== 'object') return;
+    // X wraps some posts in TweetWithVisibilityResults, the inner one without a __typename: 12 of AD Sports' 20 on 2026-10-07,
+    // its live broadcast among them, were missed until then
+    if (o.__typename === 'TweetWithVisibilityResults' && o.tweet) return visit(Object.assign({ __typename: 'Tweet' }, o.tweet));
     if (o.__typename === 'Tweet' && o.legacy && o.core) {
       const u = o.core.user_results && o.core.user_results.result, sn = (u && ((u.core && u.core.screen_name) || (u.legacy && u.legacy.screen_name))) || '';
       const L = o.legacy;
       if (sn.toLowerCase() === handle.toLowerCase() && !L.retweeted_status_result && !L.in_reply_to_status_id_str) {
-        const all = (L.extended_entities || L.entities || {}).media || [], media = all[0];
-        out.push({ id: L.id_str || o.rest_id, text: text(o), at: new Date(L.created_at).toISOString(), handle: sn,
+        const all = (L.extended_entities || L.entities || {}).media || [], media = all[0], bc = broadcast(o);
+        out.push(Object.assign({ id: L.id_str || o.rest_id, text: text(o), at: new Date(L.created_at).toISOString(), handle: sn,
                    name: (u && ((u.core && u.core.name) || (u.legacy && u.legacy.name))) || sn, image: media ? media.media_url_https : null,
                    video: all.some(m => m.type === 'video'),   // news/media.py: an official post with a video can be a goal clip
-                   url: `https://x.com/${sn}/status/${L.id_str || o.rest_id}` });
+                   url: `https://x.com/${sn}/status/${L.id_str || o.rest_id}` }, bc ? { bc } : {}));
       }
       return;   // a quoted post inside is someone else's
     }
@@ -179,7 +195,11 @@ async function main() {
       const onResp = async (r) => {
         if (a.includes('--debug') && /graphql/.test(r.url())) log('gql', r.status(), r.url().split('?')[0].split('/').slice(-1)[0]);
         if (!/\/graphql\/[^/]+\/(UserTweets|UserOriginalsTimeline)\b/.test(r.url())) return;   // X renamed it by 2026-09-30
-        try { got = got.concat(posts(await r.json(), acc.handle)); } catch (e) {}
+        try {
+          const j = await r.json();
+          if (arg('--dump')) { fs.mkdirSync(arg('--dump'), { recursive: true }); fs.writeFileSync(path.join(arg('--dump'), acc.handle + '-' + Date.now() + '.json'), JSON.stringify(j)); }   // debug: the raw timeline
+          got = got.concat(posts(j, acc.handle));
+        } catch (e) {}
       };
       page.on('response', onResp);
       try {
@@ -196,6 +216,8 @@ async function main() {
         }
       } catch (e) { inbox.errors[acc.handle] = String(e.message || e).slice(0, 120); }
       page.off('response', onResp);
+      // a broadcast's state moves (RUNNING, then ENDED): the copy already in the inbox follows it
+      got.forEach(p => { if (p.bc && seen.has(p.id)) { const it = inbox.items.find(x => x.id === p.id); if (it) it.bc = p.bc; } });
       const fresh = got.slice(0, cfg.max_posts).filter(p => !seen.has(p.id));
       // a broadcaster's post is press to the journal (its «رسمي» is not the club's), but its videos are official to news/media.py
       fresh.forEach(p => { seen.add(p.id); inbox.items.push(Object.assign(p, { lang: acc.lang || 'en', tier: acc.kind === 'broadcaster' ? 'paper' : acc.tier || 'journalist', team: acc.team || null, comp: acc.comp || null, source: acc.name || p.name })); });
@@ -220,4 +242,4 @@ if (require.main === module) {
   setTimeout(() => { console.error('[x] watchdog: still running after 10 min, giving up'); process.exit(3); }, 10 * 60e3).unref();
   main().catch(e => { console.error(e); process.exit(1); });
 }
-module.exports = { config, plan, isHot };
+module.exports = { config, plan, isHot, posts, broadcast };

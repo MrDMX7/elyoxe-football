@@ -11,8 +11,16 @@ studio, a preview, a press conference, highlights, a replay, women's or youth fo
 the page (200) or opens on YouTube (401); a gone one (404) is left out. On 2026-10-06 the Gulf Cup final was live on أبوظبي
 الرياضية (with its commentator in the title) and on both Saudi sports channels.
 
+Official live broadcasts on X too (owner 2026-10-07 «مقترح حلو كمل», as a link that opens on X): news/xreader.js keeps the
+broadcast card of every post it reads (`bc`: id, state, title), and a RUNNING one counts when the reader saw it running in the
+last X_FRESH_MIN minutes, the account is official and tied to the match (media.needed), the post went out after the match's
+window opened, and the post's text names the match like a YouTube title. Only while the match is on or about to start: a
+broadcaster's X broadcast is its channel's live feed (AD Sports': «مباشر | برنامج الفريق التاسع | خليجي 27» after the final),
+so after the whistle it shows the studio, not the match.
+
 Published (public, v1/):
-  streams.json   {generated, matches: {"<matchId>": [{id, url, title, channel, lang, embed, watching, cc}]}}
+  streams.json   {generated, matches: {"<matchId>": [{id, url, title, channel, lang, embed, watching, cc, platform, thumb}]}}
+                 platform "x": id "x<broadcast id>", url x.com/i/broadcasts/<id>, embed false, thumb its card's image
                  cc: the channel's country (sources.yaml `country:`), so the page puts the viewer's own channel first (a
                  national channel often blocks its stream abroad)
 State (private): state/news/streams.json — what the last run published and why."""
@@ -35,6 +43,8 @@ LIVE_OK = set(M.phrases(["live", "livestream", "live stream", "watch live", "en 
                          "diretta", "مباشر", "بث مباشر", "البث المباشر", "full match", "full game", "المباراة كاملة",
                          "partido completo", "match complet", "partita completa", "jogo completo", "ganzes spiel"]))
 NEG = [p for p in M.NEG_ALWAYS if p not in LIVE_OK] + M.phrases(["replay", "re-live", "إعادة", "اعادة", "مسجل", "مسجلة"])
+X_FRESH_MIN = 45          # an X broadcast's RUNNING is believed this long after the reader last read its account
+BC_ID = re.compile(r"^[A-Za-z0-9]{6,30}$")
 
 
 def window(store, t):
@@ -85,6 +95,40 @@ def match_of(title, ch, ctx):
     return hits[0], None
 
 
+def x_live(store, cfg, matches, names, t, trace):
+    """{match id: [stream]} of the official accounts' RUNNING broadcasts on X (news/x-inbox.json, the reader's last 800 posts)."""
+    box = store.get_state("news/x-inbox.json") or {}
+    last = M.ptime(box.get("last_run"))
+    if not last or last < t - timedelta(minutes=X_FRESH_MIN):
+        return {}
+    on = [m for m in matches if m.get("status") not in ("finished", "awarded")]     # window(): live, or kicking off within AHEAD_MIN
+    if not on:
+        return {}
+    accs = [a for a in (cfg.get("x") or {}).get("accounts") or [] if a.get("tier") == "official"]
+    cc = {"x_" + a["handle"].lower(): a["country"] for a in accs if a.get("country")}
+    chs = {c["key"]: c for c in M.needed(M.x_channels(accs), on)}
+    ctx, out = M.Ctx(on, names), {}
+    for p in box.get("items") or []:
+        bc, key = p.get("bc") or {}, "x_" + str(p.get("handle") or "").lower()
+        if bc.get("state") != "RUNNING" or not BC_ID.match(str(bc.get("id") or "")) or key not in chs:
+            continue
+        seen = M.ptime(bc.get("seen"))
+        if not seen or seen < t - timedelta(minutes=X_FRESH_MIN):
+            continue
+        ch = chs[key]
+        mid, why = match_of(f"{p.get('text') or ''} | {bc.get('title') or ''}", ch, ctx)
+        if mid and (M.ptime(p.get("at")) or t) < M.ptime(ctx.matches[mid]["kickoff_utc"]) - timedelta(minutes=AHEAD_MIN):
+            mid, why = None, "posted before this match's window"
+        trace.append({"ch": key, "video": "x" + bc["id"], "title": p.get("text"), "match": mid, "why": why})
+        if not mid or any(s["id"] == "x" + bc["id"] for s in out.get(mid, [])):
+            continue
+        thumb = bc.get("thumb") if str(bc.get("thumb") or "").startswith("https://pbs.twimg.com/") else None
+        out.setdefault(mid, []).append({"id": "x" + bc["id"], "url": "https://x.com/i/broadcasts/" + bc["id"], "title": (p.get("text") or bc.get("title") or "")[:200],
+                                        "channel": ch["name"], "lang": ch.get("lang"), "watching": None, "ch": key, "platform": "x", "embed": False,
+                                        **({"thumb": thumb} if thumb else {}), **({"cc": cc[key]} if key in cc else {})})
+    return out
+
+
 def step(store, cfg, t=None, dry=False, explain=False, log=print):
     t0 = time.time()
     t = t or M.now()
@@ -93,6 +137,7 @@ def step(store, cfg, t=None, dry=False, explain=False, log=print):
     found, trace, errs = {}, [], {}
     want = M.needed(M.channels(cfg), matches) if matches else []
     cc = {y["key"]: y["country"] for y in (cfg.get("youtube") or []) + ((cfg.get("media") or {}).get("youtube") or []) if y.get("country")}
+    names = M.load_names(store, M.national_comps()) if matches else None
     if want:
         def one(ch):
             try:
@@ -101,7 +146,7 @@ def step(store, cfg, t=None, dry=False, explain=False, log=print):
                 return ch, [], f"{type(e).__name__}: {str(e)[:80]}"
         with CF.ThreadPoolExecutor(max_workers=6) as ex:
             got = list(ex.map(one, want))
-        ctx = M.Ctx(matches, M.load_names(store, M.national_comps()))
+        ctx = M.Ctx(matches, names)
         for ch, lives, err in got:
             if err:
                 errs[ch["key"]] = err
@@ -112,10 +157,18 @@ def step(store, cfg, t=None, dry=False, explain=False, log=print):
                     found.setdefault(mid, []).append({"id": vid, "url": "https://www.youtube.com/watch?v=" + vid, "title": title[:200],
                                                       "channel": ch["name"], "lang": ch.get("lang"), "watching": watching, "ch": ch["key"],
                                                       **({"cc": cc[ch["key"]]} if ch["key"] in cc else {})})
+    if matches:
+        try:
+            for mid, lst in x_live(store, cfg, matches, names, t, trace).items():
+                found.setdefault(mid, []).extend(lst)
+        except Exception as e:                # X is extra: a bad inbox never costs the YouTube streams
+            errs["x"] = f"{type(e).__name__}: {str(e)[:80]}"
     # plays on the page (200) or opens on YouTube (401); gone or private (400/403/404) is left out; unknown (0) is tried
     oe = st.setdefault("oembed", {})
     for lst in found.values():
         for s in lst:
+            if s.get("platform") == "x":
+                continue
             if s["id"] not in oe and not dry:
                 oe[s["id"]] = dict(M.oembed(s["id"]), at=M.iso(t))
     for k in [k for k, v in oe.items() if (v.get("at") or "") < M.iso(t - timedelta(days=2))]:
@@ -128,7 +181,7 @@ def step(store, cfg, t=None, dry=False, explain=False, log=print):
             if s["id"] in seen or o.get("s") in (400, 403, 404):
                 continue
             seen.add(s["id"])
-            keep.append(dict(s, embed=o.get("s") != 401))
+            keep.append(s if s.get("platform") == "x" else dict(s, embed=o.get("s") != 401))
         # one that plays on the page first, then Arabic, then the most watched
         num = lambda w: float((w or "0").replace(",", "").rstrip("KM")) * (1e6 if (w or "").endswith("M") else 1e3 if (w or "").endswith("K") else 1)
         keep.sort(key=lambda s: (0 if s["embed"] else 1, 0 if s.get("lang") == "ar" else 1, -num(s.get("watching"))))
