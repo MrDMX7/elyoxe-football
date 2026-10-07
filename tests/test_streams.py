@@ -109,7 +109,7 @@ def test_x_broadcasts_count_while_the_match_is_on_and_their_post_names_it(tmp_pa
              bc_post(3, "ADSportsTV", "مباشر | السعودية × الإمارات | خليجي 27", "2026-10-03T17:30:00.000Z"),           # the group stage, days ago
              bc_post(4, "riyadiyatv", "مباشر | نهائي كأس الخليج السعودية والإمارات", "2026-10-06T17:40:00.000Z", state="ENDED"),
              bc_post(5, "kooora", "مباشر | السعودية × الإمارات", "2026-10-06T17:40:00.000Z"),                         # press, not official
-             bc_post(6, "riyadiyatv", "مباشر | السعودية والإمارات | نهائي كأس الخليج", "2026-10-06T17:45:00.000Z", seen=T - timedelta(hours=2))]
+             bc_post(6, "riyadiyatv", "مباشر | السعودية والإمارات | نهائي كأس الخليج", "2026-10-06T17:45:00.000Z", seen=T - timedelta(hours=3))]
     store.put_state("news/x-inbox.json", {"last_run": (T - timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%S.000Z"), "items": items})
     monkeypatch.setattr(SR, "live_now", lambda cid: [])
     monkeypatch.setattr(M, "load_names", lambda store, nat, cache_dir=None: M.Names(TEAMS, PLAYERS, {}, {}, ALIASES, NATIONS, {329}))
@@ -118,6 +118,12 @@ def test_x_broadcasts_count_while_the_match_is_on_and_their_post_names_it(tmp_pa
     got = store.get_json("streams.json")["matches"]["6052096"]
     assert [(s["id"], s["platform"], s["embed"], s["cc"]) for s in got] == [("x1kJzDPLnoNy01", "x", False, "ae")]
     assert got[0]["url"] == "https://x.com/i/broadcasts/1kJzDPLnoNy01" and got[0]["thumb"].startswith("https://pbs.twimg.com/")
+    # seen running 2 h ago (its post since pushed out of the 20 the reader sees by the clips): still the match's while it is on
+    box = store.get_state("news/x-inbox.json")
+    box["items"][0]["bc"]["seen"] = (T - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    store.put_state("news/x-inbox.json", box)
+    SR.step(store, cfg, t=T + timedelta(minutes=1))
+    assert [s["id"] for s in store.get_json("streams.json")["matches"]["6052096"]] == ["x1kJzDPLnoNy01"]
     # after the whistle the same feed is a studio: the broadcast goes, while a YouTube stream of the match may stay
     store.put_json("day/20261006.json", {"matches": [dict(FINAL, status="finished")]})
     SR.step(store, cfg, t=T + timedelta(minutes=12))

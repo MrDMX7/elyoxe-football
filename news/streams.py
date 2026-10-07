@@ -12,8 +12,10 @@ the page (200) or opens on YouTube (401); a gone one (404) is left out. On 2026-
 الرياضية (with its commentator in the title) and on both Saudi sports channels.
 
 Official live broadcasts on X too (owner 2026-10-07 «مقترح حلو كمل», as a link that opens on X): news/xreader.js keeps the
-broadcast card of every post it reads (`bc`: id, state, title), and a RUNNING one counts when the reader saw it running in the
-last X_FRESH_MIN minutes, the account is official and tied to the match (media.needed), the post went out after the match's
+broadcast card of every post it reads (`bc`: id, state, title), and a RUNNING one counts when the reader is alive (a run in the
+last READER_FRESH_MIN) and saw it running in the last BC_FRESH_MIN (a broadcaster posts a clip every few minutes during a match,
+so its broadcast post can leave the 20 the reader sees: once seen running it stays for the match unless seen ENDED), the
+account is official and tied to the match (media.needed), the post went out after the match's
 window opened, and the post's text names the match like a YouTube title. Only while the match is on or about to start: a
 broadcaster's X broadcast is its channel's live feed (AD Sports': «مباشر | برنامج الفريق التاسع | خليجي 27» after the final),
 so after the whistle it shows the studio, not the match.
@@ -43,7 +45,8 @@ LIVE_OK = set(M.phrases(["live", "livestream", "live stream", "watch live", "en 
                          "diretta", "مباشر", "بث مباشر", "البث المباشر", "full match", "full game", "المباراة كاملة",
                          "partido completo", "match complet", "partita completa", "jogo completo", "ganzes spiel"]))
 NEG = [p for p in M.NEG_ALWAYS if p not in LIVE_OK] + M.phrases(["replay", "re-live", "إعادة", "اعادة", "مسجل", "مسجلة"])
-X_FRESH_MIN = 45          # an X broadcast's RUNNING is believed this long after the reader last read its account
+READER_FRESH_MIN = 45     # the X reader's last run: older and none of its broadcasts are believed
+BC_FRESH_MIN = 150        # a broadcast seen RUNNING is believed this long, the length of a match (and only while it is on)
 BC_ID = re.compile(r"^[A-Za-z0-9]{6,30}$")
 
 
@@ -99,7 +102,7 @@ def x_live(store, cfg, matches, names, t, trace):
     """{match id: [stream]} of the official accounts' RUNNING broadcasts on X (news/x-inbox.json, the reader's last 800 posts)."""
     box = store.get_state("news/x-inbox.json") or {}
     last = M.ptime(box.get("last_run"))
-    if not last or last < t - timedelta(minutes=X_FRESH_MIN):
+    if not last or last < t - timedelta(minutes=READER_FRESH_MIN):
         return {}
     on = [m for m in matches if m.get("status") not in ("finished", "awarded")]     # window(): live, or kicking off within AHEAD_MIN
     if not on:
@@ -113,7 +116,7 @@ def x_live(store, cfg, matches, names, t, trace):
         if bc.get("state") != "RUNNING" or not BC_ID.match(str(bc.get("id") or "")) or key not in chs:
             continue
         seen = M.ptime(bc.get("seen"))
-        if not seen or seen < t - timedelta(minutes=X_FRESH_MIN):
+        if not seen or seen < t - timedelta(minutes=BC_FRESH_MIN):
             continue
         ch = chs[key]
         mid, why = match_of(f"{p.get('text') or ''} | {bc.get('title') or ''}", ch, ctx)
