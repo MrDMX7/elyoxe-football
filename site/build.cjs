@@ -130,7 +130,7 @@ function page(o){
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">${["home", "daypage", "all", "mine", "more"].includes(o.page) ? APPLE_SPLASH : ""}
 <link rel="stylesheet" href="/assets/app.${V5_V.css}.css">${o.page === "match" || o.page === "messi" ? '<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>' : ""}${(o.ld ? [].concat(o.ld) : []).map(l => `<script type="application/ld+json">${JSON.stringify(l).replace(/</g, "\\u003c")}</script>`).join("")}
 <script type="speculationrules">{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":"/v1/*"}},{"not":{"href_matches":"/api/*"}}]},"eagerness":"moderate"},{"source":"document","where":{"selector_matches":".tabbar a"},"eagerness":"eager"}]}</script>${o.head || ""}</head>
-<body data-page="${o.page}" data-v5="1" data-bc="${BC_V}"${R.DUPCTX ? ` data-dupctx="${esc(R.DUPCTX)}"` : ""}${CC_V ? ` data-ccm="${CC_V}"` : ""}${o.attrs || ""}>
+<body data-page="${o.page}" data-v5="1" data-bc="${BC_V}"${R.DUPCTX ? ` data-dupctx="${esc(R.DUPCTX)}"` : ""}${o.attrs || ""}>
 <a class="skip" href="#main">تخطَّ للمحتوى</a><a class="island" id="island" href="/" hidden aria-live="off"></a>
 ${U.nav(v.nav)}
 <main id="main"${v.cls ? ` class="${v.cls}"` : ""}>${v.body}${/<footer class="foot"/.test(v.body) ? "" : U.foot()}</main>
@@ -410,6 +410,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     R.COUNTRIES.forEach(c => { const d = compData.find(x => x.c.kind === "league" && x.c.country && x.c.country.iso2 === c[0] && x.st && x.st.groups && !x.st.composite); if (!d) return; (d.st.groups[0].rows || []).slice(0, TOPN[c[0]] || 3).forEach(r => add(r.team.id, c[0])); });
     { const cc = {}; compData.forEach(({ c, st }) => { const iso = c.country && c.country.iso2; if (!iso || c.kind !== "league" || cc[iso] || !st || st.composite || !st.groups || !st.groups[0]) return; const ids = st.groups[0].rows.map(r => r.team.id); if (ids.length) cc[iso] = ids.slice(0, 20).map(id => [id, (S_TEAMS[id] || {}).name_ar || TAR[id] || (S_TEAMS[id] || {}).name || ""]); });
       const cj = JSON.stringify(cc); CC_V = hash(cj); fs.writeFileSync(path.join(OUT, `assets/cc.${CC_V}.json`), cj); }   // every Arab league's clubs (the «فريقك» crest grid)
+    // 2026-10-08: no page names this file any more. The v5 body carried its hash as data-ccm, read by no code (only the v3 shell.js
+    // read data-cc, and v5 does not load it); the clubs come in table order, so each table move re-uploaded all 30k pages
     // 2026-10-07: only what moves rarely, since every page links this file by its hash: the teams to pick from move with the tables
     // (/picks.json, read when the picker opens) and the audit was read by no browser code
     const V5C = { cn:U.cfg.cn, countries:R.COUNTRIES.map(c => [c[0], c[1], c[2]]), share:ASSET_V };   // share: src/share.js, loaded on the first share image
