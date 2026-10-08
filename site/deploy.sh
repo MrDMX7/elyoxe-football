@@ -3,6 +3,9 @@
 #   ./deploy.sh            build (--preview while there is no custom domain) + sync + invalidate + live check
 #   ./deploy.sh --stack    also (re)deploy the CloudFormation stack first
 set -euo pipefail
+# 2026-10-08 (owner: the fast upload for every project): uploads go through ~/workspace/tools/s3fast.py (boto3, many at a
+# time, same arguments as `aws s3 sync|cp`); the CLI runs only if it fails
+fast(){ shift 2; "$(command -v python3 || command -v python)" "$HOME/workspace/tools/s3fast.py" "$@" || aws s3 "$@"; }
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; cd "$HERE"
 mkdir -p cache; exec 9>cache/deploy.lock
 flock -n 9 || { echo "another tifo build/deploy is running; skipping" >&2; exit 0; }   # the hourly job and a manual run share out/
@@ -20,18 +23,18 @@ node build.cjs $FLAG
 NOW=$(find out -name index.html | wc -l); LAST=$(cat cache/last_pages 2>/dev/null || echo 0)
 if [ "$LAST" -gt 0 ] && [ "$NOW" -lt $((LAST * 95 / 100)) ]; then echo "partial build: $NOW pages vs $LAST last time; not publishing" >&2; exit 7; fi
 # assets are content-hashed -> 1 year; logos 7 days; pages 60 s (live data comes from /v1 anyway)
-sync_assets(){ aws s3 sync out/assets "s3://$BUCKET/assets" --region $REGION --only-show-errors --cache-control "public,max-age=31536000,immutable"; }
-sync_logos(){ aws s3 sync out/logo "s3://$BUCKET/logo" --region $REGION --only-show-errors --cache-control "public,max-age=604800"; }
+sync_assets(){ fast aws s3 sync out/assets "s3://$BUCKET/assets" --region $REGION --only-show-errors --cache-control "public,max-age=31536000,immutable"; }
+sync_logos(){ fast aws s3 sync out/logo "s3://$BUCKET/logo" --region $REGION --only-show-errors --cache-control "public,max-age=604800"; }
 sync_assets || { echo "assets sync hiccup; retrying" >&2; sleep 5; sync_assets; }   # one retry, as for the pages: a single S3 blip failed the 23:25 run
 sync_logos || { echo "logo sync hiccup; retrying" >&2; sleep 5; sync_logos; }
-sync_pages(){ aws s3 sync out "s3://$BUCKET" --region $REGION --only-show-errors --delete --exclude "assets/*" --exclude "logo/*" --exclude "next/*" --exclude "google*.html" --exclude "db/player/[0-9]*" --exclude "og/s/*" --exclude "m/*/g/*" --cache-control "public,max-age=60"; }
+sync_pages(){ fast aws s3 sync out "s3://$BUCKET" --region $REGION --only-show-errors --delete --exclude "assets/*" --exclude "logo/*" --exclude "next/*" --exclude "google*.html" --exclude "db/player/[0-9]*" --exclude "og/s/*" --exclude "m/*/g/*" --cache-control "public,max-age=60"; }
 sync_pages || { echo "sync hiccup; retrying" >&2; sleep 5; sync_pages; }   # transient S3 stream errors on a few thousand small files
 # owner items 10-11: the stages that live outside out/ (cache/world: the encyclopedia's /db/player/<id>/; cache/share: share cards og/s/ and
 # goal pages /m/<id>/g/<n>/) write only their new or changed files to <stage>/delta/: uploaded as they are (no listing), what left the
 # stage deleted, then the manifest promoted (the same steps as tools/runner.py publish_stage)
 publish_stage(){ local d="cache/$1"; [ -f "$d/manifest.next.json" ] || return 0
   if [ -d "$d/delta" ] && [ -n "$(find "$d/delta" -type f -print -quit)" ]; then
-    aws s3 cp "$d/delta" "s3://$BUCKET" --recursive --region $REGION --only-show-errors --cache-control "public,max-age=60" || { echo "$1 upload failed; redone next run" >&2; return 0; }
+    fast aws s3 cp "$d/delta" "s3://$BUCKET" --recursive --region $REGION --only-show-errors --cache-control "public,max-age=60" || { echo "$1 upload failed; redone next run" >&2; return 0; }
   fi
   if [ -s "$d/delete.txt" ]; then
     python3 - "$BUCKET" "$REGION" "$d" <<'PY' || echo "$1 deletions failed (not fatal)" >&2

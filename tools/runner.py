@@ -109,6 +109,24 @@ def run(log, cmd, cwd=ROOT, timeout=None):
     return p.returncode, "\n".join(out.strip().splitlines()[-4:])
 
 
+S3FAST = Path.home() / "workspace" / "tools" / "s3fast.py"
+
+
+def s3(log, args):
+    """`aws s3 sync|cp …` (args from "s3" on) through ~/workspace/tools/s3fast.py, boto3 many at a time (owner 2026-10-08: the
+    fast upload for everything); the CLI, with one retry for S3 stream blips, only when it fails or is missing."""
+    if S3FAST.exists():
+        rc, tail = run(log, [PY, S3FAST] + args[1:], cwd=SITE, timeout=3 * 3600)
+        if not rc:
+            return rc, tail
+        log.w("s3fast failed; the CLI does it")
+    rc, tail = run(log, [AWS] + args, cwd=SITE, timeout=3 * 3600)
+    if rc:
+        time.sleep(5)
+        rc, tail = run(log, [AWS] + args, cwd=SITE, timeout=3 * 3600)
+    return rc, tail
+
+
 def http_ok(url):
     try:
         return urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "tifo-runner", "Accept-Encoding": "gzip"}), timeout=30).status
@@ -156,10 +174,7 @@ def job_site(log):
             log.w(f"s3push: {note} [{time.time() - t0:.0f} s, {'ok' if ok else 'falling back to the CLI sync'}]")
             if ok:
                 continue
-        rc, tail = run(log, [AWS] + args, cwd=SITE, timeout=3 * 3600)
-        if rc:
-            time.sleep(5)
-            rc, tail = run(log, [AWS] + args, cwd=SITE, timeout=3 * 3600)   # one retry: S3 stream blips on thousands of files
+        rc, tail = s3(log, args)
         if rc:
             return False, f"{what} sync failed: {tail}"
     world = publish_stage(log, bucket, "world") + publish_stage(log, bucket, "share")
@@ -202,11 +217,7 @@ def publish_stage(log, bucket, name):
     n = sum(1 for p in delta.rglob("*") if p.is_file()) if delta.is_dir() else 0
     t0 = time.time()
     if n:
-        args = [AWS, "s3", "cp", str(delta), f"s3://{bucket}", "--recursive", "--region", REGION, "--only-show-errors", "--cache-control", "public,max-age=60"]
-        rc, tail = run(log, args, cwd=SITE, timeout=3 * 3600)
-        if rc:
-            time.sleep(5)
-            rc, tail = run(log, args, cwd=SITE, timeout=3 * 3600)
+        rc, tail = s3(log, ["s3", "cp", str(delta), f"s3://{bucket}", "--recursive", "--region", REGION, "--only-show-errors", "--cache-control", "public,max-age=60"])
         if rc:
             return f"; {name} upload failed ({tail.splitlines()[-1] if tail else rc}), redone next run"
     dl = wd / "delete.txt"
