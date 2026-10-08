@@ -582,18 +582,21 @@ def resolve_wikidata(todo, pool, teams, cache, pause, out, save):
 # --------------------------------------------------------------------------
 
 def gemini_key():
-    """Tifo's own AI Studio key, or None: never the shared film key (owner 2026-09-29). None while ~/.elyoxe/gemini-off
-    exists (owner's switch, 2026-10-01): the run then fills names from Wikidata only."""
+    """TIFO_GEMINI_API_KEY if one ever exists, else the films' GEMINI_API_KEY (owner 2026-10-09: «استعمل مال السينما»).
+    None while ~/.elyoxe/gemini-off exists (owner's switch, 2026-10-01): the run then fills names from Wikidata only."""
     off = os.environ.get("ELYOXE_GEMINI_OFF") or os.path.expanduser("~/.elyoxe/gemini-off")
     if os.path.exists(off) and not os.environ.get("PYTEST_CURRENT_TEST"):
         return None
-    if os.environ.get("TIFO_GEMINI_API_KEY"):
-        return os.environ["TIFO_GEMINI_API_KEY"]
     f = Path.home() / "workspace/content-pipeline/.env"
-    if f.exists():
-        for l in f.read_text().splitlines():
-            if l.startswith("TIFO_GEMINI_API_KEY="):
-                return l.split("=", 1)[1].strip().strip('"\'') or None
+    lines = f.read_text().splitlines() if f.exists() else []
+    for name in ("TIFO_GEMINI_API_KEY", "GEMINI_API_KEY"):
+        if os.environ.get(name):
+            return os.environ[name]
+        for l in lines:
+            if l.startswith(name + "="):
+                v = l.split("=", 1)[1].strip().strip('"\'')
+                if v:
+                    return v
     return None
 
 

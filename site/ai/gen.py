@@ -31,15 +31,18 @@ ARAB = {"AE", "SA", "EG", "MA", "DZ", "TN", "IQ", "JO", "KW", "QA", "BH", "OM", 
 BIG5 = {47, 87, 55, 54, 53}
 
 def tifo_key():
-    """Tifo's own AI Studio key, or None. Owner 2026-09-29: Tifo never touches the shared film key (it drained the prepay);
-    with no TIFO_GEMINI_API_KEY every Gemini call (text fallback, Tifo Cast TTS) is skipped, not redirected.
-    ~/.elyoxe/gemini-off (usage_log.gemini_off, owner 2026-10-01) makes it None the same way."""
+    """TIFO_GEMINI_API_KEY if one ever exists, else the films' GEMINI_API_KEY (owner 2026-10-09: «استعمل مال السينما»; this
+    lifts his 09-29 rule that Tifo never touches it, now that news is off and the volume is small); env first, then
+    content-pipeline/.env. ~/.elyoxe/gemini-off (usage_log.gemini_off, owner 2026-10-01) makes it None."""
     if usage_log.gemini_off(): return None
-    if os.environ.get("TIFO_GEMINI_API_KEY"): return os.environ["TIFO_GEMINI_API_KEY"]
-    try:
-        for line in open(os.path.expanduser("~/workspace/content-pipeline/.env")):
-            if line.startswith("TIFO_GEMINI_API_KEY="): return line.split("=", 1)[1].strip().strip('"') or None
-    except OSError: pass
+    for name in ("TIFO_GEMINI_API_KEY", "GEMINI_API_KEY"):
+        if os.environ.get(name): return os.environ[name]
+        try:
+            for line in open(os.path.expanduser("~/workspace/content-pipeline/.env")):
+                if line.startswith(name + "="):
+                    v = line.split("=", 1)[1].strip().strip('"\'')
+                    if v: return v
+        except OSError: pass
     return None
 def key():
     k = tifo_key()
