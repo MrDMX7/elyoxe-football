@@ -145,6 +145,17 @@ def job_site(log):
           "--cache-control", "public,max-age=60"], "pages"),
     ]
     for args, what in syncs:
+        if what == "pages":                            # 2026-10-08: boto3, 32 at a time (tools/s3push.py); the CLI sync is the fallback
+            t0 = time.time()
+            try:
+                from tools.s3push import push
+                ok, note = push(str(SITE / "out"), bucket, REGION, excludes=[a for i, a in enumerate(args) if i and args[i - 1] == "--exclude"],
+                                cache_control="public,max-age=60", say=log.w)
+            except Exception as e:
+                ok, note = False, f"{type(e).__name__}: {e}"
+            log.w(f"s3push: {note} [{time.time() - t0:.0f} s, {'ok' if ok else 'falling back to the CLI sync'}]")
+            if ok:
+                continue
         rc, tail = run(log, [AWS] + args, cwd=SITE, timeout=3 * 3600)
         if rc:
             time.sleep(5)
