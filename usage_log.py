@@ -1,4 +1,4 @@
-"""One JSON line per Claude call into ~/.elyoxe/usage.jsonl (ELYOXE_USAGE_LOG overrides) — the file the daily cost
+"""One JSON line per Claude or Gemini call into ~/.elyoxe/usage.jsonl (ELYOXE_USAGE_LOG overrides) — the file the daily cost
 email (~/workspace/automation/cost-report) sums. cinema writes the same file from its own copy of this shape.
 Best effort: a logging failure never touches the call it describes, and pytest runs write nothing."""
 import json, os, time
@@ -21,6 +21,30 @@ def gemini_off():
     """Same switch for Gemini (owner 2026-10-01, «حتى ال gemini api المؤتمت»): while ~/.elyoxe/gemini-off exists, Tifo has no
     Gemini key, so every Gemini step (text, Tifo Cast TTS, name transliteration) takes its existing no-key path and skips."""
     return os.path.exists(GEMINI_OFF) and not os.environ.get("PYTEST_CURRENT_TEST")
+
+
+# $ per 1M tokens (input, output), paid tier, from ai.google.dev/gemini-api/docs/pricing on 2026-10-09
+GEMINI_PRICES = {"gemini-3.1-flash-lite": (0.25, 1.50), "gemini-2.5-flash-lite": (0.10, 0.40)}
+
+
+def record_gemini(job, model, out, secs, ok=True):
+    """out: the parsed generateContent response (its usageMetadata). via=api: this is a real bill on Tifo's key
+    (owner 2026-10-09: «نقيس الاستخدام هالاسبوع»). Thinking tokens bill as output."""
+    if os.environ.get("PYTEST_CURRENT_TEST") or not isinstance(out, dict):
+        return
+    try:
+        um = out.get("usageMetadata") or {}
+        tin = um.get("promptTokenCount", 0)
+        tout = um.get("candidatesTokenCount", 0) + um.get("thoughtsTokenCount", 0)
+        pin, pout = GEMINI_PRICES.get(model, (0, 0))
+        line = {"at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "project": "tifo", "job": job, "via": "api",
+                "model": model, "in": tin, "out": tout, "cache_read": um.get("cachedContentTokenCount", 0), "cache_write": 0,
+                "usd": round((tin * pin + tout * pout) / 1e6, 6), "ok": ok, "secs": secs}
+        os.makedirs(os.path.dirname(PATH), exist_ok=True)
+        with open(PATH, "a", encoding="utf-8", newline="\n") as f:
+            f.write(json.dumps(line) + "\n")
+    except Exception:
+        pass
 
 
 def record_cli(job, out, secs):

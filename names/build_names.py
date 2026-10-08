@@ -41,6 +41,9 @@ from pathlib import Path
 import requests
 import urllib3.util.connection as _uc
 
+sys.path.append(str(Path(__file__).resolve().parent.parent))   # repo root: usage_log
+import usage_log
+
 _uc.allowed_gai_family = lambda: socket.AF_INET  # IPv4 only
 
 HERE = Path(__file__).resolve().parent
@@ -50,7 +53,7 @@ FEED = "https://tifo.elyoxe.com/v1"
 UA = "ElyoxeTifoNames/1.0 (https://tifo.elyoxe.com; hello@elyoxe.com)"
 WD_API = "https://www.wikidata.org/w/api.php"
 WD_SPARQL = "https://query.wikidata.org/sparql"
-GEMINI_MODEL = "gemini-3.5-flash"
+GEMINI_MODEL = "gemini-3.1-flash-lite"   # owner 2026-10-09: Tifo's one model (site/ai/gen.py MODEL)
 UAE_LEAGUE = 538
 UAE_NATIONAL = 5789
 FOOTBALLER = "Q937857"  # association football player
@@ -640,6 +643,7 @@ def gemini_call(key, text, n):
                 log(f"  gemini {r.status_code}, waiting"); time.sleep(10 * (i + 1)); continue
             r.raise_for_status()
             j = r.json()
+            usage_log.record_gemini("names", GEMINI_MODEL, j, round(r.elapsed.total_seconds(), 1))
             txt = j["candidates"][0]["content"]["parts"][0]["text"]
             return {str(x["id"]): x["ar"] for x in json.loads(txt)["names"]}
         except Exception as e:  # noqa: BLE001

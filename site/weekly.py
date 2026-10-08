@@ -43,7 +43,7 @@ def player(pid, latin):
     if str(pid) not in cache:   # a spelling, not a fact: Gemini writes the name in Arabic letters once; kept for the names agent to review
         try:
             import gen
-            out = gen.gemini_api("اكتب اسم لاعب كرة القدم هذا بالحروف العربية كما يكتبه الإعلام العربي. JSON بس.", {"player": latin}, gen.OBJ({"ar": gen.S(60)}), temp=0.1, tokens=2000)
+            out = gen.gemini_api("اكتب اسم لاعب كرة القدم هذا بالحروف العربية كما يكتبه الإعلام العربي. JSON بس.", {"player": latin}, gen.OBJ({"ar": gen.S(60)}), temp=0.1, tokens=2000, kind="player-name")
             ar = (out or {}).get("ar", "").strip()
         except Exception: ar = ""
         if ar and not any("a" <= ch.lower() <= "z" for ch in ar):

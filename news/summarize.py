@@ -51,7 +51,10 @@ def claude_json(system, payload, schema, model="haiku", timeout=90):
 
 
 def summarize(story, sources, names):
-    """sources: cluster.sources_of(); names: {name as written: …} the Arabic names of the story's entities."""
+    """sources: cluster.sources_of(); names: {name as written: …} the Arabic names of the story's entities.
+    Switched off by the owner on 2026-10-09 («نلغي ترجمة الاخبار»): no model writes or translates news; every story
+    keeps its best original headline, the same path as a failed call. Delete the `return None` to bring it back."""
+    return None
     payload = {"kind": story["kind"], "names": sorted(set(names)),
                "sources": [{"outlet": s["name"], "lang": s["lang"], "title": s["title"], "at": s["at"]} for s in sources[:8]]}
     t0 = time.time()

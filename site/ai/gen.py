@@ -6,6 +6,7 @@ What it makes (cache/ai/…, read by build.cjs; shown on the site only for kinds
   9  + 78   summary/{match}.json   finished UAE matches: an Emirati summary (4-6 sentences) + a stats thread for X (4-6 posts)
   77        preview/{match}.json   UAE matches in the next 7 days: 5-line Emirati preview (strengths, weaknesses, key)
   161       podcast/{yyyy-ww}.json + .mp3      the weekly Tifo Cast: Hamed and Maha talking the round through, ~5 min
+                                               (by hand only since 2026-10-09: `--only podcast --any-time`; the hourly run skips it)
   (19, the voiced round recap, was dropped by the owner on 2026-09-27: it duplicated Tifo Cast)
 
 Rules (the owner's): Emirati dialect from memory feedback_emirati_dialect + content/video/_system/EMIRATI-LEXICON.json,
@@ -23,7 +24,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(HERE)
 CACHE = os.path.join(SITE, "cache", "ai")
 DATA = os.environ.get("TIFO_DATA", "https://d1n5aqaqkowltp.cloudfront.net")
-MODEL = os.environ.get("TIFO_MODEL", "gemini-3.5-flash")
+MODEL = os.environ.get("TIFO_MODEL", "gemini-3.1-flash-lite")   # owner 2026-10-09: the cheapest Gemini that serves ($0.25/$1.50); 2.5 Flash-Lite answers 404 «no longer available to new users»
 LEX = json.load(open(os.path.expanduser("~/workspace/content/video/_system/EMIRATI-LEXICON.json")))
 UAE_COMPS = [538, 11027, 9943, 11026]
 ARAB = {"AE", "SA", "EG", "MA", "DZ", "TN", "IQ", "JO", "KW", "QA", "BH", "OM", "LB", "SY", "PS", "YE", "LY", "SD", "MR", "SO", "DJ", "KM"}
@@ -142,19 +143,21 @@ def gemini(system, payload, schema, temp=0.6, tokens=4000, provider=None, kind=N
     if prov.startswith("claude") and not CLAUDE_STOPPED:
         cm = (prov.split(":") + ["haiku"])[1] or "haiku"; out = claude_text(system, payload, schema, cm, kind)
         if out is not None: LAST_MODEL[0] = "claude-" + cm; return out
-    t0 = time.time(); out = gemini_api(system, payload, schema, temp, tokens)
+    t0 = time.time(); out = gemini_api(system, payload, schema, temp, tokens, kind)
     if out is not None: CALLS.append(("gemini", round(time.time() - t0, 1)))
     return out
-def gemini_api(system, payload, schema, temp=0.6, tokens=4000):
+def gemini_api(system, payload, schema, temp=0.6, tokens=4000, kind=None):
     if GEMINI_OUT: return None
     if not tifo_key(): GEMINI_OUT.append("no TIFO_GEMINI_API_KEY"); return None
     req = {"systemInstruction": {"parts": [{"text": system}]}, "contents": [{"role": "user", "parts": [{"text": json.dumps(payload, ensure_ascii=False)}]}],
            "generationConfig": {"temperature": temp, "maxOutputTokens": tokens, "responseMimeType": "application/json", "responseSchema": schema}}
     for i in range(3):
+        t0 = time.time()
         try:
             r = urllib.request.urlopen(urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent", json.dumps(req).encode(),
                                                               {"Content-Type": "application/json", "x-goog-api-key": key()}), timeout=90)
             out = json.loads(r.read())
+            usage_log.record_gemini("gen:" + (kind or "other"), MODEL, out, round(time.time() - t0, 1))
             return json.loads(out["candidates"][0]["content"]["parts"][0]["text"])
         except Exception as e:
             print("gemini retry", i, str(e)[:200], file=sys.stderr)
@@ -247,7 +250,7 @@ def spoken(t):
 def team_ar(t): return checks.club_ar(t) or (t or {}).get("name")   # name_ar → names/clubs_ar.json → teams_ar.yaml → Gemini (cached)
 def _translit(tid, latin):
     """A club with no Arabic name anywhere: Gemini transliterates it once, cached into names/clubs_ar.json (source "generated")."""
-    out = gemini_api("اكتب اسم نادي كرة القدم هذا بالحروف العربية كما يكتبه الإعلام العربي. JSON بس.", {"club": latin}, OBJ({"ar": S(60)}), temp=0.1, tokens=2000)
+    out = gemini_api("اكتب اسم نادي كرة القدم هذا بالحروف العربية كما يكتبه الإعلام العربي. JSON بس.", {"club": latin}, OBJ({"ar": S(60)}), temp=0.1, tokens=2000, kind="club-name")
     ar = (out or {}).get("ar", "").strip()
     if not ar or re.search(r"[A-Za-z]", ar): return None
     f = checks.CLUBS_FILE
@@ -736,7 +739,9 @@ def do_daily5():
     out = deep(out); out.update({"date": today, "sig": sig, "model": LAST_MODEL[0], "generated": dt.datetime.utcnow().isoformat() + "Z"}); save("daily5", today, out); return "new"
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,podcast,daily5,commentary,digest,power,why,quick"); ap.add_argument("--limit", type=int, default=40)
+    # podcast is not in the default: Tifo Cast is made by hand each time (owner 2026-10-09) —
+    #   python3 ai/gen.py --only podcast --any-time
+    ap = argparse.ArgumentParser(); ap.add_argument("--only", default="summary,preview,daily5,commentary,digest,power,why,quick"); ap.add_argument("--limit", type=int, default=40)
     ap.add_argument("--no-audio", action="store_true"); ap.add_argument("--any-time", action="store_true", help="run podcast outside its Thursday window"); ap.add_argument("--days", type=int, default=10)
     a = ap.parse_args(); only = set(a.only.split(","))
     class Tee:   # the cron job keeps only the last 2 lines; the full run log (drops, fallbacks) goes to cache/ai/_last_run.log
