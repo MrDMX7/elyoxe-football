@@ -50,7 +50,7 @@
       return '<div class="row ins"' + (on ? "" : ' style="opacity:.62"') + '><span class="ic" style="--c:' + (on ? "#FF9F0A" : "#8E8E93") + '">' + (window.U5 ? window.U5.icon(on ? "medal" : "target", "", 2) : "") + "</span>" +
         '<span class="rt">' + esc(b[1]) + "<small>" + esc(b[2]) + "</small></span>" +
         '<span class="rv">' + (on ? "<b>✓</b>" : '<span class="num">' + have + " من " + b[4] + '</span><span style="display:block;width:56px;height:5px;margin-top:4px;border-radius:3px;background:var(--fill2);overflow:hidden"><i style="display:block;height:100%;width:' + pct + '%;background:var(--accent)"></i></span>') + "</span></div>";
-    }).join("") + '</div><p class="note" style="margin-top:12px">الأوسمة من اللي محفوظ على جوالك بس: المباريات اللي تفتحها وتتابعها، وتوقعاتك، والمدرّج، وتشكيلاتك. ما في حساب وما ترسل لأحد.</p></section>';
+    }).join("") + '</div><p class="note" style="margin-top:12px">الأوسمة من اللي محفوظ على تلفونك بس: المباريات اللي تفتحها وتتابعها، وتوقعاتك، والمدرّج، وتشكيلاتك. ما في حساب وما ترسل لأحد.</p></section>';
     try { localStorage.setItem("tifo.badges.seen", JSON.stringify(EARNED)); } catch (e) {}
     return;
   }

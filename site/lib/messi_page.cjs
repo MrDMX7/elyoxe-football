@@ -188,7 +188,7 @@ ${now.next || now.last ? `<div class="mnow" id="mnow"><h3>ميسي الحين</h
 <section><h3>اختبار ميسي</h3><div id="quiz"></div></section>
 <section><h3>هذا اليوم في مسيرته</h3><div id="today"></div></section></div>
 <script type="application/json" id="mdata">${JSON.stringify({ game, quiz, days, dob:X.dob || null, names:Object.fromEntries([...new Set([...quiz.flatMap(q => q.a), ...Object.values(days).flat().map(d => d[1])])].map(n => [n, ar(n)]).filter(x => x[0] !== x[1])) }).replace(/</g, "\\u003c")}</script>`);
-  room("r-keep", 29, "خذ ميسي معك", "", `<div class="keep"><button type="button" class="btn" id="mwall">خلفية للجوال: الـ${goals.length} هدف</button><button type="button" class="btn" id="mcard" disabled>صورة للهدف اللي واقف عليه في الملعب</button><a class="btn" href="/messi/poster/">بوستر المتحف للطباعة</a></div><p class="small muted">الصورة تنرسم على جهازك وتنحفظ عندك.</p>`);
+  room("r-keep", 29, "خذ ميسي معك", "", `<div class="keep"><button type="button" class="btn" id="mwall">خلفية للتلفون: الـ${goals.length} هدف</button><button type="button" class="btn" id="mcard" disabled>صورة للهدف اللي واقف عليه في الملعب</button><a class="btn" href="/messi/poster/">بوستر المتحف للطباعة</a></div><p class="small muted">الصورة تنرسم على جهازك وتنحفظ عندك.</p>`);
 
   const nav = `<nav class="mrooms" aria-label="قاعات المتحف"><ol>${secs.map(s => `<li><a href="#${s.id}"><span class="num">${s.no}</span> ${esc(s.title)}</a></li>`).join("")}</ol></nav>`;
   const body = `<h1>متحف ميسي</h1><p class="season">${tot ? `${tot.goals} هدف، ${tot.assists} تمريرة حاسمة، ${tot.apps} مباراة` : ""}</p>

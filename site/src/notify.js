@@ -36,7 +36,7 @@
     var seg = '<div class="seg" role="tablist" data-seg="nf" style="--n:3;--i:0"><i class="seg-th" aria-hidden="true"></i>' +
       [["off", "لا شي"], ["goals", "الأهداف بس"], ["all", "كل شي"]].map(function (x, i) { return '<button type="button" role="tab" data-t="' + x[0] + '" aria-selected="' + (i === 0) + '"><span class="sl">' + x[1] + "</span></button>"; }).join("") + "</div>";
     return '<div class="nf" data-nf-team="' + esc(t.id) + '" data-nf-name="' + esc(t.name || "") + '">' +
-      '<p class="note">تنبيه على جوالك لمباريات <b>' + esc(t.name || "فريقك") + "</b> بدون حساب.</p>" +
+      '<p class="note">تنبيه على تلفونك لمباريات <b>' + esc(t.name || "فريقك") + "</b> بدون حساب.</p>" +
       '<p class="note nf-ios" data-nf-ios hidden>على الآيفون التنبيهات تشتغل من تيفو على الشاشة الرئيسية: اضغط «شارك» ثم «إضافة إلى الشاشة الرئيسية»، وافتحه من هناك.</p>' +
       '<section class="grp mt"><div class="gh"><h2>نبّهني</h2></div><div class="card nf-pad">' + seg + '</div><p class="gf" data-nf-hint>«كل شي»: بداية المباراة وكل هدف والنتيجة النهائية.</p></section>' +
       '<section class="grp"><div class="card"><button type="button" class="row" role="switch" aria-checked="false" data-nf="video"><span class="rt">فيديو الهدف لما ينزل<small>المقطع الرسمي من القناة أو البطولة</small></span><span class="sw" aria-hidden="true"></span></button></div></section>' +
@@ -61,7 +61,7 @@
   function playerBody(p, on) {
     var x = p || {}, ev = on || PDEF;
     return '<div class="nf" data-nf-player="' + esc(x.id) + '" data-nf-name="' + esc(x.name || "") + '">' +
-      '<p class="note">تنبيه على جوالك عن <b>' + esc(x.name || "لاعبك") + "</b> مع ناديه ومنتخبه، بدون حساب.</p>" +
+      '<p class="note">تنبيه على تلفونك عن <b>' + esc(x.name || "لاعبك") + "</b> مع ناديه ومنتخبه، بدون حساب.</p>" +
       '<p class="note nf-ios" data-nf-ios hidden>على الآيفون التنبيهات تشتغل من تيفو على الشاشة الرئيسية: اضغط «شارك» ثم «إضافة إلى الشاشة الرئيسية»، وافتحه من هناك.</p>' +
       PGROUPS.map(function (g) { return '<section class="grp mt"><div class="gh"><h2>' + g[0] + '</h2></div><div class="card">' + g[1].map(function (k) {
         return '<button type="button" class="row" data-pe="' + k[0] + '" role="switch" aria-checked="' + (ev.indexOf(k[0]) >= 0) + '"><span class="rt">' + k[1] + (k[2] ? "<small>" + k[2] + "</small>" : "") + '</span><span class="sw" aria-hidden="true"></span></button>'; }).join("") + "</div></section>"; }).join("") +
@@ -85,8 +85,8 @@
   function askBar(teams, sup) {
     var la = function (n) { n = String(n || ""); return /^ال/.test(n) ? "لل" + n.slice(2) : "لـ" + n; };   // «للوحدة», «لـعجمان»
     var who = teams.map(function (t) { return "<b>" + esc(la(t.name)) + "</b>"; }).join(" أو ");
-    if (sup === "ios-install") return '<div class="nf-ask" role="dialog" aria-label="تنبيهات تيفو"><p>يوصلك كل هدف ' + who + ' على جوالك: أضف تيفو للشاشة الرئيسية أول («شارك» ثم «إضافة إلى الشاشة الرئيسية») وفعّلها من هناك.</p><div class="nf-ask-b"><button type="button" class="pill" data-ask-no>تمام</button></div></div>';
-    return '<div class="nf-ask" role="dialog" aria-label="تنبيهات تيفو"><p>يوصلك كل هدف ' + who + ' على جوالك؟</p><div class="nf-ask-b">' +
+    if (sup === "ios-install") return '<div class="nf-ask" role="dialog" aria-label="تنبيهات تيفو"><p>يوصلك كل هدف ' + who + ' على تلفونك: أضف تيفو للشاشة الرئيسية أول («شارك» ثم «إضافة إلى الشاشة الرئيسية») وفعّلها من هناك.</p><div class="nf-ask-b"><button type="button" class="pill" data-ask-no>تمام</button></div></div>';
+    return '<div class="nf-ask" role="dialog" aria-label="تنبيهات تيفو"><p>يوصلك كل هدف ' + who + ' على تلفونك؟</p><div class="nf-ask-b">' +
       teams.map(function (t) { return '<button type="button" class="pill pri" data-ask-yes="' + esc(t.id) + '">نبّهني' + (teams.length > 1 ? " " + esc(la(t.name)) : "") + "</button>"; }).join("") +
       '<button type="button" class="pill" data-ask-no>لا، شكراً</button></div></div>';
   }

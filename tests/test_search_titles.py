@@ -26,3 +26,14 @@ def test_player_title_reads_like_a_search():
     js = "const S=require(process.argv[1]+'/site/lib/player_seo.cjs');console.log(S.title({name:'علي',team:'العين',nums:true}))"
     out = subprocess.run(["node", "-e", js, ROOT], capture_output=True, text=True, encoding="utf-8").stdout.strip()
     assert out == "علي: إحصائياته وأهدافه هذا الموسم مع العين | تيفو"
+
+
+def test_the_site_says_telephone_the_emirati_way():
+    """Owner 2026-10-09: «تلفونك» not «جوالك», in every visible string of the site's sources."""
+    import glob
+    hits = []
+    for f in glob.glob(os.path.join(ROOT, "site", "src", "**", "*.js"), recursive=True) + [os.path.join(ROOT, "site", "build.cjs")] + glob.glob(os.path.join(ROOT, "site", "lib", "*.cjs")):
+        for i, line in enumerate(open(f, encoding="utf-8"), 1):
+            if "جوال" in line:
+                hits.append(f"{os.path.relpath(f, ROOT)}:{i}")
+    assert not hits, hits

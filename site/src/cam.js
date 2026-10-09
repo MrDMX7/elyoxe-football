@@ -17,7 +17,7 @@
     '<video id="cam-v" playsinline muted autoplay style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>' +
     '<canvas id="cam-hud" style="position:absolute;inset:0;width:100%;height:100%" role="img" aria-label="أرقام المباراة فوق الصورة"></canvas></div>' +
     '<div class="th-acts" style="flex-wrap:wrap"><button type="button" class="pill pri" id="cam-on">' + U.icon("eye", "", 2) + 'شغّل الكاميرا</button><button type="button" class="pill" id="cam-shot" disabled>صوّر</button><button type="button" class="pill" id="cam-flip" hidden>بدّل الكاميرا</button></div>' +
-    '<p class="note" id="cam-msg" style="margin-top:12px">وجّه جوالك على التلفزيون، والأرقام تطلع فوق الصورة وتتحدّث كل 20 ثانية. الصورة ما تطلع من جوالك إلا إذا شاركتها. الميزة تجريبية.</p>';
+    '<p class="note" id="cam-msg" style="margin-top:12px">وجّه تلفونك على التلفزيون، والأرقام تطلع فوق الصورة وتتحدّث كل 20 ثانية. الصورة ما تطلع من تلفونك إلا إذا شاركتها. الميزة تجريبية.</p>';
   var stage = D.getElementById("cam-stage"), video = D.getElementById("cam-v"), hud = D.getElementById("cam-hud"), x = hud.getContext("2d");
   var msg = function (t) { D.getElementById("cam-msg").textContent = t; };
 

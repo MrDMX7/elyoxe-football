@@ -137,7 +137,7 @@
     var who = el.querySelector("[data-tp-who]"), nickIn = el.querySelector("[data-tp-nick]"), go;
     if (!token()) {
       if (who.hidden) { who.hidden = false; nickIn.focus(); msg(el, "اكتب اسمك اللي يبين لربعك، بدون حساب ولا إيميل."); return; }
-      go = register(nickIn.value).then(function (j) { who.hidden = true; msg(el, "رمز الاسترجاع: <b class=\"tp-code\">" + esc(j.code) + "</b> اكتبه عندك، تحتاجه لو غيرت جوالك."); });
+      go = register(nickIn.value).then(function (j) { who.hidden = true; msg(el, "رمز الاسترجاع: <b class=\"tp-code\">" + esc(j.code) + "</b> اكتبه عندك، تحتاجه لو غيرت تلفونك."); });
     } else go = Promise.resolve();
     var b = el.querySelector('[data-tp="save"]'); b.disabled = true;
     go.then(function () { return api("PUT", "pick", { match: +el.dataset.mid, h: val(el, "h"), a: val(el, "a") }); })
@@ -193,7 +193,7 @@
     html += '<section class="grp"><div class="gh"><h2>توقعاتك الياية</h2></div><div class="card">' + (up.length ? up.map(pickRow).join("") : '<p class="empty">ما عندك توقعات الحين. افتح أي مباراة ياية وتوقع نتيجتها.</p>') + "</div></section>";
     if (done.length) html += '<section class="grp"><div class="gh"><h2>النتايج</h2></div><div class="card">' + done.map(pickRow).join("") + "</div></section>";
     html += '<section class="grp"><div class="gh"><h2>حسابك</h2></div><div class="card">' +
-      row({ btn: 1, t: "رمز الاسترجاع", sub: "تحتاجه لو غيرت جوالك", v: m.code ? '<span class="tp-code">' + esc(m.code) + "</span>" : "سوّ رمز", attrs: ' data-tp-act="code"' }) +
+      row({ btn: 1, t: "رمز الاسترجاع", sub: "تحتاجه لو غيرت تلفونك", v: m.code ? '<span class="tp-code">' + esc(m.code) + "</span>" : "سوّ رمز", attrs: ' data-tp-act="code"' }) +
       row({ btn: 1, t: "غيّر اسمك", v: esc(j.nick), attrs: ' data-tp-act="rename"' }) + "</div><p class=\"gf\">" + RULES + " ينقفل كل توقع مع صافرة البداية.</p></section>";
     r.innerHTML = html; times(r);
   }

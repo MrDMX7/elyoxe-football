@@ -84,7 +84,7 @@ def test_everything_from_data_is_escaped(out):
 def test_western_digits_and_the_copy_rules(out):
     h = all_html(out)
     assert not re.search("[٠-٩]", h)
-    for banned in ("وش", "زي", "تبي", "الجاي", "جديد", "مين"):          # site/redesign/v5/DESIGN.md §7
+    for banned in ("وش", "زي", "تبي", "الجاي", "جديد", "مين", "جوال"):  # site/redesign/v5/DESIGN.md §7; «تلفون» not «جوال» (owner 2026-10-09)
         assert not re.search(r"(?<![؀-ۿ])" + banned + r"(?![؀-ۿ])", h), banned
 
 

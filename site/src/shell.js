@@ -408,8 +408,8 @@
     function no(){ lsSet("tifo.inst.no", String(Date.now())); var t = $("#instask"); if (t) t.remove(); }
     function ask(force){ var ss = null, first = null; try { ss = sessionStorage.getItem("tifo.inst.asked"); first = sessionStorage.getItem("tifo.first"); } catch (e){} if (!can() || $("#instask") || ss || (first && !force)) return; var n = +lsGet("tifo.inst.no") || 0; if (Date.now() - n < 30 * 864e5) return;
       try { sessionStorage.setItem("tifo.inst.asked", "1"); } catch (e){}
-      var t = document.createElement("div"); t.id = "instask"; t.className = "instask"; t.setAttribute("role", "region"); t.setAttribute("aria-label", "تيفو على شاشة جوالك");
-      t.innerHTML = '<span>حط تيفو على شاشة جوالك</span><button type="button" class="cta" data-sheet="inst">كيف؟</button><button type="button" class="x" aria-label="مب الحين">مب الحين</button>';
+      var t = document.createElement("div"); t.id = "instask"; t.className = "instask"; t.setAttribute("role", "region"); t.setAttribute("aria-label", "تيفو على شاشة تلفونك");
+      t.innerHTML = '<span>حط تيفو على شاشة تلفونك</span><button type="button" class="cta" data-sheet="inst">كيف؟</button><button type="button" class="x" aria-label="مب الحين">مب الحين</button>';
       t.querySelector(".x").onclick = no; t.querySelector(".cta").addEventListener("click", function(){ t.remove(); }); B.appendChild(t); }
     window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); bip = e; paint(); if (lsGet("tifo.ret") && lsGet("tifo.ret") !== "first") setTimeout(ask, 15e3); });
     window.addEventListener("appinstalled", function(){ bip = null; no(); paint(); });
@@ -487,7 +487,7 @@
     function sync(){ var s = st(), ev = ((s.teams || {})[TID] || []).filter(function(x){ return !(B.classList.contains("nospoil") && x !== "start"); }), msg = $("#pushm");   // بدون حرق: no goal or result pushes
       if (!ev.length) return navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(x){ if (x) send("DELETE", { team:TID, endpoint:x.endpoint }); }).catch(function(){});
       return sub().then(function(x){ var j = x.toJSON(); return send("POST", { team:TID, events:ev, subscription:{ endpoint:j.endpoint, keys:j.keys } }); }).then(function(r){ if (msg) msg.textContent = r && r.ok !== false ? "تمام، بتوصلك التنبيهات." : "ما قدرنا نشغّلها الحين، جرّب بعد شوي."; })
-        .catch(function(){ if (msg) msg.textContent = "ما قدرنا نشغّلها. تأكد إن التنبيهات مسموحة لتيفو في إعدادات جوالك."; }); }
+        .catch(function(){ if (msg) msg.textContent = "ما قدرنا نشغّلها. تأكد إن التنبيهات مسموحة لتيفو في إعدادات تلفونك."; }); }
     sheet.addEventListener("click", function(e){ var b = e.target.closest(".ptg"); if (!b) return;
       if (Notification.permission === "default"){ var p = Notification.requestPermission(); if (p && p.then) p.then(function(r){ if (r === "granted") toggle(b); else { var m = $("#pushm"); if (m) m.textContent = "التنبيهات مقفولة. تقدر تسمح لها من إعدادات المتصفح."; } }); return; }
       if (Notification.permission === "denied"){ var m = $("#pushm"); if (m) m.textContent = "التنبيهات مقفولة لتيفو. تقدر تسمح لها من إعدادات المتصفح."; return; }

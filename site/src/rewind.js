@@ -141,12 +141,12 @@
     ground(GREEN2, GREEN); frame("");
     text(DONE ? "شكراً على الموسم" : "الموسم ما خلص", W / 2, 860, KUFI(84));
     text(DONE ? "نشوفك الموسم الياي" : "والقصة تكمل مع كل مباراة", W / 2, 980, { w: 600, size: 52, color: MINT });
-    text("كل هذا محفوظ على جوالك بس، بدون حساب", W / 2, 1180, { size: 38, color: SOFT });
+    text("كل هذا محفوظ على تلفونك بس، بدون حساب", W / 2, 1180, { size: 38, color: SOFT });
   } });
 
   // ------------------------------------------------------------------ the viewer
   if (!M.length && !P.length && !cards && !votes) {
-    root.innerHTML = '<section class="grp"><div class="card lc"><p><b>ما تجمّع شي لين الحين.</b> ريوايند يتجمع على جوالك من المباريات اللي تفتحها في تيفو: اللي تتابعها مباشر، والأهداف اللي تشوفها تدخل، وتوقعاتك. افتح أي مباراة وارجع هني، وآخر الموسم تطلع لك القصة كاملة.</p></div></section>' +
+    root.innerHTML = '<section class="grp"><div class="card lc"><p><b>ما تجمّع شي لين الحين.</b> ريوايند يتجمع على تلفونك من المباريات اللي تفتحها في تيفو: اللي تتابعها مباشر، والأهداف اللي تشوفها تدخل، وتوقعاتك. افتح أي مباراة وارجع هني، وآخر الموسم تطلع لك القصة كاملة.</p></div></section>' +
       U.grp("", U.row({ href: "/", icon: "ball", c: "#0B8246", t: "مباريات اليوم" }));
     return;
   }
@@ -155,7 +155,7 @@
     '<div class="rw-bars" style="display:flex;gap:4px;margin:0 0 10px" aria-hidden="true">' + S.map(function () { return '<i style="flex:1;height:4px;border-radius:2px;background:var(--fill2)"></i>'; }).join("") + "</div>" +
     '<div class="th-acts" style="margin:0 0 12px"><button type="button" class="pill" id="rw-prev">السابقة</button><button type="button" class="pill pri" id="rw-share">' + U.icon("share", "", 2) + 'شارك</button><button type="button" class="pill" id="rw-next">التالية</button></div>' +
     '<div id="rw-c" style="border-radius:16px;overflow:hidden;background:' + GREEN + '"></div>' +
-    '<p class="note" style="margin-top:14px">اضغط على القصة للي بعدها، وعلى طرفها اليمين للي قبلها. القصص من اللي محفوظ على جوالك بس، وما توصل لأحد إلا إذا شاركتها.</p></div>';
+    '<p class="note" style="margin-top:14px">اضغط على القصة للي بعدها، وعلى طرفها اليمين للي قبلها. القصص من اللي محفوظ على تلفونك بس، وما توصل لأحد إلا إذا شاركتها.</p></div>';
   var host = D.getElementById("rw-c"); cv.style.cssText = "display:block;width:100%;height:auto;cursor:pointer"; cv.setAttribute("role", "img"); host.appendChild(cv);
   // the team's season: its row in a table of this season, from its league (the team file's primary competition, when the team
   // has a file) or else the competitions of its matches the trail kept, the most followed first

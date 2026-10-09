@@ -41,7 +41,7 @@
   function ccName(c) { return (CTRY[c] || [])[1] || ""; }
   function localize(root) { $$("time[data-u]", root).forEach(function (t) { var f = t.dataset.f; t.textContent = f === "ago" ? U.ago(t.dataset.u) : U.timeText(t.dataset.u, f); }); }
   function applyTz() { var c = country(); cfg.tz = c && CTRY[c] ? CTRY[c][2] : devTz(); cfg.today = U.ymd(new Date().toISOString()); localize();
-    $$("#ccv").forEach(function (v) { v.textContent = ccName(c) || "حسب جوالك"; });
+    $$("#ccv").forEach(function (v) { v.textContent = ccName(c) || "حسب تلفونك"; });
     $$("button[data-cc]").forEach(function (b) { var on = b.dataset.cc === c, m = $("[data-ccv]", b); if (m) m.hidden = !on; b.setAttribute("aria-pressed", String(on)); }); }
 
   // ------------------------------------------------------------------ freshness: «آخر تحديث» in the footer, and a page older than 2 minutes dims its live digits
@@ -374,7 +374,7 @@
   function pickInit() { var pk = $("#pick"); if (!pk) return; var s = ls.json("tifo.picks", {})[pk.dataset.mid]; if (s && s.p) { selectSegOnly($(".seg", pk), s.p); pickMsg(s); }
     var ko = Date.parse(pk.dataset.kick); if (ko && ko <= NOW()) { var g = pk.closest(".grp"); if (g) g.hidden = true; } else if (ko) setTimeout(function () { var g = pk.closest(".grp"); if (g) g.hidden = true; }, Math.min(ko - NOW(), 2147483000)); }
   function pickMsg(s) { var m = $("#pickm"); if (!m) return; var nm = s.p === "d" ? "تعادل" : ($('.seg[data-seg="pick"] button[data-t="' + s.p + '"] .sl') || {}).textContent || ""; m.textContent = "توقعك: " + nm + ". نشوف بعد النهاية."; }
-  function pickSave(k) { var pk = $("#pick"); if (!pk) return; if (Date.parse(pk.dataset.kick) <= NOW()) return; var o = ls.json("tifo.picks", {}); o[pk.dataset.mid] = { p: k, ko: pk.dataset.kick, h: +pk.dataset.h, a: +pk.dataset.a }; ls.set("tifo.picks", JSON.stringify(o)); pickMsg(o[pk.dataset.mid]); toast("توقعك انحفظ في جوالك"); }
+  function pickSave(k) { var pk = $("#pick"); if (!pk) return; if (Date.parse(pk.dataset.kick) <= NOW()) return; var o = ls.json("tifo.picks", {}); o[pk.dataset.mid] = { p: k, ko: pk.dataset.kick, h: +pk.dataset.h, a: +pk.dataset.a }; ls.set("tifo.picks", JSON.stringify(o)); pickMsg(o[pk.dataset.mid]); toast("توقعك انحفظ في تلفونك"); }
   function pickSettle(md) { if (!md || md.status !== "finished" || !md.score) return; var o = ls.json("tifo.picks", {}), p = o[md.id]; if (!p || p.r != null) { if (p && p.r != null) pickShow(p); return; }
     var r = md.score.home > md.score.away ? "h" : md.score.home < md.score.away ? "a" : "d"; p.r = p.p === r ? 1 : 0; o[md.id] = p; ls.set("tifo.picks", JSON.stringify(o)); pickShow(p); }
   function pickShow(p) { if ($(".pickres")) return; var h = $(".hdr"); if (!h) return; var n = D.createElement("p"); n.className = "pickres" + (p.r ? " ok" : ""); n.textContent = p.r ? "توقعك طلع صح" : "توقعك طلع غلط"; h.appendChild(n); }
@@ -576,7 +576,7 @@
   var BIP = null, STANDALONE = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone, IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
   function instPaint() { var go = $("#instgo"), io = $("#instios"), dn = $("#instdone"), mm = $("#instm"); if (go) go.hidden = !BIP; if (io) io.hidden = !IOS || !!BIP || STANDALONE; if (dn) dn.hidden = !STANDALONE; if (mm) mm.hidden = !(BIP || IOS) || STANDALONE; }
   window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); BIP = e; instPaint(); instAsk(); });
-  window.addEventListener("appinstalled", function () { BIP = null; ls.set("tifo.inst.no", String(NOW())); instPaint(); var a = $("#instask"); if (a) a.remove(); toast("تيفو صار على شاشة جوالك"); });
+  window.addEventListener("appinstalled", function () { BIP = null; ls.set("tifo.inst.no", String(NOW())); instPaint(); var a = $("#instask"); if (a) a.remove(); toast("تيفو صار على شاشة تلفونك"); });
   D.addEventListener("click", function (e) { var g = e.target.closest && e.target.closest("#instgo"); if (!g || !BIP) return; BIP.prompt(); (BIP.userChoice || Promise.resolve({})).then(function (c) { if (c.outcome === "accepted") ls.set("tifo.inst.no", String(NOW())); closeSheet($("#sh-install")); }); BIP = null; instPaint(); });
   // the ask: a quiet card above the tab bar, on a second visit only, once a session, never again for 30 days after «مب الحين»
   function instAsk() { if (STANDALONE || BOT || !(BIP || IOS) || $("#instask") || ss.get("tifo.inst.asked")) return; var ret = ls.get("tifo.ret", ""); if (!ret || ret === "first") return; if (NOW() - (+ls.get("tifo.inst.no", 0) || 0) < 30 * 864e5) return;
@@ -624,7 +624,7 @@
   function pushSync(tid) { var ev = ((pushSt().teams || {})[tid] || []).filter(function (x) { return !(prefOn("nospoil") && x !== "start"); }), msg = $("#pushm");
     if (!ev.length) return navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (x) { if (x) pushSend("DELETE", { team: tid, endpoint: x.endpoint }); }).catch(function () {});
     return pushSub().then(function (x) { var j = x.toJSON(); return pushSend("POST", { team: tid, events: ev, subscription: { endpoint: j.endpoint, keys: j.keys } }); }).then(function (r) { if (msg) msg.textContent = r && r.ok !== false ? "تمام، بتوصلك التنبيهات." : "ما قدرنا نشغّلها الحين، جرّب بعد شوي."; })
-      .catch(function () { if (msg) msg.textContent = "ما قدرنا نشغّلها. تأكد إن التنبيهات مسموحة لتيفو في إعدادات جوالك."; }); }
+      .catch(function () { if (msg) msg.textContent = "ما قدرنا نشغّلها. تأكد إن التنبيهات مسموحة لتيفو في إعدادات تلفونك."; }); }
   function pushPaint() { var tid = +V.id, ev = (pushSt().teams || {})[tid] || []; $$("[data-push]").forEach(function (b) { b.setAttribute("aria-checked", String(ev.indexOf(b.dataset.push) >= 0)); }); }
   function pushInit() { var sh = $("#sh-notify"); if (!sh || PG !== "team") return; var tid = +V.id;
     if (!PUSHOK) { var m = $("#pushm"); if (m) m.innerHTML = IOS && !STANDALONE ? 'التنبيهات في آيفون تشتغل لما تثبّت تيفو على الشاشة الرئيسية. <a href="#" data-sheet="sh-install">شلون؟</a>' : "متصفحك ما يدعم التنبيهات."; $$("[data-push]", sh).forEach(function (b) { b.disabled = true; }); }
