@@ -86,13 +86,31 @@ def subjects(story):
     return story.get("seed") or story.get("anchor") or story["entities"]
 
 
+def pick_title(sm, si, srcs):
+    """The story's headline: the written Arabic one, else an Arabic source's (before a foreign transfer-stage item: owner
+    2026-10-09, an Arabic site shows Arabic), else the stage item's, else the first source's. -> (title, lang)"""
+    ar = next((s for s in srcs if s["lang"] == "ar"), None)
+    if sm.get("title_ar"):
+        return sm["title_ar"], "ar"
+    if ar and not (si and si.get("lang") == "ar"):
+        return ar["title"], "ar"
+    if si:
+        return si["title"], si["lang"]
+    return (srcs[0]["title"], srcs[0]["lang"]) if srcs else ("", "")
+
+
+def arabic_only(rows, n=None):
+    """Only stories with an Arabic headline reach the site (owner 2026-10-09: with headline rewriting off, 41 of 150 were
+    English, Spanish or German); a story comes back once an Arabic source covers it. The first `n`."""
+    out = [r for r in rows if r.get("title_lang") == "ar"]
+    return out if n is None else out[:n]
+
+
 def display(story, items_by_id, D):
     srcs = K.sources_of(story, items_by_id)
     sm = story.get("summary") or {}
-    ar = next((s for s in srcs if s["lang"] == "ar"), None)
     si = stage_item(story, items_by_id)
-    title, tlang = ((sm.get("title_ar"), "ar") if sm.get("title_ar") else (si["title"], si["lang"]) if si else
-                    ((ar["title"], "ar") if ar else ((srcs[0]["title"], srcs[0]["lang"]) if srcs else ("", ""))))
+    title, tlang = pick_title(sm, si, srcs)
     subj = subjects(story)
     return {"id": story["id"], "kind": story["kind"], "stage": story.get("stage"), "here_we_go": bool(story.get("here_we_go")),
             "title": title, "title_lang": tlang, "summary": sm.get("summary_ar"), "image": story.get("image"),
@@ -244,12 +262,13 @@ def main(argv=None):
     stories = {k: v for k, v in stories.items() if (v.get("last_at") or "") >= scut}
     newest = sorted(stories.values(), key=lambda s: s["last_at"] or "", reverse=True)
     gen = iso(now())
-    store.put_json("news/latest.json", {"generated": gen, "stories": [display(s, items, D) for s in newest[: st.get("latest_count", 150)]]}, cache="hot")
+    n_latest = st.get("latest_count", 150)
+    store.put_json("news/latest.json", {"generated": gen, "stories": arabic_only([display(s, items, D) for s in newest[: n_latest * 4]], n_latest)}, cache="hot")
     ents = {tuple(e) for s in touched.values() for e in (s.get("anchor") or [])} | rebuilt_named
     for k, i in ents:     # a page lists the stories whose HEADLINE names it
-        mine = [s for s in newest if [k, i] in (s.get("anchor") or [])][: st.get("entity_count", 40)]
+        mine = [s for s in newest if [k, i] in (s.get("anchor") or [])][: st.get("entity_count", 40) * 4]
         store.put_json(f"news/e/{k}-{i}.json", {"generated": gen, "entity": {"kind": k, "id": i, "name": D.names.get((k, i), "")},
-                                                "stories": [display(s, items, D) for s in mine]}, cache="warm")
+                                                "stories": arabic_only([display(s, items, D) for s in mine], st.get("entity_count", 40))}, cache="warm")
     social(store, items, D, gen, st.get("social_count", 24))
     store.put_json("news/transfers.json", {"generated": gen, "players": transfers(newest, items, D)[:200]}, cache="warm")
     steps["publish"] = round(time.time() - t1, 1)

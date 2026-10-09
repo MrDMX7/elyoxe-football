@@ -175,3 +175,23 @@ def test_the_rumour_meter():
     assert R.credibility(tr(here_we_go=True), src("journalist"))["v"] == 92
     assert R.credibility(tr(stage="official"), src("paper"))["v"] == 100
     assert R.credibility({"kind": "injury"}, src("paper")) is None
+
+
+# ------------------------------------------------------------------ Arabic headlines only (owner 2026-10-09)
+def test_the_headline_is_arabic_whenever_an_arabic_source_has_the_story():
+    from news import run as NR
+    ar = {"lang": "ar", "title": "مورينيو يشن هجوما على مبابي"}
+    en = {"lang": "en", "title": "Mourinho: Mbappé to start"}
+    assert NR.pick_title({}, en, [en, ar]) == ("مورينيو يشن هجوما على مبابي", "ar")      # an Arabic source beats a foreign stage item
+    assert NR.pick_title({}, None, [en, ar]) == ("مورينيو يشن هجوما على مبابي", "ar")
+    assert NR.pick_title({"title_ar": "خلاصة"}, en, [en]) == ("خلاصة", "ar")
+    assert NR.pick_title({}, en, [en]) == ("Mourinho: Mbappé to start", "en")
+    assert NR.pick_title({}, None, []) == ("", "")
+
+
+def test_only_arabic_headlines_are_published():
+    """27 % of /news/ (41 of 150) was English, Spanish or German once headline rewriting was switched off (2026-10-09)."""
+    from news import run as NR
+    rows = [{"id": 1, "title_lang": "ar"}, {"id": 2, "title_lang": "en"}, {"id": 3, "title_lang": "es"}, {"id": 4, "title_lang": "ar"}]
+    assert [r["id"] for r in NR.arabic_only(rows)] == [1, 4]
+    assert [r["id"] for r in NR.arabic_only(rows, 1)] == [1]
