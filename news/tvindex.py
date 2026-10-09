@@ -105,7 +105,7 @@ def build(days, now):
                     cid, cname = (m.get("c") or [None, None])[:2]
                     ck = (cid, cname or "")
                     p["comps"][ck] = p["comps"].get(ck, 0) + 1
-                if ch and ch not in p["matches"][mid]:            # one voice on شاهد and MBC Action: one match, both channels
+                if ch and not TV.BANNED_CH.search(ch) and ch not in p["matches"][mid]:   # one voice on two channels: one match, both; struck-off channels (stored days too) never
                     p["matches"][mid].append(ch)
                     p["channels"][ch] = p["channels"].get(ch, 0) + 1
     all_m = {mid: m for d in seen_days for mid, m in days[d].items()}
