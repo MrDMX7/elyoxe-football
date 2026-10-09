@@ -103,7 +103,7 @@ def events_for(d, full, followed, sent, now):
     if st == "finished" and P._age_min((d.get("periods") or {}).get("gameEnded"), now) <= P.END_WINDOW:
         end_min = max(90, now_min or 90)
         goals = [e for e in evs if e.get("type") in ("goal", "penalty_goal")]
-        for pid in sorted(followed):
+        for pid in sorted(set(followed) & (set(L["start"]) | set(L["bench"]))):   # the followed in this match, never every followed player
             m = minutes_played(full, pid, end_min)
             if not m:                 # did not play, or came on in the last minute: no «لعب 0 دقيقة»
                 continue
