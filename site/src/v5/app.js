@@ -85,6 +85,7 @@
     if (sub) { k = sub[0]; }
     if (seg) { if (!$('button[data-t="' + k + '"]', seg) && OLD[h]) k = OLD[h]; if ($('button[data-t="' + k + '"]', seg) && selectSeg(seg, k, false)) { if (sub) { var ls2 = $('.seg[data-seg="ld"]'); if (ls2) selectSeg(ls2, sub[1], false); } return; } }
     if (h === "story" || h === "second") { setTimeout(function () { openSheet("sh-share"); }, 300); return; }
+    if (h === "notify" && $("#sh-notify")) { setTimeout(function () { openSheet("sh-notify"); }, 300); return; }   // «نبّهني لمبارياته» on a player page
     var row = $('[data-anchor="' + h + '"]'); if (row) { var p = row.closest(".pane"), sg = p && $('.seg[data-seg="' + p.dataset.g + '"]'); if (sg) selectSeg(sg, p.dataset.p, false); setTimeout(function () { row.scrollIntoView({ block: "center" }); openSheet(row.dataset.sheet, row); }, 120); return; }
     var el = D.getElementById(h); if (el) { var p2 = el.closest(".pane"), sg2 = p2 && $('.seg[data-seg="' + p2.dataset.g + '"]'); if (sg2) selectSeg(sg2, p2.dataset.p, false); setTimeout(function () { el.scrollIntoView({ block: "start" }); }, 60); }
   }
@@ -428,7 +429,8 @@
   // a player's career and match log load from his own files the first time their segment opens (or now, when the page opens on it)
   function playerMounts(root) {
     var pc = $("#pcar1", root); if (pc && !pc.dataset.done) { pc.dataset.done = 1; Promise.all([V.prof ? get("player/" + V.id + "/profile.json").catch(function () { return null; }) : null, V.tm ? get("player/" + V.id + "/tm.json").catch(function () { return null; }) : null]).then(function (r) {
-      var h = P.playerCareer({ prof: r[0], tm: r[1] }); pc.innerHTML = h || (!$("#pcar .grp") ? '<div class="card">' + U.empty("ما عندنا مسيرته للحين.") + "</div>" : ""); localize(pc); }); }
+      var h = P.playerCareer({ prof: r[0], tm: r[1] }); if (!h && pc.dataset.pre) return;   // the build's career stays when the files give nothing
+      pc.innerHTML = h || (!$("#pcar .grp") ? '<div class="card">' + U.empty("ما عندنا مسيرته للحين.") + "</div>" : ""); localize(pc); }); }
     var pl = $("#plg", root); if (pl && !pl.dataset.done) { pl.dataset.done = 1; get("player/" + V.id + "/log.json").then(function (lg) { var h = P.playerGames(lg); pl.innerHTML = h || '<div class="card">' + U.empty("ما عندنا مبارياته للحين.") + "</div>"; if (lg && !$(".tiles")) tilesFromLog(lg); }).catch(function () { pl.innerHTML = '<div class="card">' + U.empty("ما عندنا مبارياته للحين.") + "</div>"; }); }
   }
   function tilesFromLog(lg) { var s = lg.seasons && lg.seasons[0]; if (!s) return; var at = $(".segbar"); if (!at) return; var sec = D.createElement("section"); sec.className = "grp";

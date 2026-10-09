@@ -92,7 +92,7 @@ const isLiveSec = h => LIVE_IDS.some(id => h.includes('id="' + id + '"'));
 // tab, sheets}`; every other caller passes a v2/v3-shaped `body` (crumbs + h1 + season + <section class="blk">…) and
 // lib/v5.cjs legacy5() turns it into the same skeleton. The SEO head (title, description, canonical or noindex, OG, JSON-LD,
 // manifest) is the same for both and never depends on the template.
-const U = require("./src/v5/ui.js"), P5 = require("./src/v5/pages.js");
+const U = require("./src/v5/ui.js"), P5 = require("./src/v5/pages.js"), PSEO = require("./lib/player_seo.cjs");
 // owner items 7, 8, 3 (docs/ENGAGEMENT.md): «نبّهني», «توقع وتحدى ربعك», «المعلقين»; their pure halves prerender here, the browser
 // halves load on the pages that use them (page() below)
 const NFM = require("./src/notify.js"), TPM = require("./src/predict.js"), VCM = require("./src/voices.js");
@@ -803,6 +803,19 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   const pjs = await pool(pids, 8, id => uaeP.has(id) ? get(`player/${id}.json`, 1) : null);
   const topP = new Set(); compData.forEach(({ stats }) => ["goals", "assists"].forEach(k => ((stats && stats.lists && stats.lists[k]) || []).slice(0, 30).forEach(r => r.player && topP.add(String(r.player.id)))));
   const pcar = await pool(pids, 8, id => topP.has(id) ? get(`player/${id}/career.json`, 1) : null);
+  // owner item 11 (2026-10-09): what Google reads on /p/ pages. Every player's FotMob career, cached and re-read once per profiles
+  // generation (or week), TIFO_PCAREER_FETCH per run (lib/player_seo.cjs): the page carries it, the honest title, a plain intro,
+  // Person JSON-LD, «تابع فريقه», his team's next match and his teammates
+  const PCDIR = path.join(CACHE, "pcareer"), pwk = Math.floor(Date.now() / 6048e5);
+  const pcs = await PSEO.refreshCareers({ ids:pids, gen:`${FMPJ.generated || ""}|${pwk}`, get, pool, dir:PCDIR, budget:+(process.env.TIFO_PCAREER_FETCH || 3000) });
+  console.log("player careers:", JSON.stringify(pcs));
+  const CAR = PSEO.loadCareers(PCDIR).careers, mates = {}, pIndexed = new Set();   // pIndexed: /p/ pages in the index (the /db/player/ links)
+  pids.forEach(id => { const t = (allPlayers[id] || {}).team; if (t) (mates[t] = mates[t] || []).push(id); });
+  const arOnly = s => /[؀-ۿ]/.test(s || "") ? s : "";   // a position or country the helpers could not put in Arabic is left out
+  // every team's next match from the competitions' fixtures (team files exist only for the focus teams)
+  const nextByTeam = new Map(), nowMs = Date.now();
+  for (const m of matchSum.values()){ if (!m || m.id == null || !(m.status === "scheduled" || U.isLive(m))) continue; const t = Date.parse(m.kickoff_utc || 0); if (!(t > nowMs - 3 * 36e5)) continue;
+    [m.home, m.away].forEach(sd => { if (!sd || !sd.id) return; const c = nextByTeam.get(sd.id); if (!c || t < Date.parse(c.kickoff_utc)) nextByTeam.set(sd.id, m); }); }
   let pcount = 0;
   pids.forEach((id, i) => {
     R.DUPCTX = (((teamsJson.teams[(allPlayers[id] || {}).team] || {}).country) || {}).name_ar || "";   // 503
@@ -825,15 +838,30 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
       cl ? S.sec("نقاط جابها لفريقه", "", `<p>جاب لفريقه <b class="num">${cl.total}</b> نقاط بأهدافه وصناعته هالموسم.</p>`) : ""].join("")).secs;
     const ph = PH[id], pcrumbs = `${pc ? `<a href="/c/${pc.key}/">${esc(pc.name_ar)}</a>، ` : ""}${tt.name_ar ? `<a href="/t/${tm}/">${esc(tt.name_ar)}</a>` : ""}`;
     const ptools = `${card ? `<a href="/c/${ck}/compare/?a=${id}">قارنه بلاعب ثاني</a>` : ""}${String(id) === "30981" ? '<a href="/messi/">متحف ميسي: كل أهدافه على ملعب ثلاثي الأبعاد</a>' : ""}`;
+    // item 11: his FotMob career (cache), this season's row, the honest title and the intro; the season sentence comes from the
+    // career row only (its apps cover the club's season), so it never names a competition it cannot vouch for
+    const car = CAR[id], sr = PSEO.seasonRow(car), fb = FMP[id] || {}, nm = nameOf(id) || p.name;
+    const nums = (!ap.fm && z(p.minutes, ap.minutes) > 0) || !!(sr && sr.apps);   // the tiles: the league card, or this season's row
+    const pcountry = arOnly(U.country(p.country || fb.cc)), pAge = fb.born && fb.born >= "1900" ? Math.floor((Date.now() - Date.parse(fb.born)) / 31557600000) : null;
+    const pmin = ap.fm ? 0 : z(p.minutes, ap.minutes), plg = pmin > 0 ? { comp:pc && pc.name_ar, min:pmin, g:z(p.goals, sv("goals")), a:z(p.assists, sv("goal_assist")) } : null;
+    const pintro = PSEO.intro({ name:nm, pos:arOnly(U.posAr(p.position || fb.pos)), country:pcountry, team:tt.name_ar, age:pAge, league:plg, season:sr, career:PSEO.careerTotals(car) });
+    // his team's next match (a match page we write) and his teammates' pages, the most minutes first
+    const nx = nextByTeam.get(tm) || nextByTeam.get(+tm);
+    const nxRow = nx ? U.grp(`مباراة ${esc(tt.name_ar || "فريقه")} الياية`, U.row({ href:`/m/${nx.id}/`, icon:"calendar", c:"#FF3B30",
+      t:`${esc(U.tnameT(nx.home))} - ${esc(U.tnameT(nx.away))}`, sub:[esc(nx.comp_name_ar || ""), nx.kickoff_utc ? U.dateAr(String(nx.kickoff_utc).slice(0, 10)) : ""].filter(Boolean).join(" · ") }), { cls:"mt2" }) : "";
+    const mm = (mates[tm] || []).filter(x => x !== id).sort((a, b2) => ((allPlayers[b2] || {}).minutes || 0) - ((allPlayers[a] || {}).minutes || 0)).slice(0, 8);
+    const mmRow = mm.length ? U.grp(`زملاءه في ${esc(tt.name_ar || "الفريق")}`, mm.map(x => U.row({ href:`/p/${x}/`, t:nameOf(x) ? esc(nameOf(x)) : `<span class="lat">${esc((allPlayers[x] || {}).name || "")}</span>` })).join(""), { cls:"mt2" }) : "";
     const v5 = P5.player(id, { name:nameOf(id), latin:p.name, team:tm ? { id:tm, name_ar:tt.name_ar } : null, pos:p.position, num:p.number, cc:p.country, season:p.season,
-      card:ap.fm ? null : { goals:z(p.goals, sv("goals")), assists:z(p.assists, sv("goal_assist")), minutes:z(p.minutes, ap.minutes), rating:p.rating }, prof:FMP[id] ? { bio:FMP[id] } : null, ea:EAC[id] || null,
-      photo:ph ? `/v1/ph/${id}.webp` : null, credit:ph ? `الصورة: <a href="${esc(ph.page || "")}" rel="noopener">${esc(((ph.artist || "").replace(/\s+/g, " ").trim().slice(0, 40)) + (ph.license ? " · " + ph.license : ""))}</a>` : "", wiki:WP[id] ? wiki5(WP[id]) : "", transfers:(TRH.players || {})[id] || null,
-      x:{ mount:true, crumbs:pcrumbs, profile:(String(id) === "30981" ? U.grp("", U.row({ href:"/messi/", icon:"target", c:"#0A84FF", t:"متحف ميسي", sub:"كل أهدافه على ملعب ثلاثي الأبعاد" }), { cls:"mt2" }) : "") + shelf(pext, { title:"بالتفصيل" }),
+      card:ap.fm ? null : { goals:z(p.goals, sv("goals")), assists:z(p.assists, sv("goal_assist")), minutes:z(p.minutes, ap.minutes), rating:p.rating }, prof:FMP[id] || car ? Object.assign({ bio:fb }, PSEO.asProfile(car) || {}) : null, ea:EAC[id] || null,
+      seasonRow:sr, photo:ph ? `/v1/ph/${id}.webp` : null, credit:ph ? `الصورة: <a href="${esc(ph.page || "")}" rel="noopener">${esc(((ph.artist || "").replace(/\s+/g, " ").trim().slice(0, 40)) + (ph.license ? " · " + ph.license : ""))}</a>` : "", wiki:WP[id] ? wiki5(WP[id]) : "", transfers:(TRH.players || {})[id] || null,
+      x:{ mount:true, crumbs:pcrumbs, intro:pintro, follow:!!tm, profile:(String(id) === "30981" ? U.grp("", U.row({ href:"/messi/", icon:"target", c:"#0A84FF", t:"متحف ميسي", sub:"كل أهدافه على ملعب ثلاثي الأبعاد" }), { cls:"mt2" }) : "") + nxRow + shelf(pext, { title:"بالتفصيل" }) + mmRow,
         share:P5.shareSheet({ html:toolRows(ptools) + `<button type="button" class="row" id="secpick"><span class="rt">صورة لأي قسم</span>${U.chev}</button>`, after:'<div id="secpicks" class="card mt" hidden></div>' }) } });
-    v5.data = { id:+id, prof:FMP[id] ? 1 : 0, tm:TMI[id] ? 1 : 0 };
-    const thinP = (p.minutes || 0) < 90 && !S.career(pcar[i]) && !(FMP[id] && FMP[id].n);   // owner item 11: thin pages stay reachable but out of the index
-    playerPages.add(String(id)); write(`p/${id}/index.html`, page({ v5, noindex:thinP, path:`/p/${id}/`, page:"player", names:Object.assign(nameOf(id) ? { [id]:nameOf(id) } : {}), title:`${nameOf(id) || p.name}: أهدافه وأرقامه هالموسم${tt.name_ar ? " مع " + tt.name_ar : ""} | تيفو`, ld:bcLd([pc && [pc.name_ar, `/c/${pc.key}/`], tt.name_ar && [tt.name_ar, `/t/${tm}/`], [nameOf(id) || p.name, `/p/${id}/`]]), desc:`${nameOf(id) || p.name}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.` }));
-    if (!thinP) urls.push(`/p/${id}/`);
+    v5.data = { id:+id, prof:FMP[id] || car ? 1 : 0, tm:TMI[id] ? 1 : 0 };
+    // owner item 11: thin pages stay reachable but out of the index; a player with a FotMob career (the cache) is no longer thin
+    const thinP = (p.minutes || 0) < 90 && !S.career(pcar[i]) && !(FMP[id] && FMP[id].n) && !PSEO.careerTotals(car);
+    const person = PSEO.person({ site:SITE, id, name:nameOf(id), latin:p.name, born:fb.born, h:fb.h, country:pcountry, team:tt.name_ar, image:ph ? `/v1/ph/${id}.webp` : null });
+    playerPages.add(String(id)); write(`p/${id}/index.html`, page({ v5, noindex:thinP, path:`/p/${id}/`, page:"player", names:Object.assign(nameOf(id) ? { [id]:nameOf(id) } : {}), title:PSEO.title({ name:nm, team:tt.name_ar, nums }), ld:[bcLd([pc && [pc.name_ar, `/c/${pc.key}/`], tt.name_ar && [tt.name_ar, `/t/${tm}/`], [nm, `/p/${id}/`]]), person], desc:pintro ? pintro.slice(0, 160) : `${nm}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.` }));
+    if (!thinP){ urls.push(`/p/${id}/`); pIndexed.add(id); }
   });
   R.DUPCTX = "";   // 503: back to no context
 
@@ -1353,7 +1381,8 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   // the pages whose content changed into cache/world/delta/, which tools/runner.py uploads; never in out/, so neither rebuilt nor re-synced every hour.
   // Not in --preview (its noindex pages would be recorded as published).
   const WORLD = PREVIEW || process.env.TIFO_WORLD === "0" ? { urls:[], stats:{ skipped:true } } : await require("./lib/world_stage.cjs")({ get, pool, page, esc, SITE, CACHE, fs, path, bcLd,
-    finalize:h => fixHtml(h).replace("__SV__", SEARCH_V).replace("__CV__", COLOR_V), written:u => WRITTEN.add(u), NAMES_AR, FMN, WP, PH, phHtml, colors, teamPages, playerPages, S_TEAMS, ASSET_V, fmGen:FMPJ.generated || "" });
+    finalize:h => fixHtml(h).replace("__SV__", SEARCH_V).replace("__CV__", COLOR_V), written:u => WRITTEN.add(u), NAMES_AR, FMN, WP, PH, phHtml, colors, teamPages, playerPages, S_TEAMS, ASSET_V, fmGen:FMPJ.generated || "",
+    pmates:Object.fromEntries(Object.entries(mates).map(([t, ids]) => [t, ids.filter(x => pIndexed.has(x)).sort((a, b2) => ((allPlayers[b2] || {}).minutes || 0) - ((allPlayers[a] || {}).minutes || 0)).slice(0, 8)])), pname:nameOf });
   // their crawl path: /db/players/ (every nationality) and /db/players/<cc>/ (its players by club), small and in out/
   { const H = WORLD.hubs || {}, CN = FMN.countries || {}, ccs = Object.keys(H).filter(cc => CN[cc] && H[cc].length).sort((a, b) => H[b].length - H[a].length);
     const pl = n => n === 1 ? "لاعب واحد" : n === 2 ? "لاعبين" : `<span class="num">${n}</span> ${n <= 10 ? "لاعبين" : "لاعب"}`, AR = /[؀-ۿ]/;
