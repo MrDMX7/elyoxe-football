@@ -51,7 +51,7 @@ if [ "${1:-}" = "--check" ]; then live_checks; exit 0; fi
 # 2. bundle: our modules + aarch64 wheels for the arm64 runtime (boto3 comes with the runtime)
 rm -rf build/lambda && mkdir -p build/lambda
 cp -r sources compute build/lambda/
-cp poller.py analytics.py arabs.py more.py report.py extra2.py push.py store.py config.py timeutil.py competitions.yaml stadiums.yaml teams_ar.yaml countries.yaml derbies.yaml alltime.yaml fifa_history.json coefficients.json build/lambda/
+cp poller.py analytics.py arabs.py more.py report.py extra2.py push.py pushplayer.py store.py config.py timeutil.py competitions.yaml stadiums.yaml teams_ar.yaml countries.yaml derbies.yaml alltime.yaml fifa_history.json coefficients.json build/lambda/
 for B in broadcast_by_country.json arab_clubs.json suspension_rules.json; do   # another agent's research (read only)
   [ -f "/root/workspace/research/tifo-2026-09-27/$B" ] && cp "/root/workspace/research/tifo-2026-09-27/$B" build/lambda/
 done

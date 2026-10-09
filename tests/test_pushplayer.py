@@ -53,7 +53,7 @@ def test_sub_in_out_cards_and_missed_penalty():
     d, full = det(events=evs)
     rows = kinds(PP.events_for(d, full, {"15403": F["15403"], "555": {"club": 10189, "national": None}}, [], NOW))
     assert ("p555:subin", "subin", "555") in rows and ("p15403:subout", "subout", "15403") in rows
-    assert ("p15403:card:yellow", "card", "15403") in rows and ("p15403:pen:66", "pen", "15403") in rows
+    assert ("p15403:card:yellow", "card", "15403") in rows and ("p15403:pen:1", "pen", "15403") in rows
 
 
 def test_already_sent_and_late_events_are_skipped():
@@ -97,7 +97,7 @@ def test_map_from_profiles():
     import pushplayers as M
     prof = {"15403": {"bio": {"team": 10189}, "career": {"national team": {"seasons": [["2024", 8, "Bosnia", 3, 0, 0]]}}},
             "2777": {"bio": {"team": 49678}, "career": {}}, "5": None}
-    m = M.build_map(["15403", "2777", "5"], lambda pid: prof.get(pid))
+    m = {k: {kk: vv for kk, vv in v.items() if kk != "at"} for k, v in M.build_map(["15403", "2777", "5"], lambda pid: prof.get(pid)).items()}
     assert m == {"15403": {"club": 10189, "national": 8, "cc": None}, "2777": {"club": 49678, "national": None, "cc": None},
                  "5": {"club": None, "national": None, "cc": None}}
     old = {"seasons": [["2019", 8, "Bosnia", 3, 0, 0]]}
@@ -114,3 +114,73 @@ def test_poller_plans_prematch_details():
 def test_push_knows_every_player_kind():
     import push
     assert set(PP.KINDS) <= set(push.EVENTS) and set(PP.KINDS) | set(push.TEAM_EVENTS) == set(push.EVENTS)
+
+
+# ------------------------------------------------------------------ final review fixes (2026-10-09)
+def test_deploy_bundles_every_local_module_push_and_poller_import():
+    """deploy.sh copies an explicit list: a module push.py or poller.py imports and the list lacks kills the poller at
+    cold start (review: pushplayer.py was missing)."""
+    import os, re
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sh = open(os.path.join(root, "deploy.sh"), encoding="utf-8").read()
+    listed = set(re.findall(r"\b([a-z_0-9]+)\.py\b", sh))
+    for mod in ("poller.py", "push.py", "pushplayer.py"):
+        src = open(os.path.join(root, mod), encoding="utf-8").read()
+        for m in re.findall(r"^(?:import|from) ([a-z_0-9]+)", src, re.M):
+            if os.path.exists(os.path.join(root, m + ".py")):
+                assert m in listed, f"{mod} imports {m}.py but deploy.sh does not bundle it"
+
+
+def test_squad_out_and_start11_only_for_players_in_this_match_however_many_are_followed():
+    import time as _t
+    d, full = det(status="finished", minute=None)
+    many = {str(i): {"club": 99999, "national": None} for i in range(200000)}
+    many.update({"15403": F["15403"]})
+    t0 = _t.time()
+    rows = PP.events_for(d, full, many, [], NOW)
+    assert _t.time() - t0 < 1.0                                        # not one pass per followed player on earth
+    assert {r[2] for r in rows} <= {"15403", "1", "555"}
+
+
+def test_missed_penalty_key_survives_a_minute_correction():
+    d, full = det(events=[ev_("missed_penalty", 66, 15403)])
+    k1 = [r[0] for r in PP.events_for(d, full, {"15403": F["15403"]}, [], NOW) if r[1] == "pen"]
+    d, full = det(events=[ev_("missed_penalty", 67, 15403)])
+    assert [r for r in PP.events_for(d, full, {"15403": F["15403"]}, k1, NOW) if r[1] == "pen"] == []
+
+
+def test_potm_is_sent_once_per_match_and_never_zero_minutes():
+    d, full = det(status="finished", minute=None, events=[ev_("sub", 90, 555, out=1)])
+    fol = {"1": {"club": 7, "national": None}, "15403": F["15403"], "555": {"club": 10189, "national": None}}
+    rows = PP.events_for(d, full, fol, ["p1:potm"], NOW)
+    assert not [r for r in rows if r[1] == "potm"]                     # a potm went out already (another player's key too)
+    full["lineups"]["home"]["starters"][0]["rating"] = 9.9
+    assert not [r for r in PP.events_for(d, full, fol, ["p1:potm"], NOW) if r[1] == "potm"]
+    assert not [r for r in rows if r[1] == "end" and r[2] == "555"]    # came on at 90': no «لعب 0 دقيقة»
+
+
+def test_the_map_reads_only_new_or_stale_players_within_a_budget_and_drops_unfollowed():
+    import pushplayers as M
+    got = []
+    prof = lambda pid: got.append(pid) or {"bio": {"team": 1}}
+    now = 200000                                                # a day = 86,400 s
+    prev = {"a": {"club": 5, "national": None, "cc": None, "at": now - 100}, "b": {"club": 6, "national": None, "cc": None, "at": 0},
+            "gone": {"club": 1, "at": now - 100}}
+    m = M.build_map(["a", "b", "c", "d"], prof, prev=prev, budget=2, now=now)
+    assert got == ["c", "d"]                                    # never mapped first (budget 2); "b" is stale but waits; "a" is fresh
+    assert m["a"]["club"] == 5 and m["b"]["club"] == 6 and m["c"]["club"] == 1 and m["d"]["club"] == 1 and "gone" not in m
+    got.clear()
+    m2 = M.build_map(["a", "b", "c", "d"], prof, prev=m, budget=2, now=now + 60)
+    assert got == ["b"] and m2["b"]["club"] == 1                # next run: the stale one
+
+
+def test_followed_ids_drop_players_nobody_follows_any_more():
+    import pushplayers as M
+
+    class T:
+        def query(self, **kw):
+            pk = kw["KeyConditionExpression"].get_expression()["values"][1]
+            if pk == "TIFOFOLLOW":
+                return {"Items": [{"sk": "P1", "n": 1}, {"sk": "P2", "n": 3}, {"sk": "P3", "n": 0}]}
+            return {"Items": [{"pk": pk}] if pk == "TIFOPUSH#P1" else []}
+    assert M.followed_ids(T()) == ["1"]                         # 2's subscriptions expired (TTL), 3 unfollowed

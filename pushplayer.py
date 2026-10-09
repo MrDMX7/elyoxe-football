@@ -84,6 +84,7 @@ def events_for(d, full, followed, sent, now):
                 add(f"p{pid}:squad_out", "squad_out", pid)
     evs = full.get("events") or []
     now_min = P._match_minute(d, evs)
+    pens = {}                         # his missed penalties so far: the key is their order, never a minute the feed may correct
     for e in evs:
         t = e.get("type")
         if t not in ("sub", "yellow", "second_yellow", "red", "missed_penalty") or not _fresh(e, now, now_min):
@@ -95,7 +96,8 @@ def events_for(d, full, followed, sent, now):
             if pout in followed:
                 add(f"p{pout}:subout", "subout", pout, e)
         elif t == "missed_penalty" and pin in followed:
-            add(f"p{pin}:pen:{P.total_minute(e.get('minute'), e.get('added'))}", "pen", pin, e)
+            pens[pin] = pens.get(pin, 0) + 1
+            add(f"p{pin}:pen:{pens[pin]}", "pen", pin, e)
         elif pin in followed:
             add(f"p{pin}:card:{t}", "card", pin, e)
     if st == "finished" and P._age_min((d.get("periods") or {}).get("gameEnded"), now) <= P.END_WINDOW:
@@ -103,13 +105,13 @@ def events_for(d, full, followed, sent, now):
         goals = [e for e in evs if e.get("type") in ("goal", "penalty_goal")]
         for pid in sorted(followed):
             m = minutes_played(full, pid, end_min)
-            if m is None:
+            if not m:                 # did not play, or came on in the last minute: no «لعب 0 دقيقة»
                 continue
             add(f"p{pid}:end", "end", pid, None, {"min": m, "r": _rating(full, pid),
                                                    "g": sum(1 for e in goals if _pid(e.get("player")) == pid),
                                                    "a": sum(1 for e in goals if _pid(e.get("assist")) == pid)})
         rated = [(r, pid) for pid in list(L["start"]) + list(L["bench"]) for r in [_rating(full, pid)] if r is not None]
-        if rated:
+        if rated and not any(k.endswith(":potm") for k in sent):   # once per match: ratings move for minutes after the whistle
             best = max(rated)[1]
             if best in followed:
                 add(f"p{best}:potm", "potm", best, None, {"r": max(rated)[0]})

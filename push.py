@@ -58,6 +58,7 @@ MAX_SENDS = 5000              # per invoke: the sender's 5-minute budget, ~40 ms
 JOB_TTL = {"start": 600, "goal": 600, "end": 900, "video": 1800,   # seconds a handed-over job stays worth sending
            "soon": 1800, "start11": 1800, "squad_out": 1800, "subin": 600, "subout": 600, "assist": 600, "card": 600, "pen": 600,
            "potm": 3600}
+PLACEHOLDER_WAIT = 2          # minutes a «<TBD>» goal waits for its scorer's name when someone in the match is followed
 PLAYER_DAILY_CAP = 20         # player alerts per device per UAE day (owner 2026-10-09: «اذا تشوف اشياء تسوي مشاكل»)
 DATA = os.environ.get("TIFO_DATA", "https://d1n5aqaqkowltp.cloudfront.net")
 CLAIM_DAYS = 3
@@ -308,36 +309,62 @@ def plan(p, d, full, invoke=None):
         return []
     mid = str(d["id"])
     marks = _marks(p)
-    sent = marks.setdefault(mid, {"at": None, "keys": []})
+    sent = marks.get(mid) or {"at": None, "keys": []}     # stored only once something is handed over (prematch passes add nothing)
     back = sent.setdefault("back", [])
     gone = takebacks(sent["keys"], back, d.get("score") or full.get("score"))
     if gone:                         # a goal handed over is no longer in the score: the VAR (or the feed) took it back
+        marks[mid] = sent
         back += gone
         p.note(f"push: {mid} taken back {', '.join(gone)}")
         _flush(p, mid)
     todo = events_to_send(d, full, sent["keys"], p.now(), back)
-    followed = p.aux("push_players")
-    pev = PP.events_for(d, full, followed, sent["keys"], p.now()) if followed else []
+    followed, pev = p.aux("push_players"), []
+    try:                             # «تابع اللاعب»: whatever goes wrong here, the team alerts still go out
+        if followed:
+            pev = PP.events_for(d, full, followed, sent["keys"], p.now())
+            L = PP.lineup(full)
+            if (set(L["start"]) | set(L["bench"])) & set(followed):
+                # FotMob names the scorer about a minute after the goal («<TBD>» first): with someone in this match followed,
+                # a nameless goal waits up to PLACEHOLDER_WAIT minutes so his followers get «هدف! <name>» (else it goes out nameless)
+                todo = [x for x in todo if not (x[1] == "goal" and x[2] and not _known(x[2].get("player"))
+                                                and _age_min(x[2].get("first_seen"), p.now()) < PLACEHOLDER_WAIT)]
+    except Exception as ex:
+        p.store.fail("push-player", f"{mid}: {type(ex).__name__}: {ex}")
+        followed, pev = {}, []
     if not todo and not pev:
         return []
     names_ar = _names_ar()
     teams = [t for t in ((d.get("home") or {}).get("id"), (d.get("away") or {}).get("id")) if t]
     jobs = [_job(mid, key, kind, {str(t): payload(kind, d, t, e, names_ar) for t in teams}, mn, again=again)
             for key, kind, e, mn, again in todo]
-    # the scorer's and the assister's followers ride on the team's goal job (one claim, one push per device, their text first)
-    for j, (key, kind, e, mn, again) in zip(list(jobs), todo):
-        if kind == "goal" and e and followed:
-            aud = _player_goal_audiences(d, e, followed, names_ar)
-            if aud:
-                j["payloads"] = {**aud, **j["payloads"]}
-    jobs += [_job(mid, key, kind, {f"P{pid}": PP.payload(kind, d, pid, e, names_ar, extra)})
-             for key, kind, pid, e, extra in pev]
+    # the scorer's and the assister's followers ride on the team's goal job, and his full-time line on the team's «end» job
+    # (one claim, one push per device, the player's text first); every other player event is a job of its own
+    rode = []
+    try:
+        for j, (key, kind, e, mn, again) in zip(list(jobs), todo):
+            if kind == "goal" and e and followed:
+                aud = _player_goal_audiences(d, e, followed, names_ar)
+                if aud:
+                    j["payloads"] = {**aud, **j["payloads"]}
+        endj = next((j for j in jobs if j["key"] == "end"), None)
+        for key, kind, pid, e, extra in pev:
+            pl = PP.payload(kind, d, pid, e, names_ar, extra)
+            if kind == "end" and endj is not None:
+                endj["payloads"] = {f"P{pid}": pl, **endj["payloads"]}
+                rode.append(key)
+            else:
+                jobs.append(_job(mid, key, kind, {f"P{pid}": pl}))
+    except Exception as ex:
+        p.store.fail("push-player", f"{mid}: {type(ex).__name__}: {ex}")
+    if not jobs:
+        return []
     try:
         (invoke or _invoke)({"jobs": jobs})
     except Exception as ex:          # not marked: the next pass tries again (the sender dedupes)
         p.store.fail("push", f"{mid}: invoke failed: {type(ex).__name__}: {ex}")
         return []
-    sent["keys"] += [mark(j) for j in jobs]                  # a player job's mark is its key («p<pid>:<kind>…»)
+    marks[mid] = sent
+    sent["keys"] += [mark(j) for j in jobs] + rode           # a player job's mark is its key («p<pid>:<kind>…»)
     sent["at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     for k in [k for k, v in marks.items() if v.get("at") and _age_min(v["at"], p.now()) > CLAIM_DAYS * 1440]:
         del marks[k]

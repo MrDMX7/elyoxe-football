@@ -383,3 +383,64 @@ def test_video_jobs_reach_the_scorers_followers_first():
     p = jobs[0]["payloads"]["P1084245"]
     assert p["title"] == "فيديو هدف جوليمار نزل" and p["kind"] == "video" and p["url"] == "/m/6052086/#v=23-1084245"
     assert "P1084245" not in PUSH.video_jobs(md, {"23-1084245": GOAL}, names_ar={}, followed={})[0]["payloads"]
+
+
+def test_a_player_error_never_costs_the_team_alerts(tmp_path, monkeypatch):
+    import poller as P
+    from store import Store, LocalBackend
+    p = P.Poller(Store(LocalBackend(tmp_path)))
+    p.load()
+    p.now_fn = lambda: NOW
+    p.aux("push_players").update({"1": {"club": 5789, "national": None}})
+    monkeypatch.setattr(PUSH.PP, "events_for", lambda *a, **k: 1 / 0)
+    d = _d(events=[GOAL])
+    assert [j["key"] for j in PUSH.plan(p, d, d, invoke=lambda ev: None)] == ["start", "goal:1-0"]
+
+
+def test_a_placeholder_scorer_waits_one_pass_when_someone_in_the_match_is_followed(tmp_path, monkeypatch):
+    import poller as P
+    from store import Store, LocalBackend
+    monkeypatch.setattr(PUSH, "_names_ar", lambda: {"1084245": {"ar": "جوليمار"}})
+    p = P.Poller(Store(LocalBackend(tmp_path)))
+    p.load()
+    p.now_fn = lambda: NOW
+    p.aux("push_players").update({"1084245": {"club": 5789, "national": None}})
+    tbd = dict(GOAL, player={"id": 0, "name": "<TBD>"}, first_seen="2026-09-30T18:29:30Z")
+    d = _d(events=[tbd])
+    d["lineups"] = {"type": "standard", "home": {"starters": [{"id": 1084245, "name": "Julimar"}], "subs": []}, "away": {"starters": [], "subs": []}}
+    assert "goal:1-0" not in [j["key"] for j in PUSH.plan(p, d, d, invoke=lambda ev: None)]   # waits for the name
+    named = dict(d, events=[GOAL])
+    goal = next(j for j in PUSH.plan(p, named, named, invoke=lambda ev: None) if j["key"] == "goal:1-0")
+    assert list(goal["payloads"])[0] == "P1084245"
+    old = dict(tbd, first_seen="2026-09-30T18:26:00Z")                  # still nameless after 2 minutes: the team alert goes
+    p2 = P.Poller(Store(LocalBackend(tmp_path / "b"))); p2.load(); p2.now_fn = lambda: NOW
+    p2.aux("push_players").update({"1084245": {"club": 5789, "national": None}})
+    d2 = dict(d, events=[old])
+    assert "goal:1-0" in [j["key"] for j in PUSH.plan(p2, d2, d2, invoke=lambda ev: None)]
+
+
+def test_full_time_reaches_a_device_once_with_the_players_line(tmp_path, monkeypatch):
+    import poller as P
+    from store import Store, LocalBackend
+    monkeypatch.setattr(PUSH, "_names_ar", lambda: {"1084245": {"ar": "جوليمار"}})
+    p = P.Poller(Store(LocalBackend(tmp_path)))
+    p.load()
+    p.now_fn = lambda: NOW
+    p.aux("push_players").update({"1084245": {"club": 5789, "national": None}})
+    d = _d(status="finished", events=[GOAL])
+    d["lineups"] = {"type": "standard", "home": {"starters": [{"id": 1084245, "name": "Julimar", "rating": 7.0}], "subs": []}, "away": {"starters": [], "subs": []}}
+    jobs = PUSH.plan(p, d, d, invoke=lambda ev: None)
+    end = next(j for j in jobs if j["key"] == "end")
+    assert list(end["payloads"])[0] == "P1084245" and end["payloads"]["P1084245"]["kind"] == "end"
+    assert not [j for j in jobs if j["key"].endswith(":end")]          # no second «انتهت» job
+
+
+def test_prematch_passes_without_jobs_leave_no_marks(tmp_path):
+    import poller as P
+    from store import Store, LocalBackend
+    p = P.Poller(Store(LocalBackend(tmp_path)))
+    p.load()
+    p.now_fn = lambda: NOW
+    d = _d(status="scheduled", events=[], score=None)
+    assert PUSH.plan(p, d, d, invoke=lambda ev: None) == []
+    assert str(d["id"]) not in p.aux("push")                           # push.json does not grow with every match at T-75
