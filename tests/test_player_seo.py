@@ -73,7 +73,7 @@ def test_this_seasons_row_only_for_the_current_season(out):
 
 
 def test_the_title_promises_numbers_only_when_there_are_some(out):
-    assert out["titleNums"] == "علي: أهدافه وأرقامه هالموسم مع العين | تيفو"
+    assert out["titleNums"] == "علي: إحصائياته وأهدافه هذا الموسم مع العين | تيفو"
     assert out["titleBare"] == "علي: مسيرته وبطاقته | تيفو"
 
 

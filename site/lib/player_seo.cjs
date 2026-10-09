@@ -1,5 +1,5 @@
 /* The /p/ player pages Google sends visitors to (owner item 11, 2026-10-09). What a crawler reads before any script runs:
-     title()          promises «أهدافه وأرقامه هالموسم» only when the page carries this season's numbers
+     title()          promises «إحصائياته وأهدافه هذا الموسم» only when the page carries this season's numbers
      intro()          one or two plain sentences from the data (no model): who he is, then this season or his career
      person()         schema.org Person, the same shape /db/player/ pages carry (lib/world_stage.cjs)
      seasonRow()      this season's row from his FotMob career, for the «هالموسم» tiles when the league file has no card
@@ -32,7 +32,8 @@ function careerTotals(t){
   return played.length ? { apps:played.reduce((a, s) => a + (+s[3] || 0), 0), g:played.reduce((a, s) => a + (+s[4] || 0), 0), seasons:played.length } : null;
 }
 
-const title = o => `${o.name}: ${o.nums ? "أهدافه وأرقامه هالموسم" : "مسيرته وبطاقته"}${o.team ? " مع " + o.team : ""} | تيفو`;
+// the <title>: in the Arabic people type in a search box («هذا الموسم», «إحصائياته»), not the page's Emirati (owner 2026-10-09)
+const title = o => `${o.name}: ${o.nums ? "إحصائياته وأهدافه هذا الموسم" : "مسيرته وبطاقته"}${o.team ? " مع " + o.team : ""} | تيفو`;
 
 // Arabic counting: 1 «مباراة وحدة» · 2 «مباراتين» · 3-10 plural · 11+ singular (the same rule as lib/world_stage.cjs)
 const count = (k, w) => k === 1 ? `${w[0]} ${w[3]}` : k === 2 ? w[1] : `${k} ${k <= 10 ? w[2] : w[0]}`;
