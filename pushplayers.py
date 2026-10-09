@@ -23,6 +23,21 @@ def national_of(prof, year=None):
     return int(s[0][1]) if recent else None
 
 
+CURRENT = ("2026/2027", "2026")   # the season under way (a European season or a calendar one); the same rule as site/lib/player_seo.cjs
+
+
+def club_of(prof):
+    """His club: profile.json has no "bio" (checked 2026-10-09 on 1659961), so the first senior row of the current season;
+    a bio's team when one exists. No current season: None, never last season's club."""
+    b = ((prof or {}).get("bio") or {}).get("team")
+    if b:
+        return int(b)
+    for s in (((prof or {}).get("career") or {}).get("senior") or {}).get("seasons") or []:
+        if str(s[0]) in CURRENT and s[1]:
+            return int(s[1])
+    return None
+
+
 def build_map(ids, get_profile, prev=None, budget=BUDGET, now=None):
     """{pid: {"club", "national", "cc", "at"}} for `ids` only. Read: the never-mapped first, then the oldest past FRESH_S,
     `budget` a run; the rest keep their previous entry (or wait, unmapped, for the next run). cc stays None in phase 1."""
@@ -32,8 +47,7 @@ def build_map(ids, get_profile, prev=None, budget=BUDGET, now=None):
     out = {pid: prev[pid] for pid in ids if pid in prev}
     for pid in due:
         p = get_profile(pid) or {}
-        club = (p.get("bio") or {}).get("team")
-        out[pid] = {"club": int(club) if club else None, "national": national_of(p), "cc": None, "at": int(now)}
+        out[pid] = {"club": club_of(p), "national": national_of(p), "cc": None, "at": int(now)}
     return out
 
 

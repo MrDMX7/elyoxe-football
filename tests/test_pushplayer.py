@@ -184,3 +184,14 @@ def test_followed_ids_drop_players_nobody_follows_any_more():
                 return {"Items": [{"sk": "P1", "n": 1}, {"sk": "P2", "n": 3}, {"sk": "P3", "n": 0}]}
             return {"Items": [{"pk": pk}] if pk == "TIFOPUSH#P1" else []}
     assert M.followed_ids(T()) == ["1"]                         # 2's subscriptions expired (TTL), 3 unfollowed
+
+
+def test_club_comes_from_the_current_career_row_when_the_profile_has_no_bio():
+    """Real profile.json (2026-10-09, player 1659961): no "bio"; the club is the first senior row of the current season."""
+    import pushplayers as M
+    real = {"player": 1659961, "career": {"senior": {"seasons": [["2026/2027", 102122, "الوحدة", "6", "0", "0", "7.20", []],
+                                                                ["2025/2026", 999, "Old", "30", "2", "1", "6.9", []]]},
+                                          "national team": {"seasons": [["2025", 5877, "Paraguay", "2", "0", "0"]]}}}
+    assert M.build_map(["1659961"], lambda pid: real, now=0)["1659961"]["club"] == 102122
+    old = {"career": {"senior": {"seasons": [["2022/2023", 7, "Gone FC", "10", "0", "0"]]}}}
+    assert M.build_map(["1"], lambda pid: old, now=0)["1"]["club"] is None          # no current season: no club, no guess
