@@ -704,6 +704,9 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   const tlist = [...teamIds], teamPages = new Set(), playerPages = new Set();
   const full = new Set((index.focus_teams || []).concat(Object.values(NAT).map(Number)));   /* QA 11/12: every Arab national team has a team file (squad + all fixtures, friendlies too) */ compData.filter(d => d.c.scope === "uae").forEach(d => (d.st && d.st.groups || []).forEach(g => g.rows.forEach(r => full.add(r.team.id))));
   const teams = await pool(tlist, 8, id => full.has(id) ? get(`team/${id}.json`) : null);
+  // a club with no team file, or one with no squad in it (860 of 895 team pages, 2026-10-09: Al Nassr's «اللاعبين» was empty): its squad
+  // from the world club file (db/world.py), the same one /db/club/ reads
+  const WSQ = require("./lib/world_squad.cjs"), wclub = await pool(tlist, 8, (id, i) => teams[i] && (teams[i].squad || []).length ? null : get(`world/club/${id}.json`, 1));
   const teamById = new Map(); tlist.forEach((id, i) => { if (teams[i]) teamById.set(id, teams[i]); });
   { const dayT = [...new Set((day.matches || []).flatMap(m => [m.home.id, m.away.id]))].filter(id => !teamById.has(id)); const tj = await pool(dayT, 6, id => get(`team/${id}.json`, 1)); dayT.forEach((id, i) => { if (tj[i]) teamById.set(id, tj[i]); }); }   // today's squads: Arabic names for live subs and scorers
   const rhist = await pool(tlist, 8, id => full.has(id) && id !== 5789 ? get(`ratings/team/${id}.json`, 1) : null);
@@ -722,6 +725,9 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     R.DUPCTX = (((teamsJson.teams[id] || {}).country) || {}).name_ar || "";   // 503: a club's own page drops its country's tag
     let t = teams[i]; if (t && t.fixtures) t.fixtures = t.fixtures.map(unstale);
     if (!t){ const b = byTeam.get(id); if (!b) return; t = { id, name:b.side.name, name_ar:b.side.name_ar, fixtures:b.ms, squad:[], partial:true }; }
+    if (!(t.squad || []).length && wclub[i]) t.squad = WSQ.squadFromWorld(wclub[i].squad);
+    if (!(t.squad || []).length) t.squad = WSQ.squadFromFm(FMP, id, nameOf);
+    if (wclub[i]){ const h = WSQ.headFromWorld(wclub[i]); if (!t.coach && h.coach) t.coach = h.coach; if (!t.venue && h.venue) t.venue = h.venue; }
     if (/^(winner|loser)\b/i.test(t.name || "") || /^[1-4][A-Z]{1,4}(\/[1-4]?[A-Z]{1,4})?$/.test(t.name || "")) return;   // bracket placeholders («Winner SF 2», «3CDE») get no page
     tcount++; teamPages.add(+t.id);
     { const cm = {}; (t.squad || []).forEach(g => (g.players || []).forEach(p => { const n = p && p.club_id && (teamsJson.teams[p.club_id] || {}).name_ar; if (n) cm[p.club_id] = n; })); R.setClubNames(Object.assign({}, cm, TAR)); }   /* QA 46: squad clubs in Arabic */
@@ -733,7 +739,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
       const tf = path.join(OUT, "tn", t.id + ".json"); fs.mkdirSync(path.dirname(tf), { recursive:true }); const rk = (() => { for (const d of compData){ const g = d.st && !d.st.composite && d.st.groups && d.st.groups[0]; const r = g && g.rows.find(r => r.team.id === t.id); if (r && R.compCountry(d.c) && d.c.kind === "league") return { comp:d.c.id, comp_ar:d.c.name_ar, rank:r.rank, pts:r.pts }; } return null; })();
       fs.writeFileSync(tf, JSON.stringify({ id:t.id, name:t.name, name_ar:t.name_ar, next:slim(f.next[0]), last:slim(f.past[0]), recent:f.past.slice(0, 5).map(slim), table:rk })); }
     const cAr = coachAr(t.coach), vAr = t.venue && VENUE_AR.get(t.venue.name);
-    const sub = [t.coach ? `المدرب ${cAr ? esc(cAr) : `<span class="lat">${esc(t.coach.name)}</span>`}` : "", t.venue && t.venue.name ? `الملعب ${vAr ? esc(vAr) : `<span class="lat">${esc(t.venue.name)}</span>`}` : ""].filter(Boolean).join("<br>");
+    const sub = [t.coach ? `المدرب ${cAr ? esc(cAr) : /[؀-ۿ]/.test(t.coach.name || "") ? esc(t.coach.name) : `<span class="lat">${esc(t.coach.name)}</span>`}` : "", t.venue && t.venue.name ? `الملعب ${vAr ? esc(vAr) : `<span class="lat">${esc(t.venue.name)}</span>`}` : ""].filter(Boolean).join("<br>");
     // the club in numbers (91, 36, 96, 135, 137, 141)
     let nums = "";
     if (rhist[i]) nums += S.sec("تصنيف تيفو عبر السنين", "", S.ratingChart(rhist[i], id));
@@ -1455,12 +1461,16 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   if (!process.env.TIFO_NO_OG) try { process.stdout.write(require("child_process").execFileSync("python3", [path.join(__dirname, "og.py")], { maxBuffer:64 << 20 }).toString()); } catch (e){ console.error("og.py failed", e.message); }   // TIFO_NO_OG: dev builds skip the share images
   const SHST = PREVIEW ? null : SHARE.run({ CACHE, fs, path, stubs:STUBS });   // the cards og.py staged and the goal pages, for tools/runner.py to upload once
   // W1.9: internal links to pages this build did not write become plain text (reported, never fatal)
-  if (!ONLY) { const SKIP = /^\/(v1|assets|logo|lg|og|audio|api|embed|next)\/|^\/(sw\.js|favicon\.svg|robots\.txt|sitemap\.xml)$|^\/cast\/(feed\.xml|cover\.jpg)$/; let dead = 0; const seen = {};
+  // (2026-10-09: ~125,000 a run) unless the encyclopedia has the player's page, the club's or the match's card (lib/world_squad.cjs relink)
+  if (!ONLY) { const SKIP = /^\/(v1|assets|logo|lg|og|audio|api|embed|next)\/|^\/(sw\.js|favicon\.svg|robots\.txt|sitemap\.xml)$|^\/cast\/(feed\.xml|cover\.jpg)$/; let dead = 0, moved = 0; const seen = {};
+    const RL = { written:WRITTEN, clubs:new Set((((await get("world/index.json")) || {}).clubs || []).map(c => +c[0])) };
     for (const f of ALLP){ const h = fs.readFileSync(f, "utf8");
       const h2 = h.replace(/(<script\b[\s\S]*?<\/script>|<template\b[^>]*>)|<a\b([^>]*?)\shref="(\/[^"#?]*)(?:[?#][^"]*)?"([^>]*)>([\s\S]*?)<\/a>/g, (m, sc, pre, href, post, inner) => { if (sc) return m; if (SKIP.test(href) || WRITTEN.has(href) || WRITTEN.has(href.replace(/\/$/, ""))) return m;
         /* an Arabic path (/commentators/<slug>/) is linked percent-encoded */ const dh = (() => { try { return decodeURIComponent(href); } catch (e){ return href; } })(); if (dh !== href && (WRITTEN.has(dh) || WRITTEN.has(dh.replace(/\/$/, "")))) return m;
+        const to = WSQ.relink(href, RL); if (to){ moved++; return `<a${pre} href="${to}"${post}>${inner}</a>`; }
         dead++; seen[href.split("/")[1]] = (seen[href.split("/")[1]] || 0) + 1; return `<span${pre}${post}>${inner}</span>`; });
       if (h2 !== h) fs.writeFileSync(f, h2); }
+    if (moved) console.log(`links to the encyclopedia instead of a missing page: ${moved}`);
     if (dead) console.error(`warn: ${dead} links to pages that don't exist were unlinked (${Object.entries(seen).map(([k, n]) => "/" + k + "/ " + n).join(", ")})`);
     if (LEAKS) console.error(`warn: ${LEAKS} text nodes with null/undefined/raw keys were cleaned`);
     if (GRPS) console.error(`warn: ${GRPS} text nodes with «المجموعة A» / «Grp» were rewritten to ordinals (fix the source)`); }
