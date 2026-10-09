@@ -308,9 +308,17 @@
     var hd = $("header.hdr"), box = hd && $(".mh-ml", hd), ko = Date.parse(md.kickoff_utc || "");
     var near = U.isLive(md) || (md.status === "scheduled" && ko > 0 && ko - NOW() < 3 * 36e5);
     if (hd && near && !box) { box = D.createElement("div"); box.className = "th-acts mh-ml";
-      box.innerHTML = '<a class="pill" href="https://meylis.elyoxe.com/r/' + encodeURIComponent(V.id || md.id) + '" rel="noopener">سولفها فالميلس</a>';
-      var meta = $(".mh-meta", hd); if (meta) meta.after(box); else hd.appendChild(box); }
+      box.innerHTML = '<a class="pill" data-mid="' + U.esc(String(V.id || md.id)) + '" href="https://meylis.elyoxe.com/r/' + encodeURIComponent(V.id || md.id) + '" rel="noopener">سولفها فالميلس</a>';
+      var meta = $(".mh-meta", hd); if (meta) meta.after(box); else hd.appendChild(box); mlCount(); }
     else if (box && !near) box.remove();
+  }
+  /* how many are in the match's room right now (meylis /v1/live, CORS *), every minute while the pill shows (owner 2026-10-09, item 6) */
+  var mlT = 0;
+  function mlCount() {
+    clearTimeout(mlT); var a = $("header.hdr .mh-ml a[data-mid]"); if (!a) return;
+    fetch("https://meylis.elyoxe.com/v1/live", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (j) { var n = j["m-" + a.dataset.mid] || 0; a.textContent = n ? "سولفها فالميلس · " + n + " داخل الحين" : "سولفها فالميلس"; })
+      .catch(function () {}).then(function () { mlT = setTimeout(mlCount, 60e3); });
   }
   // a player without a page is plain text (window.PP: the players of this page that have one), as the build's dead-link pass leaves it
   function unlinkDead(root) { var PP = window.PP; if (!PP || !root) return; $$('a[href^="/p/"]', root).forEach(function (a) { var m = /^\/p\/(\d+)\//.exec(a.getAttribute("href")); if (!m || PP[m[1]]) return;
