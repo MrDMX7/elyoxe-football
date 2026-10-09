@@ -486,7 +486,8 @@ class Poller:
             except Exception as e:
                 self.store.fail("winprob", f"{mid}: {e}")
         full["coverage_events"] = coverage_events(d)
-        if d["status"] in S.LIVE_STATUSES or d["status"] == S.FINISHED:
+        # «تابع اللاعب»: a prematch detail too (the confirmed lineup and «بعد ساعة»); its team part sends nothing before kickoff
+        if d["status"] in S.LIVE_STATUSES or d["status"] == S.FINISHED or (d["status"] == S.SCHEDULED and why == "prematch"):
             try:
                 PUSH.plan(self, full, full)
             except Exception as e:           # a push problem must never cost the live file

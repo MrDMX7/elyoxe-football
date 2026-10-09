@@ -235,6 +235,10 @@ def job_journal(log):
     # 30 min: a run killed at the limit loses all its work, and while the site job uploads a whole new site (every page changed:
     # the SEO footer and the v5 shell on 2026-10-06) the journal's S3 writes share the uplink and a run took 16 min (954 s)
     rc, tail = run(log, [PY, "-m", "news.run"], timeout=30 * 60)
+    # «تابع اللاعب»: the followed players' club and national team for the poller (never fatal: the last map stays)
+    rc2, _ = run(log, [PY, "-m", "pushplayers"], timeout=5 * 60)
+    if rc2:
+        log.w(f"pushplayers exit {rc2} (not fatal)")
     return rc == 0, tail
 
 

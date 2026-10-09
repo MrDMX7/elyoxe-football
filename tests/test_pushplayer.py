@@ -91,3 +91,26 @@ def test_payload_copy():
     for k in PP.KINDS:
         s = str(PP.payload(k, d, "15403", ev_("yellow", 40, 15403), names, {"min": 9, "g": 0, "a": 0, "r": None, "cc": {}}))
         assert not any(w in s for w in ("وش", "مين", "زي", "تبي", "<TBD>", "None")), k
+
+
+def test_map_from_profiles():
+    import pushplayers as M
+    prof = {"15403": {"bio": {"team": 10189}, "career": {"national team": {"seasons": [["2024", 8, "Bosnia", 3, 0, 0]]}}},
+            "2777": {"bio": {"team": 49678}, "career": {}}, "5": None}
+    m = M.build_map(["15403", "2777", "5"], lambda pid: prof.get(pid))
+    assert m == {"15403": {"club": 10189, "national": 8, "cc": None}, "2777": {"club": 49678, "national": None, "cc": None},
+                 "5": {"club": None, "national": None, "cc": None}}
+    old = {"seasons": [["2019", 8, "Bosnia", 3, 0, 0]]}
+    assert M.national_of({"career": {"national team": old}}) is None          # more than 3 years without a cap
+    assert M.national_of({"career": {"national team": {"seasons": [["2025/2026", "8", "B", 1, 0, 0]]}}}) == 8
+
+
+def test_poller_plans_prematch_details():
+    import inspect, poller
+    src = inspect.getsource(poller.Poller.fetch_detail)
+    assert 'why == "prematch"' in src and "PUSH.plan" in src
+
+
+def test_push_knows_every_player_kind():
+    import push
+    assert set(PP.KINDS) <= set(push.EVENTS) and set(PP.KINDS) | set(push.TEAM_EVENTS) == set(push.EVENTS)

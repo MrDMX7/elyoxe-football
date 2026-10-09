@@ -50,7 +50,9 @@ END_WINDOW = 60               # minutes after full time
 GOAL_TYPES = ("goal", "own_goal", "penalty_goal")
 DISALLOWED = ("goal_disallowed", "goal_disallowed_offside")
 TEAM_EVENTS = ("start", "goal", "end", "video")
-EVENTS = TEAM_EVENTS + tuple(k for k in PP.KINDS if k not in TEAM_EVENTS)    # a player subscription stores player kinds
+# a player subscription stores player kinds (pushplayer.KINDS; written out: pushplayer imports this module, so nothing here may
+# read pushplayer while it loads; tests/test_pushplayer.py checks the two lists agree)
+EVENTS = TEAM_EVENTS + ("soon", "start11", "squad_out", "subin", "subout", "assist", "card", "pen", "potm")
 DEFAULT_EVENTS = ("start", "goal", "end")      # a subscription that never chose (before 2026-10-06), and the UI's «كل شي»
 MAX_SENDS = 5000              # per invoke: the sender's 5-minute budget, ~40 ms per send with a pooled session
 JOB_TTL = {"start": 600, "goal": 600, "end": 900, "video": 1800,   # seconds a handed-over job stays worth sending
