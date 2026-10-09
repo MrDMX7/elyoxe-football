@@ -818,7 +818,9 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // generation (or week), TIFO_PCAREER_FETCH per run (lib/player_seo.cjs): the page carries it, the honest title, a plain intro,
   // Person JSON-LD, «تابع فريقه», his team's next match and his teammates
   const PCDIR = path.join(CACHE, "pcareer"), pwk = Math.floor(Date.now() / 6048e5);
-  const pcs = await PSEO.refreshCareers({ ids:pids, gen:`${FMPJ.generated || ""}|${pwk}`, get, pool, dir:PCDIR, budget:+(process.env.TIFO_PCAREER_FETCH || 3000) });
+  // «|m»: the cache gained each player's clubs (transfers phase 2): read every profile again once
+  const TRF = {}; ((TRW && TRW.moves) || []).forEach(m => { if (m[7]) (TRF[m[1]] = TRF[m[1]] || []).push([m[0], m[5], m[7]]); });   // the ledger's fees by player
+  const pcs = await PSEO.refreshCareers({ ids:pids, gen:`${FMPJ.generated || ""}|${pwk}|m`, get, pool, dir:PCDIR, budget:+(process.env.TIFO_PCAREER_FETCH || 3000) });
   console.log("player careers:", JSON.stringify(pcs));
   const CAR = PSEO.loadCareers(PCDIR).careers, mates = {}, pIndexed = new Set();   // pIndexed: /p/ pages in the index (the /db/player/ links)
   pids.forEach(id => { const t = (allPlayers[id] || {}).team; if (t) (mates[t] = mates[t] || []).push(id); });
@@ -866,7 +868,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     const mmRow = mm.length ? U.grp(`زملاءه في ${esc(tt.name_ar || "الفريق")}`, mm.map(x => U.row({ href:`/p/${x}/`, t:nameOf(x) ? esc(nameOf(x)) : `<span class="lat">${esc((allPlayers[x] || {}).name || "")}</span>` })).join(""), { cls:"mt2" }) : "";
     const v5 = P5.player(id, { name:nameOf(id), latin:p.name, team:tm ? { id:tm, name_ar:tt.name_ar } : null, pos:p.position, num:p.number, cc:p.country, season:p.season,
       card:ap.fm ? null : { goals:z(p.goals, sv("goals")), assists:z(p.assists, sv("goal_assist")), minutes:z(p.minutes, ap.minutes), rating:p.rating }, prof:FMP[id] || car ? Object.assign({ bio:fb }, PSEO.asProfile(car) || {}) : null, ea:EAC[id] || null,
-      seasonRow:sr, photo:ph ? `/v1/ph/${id}.webp` : null, credit:ph ? `الصورة: <a href="${esc(ph.page || "")}" rel="noopener">${esc(((ph.artist || "").replace(/\s+/g, " ").trim().slice(0, 40)) + (ph.license ? " · " + ph.license : ""))}</a>` : "", wiki:WP[id] ? wiki5(WP[id]) : "", transfers:(TRH.players || {})[id] || null,
+      seasonRow:sr, photo:ph ? `/v1/ph/${id}.webp` : null, credit:ph ? `الصورة: <a href="${esc(ph.page || "")}" rel="noopener">${esc(((ph.artist || "").replace(/\s+/g, " ").trim().slice(0, 40)) + (ph.license ? " · " + ph.license : ""))}</a>` : "", wiki:WP[id] ? wiki5(WP[id]) : "", transfers:(TRH.players || {})[id] || null, fees:TRF[id] || null,
       x:{ mount:true, crumbs:pcrumbs, intro:pintro, aka:akaOf(id), follow:!!tm, profile:(String(id) === "30981" ? U.grp("", U.row({ href:"/messi/", icon:"target", c:"#0A84FF", t:"متحف ميسي", sub:"كل أهدافه على ملعب ثلاثي الأبعاد" }), { cls:"mt2" }) : "") + nxRow + shelf(pext, { title:"بالتفصيل" }) + mmRow,
         share:P5.shareSheet({ html:toolRows(ptools) + `<button type="button" class="row" id="secpick"><span class="rt">صورة لأي قسم</span>${U.chev}</button>`, after:'<div id="secpicks" class="card mt" hidden></div>' }) } });
     v5.data = { id:+id, prof:FMP[id] || car ? 1 : 0, tm:TMI[id] ? 1 : 0 };

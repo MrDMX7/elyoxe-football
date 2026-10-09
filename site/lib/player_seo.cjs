@@ -16,11 +16,13 @@ const cols = s => (s || []).map(x => x.slice(0, 7));
 function trimProfile(p){
   if (!p) return null;
   const C = p.career || {};
-  return { s:cols((C.senior || {}).seasons), n:cols((C["national team"] || C.national || {}).seasons),
+  // m: his clubs [id, name, start, end, apps, FotMob's transfer type] for U.careerMoves (spec 2026-10-09 transfers, phase 2)
+  const tk = t => t && typeof t === "object" ? t.localizationKey || null : t || null;
+  return { s:cols((C.senior || {}).seasons), n:cols((C["national team"] || C.national || {}).seasons), m:((C.senior || {}).teams || []).map(r => [r[0], r[1], r[2], r[3], r[4], tk(r[7])]),
     t:(p.trophies || []).filter(t => (t[4] || []).length).map(t => [t[0], t[1], t[3], t[4]]) };
 }
 // back into the shape P.playerCareer draws ({career:{senior:{seasons}}, trophies}); a trophy keeps its 5-slot layout
-const asProfile = t => t ? { career:{ senior:{ seasons:t.s }, "national team":{ seasons:t.n } }, trophies:t.t.map(x => [x[0], x[1], 0, x[2], x[3]]) } : null;
+const asProfile = t => t ? { career:{ senior:{ seasons:t.s, teams:t.m || [] }, "national team":{ seasons:t.n } }, trophies:t.t.map(x => [x[0], x[1], 0, x[2], x[3]]) } : null;
 
 function seasonRow(t){
   const s = t && t.s && t.s[0];

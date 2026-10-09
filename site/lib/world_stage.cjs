@@ -17,7 +17,7 @@
    when 3 days old (1000). A page keeps the hashed assets it was written with (/assets/ is never pruned). Returns the URLs (with
    lastmod) for sitemap-players.xml and the nationality hubs. */
 "use strict";
-const crypto = require("crypto");
+const crypto = require("crypto"), U5 = require("../src/v5/ui.js");
 const RECENT = /^(2025\/2026|2026\/2027|2025|2026)$/;
 const POS = { "goalkeeper":"حارس مرمى", "keeper":"حارس مرمى", "center back":"قلب دفاع", "centre back":"قلب دفاع", "centre-back":"قلب دفاع", "left back":"ظهير أيسر", "right back":"ظهير أيمن", "left wing-back":"ظهير أيسر",
   "right wing-back":"ظهير أيمن", "defensive midfielder":"وسط دفاعي", "central midfielder":"وسط", "attacking midfielder":"وسط هجومي", "left midfielder":"وسط أيسر", "right midfielder":"وسط أيمن",
@@ -39,7 +39,7 @@ module.exports = async function(X){
     const m0 = rj("manifest.json", {}); fs.writeFileSync(path.join(DIR, "manifest.next.json"), JSON.stringify(m0)); fs.writeFileSync(path.join(DIR, "delete.txt"), "");
     Object.keys(m0).forEach(id => written(`/db/player/${id}`)); console.error("world stage: no world/players.json; kept the published pages");
     return { urls:Object.keys(m0).map(id => ({ u:`/db/player/${id}/`, lm:m0[id][3] })), stats:{ skipped:true } }; }
-  const gen = `${W.generated || ""}|${X.fmGen || ""}`;
+  const gen = `${W.generated || ""}|${X.fmGen || ""}|m`;   // «|m»: profiles read again once for their clubs (transfers phase 2)
   const CLUB = {}; (WI.clubs || []).forEach(c => { CLUB[c[0]] = c[1]; });
   const prof = rj("profiles.json", {}), meta = Object.assign({ done:{} }, rj("meta.json", {})), man = rj("manifest.json", {});
   // scope, measured 2026-10-06 on all 64,642 profiles: of 61,679 world players 15,513 have /p/; of the other 46,166, 37,305 played in
@@ -51,7 +51,8 @@ module.exports = async function(X){
   const need = cand.filter(p => meta.done[p[0]] !== gen).sort((a, b) => (meta.done[a[0]] ? 1 : 0) - (meta.done[b[0]] ? 1 : 0)).slice(0, FETCH).map(p => p[0]);
   let fetched = 0, failed = 0;
   const trim = p => ({ bio:p.bio || {}, s:(((p.career || {}).senior || {}).seasons || []).map(s => s.slice(0, 7)), n:(((p.career || {}).national || (p.career || {})["national team"] || {}).seasons || []).map(s => s.slice(0, 7)),
-    t:(p.trophies || []).filter(t => (t[4] || []).length).map(t => [t[0], t[1], t[3], t[4]]) });
+    t:(p.trophies || []).filter(t => (t[4] || []).length).map(t => [t[0], t[1], t[3], t[4]]),
+    m:(((p.career || {}).senior || {}).teams || []).map(r => [r[0], r[1], r[2], r[3], r[4], r[7] && typeof r[7] === "object" ? r[7].localizationKey || null : r[7] || null]) });
   const scoped = (id, t) => { const apps = t.s.filter(s => RECENT.test(String(s[0]))).reduce((a, s) => a + (+s[3] || 0), 0); return apps > 0 || !!WP[id]; };
   const thin = (id, t) => !t.s.length && !t.t.length && !WP[id];
   await X.pool(need, 48, async id => { const p = await get(`player/${id}/profile.json`, 2); if (!p){ failed++; return; } fetched++; const t = trim(p); meta.done[id] = gen;
@@ -75,6 +76,9 @@ module.exports = async function(X){
     const seasons = t.s.filter(s => s[1] || s[2]), tot = seasons.reduce((a, s) => [a[0] + (+s[3] || 0), a[1] + (+s[4] || 0)], [0, 0]);
     const tbl = (rows, h) => rows.length ? `<section class="grp"><div class="gh"><h2>${h}</h2></div><div class="card"><div class="tblw"><table class="tbl"><thead><tr><th>الموسم</th><th class="tm">الفريق</th><th>مباريات</th><th>أهداف</th><th>صناعة</th><th>التقييم</th></tr></thead><tbody>` +
       rows.map(s => `<tr><td>${esc(s[0])}</td><td class="tm">${tlink(s[1], s[2])}</td><td>${s[3] ?? ""}</td><td>${s[4] ?? ""}</td><td>${s[5] ?? ""}</td><td>${s[6] ? esc(s[6]) : ""}</td></tr>`).join("") + "</tbody></table></div></div></section>" : "";
+    // his transfers (spec 2026-10-09 transfers, phase 2): every club change of his career, newest first
+    const moves = m => { const mv = U5.careerMoves(m || []); return mv.length ? `<section class="grp"><div class="gh"><h2>انتقالاته</h2><span class="nn"><span class="num">${mv.length}</span></span></div><div class="card">` +
+      mv.map(x => `<div class="row"><span class="rt"><b>${tlink(x[3], x[4])}</b><small>${[x[1] != null ? "من " + tlink(x[1], x[2]) : "", U5.dateAr(x[0]), U5.MOVE_AR[x[5]] || ""].filter(Boolean).join(" · ")}</small></span></div>`).join("") + "</div></section>" : ""; };
     const tro = t.t.length ? `<section class="grp"><div class="gh"><h2>ألقابه</h2><span class="nn"><span class="num">${t.t.reduce((a, x) => a + x[3].length, 0)}</span> لقب</span></div><div class="card">${t.t.map(x => `<div class="row"><span class="rt"><b>${esc(x[2] || "")}</b><small>${tname(x[0], x[1]) ? esc(tname(x[0], x[1])) + " · " : ""}${esc(x[3].join("، "))}</small></span><span class="rv">${x[3].length}</span></div>`).join("")}</div></section>` : "";
     const mm = (mates[club] || []).filter(x => x !== id).sort((a, c) => (prof[c].s[0] ? +prof[c].s[0][3] || 0 : 0) - (prof[a].s[0] ? +prof[a].s[0][3] || 0 : 0)).slice(0, 12);
     const mateHtml = mm.length ? `<section class="grp"><div class="gh"><h2>لاعبين في ${esc(tname(club))}</h2></div><div class="card">${mm.map(x => `<a class="row" href="/db/player/${x}/"><span class="rt"><b>${nameOf(x) ? esc(nameOf(x)) : `<span class="lat">${esc(latin(x))}</span>`}</b><small>${esc(posAr((prof[x].bio || {}).pos))}</small></span></a>`).join("")}</div></section>` : "";
@@ -86,7 +90,7 @@ module.exports = async function(X){
     const sum = seasons.length ? `<p class="intro">${esc(title)} ${pos ? esc(pos) + " " : ""}${club ? "في " + esc(tname(club)) : ""}${cn ? "، من " + esc(cn) : ""}${age != null ? "، عمره " + age + " سنة" : ""}. لعب ${n(tot[0], ["مباراة", "مباراتين", "مباريات", "وحدة"])}${tot[1] ? ` وسجّل ${n(tot[1], ["هدف", "هدفين", "أهداف", "واحد"])}` : ""} في ${n(seasons.length, ["موسم", "موسمين", "مواسم", "واحد"])}.</p>` : "";
     const html = `<p class="crumbs"><a href="/db/">الموسوعة</a>${club ? "، " + tlink(club) : ""}</p>${nm ? `<h1>${esc(nm)}</h1>` : `<h1 class="lat">${esc(la)}</h1>`}<p class="season">${[pos && esc(pos), club && esc(tname(club)), cn && `<a href="/db/players/${esc(String(b.cc).toLowerCase())}/">${esc(cn)}</a>`, nm && la && `<span class="lat">${esc(la)}</span>`].filter(Boolean).join(" · ")}</p>` +
       `<div class="sx">${sum}${lead}${bio.length ? `<section class="grp"><div class="gh"><h2>بطاقته</h2></div><div class="card"><dl class="bio">${bio.map(r => `<div><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`).join("")}</dl></div></section>` : ""}` +
-      tbl(seasons, "مسيرته موسم بموسم") + tbl(t.n.filter(s => s[1] || s[2]), "مع المنتخب") + tro + mateHtml + pmHtml + `<p class="src">المسيرة والبطاقة من FotMob${lead ? "، والنبذة من ويكيبيديا" : ""}. <a href="/db/player/?id=${id}">مبارياته وانتقالاته في الموسوعة</a></p></div>`;
+      tbl(seasons, "مسيرته موسم بموسم") + moves(t.m) + tbl(t.n.filter(s => s[1] || s[2]), "مع المنتخب") + tro + mateHtml + pmHtml + `<p class="src">المسيرة والبطاقة من FotMob${lead ? "، والنبذة من ويكيبيديا" : ""}. <a href="/db/player/?id=${id}">مبارياته وانتقالاته في الموسوعة</a></p></div>`;
     const person = Object.assign({ "@context":"https://schema.org", "@type":"Person", name:title, url:`${SITE}/db/player/${id}/`, jobTitle:"لاعب كرة قدم" }, nm && la ? { alternateName:la } : {}, b.born && b.born >= "1900" ? { birthDate:b.born } : {},
       b.h ? { height:{ "@type":"QuantitativeValue", value:b.h, unitCode:"CMT" } } : {}, cn ? { nationality:{ "@type":"Country", name:cn } } : {}, club ? { affiliation:{ "@type":"SportsTeam", name:tname(club) } } : {}, PH[id] ? { image:`${SITE}/v1/ph/${id}.webp` } : {});
     return { title:`${title}: مسيرته وأرقامه${club ? " مع " + tname(club) : ""} | تيفو`, desc:`${title}${pos ? "، " + pos : ""}${club ? " في " + tname(club) : ""}${cn ? " من " + cn : ""}${age != null ? "، عمره " + age + " سنة" : ""}: مسيرته موسم بموسم بالمباريات والأهداف${t.t.length ? "، وألقابه" : ""}${wiki ? "، ونبذة من ويكيبيديا" : ""}.`,

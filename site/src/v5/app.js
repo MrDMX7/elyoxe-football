@@ -432,7 +432,8 @@
   // a player's career and match log load from his own files the first time their segment opens (or now, when the page opens on it)
   function playerMounts(root) {
     var pc = $("#pcar1", root); if (pc && !pc.dataset.done) { pc.dataset.done = 1; Promise.all([V.prof ? get("player/" + V.id + "/profile.json").catch(function () { return null; }) : null, V.tm ? get("player/" + V.id + "/tm.json").catch(function () { return null; }) : null]).then(function (r) {
-      var h = P.playerCareer({ prof: r[0], tm: r[1] }); if (!h && pc.dataset.pre) return;   // the build's career stays when the files give nothing
+      var pf = []; try { pf = JSON.parse((pc.parentNode && pc.parentNode.dataset.fees) || "[]"); } catch (e) {}
+      var h = P.playerCareer({ prof: r[0], tm: r[1], fees: pf }); if (!h && pc.dataset.pre) return;   // the build's career stays when the files give nothing
       pc.innerHTML = h || (!$("#pcar .grp") ? '<div class="card">' + U.empty("ما عندنا مسيرته للحين.") + "</div>" : ""); localize(pc); }); }
     var pl = $("#plg", root); if (pl && !pl.dataset.done) { pl.dataset.done = 1; get("player/" + V.id + "/log.json").then(function (lg) { var h = P.playerGames(lg); pl.innerHTML = h || '<div class="card">' + U.empty("ما عندنا مبارياته للحين.") + "</div>"; if (lg && !$(".tiles")) tilesFromLog(lg); }).catch(function () { pl.innerHTML = '<div class="card">' + U.empty("ما عندنا مبارياته للحين.") + "</div>"; }); }
   }

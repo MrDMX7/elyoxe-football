@@ -480,6 +480,30 @@
       '<p class="ea-meta">المهارات ' + stars(c[3]) + " · القدم الضعيفة " + stars(c[4]) + (c[5] ? " · يلعب " + (c[5] === 2 ? "باليسرى" : "باليمنى") : "") + "</p>" + (ps ? '<div class="chips" style="justify-content:flex-start;padding:0 16px 14px;margin:0">' + ps + "</div>" : "") +
       (all ? '<details class="dz"><summary class="row" style="border-top:.5px solid var(--sep)"><span class="rt" style="color:var(--accent)">كل الخصائص</span>' + CHEV + "</summary>" + all + "</details>" : "");
   };
+  // a player's transfer history (spec 2026-10-09 transfers, phase 2) from his FotMob career (profile.json career.senior.teams:
+  // [id, name, start, end, apps, goals, assists, transferType], or player_seo's trimmed [id, name, start, end, apps, type key]):
+  // one move per club change, newest first: [date, from id, from, to id, to, kind, fee]; kind free · loan · back (from a loan,
+  // to the club before it) · fee · "" ; fees [[date, to id, EUR]] (Transfermarkt, the ledger) match the same club within 60 days.
+  // A stint with no games under 60 days (an All-Star game) is no club
+  var MKIND = { free_transfer: "free", on_loan: "loan" };
+  U.careerMoves = function (teams, fees) {
+    var key = function (r) { var t = r.length === 6 ? r[5] : r[7]; return t && typeof t === "object" ? t.localizationKey : t || ""; };
+    var days = function (a, b) { return Math.abs(Date.parse(a) - Date.parse(b)) / 864e5; };
+    var T = (teams || []).filter(function (r) { return r && r[2] && !(!+r[4] && r[3] && days(r[2], r[3]) < 60); })
+      .slice().sort(function (a, b) { return a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0; });
+    var out = [];
+    for (var i = 1; i < T.length; i++) {
+      var p = T[i - 1], c = T[i], k = MKIND[key(c)] || "", fee = null, prev = out[out.length - 1];
+      if (String(p[0]) === String(c[0])) continue;
+      if (prev && prev[5] === "loan" && String(prev[1]) === String(c[0])) k = "back";
+      (fees || []).forEach(function (f) { if (fee == null && f && String(f[1]) === String(c[0]) && days(f[0], c[2]) <= 60 && f[2] != null) fee = f[2]; });
+      if (fee === 0) { fee = null; if (!k) k = "free"; }
+      if (fee && k !== "loan") k = "fee";
+      out.push([c[2], p[0], p[1], c[0], c[1], k, fee]);
+    }
+    return out.reverse();
+  };
+  U.MOVE_AR = { free: "انتقال حر", loan: "إعارة", back: "رجع من الإعارة" };
   U.eur = function (v) { return v == null ? "—" : v === 0 ? "مجاناً" : v >= 1e6 ? '<span class="num">€' + (Math.round(v / 1e5) / 10) + "</span> مليون" : '<span class="num">€' + Math.round(v / 1e3) + "</span> ألف"; };
 
   // ------------------------------------------------------------------ news
