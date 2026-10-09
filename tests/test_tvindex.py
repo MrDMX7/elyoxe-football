@@ -32,7 +32,7 @@ FX = {date(2026, 10, 1): [ours(101, 1, 2, 9806, "2026-10-01T18:45:00Z", "all"), 
 def test_one_spelling_per_voice_one_entry_per_match_and_facts_only():
     c = X.compact(D1, FX[date(2026, 10, 1)])
     assert c["101"]["calls"] == [["حفيظ دراجي", "beIN SPORTS 1"]]                   # FAMOUS / VARIANTS spelling
-    assert c["102"]["calls"] == [["فارس عوض", "شاهد"], ["فارس عوض", "MBC Action"]]
+    assert c["102"]["calls"] == [["فارس عوض", "شاهد"], ["فارس عوض", ""]]           # MBC Action is struck off (owner 2026-10-09)
     assert c["101"]["page"] is False and c["102"]["page"] is True                    # all/ only: no page of its own
     assert c["102"]["h"] == [3, "الهلال"] and c["102"]["c"] == [536, "دوري روشن"]
     assert c["103"]["calls"] == [["سالم الهاشمي", "الكأس 1"]] and c["103"]["h"] == [None, "السد"]   # no fixture of ours: no ids
@@ -44,8 +44,8 @@ def test_build_next_recent_counts_and_only_famous_voices_get_an_entry():
     pub = X.build(days, NOW)
     fares = pub["commentators"][X.key_of("فارس عوض")]
     # 302 kicked off 90 minutes ago: still «today's» (live), not history yet
-    assert fares["n"] == 2 and fares["next"] == [[302, "أبوظبي الرياضية 1"]] and fares["recent"] == [[102, "شاهد، MBC Action"]]
-    assert sorted(c for c, n in fares["channels"]) == sorted(["MBC Action", "شاهد", "أبوظبي الرياضية 1"])
+    assert fares["n"] == 2 and fares["next"] == [[302, "أبوظبي الرياضية 1"]] and fares["recent"] == [[102, "شاهد"]]
+    assert sorted(c for c, n in fares["channels"]) == sorted(["شاهد", "أبوظبي الرياضية 1"])
     assert sorted(fares["comps"]) == [[536, "دوري روشن", 1], [538, "دوري أدنوك", 1]]
     hafid = pub["commentators"][X.key_of("حفيظ دراجي")]
     assert hafid["next"] == [[301, "beIN SPORTS 2"]] and hafid["recent"] == [[101, "beIN SPORTS 1"]]   # 18:45 today is still to come

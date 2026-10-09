@@ -71,7 +71,7 @@ def test_channels_one_name_each_and_no_ads():
     ch = lambda s: (C.channel(s) or {}).get("name")
     assert ch("beIN Sports 1") == ch("beIN SPORTS 1") == ch("بى ان سبورت 1HD") == ch("beIN Sports Mena 1") == "beIN SPORTS 1"
     assert ch("beIN Xtra 2") == "beIN SPORTS XTRA 2" and ch("beIN Sports") == "beIN SPORTS"
-    assert ch("MBC شاهد رياضة") == ch("شاهد MBC") == "شاهد" and ch("MBC ACTION") == "MBC Action"
+    assert ch("MBC شاهد رياضة") == ch("شاهد MBC") == "شاهد" and ch("MBC ACTION") is None and ch("ام بي سي اكشن") is None   # struck off by the owner 2026-10-09
     assert ch("الكأس 1") == "الكأس 1" and ch("قنوات الكأس") == "الكأس" and ch("الشارقة الرياضية 2") == "الشارقة الرياضية 2"
     assert C.channel("الكويت الرياضية")["country"] == "KW" and C.channel("beIN Sports 3")["country"] is None
     assert C.channel("ثمانية 2")["linear"] and not C.channel("تطبيق ثمانية")["linear"] and not C.channel("stc tv")["linear"]
@@ -104,7 +104,7 @@ def test_rowspans_several_channels_and_a_second_voice():
     assert [(c["ch"]["name"], c["comm"]) for c in jo["channels"]] == [("الأردن الرياضية", [])]
     d, lines = article("20260919")
     st = line(lines, "شتوتجارت")                                                  # «MBC ACTION» sits in a row under a rowspan
-    assert [(c["ch"]["name"], c["comm"]) for c in st["channels"]] == [("شاهد", ["نور الدين آيت علي"]), ("MBC Action", ["نور الدين آيت علي"])]
+    assert [(c["ch"]["name"], c["comm"]) for c in st["channels"]] == [("شاهد", ["نور الدين آيت علي"])]   # the MBC Action row is dropped
     assert line(lines, "روما")["channels"][0]["comm"] == ["فارس عوض"]            # header «التعليق»
     assert line(lines, "أينتراخت فرانكفورت")["channels"][0]["comm"] == ["عبدالعزيز السبر"]   # header left empty
 

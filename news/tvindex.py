@@ -71,7 +71,8 @@ def compact(doc, fixtures):
         for e in es or []:
             names = e.get("commentators") or ([e["commentator"]] if e.get("commentator") else [])
             for n in names:
-                c = [canonical(n), e.get("channel") or ""]
+                ch = e.get("channel") or ""
+                c = [canonical(n), "" if TV.BANNED_CH.search(ch) else ch]
                 if c not in calls:
                     calls.append(c)
         if not calls:

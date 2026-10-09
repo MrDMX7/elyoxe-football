@@ -227,6 +227,10 @@ _WORDNUM = {"one": "1", "two": "2", "الاولي": "1", "الثانيه": "2", 
 NOT_CHANNEL = re.compile(r"vpn|اشترك|شاهد من هنا|^لا يوجد|غير منقول|لم يعلن|لم تعلن|^-+$|^—$|^غير متوفر|^لا توجد")
 
 
+# Channels the owner struck off every list (2026-10-09): matched on the printed name, also in day files written before the rule.
+BANNED_CH = re.compile(r"mbc\s*action|ام بي سي اكشن|إم بي سي أكشن", re.I)
+
+
 def channel(raw):
     """Raw cell text -> {key, name, country, linear} or None (an ad, «لا يوجد», a channel from outside the Arab world)."""
     t = clean(raw)
@@ -246,6 +250,8 @@ def channel(raw):
         k = key.replace("-{n}", "-" + n if n else "").replace("{n}", n)
         name = re.sub(r"\s+", " ", disp.replace("{n}", n)).strip()
         lin = linear if linear is not None else bool(n)       # «ثمانية 1» is a channel; «ثمانية» alone is the app
+        if BANNED_CH.search(name):                            # owner 2026-10-09: MBC Action is never shown as carrying a match
+            return None
         return {"key": k, "name": name, "country": country, "linear": bool(lin)}
     if AR.search(t):                                          # an Arabic channel the table doesn't know: keep its own name
         return {"key": "x-" + f.replace(" ", "-"), "name": t, "country": None, "linear": False}
