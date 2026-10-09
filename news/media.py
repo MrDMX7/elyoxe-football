@@ -1121,7 +1121,7 @@ def _hand_over(jobs):
     PUSH.invoke(jobs)
 
 
-def video_push(st, matches, clip_goals, t, hand_over, log=print):
+def video_push(st, matches, clip_goals, t, hand_over, log=print, followed=None):
     """«فيديو الهدف نزل» (item 7, 2026-10-06): the goals whose FIRST official clip came out since the last run go to the push
     sender, one job per goal (push.video_jobs: keyed by the score the goal made, «video:2-1»), handed over in one invoke.
     Here, in the journal step that attaches the clips (every 15 min), never in the poller's minute loop.
@@ -1157,7 +1157,7 @@ def video_push(st, matches, clip_goals, t, hand_over, log=print):
             fresh[k] = e
         if fresh:
             import push as PUSH
-            js = PUSH.video_jobs(md, fresh, now=t.timestamp())
+            js = PUSH.video_jobs(md, fresh, now=t.timestamp(), followed=followed)   # «تابع اللاعب»: the scorer's followers
             jobs += js
             marks += [(str(mid), k) for k in fresh]
     if first:
@@ -1293,7 +1293,7 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
         st["recent_hash"] = rh
     hand = None if dry or push is None else push if callable(push) else \
         _hand_over if type(getattr(store, "b", None)).__name__ == "S3Backend" and os.environ.get("TIFO_VIDEO_PUSH", "1") != "0" else None
-    vres = video_push(st, matches, clip_goals, t, hand, log) if hand else None
+    vres = video_push(st, matches, clip_goals, t, hand, log, followed=store.get_state("push_players.json", {}) or {}) if hand else None
     st["run"] = {"at": gen, "matches": len(matches), "channels": len(want), "videos": len(vids), "with_media": len(recent),
                  "written": written, "errors": errs, "secs": round(time.time() - t0, 1), **({"video_push": vres} if vres else {})}
     if not dry:

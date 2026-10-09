@@ -36,6 +36,8 @@ backfill) are not pushed.
 """
 import json, os, re, time
 
+import pushplayer as PP       # «تابع اللاعب»: the followed players' match events (docs/superpowers/specs/2026-10-09-player-follow-design.md)
+
 TABLE = os.environ.get("PUSH_TABLE", "cards")
 REGION = os.environ.get("PUSH_REGION", "ap-south-1")
 SENDER = "elyoxe-football-push"   # the sender's function name (the poller's PUSH_FUNCTION, media's default)
@@ -47,10 +49,15 @@ KICKOFF_WINDOW = 20           # minutes after kickoff within which a "start" pus
 END_WINDOW = 60               # minutes after full time
 GOAL_TYPES = ("goal", "own_goal", "penalty_goal")
 DISALLOWED = ("goal_disallowed", "goal_disallowed_offside")
-EVENTS = ("start", "goal", "end", "video")
+TEAM_EVENTS = ("start", "goal", "end", "video")
+EVENTS = TEAM_EVENTS + tuple(k for k in PP.KINDS if k not in TEAM_EVENTS)    # a player subscription stores player kinds
 DEFAULT_EVENTS = ("start", "goal", "end")      # a subscription that never chose (before 2026-10-06), and the UI's «كل شي»
 MAX_SENDS = 5000              # per invoke: the sender's 5-minute budget, ~40 ms per send with a pooled session
-JOB_TTL = {"start": 600, "goal": 600, "end": 900, "video": 1800}   # seconds a handed-over job stays worth sending
+JOB_TTL = {"start": 600, "goal": 600, "end": 900, "video": 1800,   # seconds a handed-over job stays worth sending
+           "soon": 1800, "start11": 1800, "squad_out": 1800, "subin": 600, "subout": 600, "assist": 600, "card": 600, "pen": 600,
+           "potm": 3600}
+PLAYER_DAILY_CAP = 20         # player alerts per device per UAE day (owner 2026-10-09: «اذا تشوف اشياء تسوي مشاكل»)
+DATA = os.environ.get("TIFO_DATA", "https://d1n5aqaqkowltp.cloudfront.net")
 CLAIM_DAYS = 3
 
 
@@ -307,18 +314,28 @@ def plan(p, d, full, invoke=None):
         p.note(f"push: {mid} taken back {', '.join(gone)}")
         _flush(p, mid)
     todo = events_to_send(d, full, sent["keys"], p.now(), back)
-    if not todo:
+    followed = p.aux("push_players")
+    pev = PP.events_for(d, full, followed, sent["keys"], p.now()) if followed else []
+    if not todo and not pev:
         return []
     names_ar = _names_ar()
     teams = [t for t in ((d.get("home") or {}).get("id"), (d.get("away") or {}).get("id")) if t]
     jobs = [_job(mid, key, kind, {str(t): payload(kind, d, t, e, names_ar) for t in teams}, mn, again=again)
             for key, kind, e, mn, again in todo]
+    # the scorer's and the assister's followers ride on the team's goal job (one claim, one push per device, their text first)
+    for j, (key, kind, e, mn, again) in zip(list(jobs), todo):
+        if kind == "goal" and e and followed:
+            aud = _player_goal_audiences(d, e, followed, names_ar)
+            if aud:
+                j["payloads"] = {**aud, **j["payloads"]}
+    jobs += [_job(mid, key, kind, {f"P{pid}": PP.payload(kind, d, pid, e, names_ar, extra)})
+             for key, kind, pid, e, extra in pev]
     try:
         (invoke or _invoke)({"jobs": jobs})
     except Exception as ex:          # not marked: the next pass tries again (the sender dedupes)
         p.store.fail("push", f"{mid}: invoke failed: {type(ex).__name__}: {ex}")
         return []
-    sent["keys"] += [mark(j) for j in jobs]
+    sent["keys"] += [mark(j) for j in jobs]                  # a player job's mark is its key («p<pid>:<kind>…»)
     sent["at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     for k in [k for k, v in marks.items() if v.get("at") and _age_min(v["at"], p.now()) > CLAIM_DAYS * 1440]:
         del marks[k]
@@ -327,7 +344,26 @@ def plan(p, d, full, invoke=None):
     return jobs
 
 
-def video_jobs(md, goals, names_ar=None, now=None):
+def _player_goal_audiences(d, e, followed, names_ar, video_key=None):
+    """{"P<pid>": payload} for a goal's scorer and assister when someone follows them (a video: the scorer only)."""
+    mid, h, a = d["id"], _name(d.get("home")), _name(d.get("away"))
+    out = {}
+    roles = (("goal", e.get("player")),) if video_key else (("goal", e.get("player")), ("assist", e.get("assist")))
+    for role, who in roles:
+        pid = str((who or {}).get("id") or "")
+        if not pid or pid not in followed or not _known(who):
+            continue
+        n = player_ar(who, names_ar) or pid
+        if video_key:
+            out[f"P{pid}"] = {"title": f"فيديو هدف {n} نزل", "body": f"{h} {_score(e.get('score'))} {a}", "url": f"/m/{mid}/#v={video_key}",
+                              "tag": f"pv-{pid}-{mid}", "kind": "video"}
+        else:
+            out[f"P{pid}"] = {"title": f"هدف! {n}" if role == "goal" else f"صناعة! {n}", "url": f"/m/{mid}/", "tag": f"p{pid}-{mid}", "kind": role,
+                              "body": f"{h} {_score(e.get('score') or d.get('score'))} {a} · الدقيقة {_minute(e)}'"}
+    return out
+
+
+def video_jobs(md, goals, names_ar=None, now=None, followed=None):
     """news/media.py: goals whose first official clip just came out ({goal key «45+2-<playerId>»: event}) -> one sender job
     per goal, keyed by the score it made («video:2-1»). A goal without a score on its event gives no job."""
     names_ar = _names_ar() if names_ar is None else names_ar
@@ -337,7 +373,8 @@ def video_jobs(md, goals, names_ar=None, now=None):
         key = score_key("video", e.get("score"))
         if not key or not teams:
             continue
-        jobs.append(_job(md["id"], key, "video", {str(t): video_payload(md, t, e, gk, names_ar) for t in teams},
+        aud = _player_goal_audiences(md, e, followed or {}, names_ar, video_key=gk)
+        jobs.append(_job(md["id"], key, "video", {**aud, **{str(t): video_payload(md, t, e, gk, names_ar) for t in teams}},
                          total_minute(e.get("minute"), e.get("added")), now))
     return jobs
 
@@ -497,6 +534,42 @@ def claim(table, match, key, minute=None, now=None, again=False):
     return None
 
 
+def cap_ok(table, sk, day, cap=PLAYER_DAILY_CAP):
+    """One more player alert for this device today? A conditional counter TIFOPUSHCAP#<device>/<UAE day>, kept 3 days."""
+    try:
+        table.update_item(Key={"pk": f"TIFOPUSHCAP#{sk}", "sk": day}, UpdateExpression="ADD n :one SET #t = :ttl",
+                          ConditionExpression="attribute_not_exists(n) OR n < :cap", ExpressionAttributeNames={"#t": "ttl"},
+                          ExpressionAttributeValues={":one": 1, ":cap": cap, ":ttl": int(time.time()) + 3 * 86400})
+        return True
+    except Exception as ex:
+        if _conditional_failed(table, ex):
+            return False
+        raise
+
+
+_GUIDE = {}
+
+
+def _guide_channel(cc, match):
+    """The channel showing `match` in country `cc` (v1/guide/<CC>.json, the «وين أشوف» pages), or None: no row, no guess.
+    One read per country per sender container."""
+    cc = str(cc or "").upper()
+    if len(cc) != 2:
+        return None
+    if cc not in _GUIDE:
+        try:
+            import gzip, urllib.request
+            with urllib.request.urlopen(f"{DATA}/guide/{cc}.json", timeout=8) as r:
+                raw = r.read()
+            _GUIDE[cc] = json.loads(gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw)
+        except Exception:
+            _GUIDE[cc] = {}
+    row = next((m for m in _GUIDE[cc].get("matches") or [] if str(m.get("match")) == str(match)), None)
+    if not row or not row.get("channel_known"):
+        return None
+    return ((row.get("broadcasters") or [{}])[0] or {}).get("name_ar") or None
+
+
 def _subs(table, team):
     from boto3.dynamodb.conditions import Key
     items, kw = [], {"KeyConditionExpression": Key("pk").eq(f"TIFOPUSH#{team}")}
@@ -539,10 +612,14 @@ def run_jobs(jobs, table, send=None, subs_override=None, now=None):
             report.append({"key": job["key"], "match": job["match"], "skipped": "already sent"})
             continue
         done_eps, stats = set(), {"ok": 0, "gone": 0, "error": 0, "quiet": 0}
-        for team, data in job["payloads"].items():
+        day = time.strftime("%Y-%m-%d", time.gmtime(t + 4 * 3600))                  # the UAE day of the per-device cap
+        # player audiences first: a device that follows the team AND the scorer gets the player's text, once
+        for team, data in sorted(job["payloads"].items(), key=lambda kv: not str(kv[0]).startswith("P")):
+            k = data.get("kind") or kind
+            is_player = str(team).startswith("P")
             subs = subs_override if subs_override is not None else _subs(table, team)
             for s in subs:
-                if not wants(s, kind) or s["endpoint"] in done_eps:
+                if not wants(s, k) or s["endpoint"] in done_eps:
                     continue
                 if in_quiet(s, t):
                     done_eps.add(s["endpoint"])
@@ -550,8 +627,15 @@ def run_jobs(jobs, table, send=None, subs_override=None, now=None):
                     continue
                 if n >= MAX_SENDS:
                     break
+                if is_player and subs_override is None and not cap_ok(table, s["sk"], day):
+                    stats["capped"] = stats.get("capped", 0) + 1
+                    continue
                 done_eps.add(s["endpoint"])
-                r = send(s, data, job["urgency"], JOB_TTL.get(kind, 600)) if with_ttl else send(s, data, job["urgency"])
+                out = data
+                if k == "soon" and s.get("cc"):
+                    ch = _guide_channel(s["cc"], job["match"])
+                    out = dict(data, body=f"{data['body']} · {ch}") if ch else data
+                r = send(s, out, job["urgency"], JOB_TTL.get(k, 600)) if with_ttl else send(s, out, job["urgency"])
                 n += 1
                 if r == "ok":
                     stats["ok"] += 1

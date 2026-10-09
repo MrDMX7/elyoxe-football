@@ -290,3 +290,96 @@ def test_poller_time_summary():
     assert summary([]) == {"n": 0}
     s = summary(list(range(1, 101)))
     assert s == {"n": 100, "p50": 50, "p95": 95, "max": 100}
+
+
+# ------------------------------------------------------------------ «تابع اللاعب» (player follow, phase 1)
+class _CapTable(_Table):
+    def update_item(self, Key, UpdateExpression, ExpressionAttributeValues, ConditionExpression=None, **kw):
+        k = (Key["pk"], Key["sk"]); it = self.items.setdefault(k, {**Key, "n": 0})
+        if ConditionExpression and it["n"] >= ExpressionAttributeValues[":cap"]:
+            raise _Table._Exc()
+        it["n"] += 1
+
+
+def _psub(n, events, cc=None):
+    s = {"pk": "TIFOPUSH#P15403", "sk": f"d{n}", "player": 15403, "endpoint": f"https://fcm.googleapis.com/fcm/send/{n}",
+         "p256dh": "x", "auth": "y", "events": list(events)}
+    if cc:
+        s["cc"] = cc
+    return s
+
+
+def test_a_goal_reaches_a_device_once_with_the_players_text(monkeypatch):
+    sub = _psub(1, ["goal"])
+    monkeypatch.setattr(PUSH, "_subs", lambda table, aud: [sub])
+    sent = []
+    job = {"match": 5, "key": "goal:1-0", "kind": "goal", "urgency": "high", "exp": 2e9, "min": 30,
+           "payloads": {"10189": {"title": "هدف! شالكه 1 - 0 فرايبورج", "body": "team"},
+                        "P15403": {"title": "هدف! إدين دجيكو", "body": "player", "kind": "goal"}}}
+    rep = PUSH.run_jobs([job], _CapTable(), send=lambda s, d, u: sent.append(d["body"]) or "ok")
+    assert sent == ["player"] and rep[0]["ok"] == 1
+
+
+def test_assist_audience_uses_its_own_event_choice(monkeypatch):
+    subs = [_psub(1, ["goal"]), _psub(2, ["assist"])]
+    monkeypatch.setattr(PUSH, "_subs", lambda table, aud: subs)
+    job = {"match": 5, "key": "goal:1-0", "kind": "goal", "urgency": "high", "exp": 2e9,
+           "payloads": {"P9": {"title": "صناعة! سالم", "body": "a", "kind": "assist"}}}
+    sent = []
+    PUSH.run_jobs([job], _CapTable(), send=lambda s, d, u: sent.append(s["sk"]) or "ok")
+    assert sent == ["d2"]
+
+
+def test_player_daily_cap_and_the_channel_by_country(monkeypatch):
+    t = _CapTable()
+    assert all(PUSH.cap_ok(t, "dev1", "2026-10-11", cap=2) for _ in range(2)) and not PUSH.cap_ok(t, "dev1", "2026-10-11", cap=2)
+    subs = [_psub(2, ["soon"], cc="AE"), _psub(3, ["soon"], cc="BH"), _psub(4, ["soon"])]
+    monkeypatch.setattr(PUSH, "_subs", lambda table, aud: subs)
+    monkeypatch.setattr(PUSH, "_guide_channel", lambda cc, match: "beIN SPORTS 1" if cc == "AE" else None)
+    job = {"match": 5, "key": "p15403:soon", "kind": "soon", "urgency": "normal", "exp": 2e9,
+           "payloads": {"P15403": {"title": "إدين دجيكو يلعب بعد ساعة", "body": "شالكه - فرايبورج", "kind": "soon"}}}
+    got = []
+    PUSH.run_jobs([job], t, send=lambda s, d, u: got.append((s["sk"], d["body"])) or "ok")
+    assert got == [("d2", "شالكه - فرايبورج · beIN SPORTS 1"), ("d3", "شالكه - فرايبورج"), ("d4", "شالكه - فرايبورج")]
+    capped = _CapTable()
+    for _ in range(PUSH.PLAYER_DAILY_CAP):
+        PUSH.cap_ok(capped, "d2", __import__("time").strftime("%Y-%m-%d", __import__("time").gmtime(__import__("time").time() + 4 * 3600)))
+    got.clear()
+    rep = PUSH.run_jobs([dict(job, key="p15403:soon2")], capped, send=lambda s, d, u: got.append(s["sk"]) or "ok")
+    assert "d2" not in got and rep[0]["capped"] == 1                                # a full day: the device gets no more
+
+
+def test_plan_adds_the_scorer_to_the_goal_job_first_and_hands_player_jobs_over(tmp_path, monkeypatch):
+    import poller as P
+    from store import Store, LocalBackend
+    monkeypatch.setattr(PUSH, "_names_ar", lambda: {"1084245": {"ar": "جوليمار"}})
+    p = P.Poller(Store(LocalBackend(tmp_path)))
+    p.load()
+    p.now_fn = lambda: NOW
+    p.aux("push_players").update({"1084245": {"club": 5789, "national": None}})
+    d = _d(events=[GOAL])
+    jobs = PUSH.plan(p, d, d, invoke=lambda ev: None)
+    goal = next(j for j in jobs if j["kind"] == "goal")
+    assert list(goal["payloads"])[0] == "P1084245" and goal["payloads"]["P1084245"]["kind"] == "goal"
+    assert goal["payloads"]["P1084245"]["title"] == "هدف! جوليمار"
+    assert goal["payloads"]["P1084245"]["body"] == "الإمارات 1 - 0 قطر · الدقيقة 23'"
+
+
+def test_plan_without_followed_players_is_unchanged(tmp_path):
+    import poller as P
+    from store import Store, LocalBackend
+    p = P.Poller(Store(LocalBackend(tmp_path)))
+    p.load()
+    p.now_fn = lambda: NOW
+    d = _d(events=[GOAL])
+    jobs = PUSH.plan(p, d, d, invoke=lambda ev: None)
+    assert [j["key"] for j in jobs] == ["start", "goal:1-0"] and not any(str(k).startswith("P") for j in jobs for k in j["payloads"])
+
+
+def test_video_jobs_reach_the_scorers_followers_first():
+    md = _d(status="finished", events=[GOAL])
+    jobs = PUSH.video_jobs(md, {"23-1084245": GOAL}, names_ar={"1084245": {"ar": "جوليمار"}}, followed={"1084245": {"club": 5789}})
+    assert list(jobs[0]["payloads"])[0] == "P1084245"
+    p = jobs[0]["payloads"]["P1084245"]
+    assert p["title"] == "فيديو هدف جوليمار نزل" and p["kind"] == "video" and p["url"] == "/m/6052086/#v=23-1084245"
+    assert "P1084245" not in PUSH.video_jobs(md, {"23-1084245": GOAL}, names_ar={}, followed={})[0]["payloads"]
