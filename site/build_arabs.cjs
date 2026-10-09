@@ -191,7 +191,32 @@ module.exports = async function(X){
     if (yrBody && X.stub) X.stub("/year/", "/calendars/#year", "السنة الياية"); }
   // 263 transfers (last 60 days, Arab leagues)
   const TR = F["transfers/latest"];
-  if (TR && TR.transfers && TR.transfers.length){
+  // the world's transfer market (spec 2026-10-09 transfers, phase 1; build.cjs passes the ledger): /transfers/ and a page per tracked league
+  const { TRT, TRW, TRS, TRL, TAR } = X;
+  const trNames = { pname:id => (NAMES_AR[id] || {}).ar, cname:id => ((teamsJson.teams || {})[id] || {}).name_ar || (TAR || {})[id] };
+  if (TRT && TRW && TRS.length){
+    const lgs = [];
+    for (const c of X.comps || []){
+      if (c.kind !== "league" || c.dormant || !c.key) continue;
+      const ids = {}; Object.entries(TRW.clubs || {}).forEach(([id, v]) => { if (v && +v[1] === +c.id) ids[id] = 1; });
+      const mv = TRT.league(TRS, ids); if (mv.length < 5) continue;
+      const clubs = Object.keys(ids).map(id => TRT.forClub(mv, id)).filter(x => x.in.length || x.out.length).sort((a, b) => (b.spent - a.spent) || (b.in.length + b.out.length - a.in.length - a.out.length));
+      const cn = id => trNames.cname(id) || (TRW.clubs[id] || [])[0] || "";
+      const p = `/transfers/${c.key}/`;
+      const body = (TRT.top(mv, 10).length ? `<section class="blk"><h2>أغلى صفقاته</h2>${TRT.list(TRT.top(mv, 10), trNames)}</section>` : "") +
+        clubs.map(x => `<section class="blk"><h2><a href="/t/${x.id}/">${esc(cn(x.id))}</a></h2>${TRT.clubSection(x, trNames)}</section>`).join("");
+      put(p, `انتقالات ${c.name_ar} ${TRL}: كل الصفقات والقادمين والراحلين`, `كل لاعب انتقل من أندية ${c.name_ar} أو إليها في ${TRL}: النادي السابق والجديد، والمبلغ إذا أُعلن، وما صرفه كل نادي.`,
+        `انتقالات ${esc(c.name_ar)}`, `${TRL}، <span class="num">${mv.length}</span> انتقال.`, body, { crumbs:'<a href="/transfers/">الانتقالات</a>', page:"transfers" });
+      lgs.push([p, c.name_ar, mv.length]);
+    }
+    const ar = TRT.arabs(TRS), nClubs = new Set(TRS.flatMap(m => [m[3], m[5]])).size;
+    const body = `<section class="blk"><h2>أغلى الصفقات</h2>${TRT.list(TRT.top(TRS, 30), trNames)}</section>` +
+      `<section class="blk"><h2>آخر الانتقالات</h2>${TRT.list(TRS.slice(0, 60), trNames)}</section>` +
+      (ar.length ? `<section class="blk"><h2>اللاعبين العرب</h2><p class="muted">كل لاعب عربي انتقل هالموسم، في أي دوري.</p>${TRT.list(ar.slice(0, 80), trNames)}</section>` : "") +
+      (lgs.length ? `<section class="blk"><h2>حسب الدوري</h2><ul class="mlist cols">${lgs.sort((a, b) => b[2] - a[2]).map(l => `<li><a href="${l[0]}">${esc(l[1])}</a> <span class="muted small num">${l[2]}</span></li>`).join("")}</ul></section>` : "");
+    put("/transfers/", `سوق الانتقالات ${TRL}: كل صفقات أندية العالم`, `كل انتقال في ${TRL} لأكثر من ${Math.floor(nClubs / 100) * 100} نادي حول العالم: أغلى الصفقات، وآخرها، واللاعبين العرب، وانتقالات كل دوري.`,
+      "سوق الانتقالات", `${TRL}: <span class="num">${TRS.length}</span> انتقال بين <span class="num">${nClubs}</span> نادي.`, body, { crumbs:hubLink, page:"transfers" });
+  } else if (TR && TR.transfers && TR.transfers.length){
     const FEE = { "free transfer":"انتقال حر", "free agent":"لاعب حر", "loan":"إعارة", "on loan":"إعارة", "undisclosed":"مبلغ غير معلن", "loan fee":"إعارة بمقابل", "back from loan":"رجع من الإعارة" };
     const fee = t => t.loan ? "إعارة" : t.free_agent ? "لاعب حر" : FEE[String(t.fee || "").toLowerCase()] || "";
     const isos = [...new Set(TR.transfers.map(t => t.country && t.country.iso2).filter(Boolean))];

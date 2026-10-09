@@ -441,6 +441,9 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   const nameOf = id => (NAMES_AR[id] || {}).ar || null;
   // transfer history (history/transfermarkt.py, Transfermarkt datasets CC0): a player's moves with fees, a club's record deals
   const TRH = (await get("history/transfers.json")) || { players:{}, clubs:{} };
+  // every club's moves this season (db/transfers_world.py; spec 2026-10-09 transfers, phase 1): /transfers/, /transfers/<league>/, the club's window
+  const TRT = require("./lib/transfers.cjs"), TRW = await get("transfers/all.json"), TRS = TRW ? TRT.season(TRW.moves, TRW.since) : [];
+  const TRL = TRW ? `موسم ${TRW.since.slice(0, 4)}/${+TRW.since.slice(2, 4) + 1}` : "";
   // every club's full history (db/history.py: results since 1888 + our FotMob archive); the tab loads its file in the browser
   const HIDX = ((await get("history/index.json")) || {}).clubs || {};
   // every club and squad player complete from FotMob (db/fotmob_profiles.py): trophies with seasons, stadium; bio of every player
@@ -755,6 +758,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
       const tw = TWINS && TWINS.clubs && S.twins(TWINS.clubs[id]); if (tw) nums += S.sec("توأم فريقك", "أقرب الأندية في أسلوب اللعب", tw);
       const ml = (tmonth[i] || []).filter(mo => mo && mo.results && mo.results.length); if (ml.length) nums = S.sec("تقرير الشهر", "", '<p class="tools">' + ml.map(mo => `<a class="btn" href="/t/${id}/month/${mo.month}/">${["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"][+mo.month.slice(5) - 1]}</a>`).join("") + "</p>") + nums;
       { const trc = trClub(id); if (trc) nums += S.sec("أغلى الصفقات في تاريخه", "", trc); }
+      { const tw = TRT.clubSection(TRT.forClub(TRS, id), { pname:nameOf, cname:k => (teamsJson.teams[k] || {}).name_ar || TAR[k] }); if (tw) nums += S.sec("انتقالات هالموسم", TRL, tw); }
       if (rc) nums += S.sec("سجل النادي", "من 2010", rc); if (hm) nums += S.sec("كل نتايجه موسم بموسم", "", hm); if (xi) nums += S.sec("التشكيلة المعتادة", "هالموسم", xi); if (cu) nums += S.sec("لاعبينه في المنتخبات", "", cu); }
     const tv2 = S.travel(t, t.fixtures); if (tv2) nums += S.sec("سافر مع فريقك", "مباريات آسيا برا الدولة", tv2);
     const co = S.coachesTeam(x538.coaches, id); if (co) nums += S.sec("مدربين النادي عبر التاريخ", "في الدوري", co);
@@ -1329,7 +1333,7 @@ ${items}
     path:"/cam/", page:"cam", noindex:true, js:[ENG.cam], title:"الكاميرا الذكية: أرقام المباراة فوق التلفزيون | تيفو", desc:"وجّه تلفونك على التلفزيون، وأرقام المباراة المباشرة تطلع فوق الصورة." }));
 
   // ---- Arab-world pages (build_arabs.cjs): national teams, Arabs abroad, derbies, clashes, streaks, guide, archive…
-  const AW = await require("./build_arabs.cjs")({ get, pool, write, page, urls, shelf, blocks, stub, NAT, coachAr, msum:id => matchSum.get(id), R, S, esc, index, teamsJson, teamPages, playerPages, matchPages:new Set(mids), NAMES_AR, fs, path, OUT, CACHE, H2H, BC });
+  const AW = await require("./build_arabs.cjs")({ get, pool, write, page, urls, shelf, blocks, stub, NAT, coachAr, TRT, TRW, TRS, TRL, TAR, comps, msum:id => matchSum.get(id), R, S, esc, index, teamsJson, teamPages, playerPages, matchPages:new Set(mids), NAMES_AR, fs, path, OUT, CACHE, H2H, BC });
   ED.push(["brk", "mow", "tonight", "streaks"].map(k => AW.home[k] || "").join("") + (AW.home.days || ""));
   writeHome();
   // W4.2: /match-of-week/ is a pinned card on /week/ now
