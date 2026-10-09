@@ -72,7 +72,26 @@
       '<button type="button" class="sh-x" data-close aria-label="سكّر">' + CLOSE + '</button></header><div class="sh-bd">' + playerBody(p) + "</div></dialog>";
   }
 
-  var N = { body: body, sheet: sheet, hourAr: hourAr, eventsOf: eventsOf, modeOf: modeOf, playerBody: playerBody, playerSheet: playerSheet, PKINDS: PKINDS, PDEF: PDEF };
+  // «نبّهني» asked at the moment a visitor cares (owner 2026-10-09: 2 team-alert subscriptions in total, both ours): a team's
+  // page opened the second time, or a live match watched a minute. Once per team; 14 days after «لا» or after it was shown.
+  var ASK_GAP = 14 * 864e5;
+  function askTeams(kind, teams, s, now, subscribed) {
+    s = s || {}; var V = s.views || {}, NO = s.no || {}, AS = s.asked || {}, sub = subscribed || {};
+    var ok = teams.filter(function (t) { var k = String(t); return t != null && !sub[k] && !(NO[k] && now - NO[k] < ASK_GAP) && !(AS[k] && now - AS[k] < ASK_GAP); });
+    if (kind === "team") return ok.filter(function (t) { return (V[String(t)] || 0) >= 2; });
+    var best = ok.slice().sort(function (a, b) { return (V[String(b)] || 0) - (V[String(a)] || 0); });
+    return best.length && (V[String(best[0])] || 0) > 0 ? [best[0]] : best.slice(0, 2);   // a live match: his team if we know it, else both
+  }
+  function askBar(teams, sup) {
+    var la = function (n) { n = String(n || ""); return /^ال/.test(n) ? "لل" + n.slice(2) : "لـ" + n; };   // «للوحدة», «لـعجمان»
+    var who = teams.map(function (t) { return "<b>" + esc(la(t.name)) + "</b>"; }).join(" أو ");
+    if (sup === "ios-install") return '<div class="nf-ask" role="dialog" aria-label="تنبيهات تيفو"><p>يوصلك كل هدف ' + who + ' على جوالك: أضف تيفو للشاشة الرئيسية أول («شارك» ثم «إضافة إلى الشاشة الرئيسية») وفعّلها من هناك.</p><div class="nf-ask-b"><button type="button" class="pill" data-ask-no>تمام</button></div></div>';
+    return '<div class="nf-ask" role="dialog" aria-label="تنبيهات تيفو"><p>يوصلك كل هدف ' + who + ' على جوالك؟</p><div class="nf-ask-b">' +
+      teams.map(function (t) { return '<button type="button" class="pill pri" data-ask-yes="' + esc(t.id) + '">نبّهني' + (teams.length > 1 ? " " + esc(la(t.name)) : "") + "</button>"; }).join("") +
+      '<button type="button" class="pill" data-ask-no>لا، شكراً</button></div></div>';
+  }
+
+  var N = { body: body, sheet: sheet, askTeams: askTeams, askBar: askBar, hourAr: hourAr, eventsOf: eventsOf, modeOf: modeOf, playerBody: playerBody, playerSheet: playerSheet, PKINDS: PKINDS, PDEF: PDEF };
   if (typeof module !== "undefined" && module.exports) { module.exports = N; return; }
   if (typeof document === "undefined") return;
 
@@ -138,7 +157,9 @@
     c.textContent = ".nf [hidden]{display:none!important}.nf .nf-pad{padding:12px}.nf .mt{margin-top:18px}.nf .grp + .grp{margin-top:18px}.nf .row small{display:block;color:var(--label2,#6b6b70);font-size:13px;line-height:18px}" +
       ".nf .nf-q{gap:16px;justify-content:flex-start;flex-wrap:wrap}.nf .nf-q label{display:flex;align-items:center;gap:8px;font-size:15px}" +
       ".nf .nf-q select{min-height:44px;padding:0 10px;border:0;border-radius:var(--r-s,10px);background:var(--fill,rgba(120,120,128,.12));color:var(--label,inherit);font:inherit}" +
-      ".nf [aria-disabled=true]{opacity:.45;pointer-events:none}.nf .nf-msg:empty{display:none}.nf .nf-ios{margin-top:10px}";
+      ".nf [aria-disabled=true]{opacity:.45;pointer-events:none}.nf .nf-msg:empty{display:none}.nf .nf-ios{margin-top:10px}" +
+      ".nf-ask{position:fixed;inset-inline:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:60;background:var(--bg-grouped2,var(--bg,#fff));color:var(--label,#111);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.2);padding:12px 14px;font-size:15px;line-height:22px}" +
+      ".nf-ask p{margin:0 0 10px}.nf-ask-b{display:flex;gap:8px;flex-wrap:wrap}";
     D.head.appendChild(c);
   })();
   function $(s, r) { return (r || D).querySelector(s); }
@@ -205,8 +226,41 @@
     (function look() { var row = D.querySelector('[data-goal-key="' + k + '"]'), b = row && row.querySelector(".mdw,button[data-media],[data-clip]");
       if (b) { b.click(); return; } if (Date.now() - t0 < 12000) setTimeout(look, 400); })();
   }
+  // the ask: views per team, «لا» and «shown» times in localStorage tifo.ask
+  function askSt() { try { var s = JSON.parse(ls.get("tifo.ask") || "{}") || {}; s.views = s.views || {}; s.no = s.no || {}; s.asked = s.asked || {}; return s; } catch (e) { return { views: {}, no: {}, asked: {} }; } }
+  function askSave(s) { ls.set("tifo.ask", JSON.stringify(s)); }
+  function askShow(teams) {
+    if (D.querySelector(".nf-ask")) return;
+    var s = askSt(); teams.forEach(function (t) { s.asked[t.id] = Date.now(); }); askSave(s);
+    var w = D.createElement("div"); w.innerHTML = askBar(teams, supported()); var bar = w.firstChild; B.appendChild(bar);
+    bar.addEventListener("click", function (e) {
+      var y = e.target.closest("[data-ask-yes]"), n = e.target.closest("[data-ask-no]");
+      if (y) {
+        set(y.dataset.askYes, ["start", "goal", "end"]).then(function () { bar.innerHTML = "<p>تمام، بيوصلك كل هدف.</p>"; D.querySelectorAll("[data-nf-team]").forEach(paint); setTimeout(function () { bar.remove(); }, 2500); })
+          .catch(function (er) { bar.innerHTML = "<p>" + (er && er.message === "denied" ? "التنبيهات مقفولة لتيفو في إعدادات المتصفح." : "ما قدرنا نشغّلها الحين، جرّب بعد شوي.") + "</p>"; setTimeout(function () { bar.remove(); }, 3500); });
+      } else if (n) { var s2 = askSt(); teams.forEach(function (t) { s2.no[t.id] = Date.now(); }); askSave(s2); bar.remove(); }
+    });
+  }
+  function ask() {
+    if (supported() === "no" || (ok() && Notification.permission === "denied")) return;
+    var page = B.dataset.page;
+    if (page === "team") {
+      var el = D.querySelector("[data-nf-team]"); if (!el) return;
+      var tid = el.dataset.nfTeam, s = askSt(); s.views[tid] = (s.views[tid] || 0) + 1; askSave(s);
+      if (askTeams("team", [tid], s, Date.now(), st().teams).length) setTimeout(function () { askShow([{ id: tid, name: el.dataset.nfName }]); }, 4000);
+    } else if (page === "match") {
+      var md = {}; try { md = JSON.parse((D.getElementById("msum") || {}).textContent || "{}"); } catch (e2) {}
+      D.addEventListener("tifo:match", function (e3) { md = Object.assign({}, md, e3.detail || {}); });
+      setTimeout(function () {
+        if (!(md.status === "live" || md.status === "ht") || !md.home || !md.away) return;
+        var nm = {}; nm[md.home.id] = md.home.name_ar || md.home.name; nm[md.away.id] = md.away.name_ar || md.away.name;
+        var pick = askTeams("live", [md.home.id, md.away.id], askSt(), Date.now(), st().teams);
+        if (pick.length) askShow(pick.map(function (t) { return { id: t, name: nm[t] }; }));
+      }, 60000);
+    }
+  }
   D.addEventListener("tifo:nospoil", function () { resync(); });
   root.TifoNotify = { body: body, sheet: sheet, mount: mount, state: state, set: set, quiet: quiet, setQuiet: setQuiet, resync: resync, supported: supported, openClip: openClip, hourAr: hourAr,
     playerBody: playerBody, playerSheet: playerSheet, playerState: playerState, setPlayer: setPlayer };
-  if (D.readyState === "loading") D.addEventListener("DOMContentLoaded", function () { mount(); openClip(); }); else { mount(); openClip(); }
+  if (D.readyState === "loading") D.addEventListener("DOMContentLoaded", function () { mount(); openClip(); ask(); }); else { mount(); openClip(); ask(); }
 })(typeof window !== "undefined" ? window : this);

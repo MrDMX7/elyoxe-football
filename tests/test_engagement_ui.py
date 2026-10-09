@@ -21,6 +21,12 @@ const ix = {since: '2026-09-30', source: 'جدول القنوات الناقلة
 console.log(JSON.stringify({
   nf: N.body({id: 5789, name: 'الإمارات <b>'}), nfSheet: N.sheet({id: 1, name: 'x'}),
   pnf: N.playerBody({id: 15403, name: 'إدين <b>'}), pnfSheet: N.playerSheet({id: 1, name: 'x'}), pkinds: N.PKINDS, pdef: N.PDEF,
+  ask: (function () { var day = 864e5, now = 100 * day, st = {views: {"1": 2, "2": 1, "3": 0}, no: {"4": now - 3 * day, "5": now - 20 * day}, asked: {"6": now - day}};
+    return {team2: N.askTeams("team", [1], st, now, {}), team1: N.askTeams("team", [2], st, now, {}), subscribed: N.askTeams("team", [1], st, now, {"1": 1}),
+      saidNo: N.askTeams("team", [4], {views: {"4": 9}, no: st.no}, now, {}), noLongAgo: N.askTeams("team", [5], {views: {"5": 9}, no: st.no}, now, {}),
+      askedRecently: N.askTeams("team", [6], {views: {"6": 9}, asked: st.asked}, now, {}),
+      liveFav: N.askTeams("live", [2, 1], st, now, {}), liveNone: N.askTeams("live", [7, 8], {}, now, {}), liveSubbed: N.askTeams("live", [7, 8], {}, now, {"7": 1, "8": 1}),
+      bar: N.askBar([{id: 1, name: 'الوحدة <b>'}], "yes"), barTwo: N.askBar([{id: 7, name: 'أ'}, {id: 8, name: 'ب'}], "yes"), barIos: N.askBar([{id: 1, name: 'الوحدة'}], "ios-install")}; })(),
   events: [N.eventsOf('goals', true), N.eventsOf('all', false), N.eventsOf('off', true), N.eventsOf('off', false)],
   modes: [N.modeOf(['goal']), N.modeOf(['start', 'goal', 'end', 'video']), N.modeOf(['video']), N.modeOf([])],
   hours: [N.hourAr(0), N.hourAr(60), N.hourAr(420), N.hourAr(720), N.hourAr(900), N.hourAr(1380)],
@@ -91,3 +97,20 @@ def test_player_sheet_has_every_alert_and_the_owners_defaults(out):
         on = "true" if k in out["pdef"] else "false"
         assert re.search(rf'data-pe="{k}"[^>]*aria-checked="{on}"', h), k
     assert 'id="sh-pnotify"' in out["pnfSheet"] and "data-close" in out["pnfSheet"]
+
+
+def test_the_alert_ask_comes_at_the_right_moment_once(out):
+    """Owner 2026-10-09: 2 team-alert subscriptions in total (both ours), 0 newsletter. One quiet bar at the moment a visitor
+    cares: a team's page opened the second time, or a live match watched a minute; once per team, 14 days after «لا»."""
+    a = out["ask"]
+    assert a["team2"] == [1] and a["team1"] == [] and a["subscribed"] == []
+    assert a["saidNo"] == [] and a["noLongAgo"] == [5] and a["askedRecently"] == []
+    assert a["liveFav"] == [1] and a["liveNone"] == [7, 8] and a["liveSubbed"] == []
+
+
+def test_the_ask_bar(out):
+    a = out["ask"]
+    assert "يوصلك كل هدف <b>للوحدة &lt;b&gt;</b>" in a["bar"] and "لـال" not in a["bar"] + a["barTwo"] + a["barIos"]
+    assert "<b>لـأ</b> أو <b>لـب</b>" in a["barTwo"] and 'data-ask-yes="1"' in a["bar"] and "data-ask-no" in a["bar"]
+    assert 'data-ask-yes="7"' in a["barTwo"] and 'data-ask-yes="8"' in a["barTwo"]
+    assert "الشاشة الرئيسية" in a["barIos"] and "data-ask-yes" not in a["barIos"]
