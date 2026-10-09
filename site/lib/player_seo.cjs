@@ -57,11 +57,11 @@ function intro(o){
   return [first || `${o.name}${who ? " " + who : ""}.`, second].filter(Boolean).join(" ");
 }
 
-// o: {site, id, name, latin, born, h, country, team, image}
+// o: {site, id, name, latin, born, h, country, team, image, aka: other Arabic spellings (names/aka.py)}
 function person(o){
-  const nm = o.name || o.latin;
+  const nm = o.name || o.latin, alt = [o.name && o.latin && o.latin !== o.name ? o.latin : null].concat(o.aka || []).filter(Boolean);
   return Object.assign({ "@context":"https://schema.org", "@type":"Person", name:nm, url:`${o.site}/p/${o.id}/`, jobTitle:"لاعب كرة قدم" },
-    o.name && o.latin && o.latin !== o.name ? { alternateName:o.latin } : {}, o.born && o.born >= "1900" ? { birthDate:o.born } : {},
+    alt.length ? { alternateName:alt.length === 1 ? alt[0] : alt } : {}, o.born && o.born >= "1900" ? { birthDate:o.born } : {},
     o.h ? { height:{ "@type":"QuantitativeValue", value:o.h, unitCode:"CMT" } } : {}, o.country ? { nationality:{ "@type":"Country", name:o.country } } : {},
     o.team ? { affiliation:{ "@type":"SportsTeam", name:o.team } } : {}, o.image ? { image:o.site + o.image } : {});
 }

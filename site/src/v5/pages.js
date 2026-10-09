@@ -267,7 +267,9 @@
       : sr && sr.apps ? [[sr.g, "أهداف"], [sr.a, "صناعة"], [sr.apps, "مباراة"]] : null;
     var tSeason = !d.card && lastS ? lastS.season : !d.card && !lastS && sr ? sr.season : d.season;
     var tilesHtml = tiles ? '<section class="grp"><div class="gh"><h2>هالموسم</h2>' + (tSeason ? '<span class="num">' + esc(tSeason) + "</span>" : "") + '</div><div class="tiles">' + tiles.map(function (x) { return '<div class="tile"><b>' + x[0] + "</b><span>" + x[1] + "</span></div>"; }).join("") + "</div></section>" : "";
-    var introHtml = x && x.intro ? '<section class="grp"><p class="wiki">' + esc(x.intro) + "</p></section>" : "";
+    // «يُكتب أيضاً» (names/aka.py): the other spellings people search his name by
+    var akaHtml = x && x.aka && x.aka.length ? '<p class="gf">يُكتب أيضاً: ' + x.aka.map(esc).join("، ") + "</p>" : "";
+    var introHtml = x && (x.intro || akaHtml) ? '<section class="grp">' + (x.intro ? '<p class="wiki">' + esc(x.intro) + "</p>" : "") + akaHtml + "</section>" : "";
     var FOOT = { left: "اليسرى", right: "اليمنى", both: "الثنتين" }, T = d.tm || {};
     var bio = [age != null && { t: "العمر", v: '<span class="num">' + age + "</span> سنة" }, age != null && { t: "تاريخ الميلاد", v: U.dateAr(b.born) }, b.h && { t: "الطول", v: '<span class="num">' + b.h + "</span> سم" }, b.foot && { t: "القدم", v: FOOT[b.foot] || esc(b.foot) }, (b.cc || d.cc) && { t: "الجنسية", v: esc(U.country(b.cc || d.cc)) },
       (b.shirt || d.num) && { t: "الرقم", v: '<span class="num">' + esc(b.shirt || d.num) + "</span>" }, b.mv && { t: "القيمة السوقية", v: U.eur(b.mv) }, b.contract && { t: "نهاية العقد", v: '<span class="num">' + esc(String(b.contract).slice(0, 7)) + "</span>" },

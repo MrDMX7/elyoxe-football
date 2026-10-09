@@ -250,6 +250,8 @@ def job_streams(log):
 
 def job_names(log):
     rc, tail = run(log, [PY, "build_names.py"], cwd=ROOT / "names", timeout=3 * 3600)
+    if rc == 0:   # «يُكتب أيضاً»: other Arabic spellings from Arabic Wikipedia redirects (never fatal; committed with names/)
+        run(log, [PY, "aka.py"], cwd=ROOT / "names", timeout=30 * 60)
     if rc == 0 and subprocess.run(["git", "status", "--porcelain", "--", "names/"], cwd=ROOT, capture_output=True, text=True).stdout.strip():
         run(log, ["git", "add", "names/"])
         run(log, ["git", "commit", "-q", "-m", f"names: weekly Arabic names for new players ({datetime.now().date()})"])

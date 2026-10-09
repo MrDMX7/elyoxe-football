@@ -811,6 +811,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   console.log("player careers:", JSON.stringify(pcs));
   const CAR = PSEO.loadCareers(PCDIR).careers, mates = {}, pIndexed = new Set();   // pIndexed: /p/ pages in the index (the /db/player/ links)
   pids.forEach(id => { const t = (allPlayers[id] || {}).team; if (t) (mates[t] = mates[t] || []).push(id); });
+  let AKA = {}; try { AKA = JSON.parse(fs.readFileSync(path.join(__dirname, "../names/players_ar_aka.json"), "utf8")); } catch (e){}   // «يُكتب أيضاً» (names/aka.py)
+  const akaOf = id => ((AKA[id] || {}).aka || []);
   const arOnly = s => /[؀-ۿ]/.test(s || "") ? s : "";   // a position or country the helpers could not put in Arabic is left out
   // every team's next match from the competitions' fixtures (team files exist only for the focus teams)
   const nextByTeam = new Map(), nowMs = Date.now();
@@ -854,13 +856,13 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     const v5 = P5.player(id, { name:nameOf(id), latin:p.name, team:tm ? { id:tm, name_ar:tt.name_ar } : null, pos:p.position, num:p.number, cc:p.country, season:p.season,
       card:ap.fm ? null : { goals:z(p.goals, sv("goals")), assists:z(p.assists, sv("goal_assist")), minutes:z(p.minutes, ap.minutes), rating:p.rating }, prof:FMP[id] || car ? Object.assign({ bio:fb }, PSEO.asProfile(car) || {}) : null, ea:EAC[id] || null,
       seasonRow:sr, photo:ph ? `/v1/ph/${id}.webp` : null, credit:ph ? `الصورة: <a href="${esc(ph.page || "")}" rel="noopener">${esc(((ph.artist || "").replace(/\s+/g, " ").trim().slice(0, 40)) + (ph.license ? " · " + ph.license : ""))}</a>` : "", wiki:WP[id] ? wiki5(WP[id]) : "", transfers:(TRH.players || {})[id] || null,
-      x:{ mount:true, crumbs:pcrumbs, intro:pintro, follow:!!tm, profile:(String(id) === "30981" ? U.grp("", U.row({ href:"/messi/", icon:"target", c:"#0A84FF", t:"متحف ميسي", sub:"كل أهدافه على ملعب ثلاثي الأبعاد" }), { cls:"mt2" }) : "") + nxRow + shelf(pext, { title:"بالتفصيل" }) + mmRow,
+      x:{ mount:true, crumbs:pcrumbs, intro:pintro, aka:akaOf(id), follow:!!tm, profile:(String(id) === "30981" ? U.grp("", U.row({ href:"/messi/", icon:"target", c:"#0A84FF", t:"متحف ميسي", sub:"كل أهدافه على ملعب ثلاثي الأبعاد" }), { cls:"mt2" }) : "") + nxRow + shelf(pext, { title:"بالتفصيل" }) + mmRow,
         share:P5.shareSheet({ html:toolRows(ptools) + `<button type="button" class="row" id="secpick"><span class="rt">صورة لأي قسم</span>${U.chev}</button>`, after:'<div id="secpicks" class="card mt" hidden></div>' }) } });
     v5.data = { id:+id, prof:FMP[id] || car ? 1 : 0, tm:TMI[id] ? 1 : 0 };
     if (tm) v5.sheets = (v5.sheets || "") + NFY.playerSheet({ id, name:nm });   // «تابع اللاعب» (player follow, phase 1)
     // owner item 11: thin pages stay reachable but out of the index; a player with a FotMob career (the cache) is no longer thin
     const thinP = (p.minutes || 0) < 90 && !S.career(pcar[i]) && !(FMP[id] && FMP[id].n) && !PSEO.careerTotals(car);
-    const person = PSEO.person({ site:SITE, id, name:nameOf(id), latin:p.name, born:fb.born, h:fb.h, country:pcountry, team:tt.name_ar, image:ph ? `/v1/ph/${id}.webp` : null });
+    const person = PSEO.person({ site:SITE, id, name:nameOf(id), latin:p.name, born:fb.born, h:fb.h, country:pcountry, team:tt.name_ar, image:ph ? `/v1/ph/${id}.webp` : null, aka:akaOf(id) });
     playerPages.add(String(id)); write(`p/${id}/index.html`, page({ v5, noindex:thinP, path:`/p/${id}/`, page:"player", names:Object.assign(nameOf(id) ? { [id]:nameOf(id) } : {}), title:PSEO.title({ name:nm, team:tt.name_ar, nums }), ld:[bcLd([pc && [pc.name_ar, `/c/${pc.key}/`], tt.name_ar && [tt.name_ar, `/t/${tm}/`], [nm, `/p/${id}/`]]), person], desc:pintro ? pintro.slice(0, 160) : `${nm}، ${tt.name_ar}: أهدافه وصناعته وتقييمه وبطاقة تيفو، واللاعبين اللي يلعبون مثله.` }));
     if (!thinP){ urls.push(`/p/${id}/`); pIndexed.add(id); }
   });
