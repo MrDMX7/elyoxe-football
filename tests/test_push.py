@@ -283,3 +283,10 @@ def test_undeliverable_keys_are_deleted_network_errors_kept(monkeypatch):
     job = {"match": 1, "key": "end", "kind": "end", "urgency": "normal", "payloads": {"5789": {"team": 5789}}}
     PUSH.run_jobs([job], t, send=lambda s, d, u: res[s["sk"]])
     assert t.deleted == [("TIFOPUSH#5789", "h1")]
+
+
+def test_poller_time_summary():
+    from tools.poller_time import summary
+    assert summary([]) == {"n": 0}
+    s = summary(list(range(1, 101)))
+    assert s == {"n": 100, "p50": 50, "p95": 95, "max": 100}
