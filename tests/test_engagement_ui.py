@@ -20,6 +20,7 @@ const ix = {since: '2026-09-30', source: 'جدول القنوات الناقلة
             '5181794': {ko: '2026-10-02T19:00:00Z', h: [1, 'فرنسا'], a: [2, 'بلجيكا<img src=x>'], c: [9806, 'دوري الأمم'], page: false}}};
 console.log(JSON.stringify({
   nf: N.body({id: 5789, name: 'الإمارات <b>'}), nfSheet: N.sheet({id: 1, name: 'x'}),
+  pnf: N.playerBody({id: 15403, name: 'إدين <b>'}), pnfSheet: N.playerSheet({id: 1, name: 'x'}), pkinds: N.PKINDS, pdef: N.PDEF,
   events: [N.eventsOf('goals', true), N.eventsOf('all', false), N.eventsOf('off', true), N.eventsOf('off', false)],
   modes: [N.modeOf(['goal']), N.modeOf(['start', 'goal', 'end', 'video']), N.modeOf(['video']), N.modeOf([])],
   hours: [N.hourAr(0), N.hourAr(60), N.hourAr(420), N.hourAr(720), N.hourAr(900), N.hourAr(1380)],
@@ -79,3 +80,14 @@ def test_western_digits_and_the_copy_rules(out):
     assert not re.search("[٠-٩]", h)
     for banned in ("وش", "زي", "تبي", "الجاي", "جديد", "مين"):          # site/redesign/v5/DESIGN.md §7
         assert not re.search(r"(?<![؀-ۿ])" + banned + r"(?![؀-ۿ])", h), banned
+
+
+def test_player_sheet_has_every_alert_and_the_owners_defaults(out):
+    h = out["pnf"]
+    assert 'data-nf-player="15403"' in h and "إدين &lt;b&gt;" in h and "<b>" not in h.replace("<b>إدين", "")
+    assert out["pkinds"] == ["soon", "start11", "squad_out", "subin", "subout", "goal", "assist", "card", "pen", "end", "potm", "video"]
+    assert out["pdef"] == ["start11", "subin", "goal", "assist", "card", "end"]
+    for k in out["pkinds"]:
+        on = "true" if k in out["pdef"] else "false"
+        assert re.search(rf'data-pe="{k}"[^>]*aria-checked="{on}"', h), k
+    assert 'id="sh-pnotify"' in out["pnfSheet"] and "data-close" in out["pnfSheet"]

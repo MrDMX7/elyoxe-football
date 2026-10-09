@@ -141,6 +141,7 @@ def test_the_page_carries_the_career_the_tiles_and_the_intro(page):
     assert "إدواردو يلعب مع &lt;بوليفار&gt;." in h                                             # the intro, escaped
     assert 'data-fav="t:1001"' in h and "<span>تابع</span> <bdi>بوليفار</bdi>" in h     # paintFav() rewrites the <span> only
     assert re.search(r'href="[^"]*1001[^"]*#notify"', h) and "نبّهني لمبارياته" in h       # L(): /t/1001/ in the build
+    assert 'data-sheet="sh-pnotify"' in h and "تابع اللاعب" in h                           # «تابع اللاعب» (player follow)
     assert h.index("إدواردو يلعب مع") < h.index("<h2>هالموسم</h2>") < h.index('id="pcar1"')
 
 

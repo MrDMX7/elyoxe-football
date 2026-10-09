@@ -51,7 +51,28 @@
       '<button type="button" class="sh-x" data-close aria-label="سكّر">' + CLOSE + '</button></header><div class="sh-bd">' + body(team) + "</div></dialog>";
   }
 
-  var N = { body: body, sheet: sheet, hourAr: hourAr, eventsOf: eventsOf, modeOf: modeOf };
+  // «تابع اللاعب» (spec 2026-10-09 player follow): his alerts in three groups; the owner's defaults ticked until the visitor
+  // chooses. Kinds = saas/cards TIFOPUSH_PEVENTS = football pushplayer.KINDS
+  var PGROUPS = [["قبل المباراة", [["soon", "مباراته بعد ساعة", "مع القناة في دولتك"], ["start11", "أساسي", "لما تنزل التشكيلة الرسمية"], ["squad_out", "مب في القائمة", "لا أساسي ولا احتياط"]]],
+    ["في المباراة", [["subin", "دخل بديل"], ["subout", "طلع تبديل", "ولو طلع مصاب"], ["goal", "هدف"], ["assist", "صناعة"], ["card", "بطاقة"], ["pen", "ضيّع ركلة جزاء"]]],
+    ["بعد المباراة", [["end", "دقايقه وأرقامه", "كم لعب وسجّل وتقييمه"], ["potm", "أحسن لاعب في المباراة"], ["video", "فيديو هدفه لما ينزل"]]]];
+  var PKINDS = PGROUPS.reduce(function (a, g) { return a.concat(g[1].map(function (x) { return x[0]; })); }, []);
+  var PDEF = ["start11", "subin", "goal", "assist", "card", "end"];
+  function playerBody(p, on) {
+    var x = p || {}, ev = on || PDEF;
+    return '<div class="nf" data-nf-player="' + esc(x.id) + '" data-nf-name="' + esc(x.name || "") + '">' +
+      '<p class="note">تنبيه على جوالك عن <b>' + esc(x.name || "لاعبك") + "</b> مع ناديه ومنتخبه، بدون حساب.</p>" +
+      '<p class="note nf-ios" data-nf-ios hidden>على الآيفون التنبيهات تشتغل من تيفو على الشاشة الرئيسية: اضغط «شارك» ثم «إضافة إلى الشاشة الرئيسية»، وافتحه من هناك.</p>' +
+      PGROUPS.map(function (g) { return '<section class="grp mt"><div class="gh"><h2>' + g[0] + '</h2></div><div class="card">' + g[1].map(function (k) {
+        return '<button type="button" class="row" data-pe="' + k[0] + '" role="switch" aria-checked="' + (ev.indexOf(k[0]) >= 0) + '"><span class="rt">' + k[1] + (k[2] ? "<small>" + k[2] + "</small>" : "") + '</span><span class="sw" aria-hidden="true"></span></button>'; }).join("") + "</div></section>"; }).join("") +
+      '<p class="gf">أوقات الهدوء و«بدون حرق» نفسها اللي للفرق. وحد أقصى 20 تنبيه لاعب باليوم.</p><p class="gf nf-msg" data-nf-msg aria-live="polite"></p></div>';
+  }
+  function playerSheet(p) {
+    return '<dialog class="sheet" id="sh-pnotify" aria-labelledby="sh-pnotify-t"><div class="sh-grab" aria-hidden="true"></div><header class="sh-hd"><h2 id="sh-pnotify-t" tabindex="-1" autofocus>تابع اللاعب</h2>' +
+      '<button type="button" class="sh-x" data-close aria-label="سكّر">' + CLOSE + '</button></header><div class="sh-bd">' + playerBody(p) + "</div></dialog>";
+  }
+
+  var N = { body: body, sheet: sheet, hourAr: hourAr, eventsOf: eventsOf, modeOf: modeOf, playerBody: playerBody, playerSheet: playerSheet, PKINDS: PKINDS, PDEF: PDEF };
   if (typeof module !== "undefined" && module.exports) { module.exports = N; return; }
   if (typeof document === "undefined") return;
 
@@ -89,7 +110,24 @@
     var go = ev.length ? permit() : Promise.resolve();
     return go.then(function () { if (ev.length) s.teams[tid] = ev; else delete s.teams[tid]; save(s); D.dispatchEvent(new CustomEvent("tifo:notify", { detail: { team: +tid, events: ev } })); return wire(tid, ev); });
   }
-  function resync() { var s = st(); if (!ok() || Notification.permission !== "granted") return Promise.resolve(); return Promise.all(Object.keys(s.teams).map(function (t) { return wire(t, s.teams[t]).catch(function () {}); })); }
+  // players: localStorage tifo.push.players {pid: [events]}; «بدون حرق» keeps «بعد ساعة» and «أساسي» only
+  function pst() { try { return JSON.parse(ls.get("tifo.push.players") || "{}") || {}; } catch (e) { return {}; } }
+  function playerState(pid) { var ev = pst()[pid]; return { events: ev ? ev.slice() : null }; }
+  function country() { var c = (ls.get("tifo.country") || "").toUpperCase(); return /^[A-Z]{2}$/.test(c) ? c : null; }
+  function wireP(pid, ev) {
+    var send = ev.filter(function (x) { return !nospoil() || x === "start11" || x === "soon"; }), s = st();
+    if (!send.length) return subscription(false).then(function (x) { if (x) return post("DELETE", { player: +pid, endpoint: x.endpoint }); });
+    return subscription(true).then(function (x) { var j = x.toJSON(), q = s.quiet ? { s: s.quiet.s, e: s.quiet.e, o: offset() } : null;
+      return post("POST", { player: +pid, events: send, quiet: q, cc: country(), subscription: { endpoint: j.endpoint, keys: j.keys } }); });
+  }
+  function setPlayer(pid, events) {
+    var ev = events.filter(function (x, i) { return PKINDS.indexOf(x) >= 0 && events.indexOf(x) === i; }), go = ev.length ? permit() : Promise.resolve();
+    return go.then(function () { var s = pst(); if (ev.length) s[pid] = ev; else delete s[pid]; ls.set("tifo.push.players", JSON.stringify(s));
+      D.dispatchEvent(new CustomEvent("tifo:notify-player", { detail: { player: +pid, events: ev } })); return wireP(pid, ev); });
+  }
+  function resync() { var s = st(), P = pst(); if (!ok() || Notification.permission !== "granted") return Promise.resolve();
+    return Promise.all(Object.keys(s.teams).map(function (t) { return wire(t, s.teams[t]).catch(function () {}); })
+      .concat(Object.keys(P).map(function (p) { return wireP(p, P[p]).catch(function () {}); }))); }
   function quiet() { return st().quiet || null; }
   function setQuiet(q) { var s = st(); s.quiet = q && q.s !== q.e ? { s: +q.s, e: +q.e } : null; save(s); return resync(); }
 
@@ -143,8 +181,22 @@
     setQuiet({ s: qs, e: qe }).then(function () { say(el, "ما بنزعجك من " + hourAr(qs) + " لين " + hourAr(qe) + "."); });
     D.querySelectorAll("[data-nf-team]").forEach(paint);
   }
+  function paintP(el) {
+    var on = playerState(el.dataset.nfPlayer).events || PDEF, sup = supported(), ios = $("[data-nf-ios]", el);   // not followed yet: the defaults
+    el.querySelectorAll("[data-pe]").forEach(function (b) { b.setAttribute("aria-checked", String(on.indexOf(b.dataset.pe) >= 0));
+      if (sup !== "yes") b.setAttribute("aria-disabled", "true"); else b.removeAttribute("aria-disabled"); });
+    if (ios) ios.hidden = sup !== "ios-install";
+  }
+  function onClickP(e) {
+    var el = e.currentTarget, b = e.target.closest("[data-pe]"); if (!b || !el.contains(b)) return;
+    b.setAttribute("aria-checked", String(b.getAttribute("aria-checked") !== "true"));
+    var ev = [].map.call(el.querySelectorAll('[data-pe][aria-checked="true"]'), function (x) { return x.dataset.pe; });
+    setPlayer(el.dataset.nfPlayer, ev).then(function () { paintP(el); say(el, ev.length ? (nospoil() ? "تمام. «بدون حرق» شغّال: بس «بعد ساعة» و«أساسي» توصلك." : "تمام، بتوصلك التنبيهات.") : "وقّفنا تنبيهات هاللاعب."); })
+      .catch(function (er) { paintP(el); fail(el, er); });
+  }
   function mount(r) {
     (r || D).querySelectorAll("[data-nf-team]").forEach(function (el) { if (el.dataset.nfOn) return paint(el); el.dataset.nfOn = "1"; el.addEventListener("click", onClick); el.addEventListener("change", onChange); paint(el); });
+    (r || D).querySelectorAll("[data-nf-player]").forEach(function (el) { if (el.dataset.nfOn) return paintP(el); el.dataset.nfOn = "1"; el.addEventListener("click", onClickP); paintP(el); });
   }
   // a «فيديو الهدف نزل» push opens /m/<id>/#v=<goal key>: the goal's «▶ شاهد» (site/src/media.js) once it is on the page
   function openClip() {
@@ -154,6 +206,7 @@
       if (b) { b.click(); return; } if (Date.now() - t0 < 12000) setTimeout(look, 400); })();
   }
   D.addEventListener("tifo:nospoil", function () { resync(); });
-  root.TifoNotify = { body: body, sheet: sheet, mount: mount, state: state, set: set, quiet: quiet, setQuiet: setQuiet, resync: resync, supported: supported, openClip: openClip, hourAr: hourAr };
+  root.TifoNotify = { body: body, sheet: sheet, mount: mount, state: state, set: set, quiet: quiet, setQuiet: setQuiet, resync: resync, supported: supported, openClip: openClip, hourAr: hourAr,
+    playerBody: playerBody, playerSheet: playerSheet, playerState: playerState, setPlayer: setPlayer };
   if (D.readyState === "loading") D.addEventListener("DOMContentLoaded", function () { mount(); openClip(); }); else { mount(); openClip(); }
 })(typeof window !== "undefined" ? window : this);

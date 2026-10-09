@@ -86,6 +86,9 @@
     if (seg) { if (!$('button[data-t="' + k + '"]', seg) && OLD[h]) k = OLD[h]; if ($('button[data-t="' + k + '"]', seg) && selectSeg(seg, k, false)) { if (sub) { var ls2 = $('.seg[data-seg="ld"]'); if (ls2) selectSeg(ls2, sub[1], false); } return; } }
     if (h === "story" || h === "second") { setTimeout(function () { openSheet("sh-share"); }, 300); return; }
     if (h === "notify" && $("#sh-notify")) { setTimeout(function () { openSheet("sh-notify"); }, 300); return; }   // «نبّهني لمبارياته» on a player page
+    // «تابع اللاعب»: the «انتهت» push opens /p/<id>/#m<match>: his matches pane on that match's row (its image: «صورة لأي قسم»)
+    var mm = /^m(\d{3,12})$/.exec(h); if (mm && PG === "player") { var sgp = $('.seg[data-seg="p"]'); if (sgp) selectSeg(sgp, "mt", false);
+      setTimeout(function () { var a = $('#plm a[href*="/' + mm[1] + '/"], #plm a[href*="id=' + mm[1] + '"]'); if (a) { a.classList.add("hl"); a.scrollIntoView({ block: "center" }); } }, 1200); return; }
     var row = $('[data-anchor="' + h + '"]'); if (row) { var p = row.closest(".pane"), sg = p && $('.seg[data-seg="' + p.dataset.g + '"]'); if (sg) selectSeg(sg, p.dataset.p, false); setTimeout(function () { row.scrollIntoView({ block: "center" }); openSheet(row.dataset.sheet, row); }, 120); return; }
     var el = D.getElementById(h); if (el) { var p2 = el.closest(".pane"), sg2 = p2 && $('.seg[data-seg="' + p2.dataset.g + '"]'); if (sg2) selectSeg(sg2, p2.dataset.p, false); setTimeout(function () { el.scrollIntoView({ block: "start" }); }, 60); }
   }
