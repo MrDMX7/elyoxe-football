@@ -450,3 +450,23 @@ def test_push_e2e_targets_teams_and_players():
     from tools.push_e2e import targets
     assert targets(["102122", "p1659961", "p981862"]) == ([102122], [1659961, 981862])
     assert targets(["5789", "5902"]) == ([5789, 5902], [])
+
+
+def test_the_sender_role_allows_every_table_call_push_makes():
+    """2026-10-09: cap_ok's update_item was AccessDenied (the role had Query/PutItem/DeleteItem only) and every player alert
+    — and the team «انتهت» that carried them — was claimed, then lost."""
+    import os, re
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    src = open(os.path.join(root, "push.py"), encoding="utf-8").read()
+    calls = set(re.findall(r"table\.(put_item|delete_item|query|update_item|get_item|scan)\(", src))
+    tpl = open(os.path.join(root, "template.yaml"), encoding="utf-8").read()
+    allowed = set(re.findall(r"dynamodb:(\w+)", tpl))
+    need = {c.title().replace("_", "") for c in calls}
+    assert need <= allowed, need - allowed
+
+
+def test_the_daily_cap_never_stops_a_send_on_an_unexpected_error():
+    class Denied:
+        def update_item(self, **kw):
+            raise Exception("AccessDeniedException: not authorized to perform: dynamodb:UpdateItem")
+    assert PUSH.cap_ok(Denied(), "dev", "2026-10-09") is True

@@ -224,7 +224,7 @@ Resources:
       Policies:
         - Statement:
             - Effect: Allow
-              Action: [dynamodb:Query, dynamodb:PutItem, dynamodb:DeleteItem]
+              Action: [dynamodb:Query, dynamodb:PutItem, dynamodb:DeleteItem, dynamodb:UpdateItem]   # UpdateItem: the per-device daily cap (push.cap_ok)
               Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/cards"
             - Effect: Allow
               Action: [ssm:GetParameter]

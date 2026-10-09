@@ -573,7 +573,10 @@ def cap_ok(table, sk, day, cap=PLAYER_DAILY_CAP):
     except Exception as ex:
         if _conditional_failed(table, ex):
             return False
-        raise
+        # anything else (2026-10-09: AccessDenied on UpdateItem) must never stop the send: the event is claimed already, so
+        # raising here loses it for every audience in the job; a missed count costs at most one alert over the cap
+        print(json.dumps({"cap_error": f"{type(ex).__name__}: {str(ex)[:160]}"}))
+        return True
 
 
 _GUIDE = {}
