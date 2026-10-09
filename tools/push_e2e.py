@@ -2,6 +2,8 @@
 
   python3 tools/push_e2e.py setup  <team_a> <team_b>   register with autopush (production VAPID public key) and
                                                         subscribe through https://tifo.elyoxe.com/api/tifo/push/sub
+  python3 tools/push_e2e.py setup  <team> p<player> …   «تابع اللاعب»: teams and players (p<id>) on one device, every
+                                                        player alert switched on
   python3 tools/push_e2e.py listen <until-UTC-ISO> [--stop-on-end]
                                                         stay connected (reconnects with the same uaid), decrypt
                                                         every notification into received.jsonl, ack it
@@ -47,7 +49,15 @@ def api(method, body):
         return f"{e.code} {e.read()[:200]!r}"
 
 
-async def setup(teams):
+def targets(args):
+    """["102122", "p1659961"] -> ([102122], [1659961]): a «p» prefix is a player (player follow, 2026-10-09)."""
+    return [int(a) for a in args if a.isdigit()], [int(a[1:]) for a in args if a[:1] == "p" and a[1:].isdigit()]
+
+
+PLAYER_EVENTS = ["soon", "start11", "squad_out", "subin", "subout", "goal", "assist", "card", "pen", "end", "potm", "video"]
+
+
+async def setup(teams, players=()):
     from cryptography.hazmat.primitives.asymmetric import ec
     from cryptography.hazmat.primitives import serialization
     import websockets
@@ -63,10 +73,11 @@ async def setup(teams):
     pem = priv.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()).decode()
     p256 = b64(priv.public_key().public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint))
     s = _state({"uaid": hello["uaid"], "channel": ch, "endpoint": reg["pushEndpoint"], "ua_pem": pem, "auth": b64(auth),
-                "p256dh": p256, "teams": teams, "created": time.time()})
-    st = api("POST", {"teams": teams, "events": ["start", "goal", "end"],
-                      "subscription": {"endpoint": s["endpoint"], "keys": {"p256dh": p256, "auth": s["auth"]}}})
-    log("setup: registered", reg.get("status"), s["endpoint"].split("/")[2], "subscribed teams", teams, "->", st)
+                "p256dh": p256, "teams": teams, "players": list(players), "created": time.time()})
+    sub = {"endpoint": s["endpoint"], "keys": {"p256dh": p256, "auth": s["auth"]}}
+    st = api("POST", {"teams": teams, "events": ["start", "goal", "end"], "subscription": sub}) if teams else None
+    sp = [api("POST", {"player": pid, "events": PLAYER_EVENTS, "cc": "AE", "subscription": sub}) for pid in players]
+    log("setup: registered", reg.get("status"), s["endpoint"].split("/")[2], "teams", teams, "->", st, "players", list(players), "->", sp)
 
 
 async def listen(until, stop_on_end):
@@ -117,7 +128,8 @@ async def listen(until, stop_on_end):
 async def teardown():
     import websockets
     s = _state()
-    st = api("DELETE", {"teams": s["teams"], "endpoint": s["endpoint"]})
+    st = api("DELETE", {"teams": s["teams"], "endpoint": s["endpoint"]}) if s.get("teams") else None
+    st = [st] + [api("DELETE", {"player": pid, "endpoint": s["endpoint"]}) for pid in s.get("players") or []]
     try:
         async with websockets.connect(WS, subprotocols=["push-notification"]) as ws:
             await ws.send(json.dumps({"messageType": "hello", "use_webpush": True, "uaid": s["uaid"], "channelIDs": [s["channel"]]}))
@@ -132,7 +144,7 @@ async def teardown():
 if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "setup":
-        asyncio.run(setup([int(x) for x in sys.argv[2:4]]))
+        asyncio.run(setup(*targets(sys.argv[2:])))
     elif cmd == "listen":
         asyncio.run(listen(sys.argv[2], "--stop-on-end" in sys.argv))
     elif cmd == "teardown":

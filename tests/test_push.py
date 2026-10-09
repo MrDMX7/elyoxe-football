@@ -444,3 +444,9 @@ def test_prematch_passes_without_jobs_leave_no_marks(tmp_path):
     d = _d(status="scheduled", events=[], score=None)
     assert PUSH.plan(p, d, d, invoke=lambda ev: None) == []
     assert str(d["id"]) not in p.aux("push")                           # push.json does not grow with every match at T-75
+
+
+def test_push_e2e_targets_teams_and_players():
+    from tools.push_e2e import targets
+    assert targets(["102122", "p1659961", "p981862"]) == ([102122], [1659961, 981862])
+    assert targets(["5789", "5902"]) == ([5789, 5902], [])
