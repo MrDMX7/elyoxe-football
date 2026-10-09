@@ -239,6 +239,10 @@ def job_journal(log):
     rc2, _ = run(log, [PY, "-m", "pushplayers"], timeout=5 * 60)
     if rc2:
         log.w(f"pushplayers exit {rc2} (not fatal)")
+    # Bing: the day's 100 URLs (a new site's quota), once a day; the tool skips a day already sent (never fatal)
+    rc3, _ = run(log, [PY, "-m", "tools.bing_submit"], timeout=5 * 60)
+    if rc3:
+        log.w(f"bing_submit exit {rc3} (not fatal)")
     return rc == 0, tail
 
 
