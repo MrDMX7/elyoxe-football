@@ -10,10 +10,11 @@ db/fotmob_profiles.py share (db/.cache/fm/t/). A run re-fetches at most BUDGET o
 January–February) those older than WINDOW_TTL, outside it those older than the cache's 6 days; the site's own clubs first,
 then the stalest. FotMob answers 429 when pushed (2026-10-09: ~40 clubs a minute with 4 threads), so the rest keep their
 cached answer (every club is fresh within about 3 days in a window). A failed request keeps the cached answer.
-Out (public): v1/transfers/all.json {generated, since, clubs: {id: [name, league id]}, moves: [[date, player id, player name,
+Out (public): v1/transfers/rumours.json {generated, rumours: [...]} (merge_rumours below), and
+v1/transfers/all.json {generated, since, clubs: {id: [name, league id]}, moves: [[date, player id, player name,
 from id, from name, to id, to name, fee EUR | null, kind, market value | null, nationality | null, position | null]]}, newest first;
 kind: fee, loan, free, undisclosed, or "" (FotMob did not say)."""
-import argparse, gzip, json, os, sys, time
+import argparse, gzip, json, os, re, sys, time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
@@ -95,6 +96,94 @@ def ledger(raws, names=None):
     return out
 
 
+# ---- phase 3: rumours. FotMob's allRumours (with its probability: Low, Medium, High, Imminent) and the news journal's transfer
+# stories (news/transfers.json, with their stage) become one lasting ledger: a rumour keeps the day it was first seen, takes the
+# news about the same player, and closes on the season's moves: «done» when the ledger shows him moving (to its club when known)
+# from two weeks before the rumour on, «no» once the window it belonged to shut without it. A year after its last word it goes.
+KEEP_DAYS = 365
+# the news journal tags renewals and gossip «transfer» too (2026-10-09 first run: «تمديد عقد هافيرتز», «prolonge jusqu'en 2028»,
+# «ينضم لمعسكر الزمالك»): a renewal is no rumour, and a news-only rumour needs talks at least; «official» came true
+RENEW = re.compile(r"تمديد|يمدد|تجديد|يجدد|prolong|extend|extension|renew|new deal|nouveau contrat|verlänger", re.I)
+STAGES = ["rumour", "talks", "agreed", "here_we_go", "official"]
+
+
+def window_end(d):
+    """The last day of the window a rumour on day d is about: summer (to 30 September) or winter (to the end of February)."""
+    if d.month <= 2 or d.month >= 10:
+        y = d.year + 1 if d.month >= 10 else d.year
+        return date(y, 3, 1).fromordinal(date(y, 3, 1).toordinal() - 1)
+    return date(d.year, 9, 30)
+
+
+def fotmob_rumours(raws, names=None):
+    names, out = names or {}, {}
+    for raw in raws:
+        for x in (((raw or {}).get("transfers") or {}).get("allRumours") or []) if isinstance(raw, dict) else []:
+            if not isinstance(x, dict) or not x.get("rumourId") or not x.get("playerId"):
+                continue
+            if x.get("fromClubId") and x.get("fromClubId") == x.get("toClubId"):     # staying (a renewal), no move
+                continue
+            out[f"fm{x['rumourId']}"] = {"pid": int(x["playerId"]), "name": names.get(str(x["playerId"])) or x.get("name"),
+                                         "from": [x.get("fromClubId"), names.get(str(x.get("fromClubId"))) or x.get("fromClub")] if x.get("fromClubId") else None,
+                                         "to": [x.get("toClubId"), names.get(str(x.get("toClubId"))) or x.get("toClub")] if x.get("toClubId") else None,
+                                         "seen": (x.get("transferDate") or "")[:10], "prob": x.get("probability"), "fee": fee_of(x)}
+    return out
+
+
+def merge_rumours(prev, fm, news, moves, today):
+    rows = {r["k"]: dict(r) for r in prev or [] if r.get("k")}
+    for k, x in fm.items():
+        if x.get("from") and x.get("to") and x["from"][0] == x["to"][0]:
+            continue
+        r = rows.get(k) or {"k": k, "first": x["seen"] or today.isoformat(), "stage": None, "stories": [], "out": None}
+        r.update(pid=x["pid"], name=r.get("name") if r.get("named") else x["name"], to=x["to"], prob=x["prob"], fee=x["fee"] or r.get("fee"),
+                 last=max(x["seen"] or "", r.get("last") or ""))
+        r["from"] = x["from"]
+        rows[k] = r
+    by_pid = {}
+    for r in rows.values():
+        by_pid.setdefault(r["pid"], []).append(r)
+    for p in news or []:
+        pid = (p.get("player") or {}).get("id")
+        if not pid:
+            continue
+        kept = [s for s in p.get("stories") or [] if not RENEW.search(s.get("title") or "")]
+        if not kept:
+            continue
+        stage = max((s.get("stage") for s in kept if s.get("stage") in STAGES), key=STAGES.index, default=None)
+        st = [[s.get("id"), s.get("title"), (s.get("at") or "")[:10], s.get("first")] for s in kept]
+        last = max([s[2] for s in st] or [today.isoformat()])
+        targets = by_pid.get(pid) or []
+        if not targets and STAGES.index(stage or "rumour") < 1:
+            continue
+        if not targets:
+            k = f"n{pid}"
+            r = rows.get(k) or {"k": k, "pid": pid, "from": None, "to": None, "first": min([s[2] for s in st] or [last]), "prob": None, "fee": None, "out": None}
+            rows[k] = r
+            targets = [r]
+        for r in targets:
+            seen = {s[0] for s in r.get("stories") or []}
+            r["stories"] = sorted((r.get("stories") or []) + [s for s in st if s[0] not in seen], key=lambda s: s[2], reverse=True)[:3]
+            r.update(stage=stage or r.get("stage"), name=(p.get("player") or {}).get("name") or r.get("name"), named=True,
+                     last=max(last, r.get("last") or ""))
+            if stage == "official" and r.get("out") != "done":
+                r.update(out="done", done=max(s[2] for s in st if any(k.get("id") == s[0] and k.get("stage") == "official" for k in kept)))
+    out = []
+    for r in rows.values():
+        if (today - date.fromisoformat(r["last"] or r["first"])).days > KEEP_DAYS:
+            continue
+        if r.get("out") != "done":
+            since = date.fromordinal(date.fromisoformat(r["first"]).toordinal() - 14).isoformat()
+            hit = next((m for m in moves or [] if m[1] == r["pid"] and m[0] >= since and (not r.get("to") or m[5] == r["to"][0])), None)
+            if hit:
+                r.update(out="done", done=hit[0], fee=hit[7] or r.get("fee"))
+            elif today > window_end(date.fromisoformat(r["last"] or r["first"])):
+                r["out"] = "no"
+        out.append(r)
+    out.sort(key=lambda r: (r.get("last") or "", r["k"]), reverse=True)
+    return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(); ap.add_argument("--upload", action="store_true"); ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--budget", type=int, default=BUDGET)
@@ -136,6 +225,11 @@ def main(argv=None):
         store.put_json("transfers/all.json", {"generated": today.isoformat(), "since": season_since(today),
                                               "clubs": {str(k): v for k, v in clubs.items()}, "moves": L}, cache="warm")
         print("uploaded v1/transfers/all.json")
+        prev = (store.get_json("transfers/rumours.json") or {}).get("rumours") or []
+        R = merge_rumours(prev, fotmob_rumours(raws, names), (store.get_json("news/transfers.json") or {}).get("players") or [], L, today)
+        store.put_json("transfers/rumours.json", {"generated": today.isoformat(), "rumours": R}, cache="warm")
+        print(json.dumps({"rumours": len(R), "open": sum(1 for r in R if not r.get("out")), "done": sum(1 for r in R if r.get("out") == "done"),
+                          "no": sum(1 for r in R if r.get("out") == "no")}))
     return 0
 
 

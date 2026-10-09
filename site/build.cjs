@@ -444,6 +444,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // every club's moves this season (db/transfers_world.py; spec 2026-10-09 transfers, phase 1): /transfers/, /transfers/<league>/, the club's window
   const TRT = require("./lib/transfers.cjs"), TRW = await get("transfers/all.json"), TRS = TRW ? TRT.season(TRW.moves, TRW.since) : [];
   const TRL = TRW ? `موسم ${TRW.since.slice(0, 4)}/${+TRW.since.slice(2, 4) + 1}` : "";
+  const TRR = ((await get("transfers/rumours.json")) || {}).rumours || [];   // phase 3: the rumour ledger
   // every club's full history (db/history.py: results since 1888 + our FotMob archive); the tab loads its file in the browser
   const HIDX = ((await get("history/index.json")) || {}).clubs || {};
   // every club and squad player complete from FotMob (db/fotmob_profiles.py): trophies with seasons, stadium; bio of every player
@@ -758,7 +759,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
       const tw = TWINS && TWINS.clubs && S.twins(TWINS.clubs[id]); if (tw) nums += S.sec("توأم فريقك", "أقرب الأندية في أسلوب اللعب", tw);
       const ml = (tmonth[i] || []).filter(mo => mo && mo.results && mo.results.length); if (ml.length) nums = S.sec("تقرير الشهر", "", '<p class="tools">' + ml.map(mo => `<a class="btn" href="/t/${id}/month/${mo.month}/">${["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"][+mo.month.slice(5) - 1]}</a>`).join("") + "</p>") + nums;
       { const trc = trClub(id); if (trc) nums += S.sec("أغلى الصفقات في تاريخه", "", trc); }
-      { const tw = TRT.clubSection(TRT.forClub(TRS, id), { pname:nameOf, cname:k => (teamsJson.teams[k] || {}).name_ar || TAR[k] }); if (tw) nums += S.sec("انتقالات هالموسم", TRL, tw); }
+      { const tn = { pname:nameOf, cname:k => (teamsJson.teams[k] || {}).name_ar || TAR[k] }, tw = TRT.clubSection(TRT.forClub(TRS, id), tn); if (tw) nums += S.sec("انتقالات هالموسم", TRL, tw);
+        const rr = TRT.rumoursOf(TRR, { club:id, open:1 }).slice(0, 15); if (rr.length) nums += S.sec("إشاعات حوله", "", TRT.rumourList(rr, tn) + '<p class="src"><a href="/transfers/rumours/">كل الإشاعات</a></p>'); }
       if (rc) nums += S.sec("سجل النادي", "من 2010", rc); if (hm) nums += S.sec("كل نتايجه موسم بموسم", "", hm); if (xi) nums += S.sec("التشكيلة المعتادة", "هالموسم", xi); if (cu) nums += S.sec("لاعبينه في المنتخبات", "", cu); }
     const tv2 = S.travel(t, t.fixtures); if (tv2) nums += S.sec("سافر مع فريقك", "مباريات آسيا برا الدولة", tv2);
     const co = S.coachesTeam(x538.coaches, id); if (co) nums += S.sec("مدربين النادي عبر التاريخ", "في الدوري", co);
@@ -868,7 +870,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     const mmRow = mm.length ? U.grp(`زملاءه في ${esc(tt.name_ar || "الفريق")}`, mm.map(x => U.row({ href:`/p/${x}/`, t:nameOf(x) ? esc(nameOf(x)) : `<span class="lat">${esc((allPlayers[x] || {}).name || "")}</span>` })).join(""), { cls:"mt2" }) : "";
     const v5 = P5.player(id, { name:nameOf(id), latin:p.name, team:tm ? { id:tm, name_ar:tt.name_ar } : null, pos:p.position, num:p.number, cc:p.country, season:p.season,
       card:ap.fm ? null : { goals:z(p.goals, sv("goals")), assists:z(p.assists, sv("goal_assist")), minutes:z(p.minutes, ap.minutes), rating:p.rating }, prof:FMP[id] || car ? Object.assign({ bio:fb }, PSEO.asProfile(car) || {}) : null, ea:EAC[id] || null,
-      seasonRow:sr, photo:ph ? `/v1/ph/${id}.webp` : null, credit:ph ? `الصورة: <a href="${esc(ph.page || "")}" rel="noopener">${esc(((ph.artist || "").replace(/\s+/g, " ").trim().slice(0, 40)) + (ph.license ? " · " + ph.license : ""))}</a>` : "", wiki:WP[id] ? wiki5(WP[id]) : "", transfers:(TRH.players || {})[id] || null, fees:TRF[id] || null,
+      seasonRow:sr, photo:ph ? `/v1/ph/${id}.webp` : null, credit:ph ? `الصورة: <a href="${esc(ph.page || "")}" rel="noopener">${esc(((ph.artist || "").replace(/\s+/g, " ").trim().slice(0, 40)) + (ph.license ? " · " + ph.license : ""))}</a>` : "", wiki:WP[id] ? wiki5(WP[id]) : "", transfers:(TRH.players || {})[id] || null, fees:TRF[id] || null, rumours:(r => r.length ? TRT.rumourList(r.slice(0, 8), { pname:nameOf, cname:k => (teamsJson.teams[k] || {}).name_ar || TAR[k] }) : "")(TRT.rumoursOf(TRR, { pid:id })),
       x:{ mount:true, crumbs:pcrumbs, intro:pintro, aka:akaOf(id), follow:!!tm, profile:(String(id) === "30981" ? U.grp("", U.row({ href:"/messi/", icon:"target", c:"#0A84FF", t:"متحف ميسي", sub:"كل أهدافه على ملعب ثلاثي الأبعاد" }), { cls:"mt2" }) : "") + nxRow + shelf(pext, { title:"بالتفصيل" }) + mmRow,
         share:P5.shareSheet({ html:toolRows(ptools) + `<button type="button" class="row" id="secpick"><span class="rt">صورة لأي قسم</span>${U.chev}</button>`, after:'<div id="secpicks" class="card mt" hidden></div>' }) } });
     v5.data = { id:+id, prof:FMP[id] || car ? 1 : 0, tm:TMI[id] ? 1 : 0 };
@@ -1335,7 +1337,7 @@ ${items}
     path:"/cam/", page:"cam", noindex:true, js:[ENG.cam], title:"الكاميرا الذكية: أرقام المباراة فوق التلفزيون | تيفو", desc:"وجّه تلفونك على التلفزيون، وأرقام المباراة المباشرة تطلع فوق الصورة." }));
 
   // ---- Arab-world pages (build_arabs.cjs): national teams, Arabs abroad, derbies, clashes, streaks, guide, archive…
-  const AW = await require("./build_arabs.cjs")({ get, pool, write, page, urls, shelf, blocks, stub, NAT, coachAr, TRT, TRW, TRS, TRL, TAR, comps, msum:id => matchSum.get(id), R, S, esc, index, teamsJson, teamPages, playerPages, matchPages:new Set(mids), NAMES_AR, fs, path, OUT, CACHE, H2H, BC });
+  const AW = await require("./build_arabs.cjs")({ get, pool, write, page, urls, shelf, blocks, stub, NAT, coachAr, TRT, TRW, TRS, TRL, TRR, TAR, FMP, comps, msum:id => matchSum.get(id), R, S, esc, index, teamsJson, teamPages, playerPages, matchPages:new Set(mids), NAMES_AR, fs, path, OUT, CACHE, H2H, BC });
   ED.push(["brk", "mow", "tonight", "streaks"].map(k => AW.home[k] || "").join("") + (AW.home.days || ""));
   writeHome();
   // W4.2: /match-of-week/ is a pinned card on /week/ now

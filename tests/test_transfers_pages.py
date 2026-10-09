@@ -70,3 +70,30 @@ console.log(JSON.stringify([T.row(a), T.row(a, {{ side:"out" }}), T.row(b), T.ro
     assert "صار بدون نادي" in free and "لـبدون" not in free and "لبدون" not in free
     assert "صار بدون نادي" in free_out and "انتقال حر" not in free_out   # «صار بدون نادي انتقال حر» says it twice
     assert "من <a" in free_in and ">الهلال<" in free_in
+
+
+RUM = [{"k": "fm1", "pid": 7, "name": "مارتينيلي", "from": [9825, "أرسنال"], "to": [8, "الهلال"], "first": "2026-08-01", "last": "2026-09-11", "prob": "High",
+        "fee": 70000000, "stage": "agreed", "stories": [["s1", "اتفاق بين الهلال وأرسنال", "2026-09-11", "Fabrizio"]], "out": None},
+       {"k": "n11", "pid": 11, "name": "إيليفن", "from": None, "to": None, "first": "2026-09-12", "last": "2026-09-12", "prob": None, "fee": None,
+        "stage": "talks", "stories": [], "out": None},
+       {"k": "fm3", "pid": 9, "name": "ناين", "from": [30, "C"], "to": [8, "الهلال"], "first": "2026-07-01", "last": "2026-07-20", "prob": "Low", "fee": None,
+        "stage": None, "stories": [], "out": "no"}]
+
+
+def test_a_rumour_row_says_how_far_it_got_and_who_said_it():
+    a, b, c = run(f"const R = {json.dumps(RUM)}; console.log(JSON.stringify(R.map(r => T.rumourRow(r))));")
+    assert '<a href="/p/7/">مارتينيلي</a>' in a and "للهلال" in a and "اتفاق" in a and "Fabrizio" in a and "اتفاق بين الهلال وأرسنال" in a
+    assert "مفاوضات" in b and "صار بدون نادي" not in b and "من " not in b.split("</a>", 1)[1][:30]
+    assert "ما صدقت" in c and "احتمال ضعيف" in c
+
+
+def test_rumours_about_a_club_or_a_player_open_first():
+    out = run(f"const R = {json.dumps(RUM)}; console.log(JSON.stringify([T.rumoursOf(R, {{ club:8 }}).map(r => r.k), T.rumoursOf(R, {{ pid:11 }}).map(r => r.k), T.rumoursOf(R, {{ club:8, open:1 }}).map(r => r.k)]));")
+    assert out == [["fm1", "fm3"], ["n11"], ["fm1"]]
+
+
+def test_contracts_ending_by_next_june():
+    P = {"1": {"name": "A", "team": 8, "contract": "2027-06-30", "pos": "Keeper"}, "2": {"name": "B", "team": 8, "contract": "2028-06-30"},
+         "3": {"name": "C", "team": 9, "contract": "2026-12-31"}, "4": {"name": "D", "team": 9, "contract": None}, "5": {"name": "E", "team": 9, "contract": "2026-09-30"}}
+    out = run(f"console.log(JSON.stringify(T.expiring({json.dumps(P)}, '2026-10-09')))")
+    assert out == {"until": "2027-06-30", "players": [["3", "C", 9, "2026-12-31"], ["1", "A", 8, "2027-06-30"]]}

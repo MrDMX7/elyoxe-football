@@ -192,7 +192,7 @@ module.exports = async function(X){
   // 263 transfers (last 60 days, Arab leagues)
   const TR = F["transfers/latest"];
   // the world's transfer market (spec 2026-10-09 transfers, phase 1; build.cjs passes the ledger): /transfers/ and a page per tracked league
-  const { TRT, TRW, TRS, TRL, TAR } = X;
+  const { TRT, TRW, TRS, TRL, TRR, TAR, FMP } = X;
   const trNames = { pname:id => (NAMES_AR[id] || {}).ar, cname:id => ((teamsJson.teams || {})[id] || {}).name_ar || (TAR || {})[id] };
   if (TRT && TRW && TRS.length){
     const lgs = [];
@@ -209,8 +209,25 @@ module.exports = async function(X){
         `انتقالات ${esc(c.name_ar)}`, `${TRL}، <span class="num">${mv.length}</span> انتقال.`, body, { crumbs:'<a href="/transfers/">الانتقالات</a>', page:"transfers" });
       lgs.push([p, c.name_ar, mv.length]);
     }
+    // phase 3: the rumours (open, came true, did not) and the contracts ending by next June, by club
+    const rOpen = (TRR || []).filter(r => !r.out), rDone = (TRR || []).filter(r => r.out === "done"), rNo = (TRR || []).filter(r => r.out === "no");
+    const hasR = put("/transfers/rumours/", "إشاعات الانتقالات: آخر أخبار الصفقات والمفاوضات", "إشاعات الانتقالات في أندية العالم: اللاعب والنادي المرتبط به، ومرحلة المفاوضات، والإشاعات التي تحققت والتي لم تتحقق.",
+      "إشاعات الانتقالات", `<span class="num">${rOpen.length}</span> إشاعة شغالة. كل إشاعة تنقفل لما تصير الصفقة («صدقت») أو تخلص فترة الانتقالات بدونها («ما صدقت»).`,
+      (rOpen.length ? `<section class="blk"><h2>شغالة</h2>${TRT.rumourList(rOpen.slice(0, 120), trNames)}</section>` : "") +
+      (rDone.length ? `<section class="blk"><h2>صدقت</h2>${TRT.rumourList(rDone.slice(0, 60), trNames)}</section>` : "") +
+      (rNo.length ? `<section class="blk"><h2>ما صدقت</h2>${TRT.rumourList(rNo.slice(0, 60), trNames)}</section>` : ""), { crumbs:'<a href="/transfers/">الانتقالات</a>', page:"transfers" });
+    const EX = TRT.expiring(FMP, new Date(Date.now() + 4 * 36e5).toISOString().slice(0, 10)), exBy = {};
+    EX.players.forEach(p => { (exBy[p[2]] = exBy[p[2]] || []).push(p); });
+    // the site's leagues first, in their order (the UAE and the Arab leagues lead), then the most players
+    const lrank = id => { const lid = ((TRW.clubs || {})[id] || [])[1], i = (X.comps || []).findIndex(c => +c.id === +lid); return i < 0 ? 1e4 : i; };
+    const exClubs = Object.keys(exBy).filter(id => trNames.cname(id)).sort((a, b) => lrank(a) - lrank(b) || exBy[b].length - exBy[a].length);
+    const hasE = exClubs.length && put("/transfers/expiring/", `اللاعبون الذين تنتهي عقودهم في ${EX.until.slice(0, 4)}: الصفقات المجانية القادمة`, `اللاعبون الذين تنتهي عقودهم قبل 30 يونيو ${EX.until.slice(0, 4)} في كل نادي، ويمكنهم الانتقال مجاناً.`,
+      `ينتهي عقده قبل 30 يونيو ${EX.until.slice(0, 4)}`, `<span class="num">${EX.players.length}</span> لاعب يقدر يطلع مجاناً الصيف الياي.`,
+      exClubs.map(id => `<section class="blk"><h2><a href="/t/${id}/">${esc(trNames.cname(id))}</a> <span class="muted small num">${exBy[id].length}</span></h2><ul class="wcl">${exBy[id].map(p => `<li><a href="/p/${p[0]}/">${(NAMES_AR[p[0]] || {}).ar ? esc(NAMES_AR[p[0]].ar) : `<span class="lat">${esc(p[1])}</span>`}</a> <span class="muted small">${dm(p[3])} <span class="num">${p[3].slice(0, 4)}</span></span></li>`).join("")}</ul></section>`).join(""),
+      { crumbs:'<a href="/transfers/">الانتقالات</a>', page:"transfers" });
     const ar = TRT.arabs(TRS), nClubs = new Set(TRS.flatMap(m => [m[3], m[5]])).size;
-    const body = `<section class="blk"><h2>أغلى الصفقات</h2>${TRT.list(TRT.top(TRS, 30), trNames)}</section>` +
+    const body = (hasR || hasE ? `<p class="tools">${hasR ? `<a class="btn" href="/transfers/rumours/">الإشاعات (<span class="num">${rOpen.length}</span>)</a>` : ""}${hasE ? `<a class="btn" href="/transfers/expiring/">ينتهي عقده الصيف الياي</a>` : ""}</p>` : "") +
+      `<section class="blk"><h2>أغلى الصفقات</h2>${TRT.list(TRT.top(TRS, 30), trNames)}</section>` +
       `<section class="blk"><h2>آخر الانتقالات</h2>${TRT.list(TRS.slice(0, 60), trNames)}</section>` +
       (ar.length ? `<section class="blk"><h2>اللاعبين العرب</h2><p class="muted">كل لاعب عربي انتقل هالموسم، في أي دوري.</p>${TRT.list(ar.slice(0, 80), trNames)}</section>` : "") +
       (lgs.length ? `<section class="blk"><h2>حسب الدوري</h2><ul class="mlist cols">${lgs.sort((a, b) => b[2] - a[2]).map(l => `<li><a href="${l[0]}">${esc(l[1])}</a> <span class="muted small num">${l[2]}</span></li>`).join("")}</ul></section>` : "");

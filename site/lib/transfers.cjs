@@ -55,4 +55,31 @@ function clubSection(c, o) {
     (c.out.length ? `<h3>راح (<span class="num">${c.out.length}</span>)</h3>${list(c.out, withSide(o, "out"))}` : "");
 }
 
-module.exports = { ARAB, season, top, arabs, league, forClub, eur, row, list, clubSection };
+// ---- phase 3: rumours (db/transfers_world.py merge_rumours -> v1/transfers/rumours.json) and contracts running out
+const PROB = { Low: "احتمال ضعيف", Medium: "احتمال متوسط", High: "احتمال قوي", Imminent: "وشيكة" };
+const STAGE = { rumour: "إشاعة", talks: "مفاوضات", agreed: "اتفاق", here_we_go: "Here we go", official: "رسمي" };
+function rumourRow(r, o) {
+  o = o || {};
+  const side = [r.from ? `من ${club(r.from[0], r.from[1], o)}` : "", r.to ? to(r.to[0], r.to[1], o) : ""].filter(Boolean).join(" ");
+  const s = (r.stories || [])[0];
+  const tag = r.out === "done" ? "صدقت" : r.out === "no" ? "ما صدقت" : STAGE[r.stage] || "";
+  // the headline only in Arabic (the site's news is Arabic only); a foreign one leaves just its source
+  const meta = [PROB[r.prob], r.fee && r.out !== "no" ? eur(r.fee) : "", s ? (AR.test(s[1] || "") ? `«${esc(s[1])}»` : "") + (s[3] ? (AR.test(s[1] || "") ? " · " : "المصدر: ") + nm(s[3]) : "") : ""].filter(Boolean).join(" · ");
+  return `<li><span class="muted small">${dm(r.done || r.last || r.first)}</span> <a href="/p/${r.pid}/">${nm((o.pname && o.pname(r.pid)) || r.name)}</a>` +
+    (side ? ` <span class="muted">${side}</span>` : "") + (tag ? ` <b>${tag}</b>` : "") + (meta ? `<br><span class="muted small">${meta}</span>` : "") + "</li>";
+}
+const rumourList = (R, o) => `<ul class="wcl">${R.map(r => rumourRow(r, o)).join("")}</ul>`;
+// a club's (to or from it) or a player's rumours, the open ones first; o.open: the open ones only
+function rumoursOf(R, q) {
+  const hit = r => (q.pid != null && +r.pid === +q.pid) || (q.club != null && ((r.to && +r.to[0] === +q.club) || (r.from && +r.from[0] === +q.club)));
+  return (R || []).filter(r => hit(r) && (!q.open || !r.out)).sort((a, b) => (!!a.out - !!b.out) || ((b.last || "") > (a.last || "") ? 1 : -1));
+}
+// players whose contract ends by next 30 June: [[id, name, team, date]], soonest first (FotMob's history/fm/players.json)
+function expiring(P, today) {
+  const until = `${+today.slice(0, 4) + (today.slice(5) > "06-30" ? 1 : 0)}-06-30`;
+  const players = Object.entries(P || {}).filter(([, p]) => p && p.contract && p.contract >= today && p.contract <= until)
+    .map(([id, p]) => [id, p.name, p.team, p.contract]).sort((a, b) => a[3] < b[3] ? -1 : a[3] > b[3] ? 1 : 0);
+  return { until, players };
+}
+
+module.exports = { ARAB, season, top, arabs, league, forClub, eur, row, list, clubSection, PROB, STAGE, rumourRow, rumourList, rumoursOf, expiring };
