@@ -136,10 +136,14 @@
     var moreHtml = (more.length ? U.grp("بالتفصيل", U.rows(more)) : "") + (x && x.ana ? x.ana : "");
     var pick = sched && !md.time_tbd ? U.grp("منو بيفوز؟", '<div class="card" style="padding:12px"><div id="pick" data-mid="' + id + '" data-kick="' + esc(md.kickoff_utc || "") + '" data-h="' + md.home.id + '" data-a="' + md.away.id + '">' + U.seg("pick", [["h", U.tname(md.home)], ["d", "تعادل"], ["a", U.tname(md.away)]], "none") + "</div></div>", { foot: '<span id="pickm">توقعك يبقى في جوالك بس.</span>' }) : "";
     var chb = ctx.ch != null ? '<section class="grp" id="wwbox" data-comp="' + md.comp + '"><div class="gh"><h2>وين تنقل</h2><span id="chcc"></span></div><div class="card" id="chbox" data-comp="' + md.comp + '">' + (ctx.ch || '<div class="row"><span class="rt muted">ما عندنا القناة الناقلة لهالبطولة.</span></div>') + "</div></section>" : "";
+    // «منو يعلّق؟» in the page itself (owner 2026-10-09): the block src/tv.js paints after load (it repaints #tvc in place)
+    var tvb = ctx.tv && ctx.tv.length ? '<section class="grp tvc" id="tvc" aria-labelledby="tvct"><div class="gh"><h2 id="tvct">منو يعلّق؟</h2><span class="ghs">القناة والمعلق</span></div><div class="card lc"><ul class="tvl">' +
+      ctx.tv.map(function (e) { var n = (e.commentators && e.commentators.length > 1 ? e.commentators : [e.commentator]).filter(Boolean).map(esc).join(" و");
+        return '<li><span class="tvn">📺 <b>' + esc(e.channel || "") + '</b></span><span class="tvv">' + (n ? "المعلق: <b>" + n + "</b>" : "المعلق يبان يوم المباراة") + "</span></li>"; }).join("") + "</ul></div></section>" : "";
     var info = U.grp("معلومات المباراة", U.info(md, { ch: !sched && U.isLive(md) && ctx.ch ? ctx.ch : "", hl: ctx.hl }));
     // «توقعك للنتيجة» (owner item 8, src/predict.js) replaces the local pick when the build passes it, and stays on live and recent pages
     var tp = x && x.predict != null ? x.predict : null;
-    var ov = sched ? (x && x.top ? x.top : "") + chb + (tp != null ? tp : pick) + probBlock + (x && x.stakes != null ? x.stakes : stakes(md, ctx.st)) + (x && x.facts ? x.facts : "") + info + moreHtml
+    var ov = sched ? (x && x.top ? x.top : "") + chb + tvb + (tp != null ? tp : pick) + probBlock + (x && x.stakes != null ? x.stakes : stakes(md, ctx.st)) + (x && x.facts ? x.facts : "") + info + moreHtml
       : (x && x.top ? x.top : "") + '<section class="grp"><div class="gh"><h2>الأحداث</h2></div><div id="ev">' + U.events(md) + '</div></section><div id="ltable"></div>' + (U.isLive(md) ? chb : "") + (tp || "") + probBlock + info + moreHtml;
     var lu = (x && x.p3d ? x.p3d : "") + '<div id="lu">' + U.lineups(md) + "</div>";
     var h2h = U.h2h(md) + (x && x.h2h ? U.grp("", U.row({ href: x.h2h, icon: "swap", c: "#5856D6", t: "كل مواجهاتهم", sub: "كم فاز كل فريق، وكل النتايج" }), { cls: "mt2" }) : "");

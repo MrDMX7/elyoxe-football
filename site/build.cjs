@@ -92,6 +92,7 @@ const isLiveSec = h => LIVE_IDS.some(id => h.includes('id="' + id + '"'));
 // tab, sheets}`; every other caller passes a v2/v3-shaped `body` (crumbs + h1 + season + <section class="blk">…) and
 // lib/v5.cjs legacy5() turns it into the same skeleton. The SEO head (title, description, canonical or noindex, OG, JSON-LD,
 // manifest) is the same for both and never depends on the template.
+const MSEO = require("./lib/match_seo.cjs");   // «معلق مباراة X و Y» (owner 2026-10-09)
 const U = require("./src/v5/ui.js"), P5 = require("./src/v5/pages.js"), PSEO = require("./lib/player_seo.cjs"), NFY = require("./src/notify.js");
 // owner items 7, 8, 3 (docs/ENGAGEMENT.md): «نبّهني», «توقع وتحدى ربعك», «المعلقين»; their pure halves prerender here, the browser
 // halves load on the pages that use them (page() below)
@@ -869,6 +870,11 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   R.DUPCTX = "";   // 503: back to no context
 
   // ---- 7. matches: summary for all, full detail where stored; probabilities (92) and records at stake (94, 95)
+  // «معلق مباراة X و Y» (owner 2026-10-09): the commentator and channel of each match from yesterday to two days ahead
+  // (news/commentators.py writes v1/tv/<ymd>.json every 15 min), into the match page's title, description and HTML
+  const TVM = {};
+  for (let k = -1; k <= 2; k++){ const t = new Date(Date.now() + 4 * 36e5 + k * 864e5), ymd = t.toISOString().slice(0, 10).replace(/-/g, "");
+    const tvd = await get(`tv/${ymd}.json`, 1); for (const [mid, rows] of Object.entries((tvd && tvd.matches) || {})) TVM[mid] = rows; }
   const mids = [...matchSum.keys()].filter(id => id != null && id !== "null");   // W1.4: a fixture without an id gets no page and no link
   const withDetail = new Set(mids.filter(id => { const m = matchSum.get(id); return m.status === "finished" || R.isLive(m) || (Date.parse(m.kickoff_utc) - Date.now() < 3 * 864e5 && Date.parse(m.kickoff_utc) > Date.now() - 864e5); }));
   const det = await pool([...withDetail], 8, id => get(`match/${id}.json`, 1));
@@ -1009,7 +1015,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
         U.row({ btn:1, icon:"link", c:"#0A84FF", t:"ضمّن المباراة في موقعك", attrs:` id="embedbtn" data-src="/embed/m/?id=${id}&d=${esc(dd)}" data-h="260"` }) + U.row({ btn:1, icon:"image", c:"#8E8E93", t:"صورة لأي قسم", attrs:' id="secpick"' }),
       after:'<div id="embout" class="card mt lc" hidden></div><div id="secpicks" class="card mt" hidden></div>' });
     const hlx = md.status === "finished" && !(md.highlights && md.highlights.url) && hl ? (hl.match(/href="([^"]+)"/) || [])[1] : null;
-    const v5 = P5.match(md, { st:cdata.st, ch:ww ? (() => { const e = BCBY.AE && BCBY.AE[md.comp]; return e && e.b && e.b.length ? e.b.slice(0, 4).map(x => `<div class="row"><span class="rt">${esc(x[0])}${x[5] ? `<small>${esc(x[5])}</small>` : ""}</span>${x[1] ? "" : '<span class="chip enc">مشفرة</span>'}</div>`).join("") : (bcAE && bcAE.broadcasters || []).slice(0, 4).map(b => `<div class="row"><span class="rt">${esc(b.name_ar || b.name || "")}</span></div>`).join(""); })() : null, og:ogOn ? 1 : 0, hl:hlx,
+    const v5 = P5.match(md, { st:cdata.st, tv:(md.status === "scheduled" ? TVM[String(md.id)] : null) || [], ch:ww ? (() => { const e = BCBY.AE && BCBY.AE[md.comp]; return e && e.b && e.b.length ? e.b.slice(0, 4).map(x => `<div class="row"><span class="rt">${esc(x[0])}${x[5] ? `<small>${esc(x[5])}</small>` : ""}</span>${x[1] ? "" : '<span class="chip enc">مشفرة</span>'}</div>`).join("") : (bcAE && bcAE.broadcasters || []).slice(0, 4).map(b => `<div class="row"><span class="rt">${esc(b.name_ar || b.name || "")}</span></div>`).join(""); })() : null, og:ogOn ? 1 : 0, hl:hlx,
       x:{ top:top5, stakes:stakes5, predict:(md.status === "scheduled" && !md.time_tbd) || R.isLive(md) || (md.status === "finished" && Date.now() - Date.parse(md.kickoff_utc || 0) < 3 * 864e5) ? TPM.block(md) : "", facts:facts3 ? `<section class="grp"><div class="gh"><h2>قبل المباراة</h2></div><div class="card lc">${facts3}</div></section>` : "", ana:shelf(ana5, { title:sched ? "قبل المباراة بالتفصيل" : "التحليل" }), faq:faq5, p3d:p3d5, h2h:H2H[hk] ? `/h2h/${hk}/` : null, share:share5,
         after:`<script type="application/json" id="msum">${JSON.stringify(Object.assign({}, sum, { events:undefined, lineups:undefined, stats:undefined, h2h:undefined })).replace(/</g, "\\u003c")}</script>` } });
     v5.data = { id:+id, comp:md.comp, status:md.status, live:R.isLive(md) || (md.status === "scheduled" && Date.parse(md.kickoff_utc) - Date.now() < 3 * 36e5 && Date.parse(md.kickoff_utc) - Date.now() > -3 * 36e5) ? 1 : 0, ko:md.kickoff_utc || null, h:md.home.id, a:md.away.id,
@@ -1024,8 +1030,9 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     // 444: «موعد مباراة X و Y» before it, «نتيجة مباراة X و Y» once it has a score
     const cN = md.comp_name_ar || R.compName(index, md.comp), H0 = PN(md.home), A0 = PN(md.away), played = !!(md.score && (md.status === "finished" || R.isLive(md)));
     const when = !md.kickoff_uae ? "والموعد ما تأكد" : R.dayLabel(R.ymd(md.kickoff_uae)) + (md.time_tbd ? "، والساعة ما تأكدت" : ` الساعة ${R.hhmm(md.kickoff_uae)} بتوقيت الإمارات`);
-    const mT = played ? `نتيجة مباراة ${H0} و${A0} ${md.score.home}-${md.score.away} في ${cN} | تيفو` : `موعد مباراة ${H0} و${A0} في ${cN}${ww ? " والقناة الناقلة" : ""} | تيفو`;
-    const mD = played ? `${md.status === "finished" ? "انتهت" : "مباشر:"} مباراة ${H0} و${A0} ${md.score.home}-${md.score.away} في ${cN}: الأهداف والأحداث والتشكيلة والإحصائيات والمواجهات السابقة.` : `موعد مباراة ${H0} و${A0} في ${cN} ${when}${ww ? "، والقناة الناقلة" : ""}، مع التشكيلة والأرقام والمواجهات السابقة.`;
+    const tvm = played ? [] : (TVM[String(md.id)] || []);   // the commentator and channel Tifo knows (v1/tv/<ymd>.json)
+    const mT = MSEO.title({ H0, A0, cN, played, score:md.score, ww:!!ww, tv:tvm });
+    const mD = (played ? "" : MSEO.lead(tvm)) + (played ? `${md.status === "finished" ? "انتهت" : "مباشر:"} مباراة ${H0} و${A0} ${md.score.home}-${md.score.away} في ${cN}: الأهداف والأحداث والتشكيلة والإحصائيات والمواجهات السابقة.` : `موعد مباراة ${H0} و${A0} في ${cN} ${when}${ww ? "، والقناة الناقلة" : ""}، مع التشكيلة والأرقام والمواجهات السابقة.`);
     const mck = (comps.find(cc => cc.id === md.comp) || {}).key, mBc = bcLd([mck && [cN, `/c/${mck}/`], [`${H0} و${A0}`, `/m/${id}/`]]);
     v5.body = v5.body.replace('<div id="ev">', `<div id="ev" data-gstub="${gstub.join(",")}">`);   // item 11: the goals whose page /m/<id>/g/<n>/ was published (src/goalshare.js)
     write(`m/${id}/index.html`, page({ v5, near:R.isLive(md) || (md.status === "finished" && Date.now() - Date.parse(md.kickoff_utc || 0) < 4 * 36e5),   /* QA 4: an upcoming match is never marked stale (its time is not live data) */ og:mOg, ogv:mOg !== "match" && md.status === "finished" && md.score ? `ft-${md.score.home}-${md.score.away}` : "", path:`/m/${id}/`, page:"match", nav:"home", attrs:` data-id="${id}"`, names, pp:mpp, title:mT, desc:mD, js:[`/assets/goalshare.${GS_V}.js`].concat(fanJs, motmJs, posterOn ? [ENG.poster] : [], [ENG.trail], coachJs, [ENG.badges]), ld:[ld].concat(faqQ.length ? [{ "@context":"https://schema.org", "@type":"FAQPage", mainEntity:faqQ.map(q => ({ "@type":"Question", name:q[0], acceptedAnswer:{ "@type":"Answer", text:q[1] } })) }] : [], [mBc]) }));
