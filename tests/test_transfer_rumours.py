@@ -18,7 +18,7 @@ def raw(*rs):
 def test_fotmob_rumours_once_each():
     R = T.fotmob_rumours([raw(rum(1), rum(2, pid=8)), raw(rum(1)), None, raw({"rumourId": None})], names={"7": "لاعب"})
     assert sorted(R) == ["fm1", "fm2"]
-    assert R["fm1"] == {"pid": 7, "name": "لاعب", "from": [10, "A"], "to": [20, "B"], "seen": "2026-09-10", "prob": "Low", "fee": 5000000}
+    assert R["fm1"] == {"pid": 7, "name": "لاعب", "from": [10, "A"], "to": [20, "B"], "seen": "2026-09-10", "prob": "Low", "fee": 5000000, "src": None}
 
 
 def test_window_end():
@@ -64,3 +64,10 @@ def test_renewals_and_bare_gossip_are_no_rumours_and_official_came_true():
     out = {r["k"]: r for r in T.merge_rumours([], fm, news, [], date(2026, 10, 9))}
     assert sorted(out) == ["n4", "n5"]
     assert out["n4"]["out"] == "done" and out["n4"]["done"] == "2026-10-09" and out["n5"]["out"] is None
+
+
+def test_a_fotmob_rumour_keeps_its_source():
+    R = T.fotmob_rumours([raw(dict(rum(1), sourceName="Sky Sports"))])
+    assert R["fm1"]["src"] == "Sky Sports"
+    out = T.merge_rumours([], R, [], [], date(2026, 9, 20))
+    assert out[0]["src"] == "Sky Sports"

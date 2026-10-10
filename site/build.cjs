@@ -1407,6 +1407,18 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   const WORLD = PREVIEW || process.env.TIFO_WORLD === "0" ? { urls:[], stats:{ skipped:true } } : await require("./lib/world_stage.cjs")({ get, pool, page, esc, SITE, CACHE, fs, path, bcLd,
     finalize:h => fixHtml(h).replace("__SV__", SEARCH_V).replace("__CV__", COLOR_V), written:u => WRITTEN.add(u), NAMES_AR, FMN, WP, PH, phHtml, colors, teamPages, playerPages, S_TEAMS, ASSET_V, fmGen:FMPJ.generated || "",
     pmates:Object.fromEntries(Object.entries(mates).map(([t, ids]) => [t, ids.filter(x => pIndexed.has(x)).sort((a, b2) => ((allPlayers[b2] || {}).minutes || 0) - ((allPlayers[a] || {}).minutes || 0)).slice(0, 8)])), pname:nameOf });
+  // owner 2026-10-10 item 1: a static page for every club of the encyclopedia with an Arabic name and no /t/ page (/db/club/<id>/,
+  // lib/club_pages.cjs), in out/: s3push uploads only the pages whose content changed; the link check sends /t/<id>/ links there
+  { const CP = require("./lib/club_pages.cjs"), WIX = ((await get("world/index.json")) || {}).clubs || [], AR = /[؀-ۿ]/;
+    const ids = WIX.filter(c => AR.test(c[1] || "") && !teamPages.has(+c[0])).map(c => +c[0]);
+    const cards = await pool(ids, 12, id => get(`world/club/${id}.json`, 1));
+    const keyOf = {}; comps.forEach(c => { if (c.kind === "league" && c.key) keyOf[+c.id] = c.key; });
+    const leaguePath = id => keyOf[id] && WRITTEN.has(`/transfers/${keyOf[id]}/`) ? `/transfers/${keyOf[id]}/` : WRITTEN.has(`/transfers/l/${id}/`) ? `/transfers/l/${id}/` : null;
+    const cname = k => (teamsJson.teams[k] || {}).name_ar || TAR[k];
+    let nClub = 0;
+    cards.forEach(c => { const P = c && CP.clubPage(c, { TRT, moves:TRS, rumours:TRR, season:TRL, site:SITE, leaguePath, pname:nameOf, cname }); if (!P) return;
+      write(`db/club/${c.id}/index.html`, page({ path:`/db/club/${c.id}/`, page:"ref", title:P.title, desc:P.desc, ld:P.ld, body:P.html })); urls.push(`/db/club/${c.id}/`); nClub++; });
+    console.log("club pages:", nClub, "of", ids.length); }
   // their crawl path: /db/players/ (every nationality) and /db/players/<cc>/ (its players by club), small and in out/
   { const H = WORLD.hubs || {}, CN = FMN.countries || {}, ccs = Object.keys(H).filter(cc => CN[cc] && H[cc].length).sort((a, b) => H[b].length - H[a].length);
     const pl = n => n === 1 ? "لاعب واحد" : n === 2 ? "لاعبين" : `<span class="num">${n}</span> ${n <= 10 ? "لاعبين" : "لاعب"}`, AR = /[؀-ۿ]/;

@@ -63,6 +63,20 @@ def plan_fetch(ids, ages, priority, budget, ttl):
     return due[:budget]
 
 
+def squad_card(tid, raw, names=None):
+    """The world club card's squad (db/world.py's shape: [id, name, shirt, group, nationality]) for a site team the
+    encyclopedia does not cover (a national team, a small club); None without a squad."""
+    names = names or {}
+    if not isinstance(raw, dict):
+        return None
+    members = [[m["id"], names.get(str(m["id"])) or m.get("name"), m.get("shirtNumber"), (g.get("title") or "").lower(), m.get("ccode")]
+               for g in ((raw.get("squad") or {}).get("squad") or []) if isinstance(g, dict)
+               for m in g.get("members") or [] if isinstance(m, dict) and m.get("id")]
+    if not members:
+        return None
+    return {"id": tid, "name": (raw.get("details") or {}).get("name"), "name_ar": names.get(str(tid)), "squad": members}
+
+
 def nationalities(raws):
     out = {}
     for raw in raws:
@@ -126,7 +140,8 @@ def fotmob_rumours(raws, names=None):
             out[f"fm{x['rumourId']}"] = {"pid": int(x["playerId"]), "name": names.get(str(x["playerId"])) or x.get("name"),
                                          "from": [x.get("fromClubId"), names.get(str(x.get("fromClubId"))) or x.get("fromClub")] if x.get("fromClubId") else None,
                                          "to": [x.get("toClubId"), names.get(str(x.get("toClubId"))) or x.get("toClub")] if x.get("toClubId") else None,
-                                         "seen": (x.get("transferDate") or "")[:10], "prob": x.get("probability"), "fee": fee_of(x)}
+                                         "seen": (x.get("transferDate") or "")[:10], "prob": x.get("probability"), "fee": fee_of(x),
+                                         "src": x.get("sourceName") or None}
     return out
 
 
@@ -139,6 +154,7 @@ def merge_rumours(prev, fm, news, moves, today):
         r.update(pid=x["pid"], name=r.get("name") if r.get("named") else x["name"], to=x["to"], prob=x["prob"], fee=x["fee"] or r.get("fee"),
                  last=max(x["seen"] or "", r.get("last") or ""))
         r["from"] = x["from"]
+        r["src"] = x.get("src") or r.get("src")       # who FotMob says carried it (the sources page ranks them)
         rows[k] = r
     by_pid = {}
     for r in rows.values():
@@ -195,6 +211,7 @@ def main(argv=None):
     today = date.today()
     idx = store.get_json("world/index.json") or {}
     clubs = {int(c[0]): [c[1], c[4] if len(c) > 4 else None] for c in idx.get("clubs") or []}
+    world = set(clubs)
     site = {int(k) for k in ((store.get_json("teams.json") or {}).get("teams") or {})}
     for tid in site:
         clubs.setdefault(tid, [None, None])
@@ -222,6 +239,11 @@ def main(argv=None):
     print(json.dumps({"clubs": len(ids), "fetched": len(fetch), "answered": sum(1 for r in raws if r), "moves": len(L), "with_fee": sum(1 for r in L if r[7]),
                       "s": round(time.time() - t0)}))
     if a.upload:
+        # the site's teams the encyclopedia does not cover (national teams, small clubs): their squad card for the team page
+        cards = [c for i, raw in zip(ids, raws) if i in site and i not in world for c in [squad_card(i, raw, names)] if c]
+        with ThreadPoolExecutor(8) as ex:
+            list(ex.map(lambda c: store.put_json(f"world/club/{c['id']}.json", c, cache="warm"), cards))
+        print(json.dumps({"squad_cards": len(cards)}))
         store.put_json("transfers/all.json", {"generated": today.isoformat(), "since": season_since(today),
                                               "clubs": {str(k): v for k, v in clubs.items()}, "moves": L}, cache="warm")
         print("uploaded v1/transfers/all.json")

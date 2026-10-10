@@ -192,17 +192,22 @@ module.exports = async function(X){
   // 263 transfers (last 60 days, Arab leagues)
   const TR = F["transfers/latest"];
   // the world's transfer market (spec 2026-10-09 transfers, phase 1; build.cjs passes the ledger): /transfers/ and a page per tracked league
-  const { TRT, TRW, TRS, TRL, TRR, TAR, FMP } = X;
+  const { TRT, TRW, TRS, TRL, TRR, TAR, FMP } = X, AR_ = /[؀-ۿ]/;
   const trNames = { pname:id => (NAMES_AR[id] || {}).ar, cname:id => ((teamsJson.teams || {})[id] || {}).name_ar || (TAR || {})[id] };
   if (TRT && TRW && TRS.length){
+    // a page per league: the site's (/transfers/<key>/), then every league of the encyclopedia with an Arabic name and 10 moves
+    // or more (/transfers/l/<id>/; owner 2026-10-10 item 2), cups out
+    const WL = ((await get("world/leagues.json")) || {}).leagues || [], LGL = [], seenL = new Set();
+    (X.comps || []).forEach(c => { if (c.kind === "league" && !c.dormant && c.key){ LGL.push({ id:+c.id, name_ar:c.name_ar, p:`/transfers/${c.key}/`, min:5 }); seenL.add(+c.id); } });
+    WL.forEach(l => { if (!seenL.has(+l.id) && l.name_ar && !/كأس|السوبر/.test(l.name_ar)) LGL.push({ id:+l.id, name_ar:l.name_ar, p:`/transfers/l/${l.id}/`, min:10 }); });
+    const lgName = {}; LGL.forEach(l => { lgName[l.id] = l.name_ar; });
     const lgs = [];
-    for (const c of X.comps || []){
-      if (c.kind !== "league" || c.dormant || !c.key) continue;
+    for (const c of LGL){
       const ids = {}; Object.entries(TRW.clubs || {}).forEach(([id, v]) => { if (v && +v[1] === +c.id) ids[id] = 1; });
-      const mv = TRT.league(TRS, ids); if (mv.length < 5) continue;
+      const mv = TRT.league(TRS, ids); if (mv.length < c.min) continue;
       const clubs = Object.keys(ids).map(id => TRT.forClub(mv, id)).filter(x => x.in.length || x.out.length).sort((a, b) => (b.spent - a.spent) || (b.in.length + b.out.length - a.in.length - a.out.length));
       const cn = id => trNames.cname(id) || (TRW.clubs[id] || [])[0] || "";
-      const p = `/transfers/${c.key}/`;
+      const p = c.p;
       const body = (TRT.top(mv, 10).length ? `<section class="blk"><h2>أغلى صفقاته</h2>${TRT.list(TRT.top(mv, 10), trNames)}</section>` : "") +
         clubs.map(x => `<section class="blk"><h2><a href="/t/${x.id}/">${esc(cn(x.id))}</a></h2>${TRT.clubSection(x, trNames)}</section>`).join("");
       put(p, `انتقالات ${c.name_ar} ${TRL}: كل الصفقات والقادمين والراحلين`, `كل لاعب انتقل من أندية ${c.name_ar} أو إليها في ${TRL}: النادي السابق والجديد، والمبلغ إذا أُعلن، وما صرفه كل نادي.`,
@@ -225,8 +230,29 @@ module.exports = async function(X){
       `ينتهي عقده قبل 30 يونيو ${EX.until.slice(0, 4)}`, `<span class="num">${EX.players.length}</span> لاعب يقدر يطلع مجاناً الصيف الياي.`,
       exClubs.map(id => `<section class="blk"><h2><a href="/t/${id}/">${esc(trNames.cname(id))}</a> <span class="muted small num">${exBy[id].length}</span></h2><ul class="wcl">${exBy[id].map(p => `<li><a href="/p/${p[0]}/">${(NAMES_AR[p[0]] || {}).ar ? esc(NAMES_AR[p[0]].ar) : `<span class="lat">${esc(p[1])}</span>`}</a> <span class="muted small">${dm(p[3])} <span class="num">${p[3].slice(0, 4)}</span></span></li>`).join("")}</ul></section>`).join(""),
       { crumbs:'<a href="/transfers/">الانتقالات</a>', page:"transfers" });
+    // owner 2026-10-10 items 10 and 9: «منو صرف أكثر» and the players without a club now
+    const SP = TRT.spending(TRS, TRW.clubs), cn0 = id => trNames.cname(id) || ((TRW.clubs || {})[id] || [])[0] || "";
+    const spRow = (h, t, a, b) => `<li><a href="${h}">${t}</a> <span class="muted">صرف ${TRT.eur(a) || "<span class=\"num\">0</span>"}${b ? `، باع بـ${TRT.eur(b)}` : ""}</span></li>`;
+    const hasS = SP.clubs.length && put("/transfers/spending/", `أكثر الأندية إنفاقاً في ${TRL}: ترتيب الصرف في سوق الانتقالات`, `ترتيب أندية العالم ودورياته حسب ما صرفته على الصفقات في ${TRL}، وما كسبته من البيع.`,
+      "منو صرف أكثر", `${TRL}، الصفقات اللي انعلن مبلغها بس.`,
+      `<section class="blk"><h2>الأندية</h2><ul class="wcl">${SP.clubs.slice(0, 50).map(c => spRow(`/t/${c.id}/`, AR_.test(cn0(c.id)) ? esc(cn0(c.id)) : `<span class="lat">${esc(cn0(c.id))}</span>`, c.spent, c.received)).join("")}</ul></section>` +
+      `<section class="blk"><h2>الدوريات</h2><ul class="wcl">${SP.leagues.filter(l => lgName[l[0]]).slice(0, 30).map(l => spRow((LGL.find(x => +x.id === +l[0]) || {}).p || "/transfers/", esc(lgName[l[0]]), l[1], l[2])).join("")}</ul></section>`,
+      { crumbs:'<a href="/transfers/">الانتقالات</a>', page:"transfers" });
+    // item 8: which sources' rumours came true (the rumour ledger closes them: «صدقت» / «ما صدقت»)
+    const SR = TRT.sources(TRR || []), pct = x => Math.round(100 * x[2] / x[1]);
+    const srTbl = rows => tbl(["المصدر", "انقفلت", "صدقت", "ما صدقت", "النسبة"], rows.map(x => `<tr><td style="text-align:start">${AR_.test(x[0]) ? esc(x[0]) : `<span class="lat">${esc(x[0])}</span>`}</td><td class="num">${x[1]}</td><td class="num">${x[2]}</td><td class="num">${x[3]}</td><td class="num">${pct(x)}%</td></tr>`));
+    const hasC = (SR.ranked.length || SR.few.length) && put("/transfers/sources/", "أصدق مصادر أخبار الانتقالات: نسبة الإشاعات التي تحققت", "ترتيب المواقع والصحفيين حسب نسبة إشاعات الانتقالات التي تحققت فعلاً، من سجل تيفو لكل إشاعة.",
+      "أصدق مصدر في الانتقالات", "كل إشاعة نتابعها لين تصدق (تصير الصفقة) أو ما تصدق (تخلص فترة الانتقالات بدونها). كل مصدر نشرها ينحسب له. الترتيب يتعدل مع كل فترة.",
+      (SR.ranked.length ? `<section class="blk"><h2>الترتيب</h2><p class="muted">المصادر اللي انقفلت لها 3 إشاعات أو أكثر.</p>${srTbl(SR.ranked)}</section>` : "") +
+      (SR.few.length ? `<section class="blk"><h2>بعدها قليلة</h2><p class="muted">أقل من 3 إشاعات انقفلت، فما ندخلها الترتيب للحين.</p>${srTbl(SR.few.slice(0, 40))}</section>` : ""),
+      { crumbs:'<a href="/transfers/">الانتقالات</a>', page:"transfers" });
+    const FA = TRT.freeAgents(TRS);
+    const hasF = FA.length && put("/transfers/free-agents/", "لاعبون بدون نادٍ: اللاعبون الأحرار المتاحون الآن", "اللاعبون الذين أصبحوا بدون نادٍ هذا الموسم ويمكنهم التوقيع مع أي نادٍ الآن، مع آخر نادٍ لعبوا له وقيمتهم السوقية.",
+      "لاعبين بدون نادي الحين", `<span class="num">${FA.length}</span> لاعب طلع من ناديه هالموسم وما وقّع مع غيره، ويقدر يوقع مع أي نادي الحين.`,
+      `<ul class="wcl">${FA.slice(0, 300).map(m => `<li><a href="/p/${m[1]}/">${AR_.test((NAMES_AR[m[1]] || {}).ar || m[2] || "") ? esc((NAMES_AR[m[1]] || {}).ar || m[2]) : `<span class="lat">${esc(m[2])}</span>`}</a> <span class="muted">آخر نادي: ${AR_.test(cn0(m[3]) || "") ? esc(cn0(m[3])) : `<span class="lat">${esc(cn0(m[3]) || m[4] || "")}</span>`}، من ${dm(m[0])}</span>${m[9] ? ` <b>قيمته ${TRT.eur(m[9])}</b>` : ""}</li>`).join("")}</ul>`,
+      { crumbs:'<a href="/transfers/">الانتقالات</a>', page:"transfers" });
     const ar = TRT.arabs(TRS), nClubs = new Set(TRS.flatMap(m => [m[3], m[5]])).size;
-    const body = (hasR || hasE ? `<p class="tools">${hasR ? `<a class="btn" href="/transfers/rumours/">الإشاعات (<span class="num">${rOpen.length}</span>)</a>` : ""}${hasE ? `<a class="btn" href="/transfers/expiring/">ينتهي عقده الصيف الياي</a>` : ""}</p>` : "") +
+    const body = `<p class="tools">${hasR ? `<a class="btn" href="/transfers/rumours/">الإشاعات (<span class="num">${rOpen.length}</span>)</a>` : ""}${hasC ? `<a class="btn" href="/transfers/sources/">أصدق مصدر</a>` : ""}${hasS ? `<a class="btn" href="/transfers/spending/">منو صرف أكثر</a>` : ""}${hasF ? `<a class="btn" href="/transfers/free-agents/">لاعبين بدون نادي</a>` : ""}${hasE ? `<a class="btn" href="/transfers/expiring/">ينتهي عقده الصيف الياي</a>` : ""}</p>` +
       `<section class="blk"><h2>أغلى الصفقات</h2>${TRT.list(TRT.top(TRS, 30), trNames)}</section>` +
       `<section class="blk"><h2>آخر الانتقالات</h2>${TRT.list(TRS.slice(0, 60), trNames)}</section>` +
       (ar.length ? `<section class="blk"><h2>اللاعبين العرب</h2><p class="muted">كل لاعب عربي انتقل هالموسم، في أي دوري.</p>${TRT.list(ar.slice(0, 80), trNames)}</section>` : "") +

@@ -97,3 +97,34 @@ def test_contracts_ending_by_next_june():
          "3": {"name": "C", "team": 9, "contract": "2026-12-31"}, "4": {"name": "D", "team": 9, "contract": None}, "5": {"name": "E", "team": 9, "contract": "2026-09-30"}}
     out = run(f"console.log(JSON.stringify(T.expiring({json.dumps(P)}, '2026-10-09')))")
     assert out == {"until": "2027-06-30", "players": [["3", "C", 9, "2026-12-31"], ["1", "A", 8, "2027-06-30"]]}
+
+
+def test_who_spent_most_clubs_and_leagues():
+    out = run(f"""const M = {json.dumps(MOVES)}; const s = T.season(M, "2026-06-01");
+const r = T.spending(s, {{ "20":["B", 536], "30":["C", 536], "40":["D", 47], "10":["A", 536] }});
+console.log(JSON.stringify([r.clubs.map(c => [c.id, c.spent, c.received]), r.leagues]));""")
+    clubs, leagues = out
+    assert clubs[:2] == [["40", 90000000, 0], ["30", 3000000, 90000000]]       # by money spent
+    assert leagues == [["47", 90000000, 0], ["536", 3000000, 93000000]]      # a move inside one league counts on both sides
+
+
+def test_players_without_a_club_now():
+    M = [["2026-09-03", 8, "بنزيما", 8, "الهلال", 2, "Free agent", None, "free", 15000000, "FRA", None],
+         ["2026-08-01", 9, "X", 5, "E", 2, "Free agent", None, "free", None, None, None],
+         ["2026-09-01", 9, "X", 2, "Free agent", 6, "F", None, "free", None, None, None],          # signed again: not free
+         ["2026-07-01", 10, "Y", 7, "G", None, None, None, "", 500000, None, None]]
+    out = run(f"console.log(JSON.stringify(T.freeAgents({json.dumps(M)}).map(m => [m[1], m[0]])))")
+    assert out == [[8, "2026-09-03"], [10, "2026-07-01"]]                     # the dearest first
+
+
+def test_which_sources_came_true():
+    """Owner 2026-10-10 item 8: «أصدق مصدر»: every closed rumour counts for each source that carried it (FotMob's source and the
+    news stories'); a source needs 3 closed rumours to be ranked, by the share that came true."""
+    R = [{"k": "a", "src": "Sky", "stories": [["s", "t", "2026-09-01", "Fabrizio"]], "out": "done"},
+         {"k": "b", "src": "Sky", "stories": [], "out": "no"},
+         {"k": "c", "src": "Sky", "stories": [["s2", "t", "2026-09-01", "Fabrizio"]], "out": "done"},
+         {"k": "d", "src": None, "stories": [["s3", "t", "2026-09-01", "Fabrizio"]], "out": "done"},
+         {"k": "e", "src": "Marca", "stories": [], "out": "no"},
+         {"k": "f", "src": "Sky", "stories": [], "out": None}]
+    out = run(f"console.log(JSON.stringify(T.sources({json.dumps(R)})))")
+    assert out == {"ranked": [["Fabrizio", 3, 3, 0, 0], ["Sky", 3, 2, 1, 1]], "few": [["Marca", 1, 0, 1, 0]]}   # [name, closed, true, not, open]

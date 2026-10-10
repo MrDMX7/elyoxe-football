@@ -1,7 +1,9 @@
 """Bing URL submission (owner 2026-10-09: the site was imported into Bing Webmaster; before that Bing had 0 Tifo pages).
 A new site gets 100 URLs a day (2,300 a month), so they go where an Arab football search lands first:
-  hub      the home page, today, tomorrow, competitions, matches, national teams (every day: they change every day)
+  hub      the home page, today, tomorrow, competitions, matches, national teams, the transfer market and its rumours (every day:
+           they change every day)
   match    today's and tomorrow's matches in the Arab and Gulf competitions
+  transfers the tracked leagues' transfer pages, who spent most, the players without a club, the contracts running out
   league   the big Arab, Asian and European leagues, and their scorers pages
   club     the top clubs of those leagues (their tables)
   star     the top scorers of those leagues
@@ -67,8 +69,10 @@ def priorities(today):
         clubs += [f"/t/{r['team']['id']}/" for r in sorted(rows, key=lambda r: r.get("rank") or 99)[:6]]
         goals = (((_get(f"comp/{c['id']}/stats.json") or {}).get("lists") or {}).get("goals") or [])[:3]
         stars += [f"/p/{x['player']['id']}/" for x in goals if (x.get("player") or {}).get("id")]
-    hubs = ["/", "/today/", "/tomorrow/", "/competitions/", "/matches/", "/national/"]
-    return [("hub", hubs), ("match", matches), ("league", leagues), ("club", clubs), ("star", stars)]
+    hubs = ["/", "/today/", "/tomorrow/", "/competitions/", "/matches/", "/national/", "/transfers/", "/transfers/rumours/"]
+    # owner 2026-10-10: the transfer market (site/build_arabs.cjs): the tracked leagues' pages and the lists
+    transfers = [f"/transfers/{k}/" for k in LEAGUES if k in by_key] + ["/transfers/spending/", "/transfers/free-agents/", "/transfers/sources/", "/transfers/expiring/"]
+    return [("hub", hubs), ("match", matches), ("transfers", transfers), ("league", leagues), ("club", clubs), ("star", stars)]
 
 
 def sitemap_paths():

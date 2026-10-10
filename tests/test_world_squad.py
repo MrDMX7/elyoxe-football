@@ -25,11 +25,11 @@ def test_dead_links_go_to_the_encyclopedia():
     /m/ 24,795): a player with an encyclopedia page goes there, a club the encyclopedia knows goes to its card."""
     js = r"""
 const { relink } = require(process.argv[1] + '/site/lib/world_squad.cjs');
-const has = { written:new Set(['/db/player/77']), clubs:new Set([101918]) };
-console.log(JSON.stringify(['/p/77/', '/p/78/', '/t/101918/', '/t/5/', '/c/x/', '/p/77/compare/', '/m/5121498/', '/m/1/g/2'].map(h => relink(h, has))));"""
+const has = { written:new Set(['/db/player/77', '/db/club/555/']), clubs:new Set([101918, 555]) };
+console.log(JSON.stringify(['/p/77/', '/p/78/', '/t/101918/', '/t/5/', '/c/x/', '/p/77/compare/', '/m/5121498/', '/m/1/g/2', '/t/555/'].map(h => relink(h, has))));"""
     out = json.loads(subprocess.run(["node", "-e", js, ROOT], capture_output=True, text=True, encoding="utf-8").stdout)
     # a match: its encyclopedia card (39 of 40 sampled 2026-10-09 have matchx/<id>.json; the card says so when not)
-    assert out == ["/db/player/77/", None, "/db/club/?id=101918", None, None, None, "/db/match/?id=5121498", None]
+    assert out == ["/db/player/77/", None, "/db/club/?id=101918", None, None, None, "/db/match/?id=5121498", None, "/db/club/555/"]   # a club with its static page (owner 2026-10-10 item 1) goes there
 
 
 @pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")

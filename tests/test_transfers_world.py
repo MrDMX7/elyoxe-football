@@ -60,3 +60,14 @@ def test_a_daily_budget_site_clubs_first_then_the_oldest():
     ages = {1: 30 * H, 2: None, 3: 50 * H, 4: 2 * H, 5: 90 * H, 6: 25 * H}
     assert T.plan_fetch([1, 2, 3, 4, 5, 6], ages, priority={6}, budget=3, ttl=20 * H) == [2, 6, 5]   # never cached, the site's, the stalest
     assert T.plan_fetch([1, 2, 3, 4, 5, 6], ages, priority=set(), budget=10, ttl=20 * H) == [2, 5, 3, 1, 6]
+
+
+def test_a_site_team_outside_the_encyclopedia_gets_its_squad_card():
+    """276 team pages had no squad on 2026-10-09, most of them national teams (Croatia, Wales…): the daily run already reads
+    their FotMob answer, so it writes them the world club card the site's squad fallback reads (world/club/<id>.json)."""
+    raw = {"details": {"id": 10155, "name": "Croatia"}, "squad": {"squad": [
+        {"title": "Coach", "members": [{"id": 9, "name": "Dalic", "ccode": "CRO"}]},
+        {"title": "Keepers", "members": [{"id": 1, "name": "Livakovic", "shirtNumber": 1, "ccode": "CRO"}, {"name": "no id"}]}]}}
+    c = T.squad_card(10155, raw, names={"1": "ليفاكوفيتش", "10155": "كرواتيا"})
+    assert c == {"id": 10155, "name": "Croatia", "name_ar": "كرواتيا", "squad": [[9, "Dalic", None, "coach", "CRO"], [1, "ليفاكوفيتش", 1, "keepers", "CRO"]]}
+    assert T.squad_card(5, {"squad": {"squad": []}}) is None and T.squad_card(5, None) is None
