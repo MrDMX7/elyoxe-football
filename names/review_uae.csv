@@ -1,12 +1,13 @@
 id,latin,ar,source,team
-1235659,Abdullla Alhammadi,,,الجزيرة
+1235659,Abdullla Alhammadi,عبد الله الحمادي,generated,الجزيرة
 1307398,Ali Al Memari,علي المعمري,generated,الجزيرة
 341753,Ali Khaseif,علي خصيف,wikidata,الجزيرة
 1614804,Anthony Dennis,أنطوني دينيس,generated,الجزيرة
 1831525,Appolinaire Bougma,أبولينير بوغما,generated,الجزيرة
 1859986,Elias Sagna,إلياس سانيا,generated,الجزيرة
 903133,Ersin Destanoğlu,إرسين ديستان أوغلو,wikidata,الجزيرة
-1831495,Hamdan Suhail,,,الجزيرة
+1831495,Hamdan Suhail,حمدان سهيل,generated,الجزيرة
+2355040,Hamza Yassen,حمزة ياسين,generated,الجزيرة
 1634624,Igor Serrote,إيغور سيروتي,generated,الجزيرة
 1237978,Jay-Dee Geusens,جاي دي جوزينز,wikidata,الجزيرة
 1831543,Jean Mendy,جان ميندي,generated,الجزيرة
@@ -14,15 +15,16 @@ id,latin,ar,source,team
 1208969,Kristjan Asllani,كريستيان أسلاني,wikidata,الجزيرة
 1110052,M'Hammed Rabii,امحمد ربيع,generated,الجزيرة
 535603,Malcom,مالكوم,wikidata,الجزيرة
-1840846,Mamadou Ndiaye,,,الجزيرة
+1840846,Mamadou Ndiaye,مامادو ندياي,generated,الجزيرة
 1158225,Milson,ميلسون,generated,الجزيرة
+2339598,Mohamed Diallo,محمد ديالو,generated,الجزيرة
 721001,Mohammed Al Attas,محمد العطاس,wikidata,الجزيرة
 1657807,Momodou Jatta,مومودو جاتا,generated,الجزيرة
 1830501,Mouhammed Thiam,محمد تيام,generated,الجزيرة
 1659921,Nermin Mujkić,نيرمين مويكيتش,generated,الجزيرة
 1537679,Nikola Vukić,نيكولا فوكيتش,generated,الجزيرة
 1107547,Ravil Tagir,رافيل طاهر,wikidata,الجزيرة
-1831551,Saeed Bamasdoos,,,الجزيرة
+1831551,Saeed Bamasdoos,سعيد بامسدوس,generated,الجزيرة
 1491069,Salih Malkoçoglu,صالح مالكوتش أوغلو,generated,الجزيرة
 696932,Simon Banza,سيمون بانزا,wikidata,الجزيرة
 450011,Talisca,تاليسكا,wikidata,الجزيرة
@@ -41,21 +43,22 @@ id,latin,ar,source,team
 195857,Adel Al Hosani,عادل الحوسني,wikidata,الشارقة
 1532202,Agner,أغنير,generated,الشارقة
 1554115,Arshia Sarshogh,أرشيا سرشوق,generated,الشارقة
-1830400,Badir Al Suwaidi,,,الشارقة
+1830400,Badir Al Suwaidi,بدر السويدي,generated,الشارقة
 743720,Charles Pickel,شارليس بيكيل,wikidata,الشارقة
 1350066,Cheickna Doumbia,شيكنا دومبيا,wikidata,الشارقة
 925642,Cho Yu-Min,تشو يو مين,wikidata,الشارقة
 1515130,Clinton Nsiala,كلينتون نسيالا,generated,الشارقة
 1830381,David Gondim,ديفيد غونديم,generated,الشارقة
-1289721,Dhari Fahad,,,الشارقة
+1289721,Dhari Fahad,ضاري فهد,generated,الشارقة
 496648,Diney Borges,ديني بورغيس,generated,الشارقة
 1837620,Fahd Jassim,فهد جاسم,generated,الشارقة
+2355038,Hamad Salim Feraih,حمد سالم فريح,generated,الشارقة
 1830389,Hamdan Al Hammadi,حمدان الحمادي,generated,الشارقة
 263685,Igor Coronado,إيغور كورونادو,wikidata,الشارقة
 1636512,João Pedro Chermont,جواو بيدرو شيرمونت,generated,الشارقة
 1084245,Julimar,جوليمار,generated,الشارقة
 1363804,Khaled Tawhid,خالد توحيد,wikidata,الشارقة
-1324923,Khalifa Sembaij,,,الشارقة
+1324923,Khalifa Sembaij,خليفة سبيعي,generated,الشارقة
 736081,Kodjo Laba,كودجو لابا,wikidata,الشارقة
 1605202,Leandrinho,لياندرينيو,generated,الشارقة
 1435445,Lorran,لوران,generated,الشارقة
@@ -93,6 +96,7 @@ id,latin,ar,source,team
 1336024,Offoe Amesimeku Leonard,أوفوي أميسيميكو ليونارد,generated,الظفرة
 618899,Rayan Yaslam,ريان يسلم,wikidata,الظفرة
 948252,Regi Lushkja,ريجي لوشكيا,generated,الظفرة
+1826265,Rodriguinho,رودريغينيو,generated,الظفرة
 1826659,Rostand Djooh,روستاند دجوه,generated,الظفرة
 453324,Samir,سمير,wikidata,الظفرة
 1708009,Serafim,سيرافيم,generated,الظفرة
@@ -109,6 +113,7 @@ id,latin,ar,source,team
 1701093,Baba Bello Ilou,بابا بيلو إيلو,generated,العين
 1572725,Djordje Skoko,جورجي سكوكو,generated,العين
 372978,Georgios Giakoumakis,جيورجيوس جياكوماكيس,wikidata,العين
+2338451,Gnampa Loco,غنامبا لوكو,generated,العين
 1577118,Hamid Mohammed,حميد محمد,generated,العين
 1696146,Hassan Muhammed,حسن محمد,generated,العين
 1528820,Hazem Abbas,حازم عباس,generated,العين
@@ -134,6 +139,7 @@ id,latin,ar,source,team
 321140,Valentino Lazaro,فالينتينو لازارو,wikidata,العين
 1840830,Warren Huaisawi,وارين هويساوي,generated,العين
 1501222,Yahya Ben Khaleq,يحيى بن خالق,generated,العين
+2338422,Yaya Tapé,يايا تابي,generated,العين
 1069974,Erik,إيريك,generated,العين + المنتخب
 197054,Khalid Eissa,خالد عيسى,generated,العين + المنتخب
 1694063,Abdoulaye Sanogo,عبدولاي سانوغو,generated,النصر
@@ -167,7 +173,7 @@ id,latin,ar,source,team
 1557066,Muhammed Ayeş,محمد عايش,generated,النصر
 1108026,Nassim Chadli,نسيم شاذلي,wikidata,النصر
 1830417,Obaid Salem,عبيد سالم,generated,النصر
-734439,Ramón Miérez,رامون ميريز,wikidata,النصر
+734439,Ramon Miérez,رامون ميريز,wikidata,النصر
 1837629,Rashid Abdulrahman,راشد عبد الرحمن,generated,النصر
 1867091,Saeed Salem,سعيد سالم,generated,النصر
 618619,Salem Sultan,سالم سلطان,wikidata,النصر
@@ -193,12 +199,12 @@ id,latin,ar,source,team
 1201810,Facundo Kruspzky,فاكوندو كروسبزكي,wikidata,الوحدة
 1813918,Favour Ogbu,فافور أوغبو,generated,الوحدة
 289258,Gastón Álvarez Suárez,غاستون ألفاريس سواريز,wikidata,الوحدة
-1489242,Gerónimo Rivera,,,الوحدة
+1489242,Gerónimo Rivera,خيرونيمو ريفيرا,generated,الوحدة
 1524517,Guga,غوغا,generated,الوحدة
 1813921,Haza Shehab,هزاع شهاب,wikidata,الوحدة
 794078,Hazaa Ammar,هزاع عمار,generated,الوحدة
 981862,Jadsom,جادسوم,wikidata,الوحدة
-500970,Joao Pedro,جواو بيدرو,generated,الوحدة
+500970,João Pedro,جواو بيدرو,generated,الوحدة
 1837624,Khaled Al Jaberi,خالد الجابري,generated,الوحدة
 1751917,Lautaro Montenegro,لاوتارو مونتينيغرو,generated,الوحدة
 1719273,Louay Trayi,لؤي تراعي,generated,الوحدة
@@ -213,6 +219,7 @@ id,latin,ar,source,team
 1536962,Prince Hally,برينس هالي,generated,الوحدة
 1447578,Rashed Issam,راشد عصام,generated,الوحدة
 1068477,Renné Rivas,ريني ريفاس,generated,الوحدة
+2355043,Saif Jafleh,سيف جفلة,generated,الوحدة
 618631,Suhail Al Mansoori,سهيل المنصوري,wikidata,الوحدة
 1837626,Yassan Al Dubai,يسان الدبي,generated,الوحدة
 1840745,Yassin Mohamed,ياسين محمد,generated,الوحدة
@@ -233,7 +240,7 @@ id,latin,ar,source,team
 1713982,Gabriel Vareta,غابرييل فاريتا,generated,الوصل
 1182091,Hugo,هوغو,wikidata,الوصل
 1697968,João Alves,جواو ألفيس,generated,الوصل
-2068028,Juan Campos,,,الوصل
+2068028,Juan Campos,خوان كامبوس,generated,الوصل
 1826887,Khaled Al Jneibi,خالد الجنيبي,generated,الوصل
 1138138,Leandro Spadacio,لياندرو سباداسيو,wikidata,الوصل
 1958503,Lucas Souza,لوكاس سوزا,generated,الوصل
@@ -243,7 +250,7 @@ id,latin,ar,source,team
 281995,Miguel Borja,ميغيل بورخا,wikidata,الوصل
 1295451,Mohamed Ali,محمد علي,generated,الوصل
 1840852,Mohamed Nasser Alobaidli,محمد ناصر العبيدلي,generated,الوصل
-1830492,Mouhamed Ba,,,الوصل
+1830492,Mouhamed Ba,محمد با,generated,الوصل
 1282144,Pedro Malheiro,بيدرو مالهيرو,generated,الوصل
 1282441,Renato Júnior,ريناتو جونيور,wikidata,الوصل
 489288,Renato Tapia,ريناتو تابيا,wikidata,الوصل
@@ -303,7 +310,7 @@ id,latin,ar,source,team
 882318,Hamad Madhad,حمد مضهد,generated,حتا
 1186594,Hamdan Humaid,حمدان حميد,wikidata,حتا
 617905,Ibrahim Essa,إبراهيم عيسى,wikidata,حتا
-1460525,Jocelyn Doumbia,,,حتا
+1460525,Jocelyn Doumbia,جوسلين دومبيا,generated,حتا
 1249746,Juan Pedroza,خوان بيدروزا,generated,حتا
 1837606,Kaua Bastian,كاوا باستيان,generated,حتا
 1040964,Khaled Ali Al Baloushi,خالد علي البلوشي,generated,حتا
@@ -315,6 +322,7 @@ id,latin,ar,source,team
 1647821,Mohammad Al Hussaini,محمد الحسيني,wikidata,حتا
 823452,Omar Saeed,عمر سعيد,wikidata,حتا
 1409599,Pedrinho,بيدرينيو,generated,حتا
+1681901,Pedro Leão,بيدرو ليون,generated,حتا
 1702026,Saad Farid,سعد فريد,generated,حتا
 794103,Saeed Al Mesmari,سعيد المسماري,wikidata,حتا
 1198741,Saeed Sulaiman,سعيد سليمان,generated,حتا
@@ -322,7 +330,7 @@ id,latin,ar,source,team
 713207,Seifeddine Jaziri,سيف الدين الجزيري,wikidata,حتا
 794093,Tahnoon Al Zaabi,طحنون الزعابي,wikidata,حتا
 618340,Abdalla Al Naqbi,عبدالله النقبي,generated,خورفكان
-618859,Abdulrahman Yousef,يوسف عبدالرحمن,wikidata,خورفكان
+2339614,Abubakar Adams,أبوبكر آدامز,generated,خورفكان
 1451225,Adama Diallo,أداما ديالو,generated,خورفكان
 1520104,Ahmadou Ama Camara,أحمدو أما كامارا,generated,خورفكان
 721012,Ahmed Al Hosani,أحمد الحوسني,generated,خورفكان
@@ -337,6 +345,7 @@ id,latin,ar,source,team
 1368339,Kayque Campos,كايكي كامبوس,generated,خورفكان
 832398,Luís Haquín,لويس هاكين,generated,خورفكان
 2157319,Malang Sagna,مالانغ سانيا,generated,خورفكان
+2339599,Mohammed Jamal,محمد جمال,generated,خورفكان
 1197115,Oumar Traoré,عمر تراوري,wikidata,خورفكان
 1129778,Pedro Pavlov,بيدرو بافلوف,wikidata,خورفكان
 1132080,Rafael Pereira,رافائيل بيريرا,wikidata,خورفكان
@@ -399,9 +408,10 @@ id,latin,ar,source,team
 699684,Jobson,جوبسون,generated,عجمان
 1291309,Lithierry,ليثيري,generated,عجمان
 750077,Lourency,لورينسي,wikidata,عجمان
+1830484,Mahmoud Yazan,محمود يزن,generated,عجمان
 628504,Mohammad Juma,محمد جمعة,generated,عجمان
 1528822,Mohammad Nasser,محمد ناصر,generated,عجمان
-1427259,Obaid Raed,,,عجمان
+1427259,Obaid Raed,عبيد رائد,generated,عجمان
 1648958,Saad El Hadani,سعد الحداني,generated,عجمان
 1831458,Salem Suleiman,سالم سليمان,generated,عجمان
 1403545,Sékou Gassama,سيكو غاساما,generated,عجمان
@@ -424,6 +434,7 @@ id,latin,ar,source,team
 1353469,Biro,بيرو,generated,كلباء
 1399709,Caio Eduardo,كايو إدواردو,generated,كلباء
 1219068,Carlos Alberto,كارلوس ألبرتو,generated,كلباء
+2341042,Hamad Ahmed,حمد أحمد,generated,كلباء
 795096,Hamad Al Mansoori,حمد المنصوري,generated,كلباء
 581131,Ibrahim Cissé,إبراهيم سيسيه,wikidata,كلباء
 1094302,Juninho,جونينيو,generated,كلباء
@@ -442,7 +453,7 @@ id,latin,ar,source,team
 1118689,Yaser Al Blooshi,ياسر البلوشي,generated,كلباء
 995420,Yousif Ali Al Mheiri,يوسف علي المهيري,generated,كلباء
 959024,Adeel Al Chadli,عديل الشاذلي,generated,يونايتد
-1527038,Aleksa Puric,,,يونايتد
+1527038,Aleksa Puric,أليكسا بوريتش,generated,يونايتد
 1235661,Aniss Karimi,أنيس كريمي,wikidata,يونايتد
 252167,Bandar Al Ahbabi,بندر الأحبابي,wikidata,يونايتد
 1458013,Dieu-Merci Michel,ديوميرسي ميشيل,generated,يونايتد
