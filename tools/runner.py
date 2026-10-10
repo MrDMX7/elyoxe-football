@@ -239,6 +239,10 @@ def job_journal(log):
     rc2, _ = run(log, [PY, "-m", "pushplayers"], timeout=5 * 60)
     if rc2:
         log.w(f"pushplayers exit {rc2} (not fatal)")
+    # «انتقالات النادي» (owner 2026-10-10 item 12): the ledger's new moves to both clubs' subscribers, in the UAE day (never fatal)
+    rc4, _ = run(log, [PY, "-m", "pushtransfers"], timeout=5 * 60)
+    if rc4:
+        log.w(f"pushtransfers exit {rc4} (not fatal)")
     # Bing: the day's 100 URLs (a new site's quota), once a day; the tool skips a day already sent (never fatal)
     rc3, _ = run(log, [PY, "-m", "tools.bing_submit"], timeout=5 * 60)
     if rc3:

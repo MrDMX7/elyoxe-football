@@ -27,7 +27,8 @@
     return w + (h < 5 ? " بالليل" : h < 12 ? " الصبح" : h === 12 ? " الظهر" : h < 18 ? " العصر" : " بالليل");
   }
   function modeOf(ev) { return ev.indexOf("start") >= 0 || ev.indexOf("end") >= 0 ? "all" : ev.indexOf("goal") >= 0 ? "goals" : "off"; }
-  function eventsOf(mode, video) { var e = mode === "all" ? EV_ALL.slice() : mode === "goals" ? ["goal"] : []; if (video) e.push("video"); return e; }
+  // transfer: the club's official moves (owner 2026-10-10 item 12), a switch of its own like the goal videos
+  function eventsOf(mode, video, transfer) { var e = mode === "all" ? EV_ALL.slice() : mode === "goals" ? ["goal"] : []; if (video) e.push("video"); if (transfer) e.push("transfer"); return e; }
   function options(sel) { var o = ""; for (var m = 0; m < 1440; m += 60) o += '<option value="' + m + '"' + (m === sel ? " selected" : "") + ">" + esc(hourAr(m)) + "</option>"; return o; }
 
   // ------------------------------------------------------------------ markup (pure: Node can prerender it)
@@ -39,7 +40,8 @@
       '<p class="note">تنبيه على تلفونك لمباريات <b>' + esc(t.name || "فريقك") + "</b> بدون حساب.</p>" +
       '<p class="note nf-ios" data-nf-ios hidden>على الآيفون التنبيهات تشتغل من تيفو على الشاشة الرئيسية: اضغط «شارك» ثم «إضافة إلى الشاشة الرئيسية»، وافتحه من هناك.</p>' +
       '<section class="grp mt"><div class="gh"><h2>نبّهني</h2></div><div class="card nf-pad">' + seg + '</div><p class="gf" data-nf-hint>«كل شي»: بداية المباراة وكل هدف والنتيجة النهائية.</p></section>' +
-      '<section class="grp"><div class="card"><button type="button" class="row" role="switch" aria-checked="false" data-nf="video"><span class="rt">فيديو الهدف لما ينزل<small>المقطع الرسمي من القناة أو البطولة</small></span><span class="sw" aria-hidden="true"></span></button></div></section>' +
+      '<section class="grp"><div class="card"><button type="button" class="row" role="switch" aria-checked="false" data-nf="video"><span class="rt">فيديو الهدف لما ينزل<small>المقطع الرسمي من القناة أو البطولة</small></span><span class="sw" aria-hidden="true"></span></button>' +
+      '<button type="button" class="row" role="switch" aria-checked="false" data-nf="transfer"><span class="rt">انتقالات النادي<small>لما يوقّع لاعب أو يطلع، رسمياً</small></span><span class="sw" aria-hidden="true"></span></button></div></section>' +
       '<section class="grp"><div class="gh"><h2>أوقات الهدوء</h2></div><div class="card">' +
       '<button type="button" class="row" role="switch" aria-checked="false" data-nf="quiet"><span class="rt">لا تنبّهني وقت النوم<small data-nf-qtxt>من ' + esc(hourAr(q.s)) + " لين " + esc(hourAr(q.e)) + '</small></span><span class="sw" aria-hidden="true"></span></button>' +
       '<div class="row nf-q" data-nf-qrow hidden><label>من <select data-nf="qs">' + options(q.s) + '</select></label><label>لين <select data-nf="qe">' + options(q.e) + "</select></label></div>" +
@@ -111,12 +113,12 @@
   function subscription(create) { return ready().then(function (reg) { return reg.pushManager.getSubscription().then(function (s) { return s || (create ? key().then(function (k) { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: u8(k) }); }) : null); }); }); }
   function post(method, b) { return fetch(API + "sub", { method: method, headers: { "content-type": "application/json" }, body: JSON.stringify(b), keepalive: true }).then(function (r) { if (!r.ok && r.status !== 204) throw new Error(r.status); return r; }); }
   function wire(tid, ev) {                            // what the server keeps for this team: «بدون حرق» keeps the kickoff only
-    var send = ev.filter(function (x) { return !nospoil() || x === "start"; }), s = st();
+    var send = ev.filter(function (x) { return !nospoil() || x === "start" || x === "transfer"; }), s = st();   // a transfer spoils no match
     if (!send.length) return subscription(false).then(function (x) { if (x) return post("DELETE", { team: +tid, endpoint: x.endpoint }); });
     return subscription(true).then(function (x) { var j = x.toJSON(), q = s.quiet ? { s: s.quiet.s, e: s.quiet.e, o: offset() } : null;
       return post("POST", { team: +tid, events: send, quiet: q, subscription: { endpoint: j.endpoint, keys: j.keys } }); });
   }
-  function state(tid) { var ev = st().teams[tid] || []; return { events: ev.slice(), mode: modeOf(ev), video: ev.indexOf("video") >= 0 }; }
+  function state(tid) { var ev = st().teams[tid] || []; return { events: ev.slice(), mode: modeOf(ev), video: ev.indexOf("video") >= 0, transfer: ev.indexOf("transfer") >= 0 }; }
   function permit() {                                  // synchronous inside the tap: Safari refuses a prompt after an await
     if (!ok()) return Promise.reject(new Error(supported()));
     if (Notification.permission === "granted") return Promise.resolve();
@@ -125,7 +127,7 @@
     return (p && p.then ? p : Promise.resolve(Notification.permission)).then(function (r) { if (r !== "granted") throw new Error("denied"); });
   }
   function set(tid, events) {
-    var s = st(), ev = events.filter(function (x, i) { return ["start", "goal", "end", "video"].indexOf(x) >= 0 && events.indexOf(x) === i; });
+    var s = st(), ev = events.filter(function (x, i) { return ["start", "goal", "end", "video", "transfer"].indexOf(x) >= 0 && events.indexOf(x) === i; });
     var go = ev.length ? permit() : Promise.resolve();
     return go.then(function () { if (ev.length) s.teams[tid] = ev; else delete s.teams[tid]; save(s); D.dispatchEvent(new CustomEvent("tifo:notify", { detail: { team: +tid, events: ev } })); return wire(tid, ev); });
   }
@@ -168,6 +170,7 @@
     if (seg) { seg.style.setProperty("--i", i); seg.querySelectorAll("button[data-t]").forEach(function (b, j) { b.setAttribute("aria-selected", String(j === i)); }); }
     var v = $('[data-nf="video"]', el), q = $('[data-nf="quiet"]', el), qr = $("[data-nf-qrow]", el), qq = s.quiet || QDEF;
     if (v) v.setAttribute("aria-checked", String(cur.video));
+    var tr = $('[data-nf="transfer"]', el); if (tr) tr.setAttribute("aria-checked", String(cur.transfer));
     if (q) q.setAttribute("aria-checked", String(!!s.quiet));
     if (qr) qr.hidden = !s.quiet;
     var qs = $('[data-nf="qs"]', el), qe = $('[data-nf="qe"]', el), qt = $("[data-nf-qtxt]", el);
@@ -189,10 +192,11 @@
   function onClick(e) {
     var el = e.currentTarget, b = e.target.closest(".seg button[data-t]"), cur = state(el.dataset.nfTeam);
     if (b && el.contains(b)) { var seg = b.parentNode, i = [].indexOf.call(seg.querySelectorAll("button[data-t]"), b); seg.style.setProperty("--i", i);
-      seg.querySelectorAll("button[data-t]").forEach(function (x) { x.setAttribute("aria-selected", String(x === b)); }); return apply(el, eventsOf(b.dataset.t, cur.video)); }
+      seg.querySelectorAll("button[data-t]").forEach(function (x) { x.setAttribute("aria-selected", String(x === b)); }); return apply(el, eventsOf(b.dataset.t, cur.video, cur.transfer)); }
     var sw = e.target.closest("[data-nf]");
     if (!sw || sw.tagName === "SELECT") return;
-    if (sw.dataset.nf === "video") return apply(el, eventsOf(cur.mode, !cur.video));
+    if (sw.dataset.nf === "video") return apply(el, eventsOf(cur.mode, !cur.video, cur.transfer));
+    if (sw.dataset.nf === "transfer") return apply(el, eventsOf(cur.mode, cur.video, !cur.transfer));
     if (sw.dataset.nf === "quiet") { var on = !quiet(); setQuiet(on ? QDEF : null).then(function () { say(el, on ? "ما بنزعجك من " + hourAr(QDEF.s) + " لين " + hourAr(QDEF.e) + "." : "التنبيهات توصلك أي وقت."); }); D.querySelectorAll("[data-nf-team]").forEach(paint); }
   }
   function onChange(e) {

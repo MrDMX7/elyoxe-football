@@ -28,6 +28,7 @@ console.log(JSON.stringify({
       liveFav: N.askTeams("live", [2, 1], st, now, {}), liveNone: N.askTeams("live", [7, 8], {}, now, {}), liveSubbed: N.askTeams("live", [7, 8], {}, now, {"7": 1, "8": 1}),
       bar: N.askBar([{id: 1, name: 'الوحدة <b>'}], "yes"), barTwo: N.askBar([{id: 7, name: 'أ'}, {id: 8, name: 'ب'}], "yes"), barIos: N.askBar([{id: 1, name: 'الوحدة'}], "ios-install")}; })(),
   events: [N.eventsOf('goals', true), N.eventsOf('all', false), N.eventsOf('off', true), N.eventsOf('off', false)],
+  events3: [N.eventsOf('off', false, true), N.eventsOf('all', true, true)], modeT: N.modeOf(['transfer']),
   modes: [N.modeOf(['goal']), N.modeOf(['start', 'goal', 'end', 'video']), N.modeOf(['video']), N.modeOf([])],
   hours: [N.hourAr(0), N.hourAr(60), N.hourAr(420), N.hourAr(720), N.hourAr(900), N.hourAr(1380)],
   block: P.block({id: 101, kickoff_utc: '2026-10-10T16:00:00Z', status: 'scheduled', home: {name_ar: 'العين'}, away: {name_ar: 'الوحدة"><script>'}}),
@@ -52,7 +53,7 @@ def all_html(out):
 
 def test_v5_markup_and_hooks(out):
     nf = out["nf"]
-    assert 'data-nf-team="5789"' in nf and 'class="seg"' in nf and 'data-seg="nf"' in nf and nf.count('role="switch"') == 2
+    assert 'data-nf-team="5789"' in nf and 'class="seg"' in nf and 'data-seg="nf"' in nf and nf.count('role="switch"') == 3   # video, transfers, quiet hours
     assert '<span class="sw" aria-hidden="true"></span>' in nf and 'data-nf="qs"' in nf and nf.count("<option") == 48
     assert out["nfSheet"].startswith('<dialog class="sheet" id="sh-notify"') and 'data-close aria-label="سكّر"' in out["nfSheet"]
     b = out["block"]
@@ -69,6 +70,9 @@ def test_v5_markup_and_hooks(out):
 
 def test_choices_map_to_the_servers_events(out):
     assert out["events"] == [["goal", "video"], ["start", "goal", "end"], ["video"], []]
+    # owner 2026-10-10 item 12: the club's transfers, a switch of their own (no match alert needed)
+    assert out["events3"] == [["transfer"], ["start", "goal", "end", "video", "transfer"]] and out["modeT"] == "off"
+    assert 'data-nf="transfer"' in out["nf"] and "انتقالات النادي" in out["nf"]
     assert out["modes"] == ["goals", "all", "off", "off"]
     assert out["hours"] == ["12 بالليل", "1 بالليل", "7 الصبح", "12 الظهر", "3 العصر", "11 بالليل"]
     assert out["names"][0] == "دوري الربع" and len(out["names"]) == 10                     # the server's LEAGUE_NAMES order

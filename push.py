@@ -49,7 +49,7 @@ KICKOFF_WINDOW = 20           # minutes after kickoff within which a "start" pus
 END_WINDOW = 60               # minutes after full time
 GOAL_TYPES = ("goal", "own_goal", "penalty_goal")
 DISALLOWED = ("goal_disallowed", "goal_disallowed_offside")
-TEAM_EVENTS = ("start", "goal", "end", "video")
+TEAM_EVENTS = ("start", "goal", "end", "video", "transfer")   # transfer: the club's official moves (pushtransfers.py)
 # a player subscription stores player kinds (pushplayer.KINDS; written out: pushplayer imports this module, so nothing here may
 # read pushplayer while it loads; tests/test_pushplayer.py checks the two lists agree)
 EVENTS = TEAM_EVENTS + ("soon", "start11", "squad_out", "subin", "subout", "assist", "card", "pen", "potm")
@@ -57,7 +57,7 @@ DEFAULT_EVENTS = ("start", "goal", "end")      # a subscription that never chose
 MAX_SENDS = 5000              # per invoke: the sender's 5-minute budget, ~40 ms per send with a pooled session
 JOB_TTL = {"start": 600, "goal": 600, "end": 900, "video": 1800,   # seconds a handed-over job stays worth sending
            "soon": 1800, "start11": 1800, "squad_out": 1800, "subin": 600, "subout": 600, "assist": 600, "card": 600, "pen": 600,
-           "potm": 3600}
+           "potm": 3600, "transfer": 6 * 3600}
 PLACEHOLDER_WAIT = 2          # minutes a «<TBD>» goal waits for its scorer's name when someone in the match is followed
 PLAYER_DAILY_CAP = 20         # player alerts per device per UAE day (owner 2026-10-09: «اذا تشوف اشياء تسوي مشاكل»)
 DATA = os.environ.get("TIFO_DATA", "https://d1n5aqaqkowltp.cloudfront.net")
