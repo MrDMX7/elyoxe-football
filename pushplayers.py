@@ -5,6 +5,10 @@ the next run maps his new club.
   python -m pushplayers"""
 import gzip, json, os, time, urllib.request
 
+import ipv4first
+
+ipv4first.install()      # 2026-10-11: the laptop's IPv6 hangs (ipv4first.py)
+
 DATA = os.environ.get("TIFO_DATA", "https://d1n5aqaqkowltp.cloudfront.net")
 BUCKET = os.environ.get("BUCKET", "elyoxe-football-574771023173-ap-south-1")
 NATIONAL_YEARS = 3            # a national team he has not played for in this many years is not «his» any more

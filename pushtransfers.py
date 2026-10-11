@@ -5,6 +5,10 @@ claims it once per move and keeps quiet hours). Runs with the journal (every 15 
 State: state/push_transfers.json {"seen": [move keys]}.
   python -m pushtransfers"""
 import gzip, json, os, time, urllib.request
+
+import ipv4first
+
+ipv4first.install()      # 2026-10-11: the laptop's IPv6 hangs (ipv4first.py)
 from datetime import date, timedelta
 
 DATA = os.environ.get("TIFO_DATA", "https://d1n5aqaqkowltp.cloudfront.net")
