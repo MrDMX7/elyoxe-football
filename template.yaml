@@ -110,8 +110,10 @@ Resources:
       FunctionName: elyoxe-football-poller
       CodeUri: build/lambda/
       Handler: poller.handler
-      MemorySize: 1024                   # 256 hit its ceiling after the 2026-10-01 features (every run timed out at 58 s and lost its
-                                         # state); 1024 also brings CPU: runs ~42 s, ~350 MB (2026-10-05)
+      MemorySize: 640                    # 256 hit its ceiling after the 2026-10-01 features (every run timed out at 58 s and lost its
+                                         # state); 1024 also brings CPU: runs ~42 s, ~350 MB (2026-10-05). 640 on 2026-10-11 to cut the
+                                         # Lambda bill past the free tier: live runs are clock-bound (20 s passes), peak 441 MB in a week.
+                                         # Timeouts or a stale live.json => back to 1024.
       Timeout: 58                        # the poller stops itself at ~50 s (settings.budget_seconds)
       ReservedConcurrentExecutions: 1    # never two pollers at once
       Environment:
