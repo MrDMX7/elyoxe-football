@@ -48,7 +48,7 @@
   function stamp(g) { var el = $("#updated"); if (el && g) { var d = new Date(g), t = d.toLocaleTimeString("ar-AE-u-nu-latn", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: cfg.tz || "Asia/Dubai" });
       el.textContent = "آخر تحديث " + (U.ymd(d.toISOString()) === cfg.today ? "" : U.dname(d.toISOString(), 1) + " ") + t + "."; }
     D.documentElement.classList.remove("stale"); fire("tifo:fresh", g); }
-  (function () { var H = D.documentElement; if (!H.classList.contains("stale") || !H.dataset.built || !/^(home|daypage|all|match)$/.test(PG)) return; var n = D.createElement("p"); n.className = "stalen"; n.textContent = "آخر تحديث للصفحة " + new Date(H.dataset.built).toLocaleTimeString("ar-AE-u-nu-latn", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Asia/Dubai" }) + "، نجيب الجديد…";
+  (function () { var H = D.documentElement; if (!H.classList.contains("stale") || !window.BUILT || !/^(home|daypage|all|match)$/.test(PG)) return; var n = D.createElement("p"); n.className = "stalen"; n.textContent = "آخر تحديث للصفحة " + new Date(window.BUILT).toLocaleTimeString("ar-AE-u-nu-latn", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Asia/Dubai" }) + "، نجيب الجديد…";
     var at = $(".hdr") || $(".lt"); if (at) at.appendChild(n); D.addEventListener("tifo:fresh", function () { n.remove(); }, { once: true }); setTimeout(function () { n.remove(); }, 15000); })();
 
   // ------------------------------------------------------------------ nav bar: the large title (or entity header) scrolls under it
@@ -288,7 +288,7 @@
       get("match/" + V.id + ".json", true).then(function (md) { cfg.now = NOW(); var was = MD; MD = md; matchPaint(md, was); stamp(md.generated);
         var soon = md.status === "scheduled" && Date.parse(md.kickoff_utc) - NOW() < 90 * 60e3 && Date.parse(md.kickoff_utc) > NOW() - 4 * 36e5;
         if ((U.isLive(md) || soon) && !timer) timer = setInterval(run, 20000); else if (!U.isLive(md) && !soon && timer) { clearInterval(timer); timer = null; } }).catch(function () {}); };
-    var age = V.built ? NOW() - Date.parse(V.built) : 0;
+    var age = (V.built || window.BUILT) ? NOW() - Date.parse(V.built || window.BUILT) : 0;
     if (V.live || age > 12e4) run(true);
     else if (V.ko && V.status === "scheduled") { var d = Date.parse(V.ko) - NOW() - 75 * 60e3; if (d > 0 && d < 2147483000) setTimeout(function () { run(true); }, d); }   // a page opened long before kickoff wakes 75 minutes before
     setInterval(function () { if (MD && U.isLive(MD) && !D.hidden) { cfg.now = NOW(); var mh = $("#mh"); if (mh) mh.innerHTML = U.matchHead(MD); } }, 30000);   // the minute moves between polls
@@ -409,7 +409,7 @@
 
   // ================================================================== team, competition, player
   function teamInit() {
-    if (!$("#tfx")) return; var ids = {}; $$("#tfeat [data-mid], #tfx [data-mid]").forEach(function (a) { ids[a.dataset.mid] = 1; }); var age = V.built ? NOW() - Date.parse(V.built) : 0;
+    if (!$("#tfx")) return; var ids = {}; $$("#tfeat [data-mid], #tfx [data-mid]").forEach(function (a) { ids[a.dataset.mid] = 1; }); var age = (V.built || window.BUILT) ? NOW() - Date.parse(V.built || window.BUILT) : 0;
     cdAttachTeam();
     get("live.json", true).then(function (l) { var Lm = {}, hit = false; (l.matches || []).forEach(function (m) { Lm[m.id] = m; if (ids[m.id]) hit = true; });
       if (!hit && age < 30 * 60e3) { D.documentElement.classList.remove("stale"); return; }
@@ -420,7 +420,7 @@
   function cdAttachTeam() { var a = $("#tfeat .fc[data-mid]"); if (!a || $(".fc-cd", a)) return; var t = D.querySelector("#tfeat time[data-u]"), sc = $(".sc.ko", a); if (!t || !sc) return; var ko = t.dataset.u, d = Date.parse(ko) - NOW(); if (!(d > 0 && d < 4 * 864e5)) return;
     var el = D.createElement("div"); el.className = "fc-cd"; el.dataset.cdko = ko; el.innerHTML = "تبدا بعد " + cdText(d); a.appendChild(el); }
   function compInit() {
-    var age = V.built ? NOW() - Date.parse(V.built) : 0; if (age < 30 * 60e3 || !V.comp) { D.documentElement.classList.remove("stale"); return; } var box = $("#ctab");
+    var age = (V.built || window.BUILT) ? NOW() - Date.parse(V.built || window.BUILT) : 0; if (age < 30 * 60e3 || !V.comp) { D.documentElement.classList.remove("stale"); return; } var box = $("#ctab");
     if (box) get("comp/" + V.comp + "/standings.json", true).then(function (st) { var b = $('.seg[data-seg="tv"] button[aria-selected="true"]'); box.innerHTML = P.compTable(st, box.dataset.single === "1", b && b.dataset.t); localize(box); stamp(st.generated); }).catch(function () {});
     var rl = $("#roundlist"); if (rl) get("comp/" + V.comp + "/fixtures.json", true).then(function (j) { FX = U.rounds(j); var b = $("#rounds button[aria-selected=true]"), k = b ? b.dataset.r : FX.cur; rl.innerHTML = U.roundMatches(FX.by[k] || []); localize(rl); }).catch(function () {});
   }

@@ -42,8 +42,10 @@ module.exports = function (X) {
   let SEQ = 0;
   function secRows(secs, o) {
     o = o || {}; const rows = [], sheets = [];
-    secs.filter(sc => strip(sc.inner).length > 2).forEach(sc => {
-      const key = "sx-" + (sc.id || (o.prefix || "s") + (++SEQ)), ic = iconFor(sc.title), live = isLiveSec(sc.full);
+    secs.filter(sc => strip(sc.inner).length > 2).forEach((sc, i) => {
+      // 2026-10-17: the key is the block's own (prefix, title, place in this call), not a counter that ran across every page of
+      // the build: that counter moved whenever any earlier page gained or lost a block, so ~30k pages changed bytes every hour
+      const key = "sx-" + (sc.id || (o.prefix || "s") + require("crypto").createHash("sha1").update((o.prefix || "s") + "|" + sc.title + "|" + i).digest("hex").slice(0, 6)), ic = iconFor(sc.title), live = isLiveSec(sc.full);
       const sub = sc.sub ? strip(sc.sub) : "";
       rows.push(U.row({ btn: 1, icon: ic[0], c: ic[1], t: esc(sc.title), sub: esc(sub), attrs: ' data-sheet="' + key + '"' + (sc.id ? ' data-anchor="' + esc(sc.id) + '"' : "") }));
       const body = '<div class="lc sxb"' + (sc.id ? "" : "") + ">" + sc.inner + "</div>";

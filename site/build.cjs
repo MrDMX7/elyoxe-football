@@ -123,8 +123,8 @@ function page(o){
   const legacy = !NOLEGACY.has(o.page) || o.legacy;
   // the build time only where the page reads it (v5 app.js: a live page's first poll, a team's fixtures, a table 30 min old): on
   // every page it made every page new every hour (2026-10-06: 30,631 of 34,300 files uploaded each build, 1-2 h each)
-  const V5D = Object.assign({ page:o.page, id:null }, liveish ? { built:BUILT } : {}, v.data || {});
-  return `<!doctype html><html lang="ar" dir="rtl"${liveish ? ` data-built="${BUILT}"` : ""}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">${LITE.GUARD}${liveish ? '<script>(function(){var h=document.documentElement;if(Date.now()-Date.parse(h.dataset.built)>12e4)h.classList.add("stale")})()</script>' : ""}
+  const V5D = Object.assign({ page:o.page, id:null }, v.data || {});   // the build stamp comes from /now.js (window.BUILT), not the page
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">${LITE.GUARD}${liveish ? '<script src="/now.js"></script><script>(function(){var h=document.documentElement;if(window.BUILT&&Date.now()-Date.parse(window.BUILT)>12e4)h.classList.add("stale")})()</script>' : ""}
 <title>${esc(o.title)}</title><meta name="description" content="${esc(o.desc)}">${PREVIEW || o.noindex ? '<meta name="robots" content="noindex">' : `<link rel="canonical" href="${url}">`}
 <meta property="og:title" content="${esc(o.title)}"><meta property="og:description" content="${esc(o.desc)}"><meta property="og:url" content="${url}"><meta property="og:locale" content="ar_AE"><meta property="og:site_name" content="تيفو">${og ? `<meta property="og:image" content="${SITE}/og/${og}.png${o.ogv ? "?v=" + o.ogv : ""}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">` : ""}
 <meta name="color-scheme" content="light dark"><meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="تيفو">
@@ -389,7 +389,10 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // 2026-10-08: keys sorted, since every page links this file by its hash: NAT follows arabs/national.json's order, and IQ/TN
   // swapping places there re-uploaded all 30k pages. The browser reads these maps by key only
   const SJ = o => JSON.stringify(o && typeof o === "object" && !Array.isArray(o) ? Object.fromEntries(Object.entries(o).sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)) : o);
-  const cjs = "window.TC=" + SJ(colors) + ";window.H2HK=" + SJ(R.H2HK) + ";window.ARABT=" + SJ(ARABT) + ";window.TAR=" + SJ(TAR) + ";window.NAT=" + SJ(NAT) + ";window.DUP=" + SJ(DUP) + ";window.CHN_AE=" + SJ(CHN_AE) + ";window.CL=" + SJ(CL) + ";window.NOWT=" + SJ(NOWT) + ";"; COLOR_V = hash(cjs); fs.writeFileSync(path.join(OUT, `assets/colors.${COLOR_V}.js`), cjs);
+  const cjs = "window.TC=" + SJ(colors) + ";window.H2HK=" + SJ(R.H2HK) + ";window.ARABT=" + SJ(ARABT) + ";window.TAR=" + SJ(TAR) + ";window.NAT=" + SJ(NAT) + ";window.DUP=" + SJ(DUP) + ";window.CHN_AE=" + SJ(CHN_AE) + ";window.CL=" + SJ(CL) + ";"; COLOR_V = hash(cjs); fs.writeFileSync(path.join(OUT, `assets/colors.${COLOR_V}.js`), cjs);
+  // 2026-10-17: what changes every build (the hot-competition clock NOWT, the build stamp) lives in /now.js (a fixed name under the
+  // pages' 60 s cache), so neither the hashed assets nor the 33k pages that name them change each hour
+  fs.writeFileSync(path.join(OUT, "now.js"), "window.NOWT=" + SJ(NOWT) + ";window.BUILT=" + JSON.stringify(BUILT) + ";");
   // ---- v5 renderer config (src/v5/ui.js U.cfg) for the prerender, and the shared browser config (assets/v5cfg.<hash>.js)
   { U.cfg.cn = {}; comps.forEach((c, i) => { U.cfg.cn[c.id] = [c.key, c.name_ar, (c.country && c.country.iso2) || "", i]; });
     U.cfg.cc = FMN.countries || {}; U.cfg.tc = colors; U.cfg.today = today; U.cfg.now = Date.now();
