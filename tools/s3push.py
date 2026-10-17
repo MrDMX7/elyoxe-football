@@ -22,7 +22,9 @@ def push(src, bucket, region, excludes=(), cache_control=None, delete=True, work
     """(ok, note)"""
     import boto3
     from botocore.config import Config
-    s3 = boto3.client("s3", region_name=region, config=Config(max_pool_connections=workers + 4,
+    # 2026-10-17: the 14:25 run sat 110 minutes in the listing with three CLOSE_WAIT sockets and one thread (a stalled read
+    # with no timeout holds the hourly lock for good); a read now fails after 60 s, is retried, and the runner falls back
+    s3 = boto3.client("s3", region_name=region, config=Config(max_pool_connections=workers + 4, connect_timeout=20, read_timeout=60,
                                                               retries={"max_attempts": 6, "mode": "standard"}))
     skip = lambda k: any(fnmatch.fnmatchcase(k, p) for p in excludes)
     t0 = time.time()
