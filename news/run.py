@@ -165,6 +165,11 @@ def main(argv=None):
     a = ap.parse_args(argv)
     t0 = time.time()
     store = Store(LocalBackend(a.local)) if a.local else Store(S3Backend(BUCKET))
+    # 2026-10-17: the hashes of what this journal published last time (state/news-hashes.json). Without them every run
+    # re-sent every news/e/ and news/social/ file (~500 PUTs an hour, the largest line of the S3 bill); put_json skips a
+    # file whose content (minus `generated`) is unchanged, which is nearly all of them between two runs.
+    HASHES = "news-hashes.json"
+    store.hashes.update(store.get_state(HASHES) or {})
     cfg = yaml.safe_load(open(os.path.join(HERE, "sources.yaml"), encoding="utf-8"))
     st = cfg.get("settings") or {}
     state = store.get_state(STATE) or {}
@@ -273,8 +278,11 @@ def main(argv=None):
     store.put_json("news/transfers.json", {"generated": gen, "players": transfers(newest, items, D)[:200]}, cache="warm")
     steps["publish"] = round(time.time() - t1, 1)
     state.update({"items": items, "stories": stories, "run": {"at": gen, "fresh": len(fresh), "stories_touched": len(touched),
-                  "summaries": done, "errors": errors, "secs": round(time.time() - t0, 1), "steps": steps, "entities": len(ents)}})
+                  "summaries": done, "errors": errors, "secs": round(time.time() - t0, 1), "steps": steps, "entities": len(ents),
+                  "written": len(store.written), "unchanged": store.skipped_same}})
     store.put_state(STATE, state)
+    if not a.local:
+        store.put_state(HASHES, {k: v for k, v in store.hashes.items() if k.startswith("v1/news/")})
     print(json.dumps(state["run"], ensure_ascii=False))
     # ---- official videos by the matches and their goals (news/media.py): the journal's YouTube feeds are reused, never fatal
     if not a.no_media:

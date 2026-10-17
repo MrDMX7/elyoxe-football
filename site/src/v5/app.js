@@ -735,8 +735,13 @@
   }
 
   // W1.10: a cookieless visit ping (path, country, how long since the last visit on this phone); crawlers and headless browsers are not visitors
-  (function () { try { if (BOT) return; var cc0 = country() || "", last = +ls.get("tifo.seen", 0) || 0, now = NOW(), d = (now - last) / 864e5, ret = !last ? "first" : new Date(last).toDateString() === new Date(now).toDateString() ? "same_day" : d <= 7 ? "d1_7" : "d8p";
-    ls.set("tifo.seen", String(now)); ls.set("tifo.ret", ret); if (ret === "first") ss.set("tifo.first", "1"); fetch("/api/tifo/hit", { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify({ path: location.pathname, country: cc0 === "xx" ? "" : cc0, ret: ret }) }).catch(function () {}); } catch (e) {} })();
+  // 2026-10-17: a ping only after a human signal (a touch, click, scroll, key or 12 s with the page in view). Rendering
+  // crawlers that pass the UA check (hundreds of «first visit, country unknown» views a day on 10-12/13) leave before either.
+  (function () { try { if (BOT) return; var sent = false, send = function () { if (sent) return; sent = true; try {
+      var cc0 = country() || "", last = +ls.get("tifo.seen", 0) || 0, now = NOW(), d = (now - last) / 864e5, ret = !last ? "first" : new Date(last).toDateString() === new Date(now).toDateString() ? "same_day" : d <= 7 ? "d1_7" : "d8p";
+      ls.set("tifo.seen", String(now)); ls.set("tifo.ret", ret); if (ret === "first") ss.set("tifo.first", "1"); fetch("/api/tifo/hit", { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify({ path: location.pathname, country: cc0 === "xx" ? "" : cc0, ret: ret }) }).catch(function () {}); } catch (e) {} };
+    ["pointerdown", "touchstart", "scroll", "keydown"].forEach(function (ev) { W.addEventListener(ev, send, { once: true, passive: true }); });
+    var t = setTimeout(function () { if (D.visibilityState === "visible") send(); }, 12000); W.addEventListener("pagehide", function () { clearTimeout(t); }); } catch (e) {} })();
 
   // tv.js, media.js and share.js read a few helpers from window.TR (render.js, in the legacy bundle); pages without it get these
   if (!LEGACY && !window.TR) window.TR = { esc: U.esc, COUNTRIES: (C.countries || []).map(function (c) { return [c[0], c[1], c[2]]; }), isLive: U.isLive, localize: localize,

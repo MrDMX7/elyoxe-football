@@ -113,6 +113,13 @@ def placeholder_ar(name):
     m = re.match(r"^(Winner|Loser)\s+([1-4][A-L]{1,6})/([1-4][A-L]{1,6})$", s, re.I)     # EURO round of 16: «Winner 1F/2E»
     if m:
         return f"{'الفايز' if m.group(1).lower() == 'winner' else 'الخاسر'} من مباراة {placeholder_ar(m.group(2))} و{placeholder_ar(m.group(3))}"
+    # CAF-style codes FotMob leaves in English: «Winner EF 3» (a tie of the first/elimination round), «Winner PO 2», «Winner Match 7»
+    m = re.match(r"^(Winner|Loser)\s+(EF|PR|PO|FR|SR|Match|Tie|Group)\s*(\d+)$", s, re.I)
+    if m:
+        k = m.group(2).upper()
+        stage = {"EF": "الدور الأول", "PR": "الدور التمهيدي", "FR": "الدور الأول", "SR": "الدور الثاني", "PO": "الملحق",
+                 "MATCH": "المباراة", "TIE": "المواجهة", "GROUP": "المجموعة"}[k]
+        return f"{'الفايز' if m.group(1).lower() == 'winner' else 'الخاسر'} من {stage} {m.group(3)}"
     return None
 
 
