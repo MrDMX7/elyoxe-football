@@ -168,7 +168,7 @@ def job_site(log):
             try:
                 from tools.s3push import push
                 ok, note = push(str(SITE / "out"), bucket, REGION, excludes=[a for i, a in enumerate(args) if i and args[i - 1] == "--exclude"],
-                                cache_control="public,max-age=60", say=log.w)
+                                cache_control="public,max-age=60", say=log.w, manifest=str(SITE / "cache" / "out_manifest.json"))
             except Exception as e:
                 ok, note = False, f"{type(e).__name__}: {e}"
             log.w(f"s3push: {note} [{time.time() - t0:.0f} s, {'ok' if ok else 'falling back to the CLI sync'}]")

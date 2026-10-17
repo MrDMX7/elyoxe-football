@@ -18,8 +18,17 @@ TYPES = {".html": "text/html", ".json": "application/json", ".png": "image/png",
 MAX_DELETE = 0.10
 
 
-def push(src, bucket, region, excludes=(), cache_control=None, delete=True, workers=32, dry=False, say=print):
-    """(ok, note)"""
+def push(src, bucket, region, excludes=(), cache_control=None, delete=True, workers=32, dry=False, say=print, manifest=None):
+    """(ok, note). `manifest`: the build's out_manifest.json ({rel: [md5, mtime]}), so a candidate's MD5 is read, not computed:
+    hashing 33k pages on this laptop took 7,023 s on 2026-10-17 (0.5 MB/s: a slow disk and the scanner on every open)."""
+    known = {}
+    if manifest:
+        try:
+            import json
+            known = {k.replace("\\", "/"): v[0] for k, v in json.load(open(manifest, encoding="utf-8")).items() if isinstance(v, list) and v}
+        except Exception as e:
+            say(f"s3push: manifest not read ({e}); hashing instead")
+    hashed = 0
     import boto3
     from botocore.config import Config
     # 2026-10-17: the 14:25 run sat 110 minutes in the listing with three CLOSE_WAIT sockets and one thread (a stalled read
@@ -50,8 +59,12 @@ def push(src, bucket, region, excludes=(), cache_control=None, delete=True, work
                 # (the pages it rewrote byte for byte, plus the ones its manifest could not vouch for): 150-270k PUTs a day,
                 # the largest line of the S3 bill. A single-part object's ETag is the MD5 of its bytes, so the bytes decide;
                 # an identical file takes the object's time, so it is not hashed again next hour.
-                with open(p, "rb") as fh:
-                    same = r[2] and "-" not in r[2] and hashlib.md5(fh.read()).hexdigest() == r[2]
+                h = known.get(k)
+                if h is None and hashed < 3000:                 # a bounded fallback: past it the file is simply sent
+                    hashed += 1
+                    with open(p, "rb") as fh:
+                        h = hashlib.md5(fh.read()).hexdigest()
+                same = bool(h) and r[2] and "-" not in r[2] and h == r[2]
                 if same:
                     identical += 1
                     try:
@@ -61,7 +74,7 @@ def push(src, bucket, region, excludes=(), cache_control=None, delete=True, work
                 else:
                     todo.append((k, p))
     gone = sorted(k for k in remote if k not in local)
-    say(f"s3push: {len(remote)} up, {len(local)} local, {len(todo)} to send, {identical} identical by md5, {len(gone)} to delete ({time.time() - t0:.0f}s to compare)")
+    say(f"s3push: {len(remote)} up, {len(local)} local, {len(todo)} to send, {identical} identical by md5 ({len(known)} from the manifest, {hashed} hashed), {len(gone)} to delete ({time.time() - t0:.0f}s to compare)")
     if dry:
         return True, "dry run"
 
