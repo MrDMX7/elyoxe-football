@@ -655,7 +655,7 @@ def area_matches(A):
     if low_cov:
         A.add("gaps", "scorers_missing", "info", "gap", "matches:low-coverage",
               f"{len(low_cov)} finished match pages name fewer scorers than goals ({dict(by_cov)}): FotMob gives these matches a score only; 365Scores often has the scorers",
-              examples=[x[0] for x in low_cov[:20]])
+              examples=[x[0] for x in low_cov[:20]], matches=[x[0] for x in low_cov])   # the full list feeds db/scorers365.py
     # 5. finished matches of the current seasons with no match page at all
     per = Counter()
     ex = defaultdict(list)
