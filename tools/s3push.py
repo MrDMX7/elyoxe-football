@@ -1,14 +1,14 @@
 """`aws s3 sync out s3://… --delete` for the site's pages, with boto3 and many uploads at a time (2026-10-08).
 
 The CLI's sync sent the laptop's pages at about 1 file a second (a 1,000-file build took 18 minutes, a full one 2 hours)
-while the line takes 3-4 MB/s. Same rules as the sync it replaces: a file goes up when its key is missing, its size
-differs, or the local file is newer than the object; a key under no local file is deleted; the excludes apply to both.
+while the line takes 3-4 MB/s. Same rules as the sync it replaces, plus one: a file goes up when its key is missing, its size
+differs, or the local file is newer than the object AND its MD5 differs from the object's ETag (2026-10-17); a key under no local file is deleted; the excludes apply to both.
 Content-Type per extension is what the CLI gave the live objects. Deletes stop at 10 % of what is up (the runner's
 partial-build guard is the first line; this is the second). Any failure returns ok=False and the runner falls back to the CLI.
 
     python -m tools.s3push <dir> <bucket> [--dry]
 """
-import fnmatch, os, sys, threading, time
+import fnmatch, hashlib, os, sys, threading, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
@@ -30,8 +30,8 @@ def push(src, bucket, region, excludes=(), cache_control=None, delete=True, work
     for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket):
         for o in page.get("Contents") or []:
             if not skip(o["Key"]):
-                remote[o["Key"]] = (o["Size"], o["LastModified"])
-    local, todo = set(), []
+                remote[o["Key"]] = (o["Size"], o["LastModified"], o.get("ETag", "").strip('"'))
+    local, todo, identical = set(), [], 0
     for root, _, files in os.walk(src):
         for f in files:
             p = os.path.join(root, f)
@@ -41,10 +41,25 @@ def push(src, bucket, region, excludes=(), cache_control=None, delete=True, work
             local.add(k)
             st = os.stat(p)
             r = remote.get(k)
-            if r is None or r[0] != st.st_size or datetime.fromtimestamp(st.st_mtime, timezone.utc) > r[1]:
+            if r is None or r[0] != st.st_size:
                 todo.append((k, p))
+            elif datetime.fromtimestamp(st.st_mtime, timezone.utc) > r[1]:
+                # 2026-10-17: same size and a newer mtime used to be enough, and the hourly build hands over 8-14k such files
+                # (the pages it rewrote byte for byte, plus the ones its manifest could not vouch for): 150-270k PUTs a day,
+                # the largest line of the S3 bill. A single-part object's ETag is the MD5 of its bytes, so the bytes decide;
+                # an identical file takes the object's time, so it is not hashed again next hour.
+                with open(p, "rb") as fh:
+                    same = r[2] and "-" not in r[2] and hashlib.md5(fh.read()).hexdigest() == r[2]
+                if same:
+                    identical += 1
+                    try:
+                        os.utime(p, (r[1].timestamp(), r[1].timestamp()))
+                    except OSError:
+                        pass
+                else:
+                    todo.append((k, p))
     gone = sorted(k for k in remote if k not in local)
-    say(f"s3push: {len(remote)} up, {len(local)} local, {len(todo)} to send, {len(gone)} to delete ({time.time() - t0:.0f}s to compare)")
+    say(f"s3push: {len(remote)} up, {len(local)} local, {len(todo)} to send, {identical} identical by md5, {len(gone)} to delete ({time.time() - t0:.0f}s to compare)")
     if dry:
         return True, "dry run"
 

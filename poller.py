@@ -1536,6 +1536,8 @@ class Poller:
                 continue
             try:
                 done = fn()
+                if f"analytics:{key}" in self.store.health and not self.store.health[f"analytics:{key}"].get("ok"):
+                    self.store.ok(f"analytics:{key}")      # a step that failed once stayed «failing» for good (match_of_week, 10-07 -> 10-17)
                 if every and done is False and every > NOT_READY_RETRY:
                     # inputs not there yet (history, ratings, careers ... fill in over several runs): try again in
                     # NOT_READY_RETRY minutes instead of publishing nothing, or an empty file, for a whole cadence
