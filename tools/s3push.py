@@ -89,13 +89,16 @@ def push(src, bucket, region, excludes=(), cache_control=None, delete=True, work
             kw["ContentType"] = ct
         s3.put_object(**kw)
 
-    t1, failed = time.time(), []
+    t1, failed, done = time.time(), [], 0
     with ThreadPoolExecutor(workers) as ex:
         for fu in as_completed([ex.submit(put, it) for it in todo]):
             try:
                 fu.result()
             except Exception as e:
                 failed.append(str(e)[:160])
+            done += 1
+            if done % 2000 == 0:          # 2026-10-17: a publish crawled at ~0.5 files/s for hours with nothing in the log
+                say(f"s3push: {done} of {len(todo)} sent, {done / max(1, time.time() - t1):.1f} files/s")
     say(f"s3push: sent {len(todo) - len(failed)} of {len(todo)} in {time.time() - t1:.0f}s")
     if failed:
         return False, f"{len(failed)} uploads failed, e.g. {failed[0]}"
