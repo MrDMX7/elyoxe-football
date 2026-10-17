@@ -404,7 +404,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     // audit, and every flip between passed and failed, re-uploaded all 30k pages
     const badge = `<p class="audit" id="auditb" hidden></p>`;
     U.cfg.footer = badge + `<p><span class="updated" id="updated"></span> تيفو بدون مراهنات. البيانات من FotMob ورابطة المحترفين الإماراتية.</p>` +
-      `<nav class="fnav" aria-label="روابط تيفو">${[["/", "اليوم"], ["/today/", "مباريات اليوم"], ["/tomorrow/", "مباريات بكرة"], ["/all/", "كل مباريات العالم"], ["/yesterday/", "نتائج أمس"], ["/matches/", "جدول المباريات"], ["/week/", "مباريات الأسبوع"], ["/countdowns/", "كم باقي؟"], ["/watch/", "وين تنقل"], ["/commentators/", "منو يعلّق"], ["/news/", "الأخبار"], ["/competitions/", "كل البطولات"], ["/c/uae-pro-league/", "دوري أدنوك"], ["/national/", "المنتخبات"], ["/arabs/", "العرب"], ["/db/", "موسوعة الأندية واللاعبين"], ["/legends/", "الأساطير"], ["/memorable/", "مباريات ما تنتسى"], ["/thisday/", "هذا اليوم"], ["/tv/", "شاشة المجلس"], ["/tv/?mine=1", "وضع المتابعة"], ["/studio/", "ستوديو التيفو"], ["/lab/", "المختبر"], ["/stadiums/", "الملاعب"], ["/laws/", "قانون الكورة"], ["/glossary/", "القاموس"], ["/cast/", "تيفو كاست"], ["/newsletter/", "النشرة"], ["/more/", "كل الصفحات"]].map(l => `<a href="${l[0]}">${l[1]}</a>`).join("")}</nav>` +
+      `<nav class="fnav" aria-label="روابط تيفو">${[["/", "اليوم"], ["/today/", "مباريات اليوم"], ["/tomorrow/", "مباريات بكرة"], ["/all/", "كل مباريات العالم"], ["/yesterday/", "نتائج أمس"], ["/matches/", "جدول المباريات"], ["/week/", "مباريات الأسبوع"], ["/countdowns/", "كم باقي؟"], ["/watch/", "وين تنقل"], ["/commentators/", "منو يعلّق"], ["/news/", "الأخبار"], ["/competitions/", "كل البطولات"], ["/c/uae-pro-league/", "دوري أدنوك"], ["/national/", "المنتخبات"], ["/arabs/", "العرب"], ["/db/", "موسوعة الأندية واللاعبين"], ["/developers/", "بيانات تيفو للمطورين"], ["/legends/", "الأساطير"], ["/memorable/", "مباريات ما تنتسى"], ["/thisday/", "هذا اليوم"], ["/tv/", "شاشة المجلس"], ["/tv/?mine=1", "وضع المتابعة"], ["/studio/", "ستوديو التيفو"], ["/lab/", "المختبر"], ["/stadiums/", "الملاعب"], ["/laws/", "قانون الكورة"], ["/glossary/", "القاموس"], ["/cast/", "تيفو كاست"], ["/newsletter/", "النشرة"], ["/more/", "كل الصفحات"]].map(l => `<a href="${l[0]}">${l[1]}</a>`).join("")}</nav>` +
       `<p>من استوديو <a href="https://elyoxe.com/">Elyoxe</a></p>`; }
   // the shared browser config: competitions, the first-visit picks (Arab national teams + the leading clubs of each Arab league),
   // the countries with their time zones, the audit
@@ -1165,6 +1165,30 @@ ${items}
     const EX = {}; lessons.forEach(l => { EX[l[0]] = l; }); const GL2 = GLOSS.map(g => g.concat([EX[g[0]]])).concat(lessons.filter(l => !GLOSS.some(g => g[0] === l[0])).map(l => [l[0], l[1].replace(/:.*$/, ""), "", l]));
     write("glossary/index.html", page({ path:"/glossary/", page:"ref", title:"قاموس مصطلحات الكورة بالإماراتي | تيفو", desc:"شرح بسيط لكل مصطلح في تيفو، ومع كل رقم مثال حقيقي من الدوري: الأهداف المتوقعة، الضغط، تصنيف تيفو، محاكي الموسم، التسلل، الفار وغيرها.", body:"<h1>قاموس المصطلحات</h1><p class=\"muted\">شرح بسيط لكل مصطلح يطلع في تيفو، ومع أرقامنا مثال من مباريات حقيقية.</p><dl class=\"gl\">" + GL2.map(g => `<dt id="${g[0]}">${esc(g[1])}</dt><dd>${g[2] ? esc(g[2]) : ""}${g[3] ? `<p class="ex"><b>مثال:</b> ${g[3][2]} <a href="${g[3][3]}">شوفها في الموقع</a></p>` : ""}</dd>`).join("") + "</dl>" })); urls.push("/glossary/");
     stub("/academy/", "/glossary/", "قاموس المصطلحات"); }
+
+  // 186 the public read API (owner 2026-10-17: everything that grows the site): what /v1 already serves, documented once, CORS * on the edge
+  { const EP = [
+      ["index.json", "البطولات المتابعة، وأي مباراة مباشرة الحين، وقائمة الملفات"],
+      ["live.json", "كل مباراة مباشرة الحين: النتيجة والدقيقة والأحداث (يتحدّث كل 20 ثانية وقت المباريات)"],
+      ["day/YYYYMMDD.json", "مباريات يوم بتوقيت الإمارات: الموعد والحالة والنتيجة واحتمالات نموذج تيفو"],
+      ["match/<id>.json", "مباراة كاملة: الأحداث وطريقة كل هدف، التشكيلات، الإحصائيات، xG، خريطة التسديد"],
+      ["comp/<id>/standings.json", "جدول الترتيب (ومعه fixtures.json للجدول الزمني وstats.json للهدافين والصناع)"],
+      ["team/<id>.json", "النادي: التشكيلة والمدرب والمباريات والبطولات"],
+      ["teams.json", "كل الأندية المتابعة باسمها العربي وشعارها وبلدها"],
+      ["player/<id>/log.json", "سجل مباريات اللاعب هالموسم: الدقايق والأهداف والتقييم"],
+      ["transfers/all.json", "سوق الانتقالات: كل صفقة هالموسم في العالم (ومعه rumours.json للإشاعات وحالتها)"],
+      ["news/latest.json", "آخر الأخبار بعناوين عربية ومصدرها (وnews/e/team-<id>.json لنادٍ بعينه)"],
+      ["streams.json", "البث الرسمي المجاني المباشر الحين (يوتيوب وX) لكل مباراة"],
+      ["tv/commentators.json", "المعلقين: مباريات اليوم والياية لكل صوت وقناته"],
+      ["audit/latest.json", "تدقيق الأرقام اليومي: كم رقم فُحص وكم ملاحظة"],
+    ];
+    const rows = EP.map(([k, d]) => `<tr><td class="lat" dir="ltr"><code>/v1/${esc(k)}</code></td><td>${esc(d)}</td></tr>`).join("");
+    write("developers/index.html", page({ path:"/developers/", page:"ref", title:"واجهة بيانات تيفو المفتوحة (API) للمطورين | تيفو", desc:"بيانات تيفو كما يقرأها الموقع نفسه: مباريات اليوم مباشرة، النتائج، الترتيب، الهدافين، الانتقالات والأخبار بالعربي، ملفات JSON مجانية بلا مفتاح.",
+      body:`<h1>بيانات تيفو للمطورين</h1><p class="muted">نفس الملفات اللي يقرأها الموقع، JSON مضغوط بـgzip على <code dir="ltr">https://tifo.elyoxe.com/v1/</code>. بلا مفتاح ولا تسجيل، ومن أي موقع (CORS مفتوح للقراءة).</p>
+<div class="tblwrap"><table class="st"><thead><tr><th>الملف</th><th>وش فيه</th></tr></thead><tbody>${rows}</tbody></table></div>
+<h2>الشروط</h2><ul><li>مجاني للاستخدام الشخصي والمواقع والتطبيقات، بشرط رابط ظاهر إلى <a href="https://tifo.elyoxe.com/">tifo.elyoxe.com</a> قرب الأرقام.</li><li>المباشر يتحدّث كل 20 ثانية؛ لا تستعلم أسرع من كل 10 ثوانٍ لكل ملف. الكاش من <code>Cache-Control</code> في الرد.</li><li>الأرقام من مصادر عامة وتُدقّق يومياً (<a href="/v1/audit/latest.json" dir="ltr">audit/latest.json</a>)؛ لو لقيت غلط راسلنا على <a href="mailto:hello@elyoxe.com">hello@elyoxe.com</a>.</li><li>ما في ضمان توافر، والهيكل قد يتغيّر مع إشعار في هذي الصفحة.</li></ul>
+<h2>مثال</h2><pre dir="ltr"><code>fetch("https://tifo.elyoxe.com/v1/live.json").then(r =&gt; r.json()).then(d =&gt; console.log(d.matches))</code></pre>
+<p class="muted">الويدجت الجاهز للتضمين: <a href="/embed/t/">جدول نادٍ</a> و<a href="/embed/m/">مباراة</a>.</p>` })); urls.push("/developers/"); }
 
   // 184 newsletter, 333 watch mode, 230 countdowns
   write("newsletter/index.html", page({ path:"/newsletter/", page:"newsletter", title:"نشرة تيفو الأسبوعية | تيفو", desc:"كل خميس في إيميلك: نتايج الأسبوع، والترتيب، ومباريات الأسبوع الياي بتوقيت بلدك.", body:'<h1>نشرة تيفو</h1><p class="muted">كل خميس في إيميلك: النتايج، والترتيب، ومباريات الأسبوع الياي بتوقيت بلدك. بدون إزعاج، وتقدر تلغي بضغطة.</p><div id="nlmsg" role="status"></div><form class="ask nlform"><input type="email" name="email" required dir="ltr" autocomplete="email" placeholder="إيميلك" aria-label="إيميلك"><button class="btn" type="submit">اشترك</button></form>' })); urls.push("/newsletter/");
