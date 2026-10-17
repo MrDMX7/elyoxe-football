@@ -37,6 +37,7 @@ STAGES = [   # name, module, args, every (days)
     ("world", "db.world", ["--upload", "--players"], 14),           # the world encyclopedia: ~300 leagues, their clubs and players
     ("transfers_world", "db.transfers_world", ["--upload"], 1),       # every club's moves this season (daily: re-fetched in a window)
     ("matches", "db.matches", ["--upload"], 1),                     # new finished matches in detail, then every player's log
+    ("scorers365", "db.scorers365", ["--upload"], 1),              # scorers and cards from 365Scores where FotMob has a score only (audit: scorers_missing)
     ("s365", "db.scores365", ["--upload"], 1),
     ("eafc", "db.eafc", ["--upload"], 7),
     ("tmdata", "db.tmdata", ["--upload"], 7),                        # Transfermarkt careers by competition, injuries, bio fill (salimt datasets)
