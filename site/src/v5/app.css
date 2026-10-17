@@ -445,7 +445,7 @@ dialog.sheet.closing{transform:translateY(100%)}
 
 /* ---------------------------------------------------------------- footer + preview note */
 .foot{margin-top:34px;padding:0 16px;color:var(--label3);font-size:12px;line-height:17px;text-align:center}
-.foot a{color:var(--label2)}
+.foot a{color:var(--label2);text-decoration:underline;text-underline-offset:2px}
 .pv{display:flex;align-items:center;gap:8px;margin:0 0 14px;padding:10px 14px;border-radius:14px;background:var(--accent-bg);color:var(--label);font-size:13px;line-height:18px}
 .pv b{color:var(--accent)}
 
