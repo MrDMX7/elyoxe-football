@@ -37,13 +37,13 @@ STAGES = [   # name, module, args, every (days)
     ("world", "db.world", ["--upload", "--players"], 14),           # the world encyclopedia: ~300 leagues, their clubs and players
     ("transfers_world", "db.transfers_world", ["--upload"], 1),       # every club's moves this season (daily: re-fetched in a window)
     ("matches", "db.matches", ["--upload"], 1),                     # new finished matches in detail, then every player's log
-    ("scorers365", "db.scorers365", ["--upload"], 1),              # scorers and cards from 365Scores where FotMob has a score only (audit: scorers_missing)
     ("s365", "db.scores365", ["--upload"], 1),
     ("eafc", "db.eafc", ["--upload"], 7),
     ("tmdata", "db.tmdata", ["--upload"], 7),                        # Transfermarkt careers by competition, injuries, bio fill (salimt datasets)
     ("photos_identity", "photos.build", ["--identity-only"], 7),      # who every Wikidata person is (~28 queries): namesakes' photos out, leads gated
     ("wiki_ar", "db.wiki_ar", ["--upload"], 30),                     # Arabic Wikipedia's lead for players and clubs
     ("audit", "db.audit", [], 1),                                    # last: every number checked against itself, FotMob now and 365Scores (docs/AUDIT-DATA-<date>.md)
+    ("scorers365", "db.scorers365", ["--upload"], 1),              # after the audit: it reads today's scorers_missing list (2026-10-18: before it, it read yesterday's)
 ]
 
 
