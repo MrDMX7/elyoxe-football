@@ -1562,13 +1562,16 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   fs.writeFileSync(path.join(OUT, ".pages"), String(urls.length));
   // W4.7: a file whose bytes match the last build keeps that build's mtime, so `aws s3 sync` (size + mtime) uploads only what changed
   if (!ONLY) { const MF = path.join(CACHE, "out_manifest.json"); let prev = {}; try { prev = JSON.parse(fs.readFileSync(MF, "utf8")); } catch (e){}
+    // 2026-10-23: keys are «/» paths on every OS (the laptop wrote «\» ones; GitHub's Linux runner matched none of them, so every
+    // page lost its lastmod); a manifest from either is read as «/»
+    prev = Object.fromEntries(Object.entries(prev).map(([k, v]) => [k.split("\\").join("/"), v]));
     const next = {}; let kept = 0, fresh = 0;
     (function walk(d){ for (const e of fs.readdirSync(d, { withFileTypes:true })){ const f = path.join(d, e.name); if (e.isDirectory()){ if (e.name !== "next") walk(f); continue; }
-      const rel = path.relative(OUT, f), h = crypto.createHash("md5").update(fs.readFileSync(f)).digest("hex"), p = prev[rel];
+      const rel = path.relative(OUT, f).split(path.sep).join("/"), h = crypto.createHash("md5").update(fs.readFileSync(f)).digest("hex"), p = prev[rel];
       if (p && p[0] === h){ try { const t = new Date(p[1]); fs.utimesSync(f, t, t); next[rel] = p; kept++; } catch (x){ next[rel] = [h, Date.now()]; fresh++; } } else { next[rel] = [h, fs.statSync(f).mtimeMs]; fresh++; } } })(OUT);
     try { fs.writeFileSync(MF, JSON.stringify(next)); } catch (e){} console.log(`out: ${fresh} new or changed files, ${kept} unchanged (they keep their old mtime for s3 sync)`);
     // 446: lastmod is when the page's bytes last changed (the manifest above), never the build time
-    const uniq = [...new Set(urls)], relOf = u => (decodeURI(u).replace(/^\//, "") + (u.endsWith("/") ? "index.html" : "")).split("/").join(path.sep), lm = u => { const e = next[relOf(u)]; return e ? new Date(e[1]).toISOString().slice(0, 10) : ""; };
+    const uniq = [...new Set(urls)], relOf = u => (decodeURI(u).replace(/^\//, "") + (u.endsWith("/") ? "index.html" : "")), lm = u => { const e = next[relOf(u)]; return e ? new Date(e[1]).toISOString().slice(0, 10) : ""; };
     const sm = list => `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` + list.map(u => `<url><loc>${esc(SITE + encodeURI(decodeURI(u)))}</loc>${lm(u) ? `<lastmod>${lm(u)}</lastmod>` : ""}</url>`)   /* QA 99: encoded, no duplicates */.join("\n") + "\n</urlset>\n";
     fs.writeFileSync(path.join(OUT, "sitemap.xml"), sm(uniq));
     // 446: the pages Google should look at first: matches from 3 days back to 7 ahead, their competitions, today/tomorrow

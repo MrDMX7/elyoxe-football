@@ -14,7 +14,7 @@ ci/seed/db-cache.tar).
     python -m tools.ci_bridge usage                     runner: this run's ~/.elyoxe/usage.jsonl up for the laptop
     python -m tools.ci_bridge state-get <name> <root>   runner: ci/state/<name>.tar into <root> (missing = first run)
     python -m tools.ci_bridge state-put <name> <root> <path>...
-    python -m tools.ci_bridge seed [db]                 laptop, once: site/cache and the jobs' state (db: the database caches)
+    python -m tools.ci_bridge seed [site|db]            laptop, once: site/cache and the jobs' state (site: the tar alone; db: the database caches)
     python -m tools.ci_bridge seed-get [site|db]        runner: the seed into place when actions/cache has none
 
 The laptop's push runs from tools/runner.py after every job it still runs there (streams, every 5 minutes), at most every
@@ -156,9 +156,10 @@ SEED = "ci/seed/site-cache.tar"
 SEED_SKIP = {"runner"}                       # logs stay where they were written
 
 
-def seed():
+def seed(only_site=False):
     """Laptop, once (or to refresh a cold start): site/cache as one tar, the journal's and the names job's state, the
-    inputs, and the page count the partial-build guard compares against."""
+    inputs, and the page count the partial-build guard compares against. only_site: the tar alone (the jobs' state in S3
+    is newer than the laptop's once GitHub runs them)."""
     import tempfile
     cache = ROOT / "site" / "cache"
     tmp = Path(tempfile.gettempdir()) / "tifo-site-cache.tar"
@@ -172,6 +173,8 @@ def seed():
     size = tmp.stat().st_size
     tmp.unlink()
     out = {"seed_bytes": size}
+    if only_site:
+        return out
     out["journal"] = state_put("journal", str(ROOT), ["news/.cache", "site/cache/bing_sent.json"])
     out["names"] = state_put("names", str(HOME / ".cache"), ["tifo-names"])
     out["inputs"] = push(force=True)
@@ -234,7 +237,7 @@ def main(argv):
     elif cmd == "state-put":
         r = state_put(argv[1], argv[2], argv[3:])
     elif cmd == "seed":
-        r = seed_db() if argv[1:2] == ["db"] else seed()
+        r = seed_db() if argv[1:2] == ["db"] else seed(only_site=argv[1:2] == ["site"])
     elif cmd == "seed-get":
         r = seed_get(argv[1] if len(argv) > 1 else "site")
     else:
