@@ -15,6 +15,7 @@ concurrency:
 env:
   TZ: Asia/Dubai
   PYTHONIOENCODING: utf-8
+  TIFO_FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}   # by hand: run even if done this week (tools/runner.py ONCE)
   GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 jobs:
   names:

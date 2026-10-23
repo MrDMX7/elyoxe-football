@@ -321,10 +321,37 @@ def beat(job, ok, secs, note):
     STORE.put_state(f"runner/{job}.json", doc)
 
 
+# Weekly jobs, done once a week whichever host gets there first (2026-10-23: GitHub Actions and the laptop both had them
+# scheduled while the jobs moved; a second newsletter would mail every subscriber twice, a second names run would race
+# the first one's push). TIFO_FORCE=1 runs anyway (a run by hand).
+ONCE = {"names": 5 * 86400, "newsletter": 5 * 86400}
+
+
+def done_elsewhere(job):
+    """A note when `job` needs no run now: it succeeded within ONCE[job] on any host, or another host is running it."""
+    gap = ONCE.get(job)
+    if not gap or os.environ.get("TIFO_FORCE") == "1":
+        return None
+    try:
+        st = STORE.get_state(f"runner/{job}.json") or {}
+    except Exception:
+        return None
+    age = lambda t: time.time() - datetime.fromisoformat(t).timestamp() if t else 1e12
+    if age(st.get("last_ok")) < gap:
+        return f"done {age(st.get('last_ok')) / 3600:.0f} h ago on {st.get('last_ok_host')}"
+    if st.get("running") and st.get("running_host") != HOST and age(st.get("started_at")) < 2 * 3600:
+        return f"running on {st.get('running_host')} since {st.get('started_at')}"
+    return None
+
+
 def do(job):
     with Lock(job) as got:
         if not got:
             print(f"{job}: a previous run is still going; skip")
+            return 0
+        why = done_elsewhere(job)
+        if why:
+            print(f"{job}: {why}; skip")
             return 0
         log, t0 = Log(job), time.time()
         try:   # «running»: the job is under way, and where

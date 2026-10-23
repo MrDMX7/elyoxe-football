@@ -1,0 +1,7 @@
+# The database job's extra packages on GitHub's runners (.github/workflows/tifo-database.yml), on top of requirements-ci.txt.
+pandas
+lxml
+html5lib
+duckdb
+numpy
+opencv-python-headless

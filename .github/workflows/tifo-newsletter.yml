@@ -14,6 +14,7 @@ concurrency:
 env:
   TZ: Asia/Dubai
   PYTHONIOENCODING: utf-8
+  TIFO_FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}   # by hand: run even if done this week (tools/runner.py ONCE)
 jobs:
   newsletter:
     runs-on: ubuntu-24.04

@@ -6,15 +6,16 @@ to s3://<football bucket>/ci/home/ (paths relative to ~, so nothing that joins a
 its own ~ first. A run's Gemini usage lines go the other way, to ci/usage/, and the laptop folds them into
 ~/.elyoxe/usage.jsonl, the file the daily cost email sums. Small job state between runs (the journal's YouTube "seen" list,
 the names job's Wikidata cache) is one tar per job under ci/state/; the site job's 1.1 GB cache rides actions/cache, and
-ci/seed/site-cache.tar is the copy a run starts from only when that cache is gone.
+ci/seed/site-cache.tar is the copy a run starts from only when that cache is gone (the database job's 1.9 GB likewise,
+ci/seed/db-cache.tar).
 
     python -m tools.ci_bridge push                      laptop: inputs and switches up (only what changed), usage lines in
     python -m tools.ci_bridge pull                      runner: inputs and switches into ~
     python -m tools.ci_bridge usage                     runner: this run's ~/.elyoxe/usage.jsonl up for the laptop
     python -m tools.ci_bridge state-get <name> <root>   runner: ci/state/<name>.tar into <root> (missing = first run)
     python -m tools.ci_bridge state-put <name> <root> <path>...
-    python -m tools.ci_bridge seed                      laptop, once: site/cache and the jobs' state up for the first runs
-    python -m tools.ci_bridge seed-get                  runner: ci/seed/site-cache.tar into site/cache (actions/cache missed)
+    python -m tools.ci_bridge seed [db]                 laptop, once: site/cache and the jobs' state (db: the database caches)
+    python -m tools.ci_bridge seed-get [site|db]        runner: the seed into place when actions/cache has none
 
 The laptop's push runs from tools/runner.py after every job it still runs there (streams, every 5 minutes), at most every
 10 minutes, so an edit to the lexicon or the research reaches the next GitHub build within minutes.
@@ -184,21 +185,40 @@ def seed():
     return out
 
 
-def seed_get():
-    cache = ROOT / "site" / "cache"
-    cache.mkdir(parents=True, exist_ok=True)
-    c = s3()
-    try:
-        c.head_object(Bucket=BUCKET, Key=SEED)
-    except Exception:
-        return {"seed": False}
-    tmp = ROOT / "site-cache-seed.tar"
-    c.download_file(BUCKET, SEED, str(tmp))
-    with tarfile.open(tmp) as t:
-        t.extractall(cache, filter="data")
+DB_SEED = "ci/seed/db-cache.tar"
+DB_DIRS = ["db/.cache", "history/.cache"]          # the database job's caches (FotMob, 365Scores, Transfermarkt, Wikidata…)
+
+
+def seed_db():
+    """Laptop, once: the database job's caches (~1.9 GB) for its first GitHub run."""
+    import tempfile
+    tmp = Path(tempfile.gettempdir()) / "tifo-db-cache.tar"
+    with tarfile.open(tmp, "w") as t:
+        for d in DB_DIRS:
+            if (ROOT / d).is_dir():
+                t.add(str(ROOT / d), arcname=d, filter=lambda ti: None if ti.name.endswith((".log", ".tmp")) else ti)
+    s3().upload_file(str(tmp), BUCKET, DB_SEED)
     size = tmp.stat().st_size
     tmp.unlink()
-    return {"seed": True, "bytes": size}
+    return {"db_seed_bytes": size}
+
+
+def seed_get(kind="site"):
+    """Runner: the seed into place (site: site/cache; db: db/.cache and history/.cache), when actions/cache had none."""
+    key, dst = (SEED, ROOT / "site" / "cache") if kind == "site" else (DB_SEED, ROOT)
+    dst.mkdir(parents=True, exist_ok=True)
+    c = s3()
+    try:
+        c.head_object(Bucket=BUCKET, Key=key)
+    except Exception:
+        return {"seed": False, "kind": kind}
+    tmp = ROOT / f"{kind}-cache-seed.tar"
+    c.download_file(BUCKET, key, str(tmp))
+    with tarfile.open(tmp) as t:
+        t.extractall(dst, filter="data")
+    size = tmp.stat().st_size
+    tmp.unlink()
+    return {"seed": True, "kind": kind, "bytes": size}
 
 
 def main(argv):
@@ -214,9 +234,9 @@ def main(argv):
     elif cmd == "state-put":
         r = state_put(argv[1], argv[2], argv[3:])
     elif cmd == "seed":
-        r = seed()
+        r = seed_db() if argv[1:2] == ["db"] else seed()
     elif cmd == "seed-get":
-        r = seed_get()
+        r = seed_get(argv[1] if len(argv) > 1 else "site")
     else:
         print(__doc__)
         return 2

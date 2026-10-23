@@ -1,6 +1,11 @@
 """Keeps the owner's football database current (2026-09-30 «الداتا بيس… يكونون محدثين فالموقع»): runs each stage when its
-turn comes, in dependency order, and records when each last ran. The laptop runs it (Task Scheduler «Tifo database»,
-daily 04:30; StartWhenAvailable catches up after the laptop was off); each stage is a module you can run alone.
+turn comes, in dependency order, and records when each last ran. GitHub Actions runs it daily at 04:30 UAE
+(.github/workflows/tifo-database.yml, since 2026-10-23; before that the laptop's Task Scheduler «Tifo database»); each
+stage is a module you can run alone.
+
+When each stage last ran is kept in db/.cache/refresh.json and in S3 (state/db/refresh.json), and the S3 copy is read again
+before every stage: a stage another host has done, or is doing (claimed less than STAGE_LIMIT ago), is skipped, so two hosts
+with the job scheduled never fetch or publish the same stage twice.
 
     python -m db.refresh [--force stage,stage] [--list]
 
@@ -17,6 +22,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 STATE = os.path.join(HERE, ".cache", "refresh.json")
 STAGE_LIMIT = 4 * 3600
+BUCKET = os.environ.get("FOOTBALL_BUCKET", "elyoxe-football-574771023173-ap-south-1")
+HOST = "github" if os.environ.get("GITHUB_ACTIONS") == "true" else "laptop" if os.name == "nt" else "fold"
+SHARED = "db/refresh.json"
 STAGES = [   # name, module, args, every (days)
     ("rsssf", "db.rsssf", ["--upload"], 30),                       # Arab leagues' old seasons (before db.history, which merges them)
     ("transfers", "history.transfermarkt", ["--upload"], 7),
@@ -47,18 +55,62 @@ STAGES = [   # name, module, args, every (days)
 ]
 
 
+def shared_store():
+    """The S3 state store, or None (no boto3, no credentials): then this host's file alone decides."""
+    try:
+        sys.path.insert(0, ROOT)
+        from store import Store, S3Backend
+        st = Store(S3Backend(BUCKET))
+        st.get_state(SHARED)
+        return st
+    except Exception as e:
+        print(f"shared state unavailable ({type(e).__name__}: {str(e)[:120]}); this host's record only", flush=True)
+        return None
+
+
+def merge(st, other):
+    """Per stage, the newer record (by its last run or its claim) of the two."""
+    when = lambda r: max(r.get("last_at") or 0, r.get("running_at") or 0)
+    for k, r in (other or {}).items():
+        if isinstance(r, dict) and when(r) > when(st.get(k) or {}):
+            st[k] = r
+    return st
+
+
+def save(st, store):
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    json.dump(st, open(STATE, "w", encoding="utf-8", newline="\n"), indent=1)
+    if store:
+        try:
+            store.put_state(SHARED, merge(store.get_state(SHARED) or {}, st))
+        except Exception as e:
+            print(f"shared state not written: {str(e)[:120]}", flush=True)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(); ap.add_argument("--force", default=""); ap.add_argument("--list", action="store_true"); a = ap.parse_args(argv)
     st = json.load(open(STATE, encoding="utf-8")) if os.path.exists(STATE) else {}
+    store = shared_store()
     force = set(filter(None, a.force.split(",")))
     now = time.time()
     for name, mod, args, every in STAGES:
-        last = st.get(name, {}).get("ok_at", 0)
+        if store:
+            try:
+                merge(st, store.get_state(SHARED) or {})
+            except Exception:
+                pass
+        rec = st.get(name, {})
+        last = rec.get("ok_at", 0)
         due = name in force or now - last > every * 86400 - 3600
         if a.list:
             print(f"{name:15} every {every:>2}d  last {datetime.fromtimestamp(last, timezone.utc).isoformat()[:16] if last else 'never':16}  {'DUE' if due else ''}"); continue
         if not due:
             continue
+        if rec.get("running_at") and rec.get("running_host") != HOST and time.time() - rec["running_at"] < STAGE_LIMIT:
+            print(f"{name}: running on {rec.get('running_host')} since {datetime.fromtimestamp(rec['running_at'], timezone.utc).isoformat()[:16]}Z; skip", flush=True)
+            continue
+        st[name] = dict(rec, running_at=time.time(), running_host=HOST)
+        save(st, store)
         t0 = time.time()
         print(f"{name}: started {datetime.now(timezone.utc).isoformat()[:16]}Z", flush=True)
         # a stage that hangs must not hold the rest for days (2026-10-06: a build and the X reader each hung 4 h on a stalled
@@ -70,12 +122,12 @@ def main(argv=None):
         except subprocess.TimeoutExpired as e:
             rc, out, err = 124, "", f"timed out after {STAGE_LIMIT}s"
         tail = (out or "").strip().splitlines()[-1:] or (err or "").strip().splitlines()[-1:]
-        st[name] = dict(st.get(name, {}), last_at=now, secs=round(time.time() - t0), rc=rc, tail=(tail[0] if tail else "")[:200])
+        st[name] = {k: v for k, v in st.get(name, {}).items() if k not in ("running_at", "running_host")}
+        st[name].update(last_at=now, secs=round(time.time() - t0), rc=rc, tail=(tail[0] if tail else "")[:200], host=HOST)
         if rc == 0:
             st[name]["ok_at"] = now
         print(f"{name}: rc={rc} {st[name]['secs']}s {st[name]['tail']}", flush=True)
-        os.makedirs(os.path.dirname(STATE), exist_ok=True)
-        json.dump(st, open(STATE, "w", encoding="utf-8", newline="\n"), indent=1)
+        save(st, store)
     return 0
 
 
