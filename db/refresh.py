@@ -1,11 +1,11 @@
 """Keeps the owner's football database current (2026-09-30 «الداتا بيس… يكونون محدثين فالموقع»): runs each stage when its
-turn comes, in dependency order, and records when each last ran. GitHub Actions runs it daily at 04:30 UAE
+turn comes, in dependency order, and records when each last ran. GitHub Actions runs it daily at 04:10 UAE
 (.github/workflows/tifo-database.yml, since 2026-10-23; before that the laptop's Task Scheduler «Tifo database»); each
 stage is a module you can run alone.
 
 When each stage last ran is kept in db/.cache/refresh.json and in S3 (state/db/refresh.json), and the S3 copy is read again
-before every stage: a stage another host has done, or is doing (claimed less than STAGE_LIMIT ago), is skipped, so two hosts
-with the job scheduled never fetch or publish the same stage twice.
+before every stage: a stage another host has done is skipped, and one it is doing (claimed less than STAGE_LIMIT ago) ends
+this run (that host goes on in order), so two hosts with the job scheduled never fetch or publish the same stage twice.
 
     python -m db.refresh [--force stage,stage] [--list]
 
@@ -107,8 +107,10 @@ def main(argv=None):
         if not due:
             continue
         if rec.get("running_at") and rec.get("running_host") != HOST and time.time() - rec["running_at"] < STAGE_LIMIT:
-            print(f"{name}: running on {rec.get('running_host')} since {datetime.fromtimestamp(rec['running_at'], timezone.utc).isoformat()[:16]}Z; skip", flush=True)
-            continue
+            # the stages run in dependency order: the host that has this one does the rest after it
+            print(f"{name}: running on {rec.get('running_host')} since {datetime.fromtimestamp(rec['running_at'], timezone.utc).isoformat()[:16]}Z; "
+                  f"the rest is left to it", flush=True)
+            break
         st[name] = dict(rec, running_at=time.time(), running_host=HOST)
         save(st, store)
         t0 = time.time()

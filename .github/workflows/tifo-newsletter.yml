@@ -2,8 +2,8 @@
 # python -m tools.runner newsletter — the weekly issue to the active subscribers (DynamoDB cards, TIFONEWS#), by SES.
 name: Tifo newsletter
 on:
-  # schedule:            (on once the dispatch runs are green)
-  #   - cron: "0 14 * * 4"
+  schedule:
+    - cron: "0 14 * * 4"
   workflow_dispatch:
 permissions:
   id-token: write

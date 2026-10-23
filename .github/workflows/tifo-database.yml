@@ -1,11 +1,11 @@
-# «Tifo database», daily at 04:30 UAE (00:30 UTC; was the laptop's Task Scheduler until 2026-10-23): python -m db.refresh —
+# «Tifo database», daily at 04:10 UAE (00:10 UTC; was the laptop's Task Scheduler at 04:30 until 2026-10-23): python -m db.refresh —
 # each stage when its turn comes (FotMob, 365Scores, Transfermarkt datasets, Wikidata/Wikipedia, Understat, Elo, EA FC…).
 # db/.cache and history/.cache (1.9 GB) ride actions/cache; with none left, ci/seed/db-cache.tar from S3. Which stage ran
 # when is shared with any other host through S3 (state/db/refresh.json), so the laptop and this never run a stage twice.
 name: Tifo database
 on:
-  # schedule:            (on once the dispatch runs are green)
-  #   - cron: "30 0 * * *"
+  schedule:
+    - cron: "10 0 * * *"        # ahead of the laptop's old 04:30, which finds the stages claimed and stops
   workflow_dispatch:
     inputs:
       force:

@@ -5,8 +5,8 @@
 # against the last published page count in S3 state, so a cold or partial cache can never publish a short site.
 name: Tifo site
 on:
-  # schedule:            (on once the dispatch runs are green)
-  #   - cron: "25 * * * *"          # every hour at :25 (UTC and UAE share the minutes)
+  schedule:
+    - cron: "25 * * * *"          # every hour at :25 (UTC and UAE share the minutes)
   workflow_dispatch:
 permissions:
   id-token: write                 # AWS by OIDC

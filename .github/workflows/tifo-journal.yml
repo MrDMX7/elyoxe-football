@@ -5,8 +5,8 @@
 # laptop's «Tifo X reader» (S3 state/news/x-inbox.json).
 name: Tifo journal
 on:
-  # schedule:            (on once the dispatch runs are green)
-  #   - cron: "5,20,35,50 * * * *"
+  schedule:
+    - cron: "5,20,35,50 * * * *"
   workflow_dispatch:
 permissions:
   id-token: write
