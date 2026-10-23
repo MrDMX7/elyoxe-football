@@ -1,0 +1,39 @@
+# «Tifo journal», every 15 minutes (was the laptop's Task Scheduler until 2026-10-23): python -m tools.runner journal — news,
+# goal videos and commentators (news.run), the followed players' map (pushplayers), club transfer alerts (pushtransfers) and
+# the day's Bing submission. Its small state (news/.cache: the YouTube «seen» list and FotMob's Arabic names; Bing's sent
+# list) is one tar in S3 between runs (tools/ci_bridge.py state-get/put). The X inbox it reads is still filled by the
+# laptop's «Tifo X reader» (S3 state/news/x-inbox.json).
+name: Tifo journal
+on:
+  # schedule:            (on once the dispatch runs are green)
+  #   - cron: "5,20,35,50 * * * *"
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
+concurrency:
+  group: tifo-journal
+  cancel-in-progress: false
+env:
+  TZ: Asia/Dubai
+  PYTHONIOENCODING: utf-8
+jobs:
+  journal:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/tifo-setup
+      - name: State from the last run
+        run: python -m tools.ci_bridge state-get journal .
+      - name: Run the journal job
+        run: python -m tools.runner journal
+      - name: Log
+        if: always()
+        run: tail -c 12000 site/cache/runner/journal.log || true
+      - name: State for the next run
+        if: success() || failure()
+        run: python -m tools.ci_bridge state-put journal . news/.cache site/cache/bing_sent.json
+      - name: Usage lines for the laptop's cost report
+        if: always()
+        run: python -m tools.ci_bridge usage || true

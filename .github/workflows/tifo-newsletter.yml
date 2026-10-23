@@ -1,0 +1,28 @@
+# «Tifo newsletter», Thursday 18:00 UAE (14:00 UTC; was the laptop's Task Scheduler until 2026-10-23):
+# python -m tools.runner newsletter — the weekly issue to the active subscribers (DynamoDB cards, TIFONEWS#), by SES.
+name: Tifo newsletter
+on:
+  # schedule:            (on once the dispatch runs are green)
+  #   - cron: "0 14 * * 4"
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
+concurrency:
+  group: tifo-newsletter
+  cancel-in-progress: false
+env:
+  TZ: Asia/Dubai
+  PYTHONIOENCODING: utf-8
+jobs:
+  newsletter:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/tifo-setup
+      - name: Run the newsletter job
+        run: python -m tools.runner newsletter
+      - name: Log
+        if: always()
+        run: tail -c 8000 site/cache/runner/newsletter.log || true

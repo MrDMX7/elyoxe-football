@@ -1,6 +1,6 @@
-"""Tifo's scheduled jobs, for the laptop (Windows Task Scheduler) and the Fold (cron) alike. Owner 2026-10-01: «ليش ما
-تخلي كل شي يشتغل من اللابتوب عشان ما يخلص جرج الفولد». The laptop runs them all; the Fold keeps only `watch`, a light
-hourly check that runs a job itself when the laptop's heartbeat for it has gone stale (laptop off or asleep).
+"""Tifo's scheduled jobs. Since 2026-10-23 GitHub Actions runs site, journal, names and newsletter (.github/workflows/tifo-*.yml;
+the repo is public so the runners are free); the laptop (Windows Task Scheduler, tools/runner-task.vbs) keeps streams, and
+any job still runs here by hand. Owner 2026-10-01 moved them off the Fold; the Fold's watchdog (`watch`) went on 2026-10-23.
 
     python -m tools.runner site        hourly: AI content (site/ai/gen.py), build, guard, publish, health
     python -m tools.runner journal     every 15 min: news, videos, commentators (python -m news.run)
@@ -8,11 +8,11 @@ hourly check that runs a job itself when the laptop's heartbeat for it has gone 
     python -m tools.runner names       weekly: Arabic names for new players (names/build_names.py), committed
     python -m tools.runner week        Thursday 15:00: «تيفو الأسبوع» images (site/weekly.py)
     python -m tools.runner newsletter  Thursday 18:00: the weekly newsletter (newsletter/send.py)
-    python -m tools.runner watch       (the Fold) runs site/journal here when the laptop has gone quiet
 
 Each job runs one at a time (a lock under site/cache/), logs to site/cache/runner/<job>.log, and writes a heartbeat to
-S3 state/runner/<job>.json {host, ok, at, seconds, note}. A job that fails twice in a row mails hello@elyoxe.com (SES,
-at most once every 6 hours per job). Same steps as site/deploy.sh (which stays for manual runs on the Fold).
+S3 state/runner/<job>.json {host, ok, at, seconds, note}; host is github, laptop or fold. A job that fails twice in a row
+mails hello@elyoxe.com (SES, at most once every 6 hours per job). On the laptop every job ends with tools/ci_bridge.py
+push: the workspace files and ~/.elyoxe switches the GitHub runs read. Same steps as site/deploy.sh (manual runs).
 """
 import argparse, json, os, shutil, subprocess, sys, time, urllib.request
 from datetime import datetime, timezone
@@ -27,9 +27,8 @@ from store import Store, S3Backend  # noqa: E402
 
 BUCKET = os.environ.get("FOOTBALL_BUCKET", "elyoxe-football-574771023173-ap-south-1")
 REGION, STACK = "ap-south-1", "elyoxe-tifo-site"
-HOST = "laptop" if os.name == "nt" else "fold"
+HOST = "github" if os.environ.get("GITHUB_ACTIONS") == "true" else "laptop" if os.name == "nt" else "fold"
 PY, NODE, AWS = sys.executable, shutil.which("node") or "node", shutil.which("aws") or "aws"
-STALE = {"site": 3 * 3600, "journal": 3600}          # watch: the Fold takes a job over after this much silence
 INDEXNOW_KEY = "8a5d11d3194545d5a4750dc4ede4a7ad"
 STORE = Store(S3Backend(BUCKET))
 
@@ -146,6 +145,14 @@ def job_site(log):
     now = sum(1 for _ in out.rglob("index.html"))
     lastf = CACHE / "last_pages"
     last = int(lastf.read_text().strip() or 0) if lastf.exists() else 0
+    # 2026-10-23: the count also lives in S3 (state/runner/site-pages.json), so a run that starts from a cold or stale cache
+    # (GitHub's runners keep nothing) still holds the build against the last published count; the larger of the two wins
+    try:
+        last = max(last, int((STORE.get_state("runner/site-pages.json") or {}).get("pages") or 0))
+    except Exception as e:
+        log.w(f"site-pages state unreadable ({e}); the local count only")
+    if not last and os.environ.get("TIFO_FIRST_PUBLISH") != "1":
+        return False, f"{now} pages built and no published count to hold them against; not publishing (TIFO_FIRST_PUBLISH=1 overrides)"
     if last and now < last * 95 // 100:             # a flaky fetch (or a missing input) can yield a partial build, and
         return False, f"partial build: {now} pages vs {last} last time; not publishing"   # `sync --delete` would wipe pages
     q = lambda k: subprocess.run([AWS, "cloudformation", "describe-stacks", "--region", REGION, "--stack-name", STACK, "--query",
@@ -179,6 +186,10 @@ def job_site(log):
             return False, f"{what} sync failed: {tail}"
     world = publish_stage(log, bucket, "world") + publish_stage(log, bucket, "share")
     lastf.write_text(str(now))
+    try:
+        STORE.put_state("runner/site-pages.json", {"pages": now, "host": HOST, "at": datetime.now(timezone.utc).isoformat(timespec="seconds")})
+    except Exception as e:
+        log.w(f"site-pages state not written: {e}")
     run(log, [AWS, "cloudfront", "create-invalidation", "--distribution-id", dist, "--paths", "/sw.js", "/", "--query", "Invalidation.Id", "--output", "text"], timeout=120)
     ix = CACHE / "indexnow.txt"
     if ix.exists() and ix.stat().st_size:
@@ -200,7 +211,7 @@ def job_site(log):
         feed = f"health unreadable: {e}"
     note = f"{now} pages published{world}; feed {feed}"
     # «ok» = the pages are published and answer. The feed's own health (the poller) is reported here but alerts on its own:
-    # counting it as a site failure marked 62 published builds «failed» (2026-10-02..05) and made the Fold's watchdog ask
+    # counting it as a site failure marked 62 published builds «failed» (2026-10-02..05) and set off the Fold's old watchdog
     return all(c == 200 for c in codes.values()), note
 
 
@@ -281,7 +292,13 @@ def job_newsletter(log):
 JOBS = {"site": job_site, "journal": job_journal, "streams": job_streams, "names": job_names, "week": job_week, "newsletter": job_newsletter}
 
 
-# ------------------------------------------------------------------ heartbeat, alerts, the Fold's watchdog
+# ------------------------------------------------------------------ heartbeat, alerts
+def where_log(job):
+    if HOST == "github":
+        return f"{os.environ.get('GITHUB_SERVER_URL', 'https://github.com')}/{os.environ.get('GITHUB_REPOSITORY')}/actions/runs/{os.environ.get('GITHUB_RUN_ID')}"
+    return f"site/cache/runner/{job}.log على {HOST}"
+
+
 def beat(job, ok, secs, note):
     prev = STORE.get_state(f"runner/{job}.json") or {}
     fails = 0 if ok else int(prev.get("fails") or 0) + 1
@@ -295,7 +312,7 @@ def beat(job, ok, secs, note):
             boto3.client("ses", region_name=REGION).send_email(
                 Source="Tifo <tifo@elyoxe.com>", Destination={"ToAddresses": ["hello@elyoxe.com"]},
                 Message={"Subject": {"Data": f"تيفو: مهمة «{job}» فشلت {fails} مرات على {HOST}", "Charset": "UTF-8"},
-                         "Body": {"Text": {"Data": f"{note}\n\nالسجل: site/cache/runner/{job}.log على {HOST}.", "Charset": "UTF-8"}}})
+                         "Body": {"Text": {"Data": f"{note}\n\nالسجل: {where_log(job)}.", "Charset": "UTF-8"}}})
             doc["alerted_ts"], doc["alerted_at"] = time.time(), doc["at"]
         except Exception as e:
             doc["alert_error"] = str(e)[:200]
@@ -310,7 +327,7 @@ def do(job):
             print(f"{job}: a previous run is still going; skip")
             return 0
         log, t0 = Log(job), time.time()
-        try:   # «running» tells the Fold's watchdog not to start the same job while this one is still going
+        try:   # «running»: the job is under way, and where
             prev = STORE.get_state(f"runner/{job}.json") or {}
             STORE.put_state(f"runner/{job}.json", dict(prev, running=True, running_host=HOST, started_at=datetime.now(timezone.utc).isoformat(timespec="seconds")))
         except Exception as e:
@@ -325,54 +342,27 @@ def do(job):
         except Exception as e:
             log.w(f"heartbeat failed: {e}")
         print(f"{job}: {'ok' if ok else 'FAILED'} ({note})")
+        bridge(log)
         return 0 if ok else 1
 
 
-ASK = os.environ.get("TIFO_ASK") or os.path.expanduser("~/workspace/automation/phone/ask.py")
-
-
-def ask(*args):
-    """automation/phone/ask.py: the owner decides by email whether the Fold takes over (2026-10-01). No ask.py = no gate."""
-    if not os.path.exists(ASK):
-        return 0
-    return subprocess.run([sys.executable, ASK, *args]).returncode
-
-
-def watch():
-    """The Fold, hourly: a job whose last good run (any host) is older than STALE runs here, until the laptop is back —
-    but only once the owner has said «اي» to ask.py's email; without it the site waits for the laptop."""
-    rc, stale, laptop_back = 0, [], True
-    for job, limit in STALE.items():
-        st = STORE.get_state(f"runner/{job}.json") or {}
-        if st.get("running") and st.get("started_at") and time.time() - datetime.fromisoformat(st["started_at"]).timestamp() < limit:
-            print(f"watch: {job} is running on {st.get('running_host')} since {st['started_at']}; leaving it")
-            laptop_back &= st.get("running_host") != HOST
-            continue
-        last = st.get("last_ok")
-        age = time.time() - datetime.fromisoformat(last).timestamp() if last else 1e9
-        if age > limit:
-            print(f"watch: {job} quiet for {age / 60:.0f} min (last good on {st.get('last_ok_host')})")
-            stale.append((job, age))
-        else:
-            print(f"watch: {job} fine ({age / 60:.0f} min ago on {st.get('last_ok_host')})")
-            laptop_back &= st.get("last_ok_host") != HOST
-    if not stale:
-        if laptop_back:
-            ask("clear", "tifo")
-        return 0
-    detail = "، ".join(f"{'الموقع' if j == 'site' else 'الأخبار'} من {a / 3600:.0f} ساعة" for j, a in stale)
-    if ask("gate", "tifo", detail) != 0:
-        return 0
-    for job, _ in stale:
-        print(f"watch: running {job} here")
-        rc |= do(job)
-    ask("ran", "tifo")
-    return rc
+def bridge(log=None):
+    """The laptop, after each job: tools/ci_bridge.py push (at most every 10 min; never fails the job)."""
+    if HOST != "laptop":
+        return
+    try:
+        from tools import ci_bridge
+        r = ci_bridge.push()
+        if log and not r.get("skipped"):
+            log.w(f"ci_bridge: {r}")
+    except Exception as e:
+        if log:
+            log.w(f"ci_bridge push failed (not fatal): {type(e).__name__}: {e}")
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(); ap.add_argument("job", choices=sorted(JOBS) + ["watch"]); a = ap.parse_args(argv)
-    return watch() if a.job == "watch" else do(a.job)
+    ap = argparse.ArgumentParser(); ap.add_argument("job", choices=sorted(JOBS)); a = ap.parse_args(argv)
+    return do(a.job)
 
 
 if __name__ == "__main__":

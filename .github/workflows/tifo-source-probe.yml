@@ -1,0 +1,17 @@
+# By hand: can GitHub's runners read the database job's sources (db/refresh.py)? tools/source_probe.py, one request each.
+name: Tifo source probe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --quiet -r requirements-ci.txt
+      - run: python -m tools.source_probe

@@ -1,0 +1,46 @@
+# «Tifo names», weekly on Sunday 02:40 UAE (Saturday 22:40 UTC; was the laptop's Task Scheduler until 2026-10-23):
+# python -m tools.runner names — Arabic names for new players (names/build_names.py: Wikidata, then Gemini), then aka.py;
+# the job commits names/ and pushes to main. Its Wikidata cache (~/.cache/tifo-names) is one tar in S3 between runs.
+name: Tifo names
+on:
+  # schedule:            (on once the dispatch runs are green)
+  #   - cron: "40 22 * * 6"
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: write                 # the job pushes names/
+concurrency:
+  group: tifo-names
+  cancel-in-progress: false
+env:
+  TZ: Asia/Dubai
+  PYTHONIOENCODING: utf-8
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+jobs:
+  names:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # the job pulls --rebase before it pushes
+      - uses: ./.github/actions/tifo-setup
+        with:
+          session-seconds: "14400"
+      - name: Git identity (the owner's, as on the laptop)
+        run: |
+          git config user.name "dmxalkaabi"
+          git config user.email "28853734+MrDMX7@users.noreply.github.com"
+      - name: Wikidata cache from the last run
+        run: python -m tools.ci_bridge state-get names "$HOME/.cache"
+      - name: Run the names job
+        run: python -m tools.runner names
+      - name: Log
+        if: always()
+        run: tail -c 12000 site/cache/runner/names.log || true
+      - name: Wikidata cache for the next run
+        if: success() || failure()
+        run: python -m tools.ci_bridge state-put names "$HOME/.cache" tifo-names
+      - name: Usage lines for the laptop's cost report
+        if: always()
+        run: python -m tools.ci_bridge usage || true

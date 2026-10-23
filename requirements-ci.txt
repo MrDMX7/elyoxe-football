@@ -1,0 +1,7 @@
+# What the scheduled jobs import on GitHub's runners (.github/workflows/tifo-*.yml). The laptop has these already.
+boto3
+PyYAML
+beautifulsoup4
+pillow==12.3.0
+requests
+tzdata

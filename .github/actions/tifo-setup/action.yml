@@ -1,0 +1,23 @@
+name: Tifo job setup
+description: Python 3.13 with the jobs' packages, AWS by OIDC (role tifo-github-actions), and the workspace inputs from S3 (tools/ci_bridge.py pull)
+inputs:
+  session-seconds:
+    description: how long the AWS session lasts (the role allows up to 6 h)
+    default: "3600"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+        cache: pip
+        cache-dependency-path: requirements-ci.txt
+    - shell: bash
+      run: python -m pip install --quiet --disable-pip-version-check -r requirements-ci.txt
+    - uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::574771023173:role/tifo-github-actions
+        aws-region: ap-south-1
+        role-duration-seconds: ${{ inputs.session-seconds }}
+    - shell: bash
+      run: python -m tools.ci_bridge pull
