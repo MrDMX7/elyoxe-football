@@ -77,6 +77,7 @@ id,latin,ar,source,team
 821897,Khaled Ebraheim,خالد إبراهيم,generated,الشارقة + المنتخب
 863341,Luanzinho,لوانزينيو,manual,الشارقة + المنتخب
 1249953,Ousmane Camara,عثمان كامارا,generated,الشارقة + المنتخب
+959373,Yahya Al Ghassani,يحيى الغساني,wikidata,الشارقة + المنتخب
 794049,Abdulla Al Karbi,عبدالله الكربي,generated,الظفرة
 1837072,Abdullah Batal,عبدالله بطال,generated,الظفرة
 2104938,Adem Ben Fajria,آدم بن فجرية,generated,الظفرة
@@ -156,6 +157,7 @@ id,latin,ar,source,team
 1639608,David Petrović,ديفيد بيتروفيتش,wikidata,النصر
 1458867,Felipe Motta,فيليبي موتا,generated,النصر
 1094909,Gláuber,غلاوبر,wikidata,النصر
+1228449,Gustavo Alex,غوستافو أليكس,generated,النصر
 915139,Hussain Mahdi,حسين مهدي,wikidata,النصر
 1830478,Jamal Khalifa,جمال خليفة,generated,النصر
 1826272,Jawad Mussa,جواد موسى,generated,النصر
@@ -183,7 +185,6 @@ id,latin,ar,source,team
 1830421,Suhail Mohammad,سهيل محمد,generated,النصر
 1816326,Wesley Delgado,ويسلي ديلغادو,generated,النصر
 1826275,Zaid Osama,زيد أسامة,generated,النصر
-1228449,Gustavo Alex,غوستافو أليكس,generated,النصر + المنتخب
 1055270,Issam Faiz,عصام فايز,generated,النصر + المنتخب
 1138102,Zayed Sultan,زايد سلطان,wikidata,النصر + المنتخب
 619460,Abdulla Kazim,عبد الله كاظم,wikidata,الوحدة
@@ -331,6 +332,7 @@ id,latin,ar,source,team
 713207,Seifeddine Jaziri,سيف الدين الجزيري,wikidata,حتا
 794093,Tahnoon Al Zaabi,طحنون الزعابي,wikidata,حتا
 618340,Abdalla Al Naqbi,عبدالله النقبي,generated,خورفكان
+618859,Abdulrahman Yousef,يوسف عبدالرحمن,wikidata,خورفكان
 2339614,Abubakar Adams,أبوبكر آدامز,generated,خورفكان
 1451225,Adama Diallo,أداما ديالو,generated,خورفكان
 1520104,Ahmadou Ama Camara,أحمدو أما كامارا,generated,خورفكان
@@ -392,7 +394,6 @@ id,latin,ar,source,team
 1174676,Guilherme,غيليرمي بالا,manual,شباب الأهلي + المنتخب
 1138507,Hamad Al Meqbaali,حمد المقبالي,generated,شباب الأهلي + المنتخب
 1197090,Sultan Adil,سلطان عادل,wikidata,شباب الأهلي + المنتخب
-959373,Yahya Al Ghassani,يحيى الغساني,wikidata,شباب الأهلي + المنتخب
 1173652,Yuri César,يوري سيزار,wikidata,شباب الأهلي + المنتخب
 964950,Abdelrahman Rakan,عبد الرحمن راكان,generated,عجمان
 1289401,Abdulla Abdelaziz,عبدالله عبد العزيز,generated,عجمان
@@ -452,6 +453,7 @@ id,latin,ar,source,team
 532220,Saman Ghoddos,سامان قدوس,wikidata,كلباء
 619228,Sultan Al Mantheri,سلطان المنذري,wikidata,كلباء
 1289722,Waleed Rashid,وليد راشد,generated,كلباء
+1418629,Yan Phillipe,يان فيليبي,generated,كلباء
 1118689,Yaser Al Blooshi,ياسر البلوشي,generated,كلباء
 995420,Yousif Ali Al Mheiri,يوسف علي المهيري,generated,كلباء
 959024,Adeel Al Chadli,عديل الشاذلي,generated,يونايتد
