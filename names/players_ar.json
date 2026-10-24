@@ -21119,6 +21119,13 @@
   "qid": "Q23928976",
   "checked": "2026-10-11"
  },
+ "658794": {
+  "latin": "Lion Schweers",
+  "ar": "ليون شفيرز",
+  "source": "generated",
+  "qid": "Q24006307",
+  "checked": "2026-10-25"
+ },
  "659018": {
   "latin": "Mads Bech",
   "ar": "مادس بيخ",
@@ -23992,6 +23999,13 @@
   "source": "wikidata",
   "qid": "Q22237703",
   "checked": "2026-09-27"
+ },
+ "721091": {
+  "latin": "Finn Porath",
+  "ar": "فين بوراث",
+  "source": "wikidata",
+  "qid": "Q26212027",
+  "checked": "2026-10-25"
  },
  "721099": {
   "latin": "Salah Laouti",
@@ -32638,6 +32652,13 @@
   "qid": "Q29998966",
   "checked": "2026-09-27"
  },
+ "848268": {
+  "latin": "Haji Wright",
+  "ar": "حاجي رايت",
+  "source": "wikidata",
+  "qid": "Q19787021",
+  "checked": "2026-10-25"
+ },
  "848282": {
   "latin": "Ryosuke Kojima",
   "ar": "ريوسوكي كوغيما",
@@ -34866,6 +34887,13 @@
   "source": "wikidata",
   "qid": "Q35829599",
   "checked": "2026-09-27"
+ },
+ "866688": {
+  "latin": "Luke Woolfenden",
+  "ar": "لوك وولفيندن",
+  "source": "generated",
+  "qid": "Q35554570",
+  "checked": "2026-10-25"
  },
  "866706": {
   "latin": "Faisal Al Jahani",
@@ -39120,7 +39148,7 @@
   "wd_label": "أوغوستو كارنيرو"
  },
  "931153": {
-  "latin": "Bader Tareq",
+  "latin": "Bader Tarek",
   "ar": "بدر طارق",
   "source": "wikidata",
   "qid": "Q50405894",
@@ -42485,6 +42513,13 @@
   "source": "wikidata",
   "qid": "Q59306386",
   "checked": "2026-09-27"
+ },
+ "962000": {
+  "latin": "Josh Eccles",
+  "ar": "جوش إيكلس",
+  "source": "wikidata",
+  "qid": "Q58754102",
+  "checked": "2026-10-25"
  },
  "962014": {
   "latin": "Santiago Eneme",
@@ -53017,6 +53052,13 @@
   "source": "wikidata",
   "qid": "Q97725322",
   "checked": "2026-09-27"
+ },
+ "1117871": {
+  "latin": "Teddy Sharman-Lowe",
+  "ar": "تيدي شارمان لو",
+  "source": "generated",
+  "qid": "Q98970365",
+  "checked": "2026-10-25"
  },
  "1117908": {
   "latin": "Alexander Lind",
@@ -70782,6 +70824,13 @@
   "qid": "Q126284601",
   "checked": "2026-09-27"
  },
+ "1336022": {
+  "latin": "Rubén Lopez",
+  "ar": "روبن لوبيز",
+  "source": "generated",
+  "qid": "Q124041037",
+  "checked": "2026-10-25"
+ },
  "1336024": {
   "latin": "Offoe Amesimeku Leonard",
   "ar": "أوفوي أميسيميكو ليونارد",
@@ -86147,6 +86196,13 @@
   "qid": "Q132733034",
   "checked": "2026-10-11"
  },
+ "1544156": {
+  "latin": "Abdulrahman Al-Mushaifri",
+  "ar": "عبد الرحمن المشيفري",
+  "source": "wikidata",
+  "qid": "Q131307119",
+  "checked": "2026-10-25"
+ },
  "1544295": {
   "latin": "Enikar Mehmud",
   "ar": "إنيكار محمود",
@@ -87228,6 +87284,13 @@
   "qid": null,
   "checked": "2026-09-27"
  },
+ "1559968": {
+  "latin": "Rubén Montero",
+  "ar": "روبن مونتيرو",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
+ },
  "1560019": {
   "latin": "Bob Nii Armah",
   "ar": "بوب ني أرماه",
@@ -87717,6 +87780,13 @@
   "source": "wikidata",
   "qid": "Q124175192",
   "checked": "2026-09-27"
+ },
+ "1574191": {
+  "latin": "Filipe Bordon",
+  "ar": "فيليبي بوردون",
+  "source": "generated",
+  "qid": "Q130416078",
+  "checked": "2026-10-25"
  },
  "1574194": {
   "latin": "Fernando Mimbacas",
@@ -91973,6 +92043,13 @@
   "source": "generated",
   "qid": null,
   "checked": "2026-10-11"
+ },
+ "1640790": {
+  "latin": "Malek El Mala",
+  "ar": "مالك الملا",
+  "source": "generated",
+  "qid": "Q125723955",
+  "checked": "2026-10-25"
  },
  "1640830": {
   "latin": "Solomon Sosu",
@@ -98169,6 +98246,13 @@
   "qid": null,
   "checked": "2026-09-27"
  },
+ "1689898": {
+  "latin": "Sa Aung Pyae Ko",
+  "ar": "سا أونغ بياي كو",
+  "source": "generated",
+  "qid": "Q100527779",
+  "checked": "2026-10-25"
+ },
  "1689899": {
   "latin": "Thet Wai Moe",
   "ar": "ثيت واي مو",
@@ -102295,6 +102379,13 @@
   "qid": null,
   "checked": "2026-10-18"
  },
+ "1741115": {
+  "latin": "Nour El Beji",
+  "ar": "نور الباجي",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
+ },
  "1741323": {
   "latin": "Renato Nhaga",
   "ar": "ريناتو نهاغا",
@@ -103003,6 +103094,13 @@
   "source": "generated",
   "qid": "Q134608962",
   "checked": "2026-10-18"
+ },
+ "1761075": {
+  "latin": "Ali Sharahili",
+  "ar": "علي شراحيلي",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
  },
  "1761101": {
   "latin": "Amiran Dzagania",
@@ -110938,6 +111036,13 @@
   "qid": "Q140247002",
   "checked": "2026-09-27"
  },
+ "1869761": {
+  "latin": "Kenny Quetant",
+  "ar": "كيني كيتانت",
+  "source": "generated",
+  "qid": "Q137970998",
+  "checked": "2026-10-25"
+ },
  "1869843": {
   "latin": "Chec Bebel Doumbia",
   "ar": "شيك بيبل دومبيا",
@@ -112652,6 +112757,13 @@
   "source": "generated",
   "qid": "Q138511267",
   "checked": "2026-10-11"
+ },
+ "1908641": {
+  "latin": "Joseph Haney",
+  "ar": "جوزيف هاني",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
  },
  "1908651": {
   "latin": "Lucas Clearie",
@@ -116296,6 +116408,13 @@
   "qid": "Q123456808",
   "checked": "2026-09-27"
  },
+ "1975808": {
+  "latin": "Jean-Paul Ndiaye",
+  "ar": "جان بول نداي",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
+ },
  "1980586": {
   "latin": "Mezian Mesloub Soares",
   "ar": "مزيان مسلوب سواريس",
@@ -116744,6 +116863,13 @@
   "source": "generated",
   "qid": "Q140855677",
   "checked": "2026-10-18"
+ },
+ "2030060": {
+  "latin": "Josiah Uwakhonye",
+  "ar": "جوسيا أواخوني",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
  },
  "2032421": {
   "latin": "Ala Bouaoune",
@@ -117703,6 +117829,13 @@
   "source": "generated",
   "qid": null,
   "checked": "2026-09-27"
+ },
+ "2139609": {
+  "latin": "Ali Al Essa",
+  "ar": "علي العيسى",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
  },
  "2139613": {
   "latin": "Hussain Al Raqwani",
@@ -119632,6 +119765,13 @@
   "source": "generated",
   "qid": null,
   "checked": "2026-09-28"
+ },
+ "2264137": {
+  "latin": "Jason Dean Bissi Mouelle",
+  "ar": "جيسون دين بيسي مويلي",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
  },
  "2264152": {
   "latin": "Grady Makiobo",
@@ -121642,6 +121782,13 @@
   "qid": null,
   "checked": "2026-10-18"
  },
+ "2358534": {
+  "latin": "Haitam Hamani",
+  "ar": "هيثم حماني",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
+ },
  "2362859": {
   "latin": "Miraziz Abdukarimov",
   "ar": "ميرازيز عبد الكريموف",
@@ -122512,6 +122659,13 @@
   "qid": null,
   "checked": "2026-10-23"
  },
+ "2402715": {
+  "latin": "Abdulaziz Qarawi",
+  "ar": "عبد العزيز القراوي",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
+ },
  "2404565": {
   "latin": "Begench Orazmuhammedov",
   "ar": "بيغينتش أورازمحمدوف",
@@ -122532,5 +122686,61 @@
   "source": "generated",
   "qid": null,
   "checked": "2026-10-23"
+ },
+ "2405268": {
+  "latin": "Ahmad Shabeeb",
+  "ar": "أحمد شبيب",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
+ },
+ "2405949": {
+  "latin": "Amadou Diakite",
+  "ar": "أمادو دياكيتي",
+  "source": "generated",
+  "qid": "Q140855577",
+  "checked": "2026-10-25"
+ },
+ "2406029": {
+  "latin": "Abderrahim Hamdani",
+  "ar": "عبد الرحيم حمداني",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
+ },
+ "2406176": {
+  "latin": "Adel Fallatah",
+  "ar": "عادل فلاتة",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
+ },
+ "2406287": {
+  "latin": "Ibrahim Meite",
+  "ar": "إبراهيم ميتي",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
+ },
+ "2406449": {
+  "latin": "Mohamed Zaalouk",
+  "ar": "محمد زعلوك",
+  "source": "wikidata",
+  "qid": "Q126916619",
+  "checked": "2026-10-25"
+ },
+ "2407028": {
+  "latin": "Boubakar Baouche",
+  "ar": "بوبكر باوش",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
+ },
+ "2407260": {
+  "latin": "Badr Abbou",
+  "ar": "بدر عبو",
+  "source": "generated",
+  "qid": null,
+  "checked": "2026-10-25"
  }
 }
