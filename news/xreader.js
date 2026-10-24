@@ -19,7 +19,6 @@
 'use strict';
 const fs = require('fs'), os = require('os'), path = require('path'), { execSync, spawn } = require('child_process');
 const WIN = process.platform === 'win32', HOME = os.homedir();
-const CI = !!process.env.GITHUB_ACTIONS;   // GitHub Actions (2026-10-24): Chrome on Xvfb, the session from the X_COOKIES secret
 const PW = [path.join(HOME, 'workspace/content-pipeline/node_modules/playwright-core'), 'playwright-core', 'playwright'];
 let chromium; for (const p of PW) { try { chromium = require(p).chromium; break; } catch (e) {} }
 const HERE = __dirname, INBOX = path.join(HERE, '.x-inbox.json');
@@ -92,7 +91,7 @@ function plan(cfg, inbox, H) {
 function seedProfile() {
   fs.mkdirSync(PROFILE, { recursive: true });
   for (const f of fs.readdirSync(PROFILE)) if (f.startsWith('Singleton')) fs.rmSync(path.join(PROFILE, f), { force: true });
-  if (WIN || CI) return;   // the laptop's and GitHub's session is x-cookies.json, added to the context below
+  if (WIN) return;   // the laptop's session is x-cookies.json, added to the context below
   // copy the session (cookies + the key file that decrypts them) from the posting profile; the posting profile itself is
   // never opened here, so the screen browser can stay up while this runs
   fs.mkdirSync(path.join(PROFILE, 'Default'), { recursive: true });
@@ -179,7 +178,7 @@ async function main() {
     channel: 'msedge', headless: false, viewport: { width: 1280, height: 1500 }, locale: 'en-US',
     args: ['--disable-blink-features=AutomationControlled', '--mute-audio', '--window-position=-32000,-32000', '--window-size=1280,1600'],
   } : {
-    executablePath: process.env.XREADER_CHROME || '/usr/bin/chromium', headless: false, env: Object.assign({}, process.env, { DISPLAY }),
+    executablePath: '/usr/bin/chromium', headless: false, env: Object.assign({}, process.env, { DISPLAY }),
     viewport: { width: 1280, height: 1500 }, locale: 'en-US',
     args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-blink-features=AutomationControlled', '--mute-audio', '--window-size=1280,1600'],
   });
