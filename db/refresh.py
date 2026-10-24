@@ -3,11 +3,11 @@ turn comes, in dependency order, and records when each last ran. GitHub Actions 
 (.github/workflows/tifo-database.yml, since 2026-10-23; before that the laptop's Task Scheduler «Tifo database»); each
 stage is a module you can run alone.
 
-When each stage last ran is kept in db/.cache/refresh.json and in S3 (state/db/refresh.json), and the S3 copy is read again
-before every stage: a stage another host has done is skipped, and one it is doing (claimed less than STAGE_LIMIT ago) ends
+When each stage last ran is kept in db/.cache/refresh.json and in S3 (state/db/refresh.json, with the stages under way in
+_claims), and the S3 copy is read again before every stage: a stage another host has done is skipped, and one it is doing (claimed less than STAGE_LIMIT ago) ends
 this run (that host goes on in order), so two hosts with the job scheduled never fetch or publish the same stage twice.
 
-    python -m db.refresh [--force stage,stage] [--list]
+    python -m db.refresh [--force stage,stage] [--list] [--sync]
 
 Stages and cadence (days): Transfermarkt transfers + maps 7 · club histories 7 · club cards 7 · champions (Wikidata, then
 Wikipedia) 7 · season scorers 7 · Understat 7 · national Elo 1 · FIFA ranking 30 · UEFA coefficients 30 · photos 30 ·
@@ -68,37 +68,61 @@ def shared_store():
         return None
 
 
+LEGACY = ("running_at", "running_host")   # 2026-10-23's first cut kept the claim inside the record; read and dropped
+
+
 def merge(st, other):
-    """Per stage, the newer record (by its last run or its claim) of the two."""
-    when = lambda r: max(r.get("last_at") or 0, r.get("running_at") or 0)
+    """Per stage, the record of the later run (last_at) of the two; claims are not records (see claims())."""
     for k, r in (other or {}).items():
-        if isinstance(r, dict) and when(r) > when(st.get(k) or {}):
+        if k.startswith("_") or not isinstance(r, dict):
+            continue
+        r = {a: b for a, b in r.items() if a not in LEGACY}
+        if (r.get("last_at") or 0) > ((st.get(k) or {}).get("last_at") or 0):
             st[k] = r
     return st
 
 
-def save(st, store):
+def shared(store):
+    """(records, claims) from S3; ({}, {}) when it cannot be read."""
+    try:
+        d = store.get_state(SHARED) or {}
+    except Exception:
+        return {}, {}
+    return d, d.get("_claims") or {}
+
+
+def save(st, store, claim=None, release=None):
+    """This host's file, then S3: the records merged by last_at, plus `claim` set or `release` cleared in _claims."""
     os.makedirs(os.path.dirname(STATE), exist_ok=True)
     json.dump(st, open(STATE, "w", encoding="utf-8", newline="\n"), indent=1)
     if store:
         try:
-            store.put_state(SHARED, merge(store.get_state(SHARED) or {}, st))
+            d, claims = shared(store)
+            out = merge(merge({}, d), st)
+            if claim:
+                claims[claim] = {"host": HOST, "at": time.time()}
+            if release:
+                claims.pop(release, None)
+            out["_claims"] = claims
+            store.put_state(SHARED, out)
         except Exception as e:
             print(f"shared state not written: {str(e)[:120]}", flush=True)
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(); ap.add_argument("--force", default=""); ap.add_argument("--list", action="store_true"); a = ap.parse_args(argv)
-    st = json.load(open(STATE, encoding="utf-8")) if os.path.exists(STATE) else {}
+    ap = argparse.ArgumentParser(); ap.add_argument("--force", default=""); ap.add_argument("--list", action="store_true"); ap.add_argument("--sync", action="store_true"); a = ap.parse_args(argv)
+    st = merge({}, json.load(open(STATE, encoding="utf-8")) if os.path.exists(STATE) else {})
     store = shared_store()
+    if a.sync:   # this host's record into S3 and nothing else (after a run that could not write it)
+        save(st, store)
+        return 0
     force = set(filter(None, a.force.split(",")))
     now = time.time()
     for name, mod, args, every in STAGES:
+        claims = {}
         if store:
-            try:
-                merge(st, store.get_state(SHARED) or {})
-            except Exception:
-                pass
+            d, claims = shared(store)
+            merge(st, d)
         rec = st.get(name, {})
         last = rec.get("ok_at", 0)
         due = name in force or now - last > every * 86400 - 3600
@@ -106,13 +130,13 @@ def main(argv=None):
             print(f"{name:15} every {every:>2}d  last {datetime.fromtimestamp(last, timezone.utc).isoformat()[:16] if last else 'never':16}  {'DUE' if due else ''}"); continue
         if not due:
             continue
-        if rec.get("running_at") and rec.get("running_host") != HOST and time.time() - rec["running_at"] < STAGE_LIMIT:
+        c = claims.get(name) or {}
+        if c.get("host") and c["host"] != HOST and time.time() - (c.get("at") or 0) < STAGE_LIMIT:
             # the stages run in dependency order: the host that has this one does the rest after it
-            print(f"{name}: running on {rec.get('running_host')} since {datetime.fromtimestamp(rec['running_at'], timezone.utc).isoformat()[:16]}Z; "
+            print(f"{name}: running on {c['host']} since {datetime.fromtimestamp(c['at'], timezone.utc).isoformat()[:16]}Z; "
                   f"the rest is left to it", flush=True)
             break
-        st[name] = dict(rec, running_at=time.time(), running_host=HOST)
-        save(st, store)
+        save(st, store, claim=name)
         t0 = time.time()
         print(f"{name}: started {datetime.now(timezone.utc).isoformat()[:16]}Z", flush=True)
         # a stage that hangs must not hold the rest for days (2026-10-06: a build and the X reader each hung 4 h on a stalled
@@ -124,12 +148,12 @@ def main(argv=None):
         except subprocess.TimeoutExpired as e:
             rc, out, err = 124, "", f"timed out after {STAGE_LIMIT}s"
         tail = (out or "").strip().splitlines()[-1:] or (err or "").strip().splitlines()[-1:]
-        st[name] = {k: v for k, v in st.get(name, {}).items() if k not in ("running_at", "running_host")}
+        st[name] = dict(st.get(name, {}))
         st[name].update(last_at=now, secs=round(time.time() - t0), rc=rc, tail=(tail[0] if tail else "")[:200], host=HOST)
         if rc == 0:
             st[name]["ok_at"] = now
         print(f"{name}: rc={rc} {st[name]['secs']}s {st[name]['tail']}", flush=True)
-        save(st, store)
+        save(st, store, release=name)
     return 0
 
 
