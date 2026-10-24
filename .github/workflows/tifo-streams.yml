@@ -1,0 +1,39 @@
+# «Tifo streams», every 5 minutes (was the laptop's Task Scheduler until 2026-10-24): python -m tools.runner streams — the free
+# official live streams of the matches near kickoff («شوفها مباشر ببلاش», news/streams.py). Its state is in S3 (state/news/), so
+# no state step; the X broadcasts come from the laptop's «Tifo X reader» inbox (S3 state/news/x-inbox.json). No ci_bridge pull:
+# streams reads nothing outside the repo. Started on time by the AWS ticker (infra/ticker, schedule tifo-streams), not by
+# GitHub's cron, which runs late on this repo.
+name: Tifo streams
+on:
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
+concurrency:
+  group: tifo-streams
+  cancel-in-progress: false
+env:
+  TZ: Asia/Dubai
+  PYTHONIOENCODING: utf-8
+jobs:
+  streams:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+      - run: python -m pip install --quiet --disable-pip-version-check -r requirements-ci.txt
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::574771023173:role/tifo-github-actions
+          aws-region: ap-south-1
+          role-duration-seconds: 900
+      - name: Run the streams job
+        run: python -m tools.runner streams
+      - name: Log
+        if: always()
+        run: tail -c 6000 site/cache/runner/streams.log || true
