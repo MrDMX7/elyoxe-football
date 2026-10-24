@@ -48,3 +48,13 @@ jobs:
         if: always()
         run: |
           [ -f news/.x-cooldown.json ] && aws s3 cp news/.x-cooldown.json "s3://$BUCKET/state/news/x-cooldown.json" --only-show-errors || true
+      - name: Debug captures (only with --debug / --dump)
+        if: always() && contains(inputs.args, '--d')
+        uses: actions/upload-artifact@v4
+        with:
+          name: xreader-debug
+          path: |
+            /tmp/x-*.png
+            /tmp/xdump
+          retention-days: 1
+          if-no-files-found: ignore
