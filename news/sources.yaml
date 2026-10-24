@@ -94,7 +94,7 @@ media:
 # min_minutes. The first live run lists accounts that don't exist in news/.x-inbox.json `errors`.
 x:
   per_run: 4
-  min_minutes: 28
+  min_minutes: 60
   max_posts: 20
   # live first (2026-10-07): while a match is on or finished in the last 3 h, its accounts (team/teams, comp/comps) are read
   # first, hot_per_run a run in turn; the rotation drops to live_per_run and runs may come every live_minutes

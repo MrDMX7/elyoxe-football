@@ -51,5 +51,6 @@ tifo-journal tifo-journal.yml cron(5/15 * * * ? *)
 tifo-names tifo-names.yml cron(40 22 ? * SAT *)
 tifo-newsletter tifo-newsletter.yml cron(0 14 ? * THU *)
 tifo-database tifo-database.yml cron(10 0 * * ? *)
+tifo-streams tifo-streams.yml cron(0/5 * * * ? *)
 EOF
 rm -rf "$TMP"
