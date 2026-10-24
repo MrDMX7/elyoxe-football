@@ -2,8 +2,9 @@
 # Tifo's ticker: Lambda tifo-ticker + one EventBridge Scheduler schedule per job (UTC), each starting its GitHub workflow
 # by workflow_dispatch (ticker.py). Idempotent: run again after editing the code or the times. All within AWS's free tiers.
 #   bash infra/ticker/deploy.sh
-# Then, once: a fine-grained PAT (github.com/settings/personal-access-tokens: only MrDMX7/elyoxe-football, Actions read and
-# write), stored with
+# Also «سينما»'s refresh (MrDMX7/elyoxe-cinema, 7 times a day at :10 UAE; names carry the UAE time, the cron is UTC).
+# Then, once: a fine-grained PAT (github.com/settings/personal-access-tokens: MrDMX7/elyoxe-football and
+# MrDMX7/elyoxe-cinema, Actions read and write), stored with
 #   aws ssm put-parameter --region ap-south-1 --name /elyoxe/tifo/github-dispatch-token --type SecureString --value <token>
 set -euo pipefail
 export MSYS_NO_PATHCONV=1      # Git Bash: keep /aws/lambda/… and /elyoxe/… as they are
@@ -39,12 +40,15 @@ else
     --role arn:aws:iam::$ACCT:role/tifo-ticker-lambda --timeout 30 --memory-size 128 --zip-file "fileb://$TMP/fn.zip" >/dev/null
 fi
 
-# job = workflow file = schedule (UTC; UAE is UTC+4)
-while read -r name wf expr; do
-  T="{\"Arn\":\"arn:aws:lambda:$R:$ACCT:function:$FN\",\"RoleArn\":\"arn:aws:iam::$ACCT:role/tifo-ticker-scheduler\",\"Input\":\"{\\\"workflow\\\":\\\"$wf\\\"}\",\"RetryPolicy\":{\"MaximumRetryAttempts\":3,\"MaximumEventAgeInSeconds\":600}}"
+# job = workflow file = schedule (UTC; UAE is UTC+4) [= repo, when not elyoxe-football; the token must cover it]
+while read -r name wf expr repo; do
+  [ -n "$name" ] || continue
+  IN="{\\\"workflow\\\":\\\"$wf\\\"}"
+  [ -n "${repo:-}" ] && IN="{\\\"repo\\\":\\\"$repo\\\",\\\"workflow\\\":\\\"$wf\\\"}"
+  T="{\"Arn\":\"arn:aws:lambda:$R:$ACCT:function:$FN\",\"RoleArn\":\"arn:aws:iam::$ACCT:role/tifo-ticker-scheduler\",\"Input\":\"$IN\",\"RetryPolicy\":{\"MaximumRetryAttempts\":3,\"MaximumEventAgeInSeconds\":600}}"
   op=create-schedule; aws scheduler get-schedule --region $R --name "$name" >/dev/null 2>&1 && op=update-schedule
   aws scheduler $op --region $R --name "$name" --schedule-expression "$expr" --flexible-time-window Mode=OFF --target "$T" >/dev/null
-  echo "$name  $expr  -> $wf"
+  echo "$name  $expr  -> ${repo:-MrDMX7/elyoxe-football} $wf"
 done <<'EOF'
 tifo-site tifo-site.yml cron(25 * * * ? *)
 tifo-journal tifo-journal.yml cron(5/15 * * * ? *)
@@ -52,5 +56,12 @@ tifo-names tifo-names.yml cron(40 22 ? * SAT *)
 tifo-newsletter tifo-newsletter.yml cron(0 14 ? * THU *)
 tifo-database tifo-database.yml cron(10 0 * * ? *)
 tifo-streams tifo-streams.yml cron(0/5 * * * ? *)
+cinema-refresh-0010 cinema-refresh.yml cron(10 20 * * ? *) MrDMX7/elyoxe-cinema
+cinema-refresh-0610 cinema-refresh.yml cron(10 2 * * ? *) MrDMX7/elyoxe-cinema
+cinema-refresh-0910 cinema-refresh.yml cron(10 5 * * ? *) MrDMX7/elyoxe-cinema
+cinema-refresh-1210 cinema-refresh.yml cron(10 8 * * ? *) MrDMX7/elyoxe-cinema
+cinema-refresh-1510 cinema-refresh.yml cron(10 11 * * ? *) MrDMX7/elyoxe-cinema
+cinema-refresh-1810 cinema-refresh.yml cron(10 14 * * ? *) MrDMX7/elyoxe-cinema
+cinema-refresh-2110 cinema-refresh.yml cron(10 17 * * ? *) MrDMX7/elyoxe-cinema
 EOF
 rm -rf "$TMP"
