@@ -40,8 +40,9 @@ else
     --role arn:aws:iam::$ACCT:role/tifo-ticker-lambda --timeout 30 --memory-size 128 --zip-file "fileb://$TMP/fn.zip" >/dev/null
 fi
 
-# job = workflow file = schedule (UTC; UAE is UTC+4) [= repo, when not elyoxe-football; the token must cover it]
-while read -r name wf expr repo; do
+# job = workflow file = repo (- = elyoxe-football; the token must cover it) = schedule (UTC; UAE is UTC+4)
+while read -r name wf repo expr; do
+  [ "${repo:-}" = - ] && repo=
   [ -n "$name" ] || continue
   IN="{\\\"workflow\\\":\\\"$wf\\\"}"
   [ -n "${repo:-}" ] && IN="{\\\"repo\\\":\\\"$repo\\\",\\\"workflow\\\":\\\"$wf\\\"}"
@@ -50,18 +51,18 @@ while read -r name wf expr repo; do
   aws scheduler $op --region $R --name "$name" --schedule-expression "$expr" --flexible-time-window Mode=OFF --target "$T" >/dev/null
   echo "$name  $expr  -> ${repo:-MrDMX7/elyoxe-football} $wf"
 done <<'EOF'
-tifo-site tifo-site.yml cron(25 * * * ? *)
-tifo-journal tifo-journal.yml cron(5/15 * * * ? *)
-tifo-names tifo-names.yml cron(40 22 ? * SAT *)
-tifo-newsletter tifo-newsletter.yml cron(0 14 ? * THU *)
-tifo-database tifo-database.yml cron(10 0 * * ? *)
-tifo-streams tifo-streams.yml cron(0/5 * * * ? *)
-cinema-refresh-0010 cinema-refresh.yml cron(10 20 * * ? *) MrDMX7/elyoxe-cinema
-cinema-refresh-0610 cinema-refresh.yml cron(10 2 * * ? *) MrDMX7/elyoxe-cinema
-cinema-refresh-0910 cinema-refresh.yml cron(10 5 * * ? *) MrDMX7/elyoxe-cinema
-cinema-refresh-1210 cinema-refresh.yml cron(10 8 * * ? *) MrDMX7/elyoxe-cinema
-cinema-refresh-1510 cinema-refresh.yml cron(10 11 * * ? *) MrDMX7/elyoxe-cinema
-cinema-refresh-1810 cinema-refresh.yml cron(10 14 * * ? *) MrDMX7/elyoxe-cinema
-cinema-refresh-2110 cinema-refresh.yml cron(10 17 * * ? *) MrDMX7/elyoxe-cinema
+tifo-site tifo-site.yml - cron(25 * * * ? *)
+tifo-journal tifo-journal.yml - cron(5/15 * * * ? *)
+tifo-names tifo-names.yml - cron(40 22 ? * SAT *)
+tifo-newsletter tifo-newsletter.yml - cron(0 14 ? * THU *)
+tifo-database tifo-database.yml - cron(10 0 * * ? *)
+tifo-streams tifo-streams.yml - cron(0/5 * * * ? *)
+cinema-refresh-0010 cinema-refresh.yml MrDMX7/elyoxe-cinema cron(10 20 * * ? *)
+cinema-refresh-0610 cinema-refresh.yml MrDMX7/elyoxe-cinema cron(10 2 * * ? *)
+cinema-refresh-0910 cinema-refresh.yml MrDMX7/elyoxe-cinema cron(10 5 * * ? *)
+cinema-refresh-1210 cinema-refresh.yml MrDMX7/elyoxe-cinema cron(10 8 * * ? *)
+cinema-refresh-1510 cinema-refresh.yml MrDMX7/elyoxe-cinema cron(10 11 * * ? *)
+cinema-refresh-1810 cinema-refresh.yml MrDMX7/elyoxe-cinema cron(10 14 * * ? *)
+cinema-refresh-2110 cinema-refresh.yml MrDMX7/elyoxe-cinema cron(10 17 * * ? *)
 EOF
 rm -rf "$TMP"
