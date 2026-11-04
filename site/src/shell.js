@@ -183,7 +183,20 @@
   (function(){ try { if (navigator.webdriver || /bot|crawl|spider|slurp|headless|lighthouse|preview|facebookexternalhit|whatsapp/i.test(navigator.userAgent || "")) return;
     var cc0 = localStorage.getItem("tifo.country") || ""; if (!cc0){ try { var tz0 = Intl.DateTimeFormat().resolvedOptions().timeZone, h0 = R.COUNTRIES.filter(function(c){ return c[2] === tz0; })[0]; cc0 = h0 ? h0[0] : ""; } catch (e){} }
     var last = +localStorage.getItem("tifo.seen") || 0, now = Date.now(), d = (now - last) / 864e5, ret = !last ? "first" : new Date(last).toDateString() === new Date(now).toDateString() ? "same_day" : d <= 7 ? "d1_7" : "d8p";   // the cards API's buckets
-    localStorage.setItem("tifo.seen", now); localStorage.setItem("tifo.ret", ret); if (ret === "first") try { sessionStorage.setItem("tifo.first", "1"); } catch (e){} fetch("/api/tifo/hit", { method:"POST", keepalive:true, headers:{ "content-type":"application/json" }, body:JSON.stringify({ path:location.pathname, country:cc0, ret:ret }) }).catch(function(){}); } catch (e){} })();
+    localStorage.setItem("tifo.seen", now); localStorage.setItem("tifo.ret", ret); if (ret === "first") try { sessionStorage.setItem("tifo.first", "1"); } catch (e){} fetch("/api/tifo/hit", { method:"POST", keepalive:true, headers:{ "content-type":"application/json" }, body:JSON.stringify({ path:location.pathname, country:cc0, ret:ret, r:source() }) }).catch(function(){}); } catch (e){}
+    // where the visit came from, as a category only (the referrer itself is never sent; same list as elyoxe.com/tools)
+    function source() {
+      var u = ""; try { u = (new URLSearchParams(location.search).get("utm_source") || "").toLowerCase(); } catch (e) {}
+      var U = { ig: "instagram", instagram: "instagram", tiktok: "tiktok", x: "x", twitter: "x", fb: "facebook", facebook: "facebook", wa: "whatsapp", whatsapp: "whatsapp", snapchat: "snapchat" };
+      if (U[u]) return U[u];
+      var h = ""; try { h = new URL(document.referrer).hostname.replace(/^(www|m|l|lm|mobile)\./, ""); } catch (e) { return "direct"; }
+      var M = [[/(^|\.)elyoxe\.com$/, "site"], [/gemini\.google\.com$/, "chatgpt"], [/(^|\.)google\./, "google"], [/(^|\.)bing\.com$/, "bing"], [/duckduckgo|yahoo|yandex|ecosia|brave\.com|baidu/, "search"],
+        [/^(x\.com|t\.co|twitter\.com)$/, "x"], [/instagram\.com$/, "instagram"], [/(facebook\.com|fb\.com|messenger\.com)$/, "facebook"], [/tiktok\.com$/, "tiktok"],
+        [/whatsapp\.(com|net)$/, "whatsapp"], [/(t\.me|telegram\.org)$/, "telegram"], [/(linkedin\.com|lnkd\.in)$/, "linkedin"], [/(youtube\.com|youtu\.be)$/, "youtube"],
+        [/snapchat\.com$/, "snapchat"], [/reddit\.com$/, "reddit"], [/(chatgpt\.com|openai\.com|perplexity\.ai|claude\.ai|copilot\.microsoft\.com)$/, "chatgpt"]];
+      for (var i = 0; i < M.length; i++) if (M[i][0].test(h)) return M[i][1];
+      return "other";
+    } })();
   // W2.4 country engine (client): the visitor's country first in the crest grid and /competitions/, and المزيد's shortcuts become
   // «دوري بلدك · منتخب بلدك · البطولة الشغالة»
   (function(){ var cc = lsGet("tifo.country"); if (!cc){ try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone, hit = R.COUNTRIES.filter(function(c){ return c[2] === tz; })[0]; cc = hit ? hit[0] : ""; } catch (e){} }
