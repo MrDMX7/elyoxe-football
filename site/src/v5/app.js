@@ -739,7 +739,20 @@
   // crawlers that pass the UA check (hundreds of «first visit, country unknown» views a day on 10-12/13) leave before either.
   (function () { try { if (BOT) return; var sent = false, send = function () { if (sent) return; sent = true; try {
       var cc0 = country() || "", last = +ls.get("tifo.seen", 0) || 0, now = NOW(), d = (now - last) / 864e5, ret = !last ? "first" : new Date(last).toDateString() === new Date(now).toDateString() ? "same_day" : d <= 7 ? "d1_7" : "d8p";
-      ls.set("tifo.seen", String(now)); ls.set("tifo.ret", ret); if (ret === "first") ss.set("tifo.first", "1"); fetch("/api/tifo/hit", { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify({ path: location.pathname, country: cc0 === "xx" ? "" : cc0, ret: ret }) }).catch(function () {}); } catch (e) {} };
+      ls.set("tifo.seen", String(now)); ls.set("tifo.ret", ret); if (ret === "first") ss.set("tifo.first", "1"); fetch("/api/tifo/hit", { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify({ path: location.pathname, country: cc0 === "xx" ? "" : cc0, ret: ret, r: source() }) }).catch(function () {}); } catch (e) {}
+      // where the visit came from, as a category only (the referrer itself is never sent; same list as elyoxe.com/tools)
+      function source() {
+        var u = ""; try { u = (new URLSearchParams(location.search).get("utm_source") || "").toLowerCase(); } catch (e) {}
+        var U = { ig: "instagram", instagram: "instagram", tiktok: "tiktok", x: "x", twitter: "x", fb: "facebook", facebook: "facebook", wa: "whatsapp", whatsapp: "whatsapp", snapchat: "snapchat" };
+        if (U[u]) return U[u];
+        var h = ""; try { h = new URL(D.referrer).hostname.replace(/^(www|m|l|lm|mobile)\./, ""); } catch (e) { return "direct"; }
+        var M = [[/(^|\.)elyoxe\.com$/, "site"], [/gemini\.google\.com$/, "chatgpt"], [/(^|\.)google\./, "google"], [/(^|\.)bing\.com$/, "bing"], [/duckduckgo|yahoo|yandex|ecosia|brave\.com|baidu/, "search"],
+          [/^(x\.com|t\.co|twitter\.com)$/, "x"], [/instagram\.com$/, "instagram"], [/(facebook\.com|fb\.com|messenger\.com)$/, "facebook"], [/tiktok\.com$/, "tiktok"],
+          [/whatsapp\.(com|net)$/, "whatsapp"], [/(t\.me|telegram\.org)$/, "telegram"], [/(linkedin\.com|lnkd\.in)$/, "linkedin"], [/(youtube\.com|youtu\.be)$/, "youtube"],
+          [/snapchat\.com$/, "snapchat"], [/reddit\.com$/, "reddit"], [/(chatgpt\.com|openai\.com|perplexity\.ai|claude\.ai|copilot\.microsoft\.com)$/, "chatgpt"]];
+        for (var i = 0; i < M.length; i++) if (M[i][0].test(h)) return M[i][1];
+        return "other";
+      } };
     ["pointerdown", "touchstart", "scroll", "keydown"].forEach(function (ev) { W.addEventListener(ev, send, { once: true, passive: true }); });
     var t = setTimeout(function () { if (D.visibilityState === "visible") send(); }, 12000); W.addEventListener("pagehide", function () { clearTimeout(t); }); } catch (e) {} })();
 
