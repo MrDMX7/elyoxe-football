@@ -753,8 +753,8 @@
         for (var i = 0; i < M.length; i++) if (M[i][0].test(h)) return M[i][1];
         return "other";
       } };
-    ["pointerdown", "touchstart", "scroll", "keydown"].forEach(function (ev) { W.addEventListener(ev, send, { once: true, passive: true }); });
-    var t = setTimeout(function () { if (D.visibilityState === "visible") send(); }, 12000); W.addEventListener("pagehide", function () { clearTimeout(t); }); } catch (e) {} })();
+    ["pointerdown", "touchstart", "scroll", "keydown"].forEach(function (ev) { window.addEventListener(ev, send, { once: true, passive: true }); });
+    var t = setTimeout(function () { if (D.visibilityState === "visible") send(); }, 12000); window.addEventListener("pagehide", function () { clearTimeout(t); }); } catch (e) {} })();
 
   // tv.js, media.js and share.js read a few helpers from window.TR (render.js, in the legacy bundle); pages without it get these
   if (!LEGACY && !window.TR) window.TR = { esc: U.esc, COUNTRIES: (C.countries || []).map(function (c) { return [c[0], c[1], c[2]]; }), isLive: U.isLive, localize: localize,
