@@ -19,6 +19,7 @@
 .lc h3{font-family:var(--kufi);font-weight:800;font-size:.9rem;margin:1.2rem 0 .4rem}
 .lc .crumbs{font-size:.82rem;margin-block-start:1rem}
 :is(.lc .crumbs,.crumbs .lc) a{color:var(--stone)}
+.lc .brk{color:var(--pulse);font-weight:700}
 .lc .season{font-size:.85rem;color:var(--stone)}
 .lc .tabs{display:flex;border-block-end:2px solid var(--line);overflow-x:auto;scrollbar-width:none;margin-block:1.1rem .4rem}
 :is(.lc .tabs,.tabs .lc) button{background:none;border:0;border-block-end:3px solid transparent;margin-block-end:-2px;padding:.55rem .95rem;cursor:pointer;color:var(--stone);white-space:nowrap;font-weight:600}

@@ -158,6 +158,10 @@ function posts(json, handle) {
   return out;
 }
 
+// the journal runs every 15 min; an official account's new post starts it at once (articles design, «عاجل»), at most
+// every 5 min. gh on the laptop has the workflow scope (2026-11-18).
+function shouldDispatch(fresh, lastMs, nowMs) { return fresh.some(p => p.tier === 'official') && nowMs - (lastMs || 0) >= 5 * 60e3; }
+
 async function main() {
   if (!chromium) { console.error('playwright-core not found'); process.exit(2); }
   const rest = resting(); if (rest && !a.includes('--export-cookies')) { log('X rate-limited the session at', new Date(rest.at).toISOString().slice(11, 16), '- resting until', new Date(rest.until).toISOString().slice(11, 16)); return; }
@@ -191,7 +195,7 @@ async function main() {
     await ctx.addCookies(JSON.parse(fs.readFileSync(jar, 'utf8'))); log('session added from x-cookies.json');
   }
   const page = ctx.pages()[0] || await ctx.newPage();
-  const seen = new Set(inbox.items.map(x => x.id)); let added = 0;
+  const seen = new Set(inbox.items.map(x => x.id)), allFresh = []; let added = 0;
   try {
     for (const acc of pick) {
       let got = [];
@@ -224,7 +228,7 @@ async function main() {
       const fresh = got.slice(0, cfg.max_posts).filter(p => !seen.has(p.id));
       // a broadcaster's post is press to the journal (its «رسمي» is not the club's), but its videos are official to news/media.py
       fresh.forEach(p => { seen.add(p.id); inbox.items.push(Object.assign(p, { lang: acc.lang || 'en', tier: acc.kind === 'broadcaster' ? 'paper' : acc.tier || 'journalist', team: acc.team || null, comp: acc.comp || null, source: acc.name || p.name })); });
-      added += fresh.length;
+      added += fresh.length; allFresh.push(...fresh);
       log('@' + acc.handle, got.length, 'posts,', fresh.length, 'new', inbox.errors[acc.handle] ? '(' + inbox.errors[acc.handle] + ')' : '');
       await page.waitForTimeout(2500 + Math.random() * 2500);   // a person's pace between profiles
     }
@@ -235,6 +239,12 @@ async function main() {
     fs.writeFileSync(INBOX, JSON.stringify(inbox));
     // the whole inbox (last 800 posts) overwrites the copy in S3; news.run skips the posts it already has by id
     if (a.includes('--upload')) execSync(`aws s3 cp "${INBOX}" s3://${BUCKET}/state/news/x-inbox.json --content-type application/json --cache-control no-store --only-show-errors`, { stdio: 'inherit', timeout: 120000 });   // execSync blocks the watchdog
+    if (a.includes('--upload') && shouldDispatch(allFresh, inbox.last_dispatch, Date.now())) {
+      try {
+        execSync('gh workflow run tifo-journal.yml --repo MrDMX7/elyoxe-football', { stdio: 'inherit', timeout: 60000 });
+        inbox.last_dispatch = Date.now(); fs.writeFileSync(INBOX, JSON.stringify(inbox)); log('journal started: an official post');
+      } catch (e) { log('journal start failed:', String(e.message || e).slice(0, 120)); }
+    }
   }
   log('done:', added, 'new posts from', pick.length, 'accounts');
 }
@@ -245,4 +255,4 @@ if (require.main === module) {
   setTimeout(() => { console.error('[x] watchdog: still running after 10 min, giving up'); process.exit(3); }, 10 * 60e3).unref();
   main().catch(e => { console.error(e); process.exit(1); });
 }
-module.exports = { config, plan, isHot, posts, broadcast };
+module.exports = { config, plan, isHot, posts, broadcast, shouldDispatch };

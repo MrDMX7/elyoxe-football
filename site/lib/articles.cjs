@@ -30,7 +30,7 @@ function articleHtml(doc, rel){
   const facts = (doc.facts_box || []).length ? `<aside class="card facts"><h2>حقائق سريعة</h2><ul>${doc.facts_box.map(f => `<li>${E(f)}</li>`).join("")}</ul></aside>` : "";
   const rl = (rel || []).length ? `<section class="grp"><h2>ذات صلة</h2><ul>${rel.map(r => `<li><a href="/news/${E(r.id)}/">${E(r.headline)}</a></li>`).join("")}</ul></section>` : "";
   const mod = doc.modified && doc.modified !== doc.published ? ` · آخر تحديث ${E(T(doc.modified))}` : "";
-  return `<article class="art"><p class="crumbs"><a href="/news/">الأخبار</a></p><h1>${E(doc.headline)}</h1><p class="lede">${E(doc.standfirst)}</p>`
+  return `<article class="art"><p class="crumbs"><a href="/news/">الأخبار</a></p><h1>${doc.breaking ? '<span class="brk">عاجل</span> ' : ""}${E(doc.headline)}</h1><p class="lede">${E(doc.standfirst)}</p>`
     + `<p class="byline muted">${AUTHOR} · ${E(T(doc.published))}${mod}</p>`
     + (img.url ? `<figure><img src="${E(img.url)}" width="${img.w || 1200}" height="${img.h || 675}" alt="${E(img.caption || doc.headline)}" loading="eager"><figcaption>${E(img.caption || "")}</figcaption></figure>` : "")
     + secs + facts

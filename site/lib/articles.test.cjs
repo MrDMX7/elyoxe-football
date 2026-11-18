@@ -49,3 +49,8 @@ test("pages are built from the full index, the list from the short one", async (
   assert.ok(written.includes("news/r-1/index.html") && written.includes("news/r-2/index.html"));
   assert.deepEqual(out.latest.map(a => a.id), ["r-2"]);
 });
+
+test("a breaking article carries the «عاجل» label", () => {
+  assert.match(A.articleHtml(doc("n-1", { kind: "news", breaking: true }), []), /<span class="brk">عاجل<\/span>/);
+  assert.doesNotMatch(A.articleHtml(doc("n-2", { kind: "news" }), []), /class="brk"/);
+});

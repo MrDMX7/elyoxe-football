@@ -49,6 +49,7 @@ h2::before{content:"";inline-size:.7rem;block-size:.7rem;background:var(--sunken
 h3{font-family:var(--kufi);font-weight:800;font-size:.9rem;margin:1.2rem 0 .4rem}
 .crumbs{font-size:.82rem;margin-block-start:1rem}
 .crumbs a{color:var(--stone)}
+.brk{color:var(--pulse);font-weight:700}
 .season{font-size:.85rem;color:var(--stone)}
 
 /* tabs: chalk underline */
