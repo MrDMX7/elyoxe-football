@@ -36,3 +36,11 @@ def test_the_sheet_carries_the_news_and_tifos_context():
 def test_breaking_is_its_own_kind():
     sheet, _ = F.news_sheet(TRANSFER, S["items"], TEXTS, data_get, AR, {}, breaking=True)
     assert sheet["النوع"] == "عاجل"
+
+
+def test_a_players_team_is_an_id_in_tifos_data():
+    """player/<id>.json carries the team as its id (live data, dry run 2026-11-19): the club's name comes from the dictionary."""
+    real = lambda path: {"name": "Weston McKennie", "team": 9885, "comp": 55, "minutes": 613, "goals": 1} if path.startswith("player/") else None
+    sheet, _ = F.news_sheet(TRANSFER, S["items"], TEXTS, real, {**AR, ("team", 9885): "يوفنتوس"}, {})
+    rows = [v for k, v in sheet["بيانات تيفو"].items() if k.endswith("هذا الموسم")]
+    assert rows and rows[0]["الفريق"] == "يوفنتوس" and rows[0]["الدقائق"] == 613

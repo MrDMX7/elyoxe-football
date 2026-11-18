@@ -169,7 +169,9 @@ def news_sheet(story, items, texts, data_get, ar, teams, breaking=False):
         p = data_get(f"player/{pid}.json")
         if p:
             latin[("player", pid)] = p.get("name")
-            row = {"الفريق": (p.get("team") or {}).get("name_ar"), "الدقائق": p.get("minutes"), "الأهداف": p.get("goals"),
+            t = p.get("team")                       # the live files carry the team's id; a dict (name_ar) is read too
+            club = t.get("name_ar") if isinstance(t, dict) else (ar.get(("team", int(t))) or _club(teams.get(str(t)) or {}) or None) if t else None
+            row = {"الفريق": club, "الدقائق": p.get("minutes"), "الأهداف": p.get("goals"),
                    "الصناعة": p.get("assists"), "التقييم": p.get("rating")}
             tifo[f"{ar.get(('player', pid)) or p.get('name')} هذا الموسم"] = {k: v for k, v in row.items() if v is not None}
     for tid in clubs[:2]:

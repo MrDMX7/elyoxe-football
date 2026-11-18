@@ -74,6 +74,15 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
         store.put_state(STATE, state); sp.save()
 
     def publish_story(s, is_breaking):
+        """One story; whatever it raises is that story's failure, never the pass's (dry run 2026-11-19)."""
+        try:
+            return _publish_story(s, is_breaking)
+        except Exception as e:
+            out["failed"] += 1
+            print(json.dumps({"news_error": s["id"], "error": f"{type(e).__name__}: {str(e)[:200]}"}, ensure_ascii=False))
+            return None
+
+    def _publish_story(s, is_breaking):
         aid = f"n-{s['id']}"
         if aid in gone:                                       # withdrawn from the desk: never back
             return None

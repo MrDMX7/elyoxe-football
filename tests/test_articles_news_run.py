@@ -86,3 +86,20 @@ def test_withdraw_from_the_desk_takes_an_article_off_for_good(tmp_path, monkeypa
     grown = copy.deepcopy(S["stories"]); grown[TRANSFER["id"]]["stage"] = "official"   # the story grows: no rewrite
     go(st, NOW + timedelta(hours=2), w, {"stories": grown, "items": S["items"], "pteam": PTEAM})
     assert aid not in [a["id"] for a in st.get_json("news/articles-all.json")["articles"]]
+
+
+def test_one_failing_story_does_not_stop_the_others(tmp_path, monkeypatch):
+    """A story whose sheet or photo raises is counted as failed; the pass goes on and saves (dry run 2026-11-19: a player file
+    in an unexpected shape stopped the whole pass)."""
+    monkeypatch.setattr(NR, "breaking", lambda s, items: False)
+    st, w = Store(LocalBackend(tmp_path)), W()
+    def collect(s, items):
+        if s["id"] == TRANSFER["id"]:
+            raise AttributeError("'int' object has no attribute 'get'")
+        return TEXTS, {"links": 0, "decoded": 0, "texts": 0}
+    go(st, NOW, w)
+    out = NR.run_news(st, {"stories": S["stories"], "items": S["items"], "pteam": PTEAM}, lambda p: None, w, NOW + timedelta(minutes=25),
+                      spend.Spend(st, NOW), deadline=1e12, clock=lambda: 0.0, collect=collect, fetch=lambda u: None,
+                      teams_json=TEAMS, ar={}, commons=lambda q: [])
+    assert out["failed"] >= 1 and out["written"] >= 1
+    assert st.get_json(f"news/a/n-{TRANSFER['id']}.json") is None
