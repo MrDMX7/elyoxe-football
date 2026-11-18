@@ -64,4 +64,16 @@ def test_a_team_without_an_arabic_name_falls_back_to_its_name():
     sheet, _ = F.report_sheet(md, None, None, NAMES)
     import os, sys
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "site", "ai")); import checks as AI
-    assert sheet["صاحب الأرض"] and sheet["صاحب الأرض"] == AI.club_ar(md["home"])      # Tifo's club dictionary, else the name
+    assert sheet["صاحب الأرض"] and sheet["صاحب الأرض"] == (AI._clubs().get(str(md["home"]["id"])) or md["home"]["name"])   # Tifo's dictionary, else the name
+
+
+def test_the_sheet_never_asks_for_a_transliteration(monkeypatch):
+    # gen.py sets checks.TRANSLIT to a Gemini call that writes names/clubs_ar.json; the sheet must stay offline
+    import os, sys
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "site", "ai")); import checks as AI
+    def no(*a, **k):
+        raise AssertionError("transliteration called")
+    monkeypatch.setattr(AI, "TRANSLIT", no)
+    md = copy.deepcopy(J("match_5181860.json")); md["home"]["name_ar"] = None; md["home"]["id"] = 999999999
+    sheet, _ = F.report_sheet(md, None, None, NAMES)
+    assert sheet["صاحب الأرض"] == md["home"]["name"]
