@@ -251,6 +251,10 @@ def job_journal(log):
     rc5, _ = run(log, [PY, "-m", "news.articles.run"], timeout=12 * 60)
     if rc5:
         log.w(f"news.articles.run exit {rc5} (not fatal)")
+    # the weekly «what each article type brought from Google» email (never fatal; skips itself between weeks)
+    rc6, _ = run(log, [PY, "-m", "tools.gsc_weekly"], timeout=3 * 60)
+    if rc6:
+        log.w(f"gsc_weekly exit {rc6} (not fatal)")
     # «تابع اللاعب»: the followed players' club and national team for the poller (never fatal: the last map stays)
     rc2, _ = run(log, [PY, "-m", "pushplayers"], timeout=5 * 60)
     if rc2:

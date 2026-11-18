@@ -31,6 +31,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GSC_SA_JSON: ${{ secrets.GSC_SA_JSON }}
+          GSC_SITE: sc-domain:elyoxe.com
       - name: Log
         if: always()
         run: tail -c 12000 site/cache/runner/journal.log || true
