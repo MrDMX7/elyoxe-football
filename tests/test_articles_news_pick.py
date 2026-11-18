@@ -35,3 +35,10 @@ def test_the_same_news_as_a_second_story_is_a_near_duplicate_but_not_of_itself()
     assert N.near_duplicate(twin, ITEMS, recent) == "n-old"
     assert N.near_duplicate(twin, ITEMS, [dict(recent[0], anchor=[["team", -1]])]) is None
     assert N.near_duplicate(TRANSFER, ITEMS, [dict(recent[0], id=f"n-{TRANSFER['id']}")]) is None
+
+
+def test_a_match_story_is_left_to_the_match_report():
+    """«تعادل شباب الأهلي وكلباء 1-1» (live journal, 2026-11-19) is the match report's job; a second page on it is the
+    near-duplicate pattern Google penalises (spec, «One page per match»)."""
+    match = dict(TRANSFER, kind="match")
+    assert not N.eligible(match, TEAMS, PTEAM, NOW)

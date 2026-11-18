@@ -1,6 +1,7 @@
 """Which journal stories become news articles (spec, «A news story is big enough»):
 - it names a club or player of a priority competition, or an Arab national team;
-- it is any kind but «other», seen in the last 24 hours.
+- it is any kind but «other» and «match» (a match is the match report's: a second page on it is the near-duplicate
+  pattern Google penalises), seen in the last 24 hours.
 Biggest first: most outlets, then an official source, then the size of the club (the big five and the Champions League,
 then the Arab leagues), then the newest.
 The journal's clusters can split one news item into two stories. The second is caught by its first headline's words,
@@ -29,7 +30,7 @@ def _teams_of(story, pteam):
 
 
 def eligible(story, teams, pteam, now):
-    if story.get("kind") in (None, "other") or not story.get("anchor"):
+    if story.get("kind") in (None, "other", "match") or not story.get("anchor"):
         return False
     if _at(story.get("last_at")) < now - timedelta(hours=24):
         return False
