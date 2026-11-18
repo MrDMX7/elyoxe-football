@@ -170,3 +170,10 @@ def test_every_article_stays_in_the_full_index(tmp_path, monkeypatch):
                         "entities": [], "published": f"2026-11-1{i}T00:00:00+00:00", "modified": f"2026-11-1{i}T00:00:00+00:00"})
     assert len(st.get_json("news/articles.json")["articles"]) == 3
     assert {a["id"] for a in st.get_json("news/articles-all.json")["articles"]} == {"r-0", "r-1", "r-2", "r-3"}
+
+
+def test_a_report_carries_its_topic_for_the_news_page_filters(tmp_path):
+    st = Store(LocalBackend(tmp_path))
+    R.run(st, data(), FakeWriter(), NOW, fetch=lambda u: None)
+    assert st.get_json(f"news/a/r-{MD['id']}.json")["topic"] == "report"
+    assert st.get_json("news/articles.json")["articles"][0]["topic"] == "report"

@@ -227,3 +227,13 @@ def test_an_article_the_owner_edited_is_never_rewritten_and_its_growth_is_flagge
     assert len(w.calls) == calls and st.get_json(f"news/a/{aid}.json")["headline"] == "عنوان المحرر"
     row = next(r for r in st.get_state("articles/desk-view.json")["stories"] if r["id"] == TRANSFER["id"])
     assert row["grew"] is True
+
+
+def test_a_news_article_carries_its_storys_kind_and_stage(tmp_path, monkeypatch):
+    monkeypatch.setattr(NR, "breaking", lambda s, items: False)
+    st, w = Store(LocalBackend(tmp_path)), W()
+    go(st, NOW, w); go(st, NOW + timedelta(minutes=25), w)
+    doc = st.get_json(f"news/a/n-{TRANSFER['id']}.json")
+    assert doc["topic"] == TRANSFER["kind"] and doc["stage"] == TRANSFER.get("stage")
+    row = next(a for a in st.get_json("news/articles.json")["articles"] if a["id"] == doc["id"])
+    assert row["topic"] == TRANSFER["kind"] and "stage" in row

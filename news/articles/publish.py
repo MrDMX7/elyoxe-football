@@ -10,11 +10,11 @@ def article_doc(aid, kind, art, meta, image, model, now_iso, prev=None):
             "facts_box": art.get("facts_box") or [], "image": image, "author": AUTHOR, "match": meta.get("match"),
             "comp": meta.get("comp"), "entities": ents, "model": model,
             "published": (prev or {}).get("published") or now_iso, "modified": now_iso,
-            "version": ((prev or {}).get("version") or 0) + 1}
+            "version": ((prev or {}).get("version") or 0) + 1, "topic": "report" if kind == "report" else None}
 
 
 def summary(doc):
-    return {k: doc.get(k) for k in ("id", "kind", "headline", "standfirst", "image", "published", "modified", "match", "comp", "entities", "breaking")}
+    return {k: doc.get(k) for k in ("id", "kind", "headline", "standfirst", "image", "published", "modified", "match", "comp", "entities", "breaking", "topic", "stage")}
 
 
 ALL = "news/articles-all.json"    # every article ever published, no limit: the site builds a page for each (final review, finding 3)
