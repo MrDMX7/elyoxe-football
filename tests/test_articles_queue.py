@@ -64,3 +64,26 @@ def test_done_entries_older_than_three_days_are_dropped():
     st = {}
     qq = q(st); qq.offer("s1", [1]); qq.mark_written("s1", 1, None)
     assert "s1" not in q(st, now=T0 + timedelta(days=4)).n["done"]
+
+
+# ---- final review, findings 1 and 11
+def test_a_failed_story_comes_back_only_when_it_grows_and_at_most_twice():
+    st = {}
+    qq = q(st); qq.offer("s1", [1], items=3); qq.mark_failed("s1", 3)
+    later = q(st, now=T0 + timedelta(hours=2))
+    later.offer("s1", [1], items=4)                                  # one new item: not back
+    assert "s1" not in later.n["queue"]
+    later.offer("s1", [1], items=5)                                  # two new items: one more try
+    assert "s1" in later.n["queue"]
+    later.mark_failed("s1", 5)
+    q(st, now=T0 + timedelta(hours=3)).offer("s1", [1], items=9)     # failed twice: never again
+    assert "s1" not in st["news"]["queue"]
+
+
+def test_a_story_is_updated_three_times_at_most():
+    st = {}
+    qq = q(st); qq.offer("s1", [1]); qq.mark_written("s1", 2, None)
+    for h in (2, 4, 6):
+        qh = q(st, now=T0 + timedelta(hours=h)); assert qh.wants_update("s1", 2 * h + 2, None); qh.mark_written("s1", 2 * h + 2, None)
+    assert not q(st, now=T0 + timedelta(hours=8)).wants_update("s1", 40, "official")
+    assert st["news"]["count"] == 1

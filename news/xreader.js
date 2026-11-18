@@ -158,9 +158,16 @@ function posts(json, handle) {
   return out;
 }
 
-// the journal runs every 15 min; an official account's new post starts it at once (articles design, «عاجل»), at most
-// every 5 min. gh on the laptop has the workflow scope (2026-11-18).
-function shouldDispatch(fresh, lastMs, nowMs) { return fresh.some(p => p.tier === 'official') && nowMs - (lastMs || 0) >= 5 * 60e3; }
+// the journal runs every 15 min; an official account's announcement starts it at once (articles design, «عاجل»), at most
+// every 5 min, and only while «عاجل» is on in news/articles/types.json: club accounts post all day on match days, and every
+// other post would run the whole journal job for nothing (final review, finding 5). gh on the laptop has the workflow scope.
+const ANNOUNCE = /^\W*(official|oficial|officiel|ufficiale|offiziell)\b|here we go|complete[sd]? the signing|\bsign(s|ed)\b|\bjoin(s|ed)\b|new (head )?coach|part(ed)? ways|sacked|relieved of|injur|ruled out|suspen|banned|رسمي|يعلن|أعلن|اعلن|التعاقد|ينضم|يوقع|إقالة|اقالة|يقيل|إصابة|اصابة|إيقاف|ايقاف|عقوبة/i;
+function shouldDispatch(fresh, lastMs, nowMs, on) {
+  return !!on && fresh.some(p => p.tier === 'official' && ANNOUNCE.test(p.text || '')) && nowMs - (lastMs || 0) >= 5 * 60e3;
+}
+function breakingOn() {
+  try { return !!(JSON.parse(fs.readFileSync(path.join(HERE, 'articles', 'types.json'), 'utf8')).breaking || {}).on; } catch (e) { return false; }
+}
 
 async function main() {
   if (!chromium) { console.error('playwright-core not found'); process.exit(2); }
@@ -239,7 +246,7 @@ async function main() {
     fs.writeFileSync(INBOX, JSON.stringify(inbox));
     // the whole inbox (last 800 posts) overwrites the copy in S3; news.run skips the posts it already has by id
     if (a.includes('--upload')) execSync(`aws s3 cp "${INBOX}" s3://${BUCKET}/state/news/x-inbox.json --content-type application/json --cache-control no-store --only-show-errors`, { stdio: 'inherit', timeout: 120000 });   // execSync blocks the watchdog
-    if (a.includes('--upload') && shouldDispatch(allFresh, inbox.last_dispatch, Date.now())) {
+    if (a.includes('--upload') && shouldDispatch(allFresh, inbox.last_dispatch, Date.now(), breakingOn())) {
       try {
         execSync('gh workflow run tifo-journal.yml --repo MrDMX7/elyoxe-football', { stdio: 'inherit', timeout: 60000 });
         inbox.last_dispatch = Date.now(); fs.writeFileSync(INBOX, JSON.stringify(inbox)); log('journal started: an official post');

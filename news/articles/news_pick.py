@@ -9,6 +9,16 @@ against the last day's articles on the same club or player."""
 from datetime import datetime, timedelta
 from . import priority
 
+# «عاجل» is for a signing, a sacking, an injury or a sanction (spec, type 8). classify.official() also passes «OFFICIAL: our new
+# home kit» (final review, finding 7), so the announcement must name one of these. Stems, matched in news.entities.norm form.
+EVENT = ["sign", "join", "contract", "extend", "extension", "renew", "loan", "transfer", "sack", "dismiss", "part ways",
+         "parted ways", "relieved", "appoint", "head coach", "manager", "injur", "ruled out", "surgery", "suspen", "ban ", "banned",
+         "fined", "sanction", "ficha", "contrato", "renueva", "renovacion", "cesado", "destitu", "nuevo entrenador", "lesion",
+         "sancion", "signe", "prolong", "limoge", "blessure", "unterschreibt", "verlanger", "verletz", "firma", "rinnov", "esoner",
+         "infortun", "squalific", "تعاقد", "التعاقد", "يضم", "ضم اللاعب", "تجديد", "تمديد", "يوقع", "وقع", "ينضم", "انضمام",
+         "اعاره", "اقاله", "يقيل", "فك الارتباط", "انهاء", "انفصال", "مدرب جديد", "تعيين", "اصابه", "مصاب", "جراحه", "ايقاف",
+         "غرامه", "عقوبه"]
+
 BIG = {47, 87, 55, 54, 53, 42}
 ARAB = {538, 536, 535, 519, 530, 525}
 TIER = {"official": 3, "journalist": 2, "paper": 1, "aggregator": 0}
@@ -29,9 +39,35 @@ def _teams_of(story, pteam):
     return out
 
 
-def eligible(story, teams, pteam, now):
+def announced(story, items):
+    """An official account's post in the story says something is done (classify.official: «OFFICIAL: …», «رسمياً…»)."""
+    from news import classify as CL
+    return any((items.get(i) or {}).get("tier") == "official" and CL.official((items.get(i) or {}).get("title"))
+               for i in story.get("items") or [])
+
+
+def event(story, items):
+    """An official post of the story names a signing, a sacking, an injury or a sanction."""
+    from news.entities import norm
+    stems = [norm(w) for w in EVENT]
+    for i in story.get("items") or []:
+        it = items.get(i) or {}
+        if it.get("tier") == "official":
+            t = " " + norm(f"{it.get('title') or ''} {it.get('desc') or ''}") + " "
+            if any(w in t for w in stems):
+                return True
+    return False
+
+
+def eligible(story, teams, pteam, now, items=None):
     if story.get("kind") in (None, "other", "match") or not story.get("anchor"):
         return False
+    # classify.py makes every non-match post of an official account kind «official», a birthday greeting too (final review,
+    # finding 2): a club's own posts alone are news only when they announce something done; an outlet carrying it is news.
+    if items is not None and story.get("kind") == "official":
+        its = [items[i] for i in story.get("items") or [] if i in items]
+        if its and all(i.get("tier") == "official" for i in its) and not announced(story, items):
+            return False
     if _at(story.get("last_at")) < now - timedelta(hours=24):
         return False
     pri, arab = priority.priority_comps(), priority.arab_teams()
@@ -48,15 +84,20 @@ def rank_key(story, items, teams):
             2 if comps & BIG else 1 if comps & ARAB else 0, _at(story.get("last_at")).timestamp()]
 
 
-def near_duplicate(story, items, recent):
+def near_duplicate(story, items, recent, now, names=frozenset()):
+    """recent: the last articles, {"id", "anchor", "words", "at"}, their words without names. Names alone never make two
+    headlines the same news («الهلال يعلن تجديد عقد سالم الدوسري» is not «سالم الدوسري يقود الهلال للفوز»: final review,
+    finding 3), and only the last 24 hours count."""
     first = next((items[i] for i in story.get("items") or [] if i in items), None)
     if not first:
         return None
-    w, anc, own = words(first.get("title")), {tuple(e) for e in story.get("anchor") or []}, f"n-{story['id']}"
+    w, anc, own = words(first.get("title")) - set(names), {tuple(e) for e in story.get("anchor") or []}, f"n-{story['id']}"
+    cut = now - timedelta(hours=24)
     for r in recent:
-        if r["id"] == own or not anc & {tuple(e) for e in r.get("anchor") or []}:
+        if r["id"] == own or _at(r.get("at")) < cut or not anc & {tuple(e) for e in r.get("anchor") or []}:
             continue
         rw = set(r.get("words") or [])
-        if w and rw and len(w & rw) / min(len(w), len(rw)) >= 0.6:
+        sh = w & rw
+        if len(sh) >= 2 and len(sh) / min(len(w), len(rw)) >= 0.6:
             return r["id"]
     return None

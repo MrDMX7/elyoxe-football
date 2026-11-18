@@ -70,9 +70,11 @@ class Writer:
         text = next((b.text for b in msg.content if b.type == "text"), "")
         try:
             best = int(json.loads(text)["best"])
-        except (ValueError, KeyError, TypeError):
-            best = -1
+        except (ValueError, KeyError, TypeError) as e:
+            raise WriteError("photo answer cannot be read: " + repr(text[:80])) from e      # news_pick then keeps the widest
+        if not -1 <= best < len(thumbs):
+            raise WriteError(f"photo answer {best} is not one of {len(thumbs)}")
         u = msg.usage
         usage = {"in": u.input_tokens or 0, "out": u.output_tokens or 0,
                  "cache_read": getattr(u, "cache_read_input_tokens", 0) or 0, "cache_write": getattr(u, "cache_creation_input_tokens", 0) or 0}
-        return (best if 0 <= best < len(thumbs) else -1), usage
+        return best, usage

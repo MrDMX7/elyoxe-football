@@ -67,3 +67,10 @@ def test_the_table_is_the_league_and_every_number_names_its_competition():
     tifo = sheet["بيانات تيفو"]
     assert tifo["ترتيب ريال مدريد في الدوري الإسباني"] == {"المركز": 2, "لعب": 12, "النقاط": 30}
     assert "أردا غولر هذا الموسم في دوري أبطال أوروبا" in tifo and len(tifo) == 2
+
+
+def test_a_player_only_story_cards_the_players_club():
+    """With no club named, Tifo's card used to be an empty dark frame (final review, finding 9): the player's club is used."""
+    story = {"id": "x", "kind": "injury", "anchor": [["player", 1]], "items": []}
+    _, meta = F.news_sheet(story, {}, TEXTS, lambda p: {"name": "A", "team": 8634} if p == "player/1.json" else None, {}, {})
+    assert meta["teams"] == [] and meta["card_teams"] == [8634]

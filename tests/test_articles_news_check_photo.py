@@ -82,7 +82,16 @@ def test_pick_photo_sends_the_photos_and_the_headline_to_haiku():
     blocks = kw["messages"][0]["content"]
     assert best == 1 and usage["in"] == 900 and kw["model"] == "claude-haiku-5-5"
     assert [b["type"] for b in blocks].count("image") == 2 and "صلاح يجدد" in blocks[-1]["text"]
-    assert WR.Writer(FakeClient({"best": 7})).pick_photo("x", [jpg(400, 225)])[0] == -1     # out of range: none
+    assert WR.Writer(FakeClient({"best": -1})).pick_photo("x", [jpg(400, 225)])[0] == -1    # none fits
+
+
+def test_an_answer_that_cannot_be_read_is_an_error_not_a_none():
+    """«none fits» gives Tifo's card; a broken answer must not (final review, finding 10): it raises, and news_pick keeps the
+    widest photo."""
+    import pytest
+    for bad in ({"best": 7}, "not json"):
+        with pytest.raises(WR.WriteError):
+            WR.Writer(FakeClient(bad)).pick_photo("x", [jpg(400, 225)])
 
 
 def test_a_date_written_in_a_sources_language_counts_as_in_the_sheet():

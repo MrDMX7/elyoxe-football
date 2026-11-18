@@ -171,6 +171,10 @@ def main(argv=None):
             news_run.TYPES["news"]["on"] = news_run.TYPES["breaking"]["on"] = True
         out["news"] = news_run.run_news(store, {k: j.get(k) or {} for k in ("stories", "items", "pteam")}, get, write.Writer(), now, sp,
                                         deadline=t0 + 8 * 60, clock=time.monotonic, fetch=http_bytes)
+        sp.save()
+        if sp.capped_now():                          # news is most of the spend: it is usually the pass that crosses the cap
+            _mail_cap(sp.month_total())
+        out["spend_month"] = round(sp.month_total(), 4)
     print(json.dumps({"articles": out}, ensure_ascii=False))
     return 0
 

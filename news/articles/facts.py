@@ -170,12 +170,15 @@ def news_sheet(story, items, texts, data_get, ar, teams, breaking=False):
     anchor = [(k, int(i)) for k, i in story.get("anchor") or []]
     players = [i for k, i in anchor if k == "player"]
     clubs = [i for k, i in anchor if k == "team"]
-    tifo, latin = {}, {("team", t): (teams.get(str(t)) or {}).get("name") for t in clubs}
+    tifo, latin, their = {}, {("team", t): (teams.get(str(t)) or {}).get("name") for t in clubs}, []
     for pid in players[:3]:
         p = data_get(f"player/{pid}.json")
         if p:
             latin[("player", pid)] = p.get("name")
             t = p.get("team")                       # the live files carry the team's id; a dict (name_ar) is read too
+            tid_p = t.get("id") if isinstance(t, dict) else t
+            if tid_p and int(tid_p) not in their:
+                their.append(int(tid_p))
             club = t.get("name_ar") if isinstance(t, dict) else (ar.get(("team", int(t))) or _club(teams.get(str(t)) or {}) or None) if t else None
             row = {"الفريق": club, "الدقائق": p.get("minutes"), "الأهداف": p.get("goals"),
                    "الصناعة": p.get("assists"), "التقييم": p.get("rating")}
@@ -207,5 +210,6 @@ def news_sheet(story, items, texts, data_get, ar, teams, breaking=False):
     seed = [(k, int(i)) for k, i in story.get("seed") or []]       # who the first headline names (news.run.subjects)
     who = next((e for e in seed if ar.get(e)), None) or (named[0] if named else (seed or anchor or [None])[0])
     meta = {"story": story["id"], "teams": clubs, "players": players, "stage": story.get("stage"), "items": len(story.get("items") or []),
-            "subject": ar.get(who) if who else None, "query": latin.get(who) if who else None}
+            "subject": ar.get(who) if who else None, "query": latin.get(who) if who else None,
+            "card_teams": clubs or their}               # a player-only story's card shows his club (final review, finding 9)
     return sheet, meta

@@ -45,7 +45,7 @@ def official_story(title, kind):
     """The transfer story alone, its first item an official account's post with this headline, its others not official."""
     s, items = copy.deepcopy(TRANSFER), copy.deepcopy(S["items"])
     s["kind"] = kind
-    items[s["items"][0]].update({"tier": "official", "title": title})
+    items[s["items"][0]].update({"tier": "official", "title": title, "desc": title})   # an official post: its text is its title
     for i in s["items"][1:]:
         if i in items:
             items[i]["tier"] = "paper"
@@ -103,3 +103,83 @@ def test_one_failing_story_does_not_stop_the_others(tmp_path, monkeypatch):
                       teams_json=TEAMS, ar={}, commons=lambda q: [])
     assert out["failed"] >= 1 and out["written"] >= 1
     assert st.get_json(f"news/a/n-{TRANSFER['id']}.json") is None
+
+
+# ---- final review
+class Short(W):
+    """A writer whose every article fails the length check."""
+    def write(self, kind, sheet, model, notes=None):
+        self.calls.append((sheet["النوع"], model))
+        return ({"headline": "ع", "standfirst": "م", "sections": [{"subhead": "ق", "paragraphs": ["قصير"]}], "facts_box": [], "sources_cited": []},
+                {"in": 4000, "out": 100, "cache_read": 0, "cache_write": 0})
+
+
+def alone(story=TRANSFER, **kw):
+    s = dict(copy.deepcopy(story), **kw)
+    return {"stories": {s["id"]: s}, "items": S["items"], "pteam": PTEAM}
+
+
+def test_a_story_that_fails_is_not_rewritten_every_run(tmp_path, monkeypatch):
+    """Finding 1: a story failing twice was popped and re-offered, due again 20 minutes later: 64 calls a day."""
+    monkeypatch.setattr(NR, "breaking", lambda s, items: False)
+    st, w = Store(LocalBackend(tmp_path)), Short()
+    for m in range(0, 24 * 60, 15):
+        go(st, NOW + timedelta(minutes=m), w, alone())
+    assert len(w.calls) == 2                                        # one try: the article and its one rewrite
+
+
+def test_a_kit_announcement_is_not_breaking(tmp_path):
+    """Finding 7: «OFFICIAL: our new home kit» passes classify.official(); «عاجل» is for a signing, a sacking, an injury or
+    a sanction (spec, type 8)."""
+    st, w = Store(LocalBackend(tmp_path)), W()
+    _, j = official_story("OFFICIAL: our new home kit for 2027 is here", "official")
+    assert go(st, NOW, w, j)["breaking"] == 0
+
+
+def test_breaking_stops_at_fifteen_a_day(tmp_path):
+    st, w = Store(LocalBackend(tmp_path)), W()
+    st.put_state("articles/state.json", {"news": {"breaking_day": NR.desk_queue.Queue({}, {}, NOW, {"daily": 60, "wait_minutes": 20}).n["day"], "breaking_count": 15}})
+    _, j = official_story("Official: the club completes the signing", "transfer")
+    assert go(st, NOW, w, j)["breaking"] == 0
+
+
+def test_two_halves_of_one_story_in_one_run_make_one_article(tmp_path, monkeypatch):
+    """Finding 3: the duplicate check ran only when stories were offered, so two halves offered together were both written."""
+    monkeypatch.setattr(NR, "breaking", lambda s, items: False)
+    st, w = Store(LocalBackend(tmp_path)), W()
+    a = copy.deepcopy(TRANSFER); b = dict(copy.deepcopy(TRANSFER), id="twin")
+    j = {"stories": {a["id"]: a, "twin": b}, "items": S["items"], "pteam": PTEAM}
+    go(st, NOW, w, j)
+    out = go(st, NOW + timedelta(minutes=25), w, j)
+    assert out["written"] == 1 and out["dupes"] >= 1
+
+
+def test_a_story_out_of_time_before_its_rewrite_waits_for_the_next_run(tmp_path, monkeypatch):
+    """Finding 6: no second attempt is started past the deadline; the story stays queued, not failed."""
+    monkeypatch.setattr(NR, "breaking", lambda s, items: False)
+    st, t = Store(LocalBackend(tmp_path)), [0.0]
+    class Slow(Short):
+        def write(self, *a, **k):
+            t[0] = 1000.0                                           # the first attempt takes the run past its deadline
+            return super().write(*a, **k)
+    w = Slow()
+    go(st, NOW, w, alone())
+    out = NR.run_news(st, alone(), lambda p: None, w, NOW + timedelta(minutes=25), spend.Spend(st, NOW), deadline=10.0,
+                      clock=lambda: t[0], collect=lambda *a, **k: (TEXTS, {"links": 0, "decoded": 0, "texts": 0}),
+                      fetch=lambda u: None, teams_json=TEAMS, ar={}, commons=lambda q: [])
+    assert len(w.calls) == 1 and out["failed"] == 0
+    assert TRANSFER["id"] in st.get_state("articles/state.json")["news"]["queue"]
+
+
+def test_the_cap_email_goes_when_the_news_pass_crosses_it(tmp_path, monkeypatch):
+    """Finding 4: only the reports' pass sent the email; news, most of the spend, would cross the cap silently."""
+    from news.articles import run as R
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
+    monkeypatch.setattr(R, "run", lambda *a, **k: {})
+    monkeypatch.setattr(R.write, "Writer", lambda *a, **k: None)
+    def news(store, journal, data_get, writer, now, sp, **kw):
+        sp.add("claude-sonnet-5-5", {"in": 0, "out": 20_000_000, "cache_read": 0, "cache_write": 0}, "news"); return {}
+    monkeypatch.setattr(NR, "run_news", news)
+    sent = []
+    monkeypatch.setattr(R, "_mail_cap", lambda total: sent.append(total))
+    assert R.main(["--local", str(tmp_path)]) == 0 and sent and sent[0] >= 180
