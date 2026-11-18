@@ -50,15 +50,6 @@ h3{font-family:var(--kufi);font-weight:800;font-size:.9rem;margin:1.2rem 0 .4rem
 .crumbs{font-size:.82rem;margin-block-start:1rem}
 .crumbs a{color:var(--stone)}
 .brk{color:var(--pulse);font-weight:700}
-.art{max-width:44rem;margin-inline:auto}
-.art h1{font-size:1.6rem;line-height:1.35;margin:.4rem 0 .6rem}
-.art .lede{font-size:1.125rem;line-height:1.75;font-weight:500}
-.art figure{margin:1rem 0}
-.art figure img{display:block;width:100%;max-width:100%;height:auto;border-radius:10px}
-.art figcaption{font-size:.8rem;color:var(--stone);margin-top:.35rem}
-.art h2{font-size:1.15rem;margin:1.4rem 0 .5rem}
-.art p{font-size:1.0625rem;line-height:1.85}
-.art .facts{margin:1.2rem 0}
 .season{font-size:.85rem;color:var(--stone)}
 
 /* tabs: chalk underline */

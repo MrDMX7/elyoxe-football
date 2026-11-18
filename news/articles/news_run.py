@@ -129,6 +129,7 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
                               headline=art["headline"], judge=judge)
         doc = publish.article_doc(aid, "news", art, meta, img, cfg["model"], now.isoformat(), prev)
         doc["breaking"] = is_breaking
+        doc["topic"], doc["stage"] = s.get("kind"), s.get("stage")      # the news page's filters
         publish.publish(store, doc)
         store.put_state(f"articles/sheets/{aid}.json", {"at": now.isoformat(), "sheet": sheet, "photos": cands})   # the desk's editor
         first = items.get((s.get("items") or [""])[0]) or {}

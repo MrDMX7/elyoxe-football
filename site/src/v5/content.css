@@ -20,15 +20,6 @@
 .lc .crumbs{font-size:.82rem;margin-block-start:1rem}
 :is(.lc .crumbs,.crumbs .lc) a{color:var(--stone)}
 .lc .brk{color:var(--pulse);font-weight:700}
-.lc .art{max-width:44rem;margin-inline:auto}
-:is(.lc .art,.art .lc) h1{font-size:1.6rem;line-height:1.35;margin:.4rem 0 .6rem}
-:is(.lc .art,.art .lc) .lede{font-size:1.125rem;line-height:1.75;font-weight:500}
-:is(.lc .art,.art .lc) figure{margin:1rem 0}
-:is(.lc .art,.art .lc) figure img{display:block;width:100%;max-width:100%;height:auto;border-radius:10px}
-:is(.lc .art,.art .lc) figcaption{font-size:.8rem;color:var(--stone);margin-top:.35rem}
-:is(.lc .art,.art .lc) h2{font-size:1.15rem;margin:1.4rem 0 .5rem}
-:is(.lc .art,.art .lc) p{font-size:1.0625rem;line-height:1.85}
-:is(.lc .art,.art .lc) .facts{margin:1.2rem 0}
 .lc .season{font-size:.85rem;color:var(--stone)}
 .lc .tabs{display:flex;border-block-end:2px solid var(--line);overflow-x:auto;scrollbar-width:none;margin-block:1.1rem .4rem}
 :is(.lc .tabs,.tabs .lc) button{background:none;border:0;border-block-end:3px solid transparent;margin-block-end:-2px;padding:.55rem .95rem;cursor:pointer;color:var(--stone);white-space:nowrap;font-weight:600}

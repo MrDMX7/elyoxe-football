@@ -43,6 +43,17 @@ jobs:
         run: python -m news.articles.run
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # the article pages written or changed this run, /news/ and the news sitemap, up within the minute from the full build's
+      # shells (news/articles/pages.py, spec 2026-11-19 §7); the hourly build no longer publishes these paths
+      - uses: actions/setup-node@v4
+        if: success() || failure()
+        with:
+          node-version: "24"
+      - name: Article pages
+        if: success() || failure()
+        continue-on-error: true
+        timeout-minutes: 5
+        run: python -m news.articles.pages
       - name: Articles in Google (weekly)
         if: success() || failure()
         continue-on-error: true
