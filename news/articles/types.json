@@ -1,0 +1,3 @@
+{
+  "report": {"on": false, "model": "claude-sonnet-5-5", "words": [300, 400]}
+}

@@ -37,6 +37,10 @@ settings:
                   130, 112, 268, 45, 299, 44, 50, 297, 10043]
   # leagues that get the full 538 treatment (probabilities, season sim, facts, watchability, pressure, fatigue, fortress)
   analytics_leagues: [538, 536, 535, 529, 524, 519, 530, 516, 544, 10721, 47, 87, 55, 54, 53, 268]   # MLS and Argentina (groups + playoffs) wait for multi-group analytics
+  # Tifo articles (docs/superpowers/specs/2026-11-18-articles-design.md): match reports and previews for these, and for every
+  # match of an Arab national team whatever the competition (news/articles/priority.py). Owner, spec review: the full list.
+  articles_priority: [538, 11027, 9943, 11026, 536, 9942, 10074, 535, 11018, 519, 9941, 10314, 530, 11840,
+                      525, 10622, 9469, 42, 47, 87, 55, 54, 53]
   # Arab clubs rating (analytics.arab_ratings): tools/calibrate_arab.py, fit before 2022-07-01, test after
   arab_rating: {k: 16, home: 60, regress: 0.2, d0: 0.30, ds: 400, newcomer: 1400, base: 1500}
   arab_rating_calibration: {brier_test: 0.5908, brier_base_rate: 0.6524, n_test: 11332, matches_total: 37575,
