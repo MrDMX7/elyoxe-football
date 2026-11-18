@@ -4,7 +4,8 @@
 # render 86 s (77 s on all cores). v4: ffmpeg from the imageio-ffmpeg wheel; the bundle as a local folder (the public Lambda
 # site's files) with clip.mp4, crests and goal.json written into its public/tifogoal/, rendered by a list-argument
 # subprocess with no shell from the Remotion folder, as goal_watch.render_local does on a runner. v5: index.html's
-# absolute /sites/tifo-goal/ paths made relative (v4's render failed on them in prepareServer).
+# absolute /sites/tifo-goal/ paths made relative (v4's render failed on them in prepareServer). v6: bundle.js.map too (v5:
+# «ENOENT … /tmp/bundle/bundle.js.map»: the renderer opens it, so the kit keeps the source maps).
 name: Tifo goal render spike
 on:
   push:
@@ -36,7 +37,7 @@ jobs:
           npm i --no-audit --no-fund --silent @remotion/cli@4.0.526 remotion@4.0.526 react@19.1.1 react-dom@19.1.1 && npx remotion browser ensure >/dev/null
           mkdir -p /tmp/bundle/public/tifogoal && cd /tmp/bundle
           for f in 155 161 18 208 226 304 328 353 434 5 617 624 63 663 687 728 761 832 845 872 892 938 986; do curl -fsS -o "$f.bundle.js" "$SITE/$f.bundle.js"; done
-          for f in bundle.js favicon.ico index.html public/tifogoal/outro-v2.mp4 public/tifogoal/sting.wav; do curl -fsS -o "$f" "$SITE/$f"; done
+          for f in bundle.js bundle.js.map favicon.ico index.html public/tifogoal/outro-v2.mp4 public/tifogoal/sting.wav; do curl -fsS -o "$f" "$SITE/$f"; done
           # the Lambda site was bundled for /sites/tifo-goal/; goal_watch's own bundle (and so the kit's) uses ./ (as here)
           sed -i -e 's#remotion_staticBase = "/sites/tifo-goal/public"#remotion_staticBase = new URL("./public", window.location.href).pathname#' -e 's#remotion_publicPath = "/sites/tifo-goal/"#remotion_publicPath = "./"#' -e 's#"/sites/tifo-goal/#"./#g' index.html
           grep -oE 'remotion_(staticBase|publicPath) = [^;]{0,70}|src="[^"]*"' index.html
