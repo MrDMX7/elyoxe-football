@@ -1,7 +1,8 @@
 # THROWAWAY spike (2026-11-18), never merged: can a runner download Tifo's goal clips and render one TifoGoal?
 # Runs on a push to the goal-render-spike branch only. No AWS, no secrets: the render reads the old public Lambda site
-# (sites/tifo-goal, Remotion 4.0.526) and gets the clip from a local server. v2: apt-get install ffmpeg hung 11 min in v1,
-# so ffmpeg/ffprobe are Remotion's own (the compositor package ships them with libx264, mjpeg and aac).
+# (sites/tifo-goal, Remotion 4.0.526) and gets the clip from a local server.
+# v2: X 5/5, YouTube 0/5. Remotion's own ffmpeg has no fps filter (goal_moment needs it). v3: apt ffmpeg again, non-interactive,
+# with a timeout (v1's apt-get hung 11 min with no output).
 name: Tifo goal render spike
 on:
   push:
@@ -14,42 +15,41 @@ jobs:
     timeout-minutes: 30
     env:
       SERVE: https://remotionlambda-apsouth1-f5deu1gkph.s3.ap-south-1.amazonaws.com/sites/tifo-goal/index.html
+      DEBIAN_FRONTEND: noninteractive
+      NEEDRESTART_MODE: a
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - name: Runner
+      - name: apt ffmpeg (timed, 5 min cap)
+        timeout-minutes: 7
+        continue-on-error: true
         run: |
-          nproc; free -m | head -2; node --version
-          curl -s https://ipinfo.io/json || true
+          t0=$(date +%s); sudo -E timeout 150 apt-get update -o Acquire::Retries=2 -o Dpkg::Use-Pty=0 | tail -3; echo "apt update: $(( $(date +%s)-t0 )) s" | tee -a "$GITHUB_STEP_SUMMARY"
+          t0=$(date +%s); sudo -E timeout 300 apt-get install -y --no-install-recommends -o Dpkg::Use-Pty=0 ffmpeg | tail -3; echo "apt install ffmpeg: $(( $(date +%s)-t0 )) s" | tee -a "$GITHUB_STEP_SUMMARY"
+          ffmpeg -hide_banner -version | head -1
       - name: Remotion 4.0.526 (timed)
         timeout-minutes: 6
         run: |
           mkdir -p /tmp/r && cd /tmp/r && npm init -y >/dev/null
           t0=$(date +%s); npm i --no-audit --no-fund --silent @remotion/cli@4.0.526 remotion@4.0.526 react@19.1.1 react-dom@19.1.1; echo "npm i: $(( $(date +%s)-t0 )) s" | tee -a "$GITHUB_STEP_SUMMARY"
-          t0=$(date +%s); npx remotion browser ensure; echo "browser ensure: $(( $(date +%s)-t0 )) s" | tee -a "$GITHUB_STEP_SUMMARY"
-          comp=$(dirname "$(find /tmp/r/node_modules/@remotion -maxdepth 2 -name ffmpeg -type f | head -1)")
-          echo "compositor: $comp"; ls "$comp"
-          echo "$comp" >> "$GITHUB_PATH"
-          echo "LD_LIBRARY_PATH=$comp:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
-      - name: Tools (timed)
+          t0=$(date +%s); npx remotion browser ensure >/dev/null; echo "browser ensure: $(( $(date +%s)-t0 )) s" | tee -a "$GITHUB_STEP_SUMMARY"
+          command -v ffmpeg || { comp=$(dirname "$(find /tmp/r/node_modules/@remotion -maxdepth 2 -name ffmpeg -type f | head -1)"); echo "$comp" >> "$GITHUB_PATH"; echo "LD_LIBRARY_PATH=$comp:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"; echo "using Remotion's ffmpeg"; }
+      - name: One X clip (timed)
         timeout-minutes: 3
         run: |
-          t0=$(date +%s); python -m pip install -q -U "yt-dlp[default]"; echo "pip yt-dlp: $(( $(date +%s)-t0 )) s"; yt-dlp --version
-          which ffmpeg ffprobe; ffmpeg -hide_banner -version | head -1; ffmpeg -hide_banner -encoders 2>/dev/null | grep -E "libx264|mjpeg|aac" || true
-      - name: yt-dlp on 10 clips
-        timeout-minutes: 15
-        run: python spike/fetch.py
+          python -m pip install -q -U "yt-dlp[default]"
+          mkdir -p dl && t0=$(date +%s.%N)
+          yt-dlp --no-warnings --no-progress -f "best[ext=mp4]/best" -o dl/0.mp4 https://x.com/thmanyahsports/status/2123080008675508376
+          echo "yt-dlp X clip: $(python -c "import time;print(round(time.time()-$t0,1))") s, $(du -m dl/0.mp4 | cut -f1) MB" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Render one TifoGoal (default concurrency, then all cores)
-        timeout-minutes: 12
+        timeout-minutes: 15
         run: |
-          src=$(ls -S dl/*.mp4 | head -1); echo "clip from $src"
-          mkdir -p serve
-          t0=$(date +%s.%N)
-          ffmpeg -v error -y -ss 20 -i "$src" -t 12 -vf scale=1280:-2 -c:v libx264 -preset veryfast -crf 20 -c:a aac -b:a 128k -ar 48000 serve/clip.mp4
-          ffmpeg -v error -y -i "$src" -t 60 -vf fps=0.5,scale=384:-2 -q:v 6 serve/f%03d.jpg
-          echo "ffmpeg cut + 30 vision frames: $(python -c "import time;print(round(time.time()-$t0,1))") s, $(ls serve/*.jpg | wc -l) jpgs" | tee -a "$GITHUB_STEP_SUMMARY"
+          mkdir -p serve && t0=$(date +%s.%N)
+          ffmpeg -v error -y -ss 20 -i dl/0.mp4 -t 12 -vf scale=1280:-2 -c:v libx264 -preset veryfast -crf 20 -c:a aac -b:a 128k -ar 48000 serve/clip.mp4
+          echo "ffmpeg 12 s cut: $(python -c "import time;print(round(time.time()-$t0,1))") s" | tee -a "$GITHUB_STEP_SUMMARY"
+          if ffmpeg -hide_banner -filters 2>/dev/null | grep -q " fps "; then t0=$(date +%s.%N); ffmpeg -v error -y -i dl/0.mp4 -t 60 -vf fps=0.5,scale=384:-2 -q:v 6 serve/f%03d.jpg; echo "vision frames (fps filter): $(ls serve/*.jpg | wc -l) in $(python -c "import time;print(round(time.time()-$t0,1))") s" | tee -a "$GITHUB_STEP_SUMMARY"; fi
           (cd serve && python -m http.server 8765 >/dev/null 2>&1 &)
           sleep 1
           cp spike/props.json /tmp/r/props.json && cd /tmp/r
