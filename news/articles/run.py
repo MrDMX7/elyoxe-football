@@ -159,9 +159,18 @@ def main(argv=None):
         store, get = Store(LocalBackend(a.local)), http_get
     else:
         store = Store(S3Backend(BUCKET)); get = lambda p: store.get_json(p)
+    t0, now = time.monotonic(), datetime.now(timezone.utc)
     if a.dry:
         TYPES["report"]["on"] = True
-    out = run(store, get, write.Writer(), datetime.now(timezone.utc), dry=a.dry, only=a.match, limit=a.limit)
+    out = run(store, get, write.Writer(), now, dry=a.dry, only=a.match, limit=a.limit, budget=6 * 60)
+    if not a.match:
+        from . import news_run
+        j = store.get_state("news/state.json") or {}
+        sp = spend.Spend(store, now)                 # reads what run() saved
+        if a.dry:
+            news_run.TYPES["news"]["on"] = news_run.TYPES["breaking"]["on"] = True
+        out["news"] = news_run.run_news(store, {k: j.get(k) or {} for k in ("stories", "items", "pteam")}, get, write.Writer(), now, sp,
+                                        deadline=t0 + 8 * 60, clock=time.monotonic, fetch=http_bytes)
     print(json.dumps({"articles": out}, ensure_ascii=False))
     return 0
 

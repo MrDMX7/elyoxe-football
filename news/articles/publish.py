@@ -14,7 +14,7 @@ def article_doc(aid, kind, art, meta, image, model, now_iso, prev=None):
 
 
 def summary(doc):
-    return {k: doc.get(k) for k in ("id", "kind", "headline", "standfirst", "image", "published", "modified", "match", "comp", "entities")}
+    return {k: doc.get(k) for k in ("id", "kind", "headline", "standfirst", "image", "published", "modified", "match", "comp", "entities", "breaking")}
 
 
 ALL = "news/articles-all.json"    # every article ever published, no limit: the site builds a page for each (final review, finding 3)
