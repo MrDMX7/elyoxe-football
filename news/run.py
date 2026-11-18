@@ -24,9 +24,15 @@ from news import readers as RD, entities as E, classify as C, cluster as K, summ
 BUCKET = os.environ.get("BUCKET", "elyoxe-football-574771023173-ap-south-1")
 STATE = "news/state.json"
 # the rules the state was clustered with: a change re-classifies the kept items and clusters them again (cluster.rebuild)
-RULES = 4   # 2026-10-06: «official» only when the headline says it (classify.official); stories on their first headline
+RULES = 5   # 2026-10-06: «official» only when the headline says it (classify.official); stories on their first headline
 #           2026-11-18: items linked again (a lone «يونايتد» needs a UAE cue), a story of clubs alone needs a shared word beyond their names
 #           2026-11-18: a club's name used as its city or an outlet is not the club; the city's news out of the Al Ain/Sharjah searches
+#           2026-11-18: and the stories of the headlines that took out, gone with them (4 left them until they aged out)
+
+
+# a club whose name is also a bank's: named only when the item is about football (2026-11-18: «شهادات البنك الأهلي», «سعر
+# الدولار في البنك الأهلي» were the club's news)
+WORD_CLUBS = {"البنك الاهلي"}
 
 
 def link_item(D, it, official=False):
@@ -36,6 +42,10 @@ def link_item(D, it, official=False):
     it["anchor"] = [list(e) for e in E.link(D, it["title"], it.get("query"))]
     it["entities"] = [list(e) for e in E.link(D, it["title"] + " " + (it.get("desc") or ""), it.get("query"))]
     it["topic"] = E.topic(D, it["title"], it.get("query"))
+    word = [e for e in it["entities"] if e[0] == "team" and E.norm(D.names.get(tuple(e), "")) in WORD_CLUBS]
+    if word and not C.football(it):
+        it["anchor"] = [e for e in it["anchor"] if e not in word]
+        it["entities"] = [e for e in it["entities"] if e not in word]
     own = it.get("owner")
     if official and own and own[0] == "team":
         for k in ("anchor", "entities"):
@@ -259,8 +269,13 @@ def main(argv=None):
                 continue
             it.update(C.classify({"title": it["title"], "tier": "paper"}) if it.get("social") else C.classify(it))
         stories, touched, rebuilt_named = K.rebuild(stories, items)
+        # a story of the last days none of whose headlines is kept: they were taken out as off-topic, so is it
+        # (an older one keeps its card until keep_clusters_days, its headlines aged out of the state)
+        gone = {sid for sid, s in stories.items() if (s.get("last_at") or "") >= cutoff and not any(i in items for i in s["items"])}
+        for sid in gone:
+            rebuilt_named |= {tuple(e) for e in stories.pop(sid).get("anchor") or []}
         state["rules"] = RULES
-        print(json.dumps({"rules": RULES, "rebuilt_stories": len(touched)}))
+        print(json.dumps({"rules": RULES, "rebuilt_stories": len(touched), "off_topic_stories": len(gone)}))
     else:
         touched = {}
     touched.update(K.assign(stories, fresh))

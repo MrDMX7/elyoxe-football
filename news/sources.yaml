@@ -225,10 +225,10 @@ gnews:
     - لامين يامال
     - انتقالات
     - فابريزيو رومانو
-  # a name that is also a city, a word or a bank: what these bring is kept only when it is about football (classify.football).
-  # The bare «العين» and «الشارقة» were mostly the city: the book fair, the municipality, the eye (2026-11-18); they stay listed
-  # while their items are in the state (keep_items_days).
-  check: [نادي العين, الشارقة الإماراتي, الوصل, الأهلي المصري, العين, الشارقة]
+  # a club named after its city: what these bring is kept only when it is about football (classify.football). The bare «العين»
+  # and «الشارقة» were mostly the city: the book fair, the municipality, the eye (2026-11-18); they stay listed while their
+  # items are in the state (keep_items_days). Not «الوصل» or «الأهلي المصري»: there the check dropped more news than junk.
+  check: [نادي العين, الشارقة الإماراتي, العين, الشارقة]
 
 settings:
   keep_items_days: 5        # raw items kept in state (for clustering and dedupe)

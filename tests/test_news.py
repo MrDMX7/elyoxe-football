@@ -262,3 +262,16 @@ def test_a_city_search_keeps_only_football():
     assert C.football(item("إيفيتش يعلن قائمة العين", [("coach", 1), ("team", 102117)]))     # a coach: football
     assert C.football(item("العين يصل إلى حتا", [("team", 102117), ("team", 5)]))              # two clubs: football
     assert C.other_sport({"title": "«طحان الوثبة» بطل كأس حمدان بن راشد بمضمار الشارقة"})
+
+
+def test_the_bank_is_not_its_club():
+    from news import run as R
+    Db = E.build(dict(TEAMS, **{"687954": {"name": "National Bank", "name_ar": "البنك الأهلي", "country": {"iso2": "EG"}, "comps": [519]}}),
+                 PLAYERS, {}, {}, ALIASES)
+    bank = ["team", 687954]
+    it = {"title": "لو معاك 100 ألف جنيه.. احسب أرباحك من شهادات البنك الأهلي 2026"}
+    R.link_item(Db, it)
+    assert bank not in it["anchor"] and bank not in it["entities"]
+    it = {"title": "البنك الأهلي يتعادل في الدوري المصري"}
+    R.link_item(Db, it)
+    assert bank in it["anchor"]
