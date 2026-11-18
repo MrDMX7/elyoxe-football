@@ -91,3 +91,16 @@ def check_article(article, sheet, md=None, words=None):
         r, _ = AI.check_halves(full, md)
         if r: fails.append(r)
     return fails
+
+
+ATTRIB = re.compile(r"(?:بحسب|وفقاً ل|وفقا ل|نقلاً عن|نقلا عن|حسب ما|ذكرت|أفادت)")
+
+
+def check_news(article, sheet, words):
+    """A news article: the Phase 1 checks without a match, and the source named once (spec, «News rules»). Two are allowed:
+    a news piece may credit a second outlet for a second fact."""
+    fails = check_article(article, sheet, None, words=words)
+    n = len(ATTRIB.findall(article_text(article)))
+    if n > 2:
+        fails.append(f"attribution {n} times; name the source once")
+    return fails
