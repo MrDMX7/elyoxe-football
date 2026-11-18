@@ -24,7 +24,7 @@ class Writer:
     def _c(self):
         if self.client is None:
             import anthropic
-            self.client = anthropic.Anthropic()
+            self.client = anthropic.Anthropic(timeout=180, max_retries=1)   # one slow call must not hold the 15-min job
         return self.client
 
     def write(self, kind, sheet, model, notes=None):

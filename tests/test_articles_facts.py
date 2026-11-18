@@ -56,3 +56,12 @@ def test_the_fingerprint_moves_when_a_goal_changes_scorer():
     g["player"] = {"id": 1, "name": "Someone Else"}
     _, m2 = F.report_sheet(md2, None, None, NAMES)
     assert m1["fingerprint"] != m2["fingerprint"]
+
+
+def test_a_team_without_an_arabic_name_falls_back_to_its_name():
+    # final review: «"فوز " + None» crashed the sheet for a team FotMob has no Arabic name for
+    md = copy.deepcopy(J("match_5181860.json")); md["home"]["name_ar"] = None
+    sheet, _ = F.report_sheet(md, None, None, NAMES)
+    import os, sys
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "site", "ai")); import checks as AI
+    assert sheet["صاحب الأرض"] and sheet["صاحب الأرض"] == AI.club_ar(md["home"])      # Tifo's club dictionary, else the name

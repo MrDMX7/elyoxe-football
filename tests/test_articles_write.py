@@ -52,3 +52,12 @@ def test_an_answer_without_the_schema_fields_is_an_error():
     bad = json.dumps({"title": "ع", "body": "ف"}, ensure_ascii=False)
     with pytest.raises(W.WriteError):
         W.Writer(FakeClient(text=bad)).write("report", {}, "claude-sonnet-5-5")
+
+
+def test_the_client_has_a_short_timeout_and_one_retry(monkeypatch):
+    # final review: the SDK's default 10 min timeout x 2 retries could hold one call for 30 min inside a 15-min job
+    import anthropic
+    got = {}
+    monkeypatch.setattr(anthropic, "Anthropic", lambda **kw: got.update(kw) or FakeClient())
+    W.Writer().write("report", {}, "claude-sonnet-5-5")
+    assert got == {"timeout": 180, "max_retries": 1}

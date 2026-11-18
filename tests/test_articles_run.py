@@ -90,3 +90,52 @@ def test_the_cap_and_the_switch_stop_everything(tmp_path, monkeypatch):
     assert R.run(st, data(), FakeWriter(), NOW, fetch=lambda u: None)["written"] == 0
     monkeypatch.setattr(R, "TYPES", {"report": {"on": False, "model": "claude-sonnet-5-5", "words": [300, 400]}})
     assert R.run(Store(LocalBackend(tmp_path / "b")), data(), FakeWriter(), NOW, fetch=lambda u: None)["written"] == 0
+
+
+# ---- final review, finding 1: a killed or crashed run must not lose its state or its spend
+MD2 = json.loads((FX / "match_1000022237.json").read_text(encoding="utf-8"))
+DAY2 = {"leagues": [{"id": 42, "matches": [{"id": MD["id"], "utc": "2026-11-16T10:00:00Z", "status": "finished",
+                                            "home": [MD["home"]["id"], "", 2], "away": [MD["away"]["id"], "", 3]}]},
+                    {"id": 538, "matches": [{"id": MD2["id"], "utc": "2026-11-16T11:00:00Z", "status": "finished",
+                                             "home": [MD2["home"]["id"], "", 2], "away": [MD2["away"]["id"], "", 1]}]}]}
+
+
+def data2(md_a=MD, md_b=MD2):
+    files = {f"match/{md_a['id']}.json": md_a, f"match/{md_b['id']}.json": md_b, "all/20261116.json": DAY2, "all/20261115.json": {"leagues": []}}
+    return lambda p: copy.deepcopy(files.get(p))
+
+
+def test_one_bad_match_does_not_stop_the_others_or_lose_the_state(tmp_path, monkeypatch):
+    st = Store(LocalBackend(tmp_path))
+    real = R.photo.pick
+    def pick(aid, md, *a, **k):
+        if md["id"] == MD["id"]:
+            raise RuntimeError("S3 503")
+        return real(aid, md, *a, **k)
+    monkeypatch.setattr(R.photo, "pick", pick)
+    out = R.run(st, data2(), FakeWriter(), NOW, fetch=lambda u: None)
+    reps = st.get_state("articles/state.json")["reports"]
+    assert out["written"] == 1 and reps[str(MD2["id"])]["status"] == "done"
+    assert reps[str(MD["id"])]["status"] == "retry" and "S3 503" in reps[str(MD["id"])]["error"]
+
+
+def test_the_state_and_spend_are_saved_after_each_match(tmp_path):
+    st = Store(LocalBackend(tmp_path))
+    class Killed(FakeWriter):
+        def write(self, kind, sheet, model, notes=None):
+            if len(self.calls) == 1:
+                raise KeyboardInterrupt          # the runner kills the process mid-run
+            return super().write(kind, sheet, model, notes)
+    with pytest.raises(KeyboardInterrupt):
+        R.run(st, data2(), Killed(), NOW, fetch=lambda u: None)
+    assert st.get_state("articles/state.json")["reports"][str(MD["id"])]["status"] == "done"
+    assert st.get_state("articles/spend.json")["2026-11"]["calls"] == 1
+
+
+def test_a_run_stops_starting_matches_after_its_time_budget(tmp_path):
+    st = Store(LocalBackend(tmp_path))
+    t = [0.0]
+    def clock():
+        t[0] += 100.0; return t[0]
+    out = R.run(st, data2(), FakeWriter(), NOW, fetch=lambda u: None, budget=150, clock=clock)
+    assert out["written"] == 1 and out["stopped"] == "time budget"

@@ -3,10 +3,12 @@ match/<id>.json, comp/<id>/standings.json, comp/<id>/fixtures.json. Keys are Ara
 (content/social/tifo/articles-test/2026-11-18/build.py). The writer never does arithmetic: totals, differences, the winner
 and each team's games played are in the sheet. A round played after a postponed one is stated (ADNOC 11-18: round 7 was
 moved to 29-30 December, so after round 8 every team had played 7)."""
-import hashlib, json
+import hashlib, json, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "site" / "ai"))
+import checks as AI   # noqa: E402  club_ar: FotMob's Arabic name, else names/clubs_ar.json, else teams_ar.yaml, else the name
 STAT_AR = {"BallPossesion": "الاستحواذ (%)", "total_shots": "التسديدات", "ShotsOnTarget": "على المرمى", "big_chance": "الفرص الكبيرة",
            "big_chance_missed_title": "فرص كبيرة ضائعة", "accurate_passes": "تمريرات صحيحة", "corners": "الركنيات",
            "yellow_cards": "البطاقات الصفراء", "expected_goals": "الأهداف المتوقعة xG", "fouls": "الأخطاء", "Offsides": "التسلل"}
@@ -58,7 +60,7 @@ def _postponed(fixtures, md):
     for m in ms:
         r = num(m.get("round"))
         if r is not None and r < last and m.get("status") in ("scheduled", "postponed"):
-            out.append({"الجولة": m.get("round_ar") or f"الجولة {r}", "المباراة": f"{m['home'].get('name_ar')} - {m['away'].get('name_ar')}",
+            out.append({"الجولة": m.get("round_ar") or f"الجولة {r}", "المباراة": f"{AI.club_ar(m['home'])} - {AI.club_ar(m['away'])}",
                         "الموعد الجديد بتوقيت الإمارات": m.get("kickoff_uae")})
     return out
 
@@ -67,7 +69,7 @@ def report_sheet(md, standings, fixtures, names):
     PL, CO, RE = names.get("players", {}), names.get("coaches", {}), names.get("referees", {})
     person = lambda p: _ar(PL, p.get("id"), p.get("name")) if p else None
     idx = _lineup_index(md)
-    team = {"home": md["home"]["name_ar"], "away": md["away"]["name_ar"]}
+    team = {"home": AI.club_ar(md["home"]), "away": AI.club_ar(md["away"])}
     ev, fp = [], []
     for e in md.get("events") or []:
         t = e.get("type")
@@ -109,7 +111,7 @@ def report_sheet(md, standings, fixtures, names):
     table = None
     if standings:
         rows = [r for g in standings.get("groups") or [] for r in g.get("rows") or []]
-        table = [{"الفريق": r["team"]["name_ar"], "المركز": r["rank"], "لعب": r["played"], "النقاط": r.get("pts", r.get("points")),
+        table = [{"الفريق": AI.club_ar(r["team"]), "المركز": r["rank"], "لعب": r["played"], "النقاط": r.get("pts", r.get("points")),
                   "فوز": r.get("won"), "تعادل": r.get("drawn"), "خسارة": r.get("lost"), "له": r.get("gf"), "عليه": r.get("ga")}
                  for r in rows if r["team"]["id"] in (md["home"]["id"], md["away"]["id"])] or None
     ref = md.get("referee") or {}
