@@ -104,3 +104,19 @@ def test_a_date_written_in_a_sources_language_counts_as_in_the_sheet():
     dates = lambda a: [f for f in C.check_news(art(a + " " + "كلمة " * 260), sheet, (250, 450)) if f.startswith("date")]
     assert dates("يمتد العقد حتى 30 يونيو 2032، وكان انضم في 1 يوليو 2023 ثم في 5 أغسطس.") == []
     assert dates("يمتد العقد حتى 29 يونيو 2032.") == ["date «29 يونيو» is not in the sheet"]
+
+
+def test_the_judge_is_told_which_photos_cover_the_story_and_never_to_pick_artwork():
+    c = FakeClient({"best": 0})
+    WR.Writer(c).pick_photo("ريال مدريد يمدد", [jpg(400, 225), jpg(400, 225)], sources=["ماركا", "ويكيميديا كومنز"])
+    texts = [b["text"] for b in c.calls[0]["messages"][0]["content"] if b["type"] == "text"]
+    assert "news outlet" in texts[0] and "archive" in texts[1]
+    assert "painting" in texts[-1] and "building" in texts[-1]
+
+
+def test_news_pick_hands_the_judge_each_photos_source(tmp_path):
+    st, seen = Store(LocalBackend(tmp_path)), []
+    def judge(headline, thumbs, sources):
+        seen.append(sources); return 0
+    P.news_pick("n-9", CANDS, [10], IMGS.get, st, headline="ع", judge=judge)
+    assert seen == [["B", "ويكيميديا كومنز"]]

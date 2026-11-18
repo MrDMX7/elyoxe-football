@@ -24,7 +24,7 @@ class W:
         n = 120 if sheet["النوع"] == "عاجل" else 300
         return ({"headline": "عنوان", "standfirst": "مقدمة", "sections": [{"subhead": "ق", "paragraphs": ["كلمة " * n]}], "facts_box": [], "sources_cited": []},
                 {"in": 4000, "out": 1500, "cache_read": 0, "cache_write": 0})
-    def pick_photo(self, headline, thumbs):
+    def pick_photo(self, headline, thumbs, **kw):
         self.calls.append(("photo", len(thumbs)))
         return 0, {"in": 900, "out": 10, "cache_read": 0, "cache_write": 0}
 
@@ -237,3 +237,31 @@ def test_a_news_article_carries_its_storys_kind_and_stage(tmp_path, monkeypatch)
     assert doc["topic"] == TRANSFER["kind"] and doc["stage"] == TRANSFER.get("stage")
     row = next(a for a in st.get_json("news/articles.json")["articles"] if a["id"] == doc["id"])
     assert row["topic"] == TRANSFER["kind"] and "stage" in row
+
+
+def test_the_same_news_written_twice_is_published_once(tmp_path, monkeypatch):
+    """2026-11-19: «ريال مدريد يمدد عقد أردا غولر حتى يونيو 2032» and «… حتى 2032 ومبابي يعلق مازحاً» both went out: two stories
+    of the journal with different first headlines. Our own headline, written, is checked against the day's articles."""
+    monkeypatch.setattr(NR, "breaking", lambda s, items: False)
+    a = copy.deepcopy(TRANSFER); b = dict(copy.deepcopy(TRANSFER), id="twin")
+    items = copy.deepcopy(S["items"]); items["other-first"] = dict(items[a["items"][0]], title="A completely different source headline")
+    b["items"] = ["other-first"] + b["items"][1:]
+    class Same(W):
+        def write(self, kind, sheet, model, notes=None):
+            art, u = super().write(kind, sheet, model, notes)
+            n = len(self.calls)
+            art["headline"] = "ريال مدريد يمدد عقد أردا غولر حتى يونيو 2032" if n == 1 else "ريال مدريد يمدد عقد أردا غولر حتى 2032 ومبابي يعلق مازحاً"
+            return art, u
+    Y2032 = [dict(TEXTS[0], text="Official: the contract runs until June 2032.")]
+    st, w = Store(LocalBackend(tmp_path)), Same()
+    j = {"stories": {a["id"]: a, "twin": b}, "items": items, "pteam": PTEAM}
+    NR.run_news(st, j, lambda p: None, w, NOW, spend.Spend(st, NOW), deadline=1e12, clock=lambda: 0.0,
+                collect=lambda *x, **k: (Y2032, {"links": 0, "decoded": 0, "texts": 0}), fetch=lambda u: None, teams_json=TEAMS,
+                ar={("player", e[1]): "أردا غولر" for e in a["anchor"] if e[0] == "player"} | {("team", e[1]): "ريال مدريد" for e in a["anchor"] if e[0] == "team"},
+                commons=lambda q: [])
+    out = NR.run_news(st, j, lambda p: None, w, NOW + timedelta(minutes=25), spend.Spend(st, NOW), deadline=1e12, clock=lambda: 0.0,
+                      collect=lambda *x, **k: (Y2032, {"links": 0, "decoded": 0, "texts": 0}), fetch=lambda u: None, teams_json=TEAMS,
+                      ar={("player", e[1]): "أردا غولر" for e in a["anchor"] if e[0] == "player"} | {("team", e[1]): "ريال مدريد" for e in a["anchor"] if e[0] == "team"},
+                      commons=lambda q: [])
+    published = [x["id"] for x in st.get_json("news/articles.json")["articles"]]
+    assert out["written"] == 1 and out["dupes"] >= 1 and len([p for p in published if p in (f"n-{a['id']}", "n-twin")]) == 1

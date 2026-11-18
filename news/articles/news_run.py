@@ -25,6 +25,7 @@ BREAKING_DAILY = 15          # the spec's 5-15 a day
 GRACE = 45                   # seconds past the deadline a rewrite may still start (the step is killed at minute 10)
 LATER = "later"              # a story out of time: it stays queued for the next run
 EDITED = "edited"            # the owner edited the article on the desk: never rewritten automatically (spec, «The desk»)
+DUP = "duplicate"            # our written headline is an article of the last day (news_pick.headline_duplicate)
 VIEW = "articles/desk-view.json"
 VIEW_MAX = 150
 
@@ -120,8 +121,13 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
         if not art:
             out["failed"] += 1
             print(json.dumps({"news_failed": s["id"], "fails": (fails or [])[:4]}, ensure_ascii=False)); return None
-        def judge(headline, thumbs):
-            best, usage = writer.pick_photo(headline, thumbs)
+        if prev is None:                                      # a first version only: an update of our own article is ours
+            twin = news_pick.headline_duplicate(art["headline"], s.get("anchor"), recent, now, names(s), own=aid)
+            if twin:
+                out["dupes"] += 1
+                print(json.dumps({"news_duplicate": s["id"], "of": twin, "headline": art["headline"]}, ensure_ascii=False)); return DUP
+        def judge(headline, thumbs, sources):
+            best, usage = writer.pick_photo(headline, thumbs, sources=sources)
             sp.add(PHOTO_MODEL, usage, "photo"); sp.save()
             return best
         cands = photo.news_candidates(texts, s, items, commons(meta["query"]) if meta.get("query") else [])
@@ -134,7 +140,8 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
         store.put_state(f"articles/sheets/{aid}.json", {"at": now.isoformat(), "sheet": sheet, "photos": cands})   # the desk's editor
         first = items.get((s.get("items") or [""])[0]) or {}
         recent[:] = [r for r in recent if r["id"] != aid][-299:] + [
-            {"id": aid, "anchor": s.get("anchor"), "words": sorted(news_pick.words(first.get("title")) - names(s)), "at": now.isoformat()}]
+            {"id": aid, "anchor": s.get("anchor"), "words": sorted(news_pick.words(first.get("title")) - names(s)),
+             "hw": sorted(news_pick.words(art["headline"]) - names(s)), "at": now.isoformat()}]
         return meta
 
     rej = set(desk.get("reject") or {})
@@ -150,7 +157,7 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
                 r = publish_story(s, True)
                 if r == LATER:
                     break
-                if r:
+                if r and r not in (DUP, EDITED):
                     out["breaking"] += 1; n["breaking_count"] += 1
                 sent.append(s["id"]); del sent[:-500]; save()
     if news.get("on"):
@@ -165,6 +172,8 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
                 break
             if r == EDITED:
                 q.mark_written(sid, len(s.get("items") or []), s.get("stage"))
+            elif r == DUP:
+                q.mark_failed(sid, len(s.get("items") or []))  # the same news: back only if it grows, twice at most
             elif r:
                 q.mark_written(sid, len(s.get("items") or []), s.get("stage")); out["written"] += 1
             else:
@@ -178,7 +187,7 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
                 r = publish_story(s, False)
                 if r == LATER:
                     break
-                if r and r != EDITED:
+                if r and r not in (EDITED, DUP):
                     out["updated"] += 1
                 q.mark_written(sid, len(s.get("items") or []), s.get("stage"))   # tried: the next try is an hour away
                 save()

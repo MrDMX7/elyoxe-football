@@ -84,6 +84,20 @@ def rank_key(story, items, teams):
             2 if comps & BIG else 1 if comps & ARAB else 0, _at(story.get("last_at")).timestamp()]
 
 
+def headline_duplicate(headline, anchor, recent, now, names=frozenset(), own=None):
+    """Our own written headline against the last day's articles (their «hw»): the journal's two halves of one story often
+    open with different source headlines, but Sonnet writes the same news the same way (2026-11-19: Güler's renewal twice)."""
+    w, anc, cut = words(headline) - set(names), {tuple(e) for e in anchor or []}, now - timedelta(hours=24)
+    for r in recent:
+        if r["id"] == own or not r.get("hw") or _at(r.get("at")) < cut or not anc & {tuple(e) for e in r.get("anchor") or []}:
+            continue
+        rw = set(r["hw"])
+        sh = w & rw
+        if len(sh) >= 2 and len(sh) / min(len(w), len(rw)) >= 0.6:
+            return r["id"]
+    return None
+
+
 def near_duplicate(story, items, recent, now, names=frozenset()):
     """recent: the last articles, {"id", "anchor", "words", "at"}, their words without names. Names alone never make two
     headlines the same news («الهلال يعلن تجديد عقد سالم الدوسري» is not «سالم الدوسري يقود الهلال للفوز»: final review,
