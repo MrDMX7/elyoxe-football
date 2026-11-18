@@ -1,6 +1,7 @@
 # THROWAWAY spike (2026-11-18), never merged: can a runner download Tifo's goal clips and render one TifoGoal?
 # Runs on a push to the goal-render-spike branch only. No AWS, no secrets: the render reads the old public Lambda site
-# (sites/tifo-goal, Remotion 4.0.526) and gets the clip from a local server.
+# (sites/tifo-goal, Remotion 4.0.526) and gets the clip from a local server. v2: apt-get install ffmpeg hung 11 min in v1,
+# so ffmpeg/ffprobe are Remotion's own (the compositor package ships them with libx264, mjpeg and aac).
 name: Tifo goal render spike
 on:
   push:
@@ -10,7 +11,7 @@ permissions:
 jobs:
   spike:
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 30
     env:
       SERVE: https://remotionlambda-apsouth1-f5deu1gkph.s3.ap-south-1.amazonaws.com/sites/tifo-goal/index.html
     steps:
@@ -21,23 +22,34 @@ jobs:
       - name: Runner
         run: |
           nproc; free -m | head -2; node --version
-          curl -s https://ipinfo.io/json | python -c "import json,sys;d=json.load(sys.stdin);print(d.get('org'),d.get('region'),d.get('country'))" || true
-      - name: Tools (timed)
-        run: |
-          t0=$(date +%s); python -m pip install -q -U "yt-dlp[default]"; echo "pip yt-dlp: $(( $(date +%s)-t0 )) s"; yt-dlp --version
-          if ! command -v ffmpeg; then t0=$(date +%s); sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null; echo "apt ffmpeg: $(( $(date +%s)-t0 )) s"; fi
-          ffmpeg -version | head -1
-      - name: yt-dlp on 10 clips
-        run: python spike/fetch.py
+          curl -s https://ipinfo.io/json || true
       - name: Remotion 4.0.526 (timed)
+        timeout-minutes: 6
         run: |
           mkdir -p /tmp/r && cd /tmp/r && npm init -y >/dev/null
-          t0=$(date +%s); npm i --no-audit --no-fund --silent @remotion/cli@4.0.526 remotion@4.0.526 react@19.1.1 react-dom@19.1.1; echo "npm i: $(( $(date +%s)-t0 )) s"
-          t0=$(date +%s); npx remotion browser ensure; echo "browser ensure: $(( $(date +%s)-t0 )) s"
+          t0=$(date +%s); npm i --no-audit --no-fund --silent @remotion/cli@4.0.526 remotion@4.0.526 react@19.1.1 react-dom@19.1.1; echo "npm i: $(( $(date +%s)-t0 )) s" | tee -a "$GITHUB_STEP_SUMMARY"
+          t0=$(date +%s); npx remotion browser ensure; echo "browser ensure: $(( $(date +%s)-t0 )) s" | tee -a "$GITHUB_STEP_SUMMARY"
+          comp=$(dirname "$(find /tmp/r/node_modules/@remotion -maxdepth 2 -name ffmpeg -type f | head -1)")
+          echo "compositor: $comp"; ls "$comp"
+          echo "$comp" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$comp:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+      - name: Tools (timed)
+        timeout-minutes: 3
+        run: |
+          t0=$(date +%s); python -m pip install -q -U "yt-dlp[default]"; echo "pip yt-dlp: $(( $(date +%s)-t0 )) s"; yt-dlp --version
+          which ffmpeg ffprobe; ffmpeg -hide_banner -version | head -1; ffmpeg -hide_banner -encoders 2>/dev/null | grep -E "libx264|mjpeg|aac" || true
+      - name: yt-dlp on 10 clips
+        timeout-minutes: 15
+        run: python spike/fetch.py
       - name: Render one TifoGoal (default concurrency, then all cores)
+        timeout-minutes: 12
         run: |
           src=$(ls -S dl/*.mp4 | head -1); echo "clip from $src"
-          mkdir -p serve && ffmpeg -v error -y -ss 20 -i "$src" -t 12 -vf scale=1280:-2 -c:v libx264 -preset veryfast -crf 20 -c:a aac -b:a 128k -ar 48000 serve/clip.mp4
+          mkdir -p serve
+          t0=$(date +%s.%N)
+          ffmpeg -v error -y -ss 20 -i "$src" -t 12 -vf scale=1280:-2 -c:v libx264 -preset veryfast -crf 20 -c:a aac -b:a 128k -ar 48000 serve/clip.mp4
+          ffmpeg -v error -y -i "$src" -t 60 -vf fps=0.5,scale=384:-2 -q:v 6 serve/f%03d.jpg
+          echo "ffmpeg cut + 30 vision frames: $(python -c "import time;print(round(time.time()-$t0,1))") s, $(ls serve/*.jpg | wc -l) jpgs" | tee -a "$GITHUB_STEP_SUMMARY"
           (cd serve && python -m http.server 8765 >/dev/null 2>&1 &)
           sleep 1
           cp spike/props.json /tmp/r/props.json && cd /tmp/r
@@ -51,6 +63,7 @@ jobs:
             cp out.mp4 "$GITHUB_WORKSPACE/render${c:+-all}.mp4"
           done
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: spike-render
           path: render*.mp4
