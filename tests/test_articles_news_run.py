@@ -9,6 +9,7 @@ from news.articles import news_run as NR, spend
 
 S = json.loads((Path(__file__).parent / "fixtures" / "articles" / "news_state.json").read_text(encoding="utf-8"))
 TRANSFER = list(S["stories"].values())[0]
+SMALL_ID = list(S["stories"])[2]
 ANCH = [e for s in S["stories"].values() for e in s["anchor"]]
 TEAMS = {"teams": {"1": {"comps": [47]}, **{str(i): {"comps": [47]} for k, i in ANCH if k == "team"}}}
 PTEAM = {str(i): 1 for k, i in ANCH if k == "player"}
@@ -183,3 +184,46 @@ def test_the_cap_email_goes_when_the_news_pass_crosses_it(tmp_path, monkeypatch)
     sent = []
     monkeypatch.setattr(R, "_mail_cap", lambda total: sent.append(total))
     assert R.main(["--local", str(tmp_path)]) == 0 and sent and sent[0] >= 180
+
+
+# ---- Phase 2b: the desk
+def test_the_desk_view_shows_each_story_its_state_and_when_it_is_due(tmp_path, monkeypatch):
+    monkeypatch.setattr(NR, "breaking", lambda s, items: False)
+    st, w = Store(LocalBackend(tmp_path)), W()
+    go(st, NOW, w)
+    view = st.get_state("articles/desk-view.json")
+    row = next(r for r in view["stories"] if r["id"] == TRANSFER["id"])
+    assert row["status"] == "queued" and row["due"] == (NOW + timedelta(minutes=20)).isoformat()
+    assert row["title"] and row["outlets"] >= 3 and row["kind"] == "transfer" and view["daily"] == 60
+    assert all(r["id"] != list(S["stories"])[1] for r in view["stories"])            # «other»: never a candidate
+    go(st, NOW + timedelta(minutes=25), w)
+    row = next(r for r in st.get_state("articles/desk-view.json")["stories"] if r["id"] == TRANSFER["id"])
+    assert row["status"] == "written" and row["article"] == f"n-{TRANSFER['id']}"
+    st.put_state("articles/desk.json", {"reject": {SMALL_ID: NOW.isoformat()}})
+    go(st, NOW + timedelta(minutes=26), w)
+    rows = {r["id"]: r for r in st.get_state("articles/desk-view.json")["stories"]}
+    assert SMALL_ID not in rows or rows[SMALL_ID]["status"] in ("rejected", "written")
+
+
+def test_each_article_keeps_its_sheet_and_photo_candidates_for_the_desk(tmp_path, monkeypatch):
+    monkeypatch.setattr(NR, "breaking", lambda s, items: False)
+    st, w = Store(LocalBackend(tmp_path)), W()
+    go(st, NOW, w); go(st, NOW + timedelta(minutes=25), w)
+    kept = st.get_state(f"articles/sheets/n-{TRANSFER['id']}.json")
+    assert kept["sheet"]["النوع"] == "خبر" and "photos" in kept
+
+
+def test_an_article_the_owner_edited_is_never_rewritten_and_its_growth_is_flagged(tmp_path, monkeypatch):
+    """Spec, «The desk»: an article he edited is never rewritten automatically; when its story gains new facts, the desk shows
+    them to him instead."""
+    monkeypatch.setattr(NR, "breaking", lambda s, items: False)
+    st, w = Store(LocalBackend(tmp_path)), W()
+    go(st, NOW, w); go(st, NOW + timedelta(minutes=25), w)
+    aid = f"n-{TRANSFER['id']}"
+    doc = st.get_json(f"news/a/{aid}.json"); doc.update(headline="عنوان المحرر", edited=True); st.put_json(f"news/a/{aid}.json", doc)
+    grown = copy.deepcopy(S["stories"]); grown[TRANSFER["id"]]["stage"] = "official"
+    calls = len(w.calls)
+    go(st, NOW + timedelta(hours=2), w, {"stories": grown, "items": S["items"], "pteam": PTEAM})
+    assert len(w.calls) == calls and st.get_json(f"news/a/{aid}.json")["headline"] == "عنوان المحرر"
+    row = next(r for r in st.get_state("articles/desk-view.json")["stories"] if r["id"] == TRANSFER["id"])
+    assert row["grew"] is True
