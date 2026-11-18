@@ -54,3 +54,12 @@ test("a breaking article carries the «عاجل» label", () => {
   assert.match(A.articleHtml(doc("n-1", { kind: "news", breaking: true }), []), /<span class="brk">عاجل<\/span>/);
   assert.doesNotMatch(A.articleHtml(doc("n-2", { kind: "news" }), []), /class="brk"/);
 });
+
+test("an article's photo fits the phone and its text is readable (owner's phone, 2026-11-19: a 1200 px photo widened the page)", () => {
+  const fs = require("fs"), path = require("path");
+  for (const f of ["../src/tifo.css", "../src/v5/content.css"]) {
+    const css = fs.readFileSync(path.join(__dirname, f), "utf8").replace(/\s+/g, "");
+    assert.match(css, /\.art[^{}]*figureimg\{[^}]*max-width:100%[^}]*height:auto/, f);    // content.css scopes it under .lc
+    assert.match(css, /\.art[^{}]*p\{[^}]*font-size:1\.0625rem/, f);
+  }
+});
