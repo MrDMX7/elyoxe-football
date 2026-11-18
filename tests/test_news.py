@@ -14,7 +14,8 @@ TEAMS = {
     "960720": {"name": "Inter Miami CF", "name_ar": "إنتر ميامي", "country": {"iso2": "US"}, "comps": [130]},
     "1552577": {"name": "United FC", "name_ar": "يونايتد", "country": {"iso2": "AE"}, "comps": [538]},
     "10261": {"name": "Newcastle United", "name_ar": "نيوكاسل", "country": {"iso2": "GB-ENG"}, "comps": [47]},
-    "9840": {"name": "Sharjah", "name_ar": "الشارقة", "country": {"iso2": "AE"}, "comps": [538]},
+    "102124": {"name": "Sharjah Cultural Club", "name_ar": "الشارقة", "country": {"iso2": "AE"}, "comps": [538]},
+    "102117": {"name": "Al-Ain", "name_ar": "العين", "country": {"iso2": "AE"}, "comps": [538]},
     "9847": {"name": "Paris Saint-Germain", "name_ar": "باريس سان جيرمان", "country": {"iso2": "FR"}, "comps": [53]},
     "8634": {"name": "Barcelona", "name_ar": "برشلونة", "country": {"iso2": "ES"}, "comps": [87]},
 }
@@ -237,3 +238,27 @@ def test_a_match_between_two_clubs_needs_no_more_than_its_headlines():
     b = _item("2", "باريس سان جيرمان يخسر أمام برشلونة 1-2 في دوري الأبطال", "ar", "match", at="2026-09-29T11:00:00Z")
     K.assign(stories, [a, b])
     assert len(stories) == 1
+
+
+def test_a_club_named_after_its_city_is_not_the_city():
+    # 2026-11-18: Al Ain's page had the book fair, the municipality, «رأس العين» and al-ain.com; Sharjah's had the ruler,
+    # the book fair and the «#الشارقة_الرياضية» channel tag on other clubs' goals
+    ain, shj = ("team", 102117), ("team", 102124)
+    for t in ("انطلاق فعاليات الدورة الـ17 من «مهرجان العين للكتاب»", "بلدية العين تنفذ 7 مشاريع مستقبلية",
+              "290 حالة تسمم في رأس العين", "مسؤول في مايكروسوفت يكشف لـ«العين الإخبارية» أسباب العطل"):
+        assert ain not in E.link(D, t), t
+    for t in ("حاكم الشارقة يهنئ ملك المغرب", "معرض الشارقة الدولي للكتاب يودع القراء",
+              "منصور محمد يضاعف النتيجة الإمارات 2-0 ماكاو #الشارقة_الرياضية"):
+        assert shj not in E.link(D, t), t
+    assert ain in E.link(D, "العين يستعيد توازنه بالفوز على حتا") and ain in E.link(D, "نادي العين الرياضي يعلن مدربه")
+    assert shj in E.link(D, "يونايتد والشارقة يتعادلان 1-1")
+
+
+def test_a_city_search_keeps_only_football():
+    item = lambda title, ents=(): {"title": title, "entities": [list(e) for e in ents]}
+    assert not C.football(item("أدوية السكري والسمنة لا تضر العين"))
+    assert not C.football(item("غرفة الشارقة تطلق مجموعة عمل قطاع الرعاية الصحية"))
+    assert C.football(item("4 مباريات تشعل غضب العين"))
+    assert C.football(item("إيفيتش يعلن قائمة العين", [("coach", 1), ("team", 102117)]))     # a coach: football
+    assert C.football(item("العين يصل إلى حتا", [("team", 102117), ("team", 5)]))              # two clubs: football
+    assert C.other_sport({"title": "«طحان الوثبة» بطل كأس حمدان بن راشد بمضمار الشارقة"})

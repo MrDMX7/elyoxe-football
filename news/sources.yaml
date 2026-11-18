@@ -188,8 +188,8 @@ gnews:
   queries:
     - دوري أدنوك للمحترفين
     - منتخب الإمارات
-    - العين
-    - الشارقة
+    - نادي العين
+    - الشارقة الإماراتي
     - الوحدة الإماراتي
     - الجزيرة الإماراتي
     - شباب الأهلي
@@ -225,6 +225,10 @@ gnews:
     - لامين يامال
     - انتقالات
     - فابريزيو رومانو
+  # a name that is also a city, a word or a bank: what these bring is kept only when it is about football (classify.football).
+  # The bare «العين» and «الشارقة» were mostly the city: the book fair, the municipality, the eye (2026-11-18); they stay listed
+  # while their items are in the state (keep_items_days).
+  check: [نادي العين, الشارقة الإماراتي, الوصل, الأهلي المصري, العين, الشارقة]
 
 settings:
   keep_items_days: 5        # raw items kept in state (for clustering and dedupe)

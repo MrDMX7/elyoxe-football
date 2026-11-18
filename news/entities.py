@@ -76,6 +76,14 @@ COMP_WORDS = {"كاس", "دوري", "بطوله", "خليجي", "cup", "copa", "
 FED_WORDS = {"الاوروبي", "الدولي", "الاسيوي", "الافريقي", "العربي", "الانجليزي", "الاسباني", "الايطالي", "الالماني", "الفرنسي",
              "لكره", "المحلي", "الكروي", "الوطني"} | set(NISBA)
 CLUB_WORDS = {"نادي", "فريق", "لنادي", "بنادي", "club"}
+# a club named after its city or a common word, used as the city or the word (2026-11-18: Al Ain's page had «مهرجان العين
+# للكتاب», «بلدية العين», «رأس العين», «فحص قاع العين» and al-ain.com's «العين الإخبارية»; Sharjah had the book fair, the
+# ruler and the «#الشارقة_الرياضية» channel tag on other clubs' goals)
+PLACE_BEFORE = {"مدينه", "منطقه", "بلديه", "مهرجان", "راس", "حاكم", "اماره", "شرطه", "جامعه", "مطار", "معرض", "محاكم", "حكومه",
+                "دائره", "هيئه", "مركز", "غرفه", "ميناء", "مستشفي", "سوق", "واحه", "قاع", "مجلس", "خيريه", "متحف", "ولي", "عهد",
+                "صاحب", "سمو", "احتفالات", "عمران", "مضمار"}
+PLACE_AFTER = {"الاخباريه", "الرياضيه", "للاخبار", "للكتاب", "للفنون", "للتراث", "للنشر", "للابتكار", "للعماره", "للتعليم",
+               "الخيريه", "للثقافه", "للسياحه", "الدولي", "للشطرنج", "للفروسيه", "للبحث", "الرقميه"}
 # household names the press calls by one word (a surname or a mononym): full names as the dictionary has them
 STARS = ["Lionel Messi", "Cristiano Ronaldo", "Kylian Mbappé", "Erling Haaland", "Mohamed Salah", "Lamine Yamal", "Neymar",
          "Vinícius Júnior", "Jude Bellingham", "Harry Kane", "Robert Lewandowski", "Luka Modric", "Karim Benzema", "Riyad Mahrez",
@@ -256,6 +264,8 @@ def _scan(D, text, query=None):
                 teams = {c for c in cands if c[0] == "team"}
                 if teams and prev not in CLUB_WORDS:
                     if prev in COMP_WORDS or (key in NISBA) or (nxt in FED_WORDS and key == norm("الاتحاد")):
+                        continue
+                    if prev in PLACE_BEFORE or nxt in PLACE_AFTER:
                         continue
                     if key in D.generic and n == 1:   # settled after the scan, by the rest of the headline
                         hit = (frozenset(cands), "generic")

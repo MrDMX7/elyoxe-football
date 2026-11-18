@@ -90,7 +90,10 @@ def classify(item):
 
 OTHER_SPORTS = [norm(w) for w in ["volleyball", "voleibol", "basketball", "baloncesto", "basket", "handball", "balonmano", "tennis", "tenis",
                 "futsal", "rugby", "cricket", "formula 1", "nba", "nfl", "baseball", "golf", "boxing", "ufc", "طائرة", "الطائرة", "كرة الطائرة",
-                "كرة السلة", "السلة", "كرة اليد", "التنس", "الصالات", "الملاكمة", "الجولف", "فورمولا", "كرة الماء", "البادل"]]
+                "كرة السلة", "السلة", "كرة اليد", "التنس", "الصالات", "الملاكمة", "الجولف", "فورمولا", "كرة الماء", "البادل",
+                # the UAE clubs' other sections and the emirates' other events (2026-11-18, «نادي الشارقة» / «نادي العين»)
+                "الشطرنج", "الشراع", "التزلج", "التايكواندو", "الجوجيتسو", "الفروسية", "الهجن", "السباحة", "ألعاب القوى", "الدراجات", "مضمار", "الخيول",
+                "سباق الخيل"]]
 
 
 def other_sport(item):
@@ -105,6 +108,30 @@ def other_sport(item):
                 words.add(v[2:])
     t = " " + " ".join(toks) + " "
     return any((w in words) if " " not in w else (" " + w + " " in t) for w in OTHER_SPORTS)
+
+
+FOOTBALL = [norm(w) for w in [
+    "مباراة", "مباريات", "لقاء", "مواجهة", "ديربي", "كلاسيكو", "الدوري", "دوري", "كأس", "بطولة", "الجولة", "الموسم", "الشوط",
+    "هدف", "أهداف", "هداف", "يسجل", "سجل", "ركلة", "ركلات", "جزاء", "فوز", "يفوز", "فاز", "تعادل", "يتعادل", "خسارة", "يخسر", "خسر",
+    "تأهل", "يتأهل", "النهائي", "الصدارة", "لاعب", "لاعبي", "لاعبين", "حارس", "مهاجم", "مدافع", "مدرب", "الجهاز الفني", "نادي",
+    "الفريق", "فريق", "منتخب", "تشكيل", "تشكيلة", "ملعب", "استاد", "مران", "تدريبات", "انتقال", "انتقالات", "صفقة", "صفقات",
+    "التعاقد", "ميركاتو", "التحكيم", "فيفا", "كاف", "يويفا", "الجماهير", "جماهير", "كرة القدم", "القدم",
+    "football", "soccer", "match", "league", "cup", "goal", "goals", "coach", "manager", "player", "players", "transfer",
+    "striker", "midfielder", "defender", "goalkeeper", "derby", "squad", "lineup", "penalty", "fifa", "uefa", "fc"]]
+
+
+def football(item):
+    """Is a Google News item about football? A search for a club's name brings its city and its namesakes too: «مهرجان العين
+    للكتاب», «فحص قاع العين», «رأس العين», «العين الجميعان», «معرض الشارقة للكتاب» (2026-11-18). Football when it names a
+    player or a coach, or two clubs, or uses a football word."""
+    ents = [tuple(e) for e in item.get("entities") or []]
+    if any(k in ("player", "coach") for k, _ in ents) or len({e for e in ents if e[0] == "team"}) >= 2:
+        return True
+    from .entities import ar_variants
+    toks = norm((item.get("title") or "") + " " + (item.get("desc") or "")[:300]).split()
+    words = {v for x in toks for v in ar_variants(x)} | {v[2:] for x in toks for v in ar_variants(x) if v.startswith("ال") and len(v) > 4}
+    t = " " + " ".join(toks) + " "
+    return any((w in words) if " " not in w else (" " + w + " " in t) for w in FOOTBALL)
 
 
 WOMEN = [norm(w) for w in ["women", "womens", "women's", "wsl", "frauen", "femenino", "femenil", "feminine", "feminin", "féminine",

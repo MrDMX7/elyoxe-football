@@ -24,8 +24,9 @@ from news import readers as RD, entities as E, classify as C, cluster as K, summ
 BUCKET = os.environ.get("BUCKET", "elyoxe-football-574771023173-ap-south-1")
 STATE = "news/state.json"
 # the rules the state was clustered with: a change re-classifies the kept items and clusters them again (cluster.rebuild)
-RULES = 3   # 2026-10-06: «official» only when the headline says it (classify.official); stories on their first headline
+RULES = 4   # 2026-10-06: «official» only when the headline says it (classify.official); stories on their first headline
 #           2026-11-18: items linked again (a lone «يونايتد» needs a UAE cue), a story of clubs alone needs a shared word beyond their names
+#           2026-11-18: a club's name used as its city or an outlet is not the club; the city's news out of the Al Ain/Sharjah searches
 
 
 def link_item(D, it, official=False):
@@ -201,6 +202,8 @@ def main(argv=None):
     # ---- fetch: every feed, plus a rotating slice of the Google News queries
     srcs = list(cfg["sources"]) + [RD.youtube_source(y) for y in cfg.get("youtube") or []]
     qs = (cfg.get("gnews") or {}).get("queries") or []
+    check = set((cfg.get("gnews") or {}).get("check") or [])
+    off_topic = lambda it: C.other_sport(it) or (it.get("query") in check and not C.football(it))
     per = (cfg.get("gnews") or {}).get("per_run", 12)
     cur = state.get("gcursor", 0) % max(1, len(qs))
     for q in (qs[cur:] + qs[:cur])[:per]:
@@ -227,6 +230,8 @@ def main(argv=None):
                 continue
             official = it["kind"] == "youtube" or (it["kind"] == "x" and it["tier"] == "official")
             link_item(D, it, official)
+            if off_topic(it):
+                continue
             if official:
                 # an official video or post: it is classified like any headline (not "official" for being on the club's
                 # channel), and only news-like titles join the stories
@@ -247,8 +252,11 @@ def main(argv=None):
     # ---- stories
     rebuilt_named = set()
     if state.get("rules") != RULES:         # the stage and story rules changed: the kept items again, from scratch
-        for it in items.values():
+        for k, it in list(items.items()):
             link_item(D, it, it.get("social"))
+            if off_topic(it):
+                del items[k]
+                continue
             it.update(C.classify({"title": it["title"], "tier": "paper"}) if it.get("social") else C.classify(it))
         stories, touched, rebuilt_named = K.rebuild(stories, items)
         state["rules"] = RULES
