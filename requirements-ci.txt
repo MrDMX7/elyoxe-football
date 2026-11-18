@@ -5,3 +5,5 @@ beautifulsoup4
 pillow==12.3.0
 requests
 tzdata
+anthropic
+google-auth

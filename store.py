@@ -135,7 +135,9 @@ class Store:
         return True
 
     def put_text(self, path, text: str, content_type, cache="static") -> bool:
-        body = text.encode("utf-8")
+        return self.put_bytes(path, text.encode("utf-8"), content_type, cache)
+
+    def put_bytes(self, path, body: bytes, content_type, cache="static") -> bool:
         h = hashlib.md5(body).hexdigest()
         key = PUBLIC + path
         if self.hashes.get(key) == h + "|" + cache:

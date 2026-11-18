@@ -20,7 +20,7 @@ env:
 jobs:
   journal:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/tifo-setup
@@ -34,6 +34,23 @@ jobs:
       - name: State for the next run
         if: success() || failure()
         run: python -m tools.ci_bridge state-put journal . news/.cache site/cache/bing_sent.json
+      # Tifo articles (match reports): after the journal's state is saved, so a slow API never costs the journal its state.
+      # It saves its own state after every match and starts no new match after 8 minutes (news/articles/run.py).
+      - name: Tifo articles
+        if: success() || failure()
+        continue-on-error: true
+        timeout-minutes: 10
+        run: python -m news.articles.run
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Articles in Google (weekly)
+        if: success() || failure()
+        continue-on-error: true
+        timeout-minutes: 3
+        run: python -m tools.gsc_weekly
+        env:
+          GSC_SA_JSON: ${{ secrets.GSC_SA_JSON }}
+          GSC_SITE: sc-domain:elyoxe.com
       - name: Usage lines for the laptop's cost report
         if: always()
         run: python -m tools.ci_bridge usage || true
