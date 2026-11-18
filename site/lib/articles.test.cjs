@@ -141,3 +141,19 @@ test("the home block: one large card, three small, all articles; redrawn live fr
   assert.match(h, /fetch\("\/v1\/news\/articles\.json"/);
   assert.equal(A.homeBlock([], NOWT), "");
 });
+
+// ---- the fast step's renderer (spec §7): the full build's shells, filled
+test("the renderer fills the shells: every marker, the current stylesheet, the article's data and the news page", () => {
+  const RN = require("./render_news.cjs");
+  const shell = '<html><head><title>__TITLE__</title><meta property="og:title" content="__TITLE__"><meta name="description" content="__DESC__"><link rel="canonical" href="https://tifo.elyoxe.com/news/__ID__/"><meta property="og:image" content="__OGURL__"><script type="application/ld+json">{"__LD__":1}</script><link rel="stylesheet" href="/news/a.0000000000.css"></head><body>__BODY__</body></html>';
+  const d = doc("n-7", { kind: "news", topic: "injury", headline: "إصابة <كبيرة>" });
+  const out = RN.renderAll({ shells: { article: shell, news: shell.replace("/news/__ID__/", "/news/") }, docs: [d], list: [d], teams: { 1: { name_ar: "العين" } }, players: {}, now: NOWT });
+  const p = out["news/n-7/index.html"];
+  assert.ok(p && !/__(TITLE|DESC|ID|OGURL|BODY|LD)__/.test(p));
+  assert.match(p, /<title>إصابة &lt;كبيرة&gt; \| تيفو<\/title>/); assert.match(p, /href="https:\/\/tifo\.elyoxe\.com\/news\/n-7\/"/);
+  assert.match(p, /"@type":"NewsArticle"/); assert.match(p, new RegExp("/news/" + A.CSS_NAME.replace(/\./g, "\.")));
+  assert.match(p, /<a class="ent" href="\/t\/1\/">/);
+  assert.match(out["news/index.html"], /<a class="nl" href="\/news\/n-7\/"/);
+  assert.match(out["sitemap-news.xml"], /<loc>https:\/\/tifo\.elyoxe\.com\/news\/n-7\/<\/loc>/);
+  assert.equal(out["news/" + A.CSS_NAME], A.CSS);
+});

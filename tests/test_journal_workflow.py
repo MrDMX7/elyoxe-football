@@ -29,3 +29,11 @@ def test_only_the_new_steps_see_the_secrets():
     assert "env" not in step("Run the journal job")
     runner = (Path(__file__).resolve().parents[1] / "tools" / "runner.py").read_text(encoding="utf-8")
     assert "news.articles.run" not in runner and "tools.gsc_weekly" not in runner
+
+
+def test_article_pages_go_up_right_after_the_articles_are_written():
+    """Spec 2026-11-19 §7: within the minute, not at the next hourly build; never failing the job."""
+    assert IDX["Tifo articles"] < IDX["Article pages"] < IDX["Usage lines for the laptop's cost report"]
+    s = step("Article pages")
+    assert s["run"] == "python -m news.articles.pages" and s.get("continue-on-error") is True and 0 < s.get("timeout-minutes", 99) <= 5
+    assert any((x.get("uses") or "").startswith("actions/setup-node") for x in STEPS[:IDX["Article pages"]])
