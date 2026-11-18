@@ -46,6 +46,15 @@ def check_article(article, sheet, md=None, words=None):
         n = len(text.split())
         if n < words[0] * 0.5 or n > words[1] * 1.3:
             fails.append(f"{n} words, the type is {words[0]}-{words[1]}")
+    if re.search(r"[٠-٩]", text):                              # the owner's rule: Western digits, always
+        fails.append("Eastern Arabic digits («٠-٩») in the text")
+    # «الدقيقة N» / «الدقيقتين N و M»: N must be the minute of an event in the sheet (final review, finding 9)
+    mins = {str(e.get("دقيقة")) for e in sheet.get("الأحداث بالترتيب") or []}
+    mins |= {m.split("+")[0] for m in mins}
+    for m in re.finditer(r"الدقيق(?:ة|تين)\s+(\d+(?:\+\d+)?)(?:\s+و\s*(\d+(?:\+\d+)?))?", text):
+        for n in filter(None, m.groups()):
+            if n not in mins:
+                fails.append(f"minute {n} is not an event minute in the sheet")
     days, times = _sheet_dates(sheet)
     # dates «8 نوفمبر»: the day and month must be a date in the sheet; then they are not numbers to check
     for m in re.finditer(r"(\d{1,2})\s+(" + "|".join(MONTHS) + r")", text):
@@ -72,6 +81,9 @@ def check_article(article, sheet, md=None, words=None):
     latin = [w for w in re.findall(r"[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'\-]+", article_text(article)) if w not in LATIN_OK]
     if latin:
         fails.append("Latin words left: " + ", ".join(sorted(set(latin))[:8]))
+    r = AI.check_history(article_text(article), sheet)          # «أول فوز», «سلسلة N», runs and counts need their evidence
+    if r:
+        fails.append(r)
     if md is not None:
         full = article_text(article)
         r = AI.check_events(full, md)

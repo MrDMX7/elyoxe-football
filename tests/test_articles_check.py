@@ -61,3 +61,24 @@ def test_a_shorter_report_of_a_thin_match_passes():
     # thin match is better than repetition, so only a text under half the minimum fails
     thin = art(*["كلمة " * 50] * 4)                                            # 200 words
     assert not [f for f in C.check_article(thin, SHEET, None, words=(300, 400)) if "words" in f]
+
+
+# ---- final review, finding 9: checks weaker than the spec
+def test_eastern_arabic_digits_fail():
+    assert [f for f in C.check_article(art(f"فاز {A} ٣-٢."), SHEET, None) if "digits" in f]
+
+
+def test_a_minute_that_is_no_event_minute_fails():
+    first = next(e for e in SHEET["الأحداث بالترتيب"] if e["حدث"].startswith("هدف"))
+    assert [f for f in C.check_article(art("سجل اللاعب في الدقيقة 1."), SHEET, None) if "minute" in f]
+    assert not [f for f in C.check_article(art(f"سجل اللاعب في الدقيقة {first['دقيقة']}."), SHEET, None) if "minute" in f]
+
+
+def test_two_minutes_and_added_time_are_read():
+    sheet = dict(SHEET, **{"الأحداث بالترتيب": [{"دقيقة": "6", "حدث": "هدف"}, {"دقيقة": "58", "حدث": "هدف"}, {"دقيقة": "45+3", "حدث": "هدف"}]})
+    assert not [f for f in C.check_article(art("سجل في الدقيقتين 6 و58، ثم في الدقيقة 45+3."), sheet, None) if "minute" in f]
+    assert [f for f in C.check_article(art("سجل في الدقيقتين 6 و59."), sheet, None) if "minute" in f]
+
+
+def test_a_history_claim_without_evidence_fails():
+    assert C.check_article(art(f"حقق {A} أول فوز له على {H} منذ سنوات."), SHEET, None)
