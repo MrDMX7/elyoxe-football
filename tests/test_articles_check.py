@@ -54,3 +54,10 @@ def test_a_text_far_from_the_type_length_fails():
     assert [f for f in C.check_article(short, SHEET, None, words=(300, 400)) if "words" in f]
     ok = art(*["كلمة " * 50] * 7)                                             # 350 words
     assert not [f for f in C.check_article(ok, SHEET, None, words=(300, 400)) if "words" in f]
+
+
+def test_a_shorter_report_of_a_thin_match_passes():
+    # 2026-11-18 dry run: Malaysia 2-1 Yemen (a friendly with no stats) was padded to reach 300 words; a 200-word report of a
+    # thin match is better than repetition, so only a text under half the minimum fails
+    thin = art(*["كلمة " * 50] * 4)                                            # 200 words
+    assert not [f for f in C.check_article(thin, SHEET, None, words=(300, 400)) if "words" in f]

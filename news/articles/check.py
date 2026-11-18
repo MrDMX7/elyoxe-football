@@ -38,12 +38,13 @@ def _sheet_dates(sheet):
 
 
 def check_article(article, sheet, md=None, words=None):
-    """words: the type's (min, max); a text under 80% of the min or over 130% of the max fails (spec: a report is 300-400)."""
+    """words: the type's (min, max); a text under half the min or over 130% of the max fails (spec: a report is 300-400; a thin
+    match makes a shorter report rather than a padded one, the 2026-11-18 dry run)."""
     text = article_text(article)
     fails = []
     if words:
         n = len(text.split())
-        if n < words[0] * 0.8 or n > words[1] * 1.3:
+        if n < words[0] * 0.5 or n > words[1] * 1.3:
             fails.append(f"{n} words, the type is {words[0]}-{words[1]}")
     days, times = _sheet_dates(sheet)
     # dates «8 نوفمبر»: the day and month must be a date in the sheet; then they are not numbers to check
