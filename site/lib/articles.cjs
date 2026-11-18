@@ -28,7 +28,8 @@ function related(doc, all, n){
 const CSS = require("fs").readFileSync(require("path").join(__dirname, "articles.css"), "utf8");
 const CSS_NAME = "a." + require("crypto").createHash("sha1").update(CSS).digest("hex").slice(0, 10) + ".css";
 const SITE_URL = "https://tifo.elyoxe.com";
-const HEAD = `<meta name="robots" content="max-image-preview:large"><link rel="stylesheet" href="/news/${CSS_NAME}">`;
+const CSS_LINK = `<link rel="stylesheet" href="/news/${CSS_NAME}">`;
+const HEAD = `<meta name="robots" content="max-image-preview:large">${CSS_LINK}`;
 const TOPIC = { report: "تقرير مباراة", transfer: "انتقالات", injury: "إصابات", statement: "تصريحات", presser: "مؤتمر صحفي", official: "إعلان رسمي" };
 const STAGE = { rumour: "إشاعة", talks: "مفاوضات", agreed: "اتفاق", here_we_go: "اتفاق نهائي", official: "رسمي" };
 const kindOf = doc => (TOPIC[doc.topic || (doc.kind === "report" ? "report" : "")] || "خبر") + (doc.topic !== "report" && STAGE[doc.stage] ? " · " + STAGE[doc.stage] : "");
@@ -104,6 +105,58 @@ function newsSitemap(docs, SITE, now){
     + "\n</urlset>\n";
 }
 
+// ---- /news/ and the home block (spec 2026-11-19 §1, §3): the same cards on the server and in the page (client below)
+const HM = iso => { try { return new Date(iso).toLocaleString("ar-AE-u-nu-latn", { timeZone: "Asia/Dubai", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; } };
+const groupOf = a => { const t = a.topic || (a.kind === "report" ? "report" : ""); return t === "presser" ? "statement" : ["report", "transfer", "injury", "statement"].includes(t) ? t : "other"; };
+const imgTag = (a, w, h, lazy) => a.image && a.image.url ? `<img src="${E(a.image.url)}" alt="" width="${w}" height="${h}"${lazy ? ' loading="lazy"' : ' fetchpriority="high"'}>` : "";
+const brk = a => a.breaking ? '<b class="brk">عاجل</b>' : "";
+const leadCard = a => `<a class="nl" href="/news/${E(a.id)}/" data-t="${groupOf(a)}">${imgTag(a, 1200, 675)}<span class="nl-in">${brk(a)}<span class="ah-k">${E(kindOf(a))}</span><span class="nl-h">${E(a.headline)}</span></span></a>`;
+const gridCard = a => `<a class="nc" href="/news/${E(a.id)}/" data-t="${groupOf(a)}">${imgTag(a, 600, 338, 1)}<span class="nc-k">${brk(a)}${E(kindOf(a))} · <time datetime="${E(a.published)}">${E(HM(a.published))}</time></span><span class="nc-h">${E(a.headline)}</span></a>`;
+const homeRow = a => `<a class="hr" href="/news/${E(a.id)}/">${imgTag(a, 240, 135, 1)}<span><span class="hr-h">${E(a.headline)}</span><small>${brk(a)}${E(kindOf(a))} · <time datetime="${E(a.published)}">${E(HM(a.published))}</time></small></span></a>`;
+const leadOf = (list, now) => list.find(a => a.breaking && now - Date.parse(a.published) <= 2 * 36e5) || list[0];
+
+// the page's own code: relative times, the filters, «المزيد», the home block's redraw. The card markup is the server's, rebuilt
+// here from the same maps, so a card loaded by «المزيد» looks like the others.
+const CLIENT = `(function(){if(window.TA)return;var TP=${JSON.stringify(TOPIC)},SG=${JSON.stringify(STAGE)};
+function e(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function kind(a){var t=a.topic||(a.kind==="report"?"report":"");return(TP[t]||"خبر")+(t!=="report"&&SG[a.stage]?" · "+SG[a.stage]:"")}
+function grp(a){var t=a.topic||(a.kind==="report"?"report":"");return t==="presser"?"statement":["report","transfer","injury","statement"].indexOf(t)>=0?t:"other"}
+function img(a,w,h,l){return a.image&&a.image.url?'<img src="'+e(a.image.url)+'" alt="" width="'+w+'" height="'+h+'"'+(l?' loading="lazy"':"")+">":""}
+function bk(a){return a.breaking?'<b class="brk">عاجل</b>':""}
+function rel(iso){var m=Math.round((Date.now()-Date.parse(iso))/6e4);return m<1?"الحين":m<60?"قبل "+m+" د":m<1440?"قبل "+Math.round(m/60)+" س":new Date(iso).toLocaleDateString("ar-AE-u-nu-latn",{timeZone:"Asia/Dubai",day:"numeric",month:"short"})}
+var TA=window.TA={
+ card:function(a){return'<a class="nc" href="/news/'+e(a.id)+'/" data-t="'+grp(a)+'">'+img(a,600,338,1)+'<span class="nc-k">'+bk(a)+e(kind(a))+' · <time datetime="'+e(a.published)+'"></time></span><span class="nc-h">'+e(a.headline)+"</span></a>"},
+ lead:function(a){return'<a class="nl" href="/news/'+e(a.id)+'/" data-t="'+grp(a)+'">'+img(a,1200,675)+'<span class="nl-in">'+bk(a)+'<span class="ah-k">'+e(kind(a))+'</span><span class="nl-h">'+e(a.headline)+"</span></span></a>"},
+ row:function(a){return'<a class="hr" href="/news/'+e(a.id)+'/">'+img(a,240,135,1)+'<span><span class="hr-h">'+e(a.headline)+"</span><small>"+bk(a)+e(kind(a))+' · <time datetime="'+e(a.published)+'"></time></small></span></a>'},
+ leadOf:function(l){return l.filter(function(a){return a.breaking&&Date.now()-Date.parse(a.published)<=72e5})[0]||l[0]},
+ times:function(r){(r||document).querySelectorAll("time[datetime]").forEach(function(t){t.textContent=rel(t.getAttribute("datetime"))})},
+ list:function(){return fetch("/v1/news/articles.json",{cache:"no-cache"}).then(function(r){return r.json()}).then(function(j){return j.articles||[]})}};
+TA.times();
+document.querySelectorAll(".nh").forEach(function(root){var f="all",bs=root.querySelectorAll(".nf button"),more=root.querySelector(".nmore"),grid=root.querySelector(".ng");
+ function apply(){root.querySelectorAll(".nl,.nc").forEach(function(c){c.hidden=!(f==="all"||c.dataset.t===f)})}
+ bs.forEach(function(b){b.onclick=function(){f=b.dataset.t;bs.forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});apply()}});
+ if(more)more.onclick=function(){more.disabled=true;TA.list().then(function(l){var from=+more.dataset.from;grid.insertAdjacentHTML("beforeend",l.slice(from,from+30).map(TA.card).join(""));more.dataset.from=from+30;more.disabled=false;if(from+30>=l.length)more.remove();TA.times(grid);apply()},function(){more.disabled=false})}});
+document.querySelectorAll(".hb-b").forEach(function(b){TA.list().then(function(l){if(!l.length)return;var ld=TA.leadOf(l);b.innerHTML=TA.lead(ld)+l.filter(function(a){return a!==ld}).slice(0,3).map(TA.row).join("");TA.times(b)})})})()`;
+const SCRIPT = `<script>${CLIENT}</script>`;
+
+function newsIndexHtml(list, now){
+  const filters = [["all", "الكل"], ["report", "تقارير"], ["transfer", "انتقالات"], ["injury", "إصابات"], ["statement", "تصريحات"]];
+  const head = `<nav class="ntabs"><a href="/news/" aria-current="page">مقالات تيفو</a><a href="/news/press/">من الصحف</a></nav>`
+    + `<div class="nf" role="toolbar">${filters.map(([k, t], i) => `<button type="button" data-t="${k}" aria-pressed="${i ? "false" : "true"}">${t}</button>`).join("")}</div>`;
+  if (!list.length) return `<div class="nh"><h1 class="nt">الأخبار</h1>${head}<p class="nempty">ما في مقالات للحين</p></div>`;
+  const lead = leadOf(list, now), rest = list.filter(a => a !== lead).slice(0, 29);
+  return `<div class="nh"><h1 class="nt">الأخبار</h1>${head}${leadCard(lead)}<div class="ng">${rest.map(gridCard).join("")}</div>`
+    + (list.length > 30 ? `<button type="button" class="nmore" data-from="30">المزيد</button>` : "") + `</div>${SCRIPT}`;
+}
+
+const pressTabs = () => `<div class="nh"><h1 class="nt">الأخبار</h1><nav class="ntabs"><a href="/news/">مقالات تيفو</a><a href="/news/press/" aria-current="page">من الصحف</a></nav></div>`;
+
+function homeBlock(list, now){
+  if (!list || !list.length) return "";
+  const lead = leadOf(list, now), rows = list.filter(a => a !== lead).slice(0, 3);
+  return `<section class="hb"><div class="hb-h"><h2>مقالات تيفو</h2><a href="/news/">كل المقالات</a></div><div class="hb-b">${leadCard(lead)}${rows.map(homeRow).join("")}</div>${SCRIPT}</section>`;
+}
+
 function listHtml(list){
   if (!list || !list.length) return "";
   return `<section class="grp" id="articles"><h2>مقالات تيفو</h2><ul class="arts">${list.map(a => `<li><a href="/news/${E(a.id)}/">${a.image && a.image.url ? `<img src="${E(a.image.url)}" width="120" height="68" alt="" loading="lazy">` : ""}<span>${E(a.headline)}</span></a></li>`).join("")}</ul></section>`;
@@ -126,7 +179,8 @@ async function render(X){
   }
   for (const t of TRUST){ write(t.path.replace(/^\//, "") + "index.html", page({ path: t.path, page: "ref", title: t.title, desc: t.desc, body: t.body })); urls.push(t.path); }
   fs.writeFileSync(path.join(OUT, "sitemap-news.xml"), newsSitemap(docs, SITE, Date.now()));
-  return { urls, byMatch, latest: lst.slice(0, 10) };
+  return { urls, byMatch, latest: lst.slice(0, 10), list: lst };
 }
 
-module.exports = { render, articleHtml, articleLd, newsSitemap, listHtml, related, makeNames, readTime, kindOf, TRUST, AUTHOR, CSS, CSS_NAME };
+module.exports = { render, articleHtml, articleLd, newsSitemap, listHtml, related, makeNames, readTime, kindOf, newsIndexHtml, pressTabs, homeBlock,
+  TRUST, AUTHOR, CSS, CSS_NAME, CSS_LINK, HEAD };

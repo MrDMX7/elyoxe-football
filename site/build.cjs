@@ -705,7 +705,9 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     const edLinks = [["/week/", "مباريات الأسبوع", "أهم مباريات الأيام السبعة الياية", "star", "#FF9500"], ["/legends/", "الأساطير", "مسيرة وأرقام أبرز لاعبين في تاريخ الكورة الإماراتية", "crown", "#FFCC00"], ["/memorable/", "مباريات ما تنتسى", "المباريات اللي صنعت تاريخ الكورة الإماراتية", "star", "#FF3B30"], ["/cast/", "تيفو كاست", "الجولة بصوت إماراتي، كل أسبوع", "mic", "#AF52DE"], ["/laws/", "قانون الكورة", "ليش ألغى الحكم الهدف؟ بالإماراتي", "whistle", "#1C7C54"], ["/tv/", "شاشة المجلس", "كل المباريات على تلفزيون المجلس", "tv", "#0A84FF"], ["/studio/", "ستوديو التيفو", "صمّم لافتة فريقك للمدرج", "brush", "#FF2D55"]];
     const fromTifo = (ed.length ? shelf(ed, { title:"من تيفو" }) : "") + (bdays ? `<section class="grp" id="bdaysg" hidden><div class="gh"><h2>اليوم في التقويم</h2></div><div class="card lc">${bdays}</div></section>` : "") +
       U.grp(ed.length ? "" : "من تيفو", U.rows(edLinks.map(l => ({ href:l[0], icon:l[3], c:l[4], t:l[1], sub:l[2] }))), { cls:"mt2" });
-    write("index.html", page({ v5:homeV5(today, day.matches, { fromTifo, h1x:"نتائج مباريات اليوم مباشر" }), ld:require("./lib/site_ld.cjs").siteLd(SITE), path:"/", page:"home", nav:"home", title:"تيفو — نتائج مباريات اليوم مباشر لكل العرب", desc:"نتايج المباريات مباشر بتوقيت بلدك: دوري أدنوك، والمنتخب، وكأس الخليج، وأبطال آسيا، والدوريات الكبيرة. الأحداث والتشكيلات والترتيب والتوقعات أول بأول." }));
+    const hv = homeV5(today, day.matches, { fromTifo, h1x:"نتائج مباريات اليوم مباشر" }), AH = require("./lib/articles.cjs");
+    hv.body = AH.homeBlock(ART.list, Date.now()) + hv.body;   // «مقالات تيفو» at the top (spec 2026-11-19 §3), redrawn live in the page
+    write("index.html", page({ v5:hv, head:AH.CSS_LINK, ld:require("./lib/site_ld.cjs").siteLd(SITE), path:"/", page:"home", nav:"home", title:"تيفو — نتائج مباريات اليوم مباشر لكل العرب", desc:"نتايج المباريات مباشر بتوقيت بلدك: دوري أدنوك، والمنتخب، وكأس الخليج، وأبطال آسيا، والدوريات الكبيرة. الأحداث والتشكيلات والترتيب والتوقعات أول بأول." }));
   };
   // ---- 5. teams
   const tlist = [...teamIds], teamPages = new Set(), playerPages = new Set();
@@ -1320,8 +1322,12 @@ ${items}
     write(`db/${k}/index.html`, page({ path:`/db/${k}/`, page:"world", noindex:true, title:`${t} | موسوعة تيفو`, desc:d, body:`<p class="crumbs"><a href="/db/">الموسوعة</a></p><h1 id="wt">نحمّل…</h1><div id="world" data-kind="${k}"></div>` }));
   // the journal (news/ in the pipeline): every outlet's story in one Arabic line. v5: the latest 30 prerendered (search engines and a
   // first paint), the browser keeps the list fresh from /v1/news/latest.json, the kinds are a segmented control
-  { const nj = (await get("news/latest.json", 2)) || { stories:[] }, v5 = P5.news(nj); v5.data = {}; v5.body = require("./lib/articles.cjs").listHtml(ART.latest) + v5.body;
-    write("news/index.html", page({ v5, path:"/news/", page:"news", title:"أخبار الكورة اليوم: الانتقالات والإصابات والتصريحات | تيفو", desc:"آخر أخبار الكورة من الصحف العربية والعالمية والقنوات الرسمية، بخلاصة عربية وكل خبر مربوط بناديه ولاعبيه، ومرحلة كل صفقة من الإشاعة للرسمي." })); urls.push("/news/"); }
+  // /news/ is Tifo's articles; the journal's list from the papers moves to /news/press/ (spec 2026-11-19 §1)
+  { const A = require("./lib/articles.cjs"), nj = (await get("news/latest.json", 2)) || { stories:[] }, v5 = P5.news(nj); v5.data = {};
+    v5.body = A.pressTabs() + v5.body.replace(/^<div class="lt"><h1>الأخبار<\/h1>[\s\S]*?<\/div>/, "");
+    write("news/press/index.html", page({ v5, path:"/news/press/", page:"news", head:A.CSS_LINK, title:"أخبار الكورة من الصحف: الانتقالات والإصابات والتصريحات | تيفو", desc:"آخر أخبار الكورة من الصحف العربية والعالمية والقنوات الرسمية، بخلاصة عربية وكل خبر مربوط بناديه ولاعبيه، ومرحلة كل صفقة من الإشاعة للرسمي." })); urls.push("/news/press/");
+    const ours = Object.assign({}, v5, { body:A.newsIndexHtml(ART.list, Date.now()), data:{} });
+    write("news/index.html", page({ v5:ours, path:"/news/", page:"news", head:A.CSS_LINK, title:"أخبار الكورة اليوم من تحرير تيفو: الانتقالات والإصابات وتقارير المباريات | تيفو", desc:"مقالات تيفو: تقارير المباريات وأخبار الانتقالات والإصابات والتصريحات، تكتبها «تحرير تيفو» من بيانات تيفو والمصادر الرسمية." })); urls.push("/news/"); }
   if (APPROVED.ask){ write("ask/index.html", page({ path:"/ask/", page:"ask", title:"اسأل تيفو: أي سؤال عن الكورة الإماراتية | تيفو", desc:"اسأل بالعامية عن الدوري الإماراتي والمنتخب: الترتيب، الهدافين، البطولات، المواجهات. الجواب من بيانات تيفو.",
     body:'<h1>اسأل تيفو</h1><p class="muted">اسأل بالعامية عن الدوري الإماراتي والمنتخب، والجواب من بيانات تيفو بس.</p><form id="askf" class="ask"><input id="askq" maxlength="200" placeholder="مثلاً: متى آخر مرة فاز الوصل على العين؟" aria-label="سؤالك"><button class="btn" type="submit">اسأل</button></form><div id="aska" role="status"></div><p class="src">الجواب يكتبه نموذج ذكاء اصطناعي من أرقام تيفو، وممكن يغلط. 25 سؤال باليوم لكل شخص.</p>' })); urls.push("/ask/"); }
 

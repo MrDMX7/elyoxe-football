@@ -101,3 +101,43 @@ test("the article stylesheet: the head's gradient, 17 px text, a photo that fits
   assert.match(css, /linear-gradient/); assert.match(css, /\.artp\{[^}]*font-size:17px/);
   assert.match(A.CSS_NAME, /^a\.[0-9a-f]{10}\.css$/);
 });
+
+// ---- the news page and the home block (spec §1, §3)
+const NOWT = Date.parse("2026-11-19T12:00:00Z");
+const item = (i, o) => Object.assign({ id: "n-" + i, kind: "news", topic: "transfer", headline: "خبر " + i, standfirst: "مقدمة " + i,
+  image: { url: SITE + "/v1/news/img/n-" + i + ".jpg" }, published: new Date(NOWT - i * 36e5).toISOString() }, o || {});
+
+test("/news/ is our articles: the two tabs, the filters, the lead, the grid of 30 and «المزيد»", () => {
+  const list = Array.from({ length: 40 }, (_, i) => item(i + 1));
+  const h = A.newsIndexHtml(list, NOWT);
+  assert.match(h, /<nav class="ntabs"><a href="\/news\/" aria-current="page">مقالات تيفو<\/a><a href="\/news\/press\/">من الصحف<\/a><\/nav>/);
+  for (const t of ["all", "report", "transfer", "injury", "statement"]) assert.match(h, new RegExp(`data-t="${t}"`));
+  assert.match(h, /<a class="nl" href="\/news\/n-1\/"/);                                       // the newest leads
+  const cards = h.replace(/<script>[\s\S]*?<\/script>/g, "");                              // the rendered cards, not the script's templates
+  assert.equal((cards.match(/<a class="nc" /g) || []).length, 29);                            // 30 with the lead
+  assert.match(h, /<button type="button" class="nmore" data-from="30">المزيد<\/button>/);
+  assert.match(h, /fetch\("\/v1\/news\/articles\.json"/);
+});
+
+test("a «عاجل» of the last two hours leads; a press conference files under statements; a report under reports", () => {
+  const list = [item(1), item(3, { breaking: true }), item(4, { topic: "presser" }), item(5, { kind: "report", topic: undefined })];
+  const h = A.newsIndexHtml(list, NOWT);
+  assert.match(h, /<a class="nl" href="\/news\/n-1\/"/);                                       // the «عاجل» is 3 h old: not the lead
+  const h2 = A.newsIndexHtml([item(1), item(2, { breaking: true })], NOWT);
+  assert.match(h2, /<a class="nl" href="\/news\/n-2\/"/);
+  assert.match(h, /<a class="nc" href="\/news\/n-4\/" data-t="statement"/);
+  assert.match(h, /<a class="nc" href="\/news\/n-5\/" data-t="report"/);
+});
+
+test("«من الصحف» keeps the journal's list under the same two tabs", () => {
+  assert.match(A.pressTabs(), /<a href="\/news\/">مقالات تيفو<\/a><a href="\/news\/press\/" aria-current="page">من الصحف<\/a>/);
+});
+
+test("the home block: one large card, three small, all articles; redrawn live from articles.json", () => {
+  const h = A.homeBlock([1, 2, 3, 4, 5].map(i => item(i)), NOWT);
+  assert.match(h, /<section class="hb">[\s\S]*<a href="\/news\/">كل المقالات<\/a>/);
+  const b = h.replace(/<script>[\s\S]*?<\/script>/g, "");
+  assert.equal((b.match(/<a class="nl" /g) || []).length, 1); assert.equal((b.match(/<a class="hr" /g) || []).length, 3);
+  assert.match(h, /fetch\("\/v1\/news\/articles\.json"/);
+  assert.equal(A.homeBlock([], NOWT), "");
+});
