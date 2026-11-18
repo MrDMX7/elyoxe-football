@@ -81,9 +81,9 @@ CLUB_WORDS = {"نادي", "فريق", "لنادي", "بنادي", "club"}
 # ruler and the «#الشارقة_الرياضية» channel tag on other clubs' goals)
 PLACE_BEFORE = {"مدينه", "منطقه", "بلديه", "مهرجان", "راس", "حاكم", "اماره", "شرطه", "جامعه", "مطار", "معرض", "محاكم", "حكومه",
                 "دائره", "هيئه", "مركز", "غرفه", "ميناء", "مستشفي", "سوق", "واحه", "قاع", "مجلس", "خيريه", "متحف", "ولي", "عهد",
-                "صاحب", "سمو", "احتفالات", "عمران", "مضمار", "حلقه"}
+                "صاحب", "سمو", "احتفالات", "عمران", "مضمار", "حلقه", "مياه", "تقنيه", "قريره"}
 PLACE_AFTER = {"الاخباريه", "الرياضيه", "للاخبار", "للكتاب", "للفنون", "للتراث", "للنشر", "للابتكار", "للعماره", "للتعليم",
-               "الخيريه", "للثقافه", "للسياحه", "الدولي", "للشطرنج", "للفروسيه", "للبحث", "الرقميه"}
+               "الخيريه", "للثقافه", "للسياحه", "الدولي", "للشطرنج", "للفروسيه", "للبحث", "الرقميه", "السخنه"}
 # household names the press calls by one word (a surname or a mononym): full names as the dictionary has them
 STARS = ["Lionel Messi", "Cristiano Ronaldo", "Kylian Mbappé", "Erling Haaland", "Mohamed Salah", "Lamine Yamal", "Neymar",
          "Vinícius Júnior", "Jude Bellingham", "Harry Kane", "Robert Lewandowski", "Luka Modric", "Karim Benzema", "Riyad Mahrez",

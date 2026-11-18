@@ -24,10 +24,11 @@ from news import readers as RD, entities as E, classify as C, cluster as K, summ
 BUCKET = os.environ.get("BUCKET", "elyoxe-football-574771023173-ap-south-1")
 STATE = "news/state.json"
 # the rules the state was clustered with: a change re-classifies the kept items and clusters them again (cluster.rebuild)
-RULES = 5   # 2026-10-06: «official» only when the headline says it (classify.official); stories on their first headline
+RULES = 6   # 2026-10-06: «official» only when the headline says it (classify.official); stories on their first headline
 #           2026-11-18: items linked again (a lone «يونايتد» needs a UAE cue), a story of clubs alone needs a shared word beyond their names
 #           2026-11-18: a club's name used as its city or an outlet is not the club; the city's news out of the Al Ain/Sharjah searches
 #           2026-11-18: and the stories of the headlines that took out, gone with them (4 left them until they aged out)
+#           2026-11-18: «العين السخنة», «مياه العين», «تقنية العين» are not the club
 
 
 # a club whose name is also a bank's: named only when the item is about football (2026-11-18: «شهادات البنك الأهلي», «سعر
