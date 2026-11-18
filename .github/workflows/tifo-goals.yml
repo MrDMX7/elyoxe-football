@@ -1,0 +1,87 @@
+# «Tifo goals» (2026-11-19, owner: «يوفر قوة اللابتوب»): each new goal's video is downloaded, checked and rendered here instead of
+# on the laptop; the laptop only posts it. Runs after every journal run (the journal files each goal's own broadcaster clip in
+# v1/media/<id>.json, so a new clip can only appear then), and by hand (the laptop also starts it when it has downloaded a
+# clip this runner could not: YouTube asks GitHub's servers to sign in).
+# The code is the laptop's own goal_watch.py (workspace repo, content/social/tifo/) in --render mode, with daily.py, gemini.py,
+# the clubs' colours and the TifoGoal Remotion bundle: the laptop's goal_watch.py --post sends them to s3://<bucket>/ci/goals/kit/
+# whenever they change. A finished goal is left in state/goals/<match>-<goal>/ (ready.json written last); the laptop posts it
+# from there and writes state/goals/posted.json back, which this job skips. Measured 2026-11-19 (spike branch goal-render-spike):
+# an X clip downloads in 2-3 s, the 12 s cut takes 5 s, a TifoGoal renders in 77-86 s on the 4-core runner (laptop: 55-99 s).
+name: Tifo goals
+on:
+  workflow_run:
+    workflows: ["Tifo journal"]
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  id-token: write                 # AWS by OIDC
+  contents: read
+concurrency:
+  group: tifo-goals
+  cancel-in-progress: false       # a render in progress finishes; the next run waits (one queued at most)
+env:
+  TZ: Asia/Dubai
+  PYTHONIOENCODING: utf-8
+  BUCKET: elyoxe-football-574771023173-ap-south-1
+  TIFO_REMOTION_DIR: /home/runner/remotion        # the Remotion CLI of the bundle's version (goal_watch.REMOTION)
+jobs:
+  goals:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/tifo-setup
+      - name: The laptop's kit
+        id: kit
+        run: |
+          if ! aws s3 cp "s3://$BUCKET/ci/goals/kit/remotion.json" "$RUNNER_TEMP/remotion.json" --only-show-errors; then
+            echo "::notice::No kit in ci/goals/kit/ yet (the laptop's goal_watch.py --post sends it): nothing to render."
+            exit 0
+          fi
+          mkdir -p ~/workspace/saas && ln -sfn "$GITHUB_WORKSPACE" ~/workspace/saas/football   # names/players_ar.json, site/cache/colors.json
+          aws s3 sync "s3://$BUCKET/ci/goals/kit/workspace/" ~/workspace/ --only-show-errors
+          python - <<'EOF' >> "$GITHUB_OUTPUT"
+          import json, os
+          v = json.load(open(os.path.join(os.environ["RUNNER_TEMP"], "remotion.json")))
+          print(f"remotion={v['remotion']}"); print(f"react={v['react']}"); print("ready=1")
+          EOF
+      - name: Goals to render
+        id: plan
+        if: steps.kit.outputs.ready == '1'
+        run: python ~/workspace/content/social/tifo/goal_watch.py --render --plan
+      - uses: actions/cache@v4
+        if: steps.plan.outputs.pending && steps.plan.outputs.pending != '0'
+        with:
+          path: ${{ env.TIFO_REMOTION_DIR }}
+          key: remotion-${{ steps.kit.outputs.remotion }}-react-${{ steps.kit.outputs.react }}
+      - name: Remotion ${{ steps.kit.outputs.remotion }} and its browser
+        if: steps.plan.outputs.pending && steps.plan.outputs.pending != '0'
+        timeout-minutes: 8
+        run: |
+          mkdir -p "$TIFO_REMOTION_DIR" && cd "$TIFO_REMOTION_DIR"
+          if [ ! -x node_modules/.bin/remotion ]; then
+            npm init -y >/dev/null
+            # install scripts run without this job's AWS session
+            env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY -u AWS_SESSION_TOKEN npm i --no-audit --no-fund --silent "@remotion/cli@${{ steps.kit.outputs.remotion }}" "remotion@${{ steps.kit.outputs.remotion }}" \
+              "react@${{ steps.kit.outputs.react }}" "react-dom@${{ steps.kit.outputs.react }}"
+          fi
+          npx remotion browser ensure
+      # ffmpeg comes from the imageio-ffmpeg wheel (a static build with every filter): on 2026-11-19 apt-get install ffmpeg hung
+      # 11 minutes, then hit a 300 s cap on a 480 kB/s mirror, and Remotion's own ffmpeg has no fps filter (goal_moment's frames).
+      - name: yt-dlp and ffmpeg
+        if: steps.plan.outputs.pending && steps.plan.outputs.pending != '0'
+        timeout-minutes: 4
+        run: |
+          python -m pip install --quiet --disable-pip-version-check -U "yt-dlp[default]" imageio-ffmpeg
+          mkdir -p ~/bin && ln -sf "$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')" ~/bin/ffmpeg
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          ~/bin/ffmpeg -hide_banner -version | head -1
+      - name: Render
+        if: steps.plan.outputs.pending && steps.plan.outputs.pending != '0'
+        timeout-minutes: 35
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}   # goal_watch.goal_moment: the second the ball goes in, read from the clip
+        run: python ~/workspace/content/social/tifo/goal_watch.py --render
+      - name: Log
+        if: always()
+        run: tail -c 8000 ~/workspace/content/social/tifo/goals/watch.log 2>/dev/null || true
