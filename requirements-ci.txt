@@ -7,3 +7,5 @@ requests
 tzdata
 anthropic
 google-auth
+googlenewsdecoder
+trafilatura
