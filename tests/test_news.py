@@ -12,6 +12,11 @@ TEAMS = {
     "10703": {"name": "Egypt", "name_ar": "مصر", "country": {"iso2": "EG"}, "comps": [289]},
     "1517695": {"name": "Nations", "name_ar": "نيشنز", "country": None, "comps": [9806]},
     "960720": {"name": "Inter Miami CF", "name_ar": "إنتر ميامي", "country": {"iso2": "US"}, "comps": [130]},
+    "1552577": {"name": "United FC", "name_ar": "يونايتد", "country": {"iso2": "AE"}, "comps": [538]},
+    "10261": {"name": "Newcastle United", "name_ar": "نيوكاسل", "country": {"iso2": "GB-ENG"}, "comps": [47]},
+    "9840": {"name": "Sharjah", "name_ar": "الشارقة", "country": {"iso2": "AE"}, "comps": [538]},
+    "9847": {"name": "Paris Saint-Germain", "name_ar": "باريس سان جيرمان", "country": {"iso2": "FR"}, "comps": [53]},
+    "8634": {"name": "Barcelona", "name_ar": "برشلونة", "country": {"iso2": "ES"}, "comps": [87]},
 }
 PLAYERS = {
     "30981": {"latin": "Lionel Messi", "ar": "ليونيل ميسي"},
@@ -91,6 +96,7 @@ def _item(i, title, lang="en", kind="other", at="2026-09-29T10:00:00Z", source="
     it = {"id": i, "title": title, "lang": lang, "kind": kind, "at": at, "source": source, "url": "u" + i, "tier": "paper"}
     it["anchor"] = [list(e) for e in E.link(D, title)]
     it["entities"] = it["anchor"]
+    it["topic"] = E.topic(D, title)
     return it
 
 
@@ -195,3 +201,39 @@ def test_only_arabic_headlines_are_published():
     rows = [{"id": 1, "title_lang": "ar"}, {"id": 2, "title_lang": "en"}, {"id": 3, "title_lang": "es"}, {"id": 4, "title_lang": "ar"}]
     assert [r["id"] for r in NR.arabic_only(rows)] == [1, 4]
     assert [r["id"] for r in NR.arabic_only(rows, 1)] == [1]
+
+
+def test_a_lone_united_is_the_uae_club_only_beside_the_uae():
+    # 2026-11-18: «نيوكاسل يونايتد» and Pochettino's «يونايتد» were linked to the UAE's United FC
+    uae = ("team", 1552577)
+    assert uae not in E.link(D, "راتب توني يعقد انتقاله إلى نيوكاسل يونايتد")
+    assert uae not in E.link(D, "بوكيتينو: قيادة يونايتد أصعب قراراتي")
+    assert uae not in E.link(D, "مانشستر يونايتد يخسر") and ("team", 10260) in E.link(D, "مانشستر يونايتد يخسر")
+    assert uae in E.link(D, "يونايتد والشارقة يتعادلان 1-1")                      # beside a UAE club
+    assert uae in E.link(D, "يونايتد يفوز في كأس مصرف أبوظبي الإسلامي")              # a UAE cue
+    assert uae in E.link(D, "نادي يونايتد يعلن مدربه الجديد")                        # «نادي» names the club itself
+
+
+def test_two_clubs_alone_are_not_one_story():
+    # 2026-11-18: «قائد برشلونة», Balde and Gvardiol were one story because every headline named PSG and Barcelona
+    stories = {}
+    rows = [("1", "بـ65 مليون يورو.. باريس سان جيرمان ينقض على قائد برشلونة"),
+            ("2", "باريس سان جيرمان يجهز 65 مليون يورو لخطف قائد برشلونة"),
+            ("3", "باريس سان جيرمان يستهدف نجم برشلونة مقابل 65 مليون يورو"),
+            ("4", "تابع باريس سان جيرمان ضد برشلونة"),
+            ("5", "باريس سان جيرمان يخطط لخطف منبوذ برشلونة"),
+            ("6", "خرج من حسابات فليك.. باريس سان جيرمان يسعى لضم بالدي من برشلونة"),
+            ("7", "باريس سان جيرمان يراقب وضع بالدي مع برشلونة تمهيداً لضمه")]
+    K.assign(stories, [_item(i, t, "ar", at=f"2026-11-14T1{i}:00:00Z") for i, t in rows])
+    by = {tuple(sorted(s["items"])) for s in stories.values()}
+    assert ("1", "2", "3") in by                          # one story, three outlets: 65 million for the captain
+    assert ("6", "7") in by                               # Balde, twice
+    assert ("4",) in by and ("5",) in by                  # a stream link, and «منبوذ» shares only the verb
+
+
+def test_a_match_between_two_clubs_needs_no_more_than_its_headlines():
+    stories = {}
+    a = _item("1", "برشلونة يفوز على باريس سان جيرمان 2-1", "ar", "match")
+    b = _item("2", "باريس سان جيرمان يخسر أمام برشلونة 1-2 في دوري الأبطال", "ar", "match", at="2026-09-29T11:00:00Z")
+    K.assign(stories, [a, b])
+    assert len(stories) == 1

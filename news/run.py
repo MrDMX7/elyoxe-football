@@ -24,7 +24,22 @@ from news import readers as RD, entities as E, classify as C, cluster as K, summ
 BUCKET = os.environ.get("BUCKET", "elyoxe-football-574771023173-ap-south-1")
 STATE = "news/state.json"
 # the rules the state was clustered with: a change re-classifies the kept items and clusters them again (cluster.rebuild)
-RULES = 2   # 2026-10-06: «official» only when the headline says it (classify.official); stories on their first headline
+RULES = 3   # 2026-10-06: «official» only when the headline says it (classify.official); stories on their first headline
+#           2026-11-18: items linked again (a lone «يونايتد» needs a UAE cue), a story of clubs alone needs a shared word beyond their names
+
+
+def link_item(D, it, official=False):
+    """Who an item is about: the people and clubs its headline names (anchor), those its headline and description name
+    (entities), and its headline's own words for the story check (topic). An official channel's club or league is always one
+    of its subjects."""
+    it["anchor"] = [list(e) for e in E.link(D, it["title"], it.get("query"))]
+    it["entities"] = [list(e) for e in E.link(D, it["title"] + " " + (it.get("desc") or ""), it.get("query"))]
+    it["topic"] = E.topic(D, it["title"], it.get("query"))
+    own = it.get("owner")
+    if official and own and own[0] == "team":
+        for k in ("anchor", "entities"):
+            if list(own) not in it[k]:
+                it[k].append(list(own))
 
 
 def now():
@@ -210,16 +225,11 @@ def main(argv=None):
         for it in got:
             if it["id"] in items or not it.get("at") or it["at"] < cutoff or C.other_sport(it):
                 continue
-            it["anchor"] = [list(e) for e in E.link(D, it["title"], it.get("query"))]      # who the headline is about
-            it["entities"] = [list(e) for e in E.link(D, it["title"] + " " + (it.get("desc") or ""), it.get("query"))]
-            if it["kind"] == "youtube" or (it["kind"] == "x" and it["tier"] == "official"):
-                # an official video or post: its channel's club or league is always one of its subjects; it is classified like any
-                # headline (not "official" for being on the club's channel), and only news-like titles join the stories
-                own = it.get("owner")
-                if own and own[0] == "team" and own not in it["anchor"]:
-                    it["anchor"].append(own)
-                if own and own[0] == "team" and own not in it["entities"]:
-                    it["entities"].append(own)
+            official = it["kind"] == "youtube" or (it["kind"] == "x" and it["tier"] == "official")
+            link_item(D, it, official)
+            if official:
+                # an official video or post: it is classified like any headline (not "official" for being on the club's
+                # channel), and only news-like titles join the stories
                 if C.womens(it):       # the club id is the men's side: a women's-team video would land on the wrong page
                     continue
                 # the title only: a channel's description is boilerplate («the official channel of…», «deal» in a sponsor line)
@@ -238,6 +248,7 @@ def main(argv=None):
     rebuilt_named = set()
     if state.get("rules") != RULES:         # the stage and story rules changed: the kept items again, from scratch
         for it in items.values():
+            link_item(D, it, it.get("social"))
             it.update(C.classify({"title": it["title"], "tier": "paper"}) if it.get("social") else C.classify(it))
         stories, touched, rebuilt_named = K.rebuild(stories, items)
         state["rules"] = RULES

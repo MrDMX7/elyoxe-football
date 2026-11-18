@@ -27,9 +27,14 @@ def _key_teams(ents):
     return {tuple(e) for e in ents if e[0] == "team"}
 
 
-def _words(title):
+def _words(item):
     from .entities import norm
-    return {w for w in norm(title).split() if len(w) > 3}
+    return {w for w in norm(item["title"]).split() if len(w) > 3}
+
+
+def _topic(item):
+    """The headline's words without the clubs it links (news.entities.topic, set when the item was linked)."""
+    return set(item["topic"]) if "topic" in item else _words(item)
 
 
 def same_story(story, item):
@@ -49,9 +54,14 @@ def same_story(story, item):
     else:
         same = len(st & it) >= 2 or (len(st) == 1 and st == it and story["kind"] in ("official", "presser", "injury"))
     if same and story["kind"] in ("other", "match", "statement"):
-        w = _words(item["title"])
+        w, t = _words(item), _topic(item)
         near = [x for x in story.get("titles", []) if x["lang"] == item["lang"]]
-        same = any(len(w & set(x["w"])) / max(1, len(w | set(x["w"]))) >= 0.3 for x in near)
+        # a story of clubs alone also needs a word beyond the clubs' names in common: «باريس سان جيرمان ينقض على قائد برشلونة» and
+        # «باريس سان جيرمان يخطط لخطف منبوذ برشلونة» matched on the names and made one story of the captain, Balde and
+        # Gvardiol (2026-11-18). A match between the two clubs needs nothing more; a player or coach already narrows it.
+        need = 1 if not sp and story["kind"] != "match" else 0
+        same = any(len(w & set(x["w"])) / max(1, len(w | set(x["w"]))) >= 0.3 and len(t & set(x.get("t", x["w"]))) >= need
+                   for x in near)
     return same
 
 
@@ -72,7 +82,7 @@ def add(story, item):
     story["entities"] = [list(e) for e in sorted(ents)]
     anc = {tuple(e) for e in story.get("anchor") or []} | {tuple(e) for e in item.get("anchor") or []}
     story["anchor"] = [list(e) for e in sorted(anc)]
-    story.setdefault("titles", []).append({"lang": item["lang"], "w": sorted(_words(item["title"]))})
+    story.setdefault("titles", []).append({"lang": item["lang"], "w": sorted(_words(item)), "t": sorted(_topic(item))})
     story["titles"] = story["titles"][-12:]
     if item.get("at"):
         if not story["first_at"] or item["at"] < story["first_at"]:
