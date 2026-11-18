@@ -28,6 +28,9 @@ jobs:
         run: python -m tools.ci_bridge state-get journal .
       - name: Run the journal job
         run: python -m tools.runner journal
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GSC_SA_JSON: ${{ secrets.GSC_SA_JSON }}
       - name: Log
         if: always()
         run: tail -c 12000 site/cache/runner/journal.log || true
