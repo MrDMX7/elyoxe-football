@@ -18,7 +18,7 @@ def test_the_order_of_the_candidates():
     c = P.candidates(MD, MEDIA)
     assert c[0]["url"] == "https://i.ytimg.com/vi/abc/maxresdefault.jpg" and "beIN SPORTS" in c[0]["caption"]
     assert c[1]["url"] == "https://i.ytimg.com/vi/def/maxresdefault.jpg"
-    assert c[-1]["source"] == "card" and c[-1]["url"].endswith("/og/m-77.png")
+    assert c[-1]["source"] == "card"
 
 
 def test_a_small_picture_is_skipped_and_the_chosen_one_is_stored(tmp_path):
@@ -29,6 +29,16 @@ def test_a_small_picture_is_skipped_and_the_chosen_one_is_stored(tmp_path):
     assert (tmp_path / "v1" / "news" / "img" / "r-77.jpg").exists()
 
 
-def test_no_frame_means_the_match_card(tmp_path):
-    got = P.pick("r-77", MD, None, lambda u: None, Store(LocalBackend(tmp_path)))
-    assert got["card"] and got["w"] == 1200 and got["h"] == 630
+def test_no_frame_means_tifos_own_card_stored_with_the_article(tmp_path):
+    # final review, finding 2: /og/m-<id>.png exists only for a few competitions; most reports pointed at a 404
+    md = dict(MD, score={"home": 2, "away": 1}, home={"name_ar": "أ", "logo": "https://logo/h.png"}, away={"name_ar": "ب", "logo": "https://logo/a.png"})
+    logos = {"https://logo/h.png": jpg(96, 96), "https://logo/a.png": jpg(96, 96)}
+    got = P.pick("r-77", md, None, logos.get, Store(LocalBackend(tmp_path)))
+    f = tmp_path / "v1" / "news" / "img" / "r-77.jpg"
+    assert got["card"] and got["url"].endswith("/v1/news/img/r-77.jpg") and f.exists()
+    assert Image.open(f).size == (1200, 675) and (got["w"], got["h"]) == (1200, 675)
+
+
+def test_the_card_is_made_even_without_logos(tmp_path):
+    got = P.pick("r-77", dict(MD, score={"home": 0, "away": 0}), None, lambda u: None, Store(LocalBackend(tmp_path)))
+    assert got["card"] and (tmp_path / "v1" / "news" / "img" / "r-77.jpg").exists()
