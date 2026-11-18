@@ -52,8 +52,8 @@ main{padding:12px 16px 90px;max-width:760px;margin:0 auto}
 .ed main{padding-top:4px}
 label{display:block;font-size:12px;color:var(--t3);margin:14px 0 4px}
 input,textarea{width:100%;background:var(--s1);border:1px solid var(--line);border-radius:8px;color:var(--text);font:inherit;padding:9px 10px;line-height:1.6}
-textarea{resize:vertical;min-height:84px}
-input.h{font-weight:600;font-size:16px}
+textarea{resize:none;min-height:60px;overflow:hidden}
+.h{font-weight:600;font-size:16px}
 .sec{border-inline-start:2px solid var(--line);padding-inline-start:10px;margin-top:14px}
 .warn{background:#F0BC5A1A;border:1px solid #F0BC5A55;color:var(--amber);border-radius:8px;padding:8px 10px;font-size:13px;margin-top:12px;display:none}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
@@ -82,6 +82,7 @@ const STAGE = {rumour: "إشاعة", talks: "مفاوضات", agreed: "اتفا�
 const E = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 const $ = s => document.querySelector(s);
 const hhmm = iso => new Date(iso).toLocaleTimeString("en-GB", {timeZone: "Asia/Dubai", hour: "2-digit", minute: "2-digit"});
+const usd = x => `<bdi dir="ltr">$${(+x || 0).toFixed(2)}</bdi>`;
 const day = iso => new Date(iso).toLocaleDateString("ar-AE-u-nu-latn", {timeZone: "Asia/Dubai", day: "numeric", month: "short"});
 function ago(iso) {
   const m = Math.round((Date.now() - Date.parse(iso)) / 60000);
@@ -96,6 +97,11 @@ if (hp.get("k")) {
   try { localStorage.setItem("tifo-desk-key", KEY); } catch (e) {}
   history.replaceState(null, "", location.pathname);
 }
+
+window.addEventListener("hashchange", () => {
+  const k = new URLSearchParams(location.hash.slice(1)).get("k");
+  if (k) { KEY = k; try { localStorage.setItem("tifo-desk-key", KEY); } catch (e) {} history.replaceState(null, "", location.pathname); load(); }
+});
 
 async function api(path, body) {
   const r = await fetch(path, {method: body ? "POST" : "GET", headers: Object.assign({"x-desk-key": KEY}, body ? {"content-type": "application/json"} : {}),
@@ -134,7 +140,7 @@ function render() {
   else if (TAB === "pub") body = pubHtml();
   else body = spendHtml(sp, cap, v);
   $("#app").innerHTML = `<header class="top"><div class="row"><span class="brand">لوحة <i>تيفو</i></span>
-    <span class="stat">اليوم <b>${v.written_today || 0}</b> من ${v.daily || 60} · عاجل <b>${v.breaking_today || 0}</b><br>الصرف <b>$${(sp.usd || 0).toFixed(2)}</b> من $${cap}</span>
+    <span class="stat">اليوم <b>${v.written_today || 0}</b> من ${v.daily || 60} · عاجل <b>${v.breaking_today || 0}</b><br>الصرف <b>${usd(sp.usd)}</b> من ${usd(cap).replace(".00", "")}</span>
     <button class="btn" id="re" aria-label="تحديث">↻</button></div>
     <nav class="tabs" role="tablist">${tabs.map(([k, t]) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${TAB === k}">${t}</button>`).join("")}</nav></header>
     <main>${body}</main>`;
@@ -172,9 +178,9 @@ function spendHtml(sp, cap, v) {
   const pct = Math.min(100, (sp.usd || 0) / cap * 100);
   const by = Object.entries(sp.by_type || {}).sort((a, b) => b[1] - a[1]);
   const name = {report: "تقارير المباريات", news: "الأخبار", breaking: "عاجل", photo: "اختيار الصور"};
-  return `<div class="item"><div class="meta">صرف هذا الشهر</div><div class="big">$${(sp.usd || 0).toFixed(2)}</div>
-    <div class="bar"><span style="width:${pct}%"></span></div><div class="meta">من سقف $${cap}${sp.capped ? " · وصل السقف، الكتابة واقفة لين بداية الشهر" : ""} · ${sp.calls || 0} طلب</div></div>
-    <div class="item">${by.length ? by.map(([k, u]) => `<div class="kv"><span>${E(name[k] || k)}</span><span>$${u.toFixed(2)}</span></div>`).join("") : '<p class="meta">ما في صرف للحين</p>'}</div>
+  return `<div class="item"><div class="meta">صرف هذا الشهر</div><div class="big">${usd(sp.usd)}</div>
+    <div class="bar"><span style="width:${pct}%"></span></div><div class="meta">من سقف ${usd(cap).replace(".00", "")}${sp.capped ? " · وصل السقف، الكتابة واقفة لين بداية الشهر" : ""} · ${sp.calls || 0} طلب</div></div>
+    <div class="item">${by.length ? by.map(([k, u]) => `<div class="kv"><span>${E(name[k] || k)}</span><span>${usd(u)}</span></div>`).join("") : '<p class="meta">ما في صرف للحين</p>'}</div>
     <div class="item"><div class="kv"><span>أخبار انكتبت اليوم</span><span>${v.written_today || 0} من ${v.daily || 60}</span></div><div class="kv"><span>عاجل اليوم</span><span>${v.breaking_today || 0} من 15</span></div></div>`;
 }
 
@@ -214,7 +220,7 @@ function drawEditor() {
       <a class="btn" style="margin-inline-start:auto" href="${SITE}/news/${E(d.id)}/" target="_blank" rel="noopener">افتح</a></header>
     <main>
       ${d.image && d.image.url ? `<img class="cur" src="${E(d.image.url)}" alt=""><p class="meta">${E(d.image.caption || "")}</p>` : ""}
-      <label>العنوان</label><input class="h" id="f-h" value="${E(d.headline)}">
+      <label>العنوان</label><textarea class="h" id="f-h" rows="1">${E(d.headline)}</textarea>
       <label>المقدمة</label><textarea id="f-s">${E(d.standfirst)}</textarea>
       ${secs}
       <label>حقائق سريعة (سطر لكل حقيقة)</label><textarea id="f-f">${E((d.facts_box || []).join("\n"))}</textarea>
@@ -224,8 +230,10 @@ function drawEditor() {
       <div class="save"><button class="btn go" id="sv">احفظ وانشر</button></div>
       <p class="meta">التعديل يطلع في القوائم الحين، وصفحة المقال نفسها مع تحديث الموقع كل ساعة. المقال اللي تعدّله ما ينكتب من جديد آلياً.</p>
     </main>`;
+  document.querySelectorAll("#ed textarea").forEach(grow);
   checkNumbers();
 }
+function grow(t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }
 function collect() {
   const secs = [...document.querySelectorAll("#ed [data-sec]")].map(s => ({subhead: s.querySelector("[data-sub]").value, paragraphs: [...s.querySelectorAll("[data-p]")].map(t => t.value)}));
   return {id: A.doc.id, headline: $("#f-h").value, standfirst: $("#f-s").value, sections: secs, facts_box: $("#f-f").value.split("\n")};
@@ -239,11 +247,11 @@ function checkNumbers() {
   w.style.display = odd.length ? "block" : "none";
   w.textContent = odd.length ? "أرقام مب موجودة في ورقة الحقائق: " + odd.join("، ") + " — تأكد منها قبل الحفظ" : "";
 }
-document.addEventListener("input", ev => { if (ev.target.closest("#ed")) checkNumbers(); });
+document.addEventListener("input", ev => { if (ev.target.closest("#ed")) { if (ev.target.tagName === "TEXTAREA") grow(ev.target); checkNumbers(); } });
 document.addEventListener("click", async ev => {
   const t = ev.target.closest("#ed button"); if (!t) return;
   if (t.id === "edx") { $("#ed").classList.remove("on"); await load(); return; }
-  if (t.dataset.addp != null) { const s = document.querySelector(`#ed [data-sec="${t.dataset.addp}"]`); t.parentElement.insertAdjacentHTML("beforebegin", `<label>فقرة</label><textarea data-p></textarea>`); return; }
+  if (t.dataset.addp != null) { const s = document.querySelector(`#ed [data-sec="${t.dataset.addp}"]`); t.parentElement.insertAdjacentHTML("beforebegin", `<label>فقرة</label><textarea data-p></textarea>`); t.parentElement.previousElementSibling.focus(); return; }
   if (t.dataset.ph != null) { document.querySelectorAll("#ed [data-ph]").forEach(b => b.setAttribute("aria-pressed", b === t ? "true" : "false")); PICK = A.photos[+t.dataset.ph]; return; }
   if (t.dataset.restore) {
     if (!confirm("ترجّع النسخة " + t.dataset.restore + "؟ النسخة الحالية تنحفظ قبلها.")) return;
