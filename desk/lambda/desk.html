@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>لوحة تيفو</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#0A2620;--s1:#0F3129;--s2:#143B32;--line:#F6F7F21A;--text:#F6F7F2;--t2:#B9C7C0;--t3:#8FA39A;--green:#5BE08F;--red:#FF8A7A;--amber:#F0BC5A;--blue:#8EC5FF;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:400 15px/1.55 "Readex Pro",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px 0}
+.row{display:flex;align-items:center;gap:8px}
+.brand{font-weight:700;font-size:18px}
+.brand i{font-style:normal;color:var(--green)}
+.stat{margin-inline-start:auto;font-size:12px;color:var(--t2);text-align:end}
+.stat b{color:var(--text);font-weight:600}
+.tabs{display:flex;gap:4px;margin-top:10px}
+.tab{flex:1;background:none;border:0;border-bottom:2px solid transparent;padding:10px 4px;color:var(--t2);font-weight:500}
+.tab[aria-selected=true]{color:var(--text);border-bottom-color:var(--green)}
+main{padding:12px 16px 90px;max-width:760px;margin:0 auto}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.chip{border:1px solid var(--line);background:var(--s1);border-radius:999px;padding:5px 12px;font-size:13px;white-space:nowrap;color:var(--t2)}
+.chip[aria-pressed=true]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.item{background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.item h3{margin:0 0 6px;font-size:15px;font-weight:600;line-height:1.5}
+.meta{font-size:12px;color:var(--t3);display:flex;flex-wrap:wrap;gap:4px 10px}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:var(--s2);color:var(--t2)}
+.tag.q{color:var(--amber)} .tag.w{color:var(--green)} .tag.r{color:var(--red)} .tag.b{background:#5BE08F22;color:var(--green)}
+.acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--s2);border-radius:8px;padding:7px 14px;font-size:13px}
+.btn.go{background:var(--green);color:#06251B;border-color:var(--green);font-weight:600}
+.btn.no{color:var(--red)}
+.btn:disabled{opacity:.5}
+.thumb{width:84px;height:47px;object-fit:cover;border-radius:6px;flex:none;background:var(--s2)}
+.pub{display:flex;gap:10px;align-items:flex-start}
+.empty{color:var(--t3);text-align:center;padding:40px 0}
+.bar{height:10px;background:var(--s2);border-radius:999px;overflow:hidden;margin:10px 0 4px}
+.bar span{display:block;height:100%;background:var(--green)}
+.big{font-size:28px;font-weight:700}
+.kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv span:last-child{color:var(--t2)}
+/* the editor */
+.ed{position:fixed;inset:0;z-index:10;background:var(--bg);overflow-y:auto;display:none}
+.ed.on{display:block}
+.ed .top{display:flex;align-items:center;gap:8px;padding:12px 16px}
+.ed main{padding-top:4px}
+label{display:block;font-size:12px;color:var(--t3);margin:14px 0 4px}
+input,textarea{width:100%;background:var(--s1);border:1px solid var(--line);border-radius:8px;color:var(--text);font:inherit;padding:9px 10px;line-height:1.6}
+textarea{resize:vertical;min-height:84px}
+input.h{font-weight:600;font-size:16px}
+.sec{border-inline-start:2px solid var(--line);padding-inline-start:10px;margin-top:14px}
+.warn{background:#F0BC5A1A;border:1px solid #F0BC5A55;color:var(--amber);border-radius:8px;padding:8px 10px;font-size:13px;margin-top:12px;display:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.grid button{border:2px solid transparent;border-radius:8px;padding:0;background:var(--s1);overflow:hidden;text-align:start}
+.grid button[aria-pressed=true]{border-color:var(--green)}
+.grid img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.grid small{display:block;padding:4px 6px;font-size:11px;color:var(--t3)}
+.cur{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;background:var(--s1)}
+.ver{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.ver div{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toast{position:fixed;bottom:20px;left:16px;right:16px;margin:auto;max-width:420px;background:var(--text);color:var(--bg);border-radius:10px;padding:10px 14px;font-size:14px;z-index:20;display:none;text-align:center}
+.lock{max-width:420px;margin:80px auto;text-align:center;color:var(--t2);padding:0 16px}
+.save{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 30%);padding:18px 0 14px}
+.save .btn{width:100%;padding:12px;font-size:15px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="ed" id="ed"></div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+const SITE = "https://tifo.elyoxe.com";
+const KIND = {transfer: "انتقالات", injury: "إصابات", presser: "مؤتمر صحفي", statement: "تصريحات", official: "إعلان رسمي", report: "تقرير مباراة", news: "خبر"};
+const STAGE = {rumour: "إشاعة", talks: "مفاوضات", agreed: "اتفاق", here_we_go: "Here we go", official: "رسمي"};
+const E = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const $ = s => document.querySelector(s);
+const hhmm = iso => new Date(iso).toLocaleTimeString("en-GB", {timeZone: "Asia/Dubai", hour: "2-digit", minute: "2-digit"});
+const day = iso => new Date(iso).toLocaleDateString("ar-AE-u-nu-latn", {timeZone: "Asia/Dubai", day: "numeric", month: "short"});
+function ago(iso) {
+  const m = Math.round((Date.now() - Date.parse(iso)) / 60000);
+  if (m < 1) return "الحين"; if (m < 60) return `قبل ${m} د`; if (m < 1440) return `قبل ${Math.round(m / 60)} س`; return day(iso);
+}
+
+let KEY = "";
+try { KEY = localStorage.getItem("tifo-desk-key") || ""; } catch (e) {}
+const hp = new URLSearchParams(location.hash.slice(1));
+if (hp.get("k")) {
+  KEY = hp.get("k");
+  try { localStorage.setItem("tifo-desk-key", KEY); } catch (e) {}
+  history.replaceState(null, "", location.pathname);
+}
+
+async function api(path, body) {
+  const r = await fetch(path, {method: body ? "POST" : "GET", headers: Object.assign({"x-desk-key": KEY}, body ? {"content-type": "application/json"} : {}),
+                               body: body ? JSON.stringify(body) : undefined});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(r.status === 401 ? "المفتاح غلط" : (j.error || ("خطأ " + r.status)));
+  return j;
+}
+function toast(t) { const el = $("#toast"); el.textContent = t; el.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.display = "none", 2600); }
+
+let D = null, TAB = "queue", FILTER = "all";
+try { TAB = sessionStorage.getItem("tab") || "queue"; } catch (e) {}
+
+async function load() {
+  try { D = await api("/api/view"); render(); }
+  catch (e) { $("#app").innerHTML = `<div class="lock"><p class="brand">لوحة <i>تيفو</i></p><p>${E(e.message)}</p><p>افتح الرابط اللي فيه المفتاح مرة وحدة، وبعدها تفتح اللوحة من هذا الجهاز على طول.</p></div>`; }
+}
+
+function status(r, v) {
+  const desk = D.desk || {};
+  if (r.status === "queued") {
+    if (r.now) return ["q", "بينكتب في الدورة الجاية"];
+    if ((v.written_today || 0) >= (v.daily || 60)) return ["q", "اليوم اكتمل، ينتظر باكر"];
+    const m = Math.round((Date.parse(r.due) - Date.now()) / 60000);
+    return ["q", m > 0 ? `ينكتب بعد ${m} د` : "ينكتب في الدورة الجاية"];
+  }
+  if (r.status === "rejected" || (desk.reject || {})[r.id]) return ["r", "مرفوض"];
+  return {written: ["w", "انكتب"], failed: ["r", "ما اجتاز الفحص"], duplicate: ["", "مكرر لخبر منشور"], withdrawn: ["r", "مسحوب"], waiting: ["", "ينتظر"]}[r.status] || ["", r.status];
+}
+
+function render() {
+  const v = D.view || {}, sp = D.spend || {}, cap = D.cap || 180;
+  const tabs = [["queue", "الطابور"], ["pub", "المنشور"], ["spend", "المصروف"]];
+  let body = "";
+  if (TAB === "queue") body = queueHtml(v);
+  else if (TAB === "pub") body = pubHtml();
+  else body = spendHtml(sp, cap, v);
+  $("#app").innerHTML = `<header class="top"><div class="row"><span class="brand">لوحة <i>تيفو</i></span>
+    <span class="stat">اليوم <b>${v.written_today || 0}</b> من ${v.daily || 60} · عاجل <b>${v.breaking_today || 0}</b><br>الصرف <b>$${(sp.usd || 0).toFixed(2)}</b> من $${cap}</span>
+    <button class="btn" id="re" aria-label="تحديث">↻</button></div>
+    <nav class="tabs" role="tablist">${tabs.map(([k, t]) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${TAB === k}">${t}</button>`).join("")}</nav></header>
+    <main>${body}</main>`;
+}
+
+function queueHtml(v) {
+  const rows = v.stories || [];
+  const f = {all: () => true, queued: r => r.status === "queued", written: r => r.status === "written", rejected: r => r.status === "rejected", grew: r => r.grew};
+  const chips = [["all", "الكل"], ["queued", "بالانتظار"], ["written", "انكتب"], ["rejected", "مرفوض"], ["grew", "قصص كبرت"]];
+  const list = rows.filter(f[FILTER] || f.all);
+  const upd = v.generated ? `<p class="meta" style="margin:0 0 8px">آخر تحديث للطابور ${ago(v.generated)} · يتحدث كل 15 دقيقة</p>` : "";
+  return `<div class="chips">${chips.map(([k, t]) => `<button class="chip" data-f="${k}" aria-pressed="${FILTER === k}">${t} ${k === "all" ? rows.length : rows.filter(f[k]).length}</button>`).join("")}</div>${upd}`
+    + (list.length ? list.map(r => {
+      const [c, t] = status(r, v);
+      const acts = r.status === "queued" ? `<button class="btn no" data-act="reject" data-id="${E(r.id)}">ارفض</button>${r.now ? "" : `<button class="btn" data-act="write" data-id="${E(r.id)}">اكتب الحين</button>`}`
+        : r.status === "rejected" ? `<button class="btn" data-act="unreject" data-id="${E(r.id)}">تراجع</button>`
+        : r.status === "written" ? `<button class="btn" data-edit="${E(r.article)}">حرّر</button><a class="btn" href="${SITE}/news/${E(r.article)}/" target="_blank" rel="noopener">افتح</a>` : "";
+      return `<article class="item"><h3>${E(r.title)}</h3><div class="meta"><span class="tag ${c}">${t}</span>${r.breaking ? '<span class="tag b">عاجل</span>' : ""}${r.grew ? '<span class="tag q">القصة كبرت بعد تعديلك</span>' : ""}
+        <span>${E(KIND[r.kind] || r.kind || "")}${r.stage ? " · " + E(STAGE[r.stage] || r.stage) : ""}</span><span>${r.outlets} مصدر</span><span>${ago(r.last_at)}</span></div>
+        <div class="meta" style="margin-top:4px">${E((r.names || []).join("، "))}${r.names && r.names.length && r.sources && r.sources.length ? " · " : ""}${E((r.sources || []).join("، "))}</div>
+        ${acts ? `<div class="acts">${acts}</div>` : ""}</article>`;
+    }).join("") : `<p class="empty">ما في شي هنا الحين</p>`);
+}
+
+function pubHtml() {
+  const list = D.published || [];
+  if (!list.length) return `<p class="empty">ما انتشر شي للحين</p>`;
+  return list.map(a => `<article class="item pub">${a.image && a.image.url ? `<img class="thumb" src="${E(a.image.url)}" alt="" loading="lazy">` : ""}
+    <div style="flex:1;min-width:0"><h3>${a.breaking ? '<span class="tag b">عاجل</span> ' : ""}${E(a.headline)}</h3>
+    <div class="meta"><span>${E(KIND[a.kind] || a.kind)}</span><span>${day(a.published)} ${hhmm(a.published)}</span>${a.modified !== a.published ? `<span>عُدّل ${ago(a.modified)}</span>` : ""}</div>
+    <div class="acts"><button class="btn" data-edit="${E(a.id)}">حرّر</button><a class="btn" href="${SITE}/news/${E(a.id)}/" target="_blank" rel="noopener">افتح</a><button class="btn no" data-act="withdraw" data-id="${E(a.id)}">اسحب</button></div></div></article>`).join("");
+}
+
+function spendHtml(sp, cap, v) {
+  const pct = Math.min(100, (sp.usd || 0) / cap * 100);
+  const by = Object.entries(sp.by_type || {}).sort((a, b) => b[1] - a[1]);
+  const name = {report: "تقارير المباريات", news: "الأخبار", breaking: "عاجل", photo: "اختيار الصور"};
+  return `<div class="item"><div class="meta">صرف هذا الشهر</div><div class="big">$${(sp.usd || 0).toFixed(2)}</div>
+    <div class="bar"><span style="width:${pct}%"></span></div><div class="meta">من سقف $${cap}${sp.capped ? " · وصل السقف، الكتابة واقفة لين بداية الشهر" : ""} · ${sp.calls || 0} طلب</div></div>
+    <div class="item">${by.length ? by.map(([k, u]) => `<div class="kv"><span>${E(name[k] || k)}</span><span>$${u.toFixed(2)}</span></div>`).join("") : '<p class="meta">ما في صرف للحين</p>'}</div>
+    <div class="item"><div class="kv"><span>أخبار انكتبت اليوم</span><span>${v.written_today || 0} من ${v.daily || 60}</span></div><div class="kv"><span>عاجل اليوم</span><span>${v.breaking_today || 0} من 15</span></div></div>`;
+}
+
+document.addEventListener("click", async ev => {
+  const t = ev.target.closest("button"); if (!t) return;
+  if (t.id === "re") { await load(); toast("تحدّث"); return; }
+  if (t.dataset.tab) { TAB = t.dataset.tab; try { sessionStorage.setItem("tab", TAB); } catch (e) {} render(); return; }
+  if (t.dataset.f) { FILTER = t.dataset.f; render(); return; }
+  if (t.dataset.edit) { openEditor(t.dataset.edit); return; }
+  if (t.dataset.act) {
+    const a = t.dataset.act, id = t.dataset.id;
+    if (a === "withdraw" && !confirm("تسحب المقال من الموقع؟ يختفي من القوائم الحين، والصفحة نفسها مع التحديث الجاي للموقع.")) return;
+    t.disabled = true;
+    try {
+      const r = await api("/api/act", {action: a, id}); D.desk = r.desk;
+      if (a === "withdraw") D.published = D.published.filter(x => x.id !== id);
+      (D.view.stories || []).forEach(s => { if (s.id === id) { if (a === "reject") s.status = "rejected"; if (a === "unreject") s.status = "queued"; if (a === "write") s.now = true; } });
+      render(); toast({reject: "انرفض", unreject: "رجع للطابور", write: "بينكتب في الدورة الجاية (خلال 15 دقيقة)", withdraw: "انسحب"}[a] || "تم");
+    } catch (e) { t.disabled = false; toast(e.message); }
+  }
+});
+
+// ---- the editor
+let A = null, PICK = null;
+async function openEditor(id) {
+  const ed = $("#ed"); ed.classList.add("on"); ed.innerHTML = `<p class="empty">يحمّل…</p>`;
+  try { A = await api("/api/article?id=" + encodeURIComponent(id)); PICK = null; drawEditor(); }
+  catch (e) { ed.innerHTML = `<div class="lock"><p>${E(e.message)}</p><button class="btn" id="edx">رجوع</button></div>`; }
+}
+function drawEditor() {
+  const d = A.doc, ed = $("#ed");
+  const secs = (d.sections || []).map((s, i) => `<div class="sec" data-sec="${i}"><label>عنوان فرعي</label><input data-sub value="${E(s.subhead)}">
+    ${(s.paragraphs || []).map(p => `<label>فقرة</label><textarea data-p>${E(p)}</textarea>`).join("")}
+    <div class="acts"><button class="btn" data-addp="${i}">+ فقرة</button></div></div>`).join("");
+  const photos = A.photos || [];
+  ed.innerHTML = `<header class="top"><button class="btn" id="edx">رجوع</button><span class="brand" style="font-size:15px">تحرير</span>
+      <a class="btn" style="margin-inline-start:auto" href="${SITE}/news/${E(d.id)}/" target="_blank" rel="noopener">افتح</a></header>
+    <main>
+      ${d.image && d.image.url ? `<img class="cur" src="${E(d.image.url)}" alt=""><p class="meta">${E(d.image.caption || "")}</p>` : ""}
+      <label>العنوان</label><input class="h" id="f-h" value="${E(d.headline)}">
+      <label>المقدمة</label><textarea id="f-s">${E(d.standfirst)}</textarea>
+      ${secs}
+      <label>حقائق سريعة (سطر لكل حقيقة)</label><textarea id="f-f">${E((d.facts_box || []).join("\n"))}</textarea>
+      <div class="warn" id="warn"></div>
+      ${photos.length ? `<label>غيّر الصورة (من صور المصادر)</label><div class="grid">${photos.map((p, i) => `<button data-ph="${i}" aria-pressed="false"><img src="${E(p.url)}" alt="" loading="lazy" referrerpolicy="no-referrer"><small>${E(p.source || "")}</small></button>`).join("")}</div>` : ""}
+      ${(A.versions || []).length ? `<label>النسخ السابقة</label>${A.versions.slice().reverse().map(v => `<div class="ver"><span class="tag">${v.version}</span><div>${E(v.headline)}</div><span class="meta">${v.modified ? hhmm(v.modified) : ""}</span><button class="btn" data-restore="${v.version}">رجّعها</button></div>`).join("")}` : ""}
+      <div class="save"><button class="btn go" id="sv">احفظ وانشر</button></div>
+      <p class="meta">التعديل يطلع في القوائم الحين، وصفحة المقال نفسها مع تحديث الموقع كل ساعة. المقال اللي تعدّله ما ينكتب من جديد آلياً.</p>
+    </main>`;
+  checkNumbers();
+}
+function collect() {
+  const secs = [...document.querySelectorAll("#ed [data-sec]")].map(s => ({subhead: s.querySelector("[data-sub]").value, paragraphs: [...s.querySelectorAll("[data-p]")].map(t => t.value)}));
+  return {id: A.doc.id, headline: $("#f-h").value, standfirst: $("#f-s").value, sections: secs, facts_box: $("#f-f").value.split("\n")};
+}
+function checkNumbers() {
+  const w = $("#warn"); if (!w) return;
+  const known = new Set(A.numbers || []);
+  if (!known.size) { w.style.display = "none"; return; }
+  const c = collect(), text = [c.headline, c.standfirst, ...c.sections.flatMap(s => [s.subhead, ...s.paragraphs]), ...c.facts_box].join(" ");
+  const odd = [...new Set((text.match(/\d+(?:[.,]\d+)?/g) || []).filter(n => !known.has(n)))];
+  w.style.display = odd.length ? "block" : "none";
+  w.textContent = odd.length ? "أرقام مب موجودة في ورقة الحقائق: " + odd.join("، ") + " — تأكد منها قبل الحفظ" : "";
+}
+document.addEventListener("input", ev => { if (ev.target.closest("#ed")) checkNumbers(); });
+document.addEventListener("click", async ev => {
+  const t = ev.target.closest("#ed button"); if (!t) return;
+  if (t.id === "edx") { $("#ed").classList.remove("on"); await load(); return; }
+  if (t.dataset.addp != null) { const s = document.querySelector(`#ed [data-sec="${t.dataset.addp}"]`); t.parentElement.insertAdjacentHTML("beforebegin", `<label>فقرة</label><textarea data-p></textarea>`); return; }
+  if (t.dataset.ph != null) { document.querySelectorAll("#ed [data-ph]").forEach(b => b.setAttribute("aria-pressed", b === t ? "true" : "false")); PICK = A.photos[+t.dataset.ph]; return; }
+  if (t.dataset.restore) {
+    if (!confirm("ترجّع النسخة " + t.dataset.restore + "؟ النسخة الحالية تنحفظ قبلها.")) return;
+    try { const r = await api("/api/restore", {id: A.doc.id, version: +t.dataset.restore}); toast("رجعت النسخة"); await openEditor(r.doc.id); } catch (e) { toast(e.message); }
+    return;
+  }
+  if (t.id === "sv") {
+    t.disabled = true;
+    try {
+      let r = await api("/api/edit", collect());
+      if (PICK) {
+        const who = ((A.doc.image || {}).caption || "").split(" — ")[0];
+        r = await api("/api/photo", {id: A.doc.id, url: PICK.url, source: PICK.source, caption: (A.doc.image || {}).caption && (A.doc.image.caption.includes(" — ")) ? who : ""});
+      }
+      toast("انحفظ وانشر"); await openEditor(r.doc.id);
+    } catch (e) { t.disabled = false; toast(e.message); }
+  }
+});
+
+load();
+</script>
+</body>
+</html>
