@@ -165,9 +165,8 @@ def job_site(log):
         (["s3", "sync", "out/logo", f"s3://{bucket}/logo", "--region", REGION, "--only-show-errors", "--cache-control", "public,max-age=604800"], "logos"),
         # the stages' files (below) live outside out/: the encyclopedia's db/player/<id>/, the share cards og/s/ and the goal pages
         # m/<id>/g/<n>/; the --delete must not take them
-        (["s3", "sync", "out", f"s3://{bucket}", "--region", REGION, "--only-show-errors", "--delete", "--exclude", "assets/*", "--exclude", "logo/*",
-          "--exclude", "next/*", "--exclude", "google*.html", "--exclude", "db/player/[0-9]*", "--exclude", "og/s/*", "--exclude", "m/*/g/*",
-          "--cache-control", "public,max-age=60"], "pages"),
+        (["s3", "sync", "out", f"s3://{bucket}", "--region", REGION, "--only-show-errors", "--delete"]
+         + [a for p in page_excludes() for a in ("--exclude", p)] + ["--cache-control", "public,max-age=60"], "pages"),
     ]
     for args, what in syncs:
         if what == "pages":                            # 2026-10-08: boto3, 32 at a time (tools/s3push.py); the CLI sync is the fallback
@@ -185,6 +184,13 @@ def job_site(log):
         if rc:
             return False, f"{what} sync failed: {tail}"
     world = publish_stage(log, bucket, "world") + publish_stage(log, bucket, "share")
+    # the shells the fast «Article pages» step fills (news/articles/pages.py): this build's own page() for an article and for
+    # /news/, so a page written between builds looks exactly like the build's
+    try:
+        sh = {k: (out / "_shells" / f"{k}.html").read_text(encoding="utf-8") for k in ("article", "news")}
+        STORE.put_state("site/shells.json", dict(sh, built=datetime.now(timezone.utc).isoformat(timespec="seconds")))
+    except Exception as e:
+        log.w(f"shells not saved: {e}")
     lastf.write_text(str(now))
     try:
         STORE.put_state("runner/site-pages.json", {"pages": now, "host": HOST, "at": datetime.now(timezone.utc).isoformat(timespec="seconds")})
@@ -213,6 +219,16 @@ def job_site(log):
     # «ok» = the pages are published and answer. The feed's own health (the poller) is reported here but alerts on its own:
     # counting it as a site failure marked 62 published builds «failed» (2026-10-02..05) and set off the Fold's old watchdog
     return all(c == 200 for c in codes.values()), note
+
+
+# what the hourly publish never uploads or deletes: the files other stages own, and (2026-11-19) what the fast «Article pages»
+# step owns — the article pages, /news/, the articles' stylesheet, the news sitemap — plus the shells it fills
+PAGE_EXCLUDES = ["assets/*", "logo/*", "next/*", "google*.html", "db/player/[0-9]*", "og/s/*", "m/*/g/*"]
+FAST_OWNED = ["news/index.html", "news/[a-z]-*", "news/a.*.css", "sitemap-news.xml", "_shells/*"]
+
+
+def page_excludes():
+    return PAGE_EXCLUDES + FAST_OWNED
 
 
 def publish_stage(log, bucket, name):

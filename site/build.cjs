@@ -909,6 +909,10 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // Tifo articles (lib/articles.cjs): the /news/<id>/ pages, the trust pages, sitemap-news.xml; the match pages link the report,
   // the /news/ page lists the newest ten
   const ART = await require("./lib/articles.cjs").render({ get, pool, write, page, esc, SITE, OUT, fs, path, names:require("./lib/articles.cjs").makeNames(S_TEAMS, PNAMES) });
+  // the shell the fast «Article pages» step fills between builds (news/articles/pages.py, lib/render_news.cjs): this build's own
+  // page() with markers, written through write() so it gets the same asset versions; never published (tools/runner.py FAST_OWNED)
+  write("_shells/article.html", page({ path:"/news/__ID__/", page:"ref", title:"__TITLE__", desc:"__DESC__", ogUrl:"__OGURL__", ogW:1200, ogH:675,
+    ld:{ __LD__:1 }, head:require("./lib/articles.cjs").HEAD, body:"__BODY__" }));
   urls.push(...ART.urls);
   const SHARE = require("./lib/share_stage.cjs"), SHPUB = SHARE.published({ CACHE, fs, path }), SHJ = [], SHG = [], STUBS = [], CLIPS = {};
   { const mr = await get("media/recent.json", 1), withG = ((mr && mr.matches) || []).filter(m => m.goals > 0).map(m => m.id), mf = await pool(withG, 6, i => get(`media/${i}.json`, 1));
@@ -1327,6 +1331,7 @@ ${items}
     v5.body = A.pressTabs() + v5.body.replace(/^<div class="lt"><h1>الأخبار<\/h1>[\s\S]*?<\/div>/, "");
     write("news/press/index.html", page({ v5, path:"/news/press/", page:"news", head:A.CSS_LINK, title:"أخبار الكورة من الصحف: الانتقالات والإصابات والتصريحات | تيفو", desc:"آخر أخبار الكورة من الصحف العربية والعالمية والقنوات الرسمية، بخلاصة عربية وكل خبر مربوط بناديه ولاعبيه، ومرحلة كل صفقة من الإشاعة للرسمي." })); urls.push("/news/press/");
     const ours = Object.assign({}, v5, { body:A.newsIndexHtml(ART.list, Date.now()), data:{} });
+    write("_shells/news.html", page({ v5:Object.assign({}, ours, { body:"__BODY__" }), path:"/news/", page:"news", head:A.CSS_LINK, title:"__TITLE__", desc:"__DESC__" }));
     write("news/index.html", page({ v5:ours, path:"/news/", page:"news", head:A.CSS_LINK, title:"أخبار الكورة اليوم من تحرير تيفو: الانتقالات والإصابات وتقارير المباريات | تيفو", desc:"مقالات تيفو: تقارير المباريات وأخبار الانتقالات والإصابات والتصريحات، تكتبها «تحرير تيفو» من بيانات تيفو والمصادر الرسمية." })); urls.push("/news/"); }
   if (APPROVED.ask){ write("ask/index.html", page({ path:"/ask/", page:"ask", title:"اسأل تيفو: أي سؤال عن الكورة الإماراتية | تيفو", desc:"اسأل بالعامية عن الدوري الإماراتي والمنتخب: الترتيب، الهدافين، البطولات، المواجهات. الجواب من بيانات تيفو.",
     body:'<h1>اسأل تيفو</h1><p class="muted">اسأل بالعامية عن الدوري الإماراتي والمنتخب، والجواب من بيانات تيفو بس.</p><form id="askf" class="ask"><input id="askq" maxlength="200" placeholder="مثلاً: متى آخر مرة فاز الوصل على العين؟" aria-label="سؤالك"><button class="btn" type="submit">اسأل</button></form><div id="aska" role="status"></div><p class="src">الجواب يكتبه نموذج ذكاء اصطناعي من أرقام تيفو، وممكن يغلط. 25 سؤال باليوم لكل شخص.</p>' })); urls.push("/ask/"); }
