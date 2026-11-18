@@ -1,0 +1,57 @@
+# THROWAWAY spike (2026-11-18), never merged: can a runner download Tifo's goal clips and render one TifoGoal?
+# Runs on a push to the goal-render-spike branch only. No AWS, no secrets: the render reads the old public Lambda site
+# (sites/tifo-goal, Remotion 4.0.526) and gets the clip from a local server.
+name: Tifo goal render spike
+on:
+  push:
+    branches: [goal-render-spike]
+permissions:
+  contents: read
+jobs:
+  spike:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      SERVE: https://remotionlambda-apsouth1-f5deu1gkph.s3.ap-south-1.amazonaws.com/sites/tifo-goal/index.html
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Runner
+        run: |
+          nproc; free -m | head -2; node --version
+          curl -s https://ipinfo.io/json | python -c "import json,sys;d=json.load(sys.stdin);print(d.get('org'),d.get('region'),d.get('country'))" || true
+      - name: Tools (timed)
+        run: |
+          t0=$(date +%s); python -m pip install -q -U "yt-dlp[default]"; echo "pip yt-dlp: $(( $(date +%s)-t0 )) s"; yt-dlp --version
+          if ! command -v ffmpeg; then t0=$(date +%s); sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null; echo "apt ffmpeg: $(( $(date +%s)-t0 )) s"; fi
+          ffmpeg -version | head -1
+      - name: yt-dlp on 10 clips
+        run: python spike/fetch.py
+      - name: Remotion 4.0.526 (timed)
+        run: |
+          mkdir -p /tmp/r && cd /tmp/r && npm init -y >/dev/null
+          t0=$(date +%s); npm i --no-audit --no-fund --silent @remotion/cli@4.0.526 remotion@4.0.526 react@19.1.1 react-dom@19.1.1; echo "npm i: $(( $(date +%s)-t0 )) s"
+          t0=$(date +%s); npx remotion browser ensure; echo "browser ensure: $(( $(date +%s)-t0 )) s"
+      - name: Render one TifoGoal (default concurrency, then all cores)
+        run: |
+          src=$(ls -S dl/*.mp4 | head -1); echo "clip from $src"
+          mkdir -p serve && ffmpeg -v error -y -ss 20 -i "$src" -t 12 -vf scale=1280:-2 -c:v libx264 -preset veryfast -crf 20 -c:a aac -b:a 128k -ar 48000 serve/clip.mp4
+          (cd serve && python -m http.server 8765 >/dev/null 2>&1 &)
+          sleep 1
+          cp spike/props.json /tmp/r/props.json && cd /tmp/r
+          for c in "" "--concurrency=100%"; do
+            t0=$(date +%s.%N)
+            npx remotion render "$SERVE" TifoGoal out.mp4 --props=props.json --codec=h264 --crf=20 --timeout=240000 --log=error $c
+            t1=$(date +%s.%N)
+            s=$(python -c "print(round($t1-$t0,1))"); mb=$(python -c "import os;print(round(os.path.getsize('out.mp4')/1e6,2))")
+            d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 out.mp4)
+            echo "render ${c:-default}: ${s} s, ${mb} MB, ${d} s long" | tee -a "$GITHUB_STEP_SUMMARY"
+            cp out.mp4 "$GITHUB_WORKSPACE/render${c:+-all}.mp4"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spike-render
+          path: render*.mp4
+          retention-days: 1
