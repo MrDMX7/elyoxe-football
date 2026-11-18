@@ -210,6 +210,8 @@ def news_sheet(story, items, texts, data_get, ar, teams, breaking=False):
     seed = [(k, int(i)) for k, i in story.get("seed") or []]       # who the first headline names (news.run.subjects)
     who = next((e for e in seed if ar.get(e)), None) or (named[0] if named else (seed or anchor or [None])[0])
     meta = {"story": story["id"], "teams": clubs, "players": players, "stage": story.get("stage"), "items": len(story.get("items") or []),
-            "subject": ar.get(who) if who else None, "query": latin.get(who) if who else None,
+            "subject": ar.get(who) if who else None,
+            # Wikimedia by name, for a player only: «Real Madrid» found the El Escorial monastery, «Barcelona» its towers (2026-11-19)
+            "query": latin.get(who) if who and who[0] == "player" else None,
             "card_teams": clubs or their}               # a player-only story's card shows his club (final review, finding 9)
     return sheet, meta

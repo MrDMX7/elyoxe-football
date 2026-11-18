@@ -150,7 +150,12 @@ def news_pick(aid, cands, team_ids, fetch, store, subject=None, headline="", jud
     best = max(ok, key=lambda x: x[0].width) if ok else None
     if ok and judge:
         try:
-            i = judge(headline, [_thumb(im) for im, _ in ok])
+            import inspect
+            thumbs = [_thumb(im) for im, _ in ok]
+            if len(inspect.signature(judge).parameters) >= 3:          # the judge is told where each photo came from
+                i = judge(headline, thumbs, [c["source"] for _, c in ok])
+            else:
+                i = judge(headline, thumbs)
             best = ok[i] if 0 <= i < len(ok) else None
         except Exception as e:
             print(json.dumps({"photo_judge_error": aid, "error": str(e)[:200]}))

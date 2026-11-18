@@ -74,3 +74,11 @@ def test_a_player_only_story_cards_the_players_club():
     story = {"id": "x", "kind": "injury", "anchor": [["player", 1]], "items": []}
     _, meta = F.news_sheet(story, {}, TEXTS, lambda p: {"name": "A", "team": 8634} if p == "player/1.json" else None, {}, {})
     assert meta["teams"] == [] and meta["card_teams"] == [8634]
+
+
+def test_a_club_gets_no_archive_photo_search():
+    """2026-11-19 on the live site: Wikimedia answered «Real Madrid» with the El Escorial monastery and «Barcelona» with the
+    city's towers; a player's name finds the player."""
+    story = {"id": "x", "kind": "transfer", "anchor": [["team", 1]], "items": []}
+    _, meta = F.news_sheet(story, {}, TEXTS, lambda p: None, {("team", 1): "ريال مدريد"}, {"1": {"name": "Real Madrid"}})
+    assert meta["subject"] == "ريال مدريد" and meta["query"] is None

@@ -54,15 +54,20 @@ class Writer:
 
     PHOTO_SCHEMA = {"type": "object", "properties": {"best": {"type": "integer"}}, "required": ["best"], "additionalProperties": False}
     PHOTO_ASK = ("These are candidate photos, numbered from 0, for an Arabic football news article with the headline below. "
-                 "Pick the one that best shows what the news is about: the player, the club or the event it names. Never pick a "
-                 "site's logo, a graphic or card full of text, an advert, or a photo of someone else. If none fits, answer -1.\n\n"
-                 "Headline: ")
+                 "Pick the one that best shows what the news is about: the player, the club or the event it names. A photo from a news "
+                 "outlet covering this story is usually the right one; an archive photo found by name only when it clearly shows that "
+                 "person playing football. Never pick: a painting, artwork or drawing; a building, city, landscape or monument; a "
+                 "site's logo, a graphic or card full of text; an advert; an old team photo; or a photo of someone else. If none fits, "
+                 "answer -1.\n\nHeadline: ")
 
-    def pick_photo(self, headline, thumbs, model="claude-haiku-5-5"):
-        """-> (index of the best photo or -1, usage). One small call: the thumbnails are 512 px at most."""
+    def pick_photo(self, headline, thumbs, model="claude-haiku-5-5", sources=None):
+        """-> (index of the best photo or -1, usage). One small call: the thumbnails are 512 px at most. sources: where each photo
+        came from (an outlet covering the story, or Wikimedia Commons: an archive photo found by name)."""
         content = []
         for i, t in enumerate(thumbs):
-            content += [{"type": "text", "text": f"Photo {i}:"},
+            src = (sources or [None] * len(thumbs))[i]
+            where = "" if src is None else " (archive photo found by name)" if src == "ويكيميديا كومنز" else " (from a news outlet covering this story)"
+            content += [{"type": "text", "text": f"Photo {i}{where}:"},
                         {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": base64.b64encode(t).decode()}}]
         content.append({"type": "text", "text": self.PHOTO_ASK + headline})
         msg = self._c().messages.create(model=model, max_tokens=200, messages=[{"role": "user", "content": content}],
