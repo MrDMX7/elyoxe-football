@@ -30,7 +30,7 @@ def test_the_sheet_carries_the_news_and_tifos_context():
     if TRANSFER["anchor"][0][0] == "player":
         assert meta["query"] == "P"                          # the Latin name, for the Commons photo search
     if any(e[0] == "player" for e in TRANSFER["anchor"]):
-        assert any(k.endswith("هذا الموسم") for k in sheet["بيانات تيفو"])
+        assert any("هذا الموسم" in k for k in sheet["بيانات تيفو"])
 
 
 def test_breaking_is_its_own_kind():
@@ -42,5 +42,28 @@ def test_a_players_team_is_an_id_in_tifos_data():
     """player/<id>.json carries the team as its id (live data, dry run 2026-11-19): the club's name comes from the dictionary."""
     real = lambda path: {"name": "Weston McKennie", "team": 9885, "comp": 55, "minutes": 613, "goals": 1} if path.startswith("player/") else None
     sheet, _ = F.news_sheet(TRANSFER, S["items"], TEXTS, real, {**AR, ("team", 9885): "يوفنتوس"}, {})
-    rows = [v for k, v in sheet["بيانات تيفو"].items() if k.endswith("هذا الموسم")]
+    rows = [v for k, v in sheet["بيانات تيفو"].items() if "هذا الموسم" in k]
     assert rows and rows[0]["الفريق"] == "يوفنتوس" and rows[0]["الدقائق"] == 613
+
+
+def test_the_subject_is_who_the_headline_is_about():
+    """The journal's seed is who the first headline names; the anchor lists everyone (dry run 2026-11-19: an Arda Güler
+    article's photo was captioned «كيليان مبابي», the first player in the anchor)."""
+    story = dict(TRANSFER, seed=[TRANSFER["anchor"][-1]])
+    _, meta = F.news_sheet(story, S["items"], TEXTS, data_get, AR, {})
+    assert meta["subject"] == AR[tuple(TRANSFER["anchor"][-1])]
+
+
+def test_the_table_is_the_league_and_every_number_names_its_competition():
+    """Real Madrid's comps are [78 Club World Cup, 87 LaLiga, 42 Champions League]: the first one gave «يتصدر ريال مدريد الترتيب
+    برصيد 7 نقاط من 3 مباريات» (dry run 2026-11-19). The table is the league's, and the player's numbers say which competition."""
+    story = {"id": "x", "kind": "transfer", "anchor": [["player", 1], ["team", 8633]], "items": []}
+    table = {"groups": [{"rows": [{"rank": 2, "team": {"id": 8633, "name_ar": "ريال مدريد"}, "played": 12, "pts": 30}]}]}
+    def get(path):
+        if path == "player/1.json":
+            return {"name": "Arda Guler", "team": 8633, "comp": 42, "minutes": 109, "goals": 1}
+        return table if path == "comp/87/standings.json" else {"groups": [{"rows": [{"rank": 1, "team": {"id": 8633}, "played": 3, "pts": 7}]}]}
+    sheet, _ = F.news_sheet(story, {}, TEXTS, get, {("player", 1): "أردا غولر", ("team", 8633): "ريال مدريد"}, {"8633": {"comps": [78, 87, 42]}})
+    tifo = sheet["بيانات تيفو"]
+    assert tifo["ترتيب ريال مدريد في الدوري الإسباني"] == {"المركز": 2, "لعب": 12, "النقاط": 30}
+    assert "أردا غولر هذا الموسم في دوري أبطال أوروبا" in tifo and len(tifo) == 2

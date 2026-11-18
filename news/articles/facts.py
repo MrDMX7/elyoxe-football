@@ -150,6 +150,11 @@ def report_sheet(md, standings, fixtures, names):
     return sheet, meta
 
 
+def _comp_ar(cid):
+    import config
+    return (config.competition(cid) or {}).get("name_ar") or ""
+
+
 KIND_AR = {"transfer": "انتقالات", "injury": "إصابات", "presser": "مؤتمر صحفي", "statement": "تصريحات", "official": "إعلان رسمي",
            "match": "مباراة"}
 STAGE_AR = {"rumour": "إشاعة", "talks": "مفاوضات", "agreed": "اتفاق", "here_we_go": "اتفاق نهائي «Here we go»", "official": "رسمي"}
@@ -159,6 +164,7 @@ def news_sheet(story, items, texts, data_get, ar, teams, breaking=False):
     """The news fact sheet (spec, «News rules»), in the shape the owner judged in the blind tests (articles-test/build_news.py).
     ar: the journal dictionary's Arabic names {(kind, id): name}; the writer must use them as they are. meta's subject is the
     Arabic name of who the story is about (the photo caption), and query its Latin name (the Commons photo search)."""
+    import config
     from news.run import credibility
     from news.cluster import sources_of
     anchor = [(k, int(i)) for k, i in story.get("anchor") or []]
@@ -173,14 +179,16 @@ def news_sheet(story, items, texts, data_get, ar, teams, breaking=False):
             club = t.get("name_ar") if isinstance(t, dict) else (ar.get(("team", int(t))) or _club(teams.get(str(t)) or {}) or None) if t else None
             row = {"الفريق": club, "الدقائق": p.get("minutes"), "الأهداف": p.get("goals"),
                    "الصناعة": p.get("assists"), "التقييم": p.get("rating")}
-            tifo[f"{ar.get(('player', pid)) or p.get('name')} هذا الموسم"] = {k: v for k, v in row.items() if v is not None}
+            where = f" في {_comp_ar(p['comp'])}" if p.get("comp") and _comp_ar(p["comp"]) else ""
+            tifo[f"{ar.get(('player', pid)) or p.get('name')} هذا الموسم{where}"] = {k: v for k, v in row.items() if v is not None}
     for tid in clubs[:2]:
-        for cid in ((teams.get(str(tid)) or {}).get("comps") or [])[:1]:
+        # the league's table, named: a club's first comp can be a cup with groups (Real Madrid's is the Club World Cup)
+        for cid in [c for c in (teams.get(str(tid)) or {}).get("comps") or [] if (config.competition(c) or {}).get("kind") == "league"][:1]:
             st = data_get(f"comp/{cid}/standings.json") or {}
             r = next((r for g in st.get("groups") or [] for r in g.get("rows") or [] if r["team"]["id"] == tid), None)
             if r:
-                tifo[f"ترتيب {ar.get(('team', tid)) or _club(r['team'])} الآن"] = {"المركز": r["rank"], "لعب": r["played"],
-                                                                                  "النقاط": r.get("pts", r.get("points"))}
+                tifo[f"ترتيب {ar.get(('team', tid)) or _club(r['team'])} في {_comp_ar(cid)}"] = {"المركز": r["rank"], "لعب": r["played"],
+                                                                                         "النقاط": r.get("pts", r.get("points"))}
     its = [items[i] for i in story.get("items") or [] if i in items]
     cred = credibility(story, sources_of(story, items))
     shown = {t["source"] for t in texts}
@@ -196,7 +204,8 @@ def news_sheet(story, items, texts, data_get, ar, teams, breaking=False):
         "بيانات تيفو": tifo,
     }
     sheet = {k: v for k, v in sheet.items() if v not in (None, [], {})}
-    who = named[0] if named else (anchor[0] if anchor else None)
+    seed = [(k, int(i)) for k, i in story.get("seed") or []]       # who the first headline names (news.run.subjects)
+    who = next((e for e in seed if ar.get(e)), None) or (named[0] if named else (seed or anchor or [None])[0])
     meta = {"story": story["id"], "teams": clubs, "players": players, "stage": story.get("stage"), "items": len(story.get("items") or []),
             "subject": ar.get(who) if who else None, "query": latin.get(who) if who else None}
     return sheet, meta

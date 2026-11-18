@@ -83,3 +83,15 @@ def test_pick_photo_sends_the_photos_and_the_headline_to_haiku():
     assert best == 1 and usage["in"] == 900 and kw["model"] == "claude-haiku-5-5"
     assert [b["type"] for b in blocks].count("image") == 2 and "صلاح يجدد" in blocks[-1]["text"]
     assert WR.Writer(FakeClient({"best": 7})).pick_photo("x", [jpg(400, 225)])[0] == -1     # out of range: none
+
+
+def test_a_date_written_in_a_sources_language_counts_as_in_the_sheet():
+    """«30 de junio de 2032» in a Spanish source is the sheet's date: the dry run (2026-11-19) failed a correct «30 يونيو»,
+    and the rewrite dropped the fact."""
+    sheet = {"النوع": "خبر", "نصوص المصادر (للحقائق فقط، لا تُنسخ)": [
+        {"المصدر": "Real Madrid", "النص": "queda vinculado al club hasta el 30 de junio de 2032"},
+        {"المصدر": "BBC", "النص": "The deal runs until June 30, and he joined on 1 July 2023."},
+        {"المصدر": "كووورة", "النص": "انضم في 5 أغسطس"}]}
+    dates = lambda a: [f for f in C.check_news(art(a + " " + "كلمة " * 260), sheet, (250, 450)) if f.startswith("date")]
+    assert dates("يمتد العقد حتى 30 يونيو 2032، وكان انضم في 1 يوليو 2023 ثم في 5 أغسطس.") == []
+    assert dates("يمتد العقد حتى 29 يونيو 2032.") == ["date «29 يونيو» is not in the sheet"]
