@@ -1,8 +1,9 @@
 # THROWAWAY spike (2026-11-18), never merged: can a runner download Tifo's goal clips and render one TifoGoal?
-# Runs on a push to the goal-render-spike branch only. No AWS, no secrets: the render reads the old public Lambda site
-# (sites/tifo-goal, Remotion 4.0.526) and gets the clip from a local server.
-# v2: X 5/5, YouTube 0/5. Remotion's own ffmpeg has no fps filter (goal_moment needs it). v3: apt ffmpeg again, non-interactive,
-# with a timeout (v1's apt-get hung 11 min with no output).
+# Runs on a push to the goal-render-spike branch only. No AWS, no secrets.
+# v2: X 5/5, YouTube 0/5; Remotion's own ffmpeg has no fps filter. v3: apt ffmpeg hit a 300 s cap (mirror at 480 kB/s);
+# render 86 s (77 s on all cores). v4: ffmpeg from the imageio-ffmpeg wheel; the bundle as a local folder (the public Lambda
+# site's files) with clip.mp4, crests and goal.json written into its public/tifogoal/, rendered by a list-argument
+# subprocess with no shell from the Remotion folder, as goal_watch.render_local does on a runner.
 name: Tifo goal render spike
 on:
   push:
@@ -12,56 +13,64 @@ permissions:
 jobs:
   spike:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 25
     env:
-      SERVE: https://remotionlambda-apsouth1-f5deu1gkph.s3.ap-south-1.amazonaws.com/sites/tifo-goal/index.html
-      DEBIAN_FRONTEND: noninteractive
-      NEEDRESTART_MODE: a
+      SITE: https://remotionlambda-apsouth1-f5deu1gkph.s3.ap-south-1.amazonaws.com/sites/tifo-goal
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - name: apt ffmpeg (timed, 5 min cap)
-        timeout-minutes: 7
-        continue-on-error: true
+      - name: ffmpeg from imageio-ffmpeg, yt-dlp (timed)
+        timeout-minutes: 4
         run: |
-          t0=$(date +%s); sudo -E timeout 150 apt-get update -o Acquire::Retries=2 -o Dpkg::Use-Pty=0 | tail -3; echo "apt update: $(( $(date +%s)-t0 )) s" | tee -a "$GITHUB_STEP_SUMMARY"
-          t0=$(date +%s); sudo -E timeout 300 apt-get install -y --no-install-recommends -o Dpkg::Use-Pty=0 ffmpeg | tail -3; echo "apt install ffmpeg: $(( $(date +%s)-t0 )) s" | tee -a "$GITHUB_STEP_SUMMARY"
-          ffmpeg -hide_banner -version | head -1
-      - name: Remotion 4.0.526 (timed)
-        timeout-minutes: 6
+          t0=$(date +%s); python -m pip install -q -U imageio-ffmpeg "yt-dlp[default]"; echo "pip imageio-ffmpeg + yt-dlp: $(( $(date +%s)-t0 )) s" | tee -a "$GITHUB_STEP_SUMMARY"
+          exe=$(python -c "import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())"); mkdir -p ~/bin && ln -sf "$exe" ~/bin/ffmpeg && echo "$HOME/bin" >> "$GITHUB_PATH"
+          ~/bin/ffmpeg -hide_banner -version | head -1 | tee -a "$GITHUB_STEP_SUMMARY"
+          ~/bin/ffmpeg -hide_banner -filters 2>/dev/null | grep -E " (fps|scale) "; ~/bin/ffmpeg -hide_banner -encoders 2>/dev/null | grep -E "libx264|mjpeg| aac"
+      - name: Remotion 4.0.526 and the bundle folder
+        timeout-minutes: 5
         run: |
           mkdir -p /tmp/r && cd /tmp/r && npm init -y >/dev/null
-          t0=$(date +%s); npm i --no-audit --no-fund --silent @remotion/cli@4.0.526 remotion@4.0.526 react@19.1.1 react-dom@19.1.1; echo "npm i: $(( $(date +%s)-t0 )) s" | tee -a "$GITHUB_STEP_SUMMARY"
-          t0=$(date +%s); npx remotion browser ensure >/dev/null; echo "browser ensure: $(( $(date +%s)-t0 )) s" | tee -a "$GITHUB_STEP_SUMMARY"
-          command -v ffmpeg || { comp=$(dirname "$(find /tmp/r/node_modules/@remotion -maxdepth 2 -name ffmpeg -type f | head -1)"); echo "$comp" >> "$GITHUB_PATH"; echo "LD_LIBRARY_PATH=$comp:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"; echo "using Remotion's ffmpeg"; }
-      - name: One X clip (timed)
-        timeout-minutes: 3
-        run: |
-          python -m pip install -q -U "yt-dlp[default]"
-          mkdir -p dl && t0=$(date +%s.%N)
-          yt-dlp --no-warnings --no-progress -f "best[ext=mp4]/best" -o dl/0.mp4 https://x.com/thmanyahsports/status/2123080008675508376
-          echo "yt-dlp X clip: $(python -c "import time;print(round(time.time()-$t0,1))") s, $(du -m dl/0.mp4 | cut -f1) MB" | tee -a "$GITHUB_STEP_SUMMARY"
-      - name: Render one TifoGoal (default concurrency, then all cores)
+          npm i --no-audit --no-fund --silent @remotion/cli@4.0.526 remotion@4.0.526 react@19.1.1 react-dom@19.1.1 && npx remotion browser ensure >/dev/null
+          mkdir -p /tmp/bundle/public/tifogoal && cd /tmp/bundle
+          for f in 155 161 18 208 226 304 328 353 434 5 617 624 63 663 687 728 761 832 845 872 892 938 986; do curl -fsS -o "$f.bundle.js" "$SITE/$f.bundle.js"; done
+          for f in bundle.js favicon.ico index.html public/tifogoal/outro-v2.mp4 public/tifogoal/sting.wav; do curl -fsS -o "$f" "$SITE/$f"; done
+          du -sh /tmp/bundle
+      - name: goal_watch's steps for one X goal (timed)
         timeout-minutes: 15
         run: |
-          mkdir -p serve && t0=$(date +%s.%N)
-          ffmpeg -v error -y -ss 20 -i dl/0.mp4 -t 12 -vf scale=1280:-2 -c:v libx264 -preset veryfast -crf 20 -c:a aac -b:a 128k -ar 48000 serve/clip.mp4
-          echo "ffmpeg 12 s cut: $(python -c "import time;print(round(time.time()-$t0,1))") s" | tee -a "$GITHUB_STEP_SUMMARY"
-          if ffmpeg -hide_banner -filters 2>/dev/null | grep -q " fps "; then t0=$(date +%s.%N); ffmpeg -v error -y -i dl/0.mp4 -t 60 -vf fps=0.5,scale=384:-2 -q:v 6 serve/f%03d.jpg; echo "vision frames (fps filter): $(ls serve/*.jpg | wc -l) in $(python -c "import time;print(round(time.time()-$t0,1))") s" | tee -a "$GITHUB_STEP_SUMMARY"; fi
-          (cd serve && python -m http.server 8765 >/dev/null 2>&1 &)
-          sleep 1
-          cp spike/props.json /tmp/r/props.json && cd /tmp/r
-          for c in "" "--concurrency=100%"; do
-            t0=$(date +%s.%N)
-            npx remotion render "$SERVE" TifoGoal out.mp4 --props=props.json --codec=h264 --crf=20 --timeout=240000 --log=error $c
-            t1=$(date +%s.%N)
-            s=$(python -c "print(round($t1-$t0,1))"); mb=$(python -c "import os;print(round(os.path.getsize('out.mp4')/1e6,2))")
-            d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 out.mp4)
-            echo "render ${c:-default}: ${s} s, ${mb} MB, ${d} s long" | tee -a "$GITHUB_STEP_SUMMARY"
-            cp out.mp4 "$GITHUB_WORKSPACE/render${c:+-all}.mp4"
-          done
+          python - <<'EOF'
+          import json, os, subprocess, tempfile, time, urllib.request
+          from pathlib import Path
+          T = {}
+          def t(k, t0): T[k] = round(time.time() - t0, 1)
+          pub = Path("/tmp/bundle/public/tifogoal"); raw = Path("dl/x.mp4"); raw.parent.mkdir(exist_ok=True)
+          t0 = time.time()
+          subprocess.run(["yt-dlp", "-q", "--no-warnings", "-f", "best[ext=mp4]/best", "-o", str(raw), "https://x.com/thmanyahsports/status/2123080008675508376"], check=True, timeout=600)
+          t("download", t0)
+          d = tempfile.mkdtemp(prefix="gm-"); t0 = time.time()
+          subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(raw), "-t", "60", "-vf", "fps=0.5,scale=384:-2", "-q:v", "6", os.path.join(d, "f%03d.jpg")], check=True)
+          t("vision frames", t0); T["frames"] = len(os.listdir(d))
+          t0 = time.time()
+          subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", "36.00", "-i", str(raw), "-t", "12", "-vf", "scale=1280:-2", "-c:v", "libx264", "-preset", "veryfast",
+                          "-crf", "20", "-c:a", "aac", "-b:a", "128k", "-ar", "48000", str(pub / "clip.mp4")], check=True)
+          t("12 s cut", t0)
+          for side, tid in (("h", 582816), ("a", 463259)):
+              urllib.request.urlretrieve(f"https://images.fotmob.com/image_resources/logo/teamlogo/{tid}.png", pub / f"{side}.png")
+          g = json.load(open("spike/props.json", encoding="utf-8"))
+          for k in ("clipUrl", "hUrl", "aUrl"): g.pop(k)
+          (pub / "goal.json").write_text(json.dumps(g, ensure_ascii=False), encoding="utf-8")
+          pj = Path("/tmp/props.json"); pj.write_text(json.dumps(g, ensure_ascii=False), encoding="utf-8")
+          mp4 = Path(os.environ["GITHUB_WORKSPACE"]) / "render.mp4"; t0 = time.time()
+          r = subprocess.run(["npx", "remotion", "render", "/tmp/bundle", "TifoGoal", str(mp4), f"--props={pj}", "--codec=h264", "--crf=20",
+                              "--timeout=240000", "--log=error"], cwd="/tmp/r", capture_output=True, text=True, timeout=1800, shell=False)
+          t("render", t0); T["render rc"] = r.returncode; T["MB"] = round(mp4.stat().st_size / 1e6, 2) if mp4.exists() else 0
+          print((r.stdout + r.stderr)[-500:])
+          line = " · ".join(f"{k}: {v}" for k, v in T.items())
+          print(line); open(os.environ["GITHUB_STEP_SUMMARY"], "a").write("goal_watch steps: " + line + "\n")
+          assert mp4.exists() and mp4.stat().st_size > 100_000
+          EOF
       - uses: actions/upload-artifact@v4
         if: always()
         with:
