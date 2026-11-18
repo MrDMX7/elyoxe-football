@@ -37,9 +37,14 @@ def _sheet_dates(sheet):
     return days, times
 
 
-def check_article(article, sheet, md=None):
+def check_article(article, sheet, md=None, words=None):
+    """words: the type's (min, max); a text under 80% of the min or over 130% of the max fails (spec: a report is 300-400)."""
     text = article_text(article)
     fails = []
+    if words:
+        n = len(text.split())
+        if n < words[0] * 0.8 or n > words[1] * 1.3:
+            fails.append(f"{n} words, the type is {words[0]}-{words[1]}")
     days, times = _sheet_dates(sheet)
     # dates «8 نوفمبر»: the day and month must be a date in the sheet; then they are not numbers to check
     for m in re.finditer(r"(\d{1,2})\s+(" + "|".join(MONTHS) + r")", text):

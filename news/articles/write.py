@@ -44,6 +44,9 @@ class Writer:
             art = json.loads(text)
         except ValueError as e:
             raise WriteError(f"no JSON: {e}") from e
+        if (not isinstance(art, dict) or any(k not in art for k in SCHEMA["required"]) or not str(art.get("headline") or "").strip()
+                or not art.get("sections") or not all(isinstance(x, dict) and x.get("paragraphs") for x in art["sections"])):
+            raise WriteError(f"answer is not the schema: keys {sorted(art)[:8] if isinstance(art, dict) else type(art).__name__}")
         u = msg.usage
         usage = {"in": u.input_tokens or 0, "out": u.output_tokens or 0,
                  "cache_read": getattr(u, "cache_read_input_tokens", 0) or 0, "cache_write": getattr(u, "cache_creation_input_tokens", 0) or 0}

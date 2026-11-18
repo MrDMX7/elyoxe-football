@@ -92,7 +92,7 @@ def run(store, data_get, writer, now, *, dry=False, only=None, limit=None, fetch
             for attempt in (1, 2):
                 art, usage = writer.write("report", sheet, cfg["model"], notes=notes)
                 sp.add(cfg["model"], usage, "report")
-                notes = check.check_article(art, sheet, md)
+                notes = check.check_article(art, sheet, md, words=cfg.get("words"))
                 if not notes:
                     ok = True; break
         except Exception as e:      # API errors, refusals: the match stays due, three tries at most

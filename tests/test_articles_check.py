@@ -46,3 +46,11 @@ def test_a_goal_credited_to_the_wrong_player_fails():
     assert C.check_article(art(f"سجل {first['اللاعب']} الهدف في الدقيقة {first['دقيقة']}."), sheet, MD) == []
     wrong = "أوناي سيمون"                                                    # Spain's goalkeeper, no goal
     assert C.check_article(art(f"سجل {wrong} الهدف في الدقيقة {first['دقيقة']}."), sheet, MD)
+
+
+def test_a_text_far_from_the_type_length_fails():
+    # spec: a match report is 300-400 words; an empty or a 900-word answer is not one
+    short = art("فاز الفريق.")
+    assert [f for f in C.check_article(short, SHEET, None, words=(300, 400)) if "words" in f]
+    ok = art(*["كلمة " * 50] * 7)                                             # 350 words
+    assert not [f for f in C.check_article(ok, SHEET, None, words=(300, 400)) if "words" in f]

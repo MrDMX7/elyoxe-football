@@ -27,7 +27,7 @@ class FakeWriter:
         self.calls.append(notes)
         if self.error:
             raise self.error
-        line = self.texts.pop(0) if self.texts else f"فاز {MD['away']['name_ar']} 3-2."
+        line = self.texts.pop(0) if self.texts else f"فاز {MD['away']['name_ar']} 3-2. " + "كلمة " * 330    # a report-length text
         return ({"headline": "عنوان", "standfirst": "مقدمة", "sections": [{"subhead": "ق", "paragraphs": [line]}], "facts_box": [], "sources_cited": ["بيانات تيفو"]},
                 {"in": 5000, "out": 2000, "cache_read": 0, "cache_write": 0})
 

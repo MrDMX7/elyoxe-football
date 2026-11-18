@@ -45,3 +45,10 @@ def test_a_rewrite_carries_the_failures():
 def test_a_refusal_or_a_cut_answer_is_an_error(stop):
     with pytest.raises(W.WriteError):
         W.Writer(FakeClient(stop=stop)).write("report", {}, "claude-sonnet-5-5")
+
+
+def test_an_answer_without_the_schema_fields_is_an_error():
+    # 2026-11-18 dry run: an answer with other keys (title, body…) went through and failed later at publish
+    bad = json.dumps({"title": "ع", "body": "ف"}, ensure_ascii=False)
+    with pytest.raises(W.WriteError):
+        W.Writer(FakeClient(text=bad)).write("report", {}, "claude-sonnet-5-5")
