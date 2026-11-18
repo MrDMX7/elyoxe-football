@@ -38,3 +38,14 @@ test("related articles share a club, newest first, never the article itself", ()
 test("the three trust pages exist", () => {
   assert.deepEqual(A.TRUST.map(t => t.path), ["/about/", "/how-we-write/", "/corrections/"]);
 });
+
+test("pages are built from the full index, the list from the short one", async () => {
+  // final review, finding 3: pages beyond the newest 500 were deleted by the next deploy
+  const files = { "news/articles.json": { articles: [{ id: "r-2" }] }, "news/articles-all.json": { articles: [{ id: "r-1" }, { id: "r-2" }] },
+                  "news/a/r-1.json": doc("r-1"), "news/a/r-2.json": doc("r-2") };
+  const written = [];
+  const out = await A.render({ get: async p => files[p] || null, pool: async (xs, n, fn) => Promise.all(xs.map(fn)), write: rel => written.push(rel),
+    page: o => o.path, SITE, OUT: "/tmp", fs: { writeFileSync: () => {} }, path: require("path") });
+  assert.ok(written.includes("news/r-1/index.html") && written.includes("news/r-2/index.html"));
+  assert.deepEqual(out.latest.map(a => a.id), ["r-2"]);
+});

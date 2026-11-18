@@ -17,9 +17,21 @@ def summary(doc):
     return {k: doc.get(k) for k in ("id", "kind", "headline", "standfirst", "image", "published", "modified", "match", "comp", "entities")}
 
 
+ALL = "news/articles-all.json"    # every article ever published, no limit: the site builds a page for each (final review, finding 3)
+
+
+def _lists(store, aid, entry, now_iso):
+    for path, keep, cache, item in (("news/articles.json", KEEP, "hot", entry), (ALL, None, "warm", entry and {k: entry[k] for k in ("id", "kind", "published", "modified", "match")})):
+        lst = [a for a in (store.get_json(path) or {}).get("articles") or [] if a["id"] != aid] + ([item] if item else [])
+        lst.sort(key=lambda a: a["published"], reverse=True)
+        store.put_json(path, {"generated": now_iso, "articles": lst[:keep] if keep else lst}, cache=cache)
+
+
 def publish(store, doc):
     store.put_json(f"news/a/{doc['id']}.json", doc, cache="warm")
-    lst = (store.get_json("news/articles.json") or {}).get("articles") or []
-    lst = [a for a in lst if a["id"] != doc["id"]] + [summary(doc)]
-    lst.sort(key=lambda a: a["published"], reverse=True)
-    store.put_json("news/articles.json", {"generated": doc["modified"], "articles": lst[:KEEP]}, cache="hot")
+    _lists(store, doc["id"], summary(doc), doc["modified"])
+
+
+def withdraw(store, aid, now_iso):
+    """Off both lists: the next site build drops its page (a report its corrected match could not be rewritten for)."""
+    _lists(store, aid, None, now_iso)

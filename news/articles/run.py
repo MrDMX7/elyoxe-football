@@ -107,6 +107,9 @@ def run(store, data_get, writer, now, *, dry=False, only=None, limit=None, fetch
                 if not notes:
                     ok = True; break
             if not ok:
+                if rec.get("status") == "done":     # a corrected match whose rewrite failed: its old report is now wrong
+                    publish.withdraw(store, f"r-{mid}", now.isoformat())
+                    print(json.dumps({"report_withdrawn": mid}))
                 reps[str(mid)] = {"status": "failed", "fp": meta["fingerprint"], "at": now.isoformat(), "fails": notes[:5]}
                 out["failed"] += 1; print(json.dumps({"report_failed": mid, "fails": notes[:5]}, ensure_ascii=False)); save(); continue
             aid = f"r-{mid}"
@@ -150,6 +153,8 @@ def main(argv=None):
     a = ap.parse_args(argv)
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(json.dumps({"articles": "no ANTHROPIC_API_KEY, skipped"})); return 0
+    if a.dry and not a.local:
+        print(json.dumps({"articles": "--dry needs --local DIR (it would publish to S3)"})); return 2
     if a.local:
         store, get = Store(LocalBackend(a.local)), http_get
     else:

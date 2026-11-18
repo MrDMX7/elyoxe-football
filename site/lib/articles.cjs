@@ -61,7 +61,9 @@ function listHtml(list){
 async function render(X){
   const { get, pool, write, page, SITE, OUT, fs, path } = X;
   const lst = ((await get("news/articles.json", 2)) || {}).articles || [];
-  const docs = (await pool(lst, 8, a => get(`news/a/${a.id}.json`, 2))).filter(Boolean);
+  // every article ever published (news/articles-all.json, no limit): a page dropped from the short list must not be deleted
+  const all = ((await get("news/articles-all.json", 2)) || {}).articles || lst;
+  const docs = (await pool(all, 8, a => get(`news/a/${a.id}.json`, 2))).filter(Boolean);
   const urls = [], byMatch = {};
   for (const d of docs){
     write(`news/${d.id}/index.html`, page({ path: `/news/${d.id}/`, page: "ref", title: `${d.headline} | تيفو`, desc: d.standfirst,

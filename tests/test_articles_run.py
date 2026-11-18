@@ -139,3 +139,34 @@ def test_a_run_stops_starting_matches_after_its_time_budget(tmp_path):
         t[0] += 100.0; return t[0]
     out = R.run(st, data2(), FakeWriter(), NOW, fetch=lambda u: None, budget=150, clock=clock)
     assert out["written"] == 1 and out["stopped"] == "time budget"
+
+
+def test_dry_without_local_is_refused(monkeypatch):
+    # final review, finding 8: --dry forced «on» and wrote to S3 when run without --local
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
+    monkeypatch.setattr(R, "S3Backend", lambda *a, **k: (_ for _ in ()).throw(AssertionError("S3 touched")))
+    assert R.main(["--dry"]) == 2
+
+
+def test_a_failed_rewrite_of_a_published_report_takes_it_down(tmp_path):
+    # final review, finding 10: the match changed, the rewrite failed, and the old (now wrong) report stayed live
+    st = Store(LocalBackend(tmp_path))
+    R.run(st, data(), FakeWriter(), NOW, fetch=lambda u: None)
+    md2 = copy.deepcopy(MD)
+    g = next(e for e in md2["events"] if e["type"] in ("goal", "penalty_goal", "own_goal")); g["player"] = {"id": 1, "name": "X"}
+    R.run(st, data(md2), FakeWriter(texts=["سجل 973 هدفاً.", "سجل 973 هدفاً."]), NOW, fetch=lambda u: None)
+    aid = f"r-{MD['id']}"
+    assert aid not in [a["id"] for a in st.get_json("news/articles.json")["articles"]]
+    assert aid not in [a["id"] for a in st.get_json("news/articles-all.json")["articles"]]
+
+
+def test_every_article_stays_in_the_full_index(tmp_path, monkeypatch):
+    # final review, finding 3: articles.json keeps 500, the site built pages only from it, deploy --delete removed the rest
+    from news.articles import publish as PB
+    monkeypatch.setattr(PB, "KEEP", 3)
+    st = Store(LocalBackend(tmp_path))
+    for i in range(4):
+        PB.publish(st, {"id": f"r-{i}", "kind": "report", "headline": "ع", "standfirst": "م", "image": None, "match": i, "comp": 1,
+                        "entities": [], "published": f"2026-11-1{i}T00:00:00+00:00", "modified": f"2026-11-1{i}T00:00:00+00:00"})
+    assert len(st.get_json("news/articles.json")["articles"]) == 3
+    assert {a["id"] for a in st.get_json("news/articles-all.json")["articles"]} == {"r-0", "r-1", "r-2", "r-3"}
