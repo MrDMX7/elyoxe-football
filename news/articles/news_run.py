@@ -24,6 +24,9 @@ PHOTO_MODEL = "claude-haiku-5-5"
 BREAKING_DAILY = 15          # the spec's 5-15 a day
 GRACE = 45                   # seconds past the deadline a rewrite may still start (the step is killed at minute 10)
 LATER = "later"              # a story out of time: it stays queued for the next run
+EDITED = "edited"            # the owner edited the article on the desk: never rewritten automatically (spec, «The desk»)
+VIEW = "articles/desk-view.json"
+VIEW_MAX = 150
 
 
 class OutOfTime(Exception):
@@ -78,10 +81,10 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
     dup = lambda s: s["id"] not in n["done"] and news_pick.near_duplicate(s, items, recent, now, names(s))
     cands = sorted((s for s in stories.values() if news_pick.eligible(s, teams, pteam, now, items=items) and f"n-{s['id']}" not in gone),
                    key=lambda s: news_pick.rank_key(s, items, teams), reverse=True)
-    offered = []
+    offered, dups = [], set()
     for s in cands:
         if dup(s):
-            out["dupes"] += 1; continue
+            out["dupes"] += 1; dups.add(s["id"]); continue
         q.offer(s["id"], news_pick.rank_key(s, items, teams), items=len(s.get("items") or [])); offered.append(s)
     q.prune({s["id"] for s in offered})
     out["queued"] = len(q.n["queue"])
@@ -104,6 +107,10 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
         aid = f"n-{s['id']}"
         if aid in gone:                                       # withdrawn from the desk: never back
             return None
+        prev = store.get_json(f"news/a/{aid}.json")
+        if prev and prev.get("edited"):                       # the owner's text stands; the desk flags the story's growth
+            grew.add(s["id"])
+            return EDITED
         texts, counts = collect(s, items)
         for k in ("links", "decoded", "texts"):
             out[k] += counts[k]
@@ -120,15 +127,17 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
         cands = photo.news_candidates(texts, s, items, commons(meta["query"]) if meta.get("query") else [])
         img = photo.news_pick(aid, cands, meta["card_teams"], fetch or (lambda u: None), store, subject=meta["subject"],
                               headline=art["headline"], judge=judge)
-        doc = publish.article_doc(aid, "news", art, meta, img, cfg["model"], now.isoformat(), store.get_json(f"news/a/{aid}.json"))
+        doc = publish.article_doc(aid, "news", art, meta, img, cfg["model"], now.isoformat(), prev)
         doc["breaking"] = is_breaking
         publish.publish(store, doc)
+        store.put_state(f"articles/sheets/{aid}.json", {"at": now.isoformat(), "sheet": sheet, "photos": cands})   # the desk's editor
         first = items.get((s.get("items") or [""])[0]) or {}
         recent[:] = [r for r in recent if r["id"] != aid][-299:] + [
             {"id": aid, "anchor": s.get("anchor"), "words": sorted(news_pick.words(first.get("title")) - names(s)), "at": now.isoformat()}]
         return meta
 
     rej = set(desk.get("reject") or {})
+    grew = set(n.get("grew") or [])
     if brk.get("on"):                                         # «عاجل» first, at once
         sent = n.setdefault("breaking", [])
         if n.get("breaking_day") != q.n["day"]:
@@ -153,7 +162,9 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
             r = publish_story(s, False)
             if r == LATER:
                 break
-            if r:
+            if r == EDITED:
+                q.mark_written(sid, len(s.get("items") or []), s.get("stage"))
+            elif r:
                 q.mark_written(sid, len(s.get("items") or []), s.get("stage")); out["written"] += 1
             else:
                 q.mark_failed(sid, len(s.get("items") or []))  # back only when it grows, twice at most
@@ -166,9 +177,49 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
                 r = publish_story(s, False)
                 if r == LATER:
                     break
-                if r:
+                if r and r != EDITED:
                     out["updated"] += 1
                 q.mark_written(sid, len(s.get("items") or []), s.get("stage"))   # tried: the next try is an hour away
                 save()
+    n["grew"] = sorted(g for g in grew if g in n["done"])
+    store.put_state(VIEW, _view(cands, stories, items, ar, q, n, rej, set(desk.get("write") or {}), dups, gone, grew, news, now))
     save()
     return out
+
+
+def _title(s, items):
+    sm = s.get("summary") or {}
+    its = [items[i] for i in s.get("items") or [] if i in items]
+    return sm.get("title_ar") or next((i.get("title") for i in its if i.get("lang") == "ar"), None) or (its[0].get("title") if its else "")
+
+
+def _view(cands, stories, items, ar, q, n, rej, now_, dups, gone, grew, cfg, now):
+    """What the desk shows (spec, «The desk»): the day's candidates biggest first, each with its state."""
+    from datetime import datetime, timedelta
+    wait = timedelta(minutes=cfg.get("wait_minutes", 20))
+    rows = []
+    for s in cands[:VIEW_MAX]:
+        sid, aid = s["id"], f"n-{s['id']}"
+        its = [items[i] for i in s.get("items") or [] if i in items]
+        row = {"id": sid, "title": _title(s, items), "kind": s.get("kind"), "stage": s.get("stage"),
+               "outlets": len({i.get("source") for i in its}), "sources": list(dict.fromkeys(i.get("source") for i in its))[:4],
+               "names": [ar[(k, int(i))] for k, i in s.get("anchor") or [] if ar.get((k, int(i)))][:4],
+               "last_at": s.get("last_at"), "grew": sid in grew, "breaking": sid in (n.get("breaking") or [])}
+        if aid in gone:
+            row["status"] = "withdrawn"
+        elif sid in n["done"]:
+            row.update(status="written", article=aid)
+        elif sid in rej:
+            row["status"] = "rejected"
+        elif sid in q.n["queue"]:
+            due = now if sid in now_ else datetime.fromisoformat(q.n["queue"][sid]["first"]) + wait
+            row.update(status="queued", due=due.isoformat(), now=sid in now_)
+        elif sid in (n.get("failed") or {}):
+            row["status"] = "failed"
+        elif sid in dups:
+            row["status"] = "duplicate"
+        else:
+            row["status"] = "waiting"
+        rows.append(row)
+    return {"generated": now.isoformat(), "day": q.n["day"], "written_today": q.n["count"], "daily": cfg.get("daily", 60),
+            "breaking_today": n.get("breaking_count", 0), "stories": rows}
