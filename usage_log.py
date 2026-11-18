@@ -68,3 +68,18 @@ def record_cli(job, out, secs):
             f.write("".join(json.dumps(r) + "\n" for r in lines))
     except Exception:
         pass
+
+
+def record_api(job, model, usage, usd):
+    """A Claude API call (Tifo articles, paid from the owner's API credit): via=api, a real bill."""
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return
+    try:
+        line = {"at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "project": "tifo", "job": job, "via": "api",
+                "model": model, "in": usage.get("in", 0), "out": usage.get("out", 0), "cache_read": usage.get("cache_read", 0),
+                "cache_write": usage.get("cache_write", 0), "usd": usd, "ok": True, "secs": None}
+        os.makedirs(os.path.dirname(PATH), exist_ok=True)
+        with open(PATH, "a", encoding="utf-8", newline="\n") as f:
+            f.write(json.dumps(line) + "\n")
+    except Exception:
+        pass
