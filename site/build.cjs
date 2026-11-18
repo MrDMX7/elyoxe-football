@@ -906,7 +906,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // item 11: the share stage (lib/share_stage.cjs): what its last good upload holds, and the goal clips of the last 48 h (news/media.py)
   // Tifo articles (lib/articles.cjs): the /news/<id>/ pages, the trust pages, sitemap-news.xml; the match pages link the report,
   // the /news/ page lists the newest ten
-  const ART = await require("./lib/articles.cjs").render({ get, pool, write, page, esc, SITE, OUT, fs, path });
+  const ART = await require("./lib/articles.cjs").render({ get, pool, write, page, esc, SITE, OUT, fs, path, names:require("./lib/articles.cjs").makeNames(S_TEAMS, PNAMES) });
   urls.push(...ART.urls);
   const SHARE = require("./lib/share_stage.cjs"), SHPUB = SHARE.published({ CACHE, fs, path }), SHJ = [], SHG = [], STUBS = [], CLIPS = {};
   { const mr = await get("media/recent.json", 1), withG = ((mr && mr.matches) || []).filter(m => m.goals > 0).map(m => m.id), mf = await pool(withG, 6, i => get(`media/${i}.json`, 1));
