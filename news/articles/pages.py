@@ -10,7 +10,7 @@
 
 The hourly build no longer uploads or deletes these paths (tools/runner.py FAST_OWNED). State: state/articles/pages.json.
   python -m news.articles.pages"""
-import json, subprocess, sys, tempfile, time, urllib.request
+import hashlib, json, subprocess, sys, tempfile, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -21,6 +21,17 @@ from tools.s3push import TYPES  # noqa: E402
 SITE = "https://tifo.elyoxe.com"
 STATE, SHELLS = "articles/pages.json", "site/shells.json"
 RENDERER = ROOT / "site" / "lib" / "render_news.cjs"
+
+
+def shell_key(shells):
+    """What the pages are made of: the shells (not their hourly timestamp), the stylesheet and the page code. A change in any
+    of them re-renders every page; the full build saving the same shells again re-renders nothing."""
+    h = hashlib.sha1()
+    for part in (shells.get("article") or "", shells.get("news") or ""):
+        h.update(part.encode("utf-8"))
+    for f in ("articles.css", "articles.cjs", "render_news.cjs"):
+        h.update((ROOT / "site" / "lib" / f).read_bytes())
+    return h.hexdigest()[:16]
 
 
 def plan(all_, seen, built):
@@ -45,7 +56,8 @@ def run(store, s3, bucket, *, teams, players, render=render_node, indexnow=None,
     all_ = (store.get_json("news/articles-all.json") or {}).get("articles") or []
     lst = (store.get_json("news/articles.json") or {}).get("articles") or []
     seen = store.get_state(STATE) or {}
-    rids, dels = plan(all_, seen, shells.get("built"))
+    key = shell_key(shells)
+    rids, dels = plan(all_, seen, key)
     if not rids and not dels:
         return {"rendered": 0, "deleted": 0}
     with ThreadPoolExecutor(16) as ex:
@@ -72,7 +84,7 @@ def run(store, s3, bucket, *, teams, players, render=render_node, indexnow=None,
             print(json.dumps({"indexnow_error": str(e)[:200]}))
     pages = {k: v for k, v in known.items() if k not in dels}
     pages.update({d["id"]: d.get("modified") for d in docs})
-    store.put_state(STATE, {"built": shells.get("built"), "pages": pages})
+    store.put_state(STATE, {"built": key, "pages": pages})
     return {"rendered": len(docs), "deleted": len(dels), "uploaded": len(files), "new": len(new)}
 
 

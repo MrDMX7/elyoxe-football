@@ -49,7 +49,7 @@ def test_a_run_uploads_with_the_full_builds_headers_deletes_and_remembers(tmp_pa
     assert css["CacheControl"] == "public,max-age=31536000,immutable" and css["ContentType"] == "text/css"
     assert s3.deleted == ["news/n-old/index.html"]
     assert sent == [["https://tifo.elyoxe.com/news/n-1/"]]
-    assert st.get_state("articles/pages.json") == {"built": "b1", "pages": {"n-1": "m1"}}
+    assert st.get_state("articles/pages.json") == {"built": PG.shell_key(st.get_state("site/shells.json")), "pages": {"n-1": "m1"}}
     assert out["rendered"] == 1 and out["deleted"] == 1
 
 
@@ -74,3 +74,10 @@ def test_an_edit_on_the_desk_rerenders_the_page_but_is_not_new_to_indexnow(tmp_p
 def test_no_shells_yet_waits_for_the_full_build(tmp_path):
     st = Store(LocalBackend(tmp_path))
     assert "skipped" in PG.run(st, FakeS3(), "site-bucket", teams={}, players={})
+
+
+def test_everything_is_rerendered_only_when_the_pages_would_change():
+    """The full build saves its shells every hour; the pages change only with the shells, the stylesheet or the page code."""
+    a = {"article": SHELL, "news": SHELL, "built": "10:00"}
+    assert PG.shell_key(a) == PG.shell_key(dict(a, built="11:00"))
+    assert PG.shell_key(a) != PG.shell_key(dict(a, article=SHELL + " "))

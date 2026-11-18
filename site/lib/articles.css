@@ -34,7 +34,7 @@
 .ents::-webkit-scrollbar{display:none}
 .ent-c{display:flex;align-items:center;gap:6px;flex:none;background:var(--bg2,#fff);border-radius:999px;padding:4px 4px 4px 12px;box-shadow:0 0 0 .5px var(--sep)}
 .ent{display:flex;align-items:center;gap:7px;color:var(--label);text-decoration:none;font-size:14px;font-weight:600;white-space:nowrap}
-.ent img{width:26px;height:26px;object-fit:contain;border-radius:50%}
+.ent img{width:26px;height:26px;object-fit:contain;border-radius:50%;background:var(--fill);padding:2px}   /* a white crest (Real Madrid) on a white chip */
 .ent-c .pill{padding:6px 12px;font-size:12px}
 
 /* the text */
