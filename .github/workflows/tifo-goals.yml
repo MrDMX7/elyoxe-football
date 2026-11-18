@@ -23,7 +23,6 @@ env:
   TZ: Asia/Dubai
   PYTHONIOENCODING: utf-8
   BUCKET: elyoxe-football-574771023173-ap-south-1
-  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}   # goal_watch.goal_moment: the second the ball goes in, read from the clip
   TIFO_REMOTION_DIR: /home/runner/remotion        # the Remotion CLI of the bundle's version (goal_watch.REMOTION)
 jobs:
   goals:
@@ -62,7 +61,8 @@ jobs:
           mkdir -p "$TIFO_REMOTION_DIR" && cd "$TIFO_REMOTION_DIR"
           if [ ! -x node_modules/.bin/remotion ]; then
             npm init -y >/dev/null
-            npm i --no-audit --no-fund --silent "@remotion/cli@${{ steps.kit.outputs.remotion }}" "remotion@${{ steps.kit.outputs.remotion }}" \
+            # install scripts run without this job's AWS session
+            env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY -u AWS_SESSION_TOKEN npm i --no-audit --no-fund --silent "@remotion/cli@${{ steps.kit.outputs.remotion }}" "remotion@${{ steps.kit.outputs.remotion }}" \
               "react@${{ steps.kit.outputs.react }}" "react-dom@${{ steps.kit.outputs.react }}"
           fi
           npx remotion browser ensure
@@ -79,6 +79,8 @@ jobs:
       - name: Render
         if: steps.plan.outputs.pending && steps.plan.outputs.pending != '0'
         timeout-minutes: 35
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}   # goal_watch.goal_moment: the second the ball goes in, read from the clip
         run: python ~/workspace/content/social/tifo/goal_watch.py --render
       - name: Log
         if: always()
