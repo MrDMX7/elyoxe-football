@@ -2,7 +2,7 @@
 for every article, so later calls read it from the prompt cache); the fact sheet is the user message; the answer is JSON in
 the schema (structured output, output_config.format). Streamed and read with get_final_message() so a long answer never hits
 the request timeout. The key is ANTHROPIC_API_KEY from the environment (the repo secret on GitHub)."""
-import json
+import base64, json
 from pathlib import Path
 
 STYLE = Path(__file__).with_name("style.md")
@@ -51,3 +51,30 @@ class Writer:
         usage = {"in": u.input_tokens or 0, "out": u.output_tokens or 0,
                  "cache_read": getattr(u, "cache_read_input_tokens", 0) or 0, "cache_write": getattr(u, "cache_creation_input_tokens", 0) or 0}
         return art, usage
+
+    PHOTO_SCHEMA = {"type": "object", "properties": {"best": {"type": "integer"}}, "required": ["best"], "additionalProperties": False}
+    PHOTO_ASK = ("These are candidate photos, numbered from 0, for an Arabic football news article with the headline below. "
+                 "Pick the one that best shows what the news is about: the player, the club or the event it names. Never pick a "
+                 "site's logo, a graphic or card full of text, an advert, or a photo of someone else. If none fits, answer -1.\n\n"
+                 "Headline: ")
+
+    def pick_photo(self, headline, thumbs, model="claude-haiku-5-5"):
+        """-> (index of the best photo or -1, usage). One small call: the thumbnails are 512 px at most."""
+        content = []
+        for i, t in enumerate(thumbs):
+            content += [{"type": "text", "text": f"Photo {i}:"},
+                        {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": base64.b64encode(t).decode()}}]
+        content.append({"type": "text", "text": self.PHOTO_ASK + headline})
+        msg = self._c().messages.create(model=model, max_tokens=200, messages=[{"role": "user", "content": content}],
+                                        output_config={"format": {"type": "json_schema", "schema": self.PHOTO_SCHEMA}})
+        text = next((b.text for b in msg.content if b.type == "text"), "")
+        try:
+            best = int(json.loads(text)["best"])
+        except (ValueError, KeyError, TypeError) as e:
+            raise WriteError("photo answer cannot be read: " + repr(text[:80])) from e      # news_pick then keeps the widest
+        if not -1 <= best < len(thumbs):
+            raise WriteError(f"photo answer {best} is not one of {len(thumbs)}")
+        u = msg.usage
+        usage = {"in": u.input_tokens or 0, "out": u.output_tokens or 0,
+                 "cache_read": getattr(u, "cache_read_input_tokens", 0) or 0, "cache_write": getattr(u, "cache_creation_input_tokens", 0) or 0}
+        return best, usage

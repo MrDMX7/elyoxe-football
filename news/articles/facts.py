@@ -148,3 +148,68 @@ def report_sheet(md, standings, fixtures, names):
             "thin": not (md.get("events") or md.get("stats")),
             "fingerprint": hashlib.sha1("|".join(sorted(fp)).encode()).hexdigest()[:12]}
     return sheet, meta
+
+
+def _comp_ar(cid):
+    import config
+    return (config.competition(cid) or {}).get("name_ar") or ""
+
+
+KIND_AR = {"transfer": "انتقالات", "injury": "إصابات", "presser": "مؤتمر صحفي", "statement": "تصريحات", "official": "إعلان رسمي",
+           "match": "مباراة"}
+STAGE_AR = {"rumour": "إشاعة", "talks": "مفاوضات", "agreed": "اتفاق", "here_we_go": "اتفاق نهائي «Here we go»", "official": "رسمي"}
+
+
+def news_sheet(story, items, texts, data_get, ar, teams, breaking=False):
+    """The news fact sheet (spec, «News rules»), in the shape the owner judged in the blind tests (articles-test/build_news.py).
+    ar: the journal dictionary's Arabic names {(kind, id): name}; the writer must use them as they are. meta's subject is the
+    Arabic name of who the story is about (the photo caption), and query its Latin name (the Commons photo search)."""
+    import config
+    from news.run import credibility
+    from news.cluster import sources_of
+    anchor = [(k, int(i)) for k, i in story.get("anchor") or []]
+    players = [i for k, i in anchor if k == "player"]
+    clubs = [i for k, i in anchor if k == "team"]
+    tifo, latin, their = {}, {("team", t): (teams.get(str(t)) or {}).get("name") for t in clubs}, []
+    for pid in players[:3]:
+        p = data_get(f"player/{pid}.json")
+        if p:
+            latin[("player", pid)] = p.get("name")
+            t = p.get("team")                       # the live files carry the team's id; a dict (name_ar) is read too
+            tid_p = t.get("id") if isinstance(t, dict) else t
+            if tid_p and int(tid_p) not in their:
+                their.append(int(tid_p))
+            club = t.get("name_ar") if isinstance(t, dict) else (ar.get(("team", int(t))) or _club(teams.get(str(t)) or {}) or None) if t else None
+            row = {"الفريق": club, "الدقائق": p.get("minutes"), "الأهداف": p.get("goals"),
+                   "الصناعة": p.get("assists"), "التقييم": p.get("rating")}
+            where = f" في {_comp_ar(p['comp'])}" if p.get("comp") and _comp_ar(p["comp"]) else ""
+            tifo[f"{ar.get(('player', pid)) or p.get('name')} هذا الموسم{where}"] = {k: v for k, v in row.items() if v is not None}
+    for tid in clubs[:2]:
+        # the league's table, named: a club's first comp can be a cup with groups (Real Madrid's is the Club World Cup)
+        for cid in [c for c in (teams.get(str(tid)) or {}).get("comps") or [] if (config.competition(c) or {}).get("kind") == "league"][:1]:
+            st = data_get(f"comp/{cid}/standings.json") or {}
+            r = next((r for g in st.get("groups") or [] for r in g.get("rows") or [] if r["team"]["id"] == tid), None)
+            if r:
+                tifo[f"ترتيب {ar.get(('team', tid)) or _club(r['team'])} في {_comp_ar(cid)}"] = {"المركز": r["rank"], "لعب": r["played"],
+                                                                                         "النقاط": r.get("pts", r.get("points"))}
+    its = [items[i] for i in story.get("items") or [] if i in items]
+    cred = credibility(story, sources_of(story, items))
+    shown = {t["source"] for t in texts}
+    named = [e for e in anchor if ar.get(e)]
+    sheet = {
+        "النوع": "عاجل" if breaking else "خبر",
+        "التصنيف": KIND_AR.get(story.get("kind"), story.get("kind") or "") + (f" · المرحلة: {STAGE_AR[story['stage']]}" if story.get("stage") in STAGE_AR else ""),
+        "عدد المصادر": len({i.get("source") for i in its}),
+        "مؤشر المصداقية في تيفو (من 100)": (cred or {}).get("v"),
+        "الأسماء بالعربية (استعملها كما هي)": [ar[e] for e in named],
+        "نصوص المصادر (للحقائق فقط، لا تُنسخ)": [{"المصدر": t["source"], "اللغة": t["lang"], "النص": t["text"]} for t in texts],
+        "عناوين أخرى عن الخبر نفسه": [{"المصدر": i.get("source"), "العنوان": i.get("title")} for i in its if i.get("source") not in shown][:8],
+        "بيانات تيفو": tifo,
+    }
+    sheet = {k: v for k, v in sheet.items() if v not in (None, [], {})}
+    seed = [(k, int(i)) for k, i in story.get("seed") or []]       # who the first headline names (news.run.subjects)
+    who = next((e for e in seed if ar.get(e)), None) or (named[0] if named else (seed or anchor or [None])[0])
+    meta = {"story": story["id"], "teams": clubs, "players": players, "stage": story.get("stage"), "items": len(story.get("items") or []),
+            "subject": ar.get(who) if who else None, "query": latin.get(who) if who else None,
+            "card_teams": clubs or their}               # a player-only story's card shows his club (final review, finding 9)
+    return sheet, meta

@@ -1,3 +1,5 @@
 {
-  "report": {"on": true, "model": "claude-sonnet-5-5", "words": [300, 400]}
+  "report": {"on": true, "model": "claude-sonnet-5-5", "words": [300, 400]},
+  "news": {"on": false, "model": "claude-sonnet-5-5", "words": [250, 450], "daily": 60, "wait_minutes": 20},
+  "breaking": {"on": false, "model": "claude-haiku-5-5", "words": [80, 160]}
 }

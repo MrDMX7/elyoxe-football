@@ -34,8 +34,8 @@ jobs:
       - name: State for the next run
         if: success() || failure()
         run: python -m tools.ci_bridge state-put journal . news/.cache site/cache/bing_sent.json
-      # Tifo articles (match reports): after the journal's state is saved, so a slow API never costs the journal its state.
-      # It saves its own state after every match and starts no new match after 8 minutes (news/articles/run.py).
+      # Tifo articles (match reports, then news): after the journal's state is saved, so a slow API never costs the journal its
+      # state. Reports start no new match after 6 minutes, news no new story after 8 (news/articles/run.py); state is saved after each.
       - name: Tifo articles
         if: success() || failure()
         continue-on-error: true

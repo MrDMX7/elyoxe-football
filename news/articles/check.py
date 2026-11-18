@@ -23,6 +23,30 @@ def article_text(a):
     return "\n".join(lines + list(a.get("facts_box") or []))
 
 
+# A news sheet carries the sources' own text: «30 de junio», «June 30», «30 juin» are the sheet's dates too (dry run 2026-11-19:
+# a correct «30 يونيو» from a Spanish source failed the check, and the rewrite dropped the fact).
+FOREIGN_MONTHS = {
+    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6, "july": 7, "august": 8, "september": 9, "october": 10,
+    "november": 11, "december": 12,
+    "enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6, "julio": 7, "agosto": 8, "septiembre": 9, "setiembre": 9,
+    "octubre": 10, "noviembre": 11, "diciembre": 12,
+    "janvier": 1, "février": 2, "fevrier": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6, "juillet": 7, "août": 8, "aout": 8,
+    "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12, "decembre": 12,
+    "januar": 1, "februar": 2, "märz": 3, "maerz": 3, "juni": 6, "juli": 7, "oktober": 10, "dezember": 12,
+    "gennaio": 1, "febbraio": 2, "aprile": 4, "maggio": 5, "giugno": 6, "luglio": 7, "settembre": 9, "ottobre": 10, "dicembre": 12,
+    "janeiro": 1, "fevereiro": 2, "março": 3, "maio": 5, "junho": 6, "julho": 7, "setembro": 9, "outubro": 10, "dezembro": 12}
+_DAY_MONTH = re.compile(r"\b(\d{1,2})(?:\.|º|er|st|nd|rd|th)?\s+(?:de\s+|of\s+)?([^\W\d_]+)", re.I)
+_MONTH_DAY = re.compile(r"\b([^\W\d_]+)\s+(\d{1,2})(?:st|nd|rd|th)?\b", re.I)
+_AR_DAY = re.compile(r"(\d{1,2})\s+(" + "|".join(MONTHS) + r")")
+
+
+def _written_dates(s):
+    out = {(MONTHS[m.group(2)], int(m.group(1))) for m in _AR_DAY.finditer(s)}
+    out |= {(FOREIGN_MONTHS[m.group(2).lower()], int(m.group(1))) for m in _DAY_MONTH.finditer(s) if m.group(2).lower() in FOREIGN_MONTHS}
+    out |= {(FOREIGN_MONTHS[m.group(1).lower()], int(m.group(2))) for m in _MONTH_DAY.finditer(s) if m.group(1).lower() in FOREIGN_MONTHS}
+    return {d for d in out if 1 <= d[1] <= 31}
+
+
 def _sheet_dates(sheet):
     days, times = set(), set()
     def walk(o):
@@ -33,6 +57,8 @@ def _sheet_dates(sheet):
         elif isinstance(o, str) and re.match(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}", o):
             d = datetime.fromisoformat(o)
             days.add((d.month, d.day)); times.add((d.hour, d.minute))
+        elif isinstance(o, str):
+            days.update(_written_dates(o))
     walk(sheet)
     return days, times
 
@@ -90,4 +116,17 @@ def check_article(article, sheet, md=None, words=None):
         if r: fails.append(r)
         r, _ = AI.check_halves(full, md)
         if r: fails.append(r)
+    return fails
+
+
+ATTRIB = re.compile(r"(?:بحسب|وفقاً ل|وفقا ل|نقلاً عن|نقلا عن|حسب ما|ذكرت|أفادت)")
+
+
+def check_news(article, sheet, words):
+    """A news article: the Phase 1 checks without a match, and the source named once (spec, «News rules»). Two are allowed:
+    a news piece may credit a second outlet for a second fact."""
+    fails = check_article(article, sheet, None, words=words)
+    n = len(ATTRIB.findall(article_text(article)))
+    if n > 2:
+        fails.append(f"attribution {n} times; name the source once")
     return fails
