@@ -81,6 +81,19 @@ def load(G, reg, S):
                         continue
                     G.c.execute("INSERT OR IGNORE INTO honour(eid, kind, rank, tid, src) VALUES(?,?,1,?, 'fotmob')", (eid, kind, tid))
                     n["titles"] += 1
+    # a Transfermarkt name on a club's bench in matches no coachHistory row covers (cups, the Club World Cup): FotMob's coach of
+    # that club with the same name (accents and all folded, else the same surname, and only one such coach) is the man
+    club_coaches = defaultdict(set)
+    for kid, tid in G.c.execute("""SELECT x.kid, CASE x.side WHEN 'h' THEN m.home ELSE m.away END FROM match_coach x JOIN match m ON m.mid=x.mid
+                                   WHERE x.src='fotmob'""").fetchall():
+        club_coaches[tid].add(kid)
+    names = {kid: fold(nm) for kid, nm in G.c.execute("SELECT kid, name FROM coach")}
+    for kid, tid, nm in G.c.execute("""SELECT DISTINCT x.kid, CASE x.side WHEN 'h' THEN m.home ELSE m.away END, c.name FROM match_coach x
+                                       JOIN match m ON m.mid=x.mid JOIN coach c ON c.kid=x.kid WHERE c.src='tm'""").fetchall():
+        me = fold(nm)
+        hits = [k for k in club_coaches.get(tid, ()) if names.get(k) == me] or                [k for k in club_coaches.get(tid, ()) if names.get(k, "").split()[-1:] == me.split()[-1:]]
+        if len(set(hits)) == 1 and reg.link("coach", "tm-name", me, hits[0]) is not None:
+            n["tm_linked"] += 1
     for (old, new), k in pairs.items():                           # a Transfermarkt name on FotMob's coach's bench
         a = G.c.execute("SELECT name, src FROM coach WHERE kid=?", (old,)).fetchone()
         b = G.c.execute("SELECT name FROM coach WHERE kid=?", (new,)).fetchone()

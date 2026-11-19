@@ -54,3 +54,14 @@ def test_spells_from_the_matches(tmp_path):
     d = json.load(open(tmp_path / "o" / "coaches" / "teams.json", encoding="utf-8"))["102101"]
     assert [(s["name"], s["start"], s["end"], s["m"], s["w"], s["d"], s["l"]) for s in d] == [
         ("Henk ten Cate", "2016-02-01", "2016-02-01", 1, 1, 0, 0), ("Abel Braga", "2015-09-01", "2015-10-01", 2, 1, 1, 0)]
+
+
+def test_a_name_only_coach_joins_the_clubs_fotmob_coach_of_that_name(tmp_path):
+    G, reg, S, mids, e, jaz = setup(tmp_path)
+    cwc = reg.mint("match", "tm", "777")                                  # a cup match: no coachHistory row covers it
+    G.put("match", {"mid": cwc, "date": "2015-12-10", "home": jaz, "away": 5, "hs": 1, "as_": 0}, "tm")
+    braga_tm = reg.mint("coach", "tm-name", "abel braga")
+    G.put("coach", {"kid": braga_tm, "name": "Abel Braga"}, "tm")
+    G.c.execute("insert into match_coach values(?, 'h', ?, 'tm')", (cwc, braga_tm))
+    coaches.load(G, reg, S)
+    assert reg.get("coach", "tm-name", "abel braga") == reg.get("coach", "fotmob", 1)
