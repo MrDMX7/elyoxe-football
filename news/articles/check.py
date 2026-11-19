@@ -120,6 +120,8 @@ def check_article(article, sheet, md=None, words=None):
 
 
 ATTRIB = re.compile(r"(?:بحسب|وفقاً ل|وفقا ل|نقلاً عن|نقلا عن|حسب ما|ذكرت|أفادت)")
+# A headline that is a question (owner 2026-11-20). A quoted question («…؟») ends with the quote mark, not «؟», and passes.
+QUESTION = re.compile(r"[?؟]\s*$")
 
 
 def check_news(article, sheet, words):
@@ -129,4 +131,6 @@ def check_news(article, sheet, words):
     n = len(ATTRIB.findall(article_text(article)))
     if n > 2:
         fails.append(f"attribution {n} times; name the source once")
+    if QUESTION.search(article.get("headline") or ""):
+        fails.append("the headline is a question; state the news, or answer the headline «لا خبر» if the sheet has none")
     return fails

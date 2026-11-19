@@ -13,6 +13,11 @@ SCHEMA = {"type": "object", "additionalProperties": False, "required": ["headlin
                          "facts_box": {"type": "array", "items": {"type": "string"}}, "sources_cited": {"type": "array", "items": {"type": "string"}}}}
 
 
+# The news writer's answer when the sheet holds only a question, a guess or an opinion, no news (style.md rule 9; owner
+# 2026-11-20 after «إرم نيوز تتساءل: هل يدفع سان جيرمان مليار يورو لضم يامال؟» went out as an article).
+NO_NEWS = "لا خبر"
+
+
 class WriteError(Exception):
     pass
 
@@ -44,12 +49,14 @@ class Writer:
             art = json.loads(text)
         except ValueError as e:
             raise WriteError(f"no JSON: {e}") from e
-        if (not isinstance(art, dict) or any(k not in art for k in SCHEMA["required"]) or not str(art.get("headline") or "").strip()
-                or not art.get("sections") or not all(isinstance(x, dict) and x.get("paragraphs") for x in art["sections"])):
-            raise WriteError(f"answer is not the schema: keys {sorted(art)[:8] if isinstance(art, dict) else type(art).__name__}")
         u = msg.usage
         usage = {"in": u.input_tokens or 0, "out": u.output_tokens or 0,
                  "cache_read": getattr(u, "cache_read_input_tokens", 0) or 0, "cache_write": getattr(u, "cache_creation_input_tokens", 0) or 0}
+        if kind == "news" and isinstance(art, dict) and str(art.get("headline") or "").strip(" «»\"") == NO_NEWS:
+            return {"no_news": True}, usage
+        if (not isinstance(art, dict) or any(k not in art for k in SCHEMA["required"]) or not str(art.get("headline") or "").strip()
+                or not art.get("sections") or not all(isinstance(x, dict) and x.get("paragraphs") for x in art["sections"])):
+            raise WriteError(f"answer is not the schema: keys {sorted(art)[:8] if isinstance(art, dict) else type(art).__name__}")
         return art, usage
 
     TOPICS = ("transfer", "injury", "statement", "presser", "official", "match", "other")

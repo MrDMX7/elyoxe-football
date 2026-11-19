@@ -61,3 +61,17 @@ def test_the_client_has_a_short_timeout_and_one_retry(monkeypatch):
     monkeypatch.setattr(anthropic, "Anthropic", lambda **kw: got.update(kw) or FakeClient())
     W.Writer().write("report", {}, "claude-sonnet-5-5")
     assert got == {"timeout": 180, "max_retries": 1}
+
+
+def test_a_news_sheet_with_no_news_is_answered_no_news_and_its_cost_is_counted():
+    """Style rule 9: a sheet that holds only an outlet's question, a guess or an opinion gets the headline «لا خبر» and empty
+    fields; the writer reports it instead of failing the schema (owner 2026-11-20)."""
+    none = json.dumps({"headline": "لا خبر", "standfirst": "", "sections": [], "facts_box": [], "sources_cited": []}, ensure_ascii=False)
+    art, u = W.Writer(FakeClient(text=none)).write("news", {}, "claude-sonnet-5-5")
+    assert art == {"no_news": True} and u["out"] == 2000
+    with pytest.raises(W.WriteError):                       # a match report always has news
+        W.Writer(FakeClient(text=none)).write("report", {}, "claude-sonnet-5-5")
+
+
+def test_the_style_guide_carries_the_no_news_answer():
+    assert W.NO_NEWS in W.STYLE.read_text(encoding="utf-8")

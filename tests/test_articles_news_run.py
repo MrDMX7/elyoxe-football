@@ -291,3 +291,30 @@ def test_the_article_carries_its_own_label_and_the_journals_guess_only_when_the_
     go(st2, NOW, w2); go(st2, NOW + timedelta(minutes=25), w2)
     d = st2.get_json(f"news/a/n-{TRANSFER['id']}.json")
     assert (d["topic"], d["stage"]) == (TRANSFER["kind"], TRANSFER["stage"]) and "labelled" not in d
+
+
+class NoNews(W):
+    """A writer that finds only a question in every sheet (write.NO_NEWS)."""
+    def write(self, kind, sheet, model, notes=None):
+        self.calls.append((sheet["النوع"], model))
+        return {"no_news": True}, {"in": 4000, "out": 50, "cache_read": 0, "cache_write": 0}
+
+
+def test_a_story_with_no_news_is_not_published_and_not_asked_again_every_run(tmp_path, monkeypatch):
+    """Owner 2026-11-20: an outlet's «هل يدفع سان جيرمان مليار يورو…؟» went out as an article. The writer answers «لا خبر»:
+    nothing is published, the cost is counted, and the story comes back only if it grows."""
+    monkeypatch.setattr(NR, "breaking", lambda s, items: False)
+    st, w = Store(LocalBackend(tmp_path)), NoNews()
+    outs = [go(st, NOW + timedelta(minutes=m), w, alone()) for m in range(0, 24 * 60, 15)]
+    assert sum(o["no_news"] for o in outs) == 1 and sum(o["written"] for o in outs) == 0 and sum(o["failed"] for o in outs) == 0
+    assert len(w.calls) == 1                                        # one call: no rewrite, no retry
+    assert st.get_json(f"news/a/n-{TRANSFER['id']}.json") is None
+    assert spend.Spend(st, NOW).month_total() > 0
+
+
+def test_a_breaking_story_with_no_news_is_not_counted_as_breaking(tmp_path):
+    st = Store(LocalBackend(tmp_path))
+    s, j = official_story("OFFICIAL: Player X signs a new contract until 2030", "transfer")
+    out = go(st, NOW, NoNews(), j)
+    assert out["breaking"] == 0 and out["no_news"] == 1
+    assert st.get_json(f"news/a/n-{s['id']}.json") is None
