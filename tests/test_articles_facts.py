@@ -77,3 +77,43 @@ def test_the_sheet_never_asks_for_a_transliteration(monkeypatch):
     md = copy.deepcopy(J("match_5181860.json")); md["home"]["name_ar"] = None; md["home"]["id"] = 999999999
     sheet, _ = F.report_sheet(md, None, None, NAMES)
     assert sheet["صاحب الأرض"] == md["home"]["name"]
+
+
+# phase 8 (Tifo graph): the sheet's «من أرشيف تيفو» comes from the graph's published files only
+GRAPH = {
+    "motm/index.json": {"since": "2026-07-01", "today": "2026-11-07", "counted": []},
+    "motm/players.json": {"535603": {"name": "مالكوم", "total": 30, "now": 4}},
+    "coaches/coaches.json": {"7": {"name": "Cosmin Olăroiu", "fotmob": 78656, "spells": [
+        {"team": 102101, "m": 40, "w": 20, "d": 10, "l": 10}, {"team": 9, "m": 60, "w": 40, "d": 10, "l": 10}]}},
+    "editions/538.json": {"seasons": [{"season": "2026/2027", "champion": None},
+                                      {"season": "2025/2026", "champion": {"fotmob": 102113, "name": "شباب الأهلي"}},
+                                      {"season": "2020/2021", "champion": {"fotmob": 102101, "name": "الجزيرة"}},
+                                      {"season": "2016/2017", "champion": {"fotmob": 102101, "name": "الجزيرة"}}]},
+    "awards/index.json": {"awards": [{"key": "golden-ball", "name_ar": "الكرة الذهبية"}]},
+    "awards/players.json": {"535603": [["golden-ball", "2019", "winner", 1, None], ["golden-ball", "2020", "winner", 2, None],
+                                       [None, "2024/2025", "top_scorer", 1, 538]]},
+}
+
+
+def test_the_graph_adds_the_man_of_the_match_coaches_titles_and_awards():
+    md = J("match_1000022237.json")
+    g = F.graph_sheet(md, GRAPH.get, NAMES)
+    assert g["رجل المباراة (أعلى تقييم)"] == {"اللاعب": "Malcom", "التقييم": 8.4, "مرات رجل المباراة هالموسم مع هالمباراة": 5,
+                                               "مرات رجل المباراة في مسيرته مع هالمباراة": 31}
+    assert g["سجل المدربين قبل هالمباراة"]["Cosmin Olăroiu"] == {"كل مسيرته": "100 مباراة: 60 فوز، 20 تعادل، 20 خسارة",
+                                                                  "مع الجزيرة": "40 مباراة: 20 فوز، 10 تعادل، 10 خسارة"}
+    assert "Rui Vitória" not in g["سجل المدربين قبل هالمباراة"]        # not in the graph: left out, never guessed
+    assert g["ألقاب البطولة"] == {"الجزيرة": 2, "الوصل": 0} and g["آخر بطل"] == "شباب الأهلي (2025/2026)"
+    assert g["ألقاب فردية للاعبين"] == {"Malcom": ["الكرة الذهبية 2019", "هداف هالبطولة 2024/2025"]}
+
+
+def test_a_match_already_counted_is_not_counted_again_and_a_missing_file_costs_nothing():
+    md = J("match_1000022237.json")
+    files = dict(GRAPH, **{"motm/index.json": {"since": "2026-07-01", "today": "2026-11-09", "counted": [md["id"]]}})
+    assert F.graph_sheet(md, files.get, NAMES)["رجل المباراة (أعلى تقييم)"]["مرات رجل المباراة هالموسم مع هالمباراة"] == 4
+
+    def broken(path):
+        raise OSError("no network")
+    assert F.graph_sheet(md, broken, NAMES) == {}
+    sheet, _ = F.report_sheet(md, J("standings_538.json"), J("fixtures_538.json"), NAMES, graph=F.graph_sheet(md, GRAPH.get, NAMES))
+    assert sheet["من أرشيف تيفو"]["آخر بطل"] == "شباب الأهلي (2025/2026)"

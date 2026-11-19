@@ -69,6 +69,7 @@ def run(store, data_get, writer, now, *, dry=False, only=None, limit=None, fetch
     days = [data_get(f"all/{(uae - timedelta(days=d)).strftime('%Y%m%d')}.json") for d in (0, 1)]
     ids = [only] if only else due.finished_priority(days, set(config.awarded()))
     names = facts.load_names()
+    gget = facts.graph_files(data_get)      # «من أرشيف تيفو»: the graph's files, read once per run
     n = 0
 
     def save():
@@ -89,7 +90,7 @@ def run(store, data_get, writer, now, *, dry=False, only=None, limit=None, fetch
                 continue
             standings = data_get(f"comp/{md['comp']}/standings.json")
             fixtures = data_get(f"comp/{md['comp']}/fixtures.json")
-            sheet, meta = facts.report_sheet(md, standings, fixtures, names)
+            sheet, meta = facts.report_sheet(md, standings, fixtures, names, graph=facts.graph_sheet(md, gget, names))
             fp = meta["fingerprint"]
             if rec.get("status") in ("done", "thin", "failed") and rec.get("fp") == meta["fingerprint"]:
                 continue

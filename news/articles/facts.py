@@ -1,5 +1,6 @@
 """The match-report fact sheet (spec: «Every article is written from one fact sheet»). Built from the public v1/ files only:
-match/<id>.json, comp/<id>/standings.json, comp/<id>/fixtures.json. Keys are Arabic, as in the blind tests the owner judged
+match/<id>.json, comp/<id>/standings.json, comp/<id>/fixtures.json, and the graph's motm/, coaches/, editions/ and awards/
+files for «من أرشيف تيفو» (graph_sheet). Keys are Arabic, as in the blind tests the owner judged
 (content/social/tifo/articles-test/2026-11-18/build.py). The writer never does arithmetic: totals, differences, the winner
 and each team's games played are in the sheet. A round played after a postponed one is stated (ADNOC 11-18: round 7 was
 moved to 29-30 December, so after round 8 every team had played 7)."""
@@ -72,7 +73,7 @@ def _postponed(fixtures, md):
     return out
 
 
-def report_sheet(md, standings, fixtures, names):
+def report_sheet(md, standings, fixtures, names, graph=None):
     PL, CO, RE = names.get("players", {}), names.get("coaches", {}), names.get("referees", {})
     person = lambda p: _ar(PL, p.get("id"), p.get("name")) if p else None
     idx = _lineup_index(md)
@@ -140,6 +141,7 @@ def report_sheet(md, standings, fixtures, names):
                                                  "فوز " + team["away"]: round(wp[2] * 100)} if wp else None),
         "الترتيب الحالي في البطولة": table,
         "جولات مؤجلة": _postponed(fixtures, md) or None,
+        "من أرشيف تيفو": graph or None,
     }
     sheet = {k: v for k, v in sheet.items() if v not in (None, [], {})}
     fp.append(f"s{sh}-{sa}" + (f"p{pens.get('home')}-{pens.get('away')}" if pens else ""))
@@ -148,6 +150,91 @@ def report_sheet(md, standings, fixtures, names):
             "thin": not (md.get("events") or md.get("stats")),
             "fingerprint": hashlib.sha1("|".join(sorted(fp)).encode()).hexdigest()[:12]}
     return sheet, meta
+
+
+def graph_files(data_get):
+    """data_get memoised for one run: the graph's files are large and the same for every match."""
+    memo = {}
+
+    def get(path):
+        if path not in memo:
+            memo[path] = data_get(path)
+        return memo[path]
+    return get
+
+
+def _record(spells):
+    m, w, d, l = (sum(s.get(k) or 0 for s in spells) for k in ("m", "w", "d", "l"))
+    return f"{m} مباراة: {w} فوز، {d} تعادل، {l} خسارة" if m else None
+
+
+def graph_sheet(md, get, names):
+    """«من أرشيف تيفو» (Tifo graph phase 8): what the graph knows around this match, from its published v1 files only
+    (graph/publish.py): the man of the match (the top FotMob rating, the graph's rule) with his count this season and in his
+    career including this match, each coach's record before it (overall and at this club), each club's titles in this
+    competition and the last champion, and the individual awards of the players who scored or were man of the match.
+    A file that is missing or fails leaves its part out; the sheet never guesses."""
+    out = {}
+    try:
+        PL, CO = names.get("players", {}), names.get("coaches", {})
+        team = {s: _club(md[s]) for s in ("home", "away")}
+        lu = md.get("lineups") or {}
+        ga = {}
+        for e in md.get("events") or []:
+            if e.get("type") in ("goal", "penalty_goal"):
+                for p in (e.get("player"), e.get("assist")):
+                    if p and p.get("id"):
+                        ga[p["id"]] = ga.get(p["id"], 0) + 1
+        played = [p for s in ("home", "away") for p in ((lu.get(s) or {}).get("starters") or []) + ((lu.get(s) or {}).get("subs") or [])
+                  if p.get("rating") is not None and p.get("id")]
+        top = max(played, key=lambda p: (float(p["rating"]), ga.get(p["id"], 0), -p["id"]), default=None)
+        if top:
+            ix, pl = get("motm/index.json") or {}, (get("motm/players.json") or {}).get(str(top["id"])) or {}
+            new = 0 if int(md["id"]) in set(map(int, ix.get("counted") or [])) else 1
+            now = (pl.get("now") or 0) + (new if (md.get("kickoff_utc") or "")[:10] >= (ix.get("since") or "9") else 0)
+            out["رجل المباراة (أعلى تقييم)"] = {"اللاعب": _ar(PL, top["id"], top.get("name")), "التقييم": float(top["rating"]),
+                                               "مرات رجل المباراة هالموسم مع هالمباراة": now,
+                                               "مرات رجل المباراة في مسيرته مع هالمباراة": (pl.get("total") or 0) + new}
+        co = get("coaches/coaches.json") or {}
+        by_fm = {c.get("fotmob"): c for c in co.values() if c.get("fotmob")}
+        rec = {}
+        for s in ("home", "away"):
+            c = (lu.get(s) or {}).get("coach") or {}
+            g = by_fm.get(c.get("id"))
+            if not g:
+                continue
+            r = {"كل مسيرته": _record(g.get("spells") or []),
+                 f"مع {team[s]}": _record([x for x in g.get("spells") or [] if x.get("team") == md[s]["id"]])}
+            rec[_ar(CO, c.get("id"), c.get("name"))] = {k: v for k, v in r.items() if v}
+        if rec:
+            out["سجل المدربين قبل هالمباراة"] = rec
+        ed = get(f"editions/{md.get('comp')}.json") or {}
+        champs = [x for x in ed.get("seasons") or [] if x.get("champion")]
+        if champs:
+            out["ألقاب البطولة"] = {team[s]: sum(1 for x in champs if (x["champion"] or {}).get("fotmob") == md[s]["id"]) for s in ("home", "away")}
+            out["آخر بطل"] = f"{champs[0]['champion'].get('name')} ({champs[0]['season']})"
+        aw = get("awards/players.json") or {}
+        anames = {a.get("key"): a.get("name_ar") or a.get("name") for a in (get("awards/index.json") or {}).get("awards") or []}
+        who = [top] if top else []
+        who += [e["player"] for e in md.get("events") or [] if e.get("type") in ("goal", "penalty_goal") and (e.get("player") or {}).get("id")]
+        titles = {}
+        for p in who:
+            t = []
+            for key, season, kind, rank, comp in aw.get(str(p["id"])) or []:
+                if rank != 1:
+                    continue
+                if key and anames.get(key):
+                    t.append(f"{anames[key]} {season}")
+                elif kind == "top_scorer" and comp == md.get("comp"):
+                    t.append(f"هداف هالبطولة {season}")
+            if t:
+                titles[_ar(PL, p["id"], p.get("name"))] = t[:8]
+        if titles:
+            out["ألقاب فردية للاعبين"] = titles
+    except Exception as e:                         # the archive is extra: a report never fails because of it
+        print(json.dumps({"graph_sheet_error": str(e)[:200]}))
+        return {}
+    return out
 
 
 def _comp_ar(cid):
