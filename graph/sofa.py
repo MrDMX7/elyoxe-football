@@ -36,6 +36,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--upload", action="store_true")
     ap.add_argument("--budget", type=int, default=2500)
+    ap.add_argument("--diag", action="store_true", help="a screenshot of what SofaScore shows the browser, nothing fetched")
     a = ap.parse_args(argv)
     S = Sources()
     if a.upload and not os.path.isdir(CACHE):
@@ -47,7 +48,10 @@ def main(argv=None):
     jf = os.path.join(CACHE, "..", "sofa_jobs.json")
     json.dump(jobs, open(jf, "w", encoding="utf-8"))
     root = subprocess.run(["npm", "root", "-g"], capture_output=True, text=True, shell=os.name == "nt").stdout.strip()
-    r = subprocess.run(["node", os.path.join(HERE, "sofa_fetch.cjs"), jf, CACHE, str(a.budget)], env=dict(os.environ, NODE_PATH=root))
+    env = dict(os.environ, NODE_PATH=root, **({"SOFA_DIAG": "1"} if a.diag else {}))
+    r = subprocess.run(["node", os.path.join(HERE, "sofa_fetch.cjs"), jf, CACHE, str(a.budget)], env=env)
+    if a.diag:
+        return r.returncode
     if a.upload:
         st = S.store()
         buf = io.BytesIO()

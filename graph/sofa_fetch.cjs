@@ -12,10 +12,21 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const jobs = JSON.parse(fs.readFileSync(jobsFile, "utf8"));
   fs.mkdirSync(out, { recursive: true });
-  const b = await chromium.launch({ headless: true, channel: "chrome" }).catch(() => chromium.launch({ headless: true }));
-  const p = await b.newPage();
-  await p.goto("https://www.sofascore.com/", { waitUntil: "domcontentloaded", timeout: 60000 });
-  const J = async u => { await sleep(1000); return p.evaluate(async u => { const x = await fetch(u); return x.status === 200 ? x.json() : { status: x.status }; }, u); };
+  // a real Chrome with a profile of its own (graph/.cache/sofa_profile: its cookies carry over from run to run), the window
+  // off-screen; the owner allowed it (2026-11-20). A headless browser gets SofaScore's challenge.
+  const b = await chromium.launchPersistentContext(path.join(out, "..", "sofa_profile"), { headless: false, channel: "chrome",
+    args: ["--window-position=-2400,0", "--window-size=1200,800"] });
+  const p = b.pages()[0] || await b.newPage();
+  await p.goto("https://www.sofascore.com/football", { waitUntil: "networkidle", timeout: 90000 }).catch(() => {});
+  await sleep(4000);
+  if (process.env.SOFA_DIAG) {                                  // what the site shows this browser (the owner's diagnosis request)
+    await p.screenshot({ path: path.join(out, "..", "sofa_diag.png") });
+    const r = await p.evaluate(async () => { const x = await fetch("/api/v1/unique-tournament/955/seasons"); return [x.status, (await x.text()).slice(0, 200)]; });
+    console.log("diag", JSON.stringify(r), await p.title());
+    await b.close();
+    return;
+  }
+  const J = async u => { await sleep(2000); return p.evaluate(async u => { const x = await fetch(u); return x.status === 200 ? x.json() : { status: x.status }; }, u); };
   const stats = { seasons: 0, events: 0, potm: 0, calls: 0 };
   for (const job of jobs) {
     const ss = await J(`/api/v1/unique-tournament/${job.ut}/seasons`);
