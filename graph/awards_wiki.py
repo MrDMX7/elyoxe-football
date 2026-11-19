@@ -1,0 +1,207 @@
+"""Award tables from an English Wikipedia article (spec §7.3): the article's HTML (REST, Parsoid) -> every table that pairs
+a season with a linked person (an award, a top scorer list) or with a champion and a runner-up club. Merged cells are
+unfolded first, so a year spanning a three-row podium dates all three rows. Pure: no network, no graph."""
+import re
+import urllib.parse
+from lxml import html as LH
+
+REF = re.compile(r"\[(?:\d+|[a-z]|note \d+|nb \d+)\]", re.I)
+MARK = re.compile(r"[†‡*^§¶#]+")
+SEASON = re.compile(r"^(\d{4})(?:\s*[–\-/]\s*(\d{4}|\d{2})(?!\d))?")
+H_YEAR = re.compile(r"\b(year|season|edition|tournament)\b|^ed\.?$", re.I)          # singular: «Years» / «Seasons» are spans and lists
+SKIP_SECTION = re.compile(r"multiple|by (player|club|team|country|nation|nationality|position|league)|all[- ]time|nominee|shortlist|"
+                          r"finalist|record|statistic|dream team|team of|all[- ]star|selection|squad|list of (players|nominees)", re.I)
+POSITIONS = re.compile(r"goalkeeper|defender|midfielder|forward|striker", re.I)
+H_TEAM = re.compile(r"club|team|nation|country|nationality|^nat\.?$|position|league", re.I)
+H_PERSON = re.compile(r"player|winner|scorer|^name|recipient|goalkeeper|manager|coach|footballer|best|^top", re.I)
+H_CHAMP = re.compile(r"champion|winner", re.I)
+H_RUNNER = re.compile(r"runner", re.I)
+H_VALUE = re.compile(r"goals?\b|points?\b|votes?\b|^pts|%", re.I)
+H_RANK = re.compile(r"^(rank|place|pos\.?)$", re.I)
+KINDS = [("top_scorer", re.compile(r"scorer|golden boot|goalscor|pichichi|capocannoniere|torj[aä]ger|golden shoe|top goal", re.I)),
+         ("best_goalkeeper", re.compile(r"goalkeeper|golden glove|yashin|zamora", re.I)),
+         ("best_young", re.compile(r"young|golden boy|kopa|rookie|revelation|breakthrough", re.I)),
+         ("coach", re.compile(r"manager|coach", re.I))]
+
+
+def clean(t):
+    return re.sub(r"\s+", " ", MARK.sub("", REF.sub("", t or ""))).strip()
+
+
+def season_label(text):
+    m = SEASON.match(clean(text))
+    if not m:
+        return None
+    y1 = int(m.group(1))
+    if not m.group(2):
+        return str(y1)
+    y2 = int(m.group(2))
+    if len(m.group(2)) == 2:
+        y2 += (y1 // 100) * 100
+        if y2 < y1:
+            y2 += 100
+    return f"{y1}/{y2}"
+
+
+def _links(c):
+    out, red = [], []
+    for a in c.xpath(".//a[@rel='mw:WikiLink']"):
+        h = a.get("href") or ""
+        if not h.startswith("./"):
+            continue
+        if "redlink=1" in h or "new" in (a.get("class") or "").split():
+            red.append(clean(a.text_content()))
+            continue
+        t = urllib.parse.unquote(h[2:].split("#")[0].split("?")[0])
+        if t and ":" not in t:
+            out.append(t)
+    return out, red
+
+
+def grid(table):
+    """Rows of cells (text, links, is_th, redlinks) with rowspan/colspan unfolded."""
+    rows = table.xpath("./tr|./thead/tr|./tbody/tr|./tfoot/tr")
+    out, carry = [], {}
+    for tr in rows:
+        cells, row, col, ci = tr.xpath("./th|./td"), [], 0, 0
+        while ci < len(cells) or col in carry:
+            if col in carry:
+                cell, left = carry[col]
+                row.append(cell)
+                if left <= 1:
+                    del carry[col]
+                else:
+                    carry[col] = (cell, left - 1)
+                col += 1
+                continue
+            c = cells[ci]
+            ci += 1
+            try:
+                rs, cs = max(1, int(c.get("rowspan") or 1)), max(1, int(c.get("colspan") or 1))
+            except ValueError:
+                rs, cs = 1, 1
+            links, red = _links(c)
+            val = (clean(c.text_content()), links, c.tag == "th", red)
+            for _ in range(min(cs, 30)):
+                row.append(val)
+                if rs > 1:
+                    carry[col] = (val, rs - 1)
+                col += 1
+        out.append(row)
+    return out
+
+
+def _section(t):
+    s = t.getparent()
+    while s is not None and s.tag != "section":
+        s = s.getparent()
+    if s is not None:
+        for tag in ("h2", "h3", "h4"):
+            h = s.find(f"./{tag}")
+            if h is not None:
+                return clean(h.text_content())
+    return ""
+
+
+def _rank(text):
+    m = re.match(r"(\d+)", clean(text))
+    return int(m.group(1)) if m else None
+
+
+def _col(hdr, rx, skip=()):
+    return next((i for i, h in enumerate(hdr) if i not in skip and rx.search(h)), None)
+
+
+def _kind(*texts):
+    for k, rx in KINDS:
+        if any(rx.search(t or "") for t in texts):
+            return k
+    return None
+
+
+def table_rows(g, page, section):
+    """The award tables in one wikitable: [] when it is not one (no season column, no person/club, < 3 dated rows); one per
+    award column when a table sets several awards side by side («Season | Player of the Season | Young Player | Coach»)."""
+    if SKIP_SECTION.search(section):
+        return []
+    nh = 0
+    while nh < len(g) and g[nh] and all(c[2] for c in g[nh]):
+        nh += 1
+    if not nh or nh >= len(g):
+        return []
+    # the header is the all-<th> row naming the most distinct columns, not a separator row («Ballon d'Or (1956–2009)»)
+    hdr = [c[0] for c in max(g[:nh], key=lambda r: len({c[0] for c in r if c[0]}))]
+    body = g[nh:]
+    if sum(1 for h in hdr if POSITIONS.search(h)) >= 2:          # a team of the tournament, not an award
+        return []
+    yi = _col(hdr, H_YEAR)
+    if yi is None and sum(1 for r in body if r and season_label(r[0][0])) >= 3:
+        yi = 0
+    if yi is None:
+        return []
+    teams = {i for i, h in enumerate(hdr) if H_TEAM.search(h)}
+    award_cols = [i for i, h in enumerate(hdr) if i != yi and i not in teams and (H_PERSON.search(h) or _kind(h))
+                  and not H_VALUE.search(h) and not H_RANK.search(h)]
+    if len(award_cols) >= 2 and len({hdr[i] for i in award_cols}) == len(award_cols) and not any(H_RUNNER.search(hdr[i]) for i in award_cols):
+        out = []
+        for i in award_cols:
+            got = _rows(body, page, f"{section} — {hdr[i]}", yi, i, None, None, None, _kind(hdr[i]) or "winner")
+            if got:
+                out.append(got)
+        return out
+    ri = _col(hdr, H_RUNNER, {yi})
+    ci = _col(hdr, H_CHAMP, {yi, ri}) if ri is not None else None
+    team_table = ri is not None and ci is not None
+    pi = None if team_table else _col(hdr, H_PERSON, {yi} | {i for i, h in enumerate(hdr) if H_TEAM.search(h)})
+    if not team_table and pi is None:
+        return []
+    ti = None if team_table else _col(hdr, re.compile(r"club|team", re.I), {yi, pi})
+    vi = _col(hdr, H_VALUE, {yi, pi, ti})
+    ki = _col(hdr, H_RANK, {yi})
+    if team_table:
+        kind = "champion_table"
+    else:
+        kind = _kind(section, " ".join(hdr)) or _kind(page) or "winner"
+    got = _rows(body, page, section, yi, pi, ti, vi, ki, kind, ci, ri)
+    return [got] if got else []
+
+
+def _rows(body, page, section, yi, pi, ti, vi, ki, kind, ci=None, ri=None):
+    team_table = kind == "champion_table"
+    rows = []
+    for r in body:
+        if len(r) <= max(i for i in (yi, pi, ci, ri, ti, vi, ki, 0) if i is not None):
+            continue
+        season = season_label(r[yi][0])
+        if not season:
+            continue
+        if team_table:
+            champ, run = r[ci][1], r[ri][1]
+            if not champ:
+                continue
+            rows.append({"season": season, "rank": 1, "person": None, "name": r[ci][0], "team": champ[0], "runner_up": run[0] if run else None,
+                         "runner_up_name": r[ri][0] or None, "value": None})
+            continue
+        cell = r[pi]
+        if not cell[0]:
+            continue
+        rk = _rank(r[ki][0]) if ki is not None else None
+        rows.append({"season": season, "rank": rk or 1, "person": cell[1][0] if cell[1] else None,
+                     "name": (cell[3][0] if cell[3] and not cell[1] else cell[0]),
+                     "team": (r[ti][1][0] if ti is not None and r[ti][1] else None),
+                     "value": (r[vi][0] or None) if vi is not None else None})
+    if len(rows) < 3:
+        return None
+    if ki is None and not team_table and len(rows) > 3 * len({r["season"] for r in rows}):
+        return None          # many names a season and no rank: nominees or a squad, not winners
+    return {"page": page, "section": section, "kind": kind, "who": "team" if team_table else "person", "rows": rows}
+
+
+def extract(html, page):
+    doc = LH.fromstring(html.decode("utf-8", "replace") if isinstance(html, bytes) else html)   # bytes alone read as Latin-1
+    for st in doc.xpath("//style|//sup[contains(@class,'reference')]"):
+        st.drop_tree()
+    out = []
+    for t in doc.xpath("//table[contains(concat(' ', normalize-space(@class), ' '), ' wikitable ')]"):
+        out.extend(table_rows(grid(t), page, _section(t)))
+    return out
