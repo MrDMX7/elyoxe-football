@@ -77,6 +77,7 @@ def prep(s):
     «#السعودية_العراق» -> «السعودية العراق»), possessives dropped («Kane's» -> «Kane»)."""
     s = unicodedata.normalize("NFKC", BIDI.sub("", (s or "").translate(AR_DIGITS))).replace("’", "'").replace("`", "'")   # 𝗠𝗔𝗧𝗖𝗛 -> MATCH
     s = re.sub(r"#(\w+)", lambda m: " " + re.sub(r"(?<=[a-z])(?=[A-Z])|_", " ", m.group(1)) + " ", s)
+    s = re.sub(r"([ء-ي])\1{2,}", r"\1", s)    # a letter drawn out for the cheer: «ماركو ماياااا», «ثااااني» (no Arabic word repeats one 3 times)
     return re.sub(r"(?i)(?<=[a-z])'s\b", "", s)
 
 
@@ -136,6 +137,11 @@ GOAL_WORDS = phrases([
     "hattrick", "curler", "bicycle kick", "overhead kick", "nets", "makes it", "doubles the lead", "golpazo",
     "هدف", "الهدف", "هدفا", "هدفين", "ثنائية", "ثلاثية", "هاتريك", "يسجل", "سجل", "يحرز", "أحرز", "تسجيل", "التسجيل", "قذيفة", "صاروخية", "رأسية",
     "ركلة جزاء", "ركلة حرة", "مقصية", "يهز الشباك", "هز الشباك", "هدف التعادل", "هدف الفوز"])
+# one of a side's goals, named by its number: «ثاني أهداف الزعيم» is the second goal, «يفتتح أهداف الزعيم» the first (Al Ain's own
+# X clips, 2026-11-19); «أهداف» there is not a clip of several goals
+ONE_OF_GOALS = {1: ["أول أهداف", "يفتتح أهداف", "افتتح أهداف", "يفتتح التسجيل", "افتتح التسجيل", "افتتاح التسجيل"],
+                2: ["ثاني أهداف"], 3: ["ثالث أهداف"], 4: ["رابع أهداف"], 5: ["خامس أهداف"]}
+GOAL_WORDS += phrases([w for ws in ONE_OF_GOALS.values() for w in ws])
 GOAL_WORDS_LANG = {"es": phrases(["anota", "marca", "tanto", "penalti", "penal", "cabezazo", "remate"]),
                    "pt": phrases(["marca", "golaço", "pênalti"]),
                    "it": phrases(["rete", "segna", "rigore", "punizione"]),
@@ -157,6 +163,9 @@ ORD_WORDS = {1: phrases(["الهدف الأول", "هدف أول", "first goal",
              3: phrases(["الهدف الثالث", "third goal", "tercer gol", "terzo gol", "troisième but"]),
              4: phrases(["الهدف الرابع", "fourth goal", "cuarto gol", "quarto gol"]),
              5: phrases(["الهدف الخامس", "fifth goal", "quinto gol"])}
+for _n, _ws in ONE_OF_GOALS.items():
+    ORD_WORDS[_n] += phrases(_ws)
+ONE_OF = [p for ws in ONE_OF_GOALS.values() for p in phrases(ws)]
 
 # never a match summary or a goal clip
 NEG_ALWAYS = phrases([
@@ -207,6 +216,10 @@ NEG_GOAL = phrases([
     "comemoração", "jubel", "يحتفل", "احتفالية",
     "goal line", "chance", "chances", "فرصة", "almost", "nearly", "so close", "close call", "denied", "no goal", "not a goal", "كاد",
     "كادت", "قريب", "casi", "quasi", "presque", "beinahe", "atajadón", "حارس", "keeper", "goalkeeper"])
+# the woodwork, which a title may name before the rebound that went in («القائم يرفض تسديدة كاكو.. والحسين رحيمي يكمل المهمة …
+# تمنح العين الهدف الثاني», Abu Dhabi Sports 2026-11-19): not held against a clip that also says which goal it was (that number
+# is then checked against the goal's)
+WOODWORK = phrases(["woodwork", "post", "crossbar", "القائم", "العارضة"])
 # the word itself (the rule that picks the match's only goal so far needs it; a «strike» or a «penalty» may be anything)
 GOAL_STRICT = phrases(["goal", "gol", "golazo", "golaço", "golo", "goool", "gooool", "gool", "هدف", "الهدف", "هدفا"])
 GOAL_STRICT_LANG = {"fr": phrases(["but"]), "de": phrases(["tor"]), "it": phrases(["rete"])}
@@ -235,7 +248,8 @@ SEASON = re.compile(r"(?<!\d)(20\d\d)\s*[/-]\s*((?:20)?\d\d)(?!\d)|(?<![\d/])(\d
 YEAR = re.compile(r"(?<![\d/.-])(19\d\d|20\d\d)(?![\d/.-])")
 DATE = re.compile(r"(?<!\d)(\d{1,2})\s*[-/.]\s*(\d{1,2})\s*[-/.]\s*(20\d\d)(?!\d)|(?<!\d)(20\d\d)-(\d\d)-(\d\d)(?!\d)")
 MINUTE = re.compile(r"(?<![\d.:/-])(\d{1,3})\s*(?:\+\s*(\d{1,2}))?\s*['’′](?!\w)|(?:الدقيقة|الدقيقه|minute|minuto|min\.?)\s*(\d{1,3})(?:\s*\+\s*(\d{1,2}))?"
-                    r"|(?<!\d)(\d{1,3})(?:st|nd|rd|th)[\s-]+min", re.I)
+                    r"|(?<!\d)(\d{1,3})(?:st|nd|rd|th)[\s-]+min"
+                    r"|(?<!\w)د\s?(\d{1,3})(?:\s*\+\s*(\d{1,2}))?(?!\d)", re.I)            # «د43:» (Al Ain's clips)
 
 
 class Text:
@@ -260,14 +274,14 @@ class Text:
         ages = [int(a or b) for a, b in YOUTH_AGE.findall(self.raw + " " + prep(head))]
         self.youth_age = ages[0] if ages else None
         self.old = next((" ".join(p) for p in NEG_OLD if has(self.al, p)), None)
-        self.neg_goal = next((" ".join(p) for p in NEG_GOAL if has(self.al, p)), None)
-        self.plural = any(has(self.al, p) for p in PLURAL_GOALS) and not self.hl
+        self.ordinal = next((n for n, ps in ORD_WORDS.items() if any(has(self.al, p) for p in ps)), None)
+        self.neg_goal = next((" ".join(p) for p in NEG_GOAL if has(self.al, p) and not (self.ordinal and p in WOODWORK)), None)
+        self.plural = any(has(self.al, p) for p in PLURAL_GOALS) and not self.hl and not any(has(self.al, p) for p in ONE_OF)
         self.many = any(has(self.al, p) for p in MANY_GOALS)
         self.pen = any(has(self.al, p) for p in PEN_WORDS)
         self.own = any(has(self.al, p) for p in OWN_WORDS)
         self.fk = any(has(self.al, p) for p in FK_WORDS)
         self.eq = any(has(self.al, p) for p in EQ_WORDS)
-        self.ordinal = next((n for n, ps in ORD_WORDS.items() if any(has(self.al, p) for p in ps)), None)
         strict = GOAL_STRICT + GOAL_STRICT_LANG.get(lang, [])
         self.goal_at = [i for i in range(len(self.al)) if any(p[0] in self.al[i] and has(self.al[i:i + len(p)], p) for p in strict)]
         self.flags = [(flag_iso(a), flag_iso(b)) for a, b in FLAG.findall(title or "")]   # «🇯🇴 🆚 🇸🇾»
@@ -293,9 +307,9 @@ class Text:
             if mo:
                 self.dates.append([(int(m.group(3)), mo, int(m.group(1)))])
         for m in MINUTE.finditer(self.raw):
-            mm = m.group(1) or m.group(3) or m.group(5)
+            mm = m.group(1) or m.group(3) or m.group(5) or m.group(6)
             if mm and int(mm) <= 130:
-                self.minutes.append((int(mm), int(m.group(2) or m.group(4) or 0)))
+                self.minutes.append((int(mm), int(m.group(2) or m.group(4) or m.group(7) or 0)))
 
 
 # ------------------------------------------------------------------------------------------------ names
