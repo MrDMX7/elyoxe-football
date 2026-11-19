@@ -500,3 +500,45 @@ def test_the_graphs_other_arabic_names_of_a_player_name_him():
     assert n.player(1572471, "Serginho").get(("سيرجيو", "بيريرا")) == 3
     assert n.player(1572471, "Serginho").get(("سيرجينيو",)) == 2
     assert M.Names({}, {}, {}, {}, {}, NATIONS).player(1, "X") == M.player_forms("X", [])
+
+
+# Abu Dhabi Sports' YouTube highlights, out the same evening and named by the result alone (2026-11-19, real titles and times):
+# the pages waited 3-5 days for the league's own «ملخص وأهداف مباراة …» instead (owner: «ملخصات المباريات تنزل فصفحة المباراة
+# لما تتوفر، نفس ما الاهداف تنزل؟»)
+CH_YT_AE = {c["key"]: c for c in M.channels({"youtube": [], "media": {"youtube": [
+    {"key": "yt_adsports", "channel": "UCF8Fpc7bPHC8Jrflci-mUiQ", "name": "أبوظبي الرياضية", "lang": "ar", "kind": "broadcaster",
+     "home": [538, 11027, 9943, 11026, 329]},
+    {"key": "yt_elsewhere", "channel": "UCxxxxxxxxxxxxxxxxxxxxxx", "name": "قناة", "lang": "ar", "kind": "broadcaster"}]}})}
+CH_YT_AE.update(CH_AE)
+
+
+def hl_of(ch, title, at, match=AIN_DHA):
+    src = "x" if ch.startswith("x_") else "youtube"
+    v = {"id": "v" + str(abs(hash(ch + title + at)) % 10 ** 9), "title": title, "desc": "", "at": at, "ch": ch, "source": src,
+         "url": "https://www.youtube.com/watch?v=" + "a" * 11}
+    trace = []
+    out = M.attach([v], [match], N_AE, CH_YT_AE, trace)
+    return [mid for mid, r in out.items() if r["highlights"]], trace
+
+
+def test_a_broadcasters_upload_named_by_the_result_alone_is_the_matchs_highlights():
+    assert hl_of("yt_adsports", "العين 2 - 1 الظفرة | الجولة 9 - دوري أدنوك للمحترفين 2026 - 2027", "2026-11-19T17:23:01Z")[0] == [1000022241]
+    # the same channel's full match and live stream are not
+    assert hl_of("yt_adsports", "العين 2 - 1 الظفرة | الجولة 9 - دوري أدنوك للمحترفين 2026 - 2027 | المباراة كاملة", "2026-11-19T18:01:00Z")[0] == []
+    assert hl_of("yt_adsports", "مباشر | دوري أدنوك للمحترفين | الجولة 9", "2026-11-19T17:53:00Z")[0] == []
+
+
+def test_a_result_title_is_two_names_and_a_score_and_nothing_else():
+    # a coach after the match, the score in his words: not the highlights
+    got, trace = hl_of("yt_adsports", "مدرب العين بعد الفوز 2-1 على الظفرة | دوري أدنوك للمحترفين", "2026-11-19T18:10:00Z")
+    assert got == []
+    # an X post shaped like a result carries one goal or a card, not the summary
+    assert hl_of("x_adsportstv", "العين 2 - 1 الظفرة | الجولة 9 - دوري أدنوك للمحترفين", "2026-11-19T17:23:01Z")[0] == []
+
+
+def test_two_short_names_are_enough_only_in_the_channels_home_competitions():
+    title, at = "العين 2 - 1 الظفرة | الجولة 9", "2026-11-19T17:23:01Z"
+    got, trace = hl_of("yt_elsewhere", title, at)
+    assert got == [] and any(t["result"] == "weak names" for t in trace)
+    abroad = dict(AIN_DHA, comp=536)                                     # the same names in another country's league
+    assert hl_of("yt_adsports", title, at, abroad)[0] == []
