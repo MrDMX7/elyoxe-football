@@ -2,6 +2,8 @@
 
 **Date:** 2026-11-19. Approach A approved by the owner the same day («نعم أوافق»), order: phase 1, then 2 and 3.
 
+**Status:** phase 1 built 2026-11-19: 1.43M matches, 106k players, 27.6k teams, one competition per competition across sources (`docs/GRAPH-COVERAGE-2026-11-19.md`); the `graph` stage of the nightly database job publishes `tifo.db` (S3 `graph/`, private) and `v1/graph/coverage.json`.
+
 **The owner's words (2026-11-19):** «اريد نخليه موقع متكامل… الاحصائيات و النتايج والانتقالات وكل شي مأرشف عندنا، اريد
 البيانات بأصولها لأقدم مدى نقدر عليه وكل شي مربوط ببعضه… مدربين واندية ومنتخبات و مباريات و احصائيات وبطولات… كلهم شبكة»;
 individual awards (Ballon d'Or, Golden Boot), a sub-section for man of the match, every tournament with its best player and
