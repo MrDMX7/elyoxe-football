@@ -10,6 +10,6 @@ def load(G, reg, S):
         key = (rating, ga, mins, -pid)
         if mid not in best or key > best[mid][0]:
             best[mid] = (key, pid, tid, rating)
-    G.c.executemany("INSERT OR REPLACE INTO match_award(mid, kind, pid, tid, value, src) VALUES(?, 'motm', ?, ?, ?, 'fotmob-rating')",
+    G.c.executemany("INSERT OR IGNORE INTO match_award(mid, kind, pid, tid, value, src) VALUES(?, 'motm', ?, ?, ?, 'fotmob-rating')",
                     [(mid, pid, tid, f"{rating:g}") for mid, (_, pid, tid, rating) in sorted(best.items())])
     return {"matches": len(best)}

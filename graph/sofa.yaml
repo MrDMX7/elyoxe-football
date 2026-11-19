@@ -1,0 +1,13 @@
+# FotMob competition id -> SofaScore unique-tournament id (found by SofaScore's search, 2026-11-20). graph/sofa.py fetches each
+# one's player of the match for the seasons FotMob has no ratings for; graph/load/sofascore.py links them.
+538: 971      # UAE Pro League
+536: 955      # Saudi Pro League
+519: 808      # Egyptian Premier League
+535: 825      # Qatar Stars League
+530: 937      # Botola Pro
+544: 984      # Tunisian Ligue 1
+516: 841      # Algerian Ligue 1
+529: 1002     # Kuwait Premier League
+9942: 2058    # King's Cup (Saudi Arabia)
+525: 463      # AFC Champions League Elite
+329: 622      # Gulf Cup
