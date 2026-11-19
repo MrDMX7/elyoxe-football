@@ -276,3 +276,15 @@ def test_the_bank_is_not_its_club():
     it = {"title": "البنك الأهلي يتعادل في الدوري المصري"}
     R.link_item(Db, it)
     assert bank in it["anchor"]
+
+
+def test_a_stadiums_renovation_is_not_a_contract_renewal():
+    """2026-11-19: «proyecto de renovación del Coliseum» made Getafe's stadium works a transfer rumour. A renewal word next to a
+    stadium word and no other transfer word is not a transfer; a player's renewal still is."""
+    getafe = {"title": "El Getafe ampliará el aforo del Coliseum y cubrirá sus gradas",
+              "desc": "Antonio Sánchez explicó las claves del proyecto de renovación del Coliseum para ampliar la capacidad y cubrir el estadio."}
+    assert C.classify(getafe)["kind"] != "transfer"
+    assert C.classify({"title": "تجديد ملعب الهلال قبل كأس العالم للأندية"})["kind"] != "transfer"
+    assert C.classify({"title": "Pedri renueva con el Barcelona hasta 2030"})["kind"] == "transfer"
+    assert C.classify({"title": "La renovación de Pedri, a punto", "desc": "El club quiere cerrarla antes del partido en el estadio."})["kind"] == "transfer"
+    assert C.classify({"title": "El Madrid ficha a un central y renueva el césped del estadio"})["kind"] == "transfer"   # another transfer word

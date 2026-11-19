@@ -49,7 +49,13 @@ STAGE_WORDS = [
     ("talks", ["talks", "negotiat", "bid", "offer", "approach", "negociacion", "oferta", "negociations", "verhandlungen", "trattativa",
                "مفاوضات", "عرض", "يفاوض", "محادثات"]),
 ]
+# A renewal word is a contract only when the headline is not about a stadium (2026-11-19: «El Getafe ampliará el aforo del
+# Coliseum y cubrirá sus gradas», its description «proyecto de renovación del Coliseum», went out as a transfer rumour).
+RENEW = ["renovacion", "renueva", "تجديد", "prolonge"]
+STADIUM = ["estadio", "aforo", "gradas", "grada", "obras", "remodelacion", "stadium", "stands", "capacity", "stade", "tribunes",
+           "stadion", "stadio", "ملعب", "الملعب", "ملاعب", "استاد", "الاستاد", "المدرجات", "مدرجات", "المرافق"]
 _K = {k: [norm(w) for w in ws] for k, ws in KIND_WORDS.items()}
+_RENEW, _STADIUM = {norm(w) for w in RENEW}, [norm(w) for w in STADIUM]
 _S = [(s, [norm(w) for w in ws]) for s, ws in STAGE_WORDS]
 _OPEN, _DONE, _AR_SIGN, _NOT = ({norm(w) for w in OFFICIAL_OPEN}, [norm(w) for w in OFFICIAL_DONE], {norm(w) for w in AR_SIGN},
                                 [norm(w) for w in NOT_DONE])
@@ -74,6 +80,8 @@ def classify(item):
     """-> {"kind", "stage" (transfers only, else None), "here_we_go": bool}."""
     t = norm((item.get("title") or "") + " " + (item.get("desc") or ""))
     kinds = [k for k in ORDER if _has(t, _K[k])]
+    if "transfer" in kinds and _has(norm(item.get("title") or ""), _STADIUM) and not _has(t, [w for w in _K["transfer"] if w not in _RENEW]):
+        kinds.remove("transfer")                                 # the stadium's renovation, not a contract's
     kind = kinds[0] if kinds else "other"
     if item.get("tier") == "official" and kind in ("other", "statement"):
         kind = "official"
