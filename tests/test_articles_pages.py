@@ -81,3 +81,30 @@ def test_everything_is_rerendered_only_when_the_pages_would_change():
     a = {"article": SHELL, "news": SHELL, "built": "10:00"}
     assert PG.shell_key(a) == PG.shell_key(dict(a, built="11:00"))
     assert PG.shell_key(a) != PG.shell_key(dict(a, article=SHELL + " "))
+
+
+def test_the_push_goes_after_the_upload_for_new_articles_only(tmp_path):
+    st, s3, handed = fresh(tmp_path), FakeS3(), []
+    now = __import__("datetime").datetime(2026, 11, 19, 10, 30, tzinfo=__import__("datetime").timezone.utc).timestamp()
+    st.put_json("news/a/n-1.json", dict(DOC, entities=[["team", 8634]]))
+
+    def push(jobs):
+        assert "news/n-1/index.html" in s3.puts                                        # the page is up first
+        handed.append([j["match"] for j in jobs])
+    PG.run(st, s3, "site-bucket", teams={}, players={}, push=push, now=now)
+    assert handed == [["article:n-1"]]
+    st.put_json("news/a/n-1.json", dict(DOC, entities=[["team", 8634]], modified="m2"))
+    st.put_json("news/articles-all.json", {"articles": [{"id": "n-1", "modified": "m2"}]})
+    PG.run(st, FakeS3(), "site-bucket", teams={}, players={}, push=push, now=now)       # an update: no second push
+    assert handed == [["article:n-1"]]
+
+
+def test_a_failed_hand_over_never_fails_the_step(tmp_path):
+    st = fresh(tmp_path)
+    st.put_json("news/a/n-1.json", dict(DOC, entities=[["team", 8634]]))
+    now = __import__("datetime").datetime(2026, 11, 19, 10, 30, tzinfo=__import__("datetime").timezone.utc).timestamp()
+
+    def boom(jobs):
+        raise RuntimeError("lambda down")
+    out = PG.run(st, FakeS3(), "site-bucket", teams={}, players={}, push=boom, now=now)
+    assert out["rendered"] == 1 and "push_error" in out and st.get_state("articles/pages.json")["pages"] == {"n-1": "m1"}

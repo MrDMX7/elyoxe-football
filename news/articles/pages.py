@@ -6,17 +6,20 @@
     article when the shells are new; an article gone from news/articles-all.json (withdrawn) has its page deleted;
   - site/lib/render_news.cjs fills the shells; the files go to the site bucket with the full build's headers
     (tools/s3push.py TYPES, public,max-age=60); every page is cached 60 s, so nothing needs invalidating;
-  - the new URLs go to IndexNow (Bing), like the full build's.
+  - the new URLs go to IndexNow (Bing), like the full build's;
+  - then, and only then, the push of each new article to its clubs' and players' followers (push_jobs.py, spec §4).
 
 The hourly build no longer uploads or deletes these paths (tools/runner.py FAST_OWNED). State: state/articles/pages.json.
   python -m news.articles.pages"""
 import hashlib, json, subprocess, sys, tempfile, time, urllib.request
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from tools.s3push import TYPES  # noqa: E402
+from news.articles import push_jobs  # noqa: E402
 
 SITE = "https://tifo.elyoxe.com"
 STATE, SHELLS = "articles/pages.json", "site/shells.json"
@@ -49,7 +52,7 @@ def render_node(payload, out_dir):
     f.unlink()
 
 
-def run(store, s3, bucket, *, teams, players, render=render_node, indexnow=None, now=None):
+def run(store, s3, bucket, *, teams, players, render=render_node, indexnow=None, push=None, now=None):
     shells = store.get_state(SHELLS)
     if not shells:
         return {"skipped": "no shells yet: the next full build saves them"}
@@ -84,8 +87,23 @@ def run(store, s3, bucket, *, teams, players, render=render_node, indexnow=None,
             print(json.dumps({"indexnow_error": str(e)[:200]}))
     pages = {k: v for k, v in known.items() if k not in dels}
     pages.update({d["id"]: d.get("modified") for d in docs})
-    store.put_state(STATE, {"built": key, "pages": pages})
-    return {"rendered": len(docs), "deleted": len(dels), "uploaded": len(files), "new": len(new)}
+    store.put_state(STATE, {"built": key, "pages": pages})       # before the push: a run that dies later never pushes twice
+    out = {"rendered": len(docs), "deleted": len(dels), "uploaded": len(files), "new": len(new)}
+    if push:
+        jobs = push_jobs.jobs(docs, known, datetime.fromtimestamp(now or time.time(), timezone.utc))
+        try:
+            if jobs:
+                push(jobs)
+            out["pushed"] = len(jobs)
+        except Exception as e:                                  # the pages are up; the push is lost, never the step
+            out["push_error"] = f"{type(e).__name__}: {str(e)[:200]}"
+    return out
+
+
+def _push(jobs):
+    import push as P
+    for i in range(0, len(jobs), 50):
+        P.invoke(jobs[i:i + 50])
 
 
 def _indexnow(urls):
@@ -108,7 +126,8 @@ def main():
         players = json.loads((ROOT / "names" / "players_ar.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         players = {}
-    out = run(store, boto3.client("s3", region_name="ap-south-1"), outs["Bucket"], teams=teams, players=players, indexnow=_indexnow)
+    out = run(store, boto3.client("s3", region_name="ap-south-1"), outs["Bucket"], teams=teams, players=players, indexnow=_indexnow,
+              push=_push)
     print(json.dumps({"article_pages": out}, ensure_ascii=False))
     return 0
 
