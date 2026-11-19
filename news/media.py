@@ -1214,8 +1214,11 @@ def pack(lst, oe, chmap, hl=False):
             continue
         seen.add(v["id"])
         title = v.get("title") or o.get("title")
+        t = Text(title or "ملخص")
+        # a title with the result alone is a broadcaster's summary (Abu Dhabi Sports' 3 minutes: chances, saves, the goals)
+        kind = ("summary" if t.summary or (t.result_head and not t.hl) else "goals") if hl else None
         res.append(card(dict(v, embed=(o.get("s") != 401) if v.get("source") == "youtube" else False, title=title, channel=o.get("author")),
-                        conf, chmap, "fotmob" if v.get("fotmob") else "tifo", ("summary" if Text(title or "ملخص").summary else "goals") if hl else None))
+                        conf, chmap, "fotmob" if v.get("fotmob") else "tifo", kind))
     return res
 
 

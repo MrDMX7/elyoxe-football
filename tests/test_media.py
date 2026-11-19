@@ -542,3 +542,13 @@ def test_two_short_names_are_enough_only_in_the_channels_home_competitions():
     assert got == [] and any(t["result"] == "weak names" for t in trace)
     abroad = dict(AIN_DHA, comp=536)                                     # the same names in another country's league
     assert hl_of("yt_adsports", title, at, abroad)[0] == []
+
+
+def test_a_result_title_is_a_summary_not_only_the_goals():
+    # Abu Dhabi Sports' 189 s «العين 2 - 1 الظفرة | الجولة 9»: chances, saves and the three goals; the page's sheet says
+    # «ملخص المباراة» for a summary and «أهداف المباراة» for the goals alone
+    v = {"id": "6ZkC43OjQwg", "source": "youtube", "url": "https://www.youtube.com/watch?v=6ZkC43OjQwg", "ch": "yt_adsports",
+         "title": "العين 2 - 1 الظفرة | الجولة 9 - دوري أدنوك للمحترفين 2026 - 2027", "at": "2026-11-19T17:23:01Z"}
+    kind = lambda title: M.pack([(dict(v, title=title), 95)], {}, CH_YT_AE, hl=True)[0]["kind"]
+    assert kind(v["title"]) == "summary"
+    assert kind("أهداف مباراة العين 2 - 1 الظفرة") == "goals"
