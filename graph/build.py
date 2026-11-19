@@ -1,0 +1,112 @@
+"""Build tifo.db from the caches (spec §2, §4): loaders in precedence order, the registry checked for renumbering, the
+coverage report written, then (--upload) published: the registry to S3 state, tifo.db.gz to S3 graph/ (private), the
+coverage to v1/graph/coverage.json.
+
+    python -m graph.build [--upload] [--out DIR] [--only fotmob_matches,names] [--no-fetch]
+"""
+import argparse, gzip, importlib, json, os, shutil, sys, time, traceback
+from datetime import datetime, timezone
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(HERE))
+from graph import coverage, fetch  # noqa: E402
+from graph.db import Graph  # noqa: E402
+from graph.ids import Registry  # noqa: E402
+from graph.src import Sources  # noqa: E402
+
+ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "rsssf", "schochastics", "martj42", "transfers"]
+REQUIRED = {"fotmob_matches"}
+CACHE = os.path.join(HERE, ".cache")
+REG_STATE = "graph/registry.json.gz"
+
+
+def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
+    t0 = time.time()
+    os.makedirs(out_dir, exist_ok=True)
+    old = Registry.load(reg_path)
+    reg = Registry(json.loads(json.dumps(old.to_json())))
+    db_path = os.path.join(out_dir, "tifo.db")
+    G = Graph(db_path)
+    if fetch:
+        try:
+            fetch_mod().martj42(S)
+        except Exception as e:
+            print(f"martj42 fetch: {e}", flush=True)
+    rec = {"started": datetime.now(timezone.utc).isoformat()[:19] + "Z", "loaders": {}, "ok": True}
+    for name in loaders or ORDER:
+        t = time.time()
+        try:
+            mod = importlib.import_module(f"graph.load.{name}")
+            out = mod.load(G, reg, S)
+            rec["loaders"][name] = {"ok": True, "secs": round(time.time() - t), "out": out}
+        except Exception as e:
+            traceback.print_exc()
+            rec["loaders"][name] = {"ok": False, "secs": round(time.time() - t), "out": f"{type(e).__name__}: {str(e)[:300]}"}
+            if name in REQUIRED:
+                rec["ok"] = False
+        G.c.commit()
+        print(f"{name}: {rec['loaders'][name]}", flush=True)
+    moved = reg.moved(old)
+    rec["moved"] = len(moved)
+    if moved:
+        rec["ok"] = False
+        rec["moved_sample"] = moved[:20]
+    cov = coverage.compute(G)
+    rec["counts"] = cov["counts"]
+    G.meta("build", {k: v for k, v in rec.items() if k != "loaders"})
+    G.close()
+    rec["secs"] = round(time.time() - t0)
+    day = rec["started"][:10]
+    json.dump({"generated": rec["started"], **cov}, open(os.path.join(out_dir, "coverage.json"), "w", encoding="utf-8", newline="\n"), ensure_ascii=False)
+    open(os.path.join(out_dir, "coverage.md"), "w", encoding="utf-8", newline="\n").write(coverage.markdown(cov, day, rec))
+    if rec["ok"]:
+        reg.save(reg_path)
+        if upload:
+            publish(S, out_dir, reg_path, rec, cov)
+    return rec
+
+
+def fetch_mod():
+    return fetch
+
+
+def publish(S, out_dir, reg_path, rec, cov):
+    st = S.store()
+    prev = st.get_state("graph/last.json") or {}
+    if prev.get("matches") and cov["counts"]["match"] < 0.95 * prev["matches"]:
+        print(f"not published: {cov['counts']['match']} matches < 95% of the last build's {prev['matches']}", flush=True)
+        return
+    st.put_state(REG_STATE, json.loads(gzip.decompress(open(reg_path, "rb").read())))
+    gz = os.path.join(out_dir, "tifo.db.gz")
+    with open(os.path.join(out_dir, "tifo.db"), "rb") as f, gzip.open(gz, "wb", compresslevel=6) as z:
+        shutil.copyfileobj(f, z, 16 << 20)
+    st.b.s3.upload_file(gz, st.b.bucket, "graph/tifo.db.gz")      # private: outside v1/, not served
+    st.put_json("graph/coverage.json", {"generated": rec["started"], "counts": cov["counts"], "linked": cov["linked"], "arabic": cov["arabic"],
+                                        "editions": cov["editions"]}, cache="static")
+    st.put_state("graph/last.json", {"at": rec["started"], "matches": cov["counts"]["match"], "secs": rec["secs"]})
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--upload", action="store_true")
+    ap.add_argument("--out", default=CACHE)
+    ap.add_argument("--only", default="")
+    ap.add_argument("--no-fetch", action="store_true")
+    a = ap.parse_args(argv)
+    S = Sources()
+    reg_path = os.path.join(CACHE, "registry.json.gz")
+    os.makedirs(CACHE, exist_ok=True)
+    if not os.path.exists(reg_path) and a.upload:
+        d = S.store().get_state(REG_STATE)
+        if d:
+            Registry(d).save(reg_path)
+    rec = run(S, a.out, reg_path, upload=a.upload, loaders=[x for x in a.only.split(",") if x] or None, fetch=not a.no_fetch)
+    day = rec["started"][:10]
+    if a.out == CACHE:
+        shutil.copyfile(os.path.join(a.out, "coverage.md"), os.path.join(os.path.dirname(HERE), "docs", f"GRAPH-COVERAGE-{day}.md"))
+    print(json.dumps({k: v for k, v in rec.items() if k != "loaders"}, ensure_ascii=False))
+    return 0 if rec["ok"] else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
