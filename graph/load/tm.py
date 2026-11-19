@@ -3,6 +3,7 @@ players db/tmdata.py and history/transfermarkt.py matched to FotMob (birth date 
 (db/.cache/tm_games.csv.gz, 2012+): a game already in the graph becomes its xref, the rest are new matches; each side's
 manager is recorded for the match as a coach of his own (a name alone never links; phase 5 links by club and dates)."""
 import csv, gzip, os, re, unicodedata
+from collections import defaultdict
 from graph.link import MatchIndex, twin, vote_teams
 
 
@@ -92,11 +93,17 @@ def load(G, reg, S):
         G.xref("team", tid, "tm", k, "date+score-votes")
     n["clubs_voted"] = len(voted)
     idx = MatchIndex(G)
+    by_comp, unlinked = defaultdict(lambda: [0, 0]), []
     for r in games:
         th, ta, hs, as_ = team(r["home_club_id"], r.get("home_club_name")), team(r["away_club_id"], r.get("away_club_name")), _i(r["home_club_goals"]), _i(r["away_club_goals"])
         mid = twin(G, idx, r["date"], th, ta, hs, as_, "tm")
         if mid:
             mid = reg.link("match", "tm", r["game_id"], mid)
+        by_comp[r["competition_id"]][1] += 1
+        if mid:
+            by_comp[r["competition_id"]][0] += 1
+        elif r["competition_id"] in ("GB1", "ES1") and len(unlinked) < 12:
+            unlinked.append((r["date"], r["home_club_id"], r.get("home_club_name"), th, r["away_club_id"], r.get("away_club_name"), ta, hs, as_))
         if mid:
             G.xref("match", mid, "tm", r["game_id"], "date+teams")
             n["games_linked"] += 1
@@ -120,4 +127,6 @@ def load(G, reg, S):
             G.put("coach", {"kid": kid, "name": nm}, "tm")
             G.c.execute("INSERT OR IGNORE INTO match_coach VALUES(?,?,?,?)", (mid, side, kid, "tm"))
             n["coaches"] += 1
+    n["linked_by_comp"] = {k: v for k, v in sorted(by_comp.items(), key=lambda x: -x[1][1])[:20]}
+    n["unlinked_sample"] = unlinked
     return n
