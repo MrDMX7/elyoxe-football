@@ -1379,7 +1379,7 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
         del vids[k]
     names = load_names(store, national_comps())
     blocked = set(str(x) for x in ((cfg.get("media") or {}).get("block") or []))
-    trace = [] if explain is not None else None
+    trace = []                                           # also the morning report's (news/media_missed.py)
     found = attach(list(vids.values()), matches, names, chmap, trace, blocked)
     fotmob_links(found, matches, vids, blocked)          # FotMob's own links: the match's highlights and a clip per goal event
     # embed checks, once per attached YouTube video (a gone video is dropped, a no-embed one opens on YouTube)
@@ -1399,7 +1399,7 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
     # every file written here, never taken away by a run that no longer sees them
     extra = (store.get_state(EXTRA) or {}).get("matches") or {}
     gone = {k for k, o in oe.items() if o.get("s") in (400, 403, 404)} | blocked
-    written, recent, clip_goals = 0, [], {}
+    written, recent, clip_goals, docs = 0, [], {}, {}
     for md in matches:
         r = found.get(md["id"])
         ex = extra.get(str(md["id"])) or {}
@@ -1417,6 +1417,7 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
         if not hl and not goals and str(md["id"]) not in outs:
             continue
         doc = {"generated": gen, "match": md["id"], "highlights": hl, "goals": goals}
+        docs[md["id"]] = doc
         h = hashlib.md5(json.dumps({k: v for k, v in doc.items() if k != "generated"}, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
         if outs.get(str(md["id"])) != h:
             if not dry:
@@ -1437,6 +1438,17 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
     hand = None if dry or push is None else push if callable(push) else \
         _hand_over if type(getattr(store, "b", None)).__name__ == "S3Backend" and os.environ.get("TIFO_VIDEO_PUSH", "1") != "0" else None
     vres = video_push(st, matches, clip_goals, t, hand, log, followed=store.get_state("push_players.json", {}) or {}) if hand else None
+    # the goals that ended without a clip, the posts that looked like them and why each was turned down: the 08:00 email
+    try:
+        from news import media_missed as MM
+        new = MM.build(matches, docs, list(vids.values()), names, chmap, trace, t)
+        if new and not dry:
+            cur = store.get_state(MM.MISSED) or {}
+            days = MM.merge(cur.get("days"), new, t)
+            if days != cur.get("days"):
+                store.put_state(MM.MISSED, {"generated": gen, "days": days})
+    except Exception as e:                               # never the step's failure
+        errs["missed"] = f"{type(e).__name__}: {str(e)[:160]}"
     st["run"] = {"at": gen, "matches": len(matches), "channels": len(want), "videos": len(vids), "with_media": len(recent),
                  "written": written, "errors": errs, "secs": round(time.time() - t0, 1), **({"video_push": vres} if vres else {})}
     if not dry:
