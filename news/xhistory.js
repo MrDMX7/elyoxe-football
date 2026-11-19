@@ -4,7 +4,7 @@
 // page for each official account, `from:<handle> filter:native_video since:<day>`, newest first, and keeps the posts its
 // SearchTimeline responses carry (the same parse as the reader: the account's own posts, no replies, no reposts).
 //
-//   node news/xhistory.js [--since 2026-10-18] [--handles a,b] [--scrolls 40] [--stop-at <ISO time>] [--upload] [--dry]
+//   node news/xhistory.js [--since 2026-10-18] [--until 2026-10-28] [--handles a,b] [--scrolls 40] [--stop-at <ISO time>] [--upload] [--dry]
 //
 // Read-only like the reader: it never clicks, follows, likes or posts. Its own browser profile (x-history) with the reader's
 // session (x-reader/x-cookies.json), so it can run while the reader's task does. X's rate-limit page stops it at once and
@@ -46,6 +46,8 @@ async function main() {
   if (!chromium) { console.error('playwright-core not found'); process.exit(2); }
   try { const c = JSON.parse(fs.readFileSync(COOL, 'utf8')); if (c.until > Date.now()) { log('X is resting the session until', new Date(c.until).toISOString()); return; } } catch (e) {}
   const since = arg('--since') || new Date(Date.now() - 32 * 864e5).toISOString().slice(0, 10);
+  // --until: the days a busy account's 40 pages did not reach (Abu Dhabi Sports, 860 videos back to 10-27 only, 2026-11-20)
+  const until = arg('--until');
   const scrolls = +(arg('--scrolls') || 40), stopAt = arg('--stop-at') ? Date.parse(arg('--stop-at')) : null;
   const cfg = config();
   let accs = order(cfg.accounts.filter(x => x.tier === 'official'));
@@ -74,7 +76,7 @@ async function main() {
         try { got = got.concat(posts(await r.json(), acc.handle)); pages++; } catch (e) {}
       };
       page.on('response', onResp);
-      const q = encodeURIComponent(`from:${acc.handle} filter:native_video since:${since}`);
+      const q = encodeURIComponent(`from:${acc.handle} filter:native_video since:${since}` + (until ? ` until:${until}` : ""));
       try {
         await paced();
         await page.goto(`https://x.com/search?q=${q}&src=typed_query&f=live`, { waitUntil: 'domcontentloaded', timeout: 60000 });
