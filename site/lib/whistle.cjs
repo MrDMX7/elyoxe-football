@@ -38,6 +38,8 @@ function bump(list, w, cap, exact) {
 
 function apply(ix, players, mds) {
   if (!ix || !Array.isArray(ix.counted) || !players) return { added: 0, skipped: "no counted list" };
+  const some = Object.values(players)[0];
+  if (some && some.now === undefined) return { added: 0, skipped: "players file before phase 6" };   // the leaders are rebuilt from it
   const seen = new Set(ix.counted.map(Number)), lo = minus(ix.today, 21);
   let added = 0;
   for (const md of mds || []) {

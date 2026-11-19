@@ -54,3 +54,10 @@ test("a new name joins, and a file from before phase 6 is left as it is", () => 
   assert.deepEqual(W.apply(old, {}, [md(9, "2026-11-19", lu([{ id: 77, rating: 9 }], []))]), { added: 0, skipped: "no counted list" });
   assert.equal(old.matches, 1);
 });
+
+test("an index from phase 6 with a players file from before it is left alone", () => {
+  const { ix } = files();
+  const pl = { 10: { total: 12, seasons: {}, comps: {}, opponents: {}, recent: [] } };          // no now, no name: the old players.json
+  assert.deepEqual(W.apply(ix, pl, [md(6, "2026-11-19", lu([{ id: 10, name: "A", rating: 9 }], []))]), { added: 0, skipped: "players file before phase 6" });
+  assert.deepEqual(ix.leaders.season, [[10, "A", 3], [30, "Z", 2]]);
+});
