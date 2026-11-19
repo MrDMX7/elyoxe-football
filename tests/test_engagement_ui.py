@@ -30,7 +30,7 @@ console.log(JSON.stringify({
   events: [N.eventsOf('goals', true), N.eventsOf('all', false), N.eventsOf('off', true), N.eventsOf('off', false)],
   events3: [N.eventsOf('off', false, true), N.eventsOf('all', true, true)], modeT: N.modeOf(['transfer']),
   events4: [N.eventsOf('goals', false, false, true), N.eventsOf('all', true, true, true), N.eventsOf('off', false, false, true)],
-  migrated: N.migrate({teams: {"5789": ["start", "goal", "end"], "1": ["start"], "2": ["goal", "article"], "3": ["transfer"]}}, {"15403": ["goal"], "9": ["soon", "article"]}),
+  migrated: N.migrate({teams: {"5789": ["start", "goal", "end"], "1": ["start"], "2": ["goal", "article"], "3": ["transfer"]}}, {"15403": ["goal"], "9": ["soon", "article"], "7": ["start11", "end"]}),
   modes: [N.modeOf(['goal']), N.modeOf(['start', 'goal', 'end', 'video']), N.modeOf(['video']), N.modeOf([])],
   hours: [N.hourAr(0), N.hourAr(60), N.hourAr(420), N.hourAr(720), N.hourAr(900), N.hourAr(1380)],
   block: P.block({id: 101, kickoff_utc: '2026-10-10T16:00:00Z', status: 'scheduled', home: {name_ar: 'العين'}, away: {name_ar: 'الوحدة"><script>'}}),
@@ -125,9 +125,32 @@ def test_the_ask_bar(out):
 
 def test_the_articles_switch_on_by_default_and_the_one_time_migration(out):
     """Spec 2026-11-19 §4: «مقالات» on by default. A team saved before the switch gets it when it had goals («بدون حرق» kept the
-    kickoff only); a followed player gets it."""
+    kickoff only), and a followed player the same way: what the sender does for a subscription saved before the switch."""
     assert out["events4"] == [["goal", "article"], ["start", "goal", "end", "video", "transfer", "article"], ["article"]]
     assert 'data-nf="article"' in out["nf"] and "مقالات تيفو" in out["nf"]
     teams, players = out["migrated"]
     assert teams == {"5789": ["start", "goal", "end", "article"], "1": ["start"], "2": ["goal", "article"], "3": ["transfer"]}
-    assert players == {"15403": ["goal", "article"], "9": ["soon", "article"]}
+    assert players == {"15403": ["goal", "article"], "9": ["soon", "article"], "7": ["start11", "end"]}   # the sender's rule: with goals
+
+
+PUSHSYNC = r"""
+const fs = require('fs'), src = fs.readFileSync(process.argv[1] + '/site/src/v5/app.js', 'utf8');
+const body = src.slice(src.indexOf('function pushSync(tid)'), src.indexOf('function pushPaint()'));
+const run = (art) => { const sent = [], store = {"tifo.push.art": art ? "1" : null};
+  const f = new Function('pushSt', 'prefOn', '$', 'pushSub', 'pushSend', 'ls', 'navigator', body + '; return pushSync;')(
+    () => ({teams: {"5789": ["start", "goal", "end"]}}), () => false, () => null,
+    () => Promise.resolve({toJSON: () => ({endpoint: "https://fcm.googleapis.com/x", keys: {}})}),
+    (m, b) => { sent.push(b); return Promise.resolve({ok: true}); }, {get: k => store[k]}, {});
+  return f(5789).then(() => sent[0]); };
+Promise.all([run(true), run(false)]).then(r => console.log(JSON.stringify(r)));
+"""
+
+
+def test_the_home_pages_resync_keeps_the_articles_choice():
+    """Review 2026-11-19: «بدون حرق» on the home page re-sends a team from v5/app.js. Once this browser has the articles switch
+    (tifo.push.art), that save carries art: 1, or the sender would read «no articles» as «never chose» and push them again."""
+    r = subprocess.run([NODE, "-e", PUSHSYNC, ROOT], capture_output=True, text=True, encoding="utf-8", timeout=60)
+    assert r.returncode == 0, r.stderr
+    migrated, before = json.loads(r.stdout)
+    assert migrated["art"] == 1 and migrated["events"] == ["start", "goal", "end"]
+    assert "art" not in before

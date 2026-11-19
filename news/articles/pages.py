@@ -91,8 +91,8 @@ def run(store, s3, bucket, *, teams, players, render=render_node, indexnow=None,
     store.put_state(STATE, {"built": key, "pages": pages})       # before the push: a run that dies later never pushes twice
     out = {"rendered": len(docs), "deleted": len(dels), "uploaded": len(files), "new": len(new)}
     if push:
-        jobs = push_jobs.jobs(docs, known, datetime.fromtimestamp(now or time.time(), timezone.utc))
         try:
+            jobs = push_jobs.jobs(docs, known, datetime.fromtimestamp(now or time.time(), timezone.utc))
             if jobs:
                 push(jobs)
             out["pushed"] = len(jobs)
@@ -103,8 +103,8 @@ def run(store, s3, bucket, *, teams, players, render=render_node, indexnow=None,
 
 def _push(jobs):
     import push as P
-    for i in range(0, len(jobs), 50):
-        P.invoke(jobs[i:i + 50])
+    for i in range(0, len(jobs), 5):              # a report's 30 players make a job of ~13 KB; an async invoke takes 256 KB
+        P.invoke(jobs[i:i + 5])
 
 
 def _indexnow(urls):

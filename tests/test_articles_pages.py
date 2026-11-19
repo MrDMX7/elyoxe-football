@@ -108,3 +108,20 @@ def test_a_failed_hand_over_never_fails_the_step(tmp_path):
         raise RuntimeError("lambda down")
     out = PG.run(st, FakeS3(), "site-bucket", teams={}, players={}, push=boom, now=now)
     assert out["rendered"] == 1 and "push_error" in out and st.get_state("articles/pages.json")["pages"] == {"n-1": "m1"}
+
+
+def test_a_malformed_article_never_fails_the_step(tmp_path):
+    """Review 2026-11-19: building the jobs is inside the guard too (an entity that is not [kind, id])."""
+    st = fresh(tmp_path)
+    st.put_json("news/a/n-1.json", dict(DOC, entities=[["team", "x"], ["team", 1, 2]]))
+    now = __import__("datetime").datetime(2026, 11, 19, 10, 30, tzinfo=__import__("datetime").timezone.utc).timestamp()
+    out = PG.run(st, FakeS3(), "site-bucket", teams={}, players={}, push=lambda jobs: None, now=now)
+    assert out["rendered"] == 1 and "push_error" in out
+
+
+def test_the_push_goes_in_small_batches(monkeypatch):
+    import push as P
+    sent = []
+    monkeypatch.setattr(P, "invoke", lambda jobs, function=None: sent.append(len(jobs)))
+    PG._push([{"n": i} for i in range(12)])
+    assert sent == [5, 5, 2]                                         # a report's 30 players: ~13 KB a job, far under 256 KB

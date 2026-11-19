@@ -15,7 +15,8 @@
      TifoNotify.openClip()           on a match page opened from «فيديو الهدف نزل» (#v=<goal key>): plays that goal's clip
    Storage: localStorage tifo.push {teams: {id: [events]}, quiet: {s, e} | null}, the live site's key, so teams chosen there
    carry over. Event: document "tifo:notify" {team, events}. «بدون حرق» (tifo.nospoil): only kickoff alerts go out.
-   «مقالات تيفو» (2026-11-19, articles spec §4): kind "article", on by default; every save sends art: 1 so the sender knows the
+   «مقالات تيفو» (2026-11-19, articles spec §4): kind "article", on by default; every save sends art: 1 (v5/app.js too, once this
+   browser has the switch) so the sender knows the
    visitor saw the switch (a subscription without it gets articles with its goals), and one migration (tifo.push.art) adds it
    to what this browser saved before. */
 (function (root) {
@@ -36,7 +37,7 @@
   function migrate(s, players) {
     var t = {}, p = {}, add = function (ev) { return ev.indexOf("article") >= 0 ? ev.slice() : ev.concat("article"); };
     Object.keys((s && s.teams) || {}).forEach(function (k) { var ev = s.teams[k] || []; t[k] = ev.indexOf("goal") >= 0 ? add(ev) : ev.slice(); });
-    Object.keys(players || {}).forEach(function (k) { p[k] = add(players[k] || []); });
+    Object.keys(players || {}).forEach(function (k) { var ev = players[k] || []; p[k] = ev.indexOf("goal") >= 0 ? add(ev) : ev.slice(); });
     return [t, p];
   }
   function options(sel) { var o = ""; for (var m = 0; m < 1440; m += 60) o += '<option value="' + m + '"' + (m === sel ? " selected" : "") + ">" + esc(hourAr(m)) + "</option>"; return o; }
