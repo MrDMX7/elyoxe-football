@@ -53,6 +53,9 @@ def load(G, reg, S):
         mid = twin(G, idx, m["match_date"], h, a, hs, as_, "fjelstul")
         if mid:
             mid = reg.link("match", "fjelstul", m["match_id"], mid) or mid
+            G.c.execute("""UPDATE match SET home=away, away=home, hs=as_, as_=hs, pen_h=pen_a, pen_a=pen_h
+                           WHERE mid=? AND home=? AND away=? AND NOT EXISTS(SELECT 1 FROM event WHERE event.mid=match.mid)
+                           AND NOT EXISTS(SELECT 1 FROM appearance WHERE appearance.mid=match.mid)""", (mid, a, h))   # a neutral ground filed the other way round: Fjelstul's sides
             n["linked"] += 1
             G.xref("match", mid, "fjelstul", m["match_id"], "date+teams")
         else:

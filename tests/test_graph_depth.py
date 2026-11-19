@@ -96,3 +96,20 @@ def test_transfermarkt_lineups_for_matches_fotmob_lacks(tmp_path):
     assert ap["Starter One"] == (1, 1, 90, 0, 1, 1) and ap["Sub Used"] == (0, 1, 25, 1, 0, 0) and ap["Bench Only"][1] == 0
     assert "Other Game" not in ap and out["matches"] == 1
     assert [r for r in G.c.execute("select type, minute, side from event where mid=? order by minute", (mid,))] == [("yellow", 30, "h"), ("sub", 65, "h"), ("goal", 80, "h")]
+
+
+def test_a_world_cup_match_held_the_other_way_round_turns_without_a_conflict(tmp_path):
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    W(db / "fjelstul_matches.csv", ["tournament_id", "tournament_name", "match_id", "stage_name", "match_date", "stadium_id", "stadium_name", "city_name", "country_name",
+                                    "home_team_id", "home_team_name", "away_team_id", "away_team_name", "home_team_score", "away_team_score", "extra_time",
+                                    "penalty_shootout", "home_team_score_penalties", "away_team_score_penalties"],
+      [["WC-1930", "1930 FIFA Men's World Cup", "M-1930-02", "group stage", "1930-07-13", "S-1", "Parque Central", "Montevideo", "Uruguay",
+        "T-83", "United States", "T-07", "Belgium", "3", "0", "0", "0", "0", "0"]])
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    usa, bel = reg.mint("team", "martj42", "United States"), reg.mint("team", "martj42", "Belgium")
+    mid = reg.mint("match", "martj42", "1930-07-13|Belgium|United States")
+    G.put("match", {"mid": mid, "date": "1930-07-13", "home": bel, "away": usa, "hs": 0, "as_": 3}, "martj42")
+    worldcup.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select home, away, hs, as_ from match where mid=?", (mid,)).fetchone() == (usa, bel, 3, 0)
+    assert G.c.execute("select count(*) from conflict").fetchone()[0] == 0
