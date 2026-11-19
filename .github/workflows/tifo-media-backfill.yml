@@ -1,0 +1,28 @@
+# By hand: the YouTube watch pages news/media_backfill.py needs (each clip's exact upload time and whether it embeds), read
+# here on 8 runners instead of on the laptop. On 2026-11-19 YouTube answered the laptop «429 Too Many Requests» after ~400
+# pages, and the laptop also downloads tonight's goal clips (goal_watch.py), so it must stay under YouTube's limit.
+#   1. laptop: python -m news.media_backfill --remote-pages --dry   (lists the channels, leaves state/news/backfill/todo.json)
+#   2. here:   each runner reads its eighth of the list into state/news/backfill/pages-<n>.json
+#   3. laptop: python -m news.media_backfill --remote-pages         (merges the pages, attaches, writes the media files)
+name: Tifo media backfill
+on:
+  workflow_dispatch:
+permissions:
+  id-token: write                 # AWS by OIDC
+  contents: read
+env:
+  TZ: Asia/Dubai
+  PYTHONIOENCODING: utf-8
+  BUCKET: elyoxe-football-574771023173-ap-south-1
+jobs:
+  pages:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/tifo-setup
+      - run: python -m news.media_backfill --read-pages ${{ matrix.shard }}/8

@@ -300,6 +300,59 @@ def test_step_writes_a_file_per_match_with_media_and_nothing_when_unchanged(tmp_
     assert M.step(store, cfg, t=t)["written"] == 0                                        # same content: nothing uploaded
 
 
+def _ksa_store(tmp_path):
+    from store import Store, LocalBackend
+    store = Store(LocalBackend(str(tmp_path)))
+    day = {"matches": [{k: KSA_IRQ[k] for k in ("id", "comp", "kickoff_utc", "status", "score", "home", "away")}]}
+    store.put_json("day/20260929.json", day); store.put_json("day/20260930.json", {"matches": []})
+    store.put_json(f"match/{KSA_IRQ['id']}.json", KSA_IRQ)
+    store.put_json("teams.json", {"teams": TEAMS})
+    return store
+
+
+CFG_KSA = {"youtube": [], "media": {"youtube": [{"key": "yt_ksasports", "channel": "UCLo2xigvxv9ksxp78AyCBTw", "name": "القنوات الرياضية السعودية",
+                                                   "lang": "ar", "kind": "broadcaster"}], "block": ["blockedvid1"]}, "x": {"accounts": []}}
+
+
+def test_step_keeps_what_the_backfill_found_and_never_a_blocked_one(tmp_path, monkeypatch):
+    store = _ksa_store(tmp_path)
+    old = {"id": "oldclip0001", "url": "https://www.youtube.com/watch?v=oldclip0001", "title": "هدف عبدالله السالم", "source": "youtube",
+           "channel": "x", "published": "2026-09-29T18:40:00Z", "embed": True, "conf": 80, "found_by": "tifo"}
+    store.put_state(M.EXTRA, {"matches": {str(KSA_IRQ["id"]): {"highlights": [], "goals": {"55-101": [old, dict(old, id="blockedvid1")]}}}})
+    monkeypatch.setattr(M, "fetch_feeds", lambda chs, prefetched=None, workers=6: ({"yt_ksasports": []}, {}))
+    monkeypatch.setattr(M, "oembed", lambda vid: {"s": 200})
+    monkeypatch.setattr(M, "load_names", lambda store, nat, cache_dir=None: M.Names(TEAMS, PLAYERS, {}, {}, ALIASES, NATIONS, {329}))
+    res = M.step(store, CFG_KSA, t=datetime(2026, 9, 30, 10, 0, tzinfo=timezone.utc))
+    assert res["written"] == 1
+    doc = store.get_json(f"media/{KSA_IRQ['id']}.json")
+    assert [c["id"] for c in doc["goals"]["55-101"]] == ["oldclip0001"]          # its feed no longer holds it: still there
+
+
+def test_backfill_adds_to_the_published_file_and_takes_nothing_away(tmp_path, monkeypatch):
+    from news import media_backfill as B
+    store = _ksa_store(tmp_path)
+    kept = {"id": "kept0000001", "url": "https://www.youtube.com/watch?v=kept0000001", "title": "ملخص مباراة السعودية والعراق", "source": "youtube",
+            "channel": "x", "published": "2026-09-29T21:00:00Z", "embed": True, "conf": 90, "found_by": "tifo", "kind": "summary"}
+    store.put_json(f"media/{KSA_IRQ['id']}.json", {"generated": "2026-09-29T21:05:00Z", "match": KSA_IRQ["id"], "highlights": [kept], "goals": {}})
+    clip = {"id": "bbbbbbbbbbb", "source": "youtube", "url": "https://www.youtube.com/watch?v=bbbbbbbbbbb", "vertical": True,
+            "title": "الهدف الثاني لمنتخبنا الوطني سجله اللاعب عبدالله الحمدان- السعودية 2- العراق 0", "desc": "",
+            "at": "2026-09-29T19:11:10Z", "ch": "yt_ksasports", "image": None}
+    monkeypatch.setattr(B, "youtube_videos", lambda chs, ctx, t0, relist=False, log=print, store=None, remote=False: [clip])
+    monkeypatch.setattr(B, "CACHE", str(tmp_path / "cache"))
+    monkeypatch.setattr(M, "oembed", lambda vid: {"s": 200})
+    monkeypatch.setattr(M, "load_names", lambda store, nat, cache_dir=None: M.Names(TEAMS, PLAYERS, {}, {}, ALIASES, NATIONS, {329}))
+    monkeypatch.setattr(M, "national_comps", lambda: frozenset({329}))
+    t = datetime(2026, 10, 1, 10, 0, tzinfo=timezone.utc)
+    res = B.run(store, CFG_KSA, t=t, days=3, log=lambda *a: None)
+    doc = store.get_json(f"media/{KSA_IRQ['id']}.json")
+    assert [h["id"] for h in doc["highlights"]] == ["kept0000001"]
+    assert [c["id"] for c in doc["goals"]["69-102"]] == ["bbbbbbbbbbb"]
+    assert res["goal_keys_added"] == 1 and res["total"] == {"goals": 2, "before": 0, "after": 1}
+    extra = store.get_state(M.EXTRA)["matches"][str(KSA_IRQ["id"])]
+    assert list(extra["goals"]) == ["69-102"]
+    assert B.run(store, CFG_KSA, t=t, days=3, log=lambda *a: None)["written"] == 0      # a second run adds nothing
+
+
 def test_goal_key_is_the_minute_the_page_shows():
     # the match page's rows: data-goal-key="45+4-301" (render.js / v3.js)
     assert M.goal_key(goal(45, "home", 301, "Ali Saleh", (1, 1), added=4)) == "45+4-301"

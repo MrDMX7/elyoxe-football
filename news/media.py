@@ -26,7 +26,8 @@ Published (public, v1/):
                          found_by (tifo|fotmob), kind (highlights only: summary|goals)}
   media/recent.json      {generated, matches: [{id, comp, kickoff_utc, status, score, home, away, highlights, goals}]}
 State (private): state/news/media.json — videos seen (4 days), the match files already read, what each media file holds,
-the embed checks."""
+the embed checks. state/news/media-extra.json — what news/media_backfill.py found (videos older than the feeds hold): merged
+into every media file this writes."""
 import argparse, concurrent.futures as CF, hashlib, json, os, re, sys, time, unicodedata, urllib.error, urllib.parse, urllib.request
 from datetime import datetime, timedelta, timezone
 
@@ -37,7 +38,8 @@ from news import readers as RD
 from news.entities import norm, ar_variants, LATIN_STOP, AR_STOP
 
 STATE = "news/media.json"
-WINDOW_H = 48                 # a match is followed this long after kickoff (live polling on the site, goal clips)
+EXTRA = "news/media-extra.json"   # news/media_backfill.py: {"matches": {id: {"highlights": [card], "goals": {key: [card]}}}}
+WINDOW_H = 48                # a match is followed this long after kickoff (live polling on the site, goal clips)
 FOLLOW_H = 7 * 24             # ... and its highlights this long (late extended highlights)
 KEEP_VIDEOS_H = 96            # videos are kept this long (the matching runs again on them every run)
 LIVE = {"live", "ht"}
@@ -1068,6 +1070,64 @@ def card(v, conf, chmap, found="tifo", kind=None):
     return c
 
 
+def pack(lst, oe, chmap, hl=False):
+    """(video, conf) pairs -> the published cards, one per video: a gone or private YouTube video is dropped (oEmbed
+    400/403/404), one with embedding off is kept as a link."""
+    seen, res = set(), []
+    for v, conf in lst:
+        o = oe.get(v["id"], {})
+        if v["id"] in seen or o.get("s") in (400, 403, 404):
+            continue
+        seen.add(v["id"])
+        title = v.get("title") or o.get("title")
+        res.append(card(dict(v, embed=(o.get("s") != 401) if v.get("source") == "youtube" else False, title=title, channel=o.get("author")),
+                        conf, chmap, "fotmob" if v.get("fotmob") else "tifo", ("summary" if Text(title or "ملخص").summary else "goals") if hl else None))
+    return res
+
+
+def sort_highlights(cards, end):
+    """The full summary first (out after the final whistle), one that plays on the page before one that opens YouTube (beIN
+    turns embedding off), Arabic channels before others, then the most confident, then the first out."""
+    return sorted(cards, key=lambda c: (0 if (end and ptime(c.get("published")) and ptime(c["published"]) >= end - timedelta(minutes=5)) or c.get("found_by") == "fotmob" else 1,
+                                        0 if c.get("embed") else 1, 0 if c.get("kind") == "summary" else 1, 0 if c.get("lang") == "ar" else 1,
+                                        -(c.get("conf") or 0), c.get("published") or ""))
+
+
+def sort_goal(cards):
+    return sorted(cards, key=lambda c: (0 if c.get("embed") else 1, 0 if c.get("lang") == "ar" else 1, -(c.get("conf") or 0), c.get("published") or ""))
+
+
+def merge_cards(a, b, drop=()):
+    """The cards of a, then those of b, one per video id; the ids in `drop` (blocked, gone) left out."""
+    seen, out = set(), []
+    for c in list(a or []) + list(b or []):
+        if not c.get("id") or c["id"] in seen or c["id"] in drop:
+            continue
+        seen.add(c["id"])
+        out.append(c)
+    return out
+
+
+def fotmob_links(found, matches, vids, blocked):
+    """FotMob's own links in the match files, the match's highlights and a clip per goal event, into `found`."""
+    for md in matches:
+        hl = md.get("highlights")
+        for h in (hl if isinstance(hl, list) else [hl] if hl else []):
+            vid = yt_id(h.get("url"))
+            if not vid or vid in blocked:
+                continue
+            v = vids.get(vid) or {"id": vid, "source": "youtube", "url": "https://www.youtube.com/watch?v=" + vid, "title": None,
+                                   "at": None, "ch": None, "image": h.get("image") or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"}
+            found.setdefault(md["id"], {"highlights": [], "goals": {}})["highlights"].append((dict(v, fotmob=True), 100))
+        for e in md.get("events") or []:
+            vid = yt_id(e.get("clip")) if e.get("clip") else None
+            if vid and e.get("player") and e["player"].get("id") and vid not in blocked:
+                v = vids.get(vid) or {"id": vid, "source": "youtube", "url": "https://www.youtube.com/watch?v=" + vid, "title": None,
+                                       "at": None, "ch": None, "image": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"}
+                found.setdefault(md["id"], {"highlights": [], "goals": {}})["goals"].setdefault(goal_key(e), []).append((dict(v, fotmob=True), 100))
+    return found
+
+
 def load_names(store, cfg_national, cache_dir=None):
     import yaml
     rd = lambda p: json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
@@ -1211,22 +1271,7 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
     blocked = set(str(x) for x in ((cfg.get("media") or {}).get("block") or []))
     trace = [] if explain is not None else None
     found = attach(list(vids.values()), matches, names, chmap, trace, blocked)
-    # FotMob's own links: the match's highlights and a clip per goal event
-    for md in matches:
-        hl = md.get("highlights")
-        for h in (hl if isinstance(hl, list) else [hl] if hl else []):
-            vid = yt_id(h.get("url"))
-            if not vid or vid in blocked:
-                continue
-            v = vids.get(vid) or {"id": vid, "source": "youtube", "url": "https://www.youtube.com/watch?v=" + vid, "title": None,
-                                   "at": None, "ch": None, "image": h.get("image") or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"}
-            found.setdefault(md["id"], {"highlights": [], "goals": {}})["highlights"].append((dict(v, fotmob=True), 100))
-        for e in md.get("events") or []:
-            vid = yt_id(e.get("clip")) if e.get("clip") else None
-            if vid and e.get("player") and e["player"].get("id") and vid not in blocked:
-                v = vids.get(vid) or {"id": vid, "source": "youtube", "url": "https://www.youtube.com/watch?v=" + vid, "title": None,
-                                       "at": None, "ch": None, "image": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"}
-                found.setdefault(md["id"], {"highlights": [], "goals": {}})["goals"].setdefault(goal_key(e), []).append((dict(v, fotmob=True), 100))
+    fotmob_links(found, matches, vids, blocked)          # FotMob's own links: the match's highlights and a clip per goal event
     # embed checks, once per attached YouTube video (a gone video is dropped, a no-embed one opens on YouTube)
     oe = st.setdefault("oembed", {})
     todo = {v["id"] for r in found.values() for v, _ in r["highlights"] + [x for l in r["goals"].values() for x in l]
@@ -1240,35 +1285,23 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
         del oe[k]
     gen = iso(t)
     outs = st.setdefault("out", {})
+    # the cards news/media_backfill.py found for these matches (videos older than this run's feeds and inbox hold): kept in
+    # every file written here, never taken away by a run that no longer sees them
+    extra = (store.get_state(EXTRA) or {}).get("matches") or {}
+    gone = {k for k, o in oe.items() if o.get("s") in (400, 403, 404)} | blocked
     written, recent, clip_goals = 0, [], {}
     for md in matches:
         r = found.get(md["id"])
-        if not r:
+        ex = extra.get(str(md["id"])) or {}
+        if not r and not ex:
             continue
-
-        def pack(lst, hl=False):
-            seen, res = set(), []
-            for v, conf in lst:
-                o = oe.get(v["id"], {})
-                if v["id"] in seen or o.get("s") in (400, 403, 404):
-                    continue
-                seen.add(v["id"])
-                title = v.get("title") or o.get("title")
-                c = card(dict(v, embed=(o.get("s") != 401) if v.get("source") == "youtube" else False, title=title, channel=o.get("author")),
-                         conf, chmap, "fotmob" if v.get("fotmob") else "tifo", ("summary" if Text(title or "ملخص").summary else "goals") if hl else None)
-                res.append(c)
-            return res
-
+        r = r or {"highlights": [], "goals": {}}
         end = match_end(md)
-        hl = pack(r["highlights"], hl=True)
-        # the full summary first (out after the final whistle), one that plays on the page before one that opens YouTube
-        # (beIN turns embedding off), Arabic channels before others, then the most confident, then the first out
-        hl.sort(key=lambda c: (0 if (end and ptime(c.get("published")) and ptime(c["published"]) >= end - timedelta(minutes=5)) or c["found_by"] == "fotmob" else 1,
-                               0 if c.get("embed") else 1, 0 if c.get("kind") == "summary" else 1, 0 if c.get("lang") == "ar" else 1,
-                               -(c.get("conf") or 0), c.get("published") or ""))
-        goals = {k: sorted(pack(l), key=lambda c: (0 if c.get("embed") else 1, 0 if c.get("lang") == "ar" else 1, -(c.get("conf") or 0), c.get("published") or ""))
-                 for k, l in r["goals"].items()}
-        goals = {k: l for k, l in goals.items() if l}
+        hl = sort_highlights(merge_cards(pack(r["highlights"], oe, chmap, hl=True), ex.get("highlights"), gone), end)
+        goals = {k: pack(l, oe, chmap) for k, l in r["goals"].items()}
+        for k, l in (ex.get("goals") or {}).items():
+            goals[k] = merge_cards(goals.get(k), l, gone)
+        goals = {k: sort_goal(l) for k, l in goals.items() if l}
         if goals:
             clip_goals[md["id"]] = list(goals)
         if not hl and not goals and str(md["id"]) not in outs:
