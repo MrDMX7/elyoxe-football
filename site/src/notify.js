@@ -14,7 +14,11 @@
      TifoNotify.supported()          "yes" | "ios-install" (iPhone outside the installed app) | "no"
      TifoNotify.openClip()           on a match page opened from «فيديو الهدف نزل» (#v=<goal key>): plays that goal's clip
    Storage: localStorage tifo.push {teams: {id: [events]}, quiet: {s, e} | null}, the live site's key, so teams chosen there
-   carry over. Event: document "tifo:notify" {team, events}. «بدون حرق» (tifo.nospoil): only kickoff alerts go out. */
+   carry over. Event: document "tifo:notify" {team, events}. «بدون حرق» (tifo.nospoil): only kickoff alerts go out.
+   «مقالات تيفو» (2026-11-19, articles spec §4): kind "article", on by default; every save sends art: 1 (v5/app.js too, once this
+   browser has the switch) so the sender knows the
+   visitor saw the switch (a subscription without it gets articles with its goals), and one migration (tifo.push.art) adds it
+   to what this browser saved before. */
 (function (root) {
   "use strict";
   var EV_ALL = ["start", "goal", "end"], API = "/api/tifo/push/";
@@ -28,7 +32,14 @@
   }
   function modeOf(ev) { return ev.indexOf("start") >= 0 || ev.indexOf("end") >= 0 ? "all" : ev.indexOf("goal") >= 0 ? "goals" : "off"; }
   // transfer: the club's official moves (owner 2026-10-10 item 12), a switch of its own like the goal videos
-  function eventsOf(mode, video, transfer) { var e = mode === "all" ? EV_ALL.slice() : mode === "goals" ? ["goal"] : []; if (video) e.push("video"); if (transfer) e.push("transfer"); return e; }
+  function eventsOf(mode, video, transfer, article) { var e = mode === "all" ? EV_ALL.slice() : mode === "goals" ? ["goal"] : []; if (video) e.push("video"); if (transfer) e.push("transfer"); if (article) e.push("article"); return e; }
+  // once per browser: «مقالات» added to the teams saved with goals before the switch existed, and to every followed player
+  function migrate(s, players) {
+    var t = {}, p = {}, add = function (ev) { return ev.indexOf("article") >= 0 ? ev.slice() : ev.concat("article"); };
+    Object.keys((s && s.teams) || {}).forEach(function (k) { var ev = s.teams[k] || []; t[k] = ev.indexOf("goal") >= 0 ? add(ev) : ev.slice(); });
+    Object.keys(players || {}).forEach(function (k) { var ev = players[k] || []; p[k] = ev.indexOf("goal") >= 0 ? add(ev) : ev.slice(); });
+    return [t, p];
+  }
   function options(sel) { var o = ""; for (var m = 0; m < 1440; m += 60) o += '<option value="' + m + '"' + (m === sel ? " selected" : "") + ">" + esc(hourAr(m)) + "</option>"; return o; }
 
   // ------------------------------------------------------------------ markup (pure: Node can prerender it)
@@ -41,7 +52,8 @@
       '<p class="note nf-ios" data-nf-ios hidden>على الآيفون التنبيهات تشتغل من تيفو على الشاشة الرئيسية: اضغط «شارك» ثم «إضافة إلى الشاشة الرئيسية»، وافتحه من هناك.</p>' +
       '<section class="grp mt"><div class="gh"><h2>نبّهني</h2></div><div class="card nf-pad">' + seg + '</div><p class="gf" data-nf-hint>«كل شي»: بداية المباراة وكل هدف والنتيجة النهائية.</p></section>' +
       '<section class="grp"><div class="card"><button type="button" class="row" role="switch" aria-checked="false" data-nf="video"><span class="rt">فيديو الهدف لما ينزل<small>المقطع الرسمي من القناة أو البطولة</small></span><span class="sw" aria-hidden="true"></span></button>' +
-      '<button type="button" class="row" role="switch" aria-checked="false" data-nf="transfer"><span class="rt">انتقالات النادي<small>لما يوقّع لاعب أو يطلع، رسمياً</small></span><span class="sw" aria-hidden="true"></span></button></div></section>' +
+      '<button type="button" class="row" role="switch" aria-checked="false" data-nf="transfer"><span class="rt">انتقالات النادي<small>لما يوقّع لاعب أو يطلع، رسمياً</small></span><span class="sw" aria-hidden="true"></span></button>' +
+      '<button type="button" class="row" role="switch" aria-checked="false" data-nf="article"><span class="rt">مقالات تيفو<small>لما تكتب تيفو خبر أو تقرير عن النادي</small></span><span class="sw" aria-hidden="true"></span></button></div></section>' +
       '<section class="grp"><div class="gh"><h2>أوقات الهدوء</h2></div><div class="card">' +
       '<button type="button" class="row" role="switch" aria-checked="false" data-nf="quiet"><span class="rt">لا تنبّهني وقت النوم<small data-nf-qtxt>من ' + esc(hourAr(q.s)) + " لين " + esc(hourAr(q.e)) + '</small></span><span class="sw" aria-hidden="true"></span></button>' +
       '<div class="row nf-q" data-nf-qrow hidden><label>من <select data-nf="qs">' + options(q.s) + '</select></label><label>لين <select data-nf="qe">' + options(q.e) + "</select></label></div>" +
@@ -57,9 +69,10 @@
   // chooses. Kinds = saas/cards TIFOPUSH_PEVENTS = football pushplayer.KINDS
   var PGROUPS = [["قبل المباراة", [["soon", "مباراته بعد ساعة", "مع القناة في دولتك"], ["start11", "أساسي", "لما تنزل التشكيلة الرسمية"], ["squad_out", "مب في القائمة", "لا أساسي ولا احتياط"]]],
     ["في المباراة", [["subin", "دخل بديل"], ["subout", "طلع تبديل", "ولو طلع مصاب"], ["goal", "هدف"], ["assist", "صناعة"], ["card", "بطاقة"], ["pen", "ضيّع ركلة جزاء"]]],
-    ["بعد المباراة", [["end", "دقايقه وأرقامه", "كم لعب وسجّل وتقييمه"], ["potm", "أحسن لاعب في المباراة"], ["video", "فيديو هدفه لما ينزل"]]]];
+    ["بعد المباراة", [["end", "دقايقه وأرقامه", "كم لعب وسجّل وتقييمه"], ["potm", "أحسن لاعب في المباراة"], ["video", "فيديو هدفه لما ينزل"]]],
+    ["من تيفو", [["article", "مقالة عنه", "خبر أو تقرير تكتبه تيفو عنه"]]]];
   var PKINDS = PGROUPS.reduce(function (a, g) { return a.concat(g[1].map(function (x) { return x[0]; })); }, []);
-  var PDEF = ["start11", "subin", "goal", "assist", "card", "end"];
+  var PDEF = ["start11", "subin", "goal", "assist", "card", "end", "article"];
   function playerBody(p, on) {
     var x = p || {}, ev = on || PDEF;
     return '<div class="nf" data-nf-player="' + esc(x.id) + '" data-nf-name="' + esc(x.name || "") + '">' +
@@ -93,7 +106,7 @@
       '<button type="button" class="pill" data-ask-no>لا، شكراً</button></div></div>';
   }
 
-  var N = { body: body, sheet: sheet, askTeams: askTeams, askBar: askBar, hourAr: hourAr, eventsOf: eventsOf, modeOf: modeOf, playerBody: playerBody, playerSheet: playerSheet, PKINDS: PKINDS, PDEF: PDEF };
+  var N = { body: body, sheet: sheet, askTeams: askTeams, askBar: askBar, hourAr: hourAr, eventsOf: eventsOf, modeOf: modeOf, migrate: migrate, playerBody: playerBody, playerSheet: playerSheet, PKINDS: PKINDS, PDEF: PDEF };
   if (typeof module !== "undefined" && module.exports) { module.exports = N; return; }
   if (typeof document === "undefined") return;
 
@@ -116,9 +129,9 @@
     var send = ev.filter(function (x) { return !nospoil() || x === "start" || x === "transfer"; }), s = st();   // a transfer spoils no match
     if (!send.length) return subscription(false).then(function (x) { if (x) return post("DELETE", { team: +tid, endpoint: x.endpoint }); });
     return subscription(true).then(function (x) { var j = x.toJSON(), q = s.quiet ? { s: s.quiet.s, e: s.quiet.e, o: offset() } : null;
-      return post("POST", { team: +tid, events: send, quiet: q, subscription: { endpoint: j.endpoint, keys: j.keys } }); });
+      return post("POST", { team: +tid, events: send, quiet: q, art: 1, subscription: { endpoint: j.endpoint, keys: j.keys } }); });
   }
-  function state(tid) { var ev = st().teams[tid] || []; return { events: ev.slice(), mode: modeOf(ev), video: ev.indexOf("video") >= 0, transfer: ev.indexOf("transfer") >= 0 }; }
+  function state(tid) { var ev = st().teams[tid] || []; return { events: ev.slice(), mode: modeOf(ev), video: ev.indexOf("video") >= 0, transfer: ev.indexOf("transfer") >= 0, article: ev.indexOf("article") >= 0 }; }
   function permit() {                                  // synchronous inside the tap: Safari refuses a prompt after an await
     if (!ok()) return Promise.reject(new Error(supported()));
     if (Notification.permission === "granted") return Promise.resolve();
@@ -127,19 +140,20 @@
     return (p && p.then ? p : Promise.resolve(Notification.permission)).then(function (r) { if (r !== "granted") throw new Error("denied"); });
   }
   function set(tid, events) {
-    var s = st(), ev = events.filter(function (x, i) { return ["start", "goal", "end", "video", "transfer"].indexOf(x) >= 0 && events.indexOf(x) === i; });
+    var s = st(), ev = events.filter(function (x, i) { return ["start", "goal", "end", "video", "transfer", "article"].indexOf(x) >= 0 && events.indexOf(x) === i; });
     var go = ev.length ? permit() : Promise.resolve();
     return go.then(function () { if (ev.length) s.teams[tid] = ev; else delete s.teams[tid]; save(s); D.dispatchEvent(new CustomEvent("tifo:notify", { detail: { team: +tid, events: ev } })); return wire(tid, ev); });
   }
   // players: localStorage tifo.push.players {pid: [events]}; «بدون حرق» keeps «بعد ساعة» and «أساسي» only
   function pst() { try { return JSON.parse(ls.get("tifo.push.players") || "{}") || {}; } catch (e) { return {}; } }
+  if (!ls.get("tifo.push.art")) { var m0 = migrate(st(), pst()), s0 = st(); s0.teams = m0[0]; save(s0); ls.set("tifo.push.players", JSON.stringify(m0[1])); ls.set("tifo.push.art", "1"); }
   function playerState(pid) { var ev = pst()[pid]; return { events: ev ? ev.slice() : null }; }
   function country() { var c = (ls.get("tifo.country") || "").toUpperCase(); return /^[A-Z]{2}$/.test(c) ? c : null; }
   function wireP(pid, ev) {
     var send = ev.filter(function (x) { return !nospoil() || x === "start11" || x === "soon"; }), s = st();
     if (!send.length) return subscription(false).then(function (x) { if (x) return post("DELETE", { player: +pid, endpoint: x.endpoint }); });
     return subscription(true).then(function (x) { var j = x.toJSON(), q = s.quiet ? { s: s.quiet.s, e: s.quiet.e, o: offset() } : null;
-      return post("POST", { player: +pid, events: send, quiet: q, cc: country(), subscription: { endpoint: j.endpoint, keys: j.keys } }); });
+      return post("POST", { player: +pid, events: send, quiet: q, cc: country(), art: 1, subscription: { endpoint: j.endpoint, keys: j.keys } }); });
   }
   function setPlayer(pid, events) {
     var ev = events.filter(function (x, i) { return PKINDS.indexOf(x) >= 0 && events.indexOf(x) === i; }), go = ev.length ? permit() : Promise.resolve();
@@ -171,6 +185,7 @@
     var v = $('[data-nf="video"]', el), q = $('[data-nf="quiet"]', el), qr = $("[data-nf-qrow]", el), qq = s.quiet || QDEF;
     if (v) v.setAttribute("aria-checked", String(cur.video));
     var tr = $('[data-nf="transfer"]', el); if (tr) tr.setAttribute("aria-checked", String(cur.transfer));
+    var ar = $('[data-nf="article"]', el); if (ar) ar.setAttribute("aria-checked", String(cur.article));
     if (q) q.setAttribute("aria-checked", String(!!s.quiet));
     if (qr) qr.hidden = !s.quiet;
     var qs = $('[data-nf="qs"]', el), qe = $('[data-nf="qe"]', el), qt = $("[data-nf-qtxt]", el);
@@ -192,11 +207,13 @@
   function onClick(e) {
     var el = e.currentTarget, b = e.target.closest(".seg button[data-t]"), cur = state(el.dataset.nfTeam);
     if (b && el.contains(b)) { var seg = b.parentNode, i = [].indexOf.call(seg.querySelectorAll("button[data-t]"), b); seg.style.setProperty("--i", i);
-      seg.querySelectorAll("button[data-t]").forEach(function (x) { x.setAttribute("aria-selected", String(x === b)); }); return apply(el, eventsOf(b.dataset.t, cur.video, cur.transfer)); }
+      seg.querySelectorAll("button[data-t]").forEach(function (x) { x.setAttribute("aria-selected", String(x === b)); });
+      return apply(el, eventsOf(b.dataset.t, cur.video, cur.transfer, cur.article || (cur.mode === "off" && b.dataset.t !== "off"))); }   // turning alerts on: articles too
     var sw = e.target.closest("[data-nf]");
     if (!sw || sw.tagName === "SELECT") return;
-    if (sw.dataset.nf === "video") return apply(el, eventsOf(cur.mode, !cur.video, cur.transfer));
-    if (sw.dataset.nf === "transfer") return apply(el, eventsOf(cur.mode, cur.video, !cur.transfer));
+    if (sw.dataset.nf === "video") return apply(el, eventsOf(cur.mode, !cur.video, cur.transfer, cur.article));
+    if (sw.dataset.nf === "transfer") return apply(el, eventsOf(cur.mode, cur.video, !cur.transfer, cur.article));
+    if (sw.dataset.nf === "article") return apply(el, eventsOf(cur.mode, cur.video, cur.transfer, !cur.article));
     if (sw.dataset.nf === "quiet") { var on = !quiet(); setQuiet(on ? QDEF : null).then(function () { say(el, on ? "ما بنزعجك من " + hourAr(QDEF.s) + " لين " + hourAr(QDEF.e) + "." : "التنبيهات توصلك أي وقت."); }); D.querySelectorAll("[data-nf-team]").forEach(paint); }
   }
   function onChange(e) {
@@ -240,7 +257,7 @@
     bar.addEventListener("click", function (e) {
       var y = e.target.closest("[data-ask-yes]"), n = e.target.closest("[data-ask-no]");
       if (y) {
-        set(y.dataset.askYes, ["start", "goal", "end"]).then(function () { bar.innerHTML = "<p>تمام، بيوصلك كل هدف.</p>"; D.querySelectorAll("[data-nf-team]").forEach(paint); setTimeout(function () { bar.remove(); }, 2500); })
+        set(y.dataset.askYes, ["start", "goal", "end", "article"]).then(function () { bar.innerHTML = "<p>تمام، بيوصلك كل هدف.</p>"; D.querySelectorAll("[data-nf-team]").forEach(paint); setTimeout(function () { bar.remove(); }, 2500); })
           .catch(function (er) { bar.innerHTML = "<p>" + (er && er.message === "denied" ? "التنبيهات مقفولة لتيفو في إعدادات المتصفح." : "ما قدرنا نشغّلها الحين، جرّب بعد شوي.") + "</p>"; setTimeout(function () { bar.remove(); }, 3500); });
       } else if (n) { var s2 = askSt(); teams.forEach(function (t) { s2.no[t.id] = Date.now(); }); askSave(s2); bar.remove(); }
     });
