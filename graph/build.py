@@ -16,7 +16,8 @@ from graph.src import Sources  # noqa: E402
 
 ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "rsssf", "schochastics", "martj42", "transfers"]
 REQUIRED = {"fotmob_matches"}
-CACHE = os.path.join(HERE, ".cache")
+CACHE = os.path.join(HERE, ".cache")       # the registry and the published mirror: kept between runs (actions/cache)
+OUT = os.path.join(HERE, ".build")         # tifo.db and the report: rebuilt each run, never cached (1-2 GB)
 REG_STATE = "graph/registry.json.gz"
 
 
@@ -46,6 +47,10 @@ def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
                 rec["ok"] = False
         G.c.commit()
         print(f"{name}: {rec['loaders'][name]}", flush=True)
+    for t, drop, keep in reg.run_merges:          # links that arrived after a native mint: the rows follow the kept id
+        G.remap(t, drop, keep)
+    rec["merges"] = len(reg.run_merges)
+    G.c.commit()
     moved = reg.moved(old)
     rec["moved"] = len(moved)
     if moved:
@@ -70,11 +75,30 @@ def fetch_mod():
     return fetch
 
 
+def registry_for_upload(st, reg_path):
+    """A publishing run starts from the published registry, never a local copy (a laptop's own numbering, an old cache)."""
+    d = st.get_state(REG_STATE)
+    if d:
+        Registry(d).save(reg_path)
+    return bool(d)
+
+
+def publish_allowed(st, cov):
+    """95% of the last published build's matches, counted in total and from FotMob alone: an empty FotMob cache would
+    keep the total (every twin minted as a match of its own) and hide the loss."""
+    prev = st.get_state("graph/last.json") or {}
+    total, fm = cov["counts"]["match"], (cov.get("by_src", {}).get("match") or {}).get("fotmob", 0)
+    for now, key in ((total, "matches"), (fm, "fotmob_matches")):
+        if prev.get(key) and now < 0.95 * prev[key]:
+            print(f"not published: {key} {now} < 95% of the last build's {prev[key]}", flush=True)
+            return False
+    return True
+
+
 def publish(S, out_dir, reg_path, rec, cov):
     st = S.store()
-    prev = st.get_state("graph/last.json") or {}
-    if prev.get("matches") and cov["counts"]["match"] < 0.95 * prev["matches"]:
-        print(f"not published: {cov['counts']['match']} matches < 95% of the last build's {prev['matches']}", flush=True)
+    if not publish_allowed(st, cov):
+        rec["published"] = False
         return
     st.put_state(REG_STATE, json.loads(gzip.decompress(open(reg_path, "rb").read())))
     gz = os.path.join(out_dir, "tifo.db.gz")
@@ -83,29 +107,29 @@ def publish(S, out_dir, reg_path, rec, cov):
     st.b.s3.upload_file(gz, st.b.bucket, "graph/tifo.db.gz")      # private: outside v1/, not served
     st.put_json("graph/coverage.json", {"generated": rec["started"], "counts": cov["counts"], "linked": cov["linked"], "arabic": cov["arabic"],
                                         "editions": cov["editions"]}, cache="static")
-    st.put_state("graph/last.json", {"at": rec["started"], "matches": cov["counts"]["match"], "secs": rec["secs"]})
+    st.put_state("graph/last.json", {"at": rec["started"], "matches": cov["counts"]["match"], "fotmob_matches": cov["by_src"]["match"].get("fotmob", 0),
+                                      "secs": rec["secs"]})
+    rec["published"] = True
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--upload", action="store_true")
-    ap.add_argument("--out", default=CACHE)
+    ap.add_argument("--out", default=OUT)
     ap.add_argument("--only", default="")
     ap.add_argument("--no-fetch", action="store_true")
     a = ap.parse_args(argv)
     S = Sources()
     reg_path = os.path.join(CACHE, "registry.json.gz")
     os.makedirs(CACHE, exist_ok=True)
-    if not os.path.exists(reg_path) and a.upload:
-        d = S.store().get_state(REG_STATE)
-        if d:
-            Registry(d).save(reg_path)
+    if a.upload:
+        registry_for_upload(S.store(), reg_path)
     rec = run(S, a.out, reg_path, upload=a.upload, loaders=[x for x in a.only.split(",") if x] or None, fetch=not a.no_fetch)
     day = rec["started"][:10]
-    if a.out == CACHE:
+    if a.out == OUT:
         shutil.copyfile(os.path.join(a.out, "coverage.md"), os.path.join(os.path.dirname(HERE), "docs", f"GRAPH-COVERAGE-{day}.md"))
     print(json.dumps({k: v for k, v in rec.items() if k != "loaders"}, ensure_ascii=False))
-    return 0 if rec["ok"] else 1
+    return 0 if rec["ok"] and rec.get("published", True) else 1
 
 
 if __name__ == "__main__":

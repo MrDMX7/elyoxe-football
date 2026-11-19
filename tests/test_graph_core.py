@@ -62,3 +62,34 @@ def test_many_ignores_duplicates(tmp_path):
     rows = [{"mid": 1, "pid": 2, "tid": 3, "played": 1}, {"mid": 1, "pid": 2, "tid": 3, "played": 1}]
     g.many("appearance", rows, "fotmob")
     assert g.c.execute("select count(*) from appearance").fetchone()[0] == 1
+
+
+def test_link_merges_a_native_mint_of_the_same_source():
+    r = Registry()
+    sch = r.mint("team", "sch", "K")                   # build 1: no crosswalk yet
+    fm = r.mint("team", "fotmob", 9)
+    assert r.link("team", "sch", "K", fm) == min(sch, fm)
+    assert r.get("team", "fotmob", 9) == r.get("team", "sch", "K") == min(sch, fm)
+    assert r.run_merges == [("team", max(sch, fm), min(sch, fm))]
+
+
+def test_link_refuses_when_the_key_names_another_sources_entity():
+    r = Registry()
+    a, b = r.mint("team", "fotmob", 1), r.mint("team", "fotmob", 2)
+    assert r.link("team", "sch", "K", a) == a
+    assert r.link("team", "sch", "K", b) is None       # K is A's by a link: two FotMob clubs are never merged
+    assert r.get("team", "sch", "K") == a and r.run_merges == []
+
+
+def test_remap_moves_rows_to_the_kept_id(tmp_path):
+    g = Graph(str(tmp_path / "t.db"))
+    g.put("team", {"tid": 1, "name": "Al Ain", "name_ar": None}, "sch")
+    g.put("team", {"tid": 2, "name": "Al Ain FC", "name_ar": "العين"}, "fotmob")
+    g.put("match", {"mid": 5, "home": 2, "away": 3, "hs": 1, "as_": 0}, "fotmob")
+    g.many("appearance", [{"mid": 5, "pid": 7, "tid": 2, "played": 1}], "fotmob")
+    g.xref("team", 2, "fotmob", 9, "fotmob-native")
+    g.remap("team", 2, 1)
+    assert g.c.execute("select home from match").fetchone()[0] == 1
+    assert g.c.execute("select tid from appearance").fetchone()[0] == 1
+    assert g.c.execute("select tid, name_ar from team").fetchall() == [(1, "العين")]
+    assert g.c.execute("select tifo_id from xref").fetchone()[0] == 1

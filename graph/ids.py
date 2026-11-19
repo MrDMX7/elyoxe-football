@@ -11,6 +11,8 @@ class Registry:
         self.next = dict(d.get("next") or {})
         self.map = dict(d.get("map") or {})
         self.merged = dict(d.get("merged") or {})
+        self.run_merges = []          # (type, dropped id, kept id) done by this build: graph.build remaps their rows
+        self._rev = None              # {(type, id): sources whose keys name it}, built on first need
 
     @staticmethod
     def key(t, src, sid):
@@ -37,13 +39,50 @@ class Registry:
         i = self.next.get(t, 0) + 1
         self.next[t] = i
         self.map[self.key(t, src, sid)] = i
+        self._note(t, i, src)
         return i
+
+    def _sources(self, t, i):
+        if self._rev is None:
+            self._rev = {}
+            for k, j in self.map.items():
+                tt, s_, _ = k.split("|", 2)
+                self._rev.setdefault((tt, self.resolve(tt, j)), set()).add(s_)
+        return self._rev.get((t, self.resolve(t, i)), set())
+
+    def _note(self, t, i, src):
+        if self._rev is not None:
+            self._rev.setdefault((t, self.resolve(t, i)), set()).add(src)
+
+    def link(self, t, src, sid, tifo_id):
+        """(src, sid) is entity tifo_id, by a trusted link (a crosswalk, a match twin). Returns the entity's id, or None when
+        the key already names another entity that other sources name too: two real entities are never merged by a link.
+        When the key's entity is only this source's own (minted before the link existed), the two are merged, the lower id
+        kept (spec §3.2), and the merge is listed in run_merges so the build moves the rows written under the other id."""
+        cur = self.get(t, src, sid)
+        tgt = self.resolve(t, tifo_id)
+        if cur is None:
+            self.map[self.key(t, src, sid)] = tgt
+            self._note(t, tgt, src)
+            return tgt
+        if cur == tgt:
+            return cur
+        if self._sources(t, cur) - {src}:
+            return None
+        keep, drop = min(cur, tgt), max(cur, tgt)
+        src_keep, src_drop = self._sources(t, keep), self._sources(t, drop)
+        self.merge(t, keep, drop)
+        self._rev[(t, keep)] = src_keep | src_drop
+        self._rev.pop((t, drop), None)
+        self.run_merges.append((t, drop, keep))
+        return keep
 
     def alias(self, t, src, sid, tifo_id):
         """(src, sid) names entity tifo_id. False when it already names another one: a link is never turned into a merge."""
         cur = self.get(t, src, sid)
         if cur is None:
             self.map[self.key(t, src, sid)] = tifo_id
+            self._note(t, tifo_id, src)
             return True
         return cur == self.resolve(t, tifo_id)
 

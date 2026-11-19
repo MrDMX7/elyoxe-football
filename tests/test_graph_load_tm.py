@@ -41,7 +41,10 @@ def test_tm(tmp_path):
     G.put("player", {"pid": pid, "name": "Omar A"}, "fotmob")
     t10, t20 = reg.mint("team", "fotmob", 10), reg.mint("team", "fotmob", 20)
     G.put("match", {"mid": reg.mint("match", "fotmob", 1), "date": "2016-01-10T16:00:00Z", "home": t10, "away": t20, "hs": 2, "as_": 1}, "fotmob")
+    zk = reg.mint("coach", "fotmob", 500)
+    G.put("coach", {"kid": zk, "name": "Zlatko D"}, "fotmob")       # same name, no club evidence: never linked by name
     out = tm.load(G, reg, S)
+    assert zk not in [k for (k,) in G.c.execute("select kid from match_coach")]
     assert reg.get("player", "tm", "5") == pid
     assert G.c.execute("select birthplace, nationality2, name_native, height from player where pid=?", (pid,)).fetchone() == ("Al Ain", "Bahrain", "عمر", 182)
     assert G.c.execute("select season, goals, minutes from player_season").fetchone() == ("2015/2016", 10, 2100)

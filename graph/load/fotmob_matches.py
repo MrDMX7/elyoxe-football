@@ -45,6 +45,8 @@ def load(G, reg, S, limit=None):
         if n % 10000 == 0:
             print(f"fotmob matches: {n}", flush=True)
             G.c.commit()
+    if n == 0:     # without FotMob every other source's twin would be minted as a match of its own (spec §4)
+        raise RuntimeError(f"no FotMob match read from {base}")
     G.c.execute("""UPDATE edition SET start=(SELECT min(substr(date,1,10)) FROM match WHERE match.eid=edition.eid),
                    end=(SELECT max(substr(date,1,10)) FROM match WHERE match.eid=edition.eid)""")
     return {"matches": n, "skipped": skipped}

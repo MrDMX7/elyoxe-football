@@ -13,11 +13,19 @@ def load(G, reg, S):
     data = list(csv.DictReader(open(p, encoding="utf-8", newline="")))
     known = {r["home_team"] for r in data} | {r["away_team"] for r in data}
     tl = 0
-    for tid, name in G.c.execute("SELECT tid, name FROM team WHERE kind='national' ORDER BY tid").fetchall():
-        dn = dataset_name(name, known)
-        if dn and reg.alias("team", "martj42", dn, tid):
-            G.xref("team", tid, "martj42", dn, "fotmob-name-alias")
-            tl += 1
+    teams = G.c.execute("SELECT tid, name FROM team WHERE kind='national' ORDER BY tid").fetchall()
+    # the exact name (or compute/national.py's alias) first; dataset_name's « U23»-stripped fallback only for a dataset
+    # name no senior side took, so «Saudi Arabia U23» never takes Saudi Arabia's history
+    for fallback in (False, True):
+        for tid, name in teams:
+            if fallback != name.endswith(" U23"):
+                continue
+            dn = dataset_name(name, known)
+            if dn and reg.get("team", "martj42", dn) is None:
+                got = reg.link("team", "martj42", dn, tid)
+                if got is not None:
+                    G.xref("team", got, "martj42", dn, "fotmob-name-alias")
+                    tl += 1
     idx = MatchIndex(G)
     linked = new = 0
     for r in data:
@@ -31,6 +39,8 @@ def load(G, reg, S):
             G.put("team", {"tid": tid, "name": nm, "kind": "national"}, "martj42")
         key = f"{r['date']}|{r['home_team']}|{r['away_team']}"
         mid = twin(G, idx, r["date"], h, a, hs, as_, "martj42")
+        if mid:
+            mid = reg.link("match", "martj42", key, mid)
         if mid:
             G.xref("match", mid, "martj42", key, "date+teams")
             linked += 1

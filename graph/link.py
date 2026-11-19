@@ -52,6 +52,8 @@ def vote_alias(reg, t, votes, src, min_n=20, share=0.9):
         if not tot:
             continue
         best, n = c.most_common(1)[0]
-        if n >= min_n and n >= share * tot and reg.alias(t, src, k, best):
-            out[k] = best
+        if n >= min_n and n >= share * tot:
+            got = reg.link(t, src, k, best)
+            if got is not None:
+                out[k] = got
     return out

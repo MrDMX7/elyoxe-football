@@ -76,8 +76,9 @@ def load(G, reg, S, codes=None):
             mid = twin(G, idx, d, h, a, hs, as_, "rsssf")
             key = f"{d}|{min(int(fid), opp)}|{max(int(fid), opp)}"
             if mid:
-                if reg.alias("match", "rsssf", key, mid):
-                    G.xref("match", mid, "rsssf", key, "date+teams")
+                mid = reg.link("match", "rsssf", key, mid)
+            if mid:
+                G.xref("match", mid, "rsssf", key, "date+teams")
                 n["matches_linked"] += 1
                 continue
             ck = comp.split(":", 1)[1] if ":" in comp else comp

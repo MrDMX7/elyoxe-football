@@ -6,6 +6,14 @@ from collections import Counter
 SCHEMA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schema.sql")
 SRC_RANK = {"fotmob": 0, "names": 0, "s365": 1, "tm": 2, "fjelstul": 3, "rsssf": 3, "sch": 4, "martj42": 5, "wikidata": 6}
 KEYS = {"team": "tid", "player": "pid", "coach": "kid", "referee": "rid", "stadium": "sid", "competition": "cid", "edition": "eid", "match": "mid"}
+# where each entity's id is referenced (remap after a merge)
+REFS = {"team": [("match", "home"), ("match", "away"), ("appearance", "tid"), ("event", "tid"), ("standing", "tid"), ("honour", "tid"),
+                 ("transfer", "from_tid"), ("transfer", "to_tid"), ("spell", "tid"), ("player_season", "tid")],
+        "player": [("appearance", "pid"), ("event", "pid"), ("event", "pid2"), ("honour", "pid"), ("transfer", "pid"), ("spell", "pid"),
+                   ("player_season", "pid"), ("injury", "pid"), ("coach", "pid")],
+        "coach": [("match_coach", "kid"), ("honour", "kid")], "referee": [("match", "rid")], "stadium": [("match", "sid"), ("team", "sid")],
+        "competition": [("edition", "cid"), ("player_season", "cid")], "edition": [("match", "eid"), ("standing", "eid"), ("honour", "eid")],
+        "match": [("appearance", "mid"), ("event", "mid"), ("match_coach", "mid")]}
 CHECK = {"match": ("hs", "as_"), "player": ("born",), "team": (), "edition": ("cid", "season")}
 
 
@@ -78,6 +86,24 @@ class Graph:
 
     def meta(self, k, v):
         self.c.execute("INSERT OR REPLACE INTO meta VALUES(?,?)", (k, json.dumps(v, ensure_ascii=False)))
+
+    def remap(self, t, drop, keep):
+        """Entity `drop` was merged into `keep`: its row fills keep's empty fields (or becomes keep's row), and every
+        reference moves; a link row that would duplicate one of keep's is dropped."""
+        k = KEYS[t]
+        row = self.c.execute(f"SELECT * FROM {t} WHERE {k}=?", (drop,)).fetchone()
+        if row:
+            r = dict(zip(self.cols[t], row))
+            src = r.pop("src")
+            r.pop("filled", None)
+            r[k] = keep
+            self.put(t, r, src)
+            self.c.execute(f"DELETE FROM {t} WHERE {k}=?", (drop,))
+        for table, col in REFS.get(t, ()):
+            self.c.execute(f"UPDATE OR IGNORE {table} SET {col}=? WHERE {col}=?", (keep, drop))
+            self.c.execute(f"DELETE FROM {table} WHERE {col}=?", (drop,))
+        self.c.execute("UPDATE OR IGNORE xref SET tifo_id=? WHERE type=? AND tifo_id=?", (keep, t, drop))
+        self.c.execute("DELETE FROM xref WHERE type=? AND tifo_id=?", (t, drop))
 
     def close(self):
         self.c.commit()

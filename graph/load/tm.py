@@ -1,7 +1,7 @@
 """Transfermarkt. salimt/football-datasets (db/.cache/tm/): bios, season × competition × club lines, injuries, for the
 players db/tmdata.py and history/transfermarkt.py matched to FotMob (birth date + name rules). dcaribou games and events
 (db/.cache/tm_games.csv.gz, 2012+): a game already in the graph becomes its xref, the rest are new matches; each side's
-manager is recorded for the match (a name: a coach links to FotMob's only when the name and the club agree)."""
+manager is recorded for the match as a coach of his own (a name alone never links; phase 5 links by club and dates)."""
 import csv, gzip, os, re, unicodedata
 from graph.link import MatchIndex, twin
 
@@ -43,13 +43,14 @@ def load(G, reg, S):
         pmap.setdefault(str(tmid), str(fid))
     for tmid, fid in sorted(pmap.items()):
         pid = reg.get("player", "fotmob", int(fid)) if fid.isdigit() else None
-        if pid and reg.alias("player", "tm", tmid, pid):
+        pid = reg.link("player", "tm", tmid, pid) if pid else None
+        if pid:
             G.xref("player", pid, "tm", tmid, "birthdate+name")
             n["players_linked"] += 1
     cmap = {str(k): v for k, v in (S.read(os.path.join(S.hist, "tm_clubmap.json")) or {}).items()}
     for tmc, fid in sorted(cmap.items()):
-        tid = reg.mint("team", "fotmob", int(fid))
-        if reg.alias("team", "tm", tmc, tid):
+        tid = reg.link("team", "tm", tmc, reg.mint("team", "fotmob", int(fid)))
+        if tid is not None:
             G.xref("team", tid, "tm", tmc, "transfers-clubmap")
 
     def team(tmc, name=None):
@@ -85,9 +86,6 @@ def load(G, reg, S):
             G.many("injury", [{"pid": pid, "season": season(r.get("season_name")), "kind": r.get("injury_reason"), "start": r.get("from_date") or None,
                                "end": r.get("end_date") or None, "days": _i(r.get("days_missed")), "games": _i(r.get("games_missed"))}], "tm")
             n["injuries"] += 1
-    coach_by = {}
-    for kid, name in G.c.execute("SELECT kid, name FROM coach"):
-        coach_by.setdefault(fold(name), []).append(kid)
     idx = MatchIndex(G)
     for r in rows(os.path.join(S.db, "tm_games.csv.gz")):
         if not r.get("home_club_goals") or not r.get("date"):
@@ -95,7 +93,8 @@ def load(G, reg, S):
         th, ta, hs, as_ = team(r["home_club_id"], r.get("home_club_name")), team(r["away_club_id"], r.get("away_club_name")), _i(r["home_club_goals"]), _i(r["away_club_goals"])
         mid = twin(G, idx, r["date"], th, ta, hs, as_, "tm")
         if mid:
-            reg.alias("match", "tm", r["game_id"], mid)
+            mid = reg.link("match", "tm", r["game_id"], mid)
+        if mid:
             G.xref("match", mid, "tm", r["game_id"], "date+teams")
             n["games_linked"] += 1
         else:
@@ -113,10 +112,9 @@ def load(G, reg, S):
             nm = (r.get(col) or "").strip()
             if not nm:
                 continue
-            cands = coach_by.get(fold(nm), [])
-            kid = cands[0] if len(cands) == 1 else (reg.get("coach", "tm-name", fold(nm)) or reg.mint("coach", "tm-name", fold(nm)))
-            if not cands or len(cands) > 1:
-                G.put("coach", {"kid": kid, "name": nm}, "tm")
+            # a name alone never links (spec §3.3): phase 5 links these to FotMob's coaches by club and dates
+            kid = reg.get("coach", "tm-name", fold(nm)) or reg.mint("coach", "tm-name", fold(nm))
+            G.put("coach", {"kid": kid, "name": nm}, "tm")
             G.c.execute("INSERT OR IGNORE INTO match_coach VALUES(?,?,?,?)", (mid, side, kid, "tm"))
             n["coaches"] += 1
     return n

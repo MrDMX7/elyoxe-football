@@ -24,8 +24,8 @@ def load(G, reg, S):
     n = {"teams": 0, "teams_linked": 0, "comps": 0, "comps_linked": 0, "champions": 0, "standings": 0, "matches": 0, "matches_linked": 0}
     for sid, ar, en, cc, fid in sorted(ix.get("teams") or [], key=lambda r: r[0]):
         if fid:
-            tid = reg.mint("team", "fotmob", int(fid))
-            if reg.alias("team", "s365", sid, tid):
+            tid = reg.link("team", "s365", sid, reg.mint("team", "fotmob", int(fid)))
+            if tid is not None:
                 G.xref("team", tid, "s365", sid, "s365-fmmap")
                 n["teams_linked"] += 1
         tid = reg.get("team", "s365", sid) or reg.mint("team", "s365", sid)
@@ -38,7 +38,7 @@ def load(G, reg, S):
         cid_s, ar, en, cc, ko = row[0], row[1], row[2], row[3], row[4]
         cname = (countries.get(str(cc)) or [None, None])[1]
         cands = fm_by.get((fold(cname), fold(en)), [])
-        if len(cands) == 1 and reg.alias("competition", "s365", cid_s, reg.mint("competition", "fotmob", cands[0])):
+        if len(cands) == 1 and reg.link("competition", "s365", cid_s, reg.mint("competition", "fotmob", cands[0])) is not None:
             G.xref("competition", reg.get("competition", "s365", cid_s), "s365", cid_s, "country+name")
             n["comps_linked"] += 1
         cid = reg.get("competition", "s365", cid_s) or reg.mint("competition", "s365", cid_s)
@@ -83,7 +83,8 @@ def load(G, reg, S):
                 th, ta = team(h), team(a)
                 mid = twin(G, idx, ko[:10], th, ta, hs, as_, "s365")
                 if mid:
-                    reg.alias("match", "s365", gid, mid)
+                    mid = reg.link("match", "s365", gid, mid)
+                if mid:
                     G.xref("match", mid, "s365", gid, "date+teams")
                     n["matches_linked"] += 1
                     continue

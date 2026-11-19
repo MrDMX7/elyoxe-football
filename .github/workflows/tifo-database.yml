@@ -38,7 +38,6 @@ jobs:
           path: |
             db/.cache
             history/.cache
-            graph/.cache
           key: tifo-db-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: tifo-db-
       - name: No cache left, so the seed from S3
@@ -54,7 +53,6 @@ jobs:
           path: |
             db/.cache
             history/.cache
-            graph/.cache
           key: tifo-db-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Keep the newest two caches of this job
         if: always()

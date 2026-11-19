@@ -19,8 +19,8 @@ def load(G, reg, S):
         return {"skipped": "no games.parquet"}
     cw = S.read(os.path.join(S.db, "crosswalk.json")) or {}
     for fid, key in sorted(cw.items(), key=lambda x: int(x[0])):
-        tid = reg.mint("team", "fotmob", int(fid))
-        if reg.alias("team", "sch", key, tid):
+        tid = reg.link("team", "sch", key, reg.mint("team", "fotmob", int(fid)))
+        if tid is not None:
             G.xref("team", tid, "sch", key, "vote")
     rows = duckdb.sql(f"""select date, home_ident, away_ident, gh, ga, competition, level, home, away, home_code
         from read_parquet('{pq}') where gh is not null and ga is not null and home_ident <> away_ident
@@ -49,9 +49,11 @@ def load(G, reg, S):
     done = set()
     for i, (d, hi, ai, gh, ga, comp, lvl, hn, an, cc) in enumerate(rows):
         if i in twins:
-            G.xref("match", twins[i], "sch", f"{d}|{hi}|{ai}", "date+teams")
-            linked += 1
-            continue
+            got = reg.link("match", "sch", f"{d}|{hi}|{ai}", twins[i])
+            if got is not None:
+                G.xref("match", got, "sch", f"{d}|{hi}|{ai}", "date+teams")
+                linked += 1
+                continue
         cid = reg.get("competition", "sch", comp) or reg.mint("competition", "sch", comp)
         if ("c", cid) not in done:
             done.add(("c", cid))

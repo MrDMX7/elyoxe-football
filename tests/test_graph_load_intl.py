@@ -35,3 +35,16 @@ def test_transfers(tmp_path):
     out = transfers.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "mirror"), s3=False))
     assert out == {"tm": 1, "fotmob": 1}
     assert G.c.execute("select fee, season from transfer where src='tm'").fetchone() == (5000000, "2019/2020")
+
+
+def test_martj42_senior_team_wins_over_u23(tmp_path):
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    (db / "martj42_results.csv").write_text("date,home_team,away_team,home_score,away_score,tournament,city,country,neutral\n"
+                                            "1990-01-01,Saudi Arabia,Qatar,1,0,Friendly,Riyadh,Saudi Arabia,FALSE\n", encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    u23, senior = reg.mint("team", "fotmob", 1), reg.mint("team", "fotmob", 2)      # the U23 side minted first
+    G.put("team", {"tid": u23, "name": "Saudi Arabia U23", "kind": "national"}, "fotmob")
+    G.put("team", {"tid": senior, "name": "Saudi Arabia", "kind": "national"}, "fotmob")
+    martj42.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert reg.get("team", "martj42", "Saudi Arabia") == senior

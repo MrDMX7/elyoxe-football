@@ -1,0 +1,57 @@
+# «Tifo graph dry run» (by hand): python -m graph.build on the nightly database caches, read only, published nowhere.
+# The report (coverage.md/.json) and the log come back as the run's artifact. The nightly «Tifo database» job runs the
+# same build as its graph stage, with --upload (docs/superpowers/specs/2026-11-19-tifo-graph-design.md).
+name: Tifo graph dry run
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: loaders to run (comma-separated, as graph.build --only; empty = all)
+        default: ""
+permissions:
+  id-token: write
+  contents: read
+concurrency:
+  group: tifo-graph-dryrun
+  cancel-in-progress: true
+env:
+  TZ: Asia/Dubai
+  PYTHONIOENCODING: utf-8
+jobs:
+  graph:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/tifo-setup
+        with:
+          session-seconds: "18000"
+      - run: python -m pip install --quiet --disable-pip-version-check -r requirements-db.txt
+      - name: Restore the database caches (read only, never saved from here; the same paths as tifo-database.yml, or the cache version misses)
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            db/.cache
+            history/.cache
+          key: tifo-db-dryrun-${{ github.run_id }}
+          restore-keys: tifo-db-
+      - name: No cache left, so the seed from S3
+        if: steps.cache.outputs.cache-matched-key == ''
+        run: python -m tools.ci_bridge seed-get db
+      - name: Build, no upload
+        run: |
+          set +e
+          python -m graph.build ${{ inputs.only && format('--only {0}', inputs.only) || '' }} > graph-build.log 2>&1
+          rc=$?
+          tail -n 60 graph-build.log
+          exit $rc
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: graph-dryrun
+          path: |
+            graph/.build/coverage.md
+            graph/.build/coverage.json
+            graph-build.log
+          retention-days: 14

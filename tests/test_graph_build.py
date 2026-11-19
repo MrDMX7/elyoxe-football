@@ -34,3 +34,67 @@ def test_fotmob_failure_fails_build(tmp_path, monkeypatch):
     monkeypatch.setattr(fotmob_matches, "load", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
     r = build.run(S, str(tmp_path / "o"), str(tmp_path / "reg.json.gz"), fetch=False)
     assert r["ok"] is False and not os.path.exists(tmp_path / "reg.json.gz")
+
+
+def test_a_link_that_arrives_later_merges_and_old_ids_resolve(tmp_path):
+    from graph.ids import Registry
+    S = caches(tmp_path)                                   # FotMob: Al Ain (10) v Al Wahda (20)
+    m = tmp_path / "mirror" / "s365"
+    (m / "comp").mkdir(parents=True)
+    ix = {"countries": {"1": ["الإمارات", "United Arab Emirates"]}, "comps": [], "teams": [[77, "العين", "Al Ain", 1, None]]}
+    (m / "index.json").write_text(json.dumps(ix), encoding="utf-8")
+    reg_path = str(tmp_path / "reg.json.gz")
+    build.run(S, str(tmp_path / "o1"), reg_path, loaders=["fotmob_matches", "s365"], fetch=False)
+    old = Registry.load(reg_path)
+    split = old.get("team", "s365", 77)
+    assert split != old.get("team", "fotmob", 10)          # build 1: 365 had no FotMob id for it, a team of its own
+    ix["teams"][0][4] = 10                                  # db/scores365.py's fmmap finds it
+    (m / "index.json").write_text(json.dumps(ix), encoding="utf-8")
+    r = build.run(S, str(tmp_path / "o2"), reg_path, loaders=["fotmob_matches", "s365"], fetch=False)
+    new = Registry.load(reg_path)
+    assert r["ok"] and r["moved"] == 0 and r["merges"] == 1
+    one = new.get("team", "fotmob", 10)
+    assert new.get("team", "s365", 77) == one and new.resolve("team", split) == one
+    import sqlite3
+    c = sqlite3.connect(str(tmp_path / "o2" / "tifo.db"))
+    assert c.execute("select count(*) from team where name_ar='العين' or name='Al Ain'").fetchone()[0] == 1
+    assert c.execute("select home from match").fetchone()[0] == one
+
+
+def test_empty_fotmob_cache_fails_the_build(tmp_path):
+    (tmp_path / "db" / ".cache" / "fm" / "mx").mkdir(parents=True)
+    S = Sources(str(tmp_path), mirror=str(tmp_path / "mirror"), s3=False)
+    r = build.run(S, str(tmp_path / "o"), str(tmp_path / "reg.json.gz"), fetch=False)
+    assert r["ok"] is False and not os.path.exists(tmp_path / "reg.json.gz")
+
+
+class FakeStore:
+    def __init__(self, state=None):
+        self.state, self.json = dict(state or {}), {}
+
+    def get_state(self, k, default=None):
+        return self.state.get(k, default)
+
+    def put_state(self, k, v):
+        self.state[k] = v
+
+    def put_json(self, k, v, cache=None):
+        self.json[k] = v
+
+
+def test_upload_starts_from_the_published_registry(tmp_path):
+    from graph.ids import Registry
+    pub = Registry(); pub.mint("team", "fotmob", 99); pub.mint("team", "fotmob", 10)
+    stale = Registry(); stale.mint("team", "fotmob", 10)               # a laptop's own numbering
+    p = str(tmp_path / "reg.json.gz")
+    stale.save(p)
+    build.registry_for_upload(FakeStore({build.REG_STATE: pub.to_json()}), p)
+    assert Registry.load(p).get("team", "fotmob", 10) == 2
+
+
+def test_publish_guard_counts_fotmob_matches():
+    st = FakeStore({"graph/last.json": {"matches": 1000, "fotmob_matches": 1000}})
+    cov = {"counts": {"match": 1200}, "by_src": {"match": {"fotmob": 100, "sch": 1100}}}
+    assert build.publish_allowed(st, cov) is False
+    cov["by_src"]["match"]["fotmob"] = 990
+    assert build.publish_allowed(st, cov) is True
