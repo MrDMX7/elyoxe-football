@@ -83,3 +83,62 @@ def awards(G, out_dir):
     _dump(os.path.join(d, "index.json"), {"awards": sorted(index, key=lambda a: (-a["years"], a["key"]))})
     _dump(os.path.join(d, "players.json"), {k: sorted(v, key=lambda x: (x[1], x[2]), reverse=True) for k, v in sorted(players.items())})
     return {"awards": len(index), "players": len(players)}
+
+
+def motm(G, out_dir, today=None, top=50):
+    """motm/index.json (leaders this season, since 1 July, and all time: overall, per competition, per club) and
+    motm/players.json ({FotMob player id: total, seasons, comps, opponents, recent}) from match_award (spec §8)."""
+    from datetime import date
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    t = date.fromisoformat(today) if today else date.today()
+    since = f"{t.year if t.month >= 7 else t.year - 1}-07-01"
+    fm_p = {a: int(b) for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='player' AND source='fotmob'") if str(b).isdigit()}
+    fm_t = {a: int(b) for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='team' AND source='fotmob'") if str(b).isdigit()}
+    fm_c = {a: int(b) for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='competition' AND source='fotmob'") if str(b).isdigit()}
+    fm_m = {a: int(b) for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='match' AND source='fotmob'") if str(b).isdigit()}
+    name = {pid: (ar or n) for pid, n, ar in q("SELECT pid, name, name_ar FROM player")}
+    rows = q("""SELECT w.mid, w.pid, w.tid, w.value, substr(m.date,1,10), m.home, m.away, e.season, e.cid FROM match_award w
+                JOIN match m ON m.mid=w.mid LEFT JOIN edition e ON e.eid=m.eid WHERE w.kind='motm' ORDER BY m.date DESC""")
+    allc, seasonc = Counter(), Counter()
+    comp_all, comp_now, club_all, club_now = defaultdict(Counter), defaultdict(Counter), defaultdict(Counter), defaultdict(Counter)
+    players = {}
+    for mid, pid, tid, value, d, home, away, season, cid in rows:
+        fp = fm_p.get(pid)
+        if fp is None:
+            continue
+        cur = (d or "") >= since
+        allc[fp] += 1
+        if cur:
+            seasonc[fp] += 1
+        fc, ft = fm_c.get(cid), fm_t.get(tid)
+        if fc:
+            comp_all[fc][fp] += 1
+            if cur:
+                comp_now[fc][fp] += 1
+        if ft:
+            club_all[ft][fp] += 1
+            if cur:
+                club_now[ft][fp] += 1
+        opp = fm_t.get(away if tid == home else home)
+        p = players.setdefault(str(fp), {"total": 0, "seasons": Counter(), "comps": Counter(), "opponents": Counter(), "recent": []})
+        p["total"] += 1
+        if season:
+            p["seasons"][season] += 1
+        if fc:
+            p["comps"][str(fc)] += 1
+        if opp:
+            p["opponents"][str(opp)] += 1
+        if len(p["recent"]) < 10 and fm_m.get(mid):
+            p["recent"].append([fm_m[mid], d, value, opp])
+    pid_of = {v: k for k, v in fm_p.items()}
+    lead = lambda c, n=top: [[fp, name.get(pid_of.get(fp)), k] for fp, k in sorted(c.items(), key=lambda x: (-x[1], x[0]))[:n]]
+    cname = {fm_c[c]: (ar or n) for c, n, ar in q("SELECT cid, name, name_ar FROM competition") if c in fm_c}
+    index = {"since": since, "matches": len(rows), "leaders": {"season": lead(seasonc), "all": lead(allc)},
+             "comps": {str(c): {"name": cname.get(c), "season": lead(comp_now[c], 20), "all": lead(comp_all[c], 20)} for c in sorted(comp_all)},
+             "clubs": {str(t): {"season": lead(club_now[t], 10), "all": lead(club_all[t], 10)} for t in sorted(club_all) if sum(club_all[t].values()) >= 3}}
+    for p in players.values():
+        for k in ("seasons", "comps", "opponents"):
+            p[k] = dict(sorted(p[k].items(), key=lambda x: (-x[1], x[0])))
+    _dump(os.path.join(out_dir, "motm", "index.json"), index)
+    _dump(os.path.join(out_dir, "motm", "players.json"), dict(sorted(players.items())))
+    return {"matches": len(rows), "players": len(players)}

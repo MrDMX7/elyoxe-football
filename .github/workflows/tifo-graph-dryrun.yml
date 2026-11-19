@@ -53,6 +53,8 @@ jobs:
           path: |
             graph/.build/coverage.md
             graph/.build/coverage.json
-            graph/.build/awards/
+            graph/.build/awards/index.json
+            graph/.build/awards/ballon-dor.json
+            graph/.build/motm/
             graph-build.log
           retention-days: 14

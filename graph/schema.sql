@@ -35,3 +35,5 @@ CREATE TABLE xref(type TEXT, tifo_id INTEGER, source TEXT, source_id TEXT, metho
 CREATE INDEX xref_tifo ON xref(type, tifo_id);
 CREATE TABLE conflict(type TEXT, tifo_id INTEGER, field TEXT, kept TEXT, kept_src TEXT, other TEXT, other_src TEXT);
 CREATE TABLE meta(k TEXT PRIMARY KEY, v TEXT);
+CREATE TABLE match_award(mid INTEGER, kind TEXT, pid INTEGER, tid INTEGER, value TEXT, src TEXT NOT NULL, PRIMARY KEY(mid, kind));
+CREATE INDEX match_award_pid ON match_award(pid);

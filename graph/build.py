@@ -15,7 +15,7 @@ from graph.ids import Registry  # noqa: E402
 from graph.src import Sources  # noqa: E402
 
 ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "rsssf", "schochastics", "martj42", "transfers",
-         "honours", "fjelstul", "awards"]      # an edition honour's first source keeps it: our counts, Fjelstul, then Wikipedia
+         "honours", "fjelstul", "awards", "motm"]      # an edition honour's first source keeps it: our counts, Fjelstul, then Wikipedia
 REQUIRED = {"fotmob_matches"}
 CACHE = os.path.join(HERE, ".cache")       # the registry and the published mirror: kept between runs (actions/cache)
 OUT = os.path.join(HERE, ".build")         # tifo.db and the report: rebuilt each run, never cached (1-2 GB)
@@ -62,6 +62,7 @@ def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
     rec["counts"] = cov["counts"]
     try:
         rec["awards_files"] = P.awards(G, out_dir)      # v1/awards/*: the pages' data (spec §7.6)
+        rec["motm_files"] = P.motm(G, out_dir)          # v1/motm/* (spec §8)
     except Exception as e:
         traceback.print_exc()
         rec["awards_files"] = f"{type(e).__name__}: {str(e)[:200]}"
@@ -130,12 +131,13 @@ def publish(S, out_dir, reg_path, rec, cov):
     st.b.s3.upload_file(gz, st.b.bucket, "graph/tifo.db.gz")      # private: outside v1/, not served
     st.put_json("graph/coverage.json", {"generated": rec["started"], "counts": cov["counts"], "linked": cov["linked"], "arabic": cov["arabic"],
                                         "editions": cov["editions"]}, cache="static")
-    ad = os.path.join(out_dir, "awards")
     sent = 0
-    for name in sorted(os.listdir(ad)) if os.path.isdir(ad) else []:
-        if name.endswith(".json"):
-            st.put_json(f"awards/{name}", json.load(open(os.path.join(ad, name), encoding="utf-8")), cache="static")
-            sent += 1
+    for sub in ("awards", "motm"):
+        ad = os.path.join(out_dir, sub)
+        for name in sorted(os.listdir(ad)) if os.path.isdir(ad) else []:
+            if name.endswith(".json"):
+                st.put_json(f"{sub}/{name}", json.load(open(os.path.join(ad, name), encoding="utf-8")), cache="static")
+                sent += 1
     rec["awards_sent"] = sent
     ap = os.path.join(out_dir, "player_aliases_ar.json")
     if os.path.exists(ap):                               # docs/2026-11-19-player-aliases.md: news/media.py reads it
