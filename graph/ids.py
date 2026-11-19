@@ -54,6 +54,11 @@ class Registry:
         if self._rev is not None:
             self._rev.setdefault((t, self.resolve(t, i)), set()).add(src)
 
+    def linked(self, t, src, sid):
+        """The key's entity is named by another source too (a link, not just this source's own mint)."""
+        cur = self.get(t, src, sid)
+        return cur is not None and bool(self._sources(t, cur) - {src})
+
     def link(self, t, src, sid, tifo_id):
         """(src, sid) is entity tifo_id, by a trusted link (a crosswalk, a match twin). Returns the entity's id, or None when
         the key already names another entity that other sources name too: two real entities are never merged by a link.

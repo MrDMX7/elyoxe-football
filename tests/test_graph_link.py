@@ -60,3 +60,17 @@ def test_vote_teams_needs_five_and_a_lead(tmp_path):
         G.put("match", {"mid": reg.mint("match", "fotmob", k), "date": d, "home": a, "away": b, "hs": 1, "as_": 0}, "fotmob")
         games.append((d, "X", "Y", 1, 0))
     assert vote_teams(G, reg, "tm", games) == {}
+
+
+def test_vote_teams_merges_a_key_the_source_minted_itself(tmp_path):
+    from graph.link import vote_teams
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    ain, wahda = reg.mint("team", "fotmob", 1), reg.mint("team", "fotmob", 2)
+    own = reg.mint("team", "tm", "AIN")               # minted earlier in the same loader (a player's season line)
+    games = []
+    for k in range(6):
+        d = f"2020-0{k + 1}-1{k}"
+        G.put("match", {"mid": reg.mint("match", "fotmob", 100 + k), "date": d, "home": ain, "away": wahda, "hs": k % 3, "as_": 1}, "fotmob")
+        games.append((d, "AIN", "WAH", k % 3, 1))
+    got = vote_teams(G, reg, "tm", games)
+    assert got["AIN"] == min(ain, own) and reg.resolve("team", own) == reg.get("team", "fotmob", 1)

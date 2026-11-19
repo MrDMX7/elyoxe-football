@@ -73,7 +73,9 @@ def vote_teams(G, reg, src, games, min_n=5, lead=3, since=None):
     for d, hk, ak, hs, as_ in games:
         if hs is None or as_ is None or (since and str(d)[:10] < since):
             continue
-        lh, la = reg.get("team", src, hk), reg.get("team", src, ak)
+        # a key counts as linked only when another source names its entity: the loader's own mints still vote
+        lh = reg.get("team", src, hk) if reg.linked("team", src, hk) else None
+        la = reg.get("team", src, ak) if reg.linked("team", src, ak) else None
         if lh and la:
             continue
         for dd in _days(str(d)):
