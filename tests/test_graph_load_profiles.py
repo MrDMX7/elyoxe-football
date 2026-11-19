@@ -9,7 +9,8 @@ PROFILE = {"id": 77, "name": "Omar A", "isCoach": False, "birthDate": {"utcTime"
            "playerInformation": [{"title": "Height", "value": {"numberValue": 182}}, {"title": "Preferred foot", "value": {"key": "left"}},
                                  {"title": "Country", "value": {"fallback": "United Arab Emirates"}, "countryCode": "ARE"}],
            "careerHistory": {"careerItems": {"senior": {"teamEntries": [{"teamId": 10, "team": "Al Ain", "startDate": "2008-07-01T00:00:00", "endDate": None,
-                                                                          "appearances": "300", "goals": "120", "assists": "80", "transferType": None}]},
+                                                                          "appearances": "300", "goals": "120", "assists": "80", "transferType": None},
+                                                                         {"teamId": 11, "team": "Old Club", "startDate": 2005, "endDate": 1199145600000, "appearances": 3}]},
                                              "national team": {"teamEntries": [{"teamId": 5789, "team": "UAE", "startDate": "2011-01-01T00:00:00", "endDate": None, "appearances": "90", "goals": "40", "assists": None}]}}}}
 COACH = {"id": 88, "name": "Coach K", "isCoach": True, "birthDate": {"utcTime": "1970-01-01T00:00:00.000Z"}, "playerInformation": [], "careerHistory": {}}
 
@@ -35,7 +36,8 @@ def test_profiles_and_names(tmp_path):
     pid = reg.get("player", "fotmob", 77)
     row = G.c.execute("select born, nationality, height, foot, position, name_ar from player where pid=?", (pid,)).fetchone()
     assert row == ("1991-10-01", "ARE", 182, "left", "Striker", "عمر أ")
-    assert G.c.execute("select count(*) from spell where pid=?", (pid,)).fetchone()[0] == 2
+    assert G.c.execute("select count(*) from spell where pid=?", (pid,)).fetchone()[0] == 3
+    assert G.c.execute("select start, end from spell where pid=? and apps=3", (pid,)).fetchone() == ("2005", "2008-01-01")
     assert G.c.execute("select national from spell where pid=? and apps=90", (pid,)).fetchone()[0] == 1
     assert G.c.execute("select name from coach").fetchall() == [("Coach K",)]
     assert G.c.execute("select source_id from xref where type='player' and source='wikidata'").fetchall() == [("Q1",)]

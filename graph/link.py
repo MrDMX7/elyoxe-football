@@ -57,3 +57,48 @@ def vote_alias(reg, t, votes, src, min_n=20, share=0.9):
             if got is not None:
                 out[k] = got
     return out
+
+
+def vote_teams(G, reg, src, games, min_n=5, lead=3, since=None):
+    """Link another source's team keys to the graph's FotMob teams by their games, never by name (db/history.py's rule):
+    a game on the same date ±1 day with the same score as a FotMob match votes «home key = that match's home» and the same
+    for away; a game with one side already linked only counts the FotMob matches of that team. A key and a team are linked
+    when each is the other's first choice with min_n votes and lead × the runner-up's. games: [(date, home key, away key,
+    hs, as_)]. Returns {key: tifo id} for the new links (written to the registry)."""
+    from collections import Counter
+    by = defaultdict(list)
+    for d, h, a, hs, as_ in G.c.execute("SELECT substr(date,1,10), home, away, hs, as_ FROM match WHERE src='fotmob' AND hs IS NOT NULL"):
+        by[(d, hs, as_)].append((h, a))
+    votes = defaultdict(Counter)
+    for d, hk, ak, hs, as_ in games:
+        if hs is None or as_ is None or (since and str(d)[:10] < since):
+            continue
+        lh, la = reg.get("team", src, hk), reg.get("team", src, ak)
+        if lh and la:
+            continue
+        for dd in _days(str(d)):
+            for h, a in by.get((dd, hs, as_), ()):
+                if (lh and lh != h) or (la and la != a):
+                    continue
+                if not lh:
+                    votes[hk][h] += 1
+                if not la:
+                    votes[ak][a] += 1
+    best_of_team = defaultdict(Counter)
+    for k, c in votes.items():
+        for t, n in c.items():
+            best_of_team[t][k] = n
+    out = {}
+    for k in sorted(votes, key=str):
+        top = votes[k].most_common(2)
+        t, n = top[0]
+        second = top[1][1] if len(top) > 1 else 0
+        if n < min_n or n < lead * second:
+            continue
+        tt = best_of_team[t].most_common(2)
+        if tt[0][0] != k or (len(tt) > 1 and tt[0][1] < lead * tt[1][1]):
+            continue
+        got = reg.link("team", src, k, t)
+        if got is not None:
+            out[k] = got
+    return out

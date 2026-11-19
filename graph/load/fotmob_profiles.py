@@ -12,6 +12,18 @@ def _int(v):
         return None
 
 
+def day(v):
+    """A career date: FotMob writes «2008-07-01T00:00:00», a bare year (2005) or epoch milliseconds."""
+    if v is None or v == "":
+        return None
+    if isinstance(v, (int, float)):
+        if 1800 <= v <= 2100:
+            return str(int(v))
+        from datetime import datetime, timezone
+        return datetime.fromtimestamp(v / 1000, timezone.utc).strftime("%Y-%m-%d")
+    return str(v)[:10] or None
+
+
 def bio(d):
     row = {"name": d.get("name"), "born": ((d.get("birthDate") or {}).get("utcTime") or "")[:10] or None}
     if row["born"] == "0001-01-01":
@@ -56,7 +68,7 @@ def load(G, reg, S):
                 tid = reg.mint("team", "fotmob", e["teamId"])
                 G.put("team", {"tid": tid, "name": e.get("team"), "kind": "national" if kind == "national team" else None}, "fotmob")
                 G.xref("team", tid, "fotmob", e["teamId"], "fotmob-native")
-                G.many("spell", [{"pid": pid, "tid": tid, "start": (e.get("startDate") or "")[:10] or None, "end": (e.get("endDate") or "")[:10] or None,
+                G.many("spell", [{"pid": pid, "tid": tid, "start": day(e.get("startDate")), "end": day(e.get("endDate")),
                                   "apps": _int(e.get("appearances")), "goals": _int(e.get("goals")), "assists": _int(e.get("assists")),
                                   "loan": 1 if "loan" in str(e.get("transferType") or "").lower() else 0,
                                   "national": 1 if kind == "national team" else 0, "youth": 1 if kind == "youth" else 0}], "fotmob")

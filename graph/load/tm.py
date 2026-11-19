@@ -3,7 +3,7 @@ players db/tmdata.py and history/transfermarkt.py matched to FotMob (birth date 
 (db/.cache/tm_games.csv.gz, 2012+): a game already in the graph becomes its xref, the rest are new matches; each side's
 manager is recorded for the match as a coach of his own (a name alone never links; phase 5 links by club and dates)."""
 import csv, gzip, os, re, unicodedata
-from graph.link import MatchIndex, twin
+from graph.link import MatchIndex, twin, vote_teams
 
 
 def fold(s):
@@ -86,10 +86,13 @@ def load(G, reg, S):
             G.many("injury", [{"pid": pid, "season": season(r.get("season_name")), "kind": r.get("injury_reason"), "start": r.get("from_date") or None,
                                "end": r.get("end_date") or None, "days": _i(r.get("days_missed")), "games": _i(r.get("games_missed"))}], "tm")
             n["injuries"] += 1
+    games = [r for r in rows(os.path.join(S.db, "tm_games.csv.gz")) if r.get("home_club_goals") and r.get("date")]
+    voted = vote_teams(G, reg, "tm", [(r["date"], r["home_club_id"], r["away_club_id"], _i(r["home_club_goals"]), _i(r["away_club_goals"])) for r in games])
+    for k, tid in voted.items():
+        G.xref("team", tid, "tm", k, "date+score-votes")
+    n["clubs_voted"] = len(voted)
     idx = MatchIndex(G)
-    for r in rows(os.path.join(S.db, "tm_games.csv.gz")):
-        if not r.get("home_club_goals") or not r.get("date"):
-            continue
+    for r in games:
         th, ta, hs, as_ = team(r["home_club_id"], r.get("home_club_name")), team(r["away_club_id"], r.get("away_club_name")), _i(r["home_club_goals"]), _i(r["away_club_goals"])
         mid = twin(G, idx, r["date"], th, ta, hs, as_, "tm")
         if mid:

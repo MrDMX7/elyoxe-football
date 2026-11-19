@@ -32,3 +32,31 @@ def test_vote_alias_needs_majority():
     got = vote_alias(reg, "competition", {"england": Counter({a: 95, b: 5}), "mixed": Counter({a: 50, b: 50})}, "sch", min_n=20, share=0.9)
     assert got == {"england": a}
     assert reg.get("competition", "sch", "england") == a and reg.get("competition", "sch", "mixed") is None
+
+
+def test_vote_teams_links_by_date_and_score(tmp_path):
+    from graph.link import vote_teams
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    ain, wahda, jazira = (reg.mint("team", "fotmob", i) for i in (1, 2, 3))
+    games = []
+    for k in range(6):                       # six FotMob meetings of Al Ain, two with other clubs on the same days
+        d = f"2020-0{k + 1}-1{k}"
+        G.put("match", {"mid": reg.mint("match", "fotmob", 100 + k), "date": d + "T18:00:00Z", "home": ain, "away": wahda, "hs": k % 3, "as_": 1}, "fotmob")
+        other = reg.mint("team", "fotmob", 10 + k)          # a chance match: same day, same score, a different club each day
+        G.put("match", {"mid": reg.mint("match", "fotmob", 200 + k), "date": d + "T18:00:00Z", "home": other, "away": reg.mint("team", "fotmob", 50 + k), "hs": k % 3, "as_": 1}, "fotmob")
+        games.append((d, "AIN", "WAH", k % 3, 1))
+    got = vote_teams(G, reg, "tm", games)
+    assert got == {"AIN": ain, "WAH": wahda}
+    assert reg.get("team", "tm", "AIN") == ain
+
+
+def test_vote_teams_needs_five_and_a_lead(tmp_path):
+    from graph.link import vote_teams
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    a, b = reg.mint("team", "fotmob", 1), reg.mint("team", "fotmob", 2)
+    games = []
+    for k in range(4):
+        d = f"2021-0{k + 1}-01"
+        G.put("match", {"mid": reg.mint("match", "fotmob", k), "date": d, "home": a, "away": b, "hs": 1, "as_": 0}, "fotmob")
+        games.append((d, "X", "Y", 1, 0))
+    assert vote_teams(G, reg, "tm", games) == {}

@@ -4,7 +4,7 @@ crosswalk (date+score votes, crosswalk.json); a competition (or a season of it) 
 games sit in one of ours. Hygiene as db/history.py: one copy per game, no placeholder teams, no «X v X»."""
 import os
 from collections import Counter, defaultdict
-from graph.link import MatchIndex, twin, vote_alias
+from graph.link import MatchIndex, twin, vote_alias, vote_teams
 
 
 def _season(d):
@@ -27,6 +27,10 @@ def load(G, reg, S):
           and home_ident not in {BLANK} and away_ident not in {BLANK}
         qualify row_number() over (partition by date, home_ident, away_ident, gh, ga, competition order by level) = 1
         order by date, competition, home_ident, away_ident""").fetchall()
+    # clubs the crosswalk lacks: the same date+score votes, on the seasons FotMob covers (since 2010/11)
+    voted = vote_teams(G, reg, "sch", [(str(r[0]), r[1], r[2], r[3], r[4]) for r in rows], since="2010-07-01")
+    for k, tid in voted.items():
+        G.xref("team", tid, "sch", k, "date+score-votes")
     idx = MatchIndex(G)
     eid_of = {mid: eid for mid, eid in G.c.execute("SELECT mid, eid FROM match")}
     cid_of = {eid: cid for eid, cid in G.c.execute("SELECT eid, cid FROM edition")}
@@ -82,4 +86,4 @@ def load(G, reg, S):
         if new % 100000 == 0:
             print(f"schochastics: {new} new", flush=True)
             G.c.commit()
-    return {"rows": len(rows), "linked": linked, "new": new, "comps_linked": sum(1 for k in cvotes if reg.get("competition", "sch", k))}
+    return {"rows": len(rows), "clubs_voted": len(voted), "linked": linked, "new": new, "comps_linked": sum(1 for k in cvotes if reg.get("competition", "sch", k))}

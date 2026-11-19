@@ -2,7 +2,7 @@
 the dataset's (compute/national.py's aliases); a result FotMob already has becomes its xref, the rest are new matches in
 a competition per tournament name."""
 import csv, os
-from graph.link import MatchIndex, twin
+from graph.link import MatchIndex, twin, vote_teams
 
 
 def load(G, reg, S):
@@ -26,6 +26,15 @@ def load(G, reg, S):
                 if got is not None:
                     G.xref("team", got, "martj42", dn, "fotmob-name-alias")
                     tl += 1
+    games = []
+    for r in data:
+        try:
+            games.append((r["date"], r["home_team"], r["away_team"], int(r["home_score"]), int(r["away_score"])))
+        except (ValueError, KeyError):
+            pass
+    for k, tid in vote_teams(G, reg, "martj42", games).items():     # national sides no name rule caught
+        G.xref("team", tid, "martj42", k, "date+score-votes")
+        tl += 1
     idx = MatchIndex(G)
     linked = new = 0
     for r in data:
