@@ -177,3 +177,75 @@ No new sources, no change to the poller, no new or changed page, no change to an
 
 - After phase 1: the coverage report, read with him. It decides the order inside phases 2–5.
 - Each later phase: its own short spec section and a look at its first pages before they go live.
+
+## 7. Phase 2: awards and honours
+
+**Owner's words (2026-11-19):** «أريد نسوي شي للجوائز الفردية من بالاندور وحذاء ذهبي … البطولات كلها نحط فيها افضل لاعب وافضل هداف».
+
+**Success:** for every award in the catalogue, every year it was given is in the graph with its winner (and podium where the
+award has one), each winner a player of the graph with an Arabic name; for every edition of every competition the graph
+holds, the champion, runner-up and top scorer when any source has them, and the tournament's own awards (best player,
+golden boot, best goalkeeper, best young player) where they exist. Every row cites its source; two sources that disagree
+leave a `conflict`.
+
+### 7.1 Model (no new tables)
+
+- **An award is a competition** with `kind = 'award'` (`competition` row: name, name_ar, scope = world / continent / country,
+  country). Each year it was given is an `edition` (season = the year or the season it was given for, as the award
+  states it: «1956», «2023/2024»). Its result is `honour(kind = 'winner', rank = 1, 2, 3…)` with `pid` (or `tid` for a
+  team award, `kid` for a coach award) and `value` (points, goals: what the source gives).
+- **A tournament's or league's own awards** are honours on that competition's edition: `best_player`, `top_scorer`
+  (`value` = goals; ranks 1..n), `top_assist`, `best_goalkeeper`, `best_young`, `fair_play` (`tid`), plus `runner_up` and
+  `third` beside the existing `champion`.
+- A winner not yet in the graph (a 1960s Ballon d'Or winner) becomes a `player` with source `wikidata` (its Wikidata item,
+  English and Arabic labels, birth date), linked by the item: FotMob players already carry 12,989 Wikidata ids (phase 1).
+
+### 7.2 The catalogue (`graph/awards.yaml`)
+
+One entry per award: key, Arabic and English names, scope, the Wikipedia page and table that list it, the Wikidata item,
+the competition it belongs to (for a tournament or league award), and the years it has been given (for the completeness
+check). First catalogue:
+
+| group | awards |
+|---|---|
+| world | Ballon d'Or (1956–, podium), FIFA World Player of the Year (1991–2009) / FIFA Ballon d'Or (2010–15) / The Best FIFA Men's Player (2016–), European Golden Shoe (1968–), Golden Boy (2003–), Kopa Trophy (2018–), Yashin Trophy (2019–), Gerd Müller Trophy (2021–), The Best FIFA Goalkeeper (2017–), FIFA Puskás Award (2009–) |
+| continents | AFC Asian Player of the Year (1994–), African Footballer of the Year (CAF 1992–, France Football 1970–94), UEFA Men's Player of the Year (2011–) and Club Footballer (1998–2010), South American Footballer of the Year (1971–) |
+| tournaments | World Cup (Golden Ball, Golden Boot, Golden Glove, Best Young Player, Fair Play: Fjelstul since 1930), EURO, Copa América, AFCON, Asian Cup, Gulf Cup, Arab Cup, Club World Cup, Champions League, AFC Champions League: best player and top scorer each |
+| leagues | top scorer of every league season we can source (our own counts, the published scorers files, RSSSF, Wikipedia's per-league lists: Pichichi, Capocannoniere, Golden Boot, the UAE, Saudi and other Arab leagues' scorers); best player where the league names one (Premier League Player of the Season, LaLiga Best Player, Serie A MVP, Bundesliga Player of the Season, Ligue 1 UNFP, the UAE Pro League's and Saudi Pro League's awards where a list exists) |
+
+### 7.3 Sources and precedence
+
+1. **Wikipedia's list tables** (English, REST HTML, read with the page's links, so a winner is the article he links to,
+   not a name). Measured 2026-11-19: Ballon d'Or 283 podium rows since 1956, Golden Shoe 63, Golden Boy 24, African
+   Footballer 123, Pichichi 102, the UAE Pro League's top scorer by season 52. A linked article gives the Wikidata item
+   through the page's `pageprops`. This is the primary list.
+2. **Wikidata** P166 «award received» with P585 «point in time»: the second source, checked against the first (alone it
+   is far short: Ballon d'Or 48 winners, Golden Shoe 25, Golden Boy 8).
+3. **Fjelstul** `award_winners.csv` for the World Cup (every award since 1930).
+4. **Our own counts** for top scorers of the editions with full events (FotMob since about 2016), then `v1/history/scorers/`
+   (Transfermarkt since 2012 and FotMob's leader lists), then RSSSF's Arab scorers.
+5. **Runner-up:** the final's loser for a knockout edition in our matches, rank 2 of a final table, and Wikidata's
+   season winners statements with «runner-up» (P2501) that db/champions.py reads today and drops.
+
+Precedence for a disagreement: Wikipedia > Fjelstul > Wikidata for awards; our own count > the published scorers files >
+RSSSF > Wikipedia for top scorers (a count from full events is checkable, a list may be stale).
+
+### 7.4 Fetching
+
+`graph/fetch.py` gains `awards(S)`: each catalogue page and Wikidata query at most once a second, kept in
+`graph/.cache/awards/` and in S3 `state/graph/awards/` (the last good copy is used when a fetch fails). The loader `awards`
+reads only those files, as every loader does.
+
+### 7.5 Checks
+
+- **Completeness per award:** years held vs the years the catalogue says it was given; a missing year is a coverage line,
+  not a failure.
+- **Agreement:** each award year with two sources compares the winner (by Wikidata item); a disagreement is a `conflict`.
+- **Sanity:** a winner born after the award year, or a podium with a repeated player, is dropped and reported.
+- The coverage report gains an «awards» section: per award, years held / expected, sources agreeing, conflicts.
+
+### 7.6 Publishing
+
+`v1/awards/index.json` (every award: names, scope, years held) and `v1/awards/<key>.json` (every year: winner, podium,
+values, player ids and Arabic names), so the pages can be built; the pages themselves are part of phase 7 unless the owner
+asks for them now.
