@@ -51,3 +51,15 @@ def test_tm(tmp_path):
     assert G.c.execute("select days, games from injury").fetchone() == (31, 4)
     assert out["games_linked"] == 1 and out["games_new"] == 1
     assert G.c.execute("select count(*) from match_coach").fetchone()[0] == 4
+
+
+def test_a_second_build_with_the_same_registry_writes_the_same_teams(tmp_path):
+    S, reg = mk(tmp_path), Registry()
+    counts = []
+    for i in range(2):
+        G = Graph(str(tmp_path / f"t{i}.db"))
+        pid = reg.mint("player", "fotmob", 77)
+        G.put("player", {"pid": pid, "name": "Omar A"}, "fotmob")
+        tm.load(G, reg, S)
+        counts.append((G.c.execute("select count(*) from team").fetchone()[0], G.c.execute("select count(*) from xref where type='team' and source='tm'").fetchone()[0]))
+    assert counts[0] == counts[1] and counts[0][0] > 0

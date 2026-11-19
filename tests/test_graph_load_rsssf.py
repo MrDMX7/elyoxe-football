@@ -33,3 +33,15 @@ def test_rsssf_tables_champions_and_matches(tmp_path):
     assert G.c.execute("select tid from honour where eid=? and kind='champion'", (have,)).fetchone()[0] == reg.get("team", "fotmob", 102117)
     oroba = G.c.execute("select tid from standing where eid=? and rank=1", (old,)).fetchone()[0]
     assert G.c.execute("select name from team where tid=?", (oroba,)).fetchone()[0] == "Oroba (Sharjah)"
+
+
+def test_rsssf_second_build_writes_the_unlinked_clubs_again(tmp_path):
+    S, reg = mk(tmp_path), Registry()
+    got = []
+    for i in range(2):
+        G = Graph(str(tmp_path / f"t{i}.db"))
+        lg = reg.mint("competition", "fotmob", 538)
+        G.put("competition", {"cid": lg, "name": "Pro League"}, "fotmob")
+        rsssf.load(G, reg, S, codes=["uae"])
+        got.append(G.c.execute("select count(*) from team where src='rsssf'").fetchone()[0])
+    assert got[0] == got[1] == 1

@@ -54,12 +54,17 @@ def load(G, reg, S):
         if tid is not None:
             G.xref("team", tid, "tm", tmc, "transfers-clubmap")
 
+    written = set()
+
     def team(tmc, name=None):
-        tid = reg.get("team", "tm", str(tmc))
-        if tid is None:
-            tid = reg.mint("team", "tm", str(tmc))
+        """A Transfermarkt club's Tifo id, its row written once a build (the registry outlives the build: a club minted
+        last week still needs its row in tonight's fresh database)."""
+        tid = reg.get("team", "tm", str(tmc)) or reg.mint("team", "tm", str(tmc))
+        if tid not in written:
+            written.add(tid)
             G.put("team", {"tid": tid, "name": name}, "tm")
-            G.xref("team", tid, "tm", tmc, "tm-native")
+            if not reg.linked("team", "tm", str(tmc)):
+                G.xref("team", tid, "tm", tmc, "tm-native")
         return tid
 
     for r in rows(os.path.join(S.db, "tm", "player_profiles.csv")):

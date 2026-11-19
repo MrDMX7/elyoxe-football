@@ -16,14 +16,15 @@ def load(G, reg, S, codes=None):
             print(f"db.rsssf not importable: {e}", flush=True)
             codes = []
     n = {"seasons": 0, "standings": 0, "champions": 0, "matches": 0, "matches_linked": 0}
+    written = set()
 
     def team(code, name, fid):
         if fid:
             return reg.mint("team", "fotmob", int(fid))
         k = f"{code}|{name}"
-        tid = reg.get("team", "rsssf-name", k)
-        if tid is None:
-            tid = reg.mint("team", "rsssf-name", k)
+        tid = reg.get("team", "rsssf-name", k) or reg.mint("team", "rsssf-name", k)
+        if tid not in written:                         # once a build, minted now or in an earlier build
+            written.add(tid)
             G.put("team", {"tid": tid, "name": name, "kind": "club"}, "rsssf")
             G.xref("team", tid, "rsssf-name", k, "rsssf-native")
         return tid
