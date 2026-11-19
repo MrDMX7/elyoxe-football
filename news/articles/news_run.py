@@ -26,6 +26,7 @@ GRACE = 45                   # seconds past the deadline a rewrite may still sta
 LATER = "later"              # a story out of time: it stays queued for the next run
 EDITED = "edited"            # the owner edited the article on the desk: never rewritten automatically (spec, «The desk»)
 DUP = "duplicate"            # our written headline is an article of the last day (news_pick.headline_duplicate)
+NONE = "no news"             # the writer found a question, a guess or an opinion, no news (write.NO_NEWS): back only if it grows
 VIEW = "articles/desk-view.json"
 VIEW_MAX = 150
 
@@ -49,6 +50,8 @@ def _write(writer, sp, cfg, sheet, job, more=lambda: True):
             raise OutOfTime()
         art, usage = writer.write("news", sheet, cfg["model"], notes=notes)
         sp.add(cfg["model"], usage, job); sp.save()       # a killed step keeps what was spent
+        if art.get("no_news"):
+            return art, None
         notes = check.check_news(art, sheet, tuple(cfg["words"]))
         if not notes:
             return art, None
@@ -58,7 +61,7 @@ def _write(writer, sp, cfg, sheet, job, more=lambda: True):
 def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, collect=sources.collect, fetch=None, teams_json=None, ar=None,
              commons=photo.commons):
     out = {"queued": 0, "written": 0, "breaking": 0, "updated": 0, "failed": 0, "withdrawn": 0, "dupes": 0,
-           "links": 0, "decoded": 0, "texts": 0}
+           "links": 0, "decoded": 0, "texts": 0, "no_news": 0}
     news, brk = TYPES.get("news") or {}, TYPES.get("breaking") or {}
     state, desk = store.get_state(STATE) or {}, store.get_state(DESK) or {}
     n = state.setdefault("news", {})
@@ -118,6 +121,9 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
         sheet, meta = facts.news_sheet(s, items, texts, data_get, ar, teams, breaking=is_breaking)
         cfg = brk if is_breaking else news
         art, fails = _write(writer, sp, cfg, sheet, "breaking" if is_breaking else "news", more=lambda: clock() <= deadline + GRACE)
+        if art and art.get("no_news"):
+            out["no_news"] += 1
+            print(json.dumps({"news_none": s["id"], "title": _title(s, items)}, ensure_ascii=False)); return NONE
         if not art:
             out["failed"] += 1
             print(json.dumps({"news_failed": s["id"], "fails": (fails or [])[:4]}, ensure_ascii=False)); return None
@@ -163,7 +169,7 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
                 r = publish_story(s, True)
                 if r == LATER:
                     break
-                if r and r not in (DUP, EDITED):
+                if r and r not in (DUP, EDITED, NONE):
                     out["breaking"] += 1; n["breaking_count"] += 1
                 sent.append(s["id"]); del sent[:-500]; save()
     if news.get("on"):
@@ -178,8 +184,8 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
                 break
             if r == EDITED:
                 q.mark_written(sid, len(s.get("items") or []), s.get("stage"))
-            elif r == DUP:
-                q.mark_failed(sid, len(s.get("items") or []))  # the same news: back only if it grows, twice at most
+            elif r in (DUP, NONE):
+                q.mark_failed(sid, len(s.get("items") or []))  # the same news, or none: back only if it grows, twice at most
             elif r:
                 q.mark_written(sid, len(s.get("items") or []), s.get("stage")); out["written"] += 1
             else:
@@ -193,7 +199,7 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
                 r = publish_story(s, False)
                 if r == LATER:
                     break
-                if r and r not in (EDITED, DUP):
+                if r and r not in (EDITED, DUP, NONE):
                     out["updated"] += 1
                 q.mark_written(sid, len(s.get("items") or []), s.get("stage"))   # tried: the next try is an hour away
                 save()

@@ -120,3 +120,13 @@ def test_news_pick_hands_the_judge_each_photos_source(tmp_path):
         seen.append(sources); return 0
     P.news_pick("n-9", CANDS, [10], IMGS.get, st, headline="ع", judge=judge)
     assert seen == [["B", "ويكيميديا كومنز"]]
+
+
+def test_a_question_headline_fails_but_a_quoted_question_passes():
+    """Owner 2026-11-20: «إرم نيوز تتساءل: هل يدفع سان جيرمان مليار يورو لضم يامال من برشلونة؟» went out as news."""
+    body = "كلمة " * 260
+    q = lambda h: [f for f in C.check_news(dict(art(body), headline=h), SHEET, (250, 450)) if "question" in f]
+    assert q("إرم نيوز تتساءل: هل يدفع سان جيرمان مليار يورو لضم يامال؟")
+    assert q("Could Arsenal sign him?")
+    assert not q("جيسوس يرد: «هل عليّ أن أرد على والدة رونالدو؟»")
+    assert not q("برشلونة يعلن تفاصيل إصابة كوبارسي")
