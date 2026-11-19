@@ -28,7 +28,7 @@ Published (public, v1/):
 State (private): state/news/media.json — videos seen (4 days), the match files already read, what each media file holds,
 the embed checks. state/news/media-extra.json — what news/media_backfill.py found (videos older than the feeds hold): merged
 into every media file this writes."""
-import argparse, concurrent.futures as CF, hashlib, json, os, re, sys, time, unicodedata, urllib.error, urllib.parse, urllib.request
+import argparse, concurrent.futures as CF, hashlib, itertools, json, os, re, sys, time, unicodedata, urllib.error, urllib.parse, urllib.request
 from datetime import datetime, timedelta, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -39,6 +39,9 @@ from news.entities import norm, ar_variants, LATIN_STOP, AR_STOP
 
 STATE = "news/media.json"
 EXTRA = "news/media-extra.json"   # news/media_backfill.py: {"matches": {id: {"highlights": [card], "goals": {key: [card]}}}}
+# the Tifo graph's Arabic names per player (graph/, owner 2026-11-19: «نسوي للاعبين أسامي aliases»): {"players": {FotMob player
+# id: [name, ...]}} or that map alone; read when it exists (docs/2026-11-19-player-aliases.md)
+PLAYER_ALIASES = "graph/player_aliases_ar.json.gz"
 WINDOW_H = 48                # a match is followed this long after kickoff (live polling on the site, goal clips)
 FOLLOW_H = 7 * 24             # ... and its highlights this long (late extended highlights)
 KEEP_VIDEOS_H = 96            # videos are kept this long (the matching runs again on them every run)
@@ -98,14 +101,34 @@ def toks(s):
 
 def alts(tt):
     """Each token with the forms its Arabic clitics hide («والعراق» -> العراق, «لمنتخب» -> منتخب, «وهدف» -> هدف). Looser than
-    the journal's linker (a 3-letter remainder counts): a form still has to match a whole name or keyword to mean anything."""
+    the journal's linker (a 3-letter remainder counts): a form still has to match a whole name or keyword to mean anything.
+    Also its loose spellings (loose(), marked «~»), which only ever meet the scorers' loose forms."""
     out = []
     for t in tt:
         v = set(ar_variants(t))
         if len(t) >= 4 and t[0] in "وبلفك" and "ء" <= t[1] <= "ي":
             v.add(t[1:])
+        for x in list(v):
+            v |= loose(x)
         out.append(v)
     return out
+
+
+# the letters a foreign name is written with either way («هوجو»/«هوغو»/«هوقو», «طمين»/«تمين», «ضياء»/«دياء»)
+LOOSE_MAP = str.maketrans({"غ": "ج", "ق": "ج", "ط": "ت", "ص": "س", "ض": "د", "ظ": "ز", "ث": "ت", "ذ": "ز"})
+
+
+def loose(t):
+    """The loose spellings of one Arabic token, each marked «~»: «ال» dropped, the letters of LOOSE_MAP folded, and one long vowel
+    (ا/و/ي) or a final «ه» left out. Two tokens that share one are the same name written another way: «طمين»/«تيمين»,
+    «الزياني»/«زياني», «أندري»/«أندريه» (2026-11-19: the four goals the matcher missed that night were all spellings)."""
+    if len(t) < 3 or not ("ء" <= t[0] <= "ي"):
+        return set()
+    f = (t[2:] if t.startswith("ال") and len(t) > 4 else t).translate(LOOSE_MAP)
+    out = {f}
+    if len(f) > 3:
+        out |= {f[:i] + f[i + 1:] for i in range(1, len(f)) if f[i] in "اوي" or (f[i] == "ه" and i == len(f) - 1)}
+    return {"~" + x for x in out if len(x) >= 3}
 
 
 def has(al, phrase):
@@ -420,11 +443,14 @@ def player_forms(latin, ars, nick=()):
 
 
 class Names:
-    """Name data: teams.json, names/*.json, news/aliases.yaml, news/nations.json, and FotMob's Arabic map when present."""
+    """Name data: teams.json, names/*.json, news/aliases.yaml, news/nations.json, FotMob's Arabic map when present, and the
+    Tifo graph's other Arabic names per player (`player_aliases`: {FotMob player id: [Arabic name, ...]}, PLAYER_ALIASES)."""
 
-    def __init__(self, teams=None, players_ar=None, clubs_ar=None, fm=None, aliases=None, nations=None, national_comps=frozenset()):
+    def __init__(self, teams=None, players_ar=None, clubs_ar=None, fm=None, aliases=None, nations=None, national_comps=frozenset(),
+                 player_aliases=None):
         self.teams = teams or {}
         self.players_ar = players_ar or {}
+        self.player_aliases = player_aliases or {}
         self.clubs_ar = clubs_ar or {}
         self.fm = fm or {}
         self.nations = nations or {}
@@ -466,7 +492,8 @@ class Names:
     def player(self, pid, name):
         if pid in self._pf:
             return self._pf[pid]
-        ars = [(self.players_ar.get(str(pid)) or {}).get("ar"), (self.fm.get("players") or {}).get(str(pid))]
+        ars = [(self.players_ar.get(str(pid)) or {}).get("ar"), (self.fm.get("players") or {}).get(str(pid))] + \
+              list(self.player_aliases.get(str(pid)) or [])
         f = player_forms(name, [x for x in ars if x], self.people.get(norm(name or ""), []))
         self._pf[pid] = f
         return f
@@ -703,6 +730,17 @@ class Ctx:
                     if len(pids) > 1 and len(form) == 1:
                         continue
                     self.index.setdefault(form[0], []).append((form, ("player", pid), st))
+            # the same Arabic names spelt loosely (loose()): a whole name names the player as a surname does (2), one word
+            # spelt loosely only helps (1); a loose form two scorers of the match share names neither
+            lsurn = {}
+            for form, pids in surn.items():
+                parts = [sorted(loose(x)) for x in form]
+                if all(parts):
+                    for combo in itertools.islice(itertools.product(*parts), 64):
+                        lsurn.setdefault(combo, set()).update(pids)
+            for form, pids in lsurn.items():
+                if len(pids) == 1:
+                    self.index.setdefault(form[0], []).append((form, ("player", next(iter(pids))), 2 if len(form) > 1 else 1))
         for k in self.index:     # one entry per (form, entity)
             seen, lst = set(), []
             for f in self.index[k]:
@@ -1256,8 +1294,12 @@ def load_names(store, cfg_national, cache_dir=None):
     except Exception:
         fm = rd(fp)
     al = yaml.safe_load(open(os.path.join(HERE, "aliases.yaml"), encoding="utf-8")) or {}
+    try:                                             # not published yet, or unreadable: the other names are enough to run
+        pa = store.get_state(PLAYER_ALIASES) or {}
+    except Exception:
+        pa = {}
     return Names(teams, rd(os.path.join(ROOT, "names", "players_ar.json")), rd(os.path.join(ROOT, "names", "clubs_ar.json")), fm, al,
-                 rd(os.path.join(HERE, "nations.json")), cfg_national)
+                 rd(os.path.join(HERE, "nations.json")), cfg_national, player_aliases=pa.get("players", pa))
 
 
 def national_comps():
