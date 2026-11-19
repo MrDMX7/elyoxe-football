@@ -202,9 +202,12 @@ leave a `conflict`.
 
 ### 7.2 The catalogue (`graph/awards.yaml`)
 
-One entry per award: key, Arabic and English names, scope, the Wikipedia page and table that list it, the Wikidata item,
-the competition it belongs to (for a tournament or league award), and the years it has been given (for the completeness
-check). First catalogue:
+**Owner 2026-11-19: «كل الجوايز اللي نقدر نحصل عليها».** So the catalogue is discovered, not hand-written: every article
+under English Wikipedia's football award categories (player, top scorer, goalkeeper, young player and manager of the year
+awards, trophies and awards: 115 categories, about 1,400 articles measured 2026-11-19) and every competition article of
+ours is read, and every table that pairs a year or season with a linked person (or a club, for champion / runner-up
+tables) becomes an award or an edition honour (§7.3). `graph/awards.yaml` only overrides: the Arabic name of an award,
+a table to skip, a wrong kind. The table below is the floor the discovered catalogue must cover:
 
 | group | awards |
 |---|---|
@@ -216,7 +219,10 @@ check). First catalogue:
 ### 7.3 Sources and precedence
 
 1. **Wikipedia's list tables** (English, REST HTML, read with the page's links, so a winner is the article he links to,
-   not a name). Measured 2026-11-19: Ballon d'Or 283 podium rows since 1956, Golden Shoe 63, Golden Boy 24, African
+   not a name; merged cells unfolded into a grid first). A person is a link whose Wikidata item is a human (P31 Q5); a red
+   link keeps the name only. A linked person reaches our player through the item: the Wikidata ids phase 1 holds, then
+   the item's Transfermarkt player id (P2446) through the Transfermarkt links; a club through its Transfermarkt club id
+   (P7223) or db/clubs.py's cards; a competition article through db/champions.py's competition items. Measured 2026-11-19: Ballon d'Or 283 podium rows since 1956, Golden Shoe 63, Golden Boy 24, African
    Footballer 123, Pichichi 102, the UAE Pro League's top scorer by season 52. A linked article gives the Wikidata item
    through the page's `pageprops`. This is the primary list.
 2. **Wikidata** P166 «award received» with P585 «point in time»: the second source, checked against the first (alone it
@@ -232,9 +238,10 @@ RSSSF > Wikipedia for top scorers (a count from full events is checkable, a list
 
 ### 7.4 Fetching
 
-`graph/fetch.py` gains `awards(S)`: each catalogue page and Wikidata query at most once a second, kept in
-`graph/.cache/awards/` and in S3 `state/graph/awards/` (the last good copy is used when a fetch fails). The loader `awards`
-reads only those files, as every loader does.
+A stage of its own, `awards` (weekly in db/refresh.py, before `graph`): the category crawl, each article's HTML (kept 30
+days), the links' Wikidata items (P31, P569, ar/en labels, P2446, P7223) in batches of 50, at most one request a second,
+all kept in `graph/.cache/awards/` and S3 `state/graph/awards/` (the last good copy is used when a fetch fails). The
+loader `awards` reads only those files, as every loader does.
 
 ### 7.5 Checks
 
@@ -247,5 +254,6 @@ reads only those files, as every loader does.
 ### 7.6 Publishing
 
 `v1/awards/index.json` (every award: names, scope, years held) and `v1/awards/<key>.json` (every year: winner, podium,
-values, player ids and Arabic names), so the pages can be built; the pages themselves are part of phase 7 unless the owner
-asks for them now.
+values, player ids and Arabic names), and the pages ship with this phase (owner 2026-11-19 «الحين»): `/awards/` (every award, grouped:
+world, continents, tournaments, leagues, countries), `/awards/<key>/` (every year with its podium, each winner linked to his
+player page, most wins), and a «جوائزه» block on the player pages that have honours. In Tifo's v5 design, Arabic.
