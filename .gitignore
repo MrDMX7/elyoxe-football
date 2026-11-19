@@ -22,6 +22,3 @@ docs/AUDIT-DATA-*.md
 news/.x-cooldown.json
 news/.x-history.json
 news/.backfill-x.log
-graph/.cache/
-graph/.build/
-.superpowers/
