@@ -272,3 +272,19 @@ player page, most wins), and a «جوائزه» block on the player pages that h
 - **Pages:** `/motm/` (the leaders, this season first, per competition and club) and a «رجل المباراة» block on player pages;
   the match page's fans' vote stays as it is, beside the rating.
 - **Timing:** nightly with the graph; phase 6 brings it to the final whistle.
+
+## 9. Phase 4: depth (free sources only)
+
+**Owner 2026-11-20:** «i dont have money for api, lets perfect our craft on tifo». SofaScore is closed (its bot protection
+refused automated access; no workaround), paid APIs are out.
+
+1. **The World Cup in full, 1930–2022 (Fjelstul):** every match linked to ours (date + the two national teams) or added under
+   the World Cup's editions, with its lineups (starters, substitutes, positions, shirt numbers), goals (own goals, penalties),
+   cards, substitutions, coaches (`match_coach`) and referees. A match FotMob already holds in detail keeps FotMob's rows.
+2. **International scorers since 1916 (martj42 `goalscorers.csv`):** goal events (minute, penalty, own goal) on the
+   internationals the graph holds without events; a scorer is a player of his national team by name
+   (`martj42-name`, «<team>|<name>»), linked to the World Cup's or FotMob's player only when the name and team agree.
+3. **Transfermarkt's lineups and appearances (dcaribou `game_lineups`, `appearances`, `game_events`, 2012+):** for the
+   Transfermarkt matches FotMob doesn't hold (the Netherlands, Portugal, Turkey, Belgium, Russia, Greece, Scotland,
+   Ukraine, Denmark and the cups): starters and substitutes, minutes, goals, assists, cards, and the events.
+Fetched weekly by graph/fetch.py into db/.cache; loaders as every other (caches only).
