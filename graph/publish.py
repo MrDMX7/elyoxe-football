@@ -37,8 +37,8 @@ def _dump(path, obj):
 
 def awards(G, out_dir):
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
-    fm_player = {tid: int(sid) for tid, sid in q("SELECT tifo_id, source_id FROM xref WHERE type='player' AND source='fotmob'")}
-    fm_comp = {tid: int(sid) for tid, sid in q("SELECT tifo_id, source_id FROM xref WHERE type='competition' AND source='fotmob'")}
+    fm_player = {tid: int(sid) for tid, sid in q("SELECT tifo_id, source_id FROM xref WHERE type='player' AND source='fotmob'") if str(sid).isdigit()}
+    fm_comp = {tid: int(sid) for tid, sid in q("SELECT tifo_id, source_id FROM xref WHERE type='competition' AND source='fotmob'") if str(sid).isdigit()}
     pname = {pid: (n, a) for pid, n, a in q("SELECT pid, name, name_ar FROM player")}
     tname = {tid: (n, a) for tid, n, a in q("SELECT tid, name, name_ar FROM team")}
     d = os.path.join(out_dir, "awards")

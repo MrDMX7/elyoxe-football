@@ -43,3 +43,10 @@ def test_award_files(tmp_path):
     assert ["ballon-dor", "2011", "winner", 1, None] in pl["30981"]                  # an award: its key
     assert [None, "2012/2013", "top_scorer", 1, 538] in pl["30981"]                   # an edition honour: the FotMob competition
     assert out["awards"] == 1
+
+
+def test_a_missing_fotmob_id_does_not_break_publishing(tmp_path):
+    G, messi = graph(tmp_path)
+    G.xref("competition", 999, "fotmob", None, "fotmob-native")          # the archive has matches with no competition
+    G.xref("player", 998, "fotmob", None, "fotmob-native")
+    assert publish.awards(G, str(tmp_path / "o"))["awards"] == 1

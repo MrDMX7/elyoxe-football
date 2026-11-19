@@ -53,5 +53,6 @@ jobs:
           path: |
             graph/.build/coverage.md
             graph/.build/coverage.json
+            graph/.build/awards/
             graph-build.log
           retention-days: 14
