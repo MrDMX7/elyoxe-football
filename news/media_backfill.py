@@ -215,7 +215,7 @@ def youtube_videos(chs, ctx, t0, relist=False, workers=6, log=print, store=None,
                 if it.get("ts") and it["ts"] < (t0 - timedelta(days=3)).timestamp():   # «3 weeks ago»: approximate, so a margin
                     continue
                 tx = M.Text(it["title"], "", ch.get("lang", "en"))
-                kind = M.classify(tx)
+                kind = M.classify(tx, ch)
                 if not kind or (kind == "goal" and (tx.neg_goal or tx.old or tx.youth or tx.hl)):
                     continue
                 teams, players = ctx.mentions(tx.al, tx.flags)
@@ -238,7 +238,7 @@ def youtube_videos(chs, ctx, t0, relist=False, workers=6, log=print, store=None,
         for ch, tab, it in cands:
             if it["id"] in seen_ids or "at" in (pages.get(it["id"]) or {}):
                 continue
-            if M.classify(M.Text(it["title"], "", ch.get("lang", "en"))) == kind:
+            if M.classify(M.Text(it["title"], "", ch.get("lang", "en")), ch) == kind:
                 order.append(it["id"]); seen_ids.add(it["id"])
     todo = order
     log(json.dumps({"listed": {k: {t: len(v.get(t) or []) for t in ("videos", "shorts")} for k, v in lists.items()}}))

@@ -309,6 +309,10 @@ class Text:
         self.goal_at = [i for i in range(len(self.al)) if any(p[0] in self.al[i] and has(self.al[i:i + len(p)], p) for p in strict)]
         self.flags = [(flag_iso(a), flag_iso(b)) for a, b in FLAG.findall(title or "")]   # «🇯🇴 🆚 🇸🇾»
         self.scores = [(int(a), int(b)) for a, b in SCORE.findall(self.raw) if int(a) <= 15 and int(b) <= 15]
+        # «العين 2 - 1 الظفرة | الجولة 9 - …»: a head with one score may be a result alone, Abu Dhabi Sports' name for its
+        # highlights (2026-11-19); result_title() checks that the rest of the head is the two teams' names
+        head = self.raw.split("|")[0]
+        self.result_head = toks(head) if len(SCORE.findall(head)) == 1 else None
         self.seasons, self.years, self.dates, self.minutes = [], [], [], []
         for m in SEASON.finditer(self.raw):
             if m.group(1):
@@ -618,7 +622,8 @@ def channels(cfg):
                     "comps": set(y.get("comps") or ([y["comp"]] if y.get("comp") else [])) or None, "journal": True})
     for y in ((cfg.get("media") or {}).get("youtube") or []):
         out.append({"key": y["key"], "id": y["channel"], "name": y["name"], "lang": y.get("lang", "ar"), "kind": y.get("kind", "broadcaster"),
-                    "team": int(y["team"]) if y.get("team") else None, "comps": set(y.get("comps") or []) or None, "journal": False})
+                    "team": int(y["team"]) if y.get("team") else None, "comps": set(y.get("comps") or []) or None,
+                    "home": {int(c) for c in y.get("home") or []} or None, "journal": False})
     return out
 
 
@@ -785,8 +790,9 @@ def check_highlights(v, ch, tx, md, gs, teams, youth_m, t_pub):
         sh, sa = (max(sh, 1), sa) if own == h else (sh, max(sa, 1))
     if not (sh and sa):
         return None, "teams"
-    # two short or shared names («الجزيرة ضد الوحدة», «ROMA-INTER») are enough on the competition's or the club's own channel
-    scoped = own in (h, a) or bool(ch.get("comps") and md.get("comp") in ch["comps"])
+    # two short or shared names («الجزيرة ضد الوحدة», «ROMA-INTER») are enough on the competition's or the club's own channel,
+    # and in a broadcaster's home competitions (`home`: Abu Dhabi Sports' YouTube also carries other leagues and friendlies)
+    scoped = own in (h, a) or bool(ch.get("comps") and md.get("comp") in ch["comps"]) or md.get("comp") in (ch.get("home") or ())
     if max(sh, sa) < 2 and not scoped:
         return None, "weak names"
     if ch.get("comps") and md.get("comp") not in ch["comps"] and own not in (h, a):
@@ -986,14 +992,28 @@ def club_minute_goal(ctx, v, ch, tx, teams, players, t_pub, note):
     return out if len({o[1] for o in out}) == 1 else []
 
 
-def classify(tx):
+def classify(tx, ch=None):
     if tx.neg or tx.women:
         return None
     if tx.hl:
         return "hl"
     if tx.goal:
         return "goal"
+    # a rights holder's or league's YouTube upload named by the result alone: the match's highlights, the same evening (Abu
+    # Dhabi Sports, 2026-11-19; the league's own «ملخص وأهداف» came 3-5 days later). Not on X, where such a post is one goal.
+    if tx.result_head and ch and ch.get("platform") != "x" and ch.get("kind") in ("broadcaster", "league"):
+        return "hl"
     return None
+
+
+def result_title(ctx, tx):
+    """The title's head is two teams' names around one score and nothing else («العين 2 - 1 الظفرة», not «مدرب العين بعد
+    الفوز 2-1 على الظفرة»)."""
+    tt, sp = tx.result_head or [], []
+    ctx.mentions(alts(tt), (), sp)
+    names = {(s, e) for s, e, k, _ in sp if k == "team"}
+    rest = [t for i, t in enumerate(tt) if not any(s <= i < e for s, e in names)]
+    return len(names) == 2 and len(rest) == 2 and all(t.isdigit() for t in rest)
 
 
 def attach(videos, matches, names, chmap, trace=None, blocked=()):
@@ -1014,10 +1034,14 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
         if not ch or not t_pub:
             continue
         tx = Text(v["title"], v.get("desc"), ch.get("lang", "en"))
-        kind = classify(tx)
+        kind = classify(tx, ch)
         if not kind:
             if trace is not None and (tx.hl or tx.goal):
                 note(v, None, "skip", tx.neg or tx.women)
+            continue
+        if kind == "hl" and not tx.hl and not result_title(ctx, tx):
+            if trace is not None and tx.scores:
+                note(v, None, "skip", "a score with more than the two teams' names")
             continue
         spans = []
         teams, players = ctx.mentions(tx.al, tx.flags if kind == "hl" else (), spans)

@@ -51,13 +51,14 @@ youtube:
 # too («Youssef Sobhi», 2026-09-30), so every line says why it is official (news/tools/youtube_ids.py --check <id>: canonical id,
 # name, subscribers, badge, description, uploads). `comps` limits a channel to those competitions (and it is read only when one
 # of them has a match in the last 48 h); `team` = a federation's own national team (read when that team played); neither = read
-# every run. `block`: video ids never to attach (a wrong one found later).
+# every run. `home`: competitions where two short names («العين 2 - 1 الظفرة») are enough on a broadcaster's channel without
+# limiting it to them (Abu Dhabi Sports also posts other leagues). `block`: video ids never to attach (a wrong one found later).
 media:
   block: []
   youtube:
     # MENA rights holders, Arabic
     - {key: yt_bein, channel: UCJUCcJUeh0Cz2xyKwkw5Q1w, name: "بي إن سبورتس", lang: ar, kind: broadcaster, why: "@beINSPORTS, 18.7M, verified: The Official Account for beIN SPORTS Channels in MENA"}
-    - {key: yt_adsports, channel: UCF8Fpc7bPHC8Jrflci-mUiQ, name: "أبوظبي الرياضية", lang: ar, kind: broadcaster, country: ae, why: "@adsportstv, 959K, verified: الحساب الرسمي لقنوات أبوظبي الرياضية; FotMob links its Gulf Cup highlights"}
+    - {key: yt_adsports, channel: UCF8Fpc7bPHC8Jrflci-mUiQ, name: "أبوظبي الرياضية", lang: ar, kind: broadcaster, country: ae, home: [538, 11027, 9943, 11026, 329], why: "@adsportstv, 959K, verified: الحساب الرسمي لقنوات أبوظبي الرياضية; FotMob links its Gulf Cup highlights"}
     - {key: yt_ksasports, channel: UCLo2xigvxv9ksxp78AyCBTw, name: "القنوات الرياضية السعودية", lang: ar, kind: broadcaster, country: sa, why: "@Riyadiyatv, 1.78M, verified: الحساب الرسمي للقنوات الرياضية السعودية"}
     - {key: yt_thmanyah, channel: UCj-2hfXdYPPNcLqcBeW3y8g, name: "رياضة ثمانية", lang: ar, kind: broadcaster, country: sa, comps: [536, 9942, 10074, 10721], why: "@thmanyahsports, 599K: Saudi league rights holder (النقل الحصري للدوري والبطولات السعودية)"}
     - {key: yt_onsport, channel: UCo2TvjBHS1BtyIkeGGTMe6w, name: "أون سبورت", lang: ar, kind: broadcaster, country: eg, comps: [519, 9941, 10314], why: "@ONSporteg, 3.78M, verified: United Media Services, Egyptian league broadcaster"}
