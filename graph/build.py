@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
-from graph import coverage, fetch, publish as P  # noqa: E402
+from graph import aliases as ALI, coverage, fetch, publish as P  # noqa: E402
 from graph.db import Graph  # noqa: E402
 from graph.ids import Registry  # noqa: E402
 from graph.src import Sources  # noqa: E402
@@ -65,6 +65,22 @@ def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
     except Exception as e:
         traceback.print_exc()
         rec["awards_files"] = f"{type(e).__name__}: {str(e)[:200]}"
+    try:                                                 # every Arabic form of each player, for the goal-clip matcher
+        if fetch:
+            fetch_mod().wikidata_ar(S, ALI.qids(G, S))
+        learned = None
+        if S.s3:
+            try:
+                learned = S.store().get_state("news/media-learned-aliases.json")
+            except Exception:
+                learned = None
+        al = ALI.build(G, S, learned=learned)
+        with open(os.path.join(out_dir, "player_aliases_ar.json"), "w", encoding="utf-8", newline=chr(10)) as f:
+            json.dump(al, f, ensure_ascii=False)
+        rec["aliases"] = len(al["players"])
+    except Exception as e:
+        traceback.print_exc()
+        rec["aliases"] = f"{type(e).__name__}: {str(e)[:200]}"
     G.meta("build", {k: v for k, v in rec.items() if k != "loaders"})
     G.close()
     rec["secs"] = round(time.time() - t0)
@@ -121,6 +137,9 @@ def publish(S, out_dir, reg_path, rec, cov):
             st.put_json(f"awards/{name}", json.load(open(os.path.join(ad, name), encoding="utf-8")), cache="static")
             sent += 1
     rec["awards_sent"] = sent
+    ap = os.path.join(out_dir, "player_aliases_ar.json")
+    if os.path.exists(ap):                               # docs/2026-11-19-player-aliases.md: news/media.py reads it
+        st.put_state("graph/player_aliases_ar.json.gz", json.load(open(ap, encoding="utf-8")))
     st.put_state("graph/last.json", {"at": rec["started"], "matches": cov["counts"]["match"], "fotmob_matches": cov["by_src"]["match"].get("fotmob", 0),
                                       "secs": rec["secs"]})
     rec["published"] = True
