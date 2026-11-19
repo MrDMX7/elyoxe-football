@@ -353,6 +353,30 @@ def test_backfill_adds_to_the_published_file_and_takes_nothing_away(tmp_path, mo
     assert B.run(store, CFG_KSA, t=t, days=3, log=lambda *a: None)["written"] == 0      # a second run adds nothing
 
 
+def test_a_title_naming_the_matchs_other_scorers_is_its_goals_not_one_goal():
+    # Real Madrid's «A GOAL FEST at the Bernabéu! MBAPPÉ, ARDA GÜLER and DIOMANDE shine | Real Madrid 4-1 Leipzig» (2026-11-19)
+    assert run("inter", "A GOAL FEST at San Siro! Thuram, Hojlund and McTominay shine | Inter 3-2 Napoli", "2026-09-28T20:50:00Z")[0] == {}
+    assert run("inter", "Thuram scores the winner! Inter 3-2 Napoli", "2026-09-28T20:50:00Z")[0] == {700: ["88-504"]}
+    # one teammate named beside the scorer (the assist) is still his goal's clip
+    assert run("inter", "Martinez sets up Thuram for the winner! Inter 3-2 Napoli", "2026-09-28T20:50:00Z")[0] == {700: ["88-504"]}
+
+
+def test_a_celebration_clip_is_not_the_goal():
+    assert run("inter", "Thuram celebrando su gol del triunfo, Inter 3-2 Napoli", "2026-09-28T20:50:00Z", desc="")[0] == {}
+
+
+def test_fotmobs_summary_on_every_event_goes_with_the_highlights_not_under_a_goal():
+    # FotMob copies one match's summary onto every event, cards too (Al Jazira - Al Wasl, 2026-11-19); a goal's own link stays
+    summ = "https://www.youtube.com/watch?v=SUMMARY0001"
+    full = dict(KSA_IRQ, events=[dict(KSA_IRQ["events"][0], clip=summ), {"type": "yellow", "minute": 60, "clip": summ},
+                                 dict(KSA_IRQ["events"][1], clip="https://www.youtube.com/watch?v=OWNCLIP0001")])
+    md = M.slim(full)
+    found = M.fotmob_links({}, [md], {}, set())
+    assert [v["id"] for v, _ in found[KSA_IRQ["id"]]["highlights"]] == ["SUMMARY0001"]
+    assert {k: [v["id"] for v, _ in l] for k, l in found[KSA_IRQ["id"]]["goals"].items()} == {"69-102": ["OWNCLIP0001"]}
+    assert M.own_clip_keys({"highlights": [], "goals": {"55-101": [{"url": "a"}], "69-102": [{"url": "a"}], "70-1": [{"url": "b"}]}}) == {"70-1"}
+
+
 def test_goal_key_is_the_minute_the_page_shows():
     # the match page's rows: data-goal-key="45+4-301" (render.js / v3.js)
     assert M.goal_key(goal(45, "home", 301, "Ali Saleh", (1, 1), added=4)) == "45+4-301"
