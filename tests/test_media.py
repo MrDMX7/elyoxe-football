@@ -477,3 +477,26 @@ def test_the_clubs_own_clip_with_the_minute_needs_no_name_we_know():
                                  "url": "u", "text": "د43: ماركينيو يفتتح التسجيل ⚽️",
                                  "image": "https://pbs.twimg.com/amplify_video_thumb/2091176454193127424/img/a.jpg"}]}, acc)
     assert M.attach(old, [AIN_DHA], N_AE, CH_AE, []) == {}
+
+
+def test_a_scorers_name_spelt_another_way_still_names_him():
+    # 2026-11-19 report: «منذر طمين»/«منذر تيمين», «عبد الله الزياني»/«عبد الله زياني», «هوجو»/«هوغو». A whole name spelt with
+    # ط/ت, غ/ج/ق, «ال» or one long vowel more or less names the scorer
+    assert run_ae("ADSportsTV", "ماركوس اندري يفتتح التسجيل ويضع العين في المقدمة ⚽️ #العين_الظفرة", "2026-11-19T16:12:36Z") \
+        == {1000022241: ["43-1572471"]}
+    assert run_ae("ADSportsTV", "حسين الرحيمي يسجل الهدف الثاني للعين ⚽️ #العين_الظفرة", "2026-11-19T16:43:30Z") == {1000022241: ["54-1295519"]}
+    assert run_ae("ADSportsTV", "عبدالله الكربى يقلص الفارق بالهدف الأول للظفرة ⚽️ #العين_الظفرة", "2026-11-19T16:55:01Z") \
+        == {1000022241: ["66-794049"]}
+    # one word spelt loosely is not enough on its own (it could be anyone's)
+    assert run_ae("ADSportsTV", "رحيم يسجل الهدف الثاني للعين ⚽️", "2026-11-19T16:43:30Z") == {}
+    assert M.loose("طمين") & M.loose("تيمين") and M.loose("هوجو") & M.loose("هوغو") and M.loose("الزياني") & M.loose("زياني")
+    assert not M.loose("حسين") & M.loose("محسن") and not M.loose("goal")
+
+
+def test_the_graphs_other_arabic_names_of_a_player_name_him():
+    # the Tifo graph publishes every Arabic form it holds per FotMob player id (state graph/player_aliases_ar.json.gz):
+    # «سيرجيو بيريرا» for the «سيرجينيو» of the dictionary (Al Wasl 2-1 Hatta, 2026-11-19)
+    n = M.Names({}, {"1572471": {"ar": "سيرجينيو"}}, {}, {}, {}, NATIONS, player_aliases={"1572471": ["سيرجيو بيريرا", ""]})
+    assert n.player(1572471, "Serginho").get(("سيرجيو", "بيريرا")) == 3
+    assert n.player(1572471, "Serginho").get(("سيرجينيو",)) == 2
+    assert M.Names({}, {}, {}, {}, {}, NATIONS).player(1, "X") == M.player_forms("X", [])
