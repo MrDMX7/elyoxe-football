@@ -70,14 +70,14 @@ class Writer:
         «انتقالات · إشاعة» from the journal's keyword guess). A stage only for a transfer."""
         body = "\n".join(p for s in art.get("sections") or [] for p in s.get("paragraphs") or [])[:3000]
         text = self.LABEL_ASK + "العنوان: " + (art.get("headline") or "") + "\nالمقدمة: " + (art.get("standfirst") or "") + "\n\n" + body
-        msg = self._c().messages.create(model=model, max_tokens=100, messages=[{"role": "user", "content": text}],
+        msg = self._c().messages.create(model=model, max_tokens=1024, messages=[{"role": "user", "content": text}],   # 100 left 28 of 60 empty
                                         output_config={"format": {"type": "json_schema", "schema": self.LABEL_SCHEMA}})
         raw = next((b.text for b in msg.content if b.type == "text"), "")
         try:
             ans = json.loads(raw)
             topic, stage = ans["topic"], ans["stage"]
         except (ValueError, KeyError, TypeError) as e:
-            raise WriteError("label answer cannot be read: " + repr(raw[:80])) from e
+            raise WriteError(f"label answer cannot be read ({msg.stop_reason}): " + repr(raw[:80])) from e
         if topic not in self.TOPICS or (stage != "none" and stage not in self.STAGES):
             raise WriteError(f"label {topic!r} / {stage!r} is not one of ours")
         u = msg.usage

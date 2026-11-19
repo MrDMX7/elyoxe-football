@@ -97,3 +97,14 @@ def test_the_backfill_stops_at_its_limit_and_its_deadline(tmp_path):
     assert RL.run(st, w, Spend(), deadline=1e12, clock=lambda: 0.0, limit=2)["labelled"] == 2
     t = iter([0.0, 99.0, 99.0, 99.0, 99.0])
     assert RL.run(st, w, Spend(), deadline=50.0, clock=lambda: next(t))["labelled"] == 1
+
+
+def test_the_label_has_room_to_answer_and_says_why_it_stopped():
+    """2026-11-19, first live run: 28 of 60 labels came back with no text at all (max_tokens was 100)."""
+    c = FakeClient({"topic": "other", "stage": "none"})
+    WR.Writer(c).label(ART)
+    assert c.calls[0]["max_tokens"] >= 1024
+    empty = types.SimpleNamespace(messages=types.SimpleNamespace(create=lambda **kw: types.SimpleNamespace(
+        stop_reason="max_tokens", content=[], usage=types.SimpleNamespace(input_tokens=1, output_tokens=1))))
+    with pytest.raises(WR.WriteError, match="max_tokens"):
+        WR.Writer(empty).label(ART)
