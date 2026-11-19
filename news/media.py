@@ -643,8 +643,17 @@ def x_videos(box, accounts):
         if not a or a.get("tier") != "official" or not p.get("video") or not p.get("at"):
             continue
         out.append({"id": "x" + str(p["id"]), "source": "x", "url": p["url"], "vertical": False, "title": (p.get("text") or "")[:300],
-                    "desc": "", "at": ptime(p["at"]) and iso(ptime(p["at"])), "ch": "x_" + a["handle"].lower(), "image": p.get("image")})
+                    "desc": "", "at": ptime(p["at"]) and iso(ptime(p["at"])), "ch": "x_" + a["handle"].lower(), "image": p.get("image"),
+                    "made": video_made(p.get("image"))})
     return out
+
+
+def video_made(image):
+    """When X got the video, from the id in its thumbnail's address (a snowflake: ms since 2010-11-04 01:42:54.657 UTC).
+    Al Ain's goal posts carry an animation uploaded once in August and posted again for every goal (owner 2026-11-19:
+    «يرسل صورة متحركة مصورة مسبقاً»): a video made before the goal does not show it. None for a custom thumbnail."""
+    m = re.search(r"/(?:amplify_video_thumb|ext_tw_video_thumb|tweet_video_thumb)/(\d{15,20})/", image or "")
+    return iso(datetime.fromtimestamp(((int(m.group(1)) >> 22) + 1288834974657) / 1000, UTC)) if m else None
 
 
 def x_channels(accounts):
@@ -747,6 +756,9 @@ def check_highlights(v, ch, tx, md, gs, teams, youth_m, t_pub):
     k = ptime(md.get("kickoff_utc"))
     if not k or t_pub < k + timedelta(minutes=40):
         return None, "before the match"
+    made = ptime(v.get("made"))
+    if made and made < k:
+        return None, "video made before the match"
     if t_pub > k + timedelta(hours=FOLLOW_H):
         return None, "too late"
     # a summary comes out after the final whistle, or at half-time (the first half's); anything out while the ball is in
@@ -816,6 +828,9 @@ def check_goal(v, ch, tx, md, g, gs, teams, players, t_pub, unnamed=False):
     lb = g.get("lb")
     if not lb or t_pub < lb - timedelta(minutes=2):
         return None, "before the goal"
+    made = ptime(v.get("made"))
+    if made and made < lb - timedelta(minutes=2):
+        return None, "video made before the goal (a ready-made animation)"
     end = match_end(md) or (lb + timedelta(hours=2))
     if t_pub > end + timedelta(hours=36):
         return None, "too late"
@@ -900,6 +915,39 @@ def only_goal(ctx, v, ch, tx, teams, spans, t_pub, note):
     return out if len({o[1] for o in out}) == 1 else []
 
 
+def club_minute_goal(ctx, v, ch, tx, teams, players, t_pub, note):
+    """A club's own clip that gives the minute is its side's goal of that minute even when the name it uses is not one we
+    know («د43: ماركو ماياااا …» for FotMob's Marcos André, Al Ain 2026-11-19): the club's (or federation's) channel, one minute
+    in the title, exactly one goal of the club at that minute (±1; the added time too when the title gives it), and no other
+    scorer of the match named. The usual checks follow (timing, the video's age, score and number words).
+    -> [(conf, match id, goal)] or []."""
+    own = ch.get("team")
+    mins = set(tx.minutes)
+    if not own or len({mm for mm, _ in mins}) != 1:
+        return []
+    mm, ad = max(mins, key=lambda x: x[1])
+    out = []
+    for mid, md in ctx.matches.items():
+        side = "home" if md["home"]["id"] == own else "away" if md["away"]["id"] == own else None
+        if not side:
+            continue
+        gs = [g for g in ctx.goals[mid] if g.get("team") == side and abs(int(g.get("minute") or 0) - mm) <= 1
+              and (not ad or abs(int(g.get("added") or 0) - ad) <= 1)]
+        if len(gs) != 1:
+            if gs:
+                note(v, mid, "goal (club, minute)", f"{len(gs)} goals of the club at {mm}'")
+            continue
+        g = gs[0]
+        others = {p for p, st in players.items() if st >= 2 and p != g["player"]["id"]} & {x["player"]["id"] for x in ctx.goals[mid]}
+        if others:
+            note(v, mid, "goal (club, minute)", "names another scorer"); continue
+        conf, why = check_goal(v, ch, tx, md, g, ctx.goals[mid], teams, {}, t_pub, unnamed=True)
+        note(v, mid, f"goal (club, minute {mm}') {g['player'].get('name')}", conf if conf else why)
+        if conf and conf >= 70:
+            out.append((conf, mid, g))
+    return out if len({o[1] for o in out}) == 1 else []
+
+
 def classify(tx):
     if tx.neg or tx.women:
         return None
@@ -967,6 +1015,8 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
                     hits.append((conf, mid, g))
         if not hits and not players:
             hits = only_goal(ctx, v, ch, tx, teams, spans, t_pub, note)
+        if not hits:
+            hits = club_minute_goal(ctx, v, ch, tx, teams, players, t_pub, note)
         if not hits:
             continue
         mids = {h[1] for h in hits}
@@ -1323,7 +1373,7 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
             if v and v["id"] not in vids:
                 vids[v["id"]] = v
     for v in x_videos(xbox, xacc):
-        vids.setdefault(v["id"], v)
+        vids.setdefault(v["id"], v)["made"] = v.get("made")      # also onto a post stored before `made` was read
     cut = iso(t - timedelta(hours=KEEP_VIDEOS_H))
     for k in [k for k, v in vids.items() if (v.get("at") or "") < cut]:
         del vids[k]
