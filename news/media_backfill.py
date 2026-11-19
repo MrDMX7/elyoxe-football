@@ -121,8 +121,31 @@ def listing(ch, t0, relist=False):
 
 
 def page_info(vid):
-    """The watch page: exact upload time (UTC) and the description's head. {"err": ...} when YouTube answers something else
-    (a consent or bot page: no date in it)."""
+    """A video's exact upload time (UTC), its description's head and whether it embeds, from YouTube's own player endpoint
+    (youtubei/v1/player: its microformat has publishDate to the second even when it will not play the video here). The
+    watch page carries the same, but YouTube answered it «429» after ~400 pages on 2026-11-19 while this endpoint went on.
+    {"err": ...} when it answers something else."""
+    body = json.dumps({"context": {"client": {"clientName": "WEB", "clientVersion": "2.20261101.00.00", "hl": "en", "gl": "US"}},
+                       "videoId": vid}).encode()
+    req = urllib.request.Request("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", data=body,
+                                 headers={"User-Agent": BROWSER_UA, "Content-Type": "application/json"})
+    try:
+        d = json.loads(urllib.request.urlopen(req, timeout=25).read())
+    except urllib.error.HTTPError as e:
+        return {"err": e.code}
+    except Exception as e:
+        return {"err": type(e).__name__}
+    mf = (d.get("microformat") or {}).get("playerMicroformatRenderer") or {}
+    at = next((x for x in (mf.get("publishDate"), mf.get("uploadDate")) if x and "T" in x), None)
+    if not at:
+        return {"err": "no date"}
+    ps = d.get("playabilityStatus") or {}
+    return {"at": M.iso(M.ptime(at)), "desc": ((d.get("videoDetails") or {}).get("shortDescription") or "")[:300],
+            **({"embed": bool(ps["playableInEmbed"])} if "playableInEmbed" in ps else {})}
+
+
+def watch_page_info(vid):
+    """The same from the watch page (kept for a machine whose player endpoint is refused)."""
     req = urllib.request.Request("https://www.youtube.com/watch?v=" + vid, headers={
         "User-Agent": BROWSER_UA, "Accept-Language": "en-US,en;q=0.9", "Cookie": "CONSENT=YES+1"})
     try:
@@ -202,27 +225,46 @@ def youtube_videos(chs, ctx, t0, relist=False, workers=6, log=print, store=None,
             log(json.dumps({"listing_error": ch["key"], "errors": L["errors"]}, ensure_ascii=False))
     pages_p = os.path.join(CACHE, "pages.json")
     pages = jload(pages_p, {})
-    if remote:
+    if store is not None:          # what the runners read (tifo-media-backfill.yml), if they did
         for k in range(16):
             sh = store.get_state(SHARD_KEY.format(k)) or {}
             for vid, r in (sh.get("pages") or {}).items():
                 if r.get("at") or "at" not in (pages.get(vid) or {}):
                     pages[vid] = r
         jsave(pages_p, pages)
-    todo = sorted({it["id"] for _, _, it in cands if "at" not in (pages.get(it["id"]) or {})})
+    # goal clips first, then summaries; each id once
+    order, seen_ids = [], set()
+    for kind in ("goal", "hl"):
+        for ch, tab, it in cands:
+            if it["id"] in seen_ids or "at" in (pages.get(it["id"]) or {}):
+                continue
+            if M.classify(M.Text(it["title"], "", ch.get("lang", "en"))) == kind:
+                order.append(it["id"]); seen_ids.add(it["id"])
+    todo = order
     log(json.dumps({"listed": {k: {t: len(v.get(t) or []) for t in ("videos", "shorts")} for k, v in lists.items()}}))
     log(json.dumps({"candidates": len(cands), "pages_to_read": len(todo)}))
     if remote:
         store.put_state(TODO_KEY, {"at": M.iso(M.now()), "ids": todo})
         todo = []
-    done = 0
-    with CF.ThreadPoolExecutor(6) as ex:
-        for vid, info in zip(todo, ex.map(page_info, todo)):
+    # two at a time with a pause: this machine also downloads the evening's goal clips from YouTube, so the first «429»
+    # stops the reading (what is read is kept; the next run goes on from there)
+    done, stop = 0, None
+    for i in range(0, len(todo), 2):
+        batch = todo[i:i + 2]
+        with CF.ThreadPoolExecutor(2) as ex:
+            res = list(ex.map(page_info, batch))
+        if any(r.get("err") in (429, 403) for r in res):
+            stop = next(r["err"] for r in res if r.get("err") in (429, 403))
+            break
+        for vid, info in zip(batch, res):
             pages[vid] = info
-            done += 1
-            if done % 200 == 0:
-                jsave(pages_p, pages)
-                log(json.dumps({"pages_read": done, "of": len(todo)}))
+        done += len(batch)
+        if done % 200 == 0:
+            jsave(pages_p, pages)
+            log(json.dumps({"pages_read": done, "of": len(todo)}))
+        time.sleep(0.4)
+    if stop:
+        log(json.dumps({"pages_stopped": stop, "read": done, "of": len(todo)}))
     jsave(pages_p, pages)
     bad = sum(1 for _, _, it in cands if "at" not in pages.get(it["id"], {}))
     if bad:
@@ -295,32 +337,46 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
         goals_new = {k: c for k, c in ((k, M.pack(l, oe, chmap)) for k, l in r["goals"].items()) if c}
         cur = store.get_json(f"media/{mid}.json") or {}
         end = M.match_end(md)
-        hl = M.sort_highlights(M.merge_cards(cur.get("highlights"), hl_new, blocked), end)
-        goals = {k: list(v) for k, v in (cur.get("goals") or {}).items()}
+        # FotMob's copy of the summary under every goal (media.fotmob_links no longer files it there): to the highlights
+        cur_goals = cur.get("goals") or {}
+        uses = {}
+        for k, l in cur_goals.items():
+            for c in l:
+                uses.setdefault(c.get("url"), set()).add(k)
+        hl_urls = {c.get("url") for c in (cur.get("highlights") or []) + hl_new}
+        summary = [c for l in cur_goals.values() for c in l
+                   if c.get("found_by") == "fotmob" and (c.get("url") in hl_urls or len(uses[c.get("url")]) > 1)]
+        sid = {c["id"] for c in summary}
+        hl = M.sort_highlights(M.merge_cards(M.merge_cards(cur.get("highlights"), hl_new, blocked),
+                                             [dict(c, kind=c.get("kind") or "summary") for c in summary], blocked), end)
+        goals = {k: [c for c in l if c.get("id") not in sid] for k, l in cur_goals.items()}
         for k, l in goals_new.items():
             goals[k] = M.sort_goal(M.merge_cards(goals.get(k), l, blocked))
+        goals = {k: l for k, l in goals.items() if l}
+        doc = {"generated": M.iso(t), "match": mid, "highlights": hl, "goals": goals}
         keys = {M.goal_key(g) for g in gs}
+        own_before, own_after = keys & M.own_clip_keys(cur), keys & M.own_clip_keys(doc)
         bc = by_comp.setdefault(md.get("comp"), {"goals": 0, "before": 0, "after": 0})
         bc["goals"] += len(keys)
-        bc["before"] += len(keys & set(cur.get("goals") or {}))
-        bc["after"] += len(keys & {k for k, v in goals.items() if v})
-        new_keys = [k for k in goals if goals[k] and not (cur.get("goals") or {}).get(k)]
+        bc["before"] += len(own_before)
+        bc["after"] += len(own_after)
+        new_keys = sorted(own_after - own_before)
         byk = {M.goal_key(g): g for g in gs}
         for k in new_keys:
             g = byk.get(k) or {}
             added_list.append({"match": mid, "comp": md.get("comp"), "teams": f"{md['home'].get('name')} - {md['away'].get('name')}",
                                "goal": k, "scorer": (g.get("player") or {}).get("name"), "score": g.get("score"), "type": g.get("type"),
                                "clips": [(c.get("channel"), c.get("title"), c.get("url"), c.get("published")) for c in goals[k]]})
-        added = sum(len(goals[k]) - len((cur.get("goals") or {}).get(k) or []) for k in goals)
-        hl_added = len(hl) - len(cur.get("highlights") or [])
-        if new_keys or added or hl_added:
-            doc = {"generated": M.iso(t), "match": mid, "highlights": hl, "goals": goals}
+        same = json.dumps({"h": cur.get("highlights") or [], "g": cur_goals}, sort_keys=True, ensure_ascii=False) == \
+            json.dumps({"h": hl, "g": goals}, sort_keys=True, ensure_ascii=False)
+        if not same:
             if not dry:
                 store.put_json(f"media/{mid}.json", doc, cache="hot")
             stats["written"] += 1
             stats["goal_keys_added"] += len(new_keys)
-            stats["clips_added"] += added
-            stats["highlights_added"] += hl_added
+            stats["clips_added"] += sum(max(0, len(goals.get(k) or []) - len(cur_goals.get(k) or [])) for k in goals)
+            stats["highlights_added"] += max(0, len(hl) - len(cur.get("highlights") or []))
+            stats["summaries_moved"] = stats.get("summaries_moved", 0) + len(sid)
         if (md.get("kickoff_utc") or "") >= keep_after and (hl_new or goals_new):
             e = extra.setdefault(str(mid), {"kickoff_utc": md.get("kickoff_utc"), "highlights": [], "goals": {}})
             e["highlights"] = M.merge_cards(e.get("highlights"), hl_new)

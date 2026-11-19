@@ -203,6 +203,8 @@ NEG_GOAL = phrases([
     "misses", "ضائع", "يهدر", "أهدر", "إهدار", "falla", "disallowed", "ruled out", "ملغي", "إلغاء", "الغاء", "anulado",
     "annullato", "offside", "تسلل", "var", "skills", "skill", "nutmeg", "dribble", "مهارة", "مهارات", "woodwork", "post", "crossbar",
     "القائم", "العارضة", "celebration", "celebrations", "احتفال", "reaction", "red card", "طرد", "tackle", "block", "clearance",
+    "celebrando", "celebra", "festejo", "festejos", "festeja", "festeggia", "festeggiamenti", "célébration", "comemora",
+    "comemoração", "jubel", "يحتفل", "احتفالية",
     "goal line", "chance", "chances", "فرصة", "almost", "nearly", "so close", "close call", "denied", "no goal", "not a goal", "كاد",
     "كادت", "قريب", "casi", "quasi", "presque", "beinahe", "atajadón", "حارس", "keeper", "goalkeeper"])
 # the word itself (the rule that picks the match's only goal so far needs it; a «strike» or a «penalty» may be anything)
@@ -960,6 +962,11 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
         pids = {h[2]["player"]["id"] for h in hits}
         if len(pids) > 1:
             note(v, mid, "goal", "two scorers named"); continue
+        # «A GOAL FEST at the Bernabéu! MBAPPÉ, ARDA GÜLER and DIOMANDE shine | Real Madrid 4-1 Leipzig» passed for the goal
+        # that made it 4-1 alone (2026-11-19): a title naming two more of the match's scorers is the match's goals
+        scorers = {g["player"]["id"] for g in ctx.goals[mid]}
+        if len({p for p, st in players.items() if st >= 2 and p in scorers and p not in pids}) >= 2:
+            note(v, mid, "goal", "names the match's other scorers: its goals, not this one"); continue
         if len(hits) > 1:
             # one player's goals that were all scored before the clip came out (a later one fails the timing check), and neither
             # score nor minute in the title chose one: a brace/hat-trick clip shows them all, any other clip is left out
@@ -1043,6 +1050,7 @@ def slim(md):
         d[side] = {"id": t.get("id"), "name": t.get("name"), "name_ar": t.get("name_ar")}
     d["events"] = [{k: e.get(k) for k in ("type", "minute", "added", "team", "player", "score", "clip")}
                    for e in md.get("events") or [] if e.get("type") in ("goal", "penalty_goal", "own_goal")]
+    d["_clips"] = clip_uses(md.get("events"))        # over every event, cards too: FotMob's summary on all of them (fotmob_links)
     return d
 
 
@@ -1108,24 +1116,62 @@ def merge_cards(a, b, drop=()):
     return out
 
 
+def clip_uses(events):
+    """{YouTube id: how many of the match's events carry it as their clip}."""
+    out = {}
+    for e in events or []:
+        vid = yt_id(e.get("clip")) if e.get("clip") else None
+        if vid:
+            out[vid] = out.get(vid, 0) + 1
+    return out
+
+
 def fotmob_links(found, matches, vids, blocked):
-    """FotMob's own links in the match files, the match's highlights and a clip per goal event, into `found`."""
+    """FotMob's own links in the match files, the match's highlights and a clip per goal event, into `found`. For many
+    leagues FotMob copies the match's summary onto every event, goals, cards and VAR alike (2026-11-19: Al Jazira - Al Wasl,
+    Kuwait SC - Nasaf): a link on more than one event, or the match's own highlights link, is the summary, so it goes with
+    the highlights and never under a goal, whose row would open the whole match."""
     for md in matches:
         hl = md.get("highlights")
-        for h in (hl if isinstance(hl, list) else [hl] if hl else []):
-            vid = yt_id(h.get("url"))
-            if not vid or vid in blocked:
-                continue
+        hls = hl if isinstance(hl, list) else [hl] if hl else []
+        hl_ids = {yt_id(h.get("url")) for h in hls}
+        uses = md.get("_clips") or clip_uses(md.get("events"))
+
+        def add_hl(vid, image=None):
             v = vids.get(vid) or {"id": vid, "source": "youtube", "url": "https://www.youtube.com/watch?v=" + vid, "title": None,
-                                   "at": None, "ch": None, "image": h.get("image") or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"}
+                                   "at": None, "ch": None, "image": image or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"}
             found.setdefault(md["id"], {"highlights": [], "goals": {}})["highlights"].append((dict(v, fotmob=True), 100))
+
+        for h in hls:
+            vid = yt_id(h.get("url"))
+            if vid and vid not in blocked:
+                add_hl(vid, h.get("image"))
+        shared = set()
         for e in md.get("events") or []:
             vid = yt_id(e.get("clip")) if e.get("clip") else None
-            if vid and e.get("player") and e["player"].get("id") and vid not in blocked:
-                v = vids.get(vid) or {"id": vid, "source": "youtube", "url": "https://www.youtube.com/watch?v=" + vid, "title": None,
-                                       "at": None, "ch": None, "image": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"}
-                found.setdefault(md["id"], {"highlights": [], "goals": {}})["goals"].setdefault(goal_key(e), []).append((dict(v, fotmob=True), 100))
+            if not vid or not (e.get("player") and e["player"].get("id")) or vid in blocked:
+                continue
+            if uses.get(vid, 0) > 1 or vid in hl_ids:
+                if vid not in hl_ids and vid not in shared:
+                    add_hl(vid)
+                shared.add(vid)
+                continue
+            v = vids.get(vid) or {"id": vid, "source": "youtube", "url": "https://www.youtube.com/watch?v=" + vid, "title": None,
+                                   "at": None, "ch": None, "image": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"}
+            found.setdefault(md["id"], {"highlights": [], "goals": {}})["goals"].setdefault(goal_key(e), []).append((dict(v, fotmob=True), 100))
     return found
+
+
+def own_clip_keys(doc):
+    """The goal keys of a media file that have a clip of their own: a video filed under that goal alone and not the match's
+    highlights (a summary filed under every goal is not that goal's clip)."""
+    gm = (doc or {}).get("goals") or {}
+    uses = {}
+    for k, l in gm.items():
+        for c in l:
+            uses.setdefault(c.get("url"), set()).add(k)
+    hl = {c.get("url") for c in (doc or {}).get("highlights") or []}
+    return {k for k, l in gm.items() if any(len(uses[c.get("url")]) == 1 and c.get("url") not in hl for c in l)}
 
 
 def load_names(store, cfg_national, cache_dir=None):
