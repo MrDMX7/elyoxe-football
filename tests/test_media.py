@@ -441,3 +441,20 @@ def test_a_rebound_off_the_post_that_the_title_says_went_in():
     assert run_ae("ADSportsTV", "تسديدة الحسين رحيمي ترتطم بالقائم #العين_الظفرة", "2026-11-19T16:43:30Z") == {}
     assert run_ae("ADSportsTV", "فرصة الهدف الثالث تضيع من الحسين رحيمي #العين_الظفرة", "2026-11-19T16:46:04Z") == {}
     assert run_ae("ADSportsTV", "القائم يحرم الحسين رحيمي من الهدف الثالث #العين_الظفرة", "2026-11-19T16:46:04Z") == {}
+
+
+def test_a_video_uploaded_before_the_goal_is_not_that_goal():
+    # Al Ain's «د43: ماركو ماياااا …» post carried a goal animation uploaded to X on 22 August and posted again for every goal
+    # (owner 2026-11-19: «يرسل صورة متحركة مصورة مسبقاً»): the video's own id dates it
+    acc = [{"handle": "alainfcae", "name": "العين", "lang": "ar", "tier": "official", "team": 102117}]
+    def post(img):
+        return {"items": [{"id": "2123448758813798726", "handle": "alainfcae", "video": True, "at": "2026-11-19T16:10:10.000Z",
+                           "url": "https://x.com/alainfcae/status/2123448758813798726", "image": img,
+                           "text": "د43: ماركو ماياااا يفتتح أهداف الزعيم ⚽️\n\n#العين_الظفرة 1⃣ - 0⃣ | #دوري_أدنوك_للمحترفين"}]}
+    old = M.x_videos(post("https://pbs.twimg.com/amplify_video_thumb/2091176454193127424/img/NNNgbP5lZaxfNo98.jpg"), acc)
+    assert old[0]["made"] == "2026-08-22T14:51:33Z"
+    assert M.attach(old, [AIN_DHA], N_AE, CH_AE, []) == {}
+    # uploaded after the goal: fine; a custom thumbnail tells nothing, so nothing is held against it
+    new = M.x_videos(post("https://pbs.twimg.com/amplify_video_thumb/2123448700000000000/img/x.jpg"), acc)
+    assert sorted(M.attach(new, [AIN_DHA], N_AE, CH_AE, [])[1000022241]["goals"]) == ["43-1572471"]
+    assert M.x_videos(post("https://pbs.twimg.com/media/HXgB47CWkAA6cs1.jpg"), acc)[0].get("made") is None
