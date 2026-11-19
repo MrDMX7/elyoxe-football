@@ -1,0 +1,37 @@
+import json
+from graph.db import Graph
+from graph.ids import Registry
+from graph.src import Sources
+from graph.load import martj42, transfers
+
+
+def test_martj42_links_and_adds(tmp_path):
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    (db / "martj42_results.csv").write_text("date,home_team,away_team,home_score,away_score,tournament,city,country,neutral\n"
+                                            "1972-03-17,United Arab Emirates,Qatar,1,0,Friendly,Dubai,United Arab Emirates,FALSE\n"
+                                            "2019-01-05,United Arab Emirates,Bahrain,1,1,AFC Asian Cup,Abu Dhabi,United Arab Emirates,FALSE\n", encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    uae, bah = reg.mint("team", "fotmob", 5789), reg.mint("team", "fotmob", 5794)
+    G.put("team", {"tid": uae, "name": "United Arab Emirates", "kind": "national"}, "fotmob")
+    G.put("team", {"tid": bah, "name": "Bahrain", "kind": "national"}, "fotmob")
+    G.put("match", {"mid": reg.mint("match", "fotmob", 1), "date": "2019-01-05T16:00:00Z", "home": uae, "away": bah, "hs": 1, "as_": 1}, "fotmob")
+    out = martj42.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert out == {"rows": 2, "linked": 1, "new": 1, "teams_linked": 2}
+    assert G.c.execute("select count(*) from match where src='martj42'").fetchone()[0] == 1
+
+
+def test_transfers(tmp_path):
+    h = tmp_path / "history" / ".cache"
+    h.mkdir(parents=True)
+    (h / "transfers.json").write_text(json.dumps({"players": {"5": [["2019-07-01", "19/20", "Al Ain", 10, "Al Hilal", None, 5000000, 9000000]]}}))
+    m = tmp_path / "mirror" / "transfers"
+    m.mkdir(parents=True)
+    (m / "all.json").write_text(json.dumps({"moves": [["2026-11-16", 77, "Omar A", 10, "العين", 2, "Free agent", None, "free", 0, None, "FW"]]}), encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    pid = reg.mint("player", "fotmob", 77)
+    reg.alias("player", "tm", "5", pid)
+    reg.mint("team", "fotmob", 10)
+    out = transfers.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "mirror"), s3=False))
+    assert out == {"tm": 1, "fotmob": 1}
+    assert G.c.execute("select fee, season from transfer where src='tm'").fetchone() == (5000000, "2019/2020")
