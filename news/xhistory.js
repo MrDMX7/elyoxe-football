@@ -4,7 +4,7 @@
 // page for each official account, `from:<handle> filter:native_video since:<day>`, newest first, and keeps the posts its
 // SearchTimeline responses carry (the same parse as the reader: the account's own posts, no replies, no reposts).
 //
-//   node news/xhistory.js [--since 2026-10-18] [--handles a,b] [--scrolls 30] [--upload] [--dry]
+//   node news/xhistory.js [--since 2026-10-18] [--handles a,b] [--scrolls 40] [--stop-at <ISO time>] [--upload] [--dry]
 //
 // Read-only like the reader: it never clicks, follows, likes or posts. Its own browser profile (x-history) with the reader's
 // session (x-reader/x-cookies.json), so it can run while the reader's task does. X's rate-limit page stops it at once and
@@ -24,13 +24,31 @@ const a = process.argv.slice(2), arg = (k) => { const i = a.indexOf(k); return i
 const log = (...x) => console.log('[xh]', ...x);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+// The UAE first, then the Gulf, the other Arab countries, the Arabic-language accounts and the rest, each group in sources.yaml's
+// order (owner 2026-11-20: the 23:00 run of 11-19 reached six European clubs before X's limit, and no UAE account).
+const GULF = ['sa', 'qa', 'kw', 'bh', 'om'], ARAB = ['eg', 'iq', 'jo', 'ps', 'lb', 'sy', 'ma', 'dz', 'tn', 'ly', 'sd', 'ye'];
+const rank = (x) => x.country === 'ae' ? 0 : GULF.includes(x.country) ? 1 : ARAB.includes(x.country) ? 2 : x.lang === 'ar' ? 3 : 4;
+function order(accs) { return accs.map((x, i) => [x, i]).sort((p, q) => rank(p[0]) - rank(q[0]) || p[1] - q[1]).map(p => p[0]); }
+// X's search answers about 50 pages a quarter-hour (that run was cut off near its 50th page, 6 minutes in): no more than BUDGET
+// in any WINDOW. wait() is how long the next page waits, given when the earlier ones went out.
+const BUDGET = 40, WINDOW = 15 * 60e3;
+function wait(stamps, now, budget = BUDGET, win = WINDOW) {
+  const recent = stamps.filter(t => now - t < win).sort((p, q) => p - q);
+  return recent.length < budget ? 0 : recent[recent.length - budget] + win - now + 1000;
+}
+const stamps = [];
+async function paced() {
+  for (let w = wait(stamps, Date.now()); w > 0; w = wait(stamps, Date.now())) { log('pacing:', Math.round(w / 1000), 's'); await sleep(w); }
+  stamps.push(Date.now());
+}
+
 async function main() {
   if (!chromium) { console.error('playwright-core not found'); process.exit(2); }
   try { const c = JSON.parse(fs.readFileSync(COOL, 'utf8')); if (c.until > Date.now()) { log('X is resting the session until', new Date(c.until).toISOString()); return; } } catch (e) {}
   const since = arg('--since') || new Date(Date.now() - 32 * 864e5).toISOString().slice(0, 10);
-  const scrolls = +(arg('--scrolls') || 30);
+  const scrolls = +(arg('--scrolls') || 40), stopAt = arg('--stop-at') ? Date.parse(arg('--stop-at')) : null;
   const cfg = config();
-  let accs = cfg.accounts.filter(x => x.tier === 'official');
+  let accs = order(cfg.accounts.filter(x => x.tier === 'official'));
   if (arg('--handles')) { const hs = arg('--handles').toLowerCase().split(','); accs = accs.filter(x => hs.includes(x.handle.toLowerCase())); }
   const box = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : { items: [], done: {} };
   const seen = new Set(box.items.map(x => x.id));
@@ -46,6 +64,7 @@ async function main() {
   let limited = false;
   try {
     for (const acc of accs) {
+      if (stopAt && Date.now() > stopAt) { log('stop time reached before @' + acc.handle); break; }
       const d = box.done[acc.handle.toLowerCase()];
       if (d && d.since <= since && Date.now() - Date.parse(d.at) < 12 * 36e5 && !a.includes('--again')) { log('@' + acc.handle, 'read', d.at.slice(0, 16), '- skip'); continue; }
       let got = [], pages = 0, status429 = false;
@@ -57,11 +76,13 @@ async function main() {
       page.on('response', onResp);
       const q = encodeURIComponent(`from:${acc.handle} filter:native_video since:${since}`);
       try {
+        await paced();
         await page.goto(`https://x.com/search?q=${q}&src=typed_query&f=live`, { waitUntil: 'domcontentloaded', timeout: 60000 });
         for (let i = 0; i < 20 && !pages; i++) await sleep(500);
         if (/\/login|\/i\/flow/.test(page.url())) { log('NOT SIGNED IN'); limited = true; break; }
         let still = 0, last = -1;
         for (let s = 0; s < scrolls && still < 3 && !status429; s++) {
+          await paced();
           await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
           await sleep(2200 + Math.random() * 1800);
           if (got.length === last) still++; else { still = 0; last = got.length; }
@@ -91,5 +112,7 @@ async function main() {
   }
   log('done:', box.items.length, 'posts with a video kept', limited ? '(stopped early)' : '');
 }
+
+module.exports = { order, wait };
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
