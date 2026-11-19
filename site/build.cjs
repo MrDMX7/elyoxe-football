@@ -407,7 +407,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     // audit, and every flip between passed and failed, re-uploaded all 30k pages
     const badge = `<p class="audit" id="auditb" hidden></p>`;
     U.cfg.footer = badge + `<p><span class="updated" id="updated"></span> تيفو بدون مراهنات. البيانات من FotMob ورابطة المحترفين الإماراتية.</p>` +
-      `<nav class="fnav" aria-label="روابط تيفو">${[["/", "اليوم"], ["/today/", "مباريات اليوم"], ["/tomorrow/", "مباريات بكرة"], ["/all/", "كل مباريات العالم"], ["/yesterday/", "نتائج أمس"], ["/matches/", "جدول المباريات"], ["/week/", "مباريات الأسبوع"], ["/countdowns/", "كم باقي؟"], ["/watch/", "وين تنقل"], ["/commentators/", "منو يعلّق"], ["/news/", "الأخبار"], ["/competitions/", "كل البطولات"], ["/c/uae-pro-league/", "دوري أدنوك"], ["/national/", "المنتخبات"], ["/arabs/", "العرب"], ["/db/", "موسوعة الأندية واللاعبين"], ["/developers/", "بيانات تيفو للمطورين"], ["/legends/", "الأساطير"], ["/memorable/", "مباريات ما تنتسى"], ["/thisday/", "هذا اليوم"], ["/tv/", "شاشة المجلس"], ["/tv/?mine=1", "وضع المتابعة"], ["/studio/", "ستوديو التيفو"], ["/lab/", "المختبر"], ["/stadiums/", "الملاعب"], ["/laws/", "قانون الكورة"], ["/glossary/", "القاموس"], ["/cast/", "تيفو كاست"], ["/newsletter/", "النشرة"], ["/more/", "كل الصفحات"]].map(l => `<a href="${l[0]}">${l[1]}</a>`).join("")}</nav>` +
+      `<nav class="fnav" aria-label="روابط تيفو">${[["/", "اليوم"], ["/today/", "مباريات اليوم"], ["/tomorrow/", "مباريات بكرة"], ["/all/", "كل مباريات العالم"], ["/yesterday/", "نتائج أمس"], ["/matches/", "جدول المباريات"], ["/week/", "مباريات الأسبوع"], ["/countdowns/", "كم باقي؟"], ["/watch/", "وين تنقل"], ["/commentators/", "منو يعلّق"], ["/news/", "الأخبار"], ["/competitions/", "كل البطولات"], ["/c/uae-pro-league/", "دوري أدنوك"], ["/national/", "المنتخبات"], ["/arabs/", "العرب"], ["/db/", "موسوعة الأندية واللاعبين"], ["/developers/", "بيانات تيفو للمطورين"], ["/legends/", "الأساطير"], ["/awards/", "الجوائز"], ["/memorable/", "مباريات ما تنتسى"], ["/thisday/", "هذا اليوم"], ["/tv/", "شاشة المجلس"], ["/tv/?mine=1", "وضع المتابعة"], ["/studio/", "ستوديو التيفو"], ["/lab/", "المختبر"], ["/stadiums/", "الملاعب"], ["/laws/", "قانون الكورة"], ["/glossary/", "القاموس"], ["/cast/", "تيفو كاست"], ["/newsletter/", "النشرة"], ["/more/", "كل الصفحات"]].map(l => `<a href="${l[0]}">${l[1]}</a>`).join("")}</nav>` +
       `<p>من استوديو <a href="https://elyoxe.com/">Elyoxe</a></p>`; }
   // the shared browser config: competitions, the first-visit picks (Arab national teams + the leading clubs of each Arab league),
   // the countries with their time zones, the audit
@@ -445,6 +445,9 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // transfer history (history/transfermarkt.py, Transfermarkt datasets CC0): a player's moves with fees, a club's record deals
   const TRH = (await get("history/transfers.json")) || { players:{}, clubs:{} };
   // every club's moves this season (db/transfers_world.py; spec 2026-10-09 transfers, phase 1): /transfers/, /transfers/<league>/, the club's window
+  // «الجوائز» (Tifo graph phase 2): v1/awards/* from graph/publish.py
+  const AWD = require("./lib/awards.cjs"), AWI = (await get("awards/index.json")) || { awards:[] }, AWP = (await get("awards/players.json")) || {},
+    AWK = Object.fromEntries((AWI.awards || []).map(a => [a.key, a]));
   const TRT = require("./lib/transfers.cjs"), TRW = await get("transfers/all.json"), TRS = TRW ? TRT.season(TRW.moves, TRW.since) : [];
   const TRL = TRW ? `موسم ${TRW.since.slice(0, 4)}/${+TRW.since.slice(2, 4) + 1}` : "";
   const TRR = ((await get("transfers/rumours.json")) || {}).rumours || [];   // phase 3: the rumour ledger
@@ -702,7 +705,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   const writeHome = () => {
     const edHtml = ED.join(""), bdays = (edHtml.match(/<div id="bdays"[^>]*><\/div>/) || [""])[0];
     const ed = blocks(edHtml).secs.filter(sc => sc.title);
-    const edLinks = [["/week/", "مباريات الأسبوع", "أهم مباريات الأيام السبعة الياية", "star", "#FF9500"], ["/legends/", "الأساطير", "مسيرة وأرقام أبرز لاعبين في تاريخ الكورة الإماراتية", "crown", "#FFCC00"], ["/memorable/", "مباريات ما تنتسى", "المباريات اللي صنعت تاريخ الكورة الإماراتية", "star", "#FF3B30"], ["/cast/", "تيفو كاست", "الجولة بصوت إماراتي، كل أسبوع", "mic", "#AF52DE"], ["/laws/", "قانون الكورة", "ليش ألغى الحكم الهدف؟ بالإماراتي", "whistle", "#1C7C54"], ["/tv/", "شاشة المجلس", "كل المباريات على تلفزيون المجلس", "tv", "#0A84FF"], ["/studio/", "ستوديو التيفو", "صمّم لافتة فريقك للمدرج", "brush", "#FF2D55"]];
+    const edLinks = [["/week/", "مباريات الأسبوع", "أهم مباريات الأيام السبعة الياية", "star", "#FF9500"], ["/awards/", "الجوائز", "الكرة الذهبية والحذاء الذهبي وكل جوائز الكورة عبر التاريخ", "crown", "#FFCC00"], ["/legends/", "الأساطير", "مسيرة وأرقام أبرز لاعبين في تاريخ الكورة الإماراتية", "crown", "#FFCC00"], ["/memorable/", "مباريات ما تنتسى", "المباريات اللي صنعت تاريخ الكورة الإماراتية", "star", "#FF3B30"], ["/cast/", "تيفو كاست", "الجولة بصوت إماراتي، كل أسبوع", "mic", "#AF52DE"], ["/laws/", "قانون الكورة", "ليش ألغى الحكم الهدف؟ بالإماراتي", "whistle", "#1C7C54"], ["/tv/", "شاشة المجلس", "كل المباريات على تلفزيون المجلس", "tv", "#0A84FF"], ["/studio/", "ستوديو التيفو", "صمّم لافتة فريقك للمدرج", "brush", "#FF2D55"]];
     const fromTifo = (ed.length ? shelf(ed, { title:"من تيفو" }) : "") + (bdays ? `<section class="grp" id="bdaysg" hidden><div class="gh"><h2>اليوم في التقويم</h2></div><div class="card lc">${bdays}</div></section>` : "") +
       U.grp(ed.length ? "" : "من تيفو", U.rows(edLinks.map(l => ({ href:l[0], icon:l[3], c:l[4], t:l[1], sub:l[2] }))), { cls:"mt2" });
     const hv = homeV5(today, day.matches, { fromTifo, h1x:"نتائج مباريات اليوم مباشر" }), AH = require("./lib/articles.cjs");
@@ -711,6 +714,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   };
   // ---- 5. teams
   const tlist = [...teamIds], teamPages = new Set(), playerPages = new Set();
+  const AWC = Object.fromEntries((comps || []).map(c => [c.id, c]));
+  const AWB = id => AWD.playerBlock(AWP[id], { award:k => AWK[k], comp:c => (AWC[c] ? { name_ar:AWC[c].name_ar, href:`/c/${AWC[c].key}/` } : null) });
   const full = new Set((index.focus_teams || []).concat(Object.values(NAT).map(Number)));   /* QA 11/12: every Arab national team has a team file (squad + all fixtures, friendlies too) */ compData.filter(d => d.c.scope === "uae").forEach(d => (d.st && d.st.groups || []).forEach(g => g.rows.forEach(r => full.add(r.team.id))));
   const teams = await pool(tlist, 8, id => full.has(id) ? get(`team/${id}.json`) : null);
   // a club with no team file, or one with no squad in it (860 of 895 team pages, 2026-10-09: Al Nassr's «اللاعبين» was empty): its squad
@@ -876,7 +881,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     const v5 = P5.player(id, { name:nameOf(id), latin:p.name, team:tm ? { id:tm, name_ar:tt.name_ar } : null, pos:p.position, num:p.number, cc:p.country, season:p.season,
       card:ap.fm ? null : { goals:z(p.goals, sv("goals")), assists:z(p.assists, sv("goal_assist")), minutes:z(p.minutes, ap.minutes), rating:p.rating }, prof:FMP[id] || car ? Object.assign({ bio:fb }, PSEO.asProfile(car) || {}) : null, ea:EAC[id] || null,
       seasonRow:sr, photo:ph ? `/v1/ph/${id}.webp` : null, credit:ph ? `الصورة: <a href="${esc(ph.page || "")}" rel="noopener">${esc(((ph.artist || "").replace(/\s+/g, " ").trim().slice(0, 40)) + (ph.license ? " · " + ph.license : ""))}</a>` : "", wiki:WP[id] ? wiki5(WP[id]) : "", transfers:(TRH.players || {})[id] || null, fees:TRF[id] || null, rumours:(r => r.length ? TRT.rumourList(r.slice(0, 8), { pname:nameOf, cname:k => (teamsJson.teams[k] || {}).name_ar || TAR[k] }) : "")(TRT.rumoursOf(TRR, { pid:id })),
-      x:{ mount:true, crumbs:pcrumbs, intro:pintro, aka:akaOf(id), follow:!!tm, profile:(String(id) === "30981" ? U.grp("", U.row({ href:"/messi/", icon:"target", c:"#0A84FF", t:"متحف ميسي", sub:"كل أهدافه على ملعب ثلاثي الأبعاد" }), { cls:"mt2" }) : "") + nxRow + shelf(pext, { title:"بالتفصيل" }) + mmRow,
+      x:{ mount:true, crumbs:pcrumbs, intro:pintro, aka:akaOf(id), follow:!!tm, profile:AWB(id) + (String(id) === "30981" ? U.grp("", U.row({ href:"/messi/", icon:"target", c:"#0A84FF", t:"متحف ميسي", sub:"كل أهدافه على ملعب ثلاثي الأبعاد" }), { cls:"mt2" }) : "") + nxRow + shelf(pext, { title:"بالتفصيل" }) + mmRow,
         share:P5.shareSheet({ html:toolRows(ptools) + `<button type="button" class="row" id="secpick"><span class="rt">صورة لأي قسم</span>${U.chev}</button>`, after:'<div id="secpicks" class="card mt" hidden></div>' }) } });
     v5.data = { id:+id, prof:FMP[id] || car ? 1 : 0, tm:TMI[id] ? 1 : 0 };
     if (tm) v5.sheets = (v5.sheets || "") + NFY.playerSheet({ id, name:nm });   // «تابع اللاعب» (player follow, phase 1)
@@ -1219,6 +1224,21 @@ ${items}
   const legRaw = (rj(path.join(RS, "legends.json")) || {}).players || [];
   const memRaw = (rj(path.join(RS, "memorable.json")) || {}).matches || [], tdRaw = (rj(path.join(RS, "thisday.json")) || {}).events || [], lawRaw = (rj(path.join(RS, "laws.json")) || {}).topics || [];
   const refPage = (p, title, desc, h1, lead, body) => { if (!body) return; write(p.slice(1) + "index.html", page({ path:p, page:"ref", title, desc, body:`<h1>${h1}</h1><p class="muted">${lead}</p>` + body })); urls.push(p); };
+  if ((AWI.awards || []).length) {
+    const hasPage = id => playerPages.has(String(id)), awNav = (title, back, label) => ({ back, backLabel:label, title, trail:"" });
+    write("awards/index.html", page({ v5:{ nav:awNav("الجوائز", "/more/", "المزيد"), body:'<div class="lt"><h1>جوائز كرة القدم</h1><p>الكرة الذهبية والحذاء الذهبي وجوائز كأس العالم والقارات والدوريات: كل سنة وفائزها، من أول مرة انعطت فيها.</p></div>' + AWD.indexBody(AWI, {}) + U.foot(), tab:"more", sheets:"", data:{} },
+      path:"/awards/", page:"ref", title:"جوائز كرة القدم: الكرة الذهبية والحذاء الذهبي وكل الجوائز عبر التاريخ | تيفو", desc:`${AWI.awards.length} جائزة في كرة القدم، كل سنة وفائزها: الكرة الذهبية من 1956، الحذاء الذهبي، جوائز كأس العالم، أفضل لاعب في آسيا وأفريقيا، وهدافين الدوريات.`,
+      ld:bcLd([["الجوائز", "/awards/"]]) }));
+    urls.push("/awards/");
+    await pool(AWI.awards, 8, async a => {
+      const d = await get(`awards/${a.key}.json`, 1); if (!d || !(d.years || []).length) return;
+      const nmA = a.name_ar || a.name, last = d.years[0], w = (last.podium || []).find(p => p.rank === 1);
+      write(`awards/${a.key}/index.html`, page({ v5:{ nav:awNav(esc(nmA), "/awards/", "الجوائز"), body:`<div class="lt"><h1>${AWD.awardName(a)}</h1><p>كل الفائزين من <span class="num">${esc(a.first)}</span> لين <span class="num">${esc(a.last)}</span>${w ? `، وآخرهم ${esc(w.name_ar || w.name)}` : ""}.</p></div>` + AWD.awardBody(d, { hasPage }) + U.foot(), tab:"more", sheets:"", data:{} },
+        path:`/awards/${a.key}/`, page:"ref", noindex:!AWD.indexable(a), title:`${nmA}: كل الفائزين من ${a.first} لين ${a.last} | تيفو`,
+        desc:`كل الفائزين بـ${nmA} عبر التاريخ (${a.years} نسخة)${w ? `، آخرهم ${w.name_ar || w.name} في ${last.season}` : ""}.`, ld:bcLd([["الجوائز", "/awards/"], [nmA, `/awards/${a.key}/`]]) }));
+      if (AWD.indexable(a)) urls.push(`/awards/${a.key}/`);
+    });
+  }
   refPage("/legends/", "أساطير الكورة الإماراتية | تيفو", "الطلياني وإسماعيل مطر وعمر عبدالرحمن وعلي مبخوت وغيرهم: مسيرتهم وأرقامهم، مع المصادر.", "أساطير الكورة الإماراتية", "مسيرة وأرقام أبرز لاعبين في تاريخ الكورة الإماراتية، وكل معلومة معها مصدرها.", S.legends(legRaw, hl, id => playerPages.has(String(id))) + '<p class="tools"><a class="btn" href="/memorable/">مباريات ما تنتسى</a></p>');   // W2.8: memorable matches sit under الأساطير
   refPage("/memorable/", "مباريات ما تنتسى في تاريخ الكورة الإماراتية | تيفو", "من تصفيات 1990 لين نهائي آسيا 2024: المباريات اللي صنعت تاريخ الكورة الإماراتية.", "مباريات ما تنتسى", "مباريات صنعت تاريخ الكورة الإماراتية، من الأحدث للأقدم.", S.memorable(memRaw, hm));
   refPage("/laws/", "قانون الكورة بالإماراتي: التسلل، اللمسة، البلنتي، الفار | تيفو", "ليش ألغى الحكم الهدف؟ شرح قوانين الكورة الرسمية (IFAB 2026/27) بالإماراتي: التسلل، لمسة اليد، البلنتي، الفار، والوقت بدل الضايع.", "قانون الكورة بالإماراتي", "شرح بسيط لقوانين الكورة من النص الرسمي لـIFAB (نسخة 2026/27)، وتحت كل شرح الجملة الرسمية نفسها.", S.laws(lawRaw, hw));
