@@ -33,11 +33,12 @@ function awardBody(d, o) {
   o = o || {};
   const rows = (d.years || []).map(y => {
     const pod = y.podium || [], first = pod.filter(p => p.rank === 1), rest = pod.filter(p => p.rank > 1);
-    return `<tr><td class="dim num">${esc(y.season)}</td><td class="tm">${first.map(p => who(p, o)).join("، ") || "—"}` +
-      (rest.length ? `<div class="muted small">${rest.map(p => `${RANK[p.rank] || num(p.rank)}: ${who(p, o)}`).join(" · ")}</div>` : "") +
+    // not .tm: that column style stacks every link and span (the podium broke into one word a line)
+    return `<tr><td class="dim num">${esc(y.season)}</td><td><b>${first.map(p => who(p, o)).join("، ") || "—"}</b>` +
+      (rest.length ? `<br><span class="muted small">${rest.map(p => `${RANK[p.rank] || num(p.rank)}: ${who(p, o)}`).join(" · ")}</span>` : "") +
       `</td><td>${first.map(p => p.team ? nm(p.team, p.team) : "").filter(Boolean).join("، ")}</td><td class="num">${esc(first.map(p => p.value || "").filter(Boolean).join("، "))}</td></tr>`;
   }).join("");
-  const table = `<div class="tblw"><table class="tbl"><thead><tr><th>السنة</th><th class="tm">الفائز</th><th>الفريق</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const table = `<div class="tblw"><table class="tbl"><thead><tr><th>السنة</th><th>الفائز</th><th>الفريق</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   const most = (d.most || []).filter(m => m[1] > 1);
   return U.grp(`كل الفائزين <span class="num">${(d.years || []).length}</span>`, table, { raw: 0 }) +
     (most.length ? U.grp("الأكثر فوزاً", U.rows(most.map(m => ({ href: m[2] && o.hasPage && o.hasPage(m[2]) ? `/p/${m[2]}/` : null, icon: "crown", c: "#FFCC00",
