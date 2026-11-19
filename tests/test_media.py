@@ -392,3 +392,52 @@ def test_goal_time_uses_the_real_half_starts():
     t = M.goal_time(KSA_IRQ, 69, None)
     assert t == datetime(2026, 9, 29, 19, 0, 26, tzinfo=timezone.utc)      # 18:37:26 + 23 min
     assert M.goal_time(KSA_IRQ, 45, 3) == datetime(2026, 9, 29, 18, 19, 32, tzinfo=timezone.utc)
+
+
+# Al Ain 2-1 Al Dhafra, UAE Pro League, 2026-11-19: the club's and Abu Dhabi Sports' own X clips of the two Al Ain goals were
+# all missed (only the 66' went up on TikTok). Real titles and times.
+AIN_DHA = {"id": 1000022241, "comp": 538, "kickoff_utc": "2026-11-19T15:25:00Z", "status": "finished", "score": {"home": 2, "away": 1},
+           "home": {"id": 102117, "name": "Al-Ain", "name_ar": "العين"}, "away": {"id": 102118, "name": "Al-Dhafra", "name_ar": "الظفرة"},
+           "periods": {"firstHalfStarted": "2026-11-19T15:26:01Z", "firstHalfEnded": "2026-11-19T16:14:10Z",
+                       "secondHalfStarted": "2026-11-19T16:30:46Z", "gameEnded": "2026-11-19T17:20:56Z"},
+           "events": [goal(43, "home", 1572471, "Marcos André", (1, 0)), goal(54, "home", 1295519, "Houssine Rahimi", (2, 0)),
+                      goal(66, "away", 794049, "Abdulla Al Karbi", (2, 1))]}
+import yaml
+N_AE = M.Names({"102117": {"name": "Al-Ain", "name_ar": "العين"}, "102118": {"name": "Al-Dhafra", "name_ar": "الظفرة"}},
+               {"1572471": {"ar": "ماركوس أندريه"}, "1295519": {"ar": "حسين رحيمي"}, "794049": {"ar": "عبدالله الكربي"}}, {}, {},
+               yaml.safe_load(open(os.path.join(HERE, "..", "news", "aliases.yaml"), encoding="utf-8")), NATIONS)
+CH_AE = {c["key"]: c for c in M.x_channels([
+    {"handle": "ADSportsTV", "name": "أبوظبي الرياضية", "lang": "ar", "tier": "official", "kind": "broadcaster", "comps": [538, 11027, 9943, 11026, 329]},
+    {"handle": "alainfcae", "name": "العين", "lang": "ar", "tier": "official", "team": 102117}])}
+
+
+def run_ae(handle, title, at):
+    v = {"id": "x" + str(abs(hash(title)) % 10 ** 8), "title": title, "desc": "", "at": at, "ch": "x_" + handle.lower(), "source": "x",
+         "url": "https://x.com/" + handle + "/status/1"}
+    out = M.attach([v], [AIN_DHA], N_AE, CH_AE, [])
+    return {mid: sorted(r["goals"]) for mid, r in out.items() if r["goals"]}
+
+
+def test_the_clubs_drawn_out_name_and_its_nickname_for_a_player():
+    # «ماركو ماياااا»: letters drawn out for the cheer, and the name the club and the broadcaster use for FotMob's «Marcos André»
+    assert run_ae("alainfcae", "د43: ماركو ماياااا يفتتح أهداف الزعيم ⚽️\n\n#العين_الظفرة 1⃣ - 0⃣ | #دوري_أدنوك_للمحترفين",
+                  "2026-11-19T16:10:10Z") == {1000022241: ["43-1572471"]}
+    assert run_ae("ADSportsTV", "ماركوس مايا يفتتح التسجيل ويضع العين في المقدمة ⚽️\n\n#العين_الظفرة \n#دوري_أدنوك_للمحترفين | #أبوظبي_الرياضية 1⃣",
+                  "2026-11-19T16:12:36Z") == {1000022241: ["43-1572471"]}
+
+
+def test_the_second_of_the_teams_goals_is_one_goal():
+    # «ثاني أهداف الزعيم» is the club's second goal, not its goals
+    assert run_ae("alainfcae", "د54: حسييييين رحيمي يسجل ثااااااااني أهداف الزعيم 🔥\n\n#العين_الظفرة 2⃣ - 0⃣ | #دوري_أدنوك_للمحترفين",
+                  "2026-11-19T16:40:27Z") == {1000022241: ["54-1295519"]}
+    # the number is checked: his goal made it 2-0, not 3-0
+    assert run_ae("alainfcae", "حسين رحيمي يسجل ثالث أهداف الزعيم", "2026-11-19T16:40:27Z") == {}
+
+
+def test_a_rebound_off_the_post_that_the_title_says_went_in():
+    assert run_ae("ADSportsTV", "القائم يرفض تسديدة كاكو.. والحسين رحيمي يكمل المهمة من متابعة سريعة تمنح العين الهدف الثاني ⚽️\n\n"
+                  "#العين_الظفرة  #دوري_أدنوك_للمحترفين | #أبوظبي_الرياضية 1⃣", "2026-11-19T16:43:30Z") == {1000022241: ["54-1295519"]}
+    # the post alone, a miss, or a goal number that is not his are still no goal
+    assert run_ae("ADSportsTV", "تسديدة الحسين رحيمي ترتطم بالقائم #العين_الظفرة", "2026-11-19T16:43:30Z") == {}
+    assert run_ae("ADSportsTV", "فرصة الهدف الثالث تضيع من الحسين رحيمي #العين_الظفرة", "2026-11-19T16:46:04Z") == {}
+    assert run_ae("ADSportsTV", "القائم يحرم الحسين رحيمي من الهدف الثالث #العين_الظفرة", "2026-11-19T16:46:04Z") == {}
