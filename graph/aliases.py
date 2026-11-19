@@ -49,8 +49,8 @@ def build(G, S, learned=None, wd=None):
     own, latin = {}, defaultdict(list)
     for pid, name, ar in q("SELECT pid, name, name_ar FROM player"):
         if pid in fm:
-            if ar:
-                own[fm[pid]] = clean(ar)
+            if ar or (name and AR.search(name)):          # the scorers files give some players their Arabic name as the name
+                own[fm[pid]] = clean(ar or name)
             if name:
                 latin[fold(name)].append(fm[pid])
     forms = defaultdict(set)

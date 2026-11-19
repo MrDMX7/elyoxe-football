@@ -69,3 +69,12 @@ def test_wikidata_arabic_forms_are_fetched_once_a_month(tmp_path):
     assert got["Q2"]["label"] == "سيرجينيو" and got["Q2"]["aliases"] == ["سيرجيو بيريرا"]
     fetch.wikidata_ar(S, ["Q2"], http=H())
     assert H.calls == 1
+
+
+def test_an_arabic_name_held_in_name_counts(tmp_path):
+    G, S = setup(tmp_path)
+    reg = Registry()
+    pid = 9999
+    G.put("player", {"pid": pid, "name": "علي أحمد مبخوت"}, "fotmob")       # the scorers file gave the Arabic name as the name
+    G.xref("player", pid, "fotmob", 170716, "fotmob-native")
+    assert aliases.build(G, S, learned={})["players"]["170716"] == ["علي أحمد مبخوت"]
