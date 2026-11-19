@@ -12,22 +12,23 @@ AWARD = {"Golden Ball": ("best_player", 1), "Silver Ball": ("best_player", 2), "
 WORLD_CUP = 77
 
 
-def load(G, reg, S):
-    aw, pl = os.path.join(S.db, "fjelstul_award_winners.csv"), os.path.join(S.db, "fjelstul_players.csv")
-    if not os.path.exists(aw):
-        return {"skipped": "no fjelstul_award_winners.csv"}
+def resolver(G, reg, S, n=None):
+    """player(fjelstul id, given, family) -> Tifo id: through his Wikipedia article's Wikidata item (the awards cache) to ours,
+    else a player of his own; his row written once a build."""
+    pl = os.path.join(S.db, "fjelstul_players.csv")
     d = os.path.join(S.root, "graph", ".cache", "awards")
     if not os.path.exists(os.path.join(d, "items.json")) and S.s3:
         AF.restore(S, d)
     items = AF._jload(os.path.join(d, "items.json"), {})
     people = {r["player_id"]: r for r in csv.DictReader(open(pl, encoding="utf-8", newline=""))} if os.path.exists(pl) else {}
-    cid = reg.mint("competition", "fotmob", WORLD_CUP)
-    G.put("competition", {"cid": cid, "name": "World Cup", "name_ar": "كأس العالم"}, "fotmob")
-    n = {"honours": 0, "linked": 0, "conflicts": 0}
+    done = {}
+    n = n if n is not None else {}
 
-    def player(pid_f, row):
+    def player(pid_f, given, family):
+        if pid_f in done:
+            return done[pid_f]
         p = people.get(pid_f) or {}
-        name = f"{row.get('given_name') or ''} {row.get('family_name') or ''}".strip()
+        name = f"{given or ''} {family or ''}".strip()
         link = p.get("player_wikipedia_link") or ""
         title = urllib.parse.unquote(link.rsplit("/wiki/", 1)[1]) if "/wiki/" in link else None
         f = (items.get(title) or {}) if title else {}
@@ -39,12 +40,28 @@ def load(G, reg, S):
             if pid is None:
                 pid = reg.mint("player", "wikidata", f["qid"])
             pid = reg.link("player", "fjelstul", pid_f, pid) or pid
-            n["linked"] += 1
+            n["linked"] = n.get("linked", 0) + 1
         if pid is None:
             pid = reg.mint("player", "fjelstul", pid_f)
         G.put("player", {"pid": pid, "name": f.get("en") or name, "name_ar": f.get("ar"), "born": f.get("born") or p.get("birth_date") or None}, "fjelstul")
         G.xref("player", pid, "fjelstul", pid_f, "wikipedia-link" if f.get("qid") else "fjelstul-native")
+        done[pid_f] = pid
         return pid
+
+    return player
+
+
+def load(G, reg, S):
+    aw = os.path.join(S.db, "fjelstul_award_winners.csv")
+    if not os.path.exists(aw):
+        return {"skipped": "no fjelstul_award_winners.csv"}
+    cid = reg.mint("competition", "fotmob", WORLD_CUP)
+    G.put("competition", {"cid": cid, "name": "World Cup", "name_ar": "كأس العالم"}, "fotmob")
+    n = {"honours": 0, "linked": 0, "conflicts": 0}
+    person = resolver(G, reg, S, n)
+
+    def player(pid_f, row):
+        return person(pid_f, row.get("given_name"), row.get("family_name"))
 
     for r in csv.DictReader(open(aw, encoding="utf-8", newline="")):
         kind = AWARD.get(r["award_name"])

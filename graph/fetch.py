@@ -19,7 +19,8 @@ FJELSTUL = "https://raw.githubusercontent.com/jfjelstul/worldcup/master/data-csv
 
 def fjelstul(S, max_age_days=7):
     """The World Cup database's award winners and players (CC-BY-SA), weekly."""
-    for name in ("award_winners", "players"):
+    for name in ("award_winners", "players", "matches", "goals", "bookings", "substitutions", "player_appearances",
+                 "manager_appearances", "referee_appearances"):
         p = os.path.join(S.db, f"fjelstul_{name}.csv")
         if not os.path.exists(p) or time.time() - os.path.getmtime(p) > max_age_days * 86400:
             data = urllib.request.urlopen(urllib.request.Request(FJELSTUL + name + ".csv", headers={"User-Agent": "elyoxe-tifo/0.1"}), timeout=120).read()
@@ -62,3 +63,19 @@ def wikidata_ar(S, qids, http=None, max_age_days=30):
         _j.dump(have, f, ensure_ascii=False)
     os.replace(p + ".tmp", p)
     return have
+
+
+DCARIBOU = "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data/"
+
+
+def depth(S, max_age_days=7):
+    """Phase 4's other free sources, weekly: martj42's international scorers, and Transfermarkt's lineups, appearances and
+    events (dcaribou, CC0)."""
+    jobs = [(MARTJ42.replace("results.csv", "goalscorers.csv"), "martj42_goalscorers.csv")]
+    jobs += [(DCARIBOU + f"{n}.csv.gz", f"tm_{n}.csv.gz") for n in ("game_lineups", "appearances", "game_events")]
+    for url, name in jobs:
+        p = os.path.join(S.db, name)
+        if not os.path.exists(p) or time.time() - os.path.getmtime(p) > max_age_days * 86400:
+            data = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "elyoxe-tifo/0.1"}), timeout=600).read()
+            open(p + ".tmp", "wb").write(data)
+            os.replace(p + ".tmp", p)

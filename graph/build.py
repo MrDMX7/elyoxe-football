@@ -14,7 +14,7 @@ from graph.db import Graph  # noqa: E402
 from graph.ids import Registry  # noqa: E402
 from graph.src import Sources  # noqa: E402
 
-ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "rsssf", "schochastics", "martj42", "transfers",
+ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "tm_lineups", "rsssf", "schochastics", "martj42", "worldcup", "intl_goals", "transfers",
          "honours", "fjelstul", "awards", "sofascore", "motm"]      # an edition honour's first source keeps it: our counts, Fjelstul, then Wikipedia
 REQUIRED = {"fotmob_matches"}
 CACHE = os.path.join(HERE, ".cache")       # the registry and the published mirror: kept between runs (actions/cache)
@@ -30,7 +30,7 @@ def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
     db_path = os.path.join(out_dir, "tifo.db")
     G = Graph(db_path)
     if fetch:
-        for f in (fetch_mod().martj42, fetch_mod().fjelstul):
+        for f in (fetch_mod().martj42, fetch_mod().fjelstul, fetch_mod().depth):
             try:
                 f(S)
             except Exception as e:
