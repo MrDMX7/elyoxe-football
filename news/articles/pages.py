@@ -7,7 +7,8 @@
   - site/lib/render_news.cjs fills the shells; the files go to the site bucket with the full build's headers
     (tools/s3push.py TYPES, public,max-age=60); every page is cached 60 s, so nothing needs invalidating;
   - the new URLs go to IndexNow (Bing), like the full build's;
-  - then, and only then, the push of each new article to its clubs' and players' followers (push_jobs.py, spec §4).
+  - then, and only then, the push of each new article to its clubs' and players' followers (push_jobs.py, spec §4);
+  - every run, v1/news/top.json, «الأكثر قراءة» (top.py, spec §5).
 
 The hourly build no longer uploads or deletes these paths (tools/runner.py FAST_OWNED). State: state/articles/pages.json.
   python -m news.articles.pages"""
@@ -129,6 +130,11 @@ def main():
     out = run(store, boto3.client("s3", region_name="ap-south-1"), outs["Bucket"], teams=teams, players=players, indexnow=_indexnow,
               push=_push)
     print(json.dumps({"article_pages": out}, ensure_ascii=False))
+    try:                                   # «الأكثر قراءة» (spec §5): every run, whether or not a page changed
+        from news.articles import top
+        print(json.dumps({"top": top.write(store, boto3.resource("dynamodb", region_name="ap-south-1").Table("cards"))}))
+    except Exception as e:
+        print(json.dumps({"top_error": f"{type(e).__name__}: {str(e)[:200]}"}))
     return 0
 
 
