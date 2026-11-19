@@ -288,3 +288,23 @@ refused automated access; no workaround), paid APIs are out.
    Transfermarkt matches FotMob doesn't hold (the Netherlands, Portugal, Turkey, Belgium, Russia, Greece, Scotland,
    Ukraine, Denmark and the cups): starters and substitutes, minutes, goals, assists, cards, and the events.
 Fetched weekly by graph/fetch.py into db/.cache; loaders as every other (caches only).
+
+## 10. Phase 7: the pages (2026-11-20)
+
+The graph's data reaches the site as three page families (`site/lib/history_pages.cjs`, wired in `site/build.cjs`):
+
+- **Season archive** `/c/<key>/seasons/`: every season of a competition from `v1/editions/<FotMob id>.json`, with champion, runner-up and top scorer. The competition's history tab opens it. Indexed from 3 seasons.
+- **Season pages** `/c/<key>/s/<season>/` (`2016/2017` → `2016-2017`): champion, runner-up, the champion's coach, final table, top scorers, season awards and man-of-the-match leaders. Written only when a season has more than a champion (a table, scorers, or 10+ matches). Indexed only with a table or scorers.
+- **Coaches**:
+  - A coach FotMob knows keeps `/coach/<FotMob id>/`. An existing page gains «مسيرته في كل البطولات»; one without a page gets it from the graph.
+  - Every other coach lives at `/coach/k<Tifo id>/`. The `k` keeps the two id spaces apart.
+  - A page needs 30 matches in our data or a bench at a club the site has. It is indexed at 30 matches.
+- **Club coaches**: on `/t/<id>/`, «مدربين النادي عبر التاريخ» now comes from the graph across all competitions. The league-only block stays only where the graph has nothing.
+
+Arabic names come from the site's own lists (club names, `NAMES_AR`, `coaches_ar.json`), since the graph's are mostly Latin.
+
+Rulings:
+
+- **National-team spells**: a national team's spell allows a two-year gap, not 180 days. Without it, Löw's Germany was six spells.
+- **Points**: points publish as whole numbers. The column is REAL, so 68 came out as 68.0.
+- **Known noise**: a qualification competition can show a «champion» (the winner of its last round). Left as is.

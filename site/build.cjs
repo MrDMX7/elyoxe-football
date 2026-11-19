@@ -450,6 +450,18 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     AWK = Object.fromEntries((AWI.awards || []).map(a => [a.key, a]));
   // «رجل المباراة» (Tifo graph phase 3): v1/motm/* from graph/publish.py
   const MOTM = require("./lib/motm_pages.cjs"), MOI = await get("motm/index.json"), MOP = (await get("motm/players.json")) || {};
+  // phase 6, at the whistle: every match finished since the graph's nightly build joins the man-of-the-match counts (lib/whistle.cjs)
+  if (MOI && Array.isArray(MOI.counted)) { const lo = new Date(Date.parse(MOI.today + "T00:00:00Z") - 21 * 864e5).toISOString().slice(0, 10), done = new Set(MOI.counted.map(Number));
+    const fresh = [...matchSum.values()].filter(m => m && m.id && m.status === "finished" && String(m.kickoff_utc || "").slice(0, 10) >= lo && !done.has(+m.id));
+    const wh = require("./lib/whistle.cjs").apply(MOI, MOP, (await pool(fresh, 8, m => get(`match/${m.id}.json`, 1))).filter(Boolean));
+    console.log(`whistle: ${wh.added || 0} of ${fresh.length} matches since the graph build added to man of the match`); }
+  // the season archive and every coach (Tifo graph phase 7): v1/editions/<competition>.json and v1/coaches/{coaches,teams}.json from graph/publish.py
+  const HP = require("./lib/history_pages.cjs"), GCO = (await get("coaches/coaches.json", 2)) || {}, GCT = (await get("coaches/teams.json", 2)) || {}, EDS = new Map();
+  (await pool(comps, 8, c => get(`editions/${c.id}.json`, 1))).forEach((d, i) => { if (d && (d.seasons || []).length) EDS.set(+comps[i].id, d); });
+  const coachAr2 = kid => { const c = GCO[kid]; return (c && c.fotmob && COACH_AR[c.fotmob] && COACH_AR[c.fotmob].ar) || null; };
+  // a coach FotMob knows keeps /coach/<FotMob id>/, the rest get /coach/k<Tifo id>/; a page only with 30 matches or a bench at one of our clubs
+  const GCP = new Map(Object.entries(GCO).filter(([, c]) => HP.coachPageable(c, { team:id => teamIds.has(+id) })).map(([k, c]) => [k, c.fotmob ? `/coach/${c.fotmob}/` : `/coach/k${k}/`]));
+  const GFM = new Map(Object.entries(GCO).filter(([, c]) => c.fotmob).map(([k, c]) => [String(c.fotmob), k])), coachHref = kid => GCP.get(String(kid)) || null;
   const TRT = require("./lib/transfers.cjs"), TRW = await get("transfers/all.json"), TRS = TRW ? TRT.season(TRW.moves, TRW.since) : [];
   const TRL = TRW ? `موسم ${TRW.since.slice(0, 4)}/${+TRW.since.slice(2, 4) + 1}` : "";
   const TRR = ((await get("transfers/rumours.json")) || {}).rumours || [];   // phase 3: the rumour ledger
@@ -660,7 +672,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
         keepL.length >= 2 && ["keepers", "الحراس", U.leaders(ldList(keepL), 10) + `<p class="gf">الرقم = مباريات بشباك نظيفة، للحراس اللي لعبوا <span class="num">${pMin}</span> دقيقة أو أكثر.</p>`]].filter(Boolean),
       num:(scoreP ? U.grp("", U.row({ href:`/c/${c.key}/scorers/`, icon:"ball", c:"#34C759", t:"كل الهدافين وصناع الأهداف" }), { cls:"mt2" }) : "") + shelf(numSecs, { title:"كل الأرقام", feat:6 }) + (naNote ? naNote.replace('class="na"', 'class="gf na"') : ""),
       pred:shelf(predAll, { title:simT ? "بعد في التوقعات" : "التوقعات" }),
-      hist:shelf(histSecs.filter(sc => !(champ5 && sc.title === "الأبطال عبر التاريخ")), { title:"بعد في التاريخ" }),
+      hist:(EDS.has(+c.id) ? U.grp("", U.row({ href:`/c/${c.key}/seasons/`, icon:"hist", c:"#FF9500", t:"كل المواسم", sub:"البطل والوصيف والهداف في كل موسم" }), { cls:"mt2" }) : "") + shelf(histSecs.filter(sc => !(champ5 && sc.title === "الأبطال عبر التاريخ")), { title:"بعد في التاريخ" }),
       after:nextR.length ? `<script type="application/json" id="rpreds">${JSON.stringify(nextR).replace(/</g, "\\u003c")}</script>` : "",
       share:P5.shareSheet({ html:toolRows(tools) + `<button type="button" class="row" id="secpick"><span class="rt">صورة لأي قسم</span>${U.chev}</button>`, after:'<div id="embout" class="card mt lc" hidden></div><div id="secpicks" class="card mt" hidden></div>' }) } });
     v5.data = { id:c.id, comp:c.id };
@@ -716,6 +728,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   };
   // ---- 5. teams
   const tlist = [...teamIds], teamPages = new Set(), playerPages = new Set();
+  const hpo = { team:id => teamPages.has(+id), player:id => playerPages.has(String(id)), coach:coachHref, coachName:coachAr2,
+    teamName:id => (teamsJson.teams[id] || {}).name_ar || TAR[id] || null, playerName:id => nameOf(id) || null };
   const AWC = Object.fromEntries((comps || []).map(c => [c.id, c]));
   const MOB = id => MOTM.playerBlock(MOP[id], { hasPage:x => playerPages.has(String(x)), comp:c => (AWC[c] ? { name_ar:AWC[c].name_ar, href:`/c/${AWC[c].key}/` } : null),
     team:t => ((teamsJson && teamsJson.teams) || {})[t] && (teamsJson.teams[t].name_ar || teamsJson.teams[t].name), match:m => matchSum.has(m) || matchSum.has(String(m)) });
@@ -777,7 +791,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
         const rr = TRT.rumoursOf(TRR, { club:id, open:1 }).slice(0, 15); if (rr.length) nums += S.sec("إشاعات حوله", "", TRT.rumourList(rr, tn) + '<p class="src"><a href="/transfers/rumours/">كل الإشاعات</a></p>'); }
       if (rc) nums += S.sec("سجل النادي", "من 2010", rc); if (hm) nums += S.sec("كل نتايجه موسم بموسم", "", hm); if (xi) nums += S.sec("التشكيلة المعتادة", "هالموسم", xi); if (cu) nums += S.sec("لاعبينه في المنتخبات", "", cu); }
     const tv2 = S.travel(t, t.fixtures); if (tv2) nums += S.sec("سافر مع فريقك", "مباريات آسيا برا الدولة", tv2);
-    const co = S.coachesTeam(x538.coaches, id); if (co) nums += S.sec("مدربين النادي عبر التاريخ", "في الدوري", co);
+    const gco = HP.clubCoaches(GCT[id], hpo), co = gco ? "" : S.coachesTeam(x538.coaches, id); if (gco) nums += S.sec("مدربين النادي عبر التاريخ", "كل البطولات", gco); else if (co) nums += S.sec("مدربين النادي عبر التاريخ", "في الدوري", co);
     if (x538.fortress && x538.fortress.stadiums){ const fs2 = x538.fortress.stadiums.filter(s => s.team === id); if (fs2.length) nums += S.sec("حصن الملعب", "", S.fortress({ since:x538.fortress.since, stadiums:fs2 })); }
     // national team (144, 145, 59, 39)
     if (id === 5789){
@@ -1151,8 +1165,13 @@ ${items}
   { const cj = {}; for (const [cid, co] of coachRows) if (co.rows.length) cj[cid] = { n:co.name, r:co.rows.map(r => [r.season, r.team, (teamsJson.teams[r.team] || {}).name_ar || "", r.won, r.drawn, r.lost]) };
     const cjs2 = JSON.stringify(cj), CV = hash(cjs2); fs.writeFileSync(path.join(OUT, `assets/coaches.${CV}.json`), cjs2);   // W1.11: hashed, since /assets/ is cached for a year
     write("coach/compare/index.html", page({ noindex:true, attrs:` data-cv="${CV}"`, path:"/coach/compare/", page:"coachcmp", title:"قارن بين مدربين | تيفو", desc:"قارن أي مدربين درّبوا في الدوري: المباريات والفوز ومعدل النقاط والأندية.", body:'<h1>قارن بين مدربين</h1><div class="cmpsel"><select id="ca" aria-label="المدرب الأول"></select><select id="cb" aria-label="المدرب الثاني"></select></div><div id="cout"></div>' })); }
+  const COW = new Set(), graphCareer = cid => { const k = GFM.get(String(cid)); return k ? S.sec("مسيرته في كل البطولات", "من قاعدة تيفو", HP.coachBody(GCO[k], hpo)) : ""; };
   for (const [cid, co] of coachRows){ if (!co.rows.length) continue; co.rows.sort((a, b) => String(b.season).localeCompare(String(a.season)));
-    write(`coach/${cid}/index.html`, page({ path:`/coach/${cid}/`, page:"ref", title:`المدرب ${co.name}: مسيرته التدريبية | تيفو`, desc:`مسيرة المدرب ${co.name}: الأندية والمواسم والفوز والتعادل والخسارة ومعدل النقاط.`, body:`<h1 class="lat">${esc(co.name)}</h1><p><a class="btn" href="/coach/compare/?a=${cid}">قارنه بمدرب ثاني</a></p>${co.current ? `<p class="season">يدرّب الحين <a href="/t/${co.current}/">${esc((teamsJson.teams[co.current] || {}).name_ar || "")}</a></p>` : ""}` + S.coachPage(co.name, co.rows, [...new Set(co.rows.map(r => r.comp && R.compName(index, r.comp)).filter(Boolean))].join("، ")) + (CH2H.has(cid) ? S.sec("ضد المدربين", "هالموسم", '<div class="tblwrap"><table class="st wrapn"><thead><tr><th style="text-align:start">المدرب</th><th>فوز</th><th>تعادل</th><th>خسارة</th></tr></thead><tbody>' + CH2H.get(cid).sort((a, b) => (b.w + b.d + b.l) - (a.w + a.d + a.l)).map(o => `<tr><td class="tm">${coachRows.has(o.op) ? `<a class="lat" href="/coach/${o.op}/">${esc(o.name || "")}</a>` : `<span class="lat">${esc(o.name || "")}</span>`}</td><td>${o.w}</td><td>${o.d}</td><td>${o.l}</td></tr>`).join("") + "</tbody></table></div>") : "") })); urls.push(`/coach/${cid}/`); }
+    write(`coach/${cid}/index.html`, page({ path:`/coach/${cid}/`, page:"ref", title:`المدرب ${co.name}: مسيرته التدريبية | تيفو`, desc:`مسيرة المدرب ${co.name}: الأندية والمواسم والفوز والتعادل والخسارة ومعدل النقاط.`, body:`<h1 class="lat">${esc(co.name)}</h1><p><a class="btn" href="/coach/compare/?a=${cid}">قارنه بمدرب ثاني</a></p>${co.current ? `<p class="season">يدرّب الحين <a href="/t/${co.current}/">${esc((teamsJson.teams[co.current] || {}).name_ar || "")}</a></p>` : ""}` + S.coachPage(co.name, co.rows, [...new Set(co.rows.map(r => r.comp && R.compName(index, r.comp)).filter(Boolean))].join("، ")) + (CH2H.has(cid) ? S.sec("ضد المدربين", "هالموسم", '<div class="tblwrap"><table class="st wrapn"><thead><tr><th style="text-align:start">المدرب</th><th>فوز</th><th>تعادل</th><th>خسارة</th></tr></thead><tbody>' + CH2H.get(cid).sort((a, b) => (b.w + b.d + b.l) - (a.w + a.d + a.l)).map(o => `<tr><td class="tm">${coachRows.has(o.op) ? `<a class="lat" href="/coach/${o.op}/">${esc(o.name || "")}</a>` : `<span class="lat">${esc(o.name || "")}</span>`}</td><td>${o.w}</td><td>${o.d}</td><td>${o.l}</td></tr>`).join("") + "</tbody></table></div>") : "") + graphCareer(cid) })); urls.push(`/coach/${cid}/`); COW.add(`/coach/${cid}/`); }
+  for (const [kid, href] of GCP){ if (COW.has(href)) continue; const c = GCO[kid], nmC = coachAr2(kid) || c.name || "", t = HP.coachTotals(c), ok = HP.coachIndexable(c);
+    write(href.slice(1) + "index.html", page({ v5:{ nav:{ back:"/more/", backLabel:"المزيد", title:esc(nmC), trail:"" }, body:`<div class="lt"><h1>${/[؀-ۿ]/.test(nmC) ? esc(nmC) : `<span class="lat">${esc(nmC)}</span>`}</h1><p>مسيرته التدريبية في كل البطولات اللي عندنا.</p></div>` + HP.coachBody(c, hpo) + U.foot(), tab:"more", sheets:"", data:{} },
+      path:href, page:"ref", noindex:!ok, title:`المدرب ${nmC}: مسيرته التدريبية وأرقامه | تيفو`, desc:`مسيرة المدرب ${nmC}: ${t.m} مباراة، ${t.w} فوز و${t.d} تعادل و${t.l} خسارة، في كل الأندية والمنتخبات اللي درّبها.`, ld:bcLd([[nmC, href]]) }));
+    if (ok) urls.push(href); }
   for (const { c, fx, x } of compData){ if (!fx || !fx.matches) continue; R.DUPCTX = (c.country && c.country.name_ar) || ""; const rr = R.rounds(fx);
     for (const k of rr.order){ if (!/^\d+$/.test(String(k))) continue;   /* QA 99: round pages only for numbered rounds (no «3rd Place Final» paths) */ const ms = rr.by[k], fin = ms.filter(m => m.status === "finished"), goals = fin.reduce((a, m) => a + (m.score ? m.score.home + m.score.away : 0), 0);
       const tor = x["team-of-round"] && x["team-of-round"].rounds && x["team-of-round"].rounds[k] ? S.teamOfRound({ rounds:{ [k]:x["team-of-round"].rounds[k] } }) : "";
@@ -1231,7 +1250,7 @@ ${items}
   if (MOI && (MOI.leaders || {}).all && MOI.leaders.all.length) {
     const comp5 = id => { const c = (comps || []).find(x => +x.id === +id); return c ? { name_ar:c.name_ar, href:`/c/${c.key}/` } : null; };
     write("motm/index.html", page({ v5:{ nav:{ back:"/more/", backLabel:"المزيد", title:"رجل المباراة", trail:"" }, body:'<div class="lt"><h1>رجل المباراة</h1><p>منو أكثر لاعب طلع رجل المباراة هالموسم وعبر التاريخ، في كل بطولة نتابعها.</p></div>' + MOTM.hubBody(MOI, { hasPage:id => playerPages.has(String(id)), comp:comp5 }) + U.foot(), tab:"more", sheets:"", data:{} },
-      path:"/motm/", page:"ref", title:"رجل المباراة: الأكثر هالموسم وعبر التاريخ في كل بطولة | تيفو", desc:`أكثر اللاعبين تتويجاً برجل المباراة هالموسم وعبر التاريخ، من ${MOI.matches} مباراة لها تقييمات.`, ld:bcLd([["رجل المباراة", "/motm/"]]) }));
+      path:"/motm/", page:"ref", title:"رجل المباراة: الأكثر هذا الموسم وعبر التاريخ في كل بطولة | تيفو", desc:`أكثر اللاعبين تتويجاً برجل المباراة هالموسم وعبر التاريخ، من ${MOI.matches} مباراة لها تقييمات.`, ld:bcLd([["رجل المباراة", "/motm/"]]) }));
     urls.push("/motm/");
   }
   if ((AWI.awards || []).length) {
@@ -1244,11 +1263,24 @@ ${items}
       const d = await get(`awards/${a.key}.json`, 1); if (!d || !(d.years || []).length) return;
       const nmA = a.name_ar || a.name, last = d.years[0], w = (last.podium || []).find(p => p.rank === 1);
       write(`awards/${a.key}/index.html`, page({ v5:{ nav:awNav(esc(nmA), "/awards/", "الجوائز"), body:`<div class="lt"><h1>${AWD.awardName(a)}</h1><p>كل الفائزين من <span class="num">${esc(a.first)}</span> لين <span class="num">${esc(a.last)}</span>${w ? `، وآخرهم ${esc(w.name_ar || w.name)}` : ""}.</p></div>` + AWD.awardBody(d, { hasPage }) + U.foot(), tab:"more", sheets:"", data:{} },
-        path:`/awards/${a.key}/`, page:"ref", noindex:!AWD.indexable(a), title:`${nmA}: كل الفائزين من ${a.first} لين ${a.last} | تيفو`,
+        path:`/awards/${a.key}/`, page:"ref", noindex:!AWD.indexable(a), title:`${nmA}: كل الفائزين من ${a.first} إلى ${a.last} | تيفو`,
         desc:`كل الفائزين بـ${nmA} عبر التاريخ (${a.years} نسخة)${w ? `، آخرهم ${w.name_ar || w.name} في ${last.season}` : ""}.`, ld:bcLd([["الجوائز", "/awards/"], [nmA, `/awards/${a.key}/`]]) }));
       if (AWD.indexable(a)) urls.push(`/awards/${a.key}/`);
     });
   }
+  for (const c of comps){ const ed = EDS.get(+c.id); if (!ed) continue;
+    const sNav = (title, back, label) => ({ back, backLabel:label, title, trail:"" }), ss = ed.seasons, arch = `/c/${c.key}/seasons/`, okA = ss.length >= 3;
+    write(arch.slice(1) + "index.html", page({ v5:{ nav:sNav("كل المواسم", `/c/${c.key}/`, esc(c.name_ar)), body:`<div class="lt"><h1>${esc(c.name_ar)}: كل المواسم</h1><p>البطل والوصيف والهداف في كل موسم، من <span class="num">${esc(ss[ss.length - 1].season)}</span> لين <span class="num">${esc(ss[0].season)}</span>.</p></div>` + HP.seasonsBody(ed, c, hpo) + U.foot(), tab:"more", sheets:"", data:{} },
+      path:arch, page:"ref", noindex:!okA, title:`أبطال ${c.name_ar} عبر التاريخ: كل المواسم والهدافين | تيفو`, desc:`كل مواسم ${c.name_ar}: البطل والوصيف والهداف في ${ss.length} موسم، من ${ss[ss.length - 1].season} لين ${ss[0].season}.`,
+      ld:bcLd([[c.name_ar, `/c/${c.key}/`], ["كل المواسم", arch]]) }));
+    if (okA) urls.push(arch);
+    const mNow = MOI && MOI.comps && MOI.comps[c.id];   // the season in play (a split season, since 1 July) takes the whistle-fresh man of the match list
+    if (mNow && /\//.test(ss[0].season)) ss[0].motm = (mNow.season || []).slice(0, 5);
+    for (const s of ss.filter(HP.seasonRich)){ const sp = `/c/${c.key}/s/${HP.slug(s.season)}/`, okS = !!((s.table || []).length || (s.top_scorers || []).length), chN = s.champion && (hpo.teamName(s.champion.fotmob) || s.champion.name);
+      write(sp.slice(1) + "index.html", page({ v5:{ nav:sNav(`موسم ${esc(s.season)}`, arch, "كل المواسم"), body:`<div class="lt"><h1>${esc(c.name_ar)} <span class="num">${esc(s.season)}</span></h1></div>` + HP.seasonBody(s, c, hpo) + U.foot(), tab:"more", sheets:"", data:{} },
+        path:sp, page:"ref", noindex:!okS, title:`${c.name_ar} ${s.season}: البطل والترتيب والهدافين | تيفو`, desc:`موسم ${s.season} من ${c.name_ar}${chN ? `: البطل ${chN}` : ""}، والترتيب النهائي والهدافين وأفضل اللاعبين.`,
+        ld:bcLd([[c.name_ar, `/c/${c.key}/`], ["كل المواسم", arch], [s.season, sp]]) }));
+      if (okS) urls.push(sp); } }
   refPage("/legends/", "أساطير الكورة الإماراتية | تيفو", "الطلياني وإسماعيل مطر وعمر عبدالرحمن وعلي مبخوت وغيرهم: مسيرتهم وأرقامهم، مع المصادر.", "أساطير الكورة الإماراتية", "مسيرة وأرقام أبرز لاعبين في تاريخ الكورة الإماراتية، وكل معلومة معها مصدرها.", S.legends(legRaw, hl, id => playerPages.has(String(id))) + '<p class="tools"><a class="btn" href="/memorable/">مباريات ما تنتسى</a></p>');   // W2.8: memorable matches sit under الأساطير
   refPage("/memorable/", "مباريات ما تنتسى في تاريخ الكورة الإماراتية | تيفو", "من تصفيات 1990 لين نهائي آسيا 2024: المباريات اللي صنعت تاريخ الكورة الإماراتية.", "مباريات ما تنتسى", "مباريات صنعت تاريخ الكورة الإماراتية، من الأحدث للأقدم.", S.memorable(memRaw, hm));
   refPage("/laws/", "قانون الكورة بالإماراتي: التسلل، اللمسة، البلنتي، الفار | تيفو", "ليش ألغى الحكم الهدف؟ شرح قوانين الكورة الرسمية (IFAB 2026/27) بالإماراتي: التسلل، لمسة اليد، البلنتي، الفار، والوقت بدل الضايع.", "قانون الكورة بالإماراتي", "شرح بسيط لقوانين الكورة من النص الرسمي لـIFAB (نسخة 2026/27)، وتحت كل شرح الجملة الرسمية نفسها.", S.laws(lawRaw, hw));
