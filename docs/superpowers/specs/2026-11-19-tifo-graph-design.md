@@ -91,6 +91,7 @@ Every row carries `src` (which source said it) and, where the source has one, `s
 | `honour` | `eid, kind, rank` | kind: champion, runner_up, … (phase 2 adds top_scorer, best_player…); `tid` or `pid` |
 | `transfer` | id | `pid`, from/to `tid`, date, fee, type (loan, free, return) |
 | `spell` | `pid, tid, from` | membership of a squad with dates, apps, goals (FotMob career, TM season lines) |
+| `player_season` | — | Transfermarkt's season × competition × club lines: apps, minutes, goals, assists, cards, clean sheets |
 | `injury` | id | `pid`, from, to, kind, games missed |
 | `xref` | `type, tifo_id, source, source_id` | the crosswalk: method (`fotmob-native`, `vote`, `birthdate+name`, `wikidata`, `manual`), confidence |
 | `conflict` | id | the same fact from two sources that disagree: both values, both sources, which one the graph keeps and why |
