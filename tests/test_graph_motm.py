@@ -48,3 +48,6 @@ def test_motm_files(tmp_path):
     pl = json.load(open(tmp_path / "o" / "motm" / "players.json", encoding="utf-8"))["170716"]
     assert pl["total"] == 3 and pl["seasons"] == {"2026/2027": 2, "2024/2025": 1} and pl["comps"] == {"538": 3}
     assert pl["opponents"] == {"102122": 3} and pl["recent"][0] == [902, "2026-11-01", "8.7", 102122]
+    # phase 6: what the site needs to add the matches played since this build without counting any twice
+    assert pl["now"] == 2 and pl["name"] == "علي مبخوت"
+    assert ix["today"] == "2026-11-20" and ix["counted"] == [902]          # FotMob ids already counted in the last 21 days
