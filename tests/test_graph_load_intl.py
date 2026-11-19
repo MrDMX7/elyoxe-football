@@ -70,3 +70,16 @@ def test_martj42_competitions_link_by_their_twins(tmp_path):
     martj42.load(G, reg, Sources(str(tmp_path), s3=False))
     assert reg.get("competition", "martj42", "FIFA World Cup") == wc
     assert reg.get("edition", "martj42", "FIFA World Cup|2026") == e
+
+
+def test_martj42_major_tournaments_by_the_curated_map(tmp_path):
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    (db / "martj42_results.csv").write_text("date,home_team,away_team,home_score,away_score,tournament,city,country,neutral\n"
+                                            "1996-12-04,United Arab Emirates,Kuwait,1,0,AFC Asian Cup,Abu Dhabi,United Arab Emirates,FALSE\n", encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    ac = reg.mint("competition", "fotmob", 290)
+    G.put("competition", {"cid": ac, "name": "Asian Cup"}, "fotmob")
+    martj42.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert reg.get("competition", "martj42", "AFC Asian Cup") == ac
+    assert G.c.execute("select e.cid from match m join edition e on e.eid=m.eid where m.src='martj42'").fetchone()[0] == ac

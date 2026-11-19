@@ -6,6 +6,11 @@ from collections import Counter, defaultdict
 from graph.link import MatchIndex, edition_for, twin, vote_alias, vote_teams
 
 
+# the tournaments FotMob has under one id (a manual link, spec §3.3 «manual»: too few shared games to vote before 2026)
+FOTMOB = {"FIFA World Cup": 77, "AFC Asian Cup": 290, "Gulf Cup": 329, "Arab Cup": 10242, "African Cup of Nations": 289,
+          "UEFA Euro": 50, "Copa América": 44, "UEFA Nations League": 9806}
+
+
 def load(G, reg, S):
     from compute.national import dataset_name
     p = os.path.join(S.db, "martj42_results.csv")
@@ -54,6 +59,10 @@ def load(G, reg, S):
             cvotes[r["tournament"]][cid_of[e]] += 1
             evotes[f"{r['tournament']}|{r['date'][:4]}"][e] += 1
         rows.append((r, h, a, hs, as_, mid))
+    for name, fid in sorted(FOTMOB.items()):
+        got = reg.link("competition", "martj42", name, reg.mint("competition", "fotmob", fid))
+        if got is not None:
+            G.xref("competition", got, "martj42", name, "manual")
     vote_alias(reg, "competition", cvotes, "martj42", min_n=10, share=0.9)
     vote_alias(reg, "edition", evotes, "martj42", min_n=3, share=0.9)
     linked = new = 0
