@@ -74,7 +74,7 @@ test("the byline has the reading time, in Arabic numbers grammar and Western dig
 
 test("the share block has the phone's share, WhatsApp, X and copy, with the page's address", () => {
   const h = A.articleHtml(doc("r-9"), []);
-  assert.match(h, /<div class="shr" data-url="https:\/\/tifo\.elyoxe\.com\/news\/r-9\/"/);
+  assert.match(h, /<div class="ashr" data-url="https:\/\/tifo\.elyoxe\.com\/news\/r-9\/"/);
   assert.match(h, /href="https:\/\/wa\.me\/\?text=[^"]*tifo\.elyoxe\.com%2Fnews%2Fr-9%2F"/);
   assert.match(h, /href="https:\/\/x\.com\/intent\/post\?text=[^"]*&amp;url=https%3A%2F%2Ftifo\.elyoxe\.com%2Fnews%2Fr-9%2F"/);
   assert.match(h, /data-copy/); assert.match(h, /navigator\.share/);
@@ -82,17 +82,17 @@ test("the share block has the phone's share, WhatsApp, X and copy, with the page
 
 test("the clubs and players strip: logo, Arabic name, link, and «تابع» for a club", () => {
   const h = A.articleHtml(doc("r-9", { entities: [["team", 1], ["player", 7], ["team", 99]] }), [], NAMES);
-  assert.match(h, /<a class="ent" href="\/t\/1\/"><img src="\/logo\/1\.png"[^>]*>العين<\/a><button type="button" class="pill" data-fav="t:1" data-n="العين">تابع<\/button>/);
-  assert.match(h, /<a class="ent" href="\/p\/7\/">[\s\S]*سفيان رحيمي<\/a>/);
+  assert.match(h, /<a class="aent" href="\/t\/1\/"><img src="\/logo\/1\.png"[^>]*>العين<\/a><button type="button" class="pill" data-fav="t:1" data-n="العين">تابع<\/button>/);
+  assert.match(h, /<a class="aent" href="\/p\/7\/">[\s\S]*سفيان رحيمي<\/a>/);
   assert.doesNotMatch(h, /\/t\/99\//);                                     // a club with no Arabic name is left out
-  assert.doesNotMatch(A.articleHtml(doc("r-9"), []), /class="ents"/);        // no names, no strip
+  assert.doesNotMatch(A.articleHtml(doc("r-9"), []), /class="aents"/);        // no names, no strip
 });
 
 test("«ذات صلة» is four photo cards", () => {
   const rel = [1, 2, 3, 4, 5].map(i => doc("r-" + i, { headline: "مقال " + i }));
   const h = A.articleHtml(doc("r-9"), rel);
-  assert.equal((h.match(/<a class="rc" href="\/news\/r-\d\/">/g) || []).length, 4);
-  assert.match(h, /<a class="rc" href="\/news\/r-1\/"><img src="[^"]*r-1\.jpg"[^>]*><span>مقال 1<\/span><\/a>/);
+  assert.equal((h.match(/<a class="arc" href="\/news\/r-\d\/">/g) || []).length, 4);
+  assert.match(h, /<a class="arc" href="\/news\/r-1\/"><img src="[^"]*r-1\.jpg"[^>]*><span>مقال 1<\/span><\/a>/);
 });
 
 test("the article stylesheet: the head's gradient, 17 px text, a photo that fits", () => {
@@ -112,7 +112,7 @@ test("/news/ is our articles: the two tabs, the filters, the lead, the grid of 3
   const h = A.newsIndexHtml(list, NOWT);
   assert.match(h, /<nav class="ntabs"><a href="\/news\/" aria-current="page">مقالات تيفو<\/a><a href="\/news\/press\/">من الصحف<\/a><\/nav>/);
   for (const t of ["all", "report", "transfer", "injury", "statement"]) assert.match(h, new RegExp(`data-t="${t}"`));
-  assert.match(h, /<a class="nl" href="\/news\/n-1\/"/);                                       // the newest leads
+  assert.match(h, /<a class="anl" href="\/news\/n-1\/"/);                                       // the newest leads
   const cards = h.replace(/<script>[\s\S]*?<\/script>/g, "");                              // the rendered cards, not the script's templates
   assert.equal((cards.match(/<a class="nc" /g) || []).length, 29);                            // 30 with the lead
   assert.match(h, /<button type="button" class="nmore" data-from="30">المزيد<\/button>/);
@@ -122,9 +122,9 @@ test("/news/ is our articles: the two tabs, the filters, the lead, the grid of 3
 test("a «عاجل» of the last two hours leads; a press conference files under statements; a report under reports", () => {
   const list = [item(1), item(3, { breaking: true }), item(4, { topic: "presser" }), item(5, { kind: "report", topic: undefined })];
   const h = A.newsIndexHtml(list, NOWT);
-  assert.match(h, /<a class="nl" href="\/news\/n-1\/"/);                                       // the «عاجل» is 3 h old: not the lead
+  assert.match(h, /<a class="anl" href="\/news\/n-1\/"/);                                       // the «عاجل» is 3 h old: not the lead
   const h2 = A.newsIndexHtml([item(1), item(2, { breaking: true })], NOWT);
-  assert.match(h2, /<a class="nl" href="\/news\/n-2\/"/);
+  assert.match(h2, /<a class="anl" href="\/news\/n-2\/"/);
   assert.match(h, /<a class="nc" href="\/news\/n-4\/" data-t="statement"/);
   assert.match(h, /<a class="nc" href="\/news\/n-5\/" data-t="report"/);
 });
@@ -135,9 +135,9 @@ test("«من الصحف» keeps the journal's list under the same two tabs", () 
 
 test("the home block: one large card, three small, all articles; redrawn live from articles.json", () => {
   const h = A.homeBlock([1, 2, 3, 4, 5].map(i => item(i)), NOWT);
-  assert.match(h, /<section class="hb">[\s\S]*<a href="\/news\/">كل المقالات<\/a>/);
+  assert.match(h, /<section class="ahb">[\s\S]*<a href="\/news\/">كل المقالات<\/a>/);
   const b = h.replace(/<script>[\s\S]*?<\/script>/g, "");
-  assert.equal((b.match(/<a class="nl" /g) || []).length, 1); assert.equal((b.match(/<a class="hr" /g) || []).length, 3);
+  assert.equal((b.match(/<a class="anl" /g) || []).length, 1); assert.equal((b.match(/<a class="hr" /g) || []).length, 3);
   assert.match(h, /fetch\("\/v1\/news\/articles\.json"/);
   assert.equal(A.homeBlock([], NOWT), "");
 });
@@ -152,8 +152,8 @@ test("the renderer fills the shells: every marker, the current stylesheet, the a
   assert.ok(p && !/__(TITLE|DESC|ID|OGURL|BODY|LD)__/.test(p));
   assert.match(p, /<title>إصابة &lt;كبيرة&gt; \| تيفو<\/title>/); assert.match(p, /href="https:\/\/tifo\.elyoxe\.com\/news\/n-7\/"/);
   assert.match(p, /"@type":"NewsArticle"/); assert.match(p, new RegExp("/news/" + A.CSS_NAME.replace(/\./g, "\.")));
-  assert.match(p, /<a class="ent" href="\/t\/1\/">/);
-  assert.match(out["news/index.html"], /<a class="nl" href="\/news\/n-7\/"/);
+  assert.match(p, /<a class="aent" href="\/t\/1\/">/);
+  assert.match(out["news/index.html"], /<a class="anl" href="\/news\/n-7\/"/);
   assert.match(out["sitemap-news.xml"], /<loc>https:\/\/tifo\.elyoxe\.com\/news\/n-7\/<\/loc>/);
   assert.equal(out["news/" + A.CSS_NAME], A.CSS);
 });

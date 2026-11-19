@@ -51,7 +51,7 @@ function readTime(doc){
 
 function shareHtml(doc){
   const url = `${SITE_URL}/news/${doc.id}/`, u = encodeURIComponent(url), t = encodeURIComponent(doc.headline || "");
-  return `<div class="shr" data-url="${E(url)}" data-title="${E(doc.headline)}"><button type="button" class="pill pri" data-native hidden>مشاركة</button>`
+  return `<div class="ashr" data-url="${E(url)}" data-title="${E(doc.headline)}"><button type="button" class="pill pri" data-native hidden>مشاركة</button>`
     + `<a class="pill" href="https://wa.me/?text=${t}%20${u}" target="_blank" rel="noopener">واتساب</a>`
     + `<a class="pill" href="${E(`https://x.com/intent/post?text=${t}&url=${u}`)}" target="_blank" rel="noopener">X</a>`
     + `<button type="button" class="pill" data-copy>نسخ الرابط</button></div>`
@@ -65,25 +65,25 @@ function entsHtml(doc, names){
   const chips = (doc.entities || []).map(([k, id]) => {
     const n = names(k, id); if (!n) return "";
     const img = `<img src="${E(n.img)}" alt="" width="26" height="26" loading="lazy"${k === "player" ? ' onerror="this.remove()"' : ""}>`;
-    return `<span class="ent-c"><a class="ent" href="${E(n.href)}">${img}${E(n.name)}</a>`
+    return `<span class="aent-c"><a class="aent" href="${E(n.href)}">${img}${E(n.name)}</a>`
       + (k === "team" ? `<button type="button" class="pill" data-fav="t:${E(id)}" data-n="${E(n.name)}">تابع</button>` : "") + "</span>";
   }).filter(Boolean);
-  return chips.length ? `<nav class="ents" aria-label="في المقال">${chips.join("")}</nav>` : "";
+  return chips.length ? `<nav class="aents" aria-label="في المقال">${chips.join("")}</nav>` : "";
 }
 
 function articleHtml(doc, rel, names){
   const img = doc.image || {};
   const secs = (doc.sections || []).map(s => (s.subhead ? `<h2>${E(s.subhead)}</h2>` : "") + (s.paragraphs || []).map(p => `<p>${E(p)}</p>`).join("")).join("");
-  const facts = (doc.facts_box || []).length ? `<aside class="facts"><h2>حقائق سريعة</h2><ul>${doc.facts_box.map(f => `<li>${E(f)}</li>`).join("")}</ul></aside>` : "";
+  const facts = (doc.facts_box || []).length ? `<aside class="afacts"><h2>حقائق سريعة</h2><ul>${doc.facts_box.map(f => `<li>${E(f)}</li>`).join("")}</ul></aside>` : "";
   const rl = (rel || []).slice(0, 4);
-  const rels = rl.length ? `<section class="rel"><h2>ذات صلة</h2><div class="rg">${rl.map(r => `<a class="rc" href="/news/${E(r.id)}/">${r.image && r.image.url ? `<img src="${E(r.image.url)}" alt="" width="600" height="338" loading="lazy">` : ""}<span>${E(r.headline)}</span></a>`).join("")}</div></section>` : "";
+  const rels = rl.length ? `<section class="arel"><h2>ذات صلة</h2><div class="arg">${rl.map(r => `<a class="arc" href="/news/${E(r.id)}/">${r.image && r.image.url ? `<img src="${E(r.image.url)}" alt="" width="600" height="338" loading="lazy">` : ""}<span>${E(r.headline)}</span></a>`).join("")}</div></section>` : "";
   const mod = doc.modified && doc.modified !== doc.published ? ` · آخر تحديث ${E(T(doc.modified))}` : "";
   const chip = doc.breaking ? `<span class="brk">عاجل</span><span class="ah-k">${E(kindOf(doc))}</span>` : `<span class="ah-k">${E(kindOf(doc))}</span>`;
   const head = img.url
     ? `<header class="ah"><figure class="ah-f"><div class="ah-ph"><img src="${E(img.url)}" width="${img.w || 1200}" height="${img.h || 675}" alt="${E(img.caption || doc.headline)}" fetchpriority="high"><div class="ah-in">${chip}<h1>${E(doc.headline)}</h1></div></div>${img.caption ? `<figcaption class="ah-cap">${E(img.caption)}</figcaption>` : ""}</figure></header>`
     : `<header class="ah np"><div class="ah-in">${chip}<h1>${E(doc.headline)}</h1></div></header>`;
   return `<article class="art"><p class="crumbs"><a href="/news/">الأخبار</a></p>${head}<p class="lede">${E(doc.standfirst)}</p>`
-    + `<p class="ab"><b>${AUTHOR}</b><span>${readTime(doc)}</span><span>${E(T(doc.published))}${mod}</span></p>`
+    + `<p class="aby"><b>${AUTHOR}</b><span>${readTime(doc)}</span><span>${E(T(doc.published))}${mod}</span></p>`
     + shareHtml(doc) + entsHtml(doc, names)
     + secs + facts
     + (doc.match ? `<a class="mlink" href="/m/${E(doc.match)}/">صفحة المباراة: الأحداث والتشكيلة والإحصائيات</a>` : "")
@@ -110,7 +110,7 @@ const HM = iso => { try { return new Date(iso).toLocaleString("ar-AE-u-nu-latn",
 const groupOf = a => { const t = a.topic || (a.kind === "report" ? "report" : ""); return t === "presser" ? "statement" : ["report", "transfer", "injury", "statement"].includes(t) ? t : "other"; };
 const imgTag = (a, w, h, lazy) => a.image && a.image.url ? `<img src="${E(a.image.url)}" alt="" width="${w}" height="${h}"${lazy ? ' loading="lazy"' : ' fetchpriority="high"'}>` : "";
 const brk = a => a.breaking ? '<b class="brk">عاجل</b>' : "";
-const leadCard = a => `<a class="nl" href="/news/${E(a.id)}/" data-t="${groupOf(a)}">${imgTag(a, 1200, 675)}<span class="nl-in">${brk(a)}<span class="ah-k">${E(kindOf(a))}</span><span class="nl-h">${E(a.headline)}</span></span></a>`;
+const leadCard = a => `<a class="anl" href="/news/${E(a.id)}/" data-t="${groupOf(a)}">${imgTag(a, 1200, 675)}<span class="anl-in">${brk(a)}<span class="ah-k">${E(kindOf(a))}</span><span class="anl-h">${E(a.headline)}</span></span></a>`;
 const gridCard = a => `<a class="nc" href="/news/${E(a.id)}/" data-t="${groupOf(a)}">${imgTag(a, 600, 338, 1)}<span class="nc-k">${brk(a)}${E(kindOf(a))} · <time datetime="${E(a.published)}">${E(HM(a.published))}</time></span><span class="nc-h">${E(a.headline)}</span></a>`;
 const homeRow = a => `<a class="hr" href="/news/${E(a.id)}/">${imgTag(a, 240, 135, 1)}<span><span class="hr-h">${E(a.headline)}</span><small>${brk(a)}${E(kindOf(a))} · <time datetime="${E(a.published)}">${E(HM(a.published))}</time></small></span></a>`;
 const leadOf = (list, now) => list.find(a => a.breaking && now - Date.parse(a.published) <= 2 * 36e5) || list[0];
@@ -126,35 +126,35 @@ function bk(a){return a.breaking?'<b class="brk">عاجل</b>':""}
 function rel(iso){var m=Math.round((Date.now()-Date.parse(iso))/6e4);return m<1?"الحين":m<60?"قبل "+m+" د":m<1440?"قبل "+Math.round(m/60)+" س":new Date(iso).toLocaleDateString("ar-AE-u-nu-latn",{timeZone:"Asia/Dubai",day:"numeric",month:"short"})}
 var TA=window.TA={
  card:function(a){return'<a class="nc" href="/news/'+e(a.id)+'/" data-t="'+grp(a)+'">'+img(a,600,338,1)+'<span class="nc-k">'+bk(a)+e(kind(a))+' · <time datetime="'+e(a.published)+'"></time></span><span class="nc-h">'+e(a.headline)+"</span></a>"},
- lead:function(a){return'<a class="nl" href="/news/'+e(a.id)+'/" data-t="'+grp(a)+'">'+img(a,1200,675)+'<span class="nl-in">'+bk(a)+'<span class="ah-k">'+e(kind(a))+'</span><span class="nl-h">'+e(a.headline)+"</span></span></a>"},
+ lead:function(a){return'<a class="anl" href="/news/'+e(a.id)+'/" data-t="'+grp(a)+'">'+img(a,1200,675)+'<span class="anl-in">'+bk(a)+'<span class="ah-k">'+e(kind(a))+'</span><span class="anl-h">'+e(a.headline)+"</span></span></a>"},
  row:function(a){return'<a class="hr" href="/news/'+e(a.id)+'/">'+img(a,240,135,1)+'<span><span class="hr-h">'+e(a.headline)+"</span><small>"+bk(a)+e(kind(a))+' · <time datetime="'+e(a.published)+'"></time></small></span></a>'},
  leadOf:function(l){return l.filter(function(a){return a.breaking&&Date.now()-Date.parse(a.published)<=72e5})[0]||l[0]},
  times:function(r){(r||document).querySelectorAll("time[datetime]").forEach(function(t){t.textContent=rel(t.getAttribute("datetime"))})},
  list:function(){return fetch("/v1/news/articles.json",{cache:"no-cache"}).then(function(r){return r.json()}).then(function(j){return j.articles||[]})}};
 TA.times();
 document.querySelectorAll(".nh").forEach(function(root){var f="all",bs=root.querySelectorAll(".nf button"),more=root.querySelector(".nmore"),grid=root.querySelector(".ng");
- function apply(){root.querySelectorAll(".nl,.nc").forEach(function(c){c.hidden=!(f==="all"||c.dataset.t===f)})}
+ function apply(){root.querySelectorAll(".anl,.nc").forEach(function(c){c.hidden=!(f==="all"||c.dataset.t===f)})}
  bs.forEach(function(b){b.onclick=function(){f=b.dataset.t;bs.forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});apply()}});
  if(more)more.onclick=function(){more.disabled=true;TA.list().then(function(l){var from=+more.dataset.from;grid.insertAdjacentHTML("beforeend",l.slice(from,from+30).map(TA.card).join(""));more.dataset.from=from+30;more.disabled=false;if(from+30>=l.length)more.remove();TA.times(grid);apply()},function(){more.disabled=false})}});
-document.querySelectorAll(".hb-b").forEach(function(b){TA.list().then(function(l){if(!l.length)return;var ld=TA.leadOf(l);b.innerHTML=TA.lead(ld)+l.filter(function(a){return a!==ld}).slice(0,3).map(TA.row).join("");TA.times(b)})})})()`;
+document.querySelectorAll(".ahb-b").forEach(function(b){TA.list().then(function(l){if(!l.length)return;var ld=TA.leadOf(l);b.innerHTML=TA.lead(ld)+l.filter(function(a){return a!==ld}).slice(0,3).map(TA.row).join("");TA.times(b)})})})()`;
 const SCRIPT = `<script>${CLIENT}</script>`;
 
 function newsIndexHtml(list, now){
   const filters = [["all", "الكل"], ["report", "تقارير"], ["transfer", "انتقالات"], ["injury", "إصابات"], ["statement", "تصريحات"]];
   const head = `<nav class="ntabs"><a href="/news/" aria-current="page">مقالات تيفو</a><a href="/news/press/">من الصحف</a></nav>`
     + `<div class="nf" role="toolbar">${filters.map(([k, t], i) => `<button type="button" data-t="${k}" aria-pressed="${i ? "false" : "true"}">${t}</button>`).join("")}</div>`;
-  if (!list.length) return `<div class="nh"><h1 class="nt">الأخبار</h1>${head}<p class="nempty">ما في مقالات للحين</p></div>`;
+  if (!list.length) return `<div class="nh"><h1 class="ant">الأخبار</h1>${head}<p class="nempty">ما في مقالات للحين</p></div>`;
   const lead = leadOf(list, now), rest = list.filter(a => a !== lead).slice(0, 29);
-  return `<div class="nh"><h1 class="nt">الأخبار</h1>${head}${leadCard(lead)}<div class="ng">${rest.map(gridCard).join("")}</div>`
+  return `<div class="nh"><h1 class="ant">الأخبار</h1>${head}${leadCard(lead)}<div class="ng">${rest.map(gridCard).join("")}</div>`
     + (list.length > 30 ? `<button type="button" class="nmore" data-from="30">المزيد</button>` : "") + `</div>${SCRIPT}`;
 }
 
-const pressTabs = () => `<div class="nh"><h1 class="nt">الأخبار</h1><nav class="ntabs"><a href="/news/">مقالات تيفو</a><a href="/news/press/" aria-current="page">من الصحف</a></nav></div>`;
+const pressTabs = () => `<div class="nh"><h1 class="ant">الأخبار</h1><nav class="ntabs"><a href="/news/">مقالات تيفو</a><a href="/news/press/" aria-current="page">من الصحف</a></nav></div>`;
 
 function homeBlock(list, now){
   if (!list || !list.length) return "";
   const lead = leadOf(list, now), rows = list.filter(a => a !== lead).slice(0, 3);
-  return `<section class="hb"><div class="hb-h"><h2>مقالات تيفو</h2><a href="/news/">كل المقالات</a></div><div class="hb-b">${leadCard(lead)}${rows.map(homeRow).join("")}</div>${SCRIPT}</section>`;
+  return `<section class="ahb"><div class="ahb-h"><h2>مقالات تيفو</h2><a href="/news/">كل المقالات</a></div><div class="ahb-b">${leadCard(lead)}${rows.map(homeRow).join("")}</div>${SCRIPT}</section>`;
 }
 
 function listHtml(list){
