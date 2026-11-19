@@ -105,3 +105,11 @@ def test_canonical_title_and_not_awarded_rows():
     t = T('<tr><th>Year</th><th>Player</th></tr>' + ''.join(f'<tr><td>{y}</td><td>{x}</td></tr>' for y, x in
           ((2001, L("A")), (2002, "Not awarded"), (2003, L("B")), (2004, "—"), (2005, L("C")), (2020, "Cancelled due to COVID-19"))))
     assert [r["season"] for r in extract(t, "X")[0]["rows"]] == ["2001", "2003", "2005"]
+
+
+def test_season_scorers_without_a_rank_column_rank_by_goals():
+    from graph.awards_wiki import extract_season
+    sc = T('<tr><th>Player</th><th>Club</th><th>Goals</th></tr>'
+           f'<tr><td>{L("A")}</td><td>x</td><td>8</td></tr><tr><td>{L("B")}</td><td>x</td><td>8</td></tr><tr><td>{L("C")}</td><td>x</td><td>6</td></tr>', "Top goalscorers")
+    got = extract_season(sc, "2024–25 UEFA Nations League")
+    assert [(r["person"], r["rank"]) for r in got["rows"]] == [("A", 1), ("B", 1), ("C", 3)]

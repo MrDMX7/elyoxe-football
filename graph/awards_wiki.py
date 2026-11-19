@@ -263,16 +263,23 @@ def extract_season(html, page):
             continue
         if pi is not None and re.search(r"scorer|goalscor", section, re.I):   # Rank | Player | Club | Goals
             ki, vi = _col(hdr, re.compile(r"^(rank|pos\.?|#)$", re.I)), _col(hdr, re.compile(r"goals?", re.I))
-            last = 0
+            last, got = 0, []
             for r in body:
                 if len(r) <= pi or not r[pi][0]:
                     continue
                 rk = _rank(r[ki][0]) if ki is not None and len(r) > ki else None
-                rk = rk or last or 1
-                last = rk
-                if rk > 10:
-                    break
-                rows.append({"kind": "top_scorer", "rank": rk, "person": r[pi][1][0] if r[pi][1] else None, "name": r[pi][0],
-                             "team": r[ti][1][0] if ti is not None and len(r) > ti and r[ti][1] else None,
-                             "value": r[vi][0] if vi is not None and len(r) > vi else None})
+                if ki is not None:
+                    rk = rk or last or 1
+                    last = rk
+                got.append({"kind": "top_scorer", "rank": rk, "person": r[pi][1][0] if r[pi][1] else None, "name": r[pi][0],
+                            "team": r[ti][1][0] if ti is not None and len(r) > ti and r[ti][1] else None,
+                            "value": r[vi][0] if vi is not None and len(r) > vi else None})
+            if ki is None:                                         # no rank column: the goals rank them, ties share a rank
+                got.sort(key=lambda x: -(_rank(x["value"] or "") or 0))
+                prev = None
+                for i, x in enumerate(got):
+                    g = _rank(x["value"] or "") or 0
+                    x["rank"] = prev[1] if prev and prev[0] == g else i + 1
+                    prev = (g, x["rank"])
+            rows += [x for x in got if x["rank"] <= 10]
     return {"page": page, "season": season, "rows": rows}

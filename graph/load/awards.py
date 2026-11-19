@@ -10,7 +10,7 @@
     player of his own from Wikidata (English and Arabic labels, birth date); a red link is a name only;
   * a winner born after the end of the season is dropped (a wrong link) and counted.
 """
-import os, re
+import os, re, unicodedata
 import yaml
 from graph import awards_fetch as AF
 from graph.awards_wiki import canonical, extract
@@ -119,6 +119,36 @@ def load(G, reg, S):
             G.put("team", {"tid": tid, "name": f.get("en") or name, "name_ar": f.get("ar")}, "wikidata")
         return tid
 
+    def label(tid=None, pid=None, kid=None):
+        t, k = ("player", "pid") if pid else ("team", "tid") if tid else ("coach", "kid")
+        r = G.c.execute(f"SELECT name FROM {t} WHERE {k}=?", (pid or tid or kid,)).fetchone()
+        return re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", (r[0] if r else "") or "").encode("ascii", "ignore").decode().lower()).strip()
+
+    def alike(a, b):
+        return bool(a and b) and (a == b or a.split()[-1:] == b.split()[-1:])
+
+    def edition_set(eid, kind, entries):
+        """One source table's honours of one kind for one edition (entries: rank, tid, pid, kid, value): written when the edition
+        has none of that kind yet; else the first source keeps them, and a disagreement is logged once, only when no first-place
+        name of the two lists matches (the same man is often two ids: a name-only row and a linked one)."""
+        entries = [e for e in entries if any(e[1:4])]
+        if not entries:
+            return
+        cur = G.c.execute("SELECT rank, tid, pid, kid, src FROM honour WHERE eid=? AND kind=?", (eid, kind)).fetchall()
+        if cur:
+            top_m, top_t = min(e[0] for e in entries), min(c[0] for c in cur)
+            mine = [label(e[1], e[2], e[3]) for e in entries if e[0] == top_m]
+            theirs = [label(c[1], c[2], c[3]) for c in cur if c[0] == top_t]
+            if not any(alike(x, y) for x in mine for y in theirs):
+                G.conflict("honour", eid, kind, "; ".join(theirs), cur[0][4], "; ".join(mine), "wiki")
+                n["conflicts"] += 1
+            return
+        for rank, tid, pid, kid, value in entries:
+            if G.c.execute("INSERT OR IGNORE INTO honour(eid, kind, rank, tid, pid, kid, value, src) VALUES(?,?,?,?,?,?,?,?)",
+                           (eid, kind, rank, tid, pid, kid, value, "wiki")).rowcount:
+                n["honours"] += 1
+                n["edition_honours"] += 1
+
     def honour(eid, kind, rank, tid=None, pid=None, kid=None, value=None, first_wins=False):
         if first_wins:
             cur = G.c.execute("SELECT tid, pid, kid, src FROM honour WHERE eid=? AND kind=? AND rank=?", (eid, kind, rank)).fetchall()
@@ -158,15 +188,16 @@ def load(G, reg, S):
             n["tables"] += 1
             if fid:                                                       # our competition's article: edition honours
                 cid = reg.mint("competition", "fotmob", int(fid))
+                per = {}
                 for r in t["rows"]:
                     eid = edition_for(G, reg, "wiki", f"{fid}|{r['season']}", cid, r["season"])
                     if t["kind"] == "champion_table":
-                        honour(eid, "champion", 1, tid=team(r["team"], r["name"]), first_wins=True)
+                        per.setdefault((eid, "champion"), []).append((1, team(r["team"], r["name"]), None, None, None))
                         if r.get("runner_up"):
-                            honour(eid, "runner_up", 1, tid=team(r["runner_up"], r.get("runner_up_name")), first_wins=True)
+                            per.setdefault((eid, "runner_up"), []).append((1, team(r["runner_up"], r.get("runner_up_name")), None, None, None))
                         continue
                     if t["kind"] == "coach":
-                        honour(eid, "best_coach", r["rank"], kid=coach(r["person"], r["name"], page), value=r["value"], first_wins=True)
+                        per.setdefault((eid, "best_coach"), []).append((r["rank"], None, None, coach(r["person"], r["name"], page), r["value"]))
                         continue
                     pid, born = player(r["person"], r["name"], page)
                     if pid is None:
@@ -174,8 +205,9 @@ def load(G, reg, S):
                     if born and _end_year(r["season"]) and int(born[:4]) > _end_year(r["season"]):
                         n["sanity_dropped"] += 1
                         continue
-                    honour(eid, HONOUR.get(t["kind"], "best_player"), r["rank"], pid=pid, value=r["value"], first_wins=True)
-                    n["edition_honours"] += 1
+                    per.setdefault((eid, HONOUR.get(t["kind"], "best_player")), []).append((r["rank"], None, pid, None, r["value"]))
+                for (eid, kind), entries in per.items():
+                    edition_set(eid, kind, entries)
                 continue
             if t["kind"] == "champion_table":
                 continue
@@ -222,9 +254,10 @@ def load(G, reg, S):
         n["season_pages"] += 1
         cid = reg.mint("competition", "fotmob", int(fid))
         eid = edition_for(G, reg, "wiki", f"{fid}|{got['season']}", cid, got["season"])
+        per = {}
         for r in got["rows"]:
             if r["kind"] == "best_coach":
-                honour(eid, "best_coach", 1, kid=coach(r["person"], r["name"], page), first_wins=True)
+                per.setdefault("best_coach", []).append((1, None, None, coach(r["person"], r["name"], page), None))
                 continue
             pid, born = player(r["person"], r["name"], page)
             if pid is None:
@@ -232,6 +265,7 @@ def load(G, reg, S):
             if born and _end_year(got["season"]) and int(born[:4]) > _end_year(got["season"]):
                 n["sanity_dropped"] += 1
                 continue
-            honour(eid, r["kind"], r["rank"], pid=pid, value=r["value"], first_wins=True)
-            n["edition_honours"] += 1
+            per.setdefault(r["kind"], []).append((r["rank"], None, pid, None, r["value"]))
+        for kind, entries in per.items():
+            edition_set(eid, kind, entries)
     return n

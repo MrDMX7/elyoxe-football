@@ -154,3 +154,25 @@ def test_a_redirect_is_read_once_as_its_article(tmp_path):
     G2, reg2 = Graph(str(tmp_path / "t2.db")), Registry()
     awards.load(G2, reg2, S2)
     assert G2.c.execute("select name from competition where kind='award'").fetchall() == [("Ballon d'Or",)]
+
+
+def test_the_same_scorer_from_two_sources_is_no_conflict_and_ties_stay(tmp_path):
+    sc = T('<tr><th>Player</th><th>Club</th><th>Goals</th></tr>'
+           f'<tr><td>{L("Ali_Mabkhout")}</td><td>x</td><td>25</td></tr><tr><td>{L("Other_Guy")}</td><td>x</td><td>25</td></tr>', "Top scorers")
+    items = {"Ali_Mabkhout": item("Q61", "Ali Mabkhout", "علي مبخوت", "1990-10-05"), "Other_Guy": item("Q62", "Other Guy", born="1990-01-01")}
+    S = mk(tmp_path, {"2016–17_UAE_Pro_League": sc, "2017–18_UAE_Pro_League": sc}, items)
+    art = tmp_path / "graph" / ".cache" / "awards" / "articles.json"
+    a = json.loads(art.read_text(encoding="utf-8"))
+    a["awards"], a["seasons"] = [], {"2016–17_UAE_Pro_League": "538", "2017–18_UAE_Pro_League": "538"}
+    art.write_text(json.dumps(a), encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 538)
+    e17 = reg.mint("edition", "fotmob", "538|2016/2017")
+    G.put("edition", {"eid": e17, "cid": lg, "season": "2016/2017"}, "fotmob")
+    ours = reg.mint("player", "fotmob", 170716)
+    G.put("player", {"pid": ours, "name": "Ali Ahmed Mabkhout"}, "fotmob")
+    G.c.execute("insert into honour(eid, kind, rank, pid, value, src) values(?, 'top_scorer', 1, ?, '25', 'tifo')", (e17, ours))
+    awards.load(G, reg, S)
+    assert G.c.execute("select count(*) from conflict").fetchone()[0] == 0          # our count names him too
+    e18 = G.c.execute("select eid from edition where cid=? and season='2017/2018'", (lg,)).fetchone()[0]
+    assert G.c.execute("select count(*) from honour where eid=? and kind='top_scorer' and rank=1", (e18,)).fetchone()[0] == 2
