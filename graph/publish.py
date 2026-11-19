@@ -186,3 +186,45 @@ def coaches(G, out_dir, gap_days=180):
     _dump(os.path.join(out_dir, "coaches", "teams.json"), dict(sorted(teams.items())))
     _dump(os.path.join(out_dir, "coaches", "coaches.json"), dict(sorted(people.items())))
     return {"spells": len(spells), "teams": len(teams), "coaches": len(people)}
+
+
+def editions(G, out_dir):
+    """editions/<FotMob competition>.json: every season of each of our competitions with its champion, runner-up, final table,
+    top scorers, season awards (best player, young player, goalkeeper, coach, local player), the champion's coach, the man of
+    the match leaders and the matches held: the season pages' data (phase 7). Newest season first."""
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    fm = lambda t: {a: int(b) for a, b in q(f"SELECT tifo_id, source_id FROM xref WHERE type='{t}' AND source='fotmob'") if str(b).isdigit()}
+    fm_c, fm_t, fm_p = fm("competition"), fm("team"), fm("player")
+    tn = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
+    pn = {p: (a or n) for p, n, a in q("SELECT pid, name, name_ar FROM player")}
+    kn = {k: (a or n) for k, n, a in q("SELECT kid, name, name_ar FROM coach")}
+    team = lambda t: {"fotmob": fm_t.get(t), "name": tn.get(t)} if t else None
+    n = 0
+    for cid, fid in sorted(fm_c.items(), key=lambda x: x[1]):
+        name, name_ar = q("SELECT name, name_ar FROM competition WHERE cid=?", (cid,))[0]
+        seasons = []
+        for eid, season in q("SELECT eid, season FROM edition WHERE cid=? ORDER BY season DESC", (cid,)):
+            hon = defaultdict(list)
+            for kind, rank, tid, pid, kid, value in q("SELECT kind, rank, tid, pid, kid, value FROM honour WHERE eid=? ORDER BY kind, rank", (eid,)):
+                hon[kind].append((rank, tid, pid, kid, value))
+            table = [[r, fm_t.get(t), tn.get(t), p, w, d, l, gf, ga, pts] for r, t, p, w, d, l, gf, ga, pts in
+                     q("SELECT rank, tid, played, won, drawn, lost, gf, ga, pts FROM standing WHERE eid=? ORDER BY grp, rank", (eid,))]
+            matches = q("SELECT count(*) FROM match WHERE eid=?", (eid,))[0][0]
+            if not hon and not table and not matches:
+                continue
+            champ = (hon.get("champion") or [(None, None)])[0][1]
+            coach = q("""SELECT x.kid, count(*) n FROM match_coach x JOIN match m ON m.mid=x.mid WHERE m.eid=? AND
+                         ((x.side='h' AND m.home=?) OR (x.side='a' AND m.away=?)) GROUP BY x.kid ORDER BY n DESC LIMIT 1""", (eid, champ, champ)) if champ else []
+            motm = q("""SELECT w.pid, count(*) n FROM match_award w JOIN match m ON m.mid=w.mid WHERE m.eid=? AND w.kind='motm'
+                        GROUP BY w.pid ORDER BY n DESC, w.pid LIMIT 5""", (eid,))
+            people = lambda kind: [{"rank": r, "fotmob": fm_p.get(p), "name": pn.get(p), "value": v} for r, t, p, k, v in hon.get(kind, []) if p]
+            seasons.append({"season": season, "matches": matches, "champion": team(champ), "runner_up": team((hon.get("runner_up") or [(None, None)])[0][1]),
+                            "table": table, "top_scorers": people("top_scorer")[:10],
+                            **{k: people(k)[:3] for k in ("best_player", "best_young", "best_goalkeeper", "best_local", "top_assist")},
+                            "best_coach": [{"kid": k, "name": kn.get(k)} for r, t, p, k, v in hon.get("best_coach", []) if k][:1],
+                            "champion_coach": {"kid": coach[0][0], "name": kn.get(coach[0][0])} if coach else None,
+                            "motm": [[fm_p.get(p), pn.get(p), c] for p, c in motm if fm_p.get(p)]})
+        if seasons:
+            _dump(os.path.join(out_dir, "editions", f"{fid}.json"), {"fotmob": fid, "name": name, "name_ar": name_ar, "seasons": seasons})
+            n += 1
+    return {"competitions": n}

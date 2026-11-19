@@ -57,3 +57,38 @@ def test_club_awards_have_their_own_group():
     assert publish.group("Chelsea F.C. Player of the Season award recipients") == "club"
     assert publish.group("Ballon d'Or") == "world"
     assert publish.group("FWA Footballer of the Year") == "country"
+
+
+def test_edition_files_for_season_pages(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 538)
+    G.put("competition", {"cid": lg, "name": "Pro League", "name_ar": "دوري أدنوك للمحترفين"}, "fotmob")
+    G.xref("competition", lg, "fotmob", 538, "fotmob-native")
+    ain, jaz = reg.mint("team", "fotmob", 102117), reg.mint("team", "fotmob", 102101)
+    for t, f, ar in ((ain, 102117, "العين"), (jaz, 102101, "الجزيرة")):
+        G.put("team", {"tid": t, "name": str(f), "name_ar": ar}, "fotmob")
+        G.xref("team", t, "fotmob", f, "fotmob-native")
+    mab = reg.mint("player", "fotmob", 170716)
+    G.put("player", {"pid": mab, "name": "Ali Mabkhout", "name_ar": "علي مبخوت"}, "fotmob")
+    G.xref("player", mab, "fotmob", 170716, "fotmob-native")
+    e = reg.mint("edition", "fotmob", "538|2016/2017")
+    G.put("edition", {"eid": e, "cid": lg, "season": "2016/2017"}, "fotmob")
+    G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'champion', 1, ?, 's365')", (e, jaz))
+    G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'runner_up', 1, ?, 'table')", (e, ain))
+    G.c.execute("insert into honour(eid, kind, rank, pid, value, src) values(?, 'top_scorer', 1, ?, '33', 'tifo')", (e, mab))
+    G.c.execute("insert into standing values(?, '', 1, ?, 26, 22, 2, 2, 70, 20, 68, 's365')", (e, jaz))
+    m = reg.mint("match", "fotmob", 1)
+    G.put("match", {"mid": m, "eid": e, "date": "2017-01-01", "home": jaz, "away": ain, "hs": 2, "as_": 0}, "fotmob")
+    G.c.execute("insert into match_award values(?, 'motm', ?, ?, '9.1', 'fotmob-rating')", (m, mab, jaz))
+    k = reg.mint("coach", "fotmob", 150526)
+    G.put("coach", {"kid": k, "name": "Henk ten Cate"}, "fotmob")
+    G.c.execute("insert into match_coach values(?, 'h', ?, 'fotmob')", (m, k))
+    G.c.commit()
+    out = publish.editions(G, str(tmp_path / "o"))
+    d = json.load(open(tmp_path / "o" / "editions" / "538.json", encoding="utf-8"))
+    s = d["seasons"][0]
+    assert (s["season"], s["champion"]["fotmob"], s["champion"]["name"], s["runner_up"]["name"]) == ("2016/2017", 102101, "الجزيرة", "العين")
+    assert s["top_scorers"][0] == {"rank": 1, "fotmob": 170716, "name": "علي مبخوت", "value": "33"}
+    assert s["table"][0][:3] == [1, 102101, "الجزيرة"] and s["motm"][0] == [170716, "علي مبخوت", 1]
+    assert s["champion_coach"] == {"kid": k, "name": "Henk ten Cate"} and s["matches"] == 1
+    assert out["competitions"] == 1
