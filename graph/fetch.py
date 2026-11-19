@@ -12,3 +12,16 @@ def martj42(S, max_age_days=7):
         open(tmp, "wb").write(data)
         os.replace(tmp, p)
     return p
+
+
+FJELSTUL = "https://raw.githubusercontent.com/jfjelstul/worldcup/master/data-csv/"
+
+
+def fjelstul(S, max_age_days=7):
+    """The World Cup database's award winners and players (CC-BY-SA), weekly."""
+    for name in ("award_winners", "players"):
+        p = os.path.join(S.db, f"fjelstul_{name}.csv")
+        if not os.path.exists(p) or time.time() - os.path.getmtime(p) > max_age_days * 86400:
+            data = urllib.request.urlopen(urllib.request.Request(FJELSTUL + name + ".csv", headers={"User-Agent": "elyoxe-tifo/0.1"}), timeout=120).read()
+            open(p + ".tmp", "wb").write(data)
+            os.replace(p + ".tmp", p)

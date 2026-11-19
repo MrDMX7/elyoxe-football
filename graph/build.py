@@ -14,7 +14,8 @@ from graph.db import Graph  # noqa: E402
 from graph.ids import Registry  # noqa: E402
 from graph.src import Sources  # noqa: E402
 
-ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "rsssf", "schochastics", "martj42", "transfers", "awards"]
+ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "rsssf", "schochastics", "martj42", "transfers",
+         "honours", "fjelstul", "awards"]      # an edition honour's first source keeps it: our counts, Fjelstul, then Wikipedia
 REQUIRED = {"fotmob_matches"}
 CACHE = os.path.join(HERE, ".cache")       # the registry and the published mirror: kept between runs (actions/cache)
 OUT = os.path.join(HERE, ".build")         # tifo.db and the report: rebuilt each run, never cached (1-2 GB)
@@ -29,10 +30,11 @@ def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
     db_path = os.path.join(out_dir, "tifo.db")
     G = Graph(db_path)
     if fetch:
-        try:
-            fetch_mod().martj42(S)
-        except Exception as e:
-            print(f"martj42 fetch: {e}", flush=True)
+        for f in (fetch_mod().martj42, fetch_mod().fjelstul):
+            try:
+                f(S)
+            except Exception as e:
+                print(f"{f.__name__} fetch: {e}", flush=True)
     rec = {"started": datetime.now(timezone.utc).isoformat()[:19] + "Z", "loaders": {}, "ok": True}
     for name in loaders or ORDER:
         t = time.time()

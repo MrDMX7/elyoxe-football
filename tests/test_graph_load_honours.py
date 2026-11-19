@@ -1,0 +1,77 @@
+import json
+from graph.db import Graph
+from graph.ids import Registry
+from graph.src import Sources
+from graph.load import honours, fjelstul
+
+
+def base(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    cid = reg.mint("competition", "fotmob", 538)
+    G.put("competition", {"cid": cid, "name": "Pro League"}, "fotmob")
+    G.xref("competition", cid, "fotmob", 538, "fotmob-native")
+    eid = reg.mint("edition", "fotmob", "538|2025/2026")
+    G.put("edition", {"eid": eid, "cid": cid, "season": "2025/2026"}, "fotmob")
+    return G, reg, cid, eid
+
+
+def match(G, reg, eid, k, h, a, hs, as_, rnd="1", goals=()):
+    mid = reg.mint("match", "fotmob", k)
+    G.put("match", {"mid": mid, "eid": eid, "round": rnd, "date": f"2026-01-{10 + k:02d}", "home": h, "away": a, "hs": hs, "as_": as_, "status": "finished"}, "fotmob")
+    G.many("event", [{"mid": mid, "seq": i, "minute": 10 + i, "type": t, "side": "h", "pid": p} for i, (t, p) in enumerate(goals)], "fotmob")
+    return mid
+
+
+def test_top_scorer_from_events_counts_no_own_goals(tmp_path):
+    G, reg, cid, eid = base(tmp_path)
+    a, b = reg.mint("player", "fotmob", 1), reg.mint("player", "fotmob", 2)
+    match(G, reg, eid, 1, 10, 20, 2, 0, goals=[("goal", a), ("own_goal", b)])
+    match(G, reg, eid, 2, 20, 10, 2, 0, goals=[("goal", b), ("penalty_goal", b)])
+    match(G, reg, eid, 3, 10, 30, 1, 0, goals=[("goal", a)])
+    honours.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "m"), s3=False))
+    got = G.c.execute("select rank, pid, value, src from honour where eid=? and kind='top_scorer' order by pid", (eid,)).fetchall()
+    assert got == [(1, a, "2", "tifo"), (1, b, "2", "tifo")]
+
+
+def test_runner_up_from_the_final(tmp_path):
+    G, reg, cid, eid = base(tmp_path)
+    match(G, reg, eid, 1, 10, 20, 2, 1, rnd="Final", goals=[("goal", 1), ("goal", 1), ("goal", 2)])
+    honours.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "m"), s3=False))
+    got = dict(G.c.execute("select kind, tid from honour where eid=? and kind in ('champion','runner_up')", (eid,)).fetchall())
+    assert got == {"champion": 10, "runner_up": 20}
+
+
+def test_scorers_file_and_rsssf_fill_the_older_seasons(tmp_path):
+    G, reg, cid, eid = base(tmp_path)
+    m = tmp_path / "m" / "history"
+    (m / "scorers").mkdir(parents=True)
+    (m / "arab").mkdir(parents=True)
+    (m / "scorers" / "538.json").write_text(json.dumps({"seasons": {"2012/2013": {"goals": [[170716, "علي مبخوت", 23], [None, "X", 19]]}}}), encoding="utf-8")
+    (m / "arab" / "uae.json").write_text(json.dumps({"league": 538, "seasons": [{"season": "1974/1975", "scorers": [["Suhail Salim", "Ahly", 102119, 14]]}]}), encoding="utf-8")
+    honours.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "m"), s3=False), arab_codes=["uae"])
+    e13 = G.c.execute("select eid from edition where cid=? and season='2012/2013'", (cid,)).fetchone()[0]
+    assert G.c.execute("select rank, pid, value, src from honour where eid=? and kind='top_scorer' order by rank", (e13,)).fetchall()[0] == (1, reg.get("player", "fotmob", 170716), "23", "scorers")
+    e75 = G.c.execute("select eid from edition where cid=? and season='1974/1975'", (cid,)).fetchone()[0]
+    pid = G.c.execute("select pid from honour where eid=? and kind='top_scorer'", (e75,)).fetchone()[0]
+    assert G.c.execute("select name from player where pid=?", (pid,)).fetchone()[0] == "Suhail Salim"
+
+
+def test_fjelstul_golden_ball_podium(tmp_path):
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    (db / "fjelstul_award_winners.csv").write_text(
+        "key_id,tournament_id,tournament_name,award_id,award_name,shared,player_id,family_name,given_name,team_id,team_name,team_code\n"
+        "1,WC-1930,1930 FIFA Men's World Cup,A-1,Golden Ball,0,P-1,Nasazzi,José,T-84,Uruguay,URY\n"
+        "2,WC-1930,1930 FIFA Men's World Cup,A-2,Silver Ball,0,P-2,Stábile,Guillermo,T-03,Argentina,ARG\n"
+        "3,WC-1930,1930 FIFA Men's World Cup,A-4,Golden Boot,0,P-2,Stábile,Guillermo,T-03,Argentina,ARG\n"
+        "4,WC-1930,1930 FIFA Men's World Cup,A-9,FIFA Fair Play Trophy,0,,,,T-84,Uruguay,URY\n", encoding="utf-8")
+    (db / "fjelstul_players.csv").write_text("key_id,player_id,family_name,given_name,birth_date,player_wikipedia_link\n"
+                                             "1,P-1,Nasazzi,José,1901-05-24,https://en.wikipedia.org/wiki/Jos%C3%A9_Nasazzi\n"
+                                             "2,P-2,Stábile,Guillermo,1905-01-17,https://en.wikipedia.org/wiki/Guillermo_St%C3%A1bile\n", encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    wc = reg.mint("competition", "fotmob", 77)
+    fjelstul.load(G, reg, Sources(str(tmp_path), s3=False))
+    e = G.c.execute("select eid from edition where cid=? and season='1930'", (wc,)).fetchone()[0]
+    got = {(k, r): n for k, r, n in G.c.execute("select h.kind, h.rank, coalesce(p.name, t.name) from honour h left join player p on p.pid=h.pid "
+                                                "left join team t on t.tid=h.tid where h.eid=?", (e,))}
+    assert got == {("best_player", 1): "José Nasazzi", ("best_player", 2): "Guillermo Stábile", ("top_scorer", 1): "Guillermo Stábile", ("fair_play", 1): "Uruguay"}
