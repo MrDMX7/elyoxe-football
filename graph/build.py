@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
-from graph import coverage, fetch  # noqa: E402
+from graph import coverage, fetch, publish as P  # noqa: E402
 from graph.db import Graph  # noqa: E402
 from graph.ids import Registry  # noqa: E402
 from graph.src import Sources  # noqa: E402
@@ -60,6 +60,11 @@ def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
         rec["moved_sample"] = moved[:20]
     cov = coverage.compute(G)
     rec["counts"] = cov["counts"]
+    try:
+        rec["awards_files"] = P.awards(G, out_dir)      # v1/awards/*: the pages' data (spec §7.6)
+    except Exception as e:
+        traceback.print_exc()
+        rec["awards_files"] = f"{type(e).__name__}: {str(e)[:200]}"
     G.meta("build", {k: v for k, v in rec.items() if k != "loaders"})
     G.close()
     rec["secs"] = round(time.time() - t0)
@@ -109,6 +114,13 @@ def publish(S, out_dir, reg_path, rec, cov):
     st.b.s3.upload_file(gz, st.b.bucket, "graph/tifo.db.gz")      # private: outside v1/, not served
     st.put_json("graph/coverage.json", {"generated": rec["started"], "counts": cov["counts"], "linked": cov["linked"], "arabic": cov["arabic"],
                                         "editions": cov["editions"]}, cache="static")
+    ad = os.path.join(out_dir, "awards")
+    sent = 0
+    for name in sorted(os.listdir(ad)) if os.path.isdir(ad) else []:
+        if name.endswith(".json"):
+            st.put_json(f"awards/{name}", json.load(open(os.path.join(ad, name), encoding="utf-8")), cache="static")
+            sent += 1
+    rec["awards_sent"] = sent
     st.put_state("graph/last.json", {"at": rec["started"], "matches": cov["counts"]["match"], "fotmob_matches": cov["by_src"]["match"].get("fotmob", 0),
                                       "secs": rec["secs"]})
     rec["published"] = True
