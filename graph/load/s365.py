@@ -3,6 +3,7 @@
 A 365 team links through the FotMob id db/scores365.py found for it; a 365 competition links when FotMob lists one with
 the same English name in the same country."""
 import os, re, unicodedata
+from graph.fm import norm_season
 from graph.link import MatchIndex, twin
 
 
@@ -33,13 +34,17 @@ def load(G, reg, S):
         if not fid:
             G.xref("team", tid, "s365", sid, "s365-native")
         n["teams"] += 1
+    curated = {}                                      # db/scores365.py's own FotMob ↔ 365 competition map (s365/fm.json)
+    for fid, c in ((S.published("s365/fm.json") or {}).get("comps") or {}).items():
+        if c.get("id") and str(fid).isdigit():
+            curated[int(c["id"])] = int(fid)
     eids = {}
     for row in sorted(ix.get("comps") or [], key=lambda r: r[0]):
         cid_s, ar, en, cc, ko = row[0], row[1], row[2], row[3], row[4]
         cname = (countries.get(str(cc)) or [None, None])[1]
-        cands = fm_by.get((fold(cname), fold(en)), [])
+        cands = [curated[cid_s]] if cid_s in curated else fm_by.get((fold(cname), fold(en)), [])
         if len(cands) == 1 and reg.link("competition", "s365", cid_s, reg.mint("competition", "fotmob", cands[0])) is not None:
-            G.xref("competition", reg.get("competition", "s365", cid_s), "s365", cid_s, "country+name")
+            G.xref("competition", reg.get("competition", "s365", cid_s), "s365", cid_s, "s365-fm-map" if cid_s in curated else "country+name")
             n["comps_linked"] += 1
         cid = reg.get("competition", "s365", cid_s) or reg.mint("competition", "s365", cid_s)
         G.put("competition", {"cid": cid, "name": en, "name_ar": ar, "kind": "cup" if ko else "league", "country": cname}, "s365")
@@ -49,6 +54,7 @@ def load(G, reg, S):
         d = S.published(f"s365/comp/{cid_s}.json") or {}
 
         def edition(season):
+            season = norm_season(season)
             k = (cid, season)
             if k not in eids:
                 hit = G.c.execute("SELECT eid FROM edition WHERE cid=? AND season=?", (cid, season)).fetchone()

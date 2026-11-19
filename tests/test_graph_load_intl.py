@@ -48,3 +48,25 @@ def test_martj42_senior_team_wins_over_u23(tmp_path):
     G.put("team", {"tid": senior, "name": "Saudi Arabia", "kind": "national"}, "fotmob")
     martj42.load(G, reg, Sources(str(tmp_path), s3=False))
     assert reg.get("team", "martj42", "Saudi Arabia") == senior
+
+
+def test_martj42_competitions_link_by_their_twins(tmp_path):
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    wc = reg.mint("competition", "fotmob", 77)
+    G.put("competition", {"cid": wc, "name": "World Cup"}, "fotmob")
+    e = reg.mint("edition", "fotmob", "77|2026")
+    G.put("edition", {"eid": e, "cid": wc, "season": "2026"}, "fotmob")
+    lines = ["date,home_team,away_team,home_score,away_score,tournament,city,country,neutral"]
+    for k in range(12):
+        h, a = reg.mint("team", "fotmob", 100 + 2 * k), reg.mint("team", "fotmob", 101 + 2 * k)
+        G.put("team", {"tid": h, "name": f"H{k}", "kind": "national"}, "fotmob")
+        G.put("team", {"tid": a, "name": f"A{k}", "kind": "national"}, "fotmob")
+        d = f"2026-06-{11 + k}"
+        G.put("match", {"mid": reg.mint("match", "fotmob", k), "eid": e, "date": d + "T19:00:00Z", "home": h, "away": a, "hs": 1, "as_": 0}, "fotmob")
+        lines.append(f"{d},H{k},A{k},1,0,FIFA World Cup,X,Y,TRUE")
+    (db / "martj42_results.csv").write_text(chr(10).join(lines) + chr(10), encoding="utf-8")
+    martj42.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert reg.get("competition", "martj42", "FIFA World Cup") == wc
+    assert reg.get("edition", "martj42", "FIFA World Cup|2026") == e

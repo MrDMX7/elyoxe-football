@@ -2,7 +2,8 @@
 the dataset's (compute/national.py's aliases); a result FotMob already has becomes its xref, the rest are new matches in
 a competition per tournament name."""
 import csv, os
-from graph.link import MatchIndex, twin, vote_teams
+from collections import Counter, defaultdict
+from graph.link import MatchIndex, edition_for, twin, vote_alias, vote_teams
 
 
 def load(G, reg, S):
@@ -36,7 +37,10 @@ def load(G, reg, S):
         G.xref("team", tid, "martj42", k, "date+score-votes")
         tl += 1
     idx = MatchIndex(G)
-    linked = new = 0
+    eid_of = {mid: eid for mid, eid in G.c.execute("SELECT mid, eid FROM match WHERE eid IS NOT NULL")}
+    cid_of = {eid: cid for eid, cid in G.c.execute("SELECT eid, cid FROM edition")}
+    # pass 1: the twins, and which of our competitions and editions they vote for (as schochastics)
+    rows, cvotes, evotes = [], defaultdict(Counter), defaultdict(Counter)
     for r in data:
         try:
             hs, as_ = int(r["home_score"]), int(r["away_score"])
@@ -44,10 +48,19 @@ def load(G, reg, S):
             continue
         h, a = (reg.get("team", "martj42", r["home_team"]) or reg.mint("team", "martj42", r["home_team"]),
                 reg.get("team", "martj42", r["away_team"]) or reg.mint("team", "martj42", r["away_team"]))
+        mid = twin(G, idx, r["date"], h, a, hs, as_, "martj42")
+        if mid and eid_of.get(mid):
+            e = eid_of[mid]
+            cvotes[r["tournament"]][cid_of[e]] += 1
+            evotes[f"{r['tournament']}|{r['date'][:4]}"][e] += 1
+        rows.append((r, h, a, hs, as_, mid))
+    vote_alias(reg, "competition", cvotes, "martj42", min_n=10, share=0.9)
+    vote_alias(reg, "edition", evotes, "martj42", min_n=3, share=0.9)
+    linked = new = 0
+    for r, h, a, hs, as_, mid in rows:
         for tid, nm in ((h, r["home_team"]), (a, r["away_team"])):
             G.put("team", {"tid": tid, "name": nm, "kind": "national"}, "martj42")
         key = f"{r['date']}|{r['home_team']}|{r['away_team']}"
-        mid = twin(G, idx, r["date"], h, a, hs, as_, "martj42")
         if mid:
             mid = reg.link("match", "martj42", key, mid)
         if mid:
@@ -57,8 +70,7 @@ def load(G, reg, S):
         cid = reg.get("competition", "martj42", r["tournament"]) or reg.mint("competition", "martj42", r["tournament"])
         G.put("competition", {"cid": cid, "name": r["tournament"], "scope": "international"}, "martj42")
         y = r["date"][:4]
-        eid = reg.get("edition", "martj42", f"{r['tournament']}|{y}") or reg.mint("edition", "martj42", f"{r['tournament']}|{y}")
-        G.put("edition", {"eid": eid, "cid": cid, "season": y}, "martj42")
+        eid = edition_for(G, reg, "martj42", f"{r['tournament']}|{y}", cid, y)
         mid = reg.mint("match", "martj42", key)
         G.put("match", {"mid": mid, "eid": eid, "date": r["date"], "home": h, "away": a, "hs": hs, "as_": as_, "status": "finished"}, "martj42")
         G.xref("match", mid, "martj42", key, "martj42-native")

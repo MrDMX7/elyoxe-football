@@ -50,3 +50,13 @@ def test_published_reads_mirror(tmp_path):
     (m / "index.json").write_text('{"teams": []}')
     assert S.published("s365/index.json") == {"teams": []}
     assert S.published("s365/none.json") is None
+
+
+def test_norm_season():
+    assert fm.norm_season("2010-2011") == "2010/2011"
+    assert fm.norm_season("2025/2026") == "2025/2026"
+    assert fm.norm_season("قطر 2022") == "2022"
+    assert fm.norm_season("كندا/المكسيك/أمريكا 2026") == "2026"
+    assert fm.norm_season("2006 ألمانيا") == "2006"
+    assert fm.norm_season("2026 Apertura") == "2026 Apertura"
+    assert fm.norm_season("1906 (Amateur)") == "1906 (Amateur)"

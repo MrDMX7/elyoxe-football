@@ -35,3 +35,21 @@ def test_s365(tmp_path):
     assert G.c.execute("select count(*) from standing s join edition e on e.eid=s.eid where e.cid=?", (jo,)).fetchone()[0] == 2
     assert G.c.execute("select count(*) from match where src='s365'").fetchone()[0] == 1
     assert G.c.execute("select name_ar from team where tid=?", (reg.get("team", "s365", 8276),)).fetchone()[0] == "الفيصلي"
+
+
+def test_s365_uses_the_curated_fotmob_map_and_season_labels(tmp_path):
+    S = mk(tmp_path)
+    m = tmp_path / "mirror" / "s365"
+    ix = json.loads((m / "index.json").read_text(encoding="utf-8"))
+    ix["comps"].append([5930, "كأس العالم", "World Cup", 1, 1, 23, "1930", "2026", 0, 0, 0, 0])
+    ix["teams"].append([2378, "الأرجنتين", "Argentina", 1, 6706])
+    (m / "index.json").write_text(json.dumps(ix), encoding="utf-8")
+    (m / "comp" / "5930.json").write_text(json.dumps({"id": "5930", "champions": [["قطر 2022", 2378, [], 1]], "tables": {}, "live": {}}), encoding="utf-8")
+    (m / "fm.json").write_text(json.dumps({"comps": {"77": {"id": 5930}}}), encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    wc = reg.mint("competition", "fotmob", 77)
+    e22 = reg.mint("edition", "fotmob", "77|2022")
+    G.put("edition", {"eid": e22, "cid": wc, "season": "2022"}, "fotmob")
+    s365.load(G, reg, S)
+    assert reg.get("competition", "s365", 5930) == wc
+    assert G.c.execute("select eid from honour where kind='champion' and tid=?", (reg.get("team", "fotmob", 6706),)).fetchone()[0] == e22

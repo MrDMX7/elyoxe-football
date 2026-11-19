@@ -74,3 +74,15 @@ def test_vote_teams_merges_a_key_the_source_minted_itself(tmp_path):
         games.append((d, "AIN", "WAH", k % 3, 1))
     got = vote_teams(G, reg, "tm", games)
     assert got["AIN"] == min(ain, own) and reg.resolve("team", own) == reg.get("team", "fotmob", 1)
+
+
+def test_edition_for_reuses_the_competitions_season(tmp_path):
+    from graph.link import edition_for
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    wc = reg.mint("competition", "fotmob", 77)
+    e = reg.mint("edition", "s365", "5930|2022")
+    G.put("edition", {"eid": e, "cid": wc, "season": "2022"}, "s365")
+    assert edition_for(G, reg, "martj42", "FIFA World Cup|2022", wc, "2022") == e
+    assert reg.get("edition", "martj42", "FIFA World Cup|2022") == e
+    new = edition_for(G, reg, "martj42", "FIFA World Cup|1930", wc, "1930")
+    assert new != e and G.c.execute("select cid, season, src from edition where eid=?", (new,)).fetchone() == (wc, "1930", "martj42")

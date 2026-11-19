@@ -4,7 +4,7 @@ crosswalk (date+score votes, crosswalk.json); a competition (or a season of it) 
 games sit in one of ours. Hygiene as db/history.py: one copy per game, no placeholder teams, no «X v X»."""
 import os
 from collections import Counter, defaultdict
-from graph.link import MatchIndex, twin, vote_alias, vote_teams
+from graph.link import MatchIndex, edition_for, twin, vote_alias, vote_teams
 
 
 def _season(d):
@@ -50,7 +50,7 @@ def load(G, reg, S):
     vote_alias(reg, "edition", evotes, "sch", min_n=5, share=0.9)
     # pass 2: rows
     new = linked = 0
-    done = set()
+    done, eids = set(), {}
     for i, (d, hi, ai, gh, ga, comp, lvl, hn, an, cc) in enumerate(rows):
         if i in twins:
             got = reg.link("match", "sch", f"{d}|{hi}|{ai}", twins[i])
@@ -65,11 +65,10 @@ def load(G, reg, S):
                                   "scope": None if lvl == "national" else lvl, "country": cc if lvl == "national" else None}, "sch")
             G.xref("competition", cid, "sch", comp, "vote" if reg.get("competition", "sch", comp) in cid_of.values() else "sch-native")
         sk = f"{comp}|{_season(d)}"
-        eid = reg.get("edition", "sch", sk) or reg.mint("edition", "sch", sk)
-        if ("e", eid) not in done:
-            done.add(("e", eid))
-            G.put("edition", {"eid": eid, "cid": cid, "season": _season(d)}, "sch")
-            G.xref("edition", eid, "sch", sk, "sch-native")
+        if ("e", sk) not in done:
+            done.add(("e", sk))
+            eids[sk] = edition_for(G, reg, "sch", sk, cid, _season(d))
+        eid = eids[sk]
         h = reg.get("team", "sch", hi) or reg.mint("team", "sch", hi)
         a = reg.get("team", "sch", ai) or reg.mint("team", "sch", ai)
         for tid, key, nm in ((h, hi, hn), (a, ai, an)):

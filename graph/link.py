@@ -104,3 +104,21 @@ def vote_teams(G, reg, src, games, min_n=5, lead=3, since=None):
         if got is not None:
             out[k] = got
     return out
+
+
+def edition_for(G, reg, src, key, cid, season):
+    """The edition (cid, season) whatever source made it first, linked to this source's key; minted only when no source
+    has that season of that competition yet. Two sources of one competition (the World Cup from 365Scores, martj42 and
+    FotMob) never make two «2022»."""
+    got = reg.get("edition", src, key)
+    if got is None:
+        hit = G.c.execute("SELECT eid FROM edition WHERE cid=? AND season=? ORDER BY eid LIMIT 1", (cid, season)).fetchone()
+        got = reg.link("edition", src, key, hit[0]) if hit else None
+        if got is None:
+            got = reg.mint("edition", src, key)
+    if not G.c.execute("SELECT 1 FROM edition WHERE eid=?", (got,)).fetchone():
+        G.put("edition", {"eid": got, "cid": cid, "season": season}, src)
+        G.xref("edition", got, src, key, f"{src}-native")
+    else:
+        G.xref("edition", got, src, key, "competition+season")
+    return got

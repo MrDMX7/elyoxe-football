@@ -11,6 +11,19 @@ def _label(s):
     return m.group(1) if m else (str(s) if s else None)
 
 
+def norm_season(s):
+    """Another source's season label in FotMob's form: «2010-2011» -> «2010/2011»; a tournament named by its host
+    («قطر 2022», «2006 ألمانيا») -> «2022»; anything else (Apertura, Amateur eras) as it is."""
+    s = str(s or "").strip()
+    m = re.fullmatch(r"(\d{4})\s*[-/]\s*(\d{4})", s)
+    if m:
+        return f"{m.group(1)}/{m.group(2)}"
+    years = re.findall(r"(?<!\d)(\d{4})(?!\d)", s)
+    if len(years) == 1 and not re.search(r"[A-Za-z(]", s):
+        return years[0]
+    return s
+
+
 def iso(s):
     if not s:
         return None
