@@ -10,7 +10,7 @@ T = json.loads((D / "types.json").read_text(encoding="utf-8"))
 def test_news_and_breaking_are_configured_and_on():
     """Switched on by the owner 2026-11-19."""
     assert T["news"] == {"on": True, "model": "claude-sonnet-5-5", "words": [250, 450], "daily": 60, "wait_minutes": 20,
-                         "per_hour": 4}
+                         "per_hour": 5, "hour_weights": [3.25] * 3 + [1] * 6 + [2.5] * 6 + [3.25] * 9}   # owner 2026-11-19: night less
     assert T["breaking"] == {"on": True, "model": "claude-haiku-5-5", "words": [80, 160]}
 
 

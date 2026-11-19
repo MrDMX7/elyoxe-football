@@ -143,3 +143,31 @@ def test_the_desk_write_is_not_paced_but_still_counts():
         qq.mark_written(sid, 1, None)
     desk = {"write": {"s50": at.isoformat(), "s51": at.isoformat()}}
     assert pq(st, desk, now=at + timedelta(minutes=10)).ready() == ["s50", "s51"]
+
+
+# The day's curve (owner 2026-11-19, «خل الليل أقل والمسا أكثر»): Tifo's readers are in Egypt, Saudi Arabia, the UAE and North
+# Africa, 1-3 hours behind the UAE, so their night is 03:00-09:00 UAE. The share so far follows a weight per UAE hour.
+CURVE = [3.25] * 3 + [1.0] * 6 + [2.5] * 6 + [3.25] * 9
+CURVED = {"daily": 60, "wait_minutes": 20, "per_hour": 5, "hour_weights": CURVE}
+
+
+def cq(state, desk=None, now=T0):
+    return Q.Queue(state, desk or {}, now, CURVED)
+
+
+def test_the_curve_adds_up_to_the_day():
+    assert sum(CURVE) == 60 and len(CURVE) == 24
+
+
+def test_the_night_gets_one_an_hour_and_the_evening_up_to_five():
+    st = {}
+    for i in range(100):
+        cq(st, now=MIDNIGHT_UAE - timedelta(hours=1)).offer(f"s{i}", [100 - i])
+    q0 = cq(st, now=MIDNIGHT_UAE + timedelta(minutes=5))
+    assert len(q0.ready()) == 4                                            # 00:05: 3.25 of the day, rounded up
+    st["news"]["count"], st["news"]["hour"] = 10, []
+    assert len(cq(st, now=MIDNIGHT_UAE + timedelta(hours=3, minutes=5)).ready()) == 1    # 03:05: 9.75 + 1 -> 11
+    st["news"]["count"] = 15
+    assert cq(st, now=MIDNIGHT_UAE + timedelta(hours=7, minutes=5)).ready() == []        # 07:05: 9.75 + 5 -> 15
+    st["news"]["count"] = 20
+    assert len(cq(st, now=MIDNIGHT_UAE + timedelta(hours=19, minutes=5)).ready()) == 5   # 19:05: far behind, 5 an hour at most
