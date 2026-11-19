@@ -51,9 +51,10 @@ test("pages are built from the full index, the list from the short one", async (
   assert.deepEqual(out.latest.map(a => a.id), ["r-2"]);
 });
 
+const markup = h => h.slice(0, h.indexOf("</article>"));                         // the page without its own script
 test("a breaking article carries the «عاجل» label", () => {
   assert.match(A.articleHtml(doc("n-1", { kind: "news", breaking: true }), []), /<span class="brk">عاجل<\/span>/);
-  assert.doesNotMatch(A.articleHtml(doc("n-2", { kind: "news" }), []), /class="brk"/);
+  assert.doesNotMatch(markup(A.articleHtml(doc("n-2", { kind: "news" }), [])), /class="brk"/);
 });
 
 // ---- part A (docs/superpowers/specs/2026-11-19-articles-pages-design.md §2)
@@ -156,4 +157,25 @@ test("the renderer fills the shells: every marker, the current stylesheet, the a
   assert.match(out["news/index.html"], /<a class="anl" href="\/news\/n-7\/"/);
   assert.match(out["sitemap-news.xml"], /<loc>https:\/\/tifo\.elyoxe\.com\/news\/n-7\/<\/loc>/);
   assert.equal(out["news/" + A.CSS_NAME], A.CSS);
+});
+
+test("«الأكثر قراءة»: an empty slot on the article page and after the sixth card of /news/, filled in the page from top.json (spec §5)", () => {
+  const h = A.articleHtml(doc("r-9"), []);
+  assert.match(h, /<section class="atop" data-top data-self="r-9" hidden><\/section><p class="trust">/);
+  assert.match(h, /<\/article><script>/);                                      // the page's own code is on the article page too
+  const list = Array.from({ length: 12 }, (_, i) => doc("n-" + i, { kind: "news", topic: "transfer", published: `2026-11-19T1${i % 10}:00:00+00:00` }));
+  const n = A.newsIndexHtml(list, Date.parse("2026-11-19T20:00:00Z"));
+  const grid = n.slice(n.indexOf('<div class="ng">'));
+  assert.equal((grid.slice(0, grid.indexOf('<section class="atop"')).match(/class="nc"/g) || []).length, 6);
+  assert.match(n, /<section class="atop" data-top hidden><\/section>/);
+  assert.match(A.CLIENT, /\/v1\/news\/top\.json/); assert.match(A.CLIENT, /الأكثر قراءة/);
+  assert.match(A.CSS, /\.atop\{/); assert.match(A.CSS, /\.ng \.atop\{grid-column:1\/-1/);
+});
+
+test("the goal videos: a slot in a match report only, filled in the page from v1/goals/<match>.json (spec §6)", () => {
+  const h = A.articleHtml(doc("r-9"), []);
+  assert.match(h, /<p class="aby">[\s\S]*?<\/p><section class="agoals" data-match="9" hidden><\/section>/);
+  assert.doesNotMatch(markup(A.articleHtml(doc("n-1", { kind: "news", match: null }), [])), /agoals/);
+  assert.match(A.CLIENT, /"\/v1\/goals\/"\+/); assert.match(A.CLIENT, /preload="none"/); assert.match(A.CLIENT, /playsinline/);
+  assert.match(A.CSS, /\.agoals video\{[^}]*max-height:70vh/);
 });

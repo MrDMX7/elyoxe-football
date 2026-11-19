@@ -82,12 +82,15 @@ function articleHtml(doc, rel, names){
   const head = img.url
     ? `<header class="ah"><figure class="ah-f"><div class="ah-ph"><img src="${E(img.url)}" width="${img.w || 1200}" height="${img.h || 675}" alt="${E(img.caption || doc.headline)}" fetchpriority="high"><div class="ah-in">${chip}<h1>${E(doc.headline)}</h1></div></div>${img.caption ? `<figcaption class="ah-cap">${E(img.caption)}</figcaption>` : ""}</figure></header>`
     : `<header class="ah np"><div class="ah-in">${chip}<h1>${E(doc.headline)}</h1></div></header>`;
+  // the goal videos of a match report (spec §6) and «الأكثر قراءة» (§5): empty slots the page's own code fills
+  const goals = doc.kind === "report" && doc.match ? `<section class="agoals" data-match="${E(doc.match)}" hidden></section>` : "";
   return `<article class="art"><p class="crumbs"><a href="/news/">الأخبار</a></p>${head}<p class="lede">${E(doc.standfirst)}</p>`
-    + `<p class="aby"><b>${AUTHOR}</b><span>${readTime(doc)}</span><span>${E(T(doc.published))}${mod}</span></p>`
+    + `<p class="aby"><b>${AUTHOR}</b><span>${readTime(doc)}</span><span>${E(T(doc.published))}${mod}</span></p>` + goals
     + shareHtml(doc) + entsHtml(doc, names)
     + secs + facts
     + (doc.match ? `<a class="mlink" href="/m/${E(doc.match)}/">صفحة المباراة: الأحداث والتشكيلة والإحصائيات</a>` : "")
-    + rels + `<p class="trust"><a href="/how-we-write/">كيف نكتب</a> · <a href="/corrections/">سياسة التصحيح</a> · <a href="/about/">من نحن</a></p></article>`;
+    + rels + `<section class="atop" data-top data-self="${E(doc.id)}" hidden></section>`
+    + `<p class="trust"><a href="/how-we-write/">كيف نكتب</a> · <a href="/corrections/">سياسة التصحيح</a> · <a href="/about/">من نحن</a></p></article>${SCRIPT}`;
 }
 
 function articleLd(doc, SITE){
@@ -136,7 +139,11 @@ document.querySelectorAll(".nh").forEach(function(root){var f="all",bs=root.quer
  function apply(){root.querySelectorAll(".anl,.nc").forEach(function(c){c.hidden=!(f==="all"||c.dataset.t===f)})}
  bs.forEach(function(b){b.onclick=function(){f=b.dataset.t;bs.forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});apply()}});
  if(more)more.onclick=function(){more.disabled=true;TA.list().then(function(l){var from=+more.dataset.from;grid.insertAdjacentHTML("beforeend",l.slice(from,from+30).map(TA.card).join(""));more.dataset.from=from+30;more.disabled=false;if(from+30>=l.length)more.remove();TA.times(grid);apply()},function(){more.disabled=false})}});
-document.querySelectorAll(".ahb-b").forEach(function(b){TA.list().then(function(l){if(!l.length)return;var ld=TA.leadOf(l);b.innerHTML=TA.lead(ld)+l.filter(function(a){return a!==ld}).slice(0,3).map(TA.row).join("");TA.times(b)})})})()`;
+document.querySelectorAll(".ahb-b").forEach(function(b){TA.list().then(function(l){if(!l.length)return;var ld=TA.leadOf(l);b.innerHTML=TA.lead(ld)+l.filter(function(a){return a!==ld}).slice(0,3).map(TA.row).join("");TA.times(b)})});
+document.querySelectorAll("[data-top]").forEach(function(s){fetch("/v1/news/top.json",{cache:"no-cache"}).then(function(r){return r.json()}).then(function(j){var me=s.dataset.self,l=(j.articles||[]).filter(function(a){return a.id!==me}).slice(0,5);if(l.length<3)return;
+ s.innerHTML='<h2>الأكثر قراءة</h2><ol>'+l.map(function(a,i){return'<li><a href="/news/'+e(a.id)+'/"><b class="num">'+(i+1)+'</b><span>'+e(a.headline)+"</span></a></li>"}).join("")+"</ol>";s.hidden=false},function(){})});
+document.querySelectorAll(".agoals[data-match]").forEach(function(s){fetch("/v1/goals/"+encodeURIComponent(s.dataset.match)+".json",{cache:"no-cache"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){var g=(j.goals||[]).filter(function(x){return String(x.mp4).indexOf("/v1/goals/")===0});if(!g.length)return;
+ s.innerHTML='<h2>الأهداف</h2>'+g.map(function(x){return'<figure class="ag"><video controls playsinline preload="none" poster="'+e(x.poster)+'" src="'+e(x.mp4)+'"></video><figcaption><b class="num">'+e(x.minute)+"'</b> "+e(x.scorer_ar)+"</figcaption></figure>"}).join("");s.hidden=false},function(){})})})()`;
 const SCRIPT = `<script>${CLIENT}</script>`;
 
 function newsIndexHtml(list, now){
@@ -145,7 +152,8 @@ function newsIndexHtml(list, now){
     + `<div class="nf" role="toolbar">${filters.map(([k, t], i) => `<button type="button" data-t="${k}" aria-pressed="${i ? "false" : "true"}">${t}</button>`).join("")}</div>`;
   if (!list.length) return `<div class="nh"><h1 class="ant">الأخبار</h1>${head}<p class="nempty">ما في مقالات للحين</p></div>`;
   const lead = leadOf(list, now), rest = list.filter(a => a !== lead).slice(0, 29);
-  return `<div class="nh"><h1 class="ant">الأخبار</h1>${head}${leadCard(lead)}<div class="ng">${rest.map(gridCard).join("")}</div>`
+  const top = `<section class="atop" data-top hidden></section>`;                 // «الأكثر قراءة» after the sixth card (§1)
+  return `<div class="nh"><h1 class="ant">الأخبار</h1>${head}${leadCard(lead)}<div class="ng">${rest.slice(0, 6).map(gridCard).join("")}${top}${rest.slice(6).map(gridCard).join("")}</div>`
     + (list.length > 30 ? `<button type="button" class="nmore" data-from="30">المزيد</button>` : "") + `</div>${SCRIPT}`;
 }
 
@@ -183,4 +191,4 @@ async function render(X){
 }
 
 module.exports = { render, articleHtml, articleLd, newsSitemap, listHtml, related, makeNames, readTime, kindOf, newsIndexHtml, pressTabs, homeBlock,
-  TRUST, AUTHOR, CSS, CSS_NAME, CSS_LINK, HEAD };
+  TRUST, AUTHOR, CSS, CSS_NAME, CSS_LINK, HEAD, CLIENT };
