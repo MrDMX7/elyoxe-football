@@ -144,15 +144,17 @@ def motm(G, out_dir, today=None, top=50):
     return {"matches": len(rows), "players": len(players)}
 
 
-def coaches(G, out_dir, gap_days=180):
+def coaches(G, out_dir, gap_days=180, national_gap_days=730):
     """coaches/teams.json ({FotMob team id: spells, newest first}) and coaches/coaches.json ({Tifo coach id: name, FotMob id,
-    spells}): a spell is a coach's run of matches on one club's bench with no gap over gap_days, with its record."""
+    spells}): a spell is a coach's run of matches on one club's bench with no gap over gap_days (national_gap_days for a
+    national team, which can go a year between tournaments in our data), with its record."""
     from datetime import date
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     fm_t = {a: int(b) for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='team' AND source='fotmob'") if str(b).isdigit()}
     fm_k = {a: int(b) for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='coach' AND source='fotmob'") if str(b).isdigit()}
     cname = {k: (n, a) for k, n, a in q("SELECT kid, name, name_ar FROM coach")}
     tname = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
+    national = {t for (t,) in q("SELECT tid FROM team WHERE kind='national'")}
     runs = defaultdict(list)
     for kid, side, d, home, away, hs, as_ in q("""SELECT x.kid, x.side, substr(m.date,1,10), m.home, m.away, m.hs, m.as_ FROM match_coach x
                                                  JOIN match m ON m.mid=x.mid WHERE m.hs IS NOT NULL AND m.date IS NOT NULL ORDER BY m.date"""):
@@ -162,7 +164,7 @@ def coaches(G, out_dir, gap_days=180):
     for (kid, tid), ms in runs.items():
         cur = None
         for d, gf, ga in ms:
-            if cur and (date.fromisoformat(d) - date.fromisoformat(cur["end"])).days > gap_days:
+            if cur and (date.fromisoformat(d) - date.fromisoformat(cur["end"])).days > (national_gap_days if tid in national else gap_days):
                 spells.append(cur)
                 cur = None
             if cur is None:
@@ -207,7 +209,8 @@ def editions(G, out_dir):
             hon = defaultdict(list)
             for kind, rank, tid, pid, kid, value in q("SELECT kind, rank, tid, pid, kid, value FROM honour WHERE eid=? ORDER BY kind, rank", (eid,)):
                 hon[kind].append((rank, tid, pid, kid, value))
-            table = [[r, fm_t.get(t), tn.get(t), p, w, d, l, gf, ga, pts] for r, t, p, w, d, l, gf, ga, pts in
+            whole = lambda v: int(v) if isinstance(v, float) and v.is_integer() else v           # the points column is REAL: 68, not 68.0
+            table = [[r, fm_t.get(t), tn.get(t), p, w, d, l, gf, ga, whole(pts)] for r, t, p, w, d, l, gf, ga, pts in
                      q("SELECT rank, tid, played, won, drawn, lost, gf, ga, pts FROM standing WHERE eid=? ORDER BY grp, rank", (eid,))]
             matches = q("SELECT count(*) FROM match WHERE eid=?", (eid,))[0][0]
             if not hon and not table and not matches:

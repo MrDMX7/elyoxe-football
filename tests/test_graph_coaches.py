@@ -65,3 +65,19 @@ def test_a_name_only_coach_joins_the_clubs_fotmob_coach_of_that_name(tmp_path):
     G.c.execute("insert into match_coach values(?, 'h', ?, 'tm')", (cwc, braga_tm))
     coaches.load(G, reg, S)
     assert reg.get("coach", "tm-name", "abel braga") == reg.get("coach", "fotmob", 1)
+
+
+def test_a_national_team_spell_survives_the_gaps_between_tournaments(tmp_path):
+    from graph import publish
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    ger, opp, kid = reg.mint("team", "fotmob", 8570), reg.mint("team", "fotmob", 1), reg.mint("coach", "fotmob", 78652)
+    G.put("team", {"tid": ger, "name": "Germany", "kind": "national"}, "fotmob")
+    G.put("coach", {"kid": kid, "name": "Joachim Löw"}, "fotmob")
+    G.xref("team", ger, "fotmob", 8570, "fotmob-native")
+    for k, d in enumerate(("2010-07-10", "2012-02-29", "2013-10-15")):          # 600 days between the first two: one spell on a national bench
+        mid = reg.mint("match", "fotmob", 50 + k)
+        G.put("match", {"mid": mid, "date": d, "home": ger, "away": opp, "hs": 1, "as_": 0}, "fotmob")
+        G.c.execute("insert into match_coach values(?, 'h', ?, 'fotmob')", (mid, kid))
+    publish.coaches(G, str(tmp_path / "o"))
+    d = json.load(open(tmp_path / "o" / "coaches" / "teams.json", encoding="utf-8"))["8570"]
+    assert [(s["start"], s["end"], s["m"]) for s in d] == [("2010-07-10", "2013-10-15", 3)]

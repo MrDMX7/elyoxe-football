@@ -76,7 +76,7 @@ def test_edition_files_for_season_pages(tmp_path):
     G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'champion', 1, ?, 's365')", (e, jaz))
     G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'runner_up', 1, ?, 'table')", (e, ain))
     G.c.execute("insert into honour(eid, kind, rank, pid, value, src) values(?, 'top_scorer', 1, ?, '33', 'tifo')", (e, mab))
-    G.c.execute("insert into standing values(?, '', 1, ?, 26, 22, 2, 2, 70, 20, 68, 's365')", (e, jaz))
+    G.c.execute("insert into standing values(?, '', 1, ?, 26, 22, 2, 2, 70, 20, 68.0, 's365')", (e, jaz))
     m = reg.mint("match", "fotmob", 1)
     G.put("match", {"mid": m, "eid": e, "date": "2017-01-01", "home": jaz, "away": ain, "hs": 2, "as_": 0}, "fotmob")
     G.c.execute("insert into match_award values(?, 'motm', ?, ?, '9.1', 'fotmob-rating')", (m, mab, jaz))
@@ -89,6 +89,6 @@ def test_edition_files_for_season_pages(tmp_path):
     s = d["seasons"][0]
     assert (s["season"], s["champion"]["fotmob"], s["champion"]["name"], s["runner_up"]["name"]) == ("2016/2017", 102101, "الجزيرة", "العين")
     assert s["top_scorers"][0] == {"rank": 1, "fotmob": 170716, "name": "علي مبخوت", "value": "33"}
-    assert s["table"][0][:3] == [1, 102101, "الجزيرة"] and s["motm"][0] == [170716, "علي مبخوت", 1]
+    assert s["table"][0] == [1, 102101, "الجزيرة", 26, 22, 2, 2, 70, 20, 68] and type(s["table"][0][9]) is int and s["motm"][0] == [170716, "علي مبخوت", 1]
     assert s["champion_coach"] == {"kid": k, "name": "Henk ten Cate"} and s["matches"] == 1
     assert out["competitions"] == 1
