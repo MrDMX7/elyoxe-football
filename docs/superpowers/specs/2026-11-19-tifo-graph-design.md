@@ -257,3 +257,18 @@ loader `awards` reads only those files, as every loader does.
 values, player ids and Arabic names), and the pages ship with this phase (owner 2026-11-19 «الحين»): `/awards/` (every award, grouped:
 world, continents, tournaments, leagues, countries), `/awards/<key>/` (every year with its podium, each winner linked to his
 player page, most wins), and a «جوائزه» block on the player pages that have honours. In Tifo's v5 design, Arabic.
+
+## 8. Phase 3: man of the match
+
+**Owner 2026-11-19:** «اريد يكون مكان فرعي لرجل المباراة»; the design below approved («yes») the same night.
+
+- **The pick:** FotMob's «Player of the Match» is the match's highest FotMob rating, so the graph takes, for every match with
+  ratings, the player with the highest rating (ties: more goals + assists, then more minutes, then the lower Tifo id).
+  Source `fotmob-rating`. A match without ratings has no pick (no guess).
+- **Table:** `match_award(mid, kind, pid, tid, value, src)`, kind `motm`, value = the rating.
+- **Counts per player:** total, per season, per competition, per opponent; the last ten picks.
+- **Files:** `v1/motm/index.json` (leaders this season and all time, overall and per competition we cover; per club for the
+  site's clubs) and `v1/motm/players.json` ({FotMob id: {total, seasons, comps, recent}}).
+- **Pages:** `/motm/` (the leaders, this season first, per competition and club) and a «رجل المباراة» block on player pages;
+  the match page's fans' vote stays as it is, beside the rating.
+- **Timing:** nightly with the graph; phase 6 brings it to the final whistle.
