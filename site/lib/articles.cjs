@@ -30,7 +30,7 @@ const CSS_NAME = "a." + require("crypto").createHash("sha1").update(CSS).digest(
 const SITE_URL = "https://tifo.elyoxe.com";
 const CSS_LINK = `<link rel="stylesheet" href="/news/${CSS_NAME}">`;
 const HEAD = `<meta name="robots" content="max-image-preview:large">${CSS_LINK}`;
-const TOPIC = { report: "تقرير مباراة", transfer: "انتقالات", injury: "إصابات", statement: "تصريحات", presser: "مؤتمر صحفي", official: "إعلان رسمي" };
+const TOPIC = { report: "تقرير مباراة", transfer: "انتقالات", injury: "إصابات", statement: "تصريحات", presser: "مؤتمر صحفي", official: "إعلان رسمي", match: "مباراة" };
 const STAGE = { rumour: "إشاعة", talks: "مفاوضات", agreed: "اتفاق", here_we_go: "اتفاق نهائي", official: "رسمي" };
 const kindOf = doc => (TOPIC[doc.topic || (doc.kind === "report" ? "report" : "")] || "خبر") + (doc.topic !== "report" && STAGE[doc.stage] ? " · " + STAGE[doc.stage] : "");
 
@@ -110,7 +110,8 @@ function newsSitemap(docs, SITE, now){
 
 // ---- /news/ and the home block (spec 2026-11-19 §1, §3): the same cards on the server and in the page (client below)
 const HM = iso => { try { return new Date(iso).toLocaleString("ar-AE-u-nu-latn", { timeZone: "Asia/Dubai", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; } };
-const groupOf = a => { const t = a.topic || (a.kind === "report" ? "report" : ""); return t === "presser" ? "statement" : ["report", "transfer", "injury", "statement"].includes(t) ? t : "other"; };
+// the filters: a press conference under statements, a news piece about a match under reports
+const groupOf = a => { const t = a.topic || (a.kind === "report" ? "report" : ""); return t === "presser" ? "statement" : t === "match" ? "report" : ["report", "transfer", "injury", "statement"].includes(t) ? t : "other"; };
 const imgTag = (a, w, h, lazy) => a.image && a.image.url ? `<img src="${E(a.image.url)}" alt="" width="${w}" height="${h}"${lazy ? ' loading="lazy"' : ' fetchpriority="high"'}>` : "";
 const brk = a => a.breaking ? '<b class="brk">عاجل</b>' : "";
 const leadCard = a => `<a class="anl" href="/news/${E(a.id)}/" data-t="${groupOf(a)}">${imgTag(a, 1200, 675)}<span class="anl-in">${brk(a)}<span class="ah-k">${E(kindOf(a))}</span><span class="anl-h">${E(a.headline)}</span></span></a>`;
@@ -123,7 +124,7 @@ const leadOf = (list, now) => list.find(a => a.breaking && now - Date.parse(a.pu
 const CLIENT = `(function(){if(window.TA)return;var TP=${JSON.stringify(TOPIC)},SG=${JSON.stringify(STAGE)};
 function e(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
 function kind(a){var t=a.topic||(a.kind==="report"?"report":"");return(TP[t]||"خبر")+(t!=="report"&&SG[a.stage]?" · "+SG[a.stage]:"")}
-function grp(a){var t=a.topic||(a.kind==="report"?"report":"");return t==="presser"?"statement":["report","transfer","injury","statement"].indexOf(t)>=0?t:"other"}
+function grp(a){var t=a.topic||(a.kind==="report"?"report":"");return t==="presser"?"statement":["report","match"].indexOf(t)>=0?"report":["transfer","injury","statement"].indexOf(t)>=0?t:"other"}
 function img(a,w,h,l){return a.image&&a.image.url?'<img src="'+e(a.image.url)+'" alt="" width="'+w+'" height="'+h+'"'+(l?' loading="lazy"':"")+">":""}
 function bk(a){return a.breaking?'<b class="brk">عاجل</b>':""}
 function rel(iso){var m=Math.round((Date.now()-Date.parse(iso))/6e4);return m<1?"الحين":m<60?"قبل "+m+" د":m<1440?"قبل "+Math.round(m/60)+" س":new Date(iso).toLocaleDateString("ar-AE-u-nu-latn",{timeZone:"Asia/Dubai",day:"numeric",month:"short"})}

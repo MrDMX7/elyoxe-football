@@ -135,7 +135,13 @@ def run_news(store, journal, data_get, writer, now, sp, *, deadline, clock, coll
                               headline=art["headline"], judge=judge)
         doc = publish.article_doc(aid, "news", art, meta, img, cfg["model"], now.isoformat(), prev)
         doc["breaking"] = is_breaking
-        doc["topic"], doc["stage"] = s.get("kind"), s.get("stage")      # the news page's filters
+        try:                                                  # the chip and the filters: what the article itself is about
+            topic, stage, usage = writer.label(art)
+            sp.add(PHOTO_MODEL, usage, "label"); sp.save()
+            doc["topic"], doc["stage"], doc["labelled"] = topic, stage, 1
+        except Exception as e:                                # the journal's keyword guess; the backfill tries again (relabel.py)
+            print(json.dumps({"label_error": aid, "error": f"{type(e).__name__}: {str(e)[:120]}"}, ensure_ascii=False))
+            doc["topic"], doc["stage"] = s.get("kind"), s.get("stage")
         publish.publish(store, doc)
         store.put_state(f"articles/sheets/{aid}.json", {"at": now.isoformat(), "sheet": sheet, "photos": cands})   # the desk's editor
         first = items.get((s.get("items") or [""])[0]) or {}

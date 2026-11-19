@@ -171,6 +171,12 @@ def main(argv=None):
             news_run.TYPES["news"]["on"] = news_run.TYPES["breaking"]["on"] = True
         out["news"] = news_run.run_news(store, {k: j.get(k) or {} for k in ("stories", "items", "pteam")}, get, write.Writer(), now, sp,
                                         deadline=t0 + 8 * 60, clock=time.monotonic, fetch=http_bytes)
+        if not a.dry:                                # the articles written before they labelled themselves (relabel.py)
+            from . import relabel
+            try:
+                out["relabel"] = relabel.run(store, write.Writer(), sp, deadline=t0 + 9 * 60, clock=time.monotonic)
+            except Exception as e:
+                out["relabel_error"] = f"{type(e).__name__}: {str(e)[:200]}"
         sp.save()
         if sp.capped_now():                          # news is most of the spend: it is usually the pass that crosses the cap
             _mail_cap(sp.month_total())
