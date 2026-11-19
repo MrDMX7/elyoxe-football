@@ -458,3 +458,22 @@ def test_a_video_uploaded_before_the_goal_is_not_that_goal():
     new = M.x_videos(post("https://pbs.twimg.com/amplify_video_thumb/2123448700000000000/img/x.jpg"), acc)
     assert sorted(M.attach(new, [AIN_DHA], N_AE, CH_AE, [])[1000022241]["goals"]) == ["43-1572471"]
     assert M.x_videos(post("https://pbs.twimg.com/media/HXgB47CWkAA6cs1.jpg"), acc)[0].get("made") is None
+
+
+def test_the_clubs_own_clip_with_the_minute_needs_no_name_we_know():
+    # a club posts «د43: <the name it uses>»: its channel, the minute and its one goal at that minute say which goal it is
+    assert run_ae("alainfcae", "د43: ماركينيو يفتتح التسجيل ⚽️ #العين_الظفرة", "2026-11-19T16:10:10Z") == {1000022241: ["43-1572471"]}
+    assert run_ae("alainfcae", "43' ماركينيو يسجل للزعيم ⚽️", "2026-11-19T16:10:10Z") == {1000022241: ["43-1572471"]}
+    # no goal of the club at that minute (66' was Al Dhafra's), or a minute it has not reached yet: nothing
+    assert run_ae("alainfcae", "د50: ماركينيو يسجل ⚽️ #العين_الظفرة", "2026-11-19T16:40:27Z") == {}
+    assert run_ae("alainfcae", "د66: الهدف الأول للظفرة ⚽️ #العين_الظفرة", "2026-11-19T16:55:00Z") == {}
+    assert run_ae("alainfcae", "د54: ماركينيو يسجل ⚽️ #العين_الظفرة", "2026-11-19T16:12:00Z") == {}
+    # a broadcaster's or another club's channel is not the club: the name still has to be known there
+    assert run_ae("ADSportsTV", "د43: ماركينيو يفتتح التسجيل ⚽️ #العين_الظفرة", "2026-11-19T16:12:36Z") == {}
+    # a miss at that minute is still not a goal, and the club's ready-made animation is still not the goal
+    assert run_ae("alainfcae", "د43: فرصة ضائعة من ماركينيو #العين_الظفرة", "2026-11-19T16:10:10Z") == {}
+    acc = [{"handle": "alainfcae", "name": "العين", "lang": "ar", "tier": "official", "team": 102117}]
+    old = M.x_videos({"items": [{"id": "2123448758813798726", "handle": "alainfcae", "video": True, "at": "2026-11-19T16:10:10.000Z",
+                                 "url": "u", "text": "د43: ماركينيو يفتتح التسجيل ⚽️",
+                                 "image": "https://pbs.twimg.com/amplify_video_thumb/2091176454193127424/img/a.jpg"}]}, acc)
+    assert M.attach(old, [AIN_DHA], N_AE, CH_AE, []) == {}
