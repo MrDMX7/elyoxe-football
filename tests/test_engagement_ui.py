@@ -29,6 +29,8 @@ console.log(JSON.stringify({
       bar: N.askBar([{id: 1, name: 'الوحدة <b>'}], "yes"), barTwo: N.askBar([{id: 7, name: 'أ'}, {id: 8, name: 'ب'}], "yes"), barIos: N.askBar([{id: 1, name: 'الوحدة'}], "ios-install")}; })(),
   events: [N.eventsOf('goals', true), N.eventsOf('all', false), N.eventsOf('off', true), N.eventsOf('off', false)],
   events3: [N.eventsOf('off', false, true), N.eventsOf('all', true, true)], modeT: N.modeOf(['transfer']),
+  events4: [N.eventsOf('goals', false, false, true), N.eventsOf('all', true, true, true), N.eventsOf('off', false, false, true)],
+  migrated: N.migrate({teams: {"5789": ["start", "goal", "end"], "1": ["start"], "2": ["goal", "article"], "3": ["transfer"]}}, {"15403": ["goal"], "9": ["soon", "article"]}),
   modes: [N.modeOf(['goal']), N.modeOf(['start', 'goal', 'end', 'video']), N.modeOf(['video']), N.modeOf([])],
   hours: [N.hourAr(0), N.hourAr(60), N.hourAr(420), N.hourAr(720), N.hourAr(900), N.hourAr(1380)],
   block: P.block({id: 101, kickoff_utc: '2026-10-10T16:00:00Z', status: 'scheduled', home: {name_ar: 'العين'}, away: {name_ar: 'الوحدة"><script>'}}),
@@ -53,7 +55,7 @@ def all_html(out):
 
 def test_v5_markup_and_hooks(out):
     nf = out["nf"]
-    assert 'data-nf-team="5789"' in nf and 'class="seg"' in nf and 'data-seg="nf"' in nf and nf.count('role="switch"') == 3   # video, transfers, quiet hours
+    assert 'data-nf-team="5789"' in nf and 'class="seg"' in nf and 'data-seg="nf"' in nf and nf.count('role="switch"') == 4   # video, transfers, articles, quiet hours
     assert '<span class="sw" aria-hidden="true"></span>' in nf and 'data-nf="qs"' in nf and nf.count("<option") == 48
     assert out["nfSheet"].startswith('<dialog class="sheet" id="sh-notify"') and 'data-close aria-label="سكّر"' in out["nfSheet"]
     b = out["block"]
@@ -95,8 +97,9 @@ def test_western_digits_and_the_copy_rules(out):
 def test_player_sheet_has_every_alert_and_the_owners_defaults(out):
     h = out["pnf"]
     assert 'data-nf-player="15403"' in h and "إدين &lt;b&gt;" in h and "<b>" not in h.replace("<b>إدين", "")
-    assert out["pkinds"] == ["soon", "start11", "squad_out", "subin", "subout", "goal", "assist", "card", "pen", "end", "potm", "video"]
-    assert out["pdef"] == ["start11", "subin", "goal", "assist", "card", "end"]
+    assert out["pkinds"] == ["soon", "start11", "squad_out", "subin", "subout", "goal", "assist", "card", "pen", "end", "potm", "video", "article"]
+    assert out["pdef"] == ["start11", "subin", "goal", "assist", "card", "end", "article"]                  # articles on by default (2026-11-19)
+    assert "مقالة عنه" in h
     for k in out["pkinds"]:
         on = "true" if k in out["pdef"] else "false"
         assert re.search(rf'data-pe="{k}"[^>]*aria-checked="{on}"', h), k
@@ -118,3 +121,13 @@ def test_the_ask_bar(out):
     assert "<b>لـأ</b> أو <b>لـب</b>" in a["barTwo"] and 'data-ask-yes="1"' in a["bar"] and "data-ask-no" in a["bar"]
     assert 'data-ask-yes="7"' in a["barTwo"] and 'data-ask-yes="8"' in a["barTwo"]
     assert "الشاشة الرئيسية" in a["barIos"] and "data-ask-yes" not in a["barIos"]
+
+
+def test_the_articles_switch_on_by_default_and_the_one_time_migration(out):
+    """Spec 2026-11-19 §4: «مقالات» on by default. A team saved before the switch gets it when it had goals («بدون حرق» kept the
+    kickoff only); a followed player gets it."""
+    assert out["events4"] == [["goal", "article"], ["start", "goal", "end", "video", "transfer", "article"], ["article"]]
+    assert 'data-nf="article"' in out["nf"] and "مقالات تيفو" in out["nf"]
+    teams, players = out["migrated"]
+    assert teams == {"5789": ["start", "goal", "end", "article"], "1": ["start"], "2": ["goal", "article"], "3": ["transfer"]}
+    assert players == {"15403": ["goal", "article"], "9": ["soon", "article"]}
