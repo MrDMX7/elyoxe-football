@@ -4,8 +4,9 @@ A story waits wait_minutes after it is first offered. The desk file (state/artic
 Phase 2b) can «reject» it, or «write» it at once. At most `daily` new articles a UAE day, and «write» does not lift that.
 
 Pacing (owner, 2026-11-19), when the config has `per_hour`: at most that many new articles in any hour, and no more than the
-day's share so far, `daily` x the UAE hours begun / 24, so a night's backlog cannot use the evening's articles. The desk's
-«اكتب» is not paced, only counted.
+day's share so far, so a night's backlog cannot use the evening's articles. The share follows `hour_weights`, a weight for each
+UAE hour (the owner's «الليل أقل والمسا أكثر»: the readers' night is 03:00-09:00 UAE), else it is even. The desk's «اكتب» is
+not paced, only counted.
 
 A written story is updated at most once an hour, and only for 2 or more new items or a higher stage. A queued story that
 leaves the journal's window is dropped."""
@@ -70,8 +71,9 @@ class Queue:
         hour_ago = self.now - timedelta(hours=1)
         stamps = [t for t in self.n.get("hour") or [] if datetime.fromisoformat(t) > hour_ago]
         self.n["hour"] = stamps
-        uae = self.now.astimezone(UAE)
-        share = math.ceil(self.cfg["daily"] * (uae.hour + 1) / 24) - self.n["count"]
+        h = self.now.astimezone(UAE).hour
+        w = self.cfg.get("hour_weights") or [1] * 24               # the day's curve by UAE hour (owner 2026-11-19); even without one
+        share = math.ceil(round(self.cfg["daily"] * sum(w[:h + 1]) / sum(w), 6)) - self.n["count"]
         return min(per_hour - len(stamps), share)
 
     def mark_written(self, sid, items, stage):
