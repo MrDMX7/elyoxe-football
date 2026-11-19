@@ -77,3 +77,14 @@ def test_fjelstul_golden_ball_podium(tmp_path):
                                                 "left join team t on t.tid=h.tid where h.eid=?", (e,))}
     assert G.c.execute("select count(*) from edition where season='1991'").fetchone()[0] == 0     # the women's World Cup is not the men's
     assert got == {("best_player", 1): "José Nasazzi", ("best_player", 2): "Guillermo Stábile", ("top_scorer", 1): "Guillermo Stábile", ("fair_play", 1): "Uruguay"}
+
+
+def test_a_qualification_competition_has_no_champion(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    cid = reg.mint("competition", "fotmob", 10611)
+    G.put("competition", {"cid": cid, "name": "Champions League Qualification"}, "fotmob")
+    eid = reg.mint("edition", "fotmob", "10611|2026/2027")
+    G.put("edition", {"eid": eid, "cid": cid, "season": "2026/2027"}, "fotmob")
+    match(G, reg, eid, 1, 10, 20, 2, 1, rnd="Final")
+    honours.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "m"), s3=False))
+    assert G.c.execute("select count(*) from honour where eid=? and kind in ('champion','runner_up')", (eid,)).fetchone()[0] == 0

@@ -47,9 +47,11 @@ def load(G, reg, S, arab_codes=None):
             n["top_scorer_own"] += _put(G, eid, "top_scorer", rank, "tifo", pid=pid, value=str(g))
     # 2. finals -> champion, runner-up
     legs = defaultdict(list)
-    for mid, eid, h, a, hs, as_, ph, pa in G.c.execute("""SELECT mid, eid, home, away, hs, as_, pen_h, pen_a FROM match
-                                                          WHERE eid IS NOT NULL AND lower(trim(round)) IN ('final', 'the final', 'finals')
-                                                          AND hs IS NOT NULL ORDER BY date"""):
+    # a qualification competition's last round sends a team on, it crowns nobody (UCL qualifying 2026/27 «champion» Bodø/Glimt)
+    for mid, eid, h, a, hs, as_, ph, pa in G.c.execute("""SELECT m.mid, m.eid, m.home, m.away, m.hs, m.as_, m.pen_h, m.pen_a FROM match m
+                                                          JOIN edition e ON e.eid=m.eid LEFT JOIN competition c ON c.cid=e.cid
+                                                          WHERE lower(trim(m.round)) IN ('final', 'the final', 'finals') AND m.hs IS NOT NULL
+                                                          AND lower(coalesce(c.name, '')) NOT LIKE '%qualif%' ORDER BY m.date"""):
         legs[eid].append((h, a, hs, as_, ph, pa))
     for eid, ls in legs.items():
         teams = {ls[0][0], ls[0][1]}
