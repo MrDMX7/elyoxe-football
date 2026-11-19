@@ -70,3 +70,28 @@ def test_an_awards_table_with_several_award_columns_splits():
     got = {t["kind"]: [r["person"] for r in t["rows"]] for t in extract(h, "Saudi Pro League")}
     assert got == {"winner": ["P0", "P1", "P2"], "best_young": ["Y0", "Y1", "Y2"], "coach": ["C0", "C1", "C2"]}
     assert {t["section"] for t in extract(h, "Saudi Pro League")} == {"Awards — Player of the Season", "Awards — Young Player", "Awards — Coach"}
+
+
+def test_season_page_awards_and_scorers():
+    from graph.awards_wiki import extract_season, season_links
+    aw = T('<tr><th>Award</th><th>Winner</th><th>Club</th></tr>'
+           f'<tr><td>Player of the Season</td><td>{L("Omar_Abdulrahman")}</td><td>{L("Al_Ain_FC")}</td></tr>'
+           f'<tr><td>Best Emirati Player</td><td>{L("Ali_Mabkhout")}</td><td>{L("Al_Jazira_Club")}</td></tr>'
+           f'<tr><td>Goalkeeper of the Season</td><td>{L("Khalid_Eisa")}</td><td>{L("Al_Ain_FC")}</td></tr>'
+           f'<tr><td>Coach of the Season</td><td>{L("Zlatko_Dalić")}</td><td>{L("Al_Ain_FC")}</td></tr>'
+           f'<tr><td>Fans\' favourite chant</td><td>{L("X")}</td><td></td></tr>', "Awards")
+    sc = T('<tr><th>Rank</th><th>Player</th><th>Club</th><th>Goals</th></tr>'
+           f'<tr><td>1</td><td>{L("Ali_Mabkhout")}</td><td>{L("Al_Jazira_Club")}</td><td>33</td></tr>'
+           f'<tr><td>2</td><td>{L("Sebastián_Tagliabúe")}</td><td>{L("Al_Wahda_FC")}</td><td>25</td></tr>'
+           f'<tr><td>3</td><td>{L("Y")}</td><td></td><td>20</td></tr>', "Top scorers")
+    page = b"<html><body>" + aw[12:-14] + sc[12:-14] + b"</body></html>"
+    got = extract_season(page, "2016–17 UAE Pro League")
+    assert got["season"] == "2016/2017"
+    kinds = [(r["kind"], r["rank"], r["person"]) for r in got["rows"]]
+    assert ("best_player", 1, "Omar_Abdulrahman") in kinds and ("best_local", 1, "Ali_Mabkhout") in kinds
+    assert ("best_goalkeeper", 1, "Khalid_Eisa") in kinds and ("best_coach", 1, "Zlatko_Dalić") in kinds
+    assert ("top_scorer", 1, "Ali_Mabkhout") in kinds and ("top_scorer", 2, "Sebastián_Tagliabúe") in kinds
+    assert not any(r["person"] == "X" for r in got["rows"])               # an award we don't model
+    links = season_links(b'<a rel="mw:WikiLink" href="./2016%E2%80%9317_UAE_Pro_League">x</a><a rel="mw:WikiLink" href="./Al_Ain_FC">y</a>'
+                         b'<a rel="mw:WikiLink" href="./1973%E2%80%9374_UAE_Football_League">z</a><a rel="mw:WikiLink" href="./2016_in_UAE_football">w</a>')
+    assert links == ["2016–17_UAE_Pro_League", "1973–74_UAE_Football_League"]

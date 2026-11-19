@@ -205,3 +205,67 @@ def extract(html, page):
     for t in doc.xpath("//table[contains(concat(' ', normalize-space(@class), ' '), ' wikitable ')]"):
         out.extend(table_rows(grid(t), page, _section(t)))
     return out
+
+
+# ---- a season's own article («2016–17 UAE Pro League»): its awards table and its top scorers (the season is the title's)
+SEASON_KINDS = [("best_local", re.compile(r"emirati|saudi|qatari|local|national player|best (arab|egyptian|moroccan|tunisian|algerian|iraqi|kuwaiti|omani|bahraini|jordanian)", re.I)),
+                ("best_goalkeeper", re.compile(r"goalkeeper", re.I)), ("best_young", re.compile(r"young|youth|rookie|revelation|u-?2[13]", re.I)),
+                ("best_coach", re.compile(r"coach|manager", re.I)), ("top_scorer", re.compile(r"top ?scorer|golden boot|top goal", re.I)),
+                ("best_player", re.compile(r"player of the (season|year)|best player|most valuable|\bmvp\b|footballer of the", re.I))]
+H_AWARD = re.compile(r"^(award|awards|category|prize|title)$", re.I)
+SEASON_TITLE = re.compile(r"^(\d{4}(?:[–-]\d{2,4})?)[ _](.+)$")
+SEASON_LINK = re.compile(r"(league|liga|serie|bundesliga|ligue|division|cup|championship|eredivisie|primeira|s[uü]per lig)", re.I)
+
+
+def season_links(html):
+    """Season articles a competition's article links («2016–17_UAE_Pro_League»), in page order, once each."""
+    out = []
+    for h in re.findall(rb'href="\./([^"#?]+)"', html if isinstance(html, bytes) else html.encode()):
+        t = urllib.parse.unquote(h.decode("utf-8", "replace"))
+        m = SEASON_TITLE.match(t)
+        if m and SEASON_LINK.search(m.group(2)) and not re.search(r"\bin\b", m.group(2)) and t not in out:
+            out.append(t)
+    return out
+
+
+def extract_season(html, page):
+    m = SEASON_TITLE.match(page.replace("_", " "))
+    season = season_label(m.group(1)) if m else None
+    doc = LH.fromstring(html.decode("utf-8", "replace") if isinstance(html, bytes) else html)
+    for st in doc.xpath("//style|//sup[contains(@class,'reference')]"):
+        st.drop_tree()
+    rows = []
+    for t in doc.xpath("//table[contains(concat(' ', normalize-space(@class), ' '), ' wikitable ')]"):
+        g, section = grid(t), _section(t)
+        if not g or not g[0]:
+            continue
+        hdr = [c[0] for c in g[0]]
+        body = g[1:]
+        ai = _col(hdr, H_AWARD)
+        pi = _col(hdr, re.compile(r"player|winner|name|recipient", re.I), {ai} if ai is not None else set())
+        ti = _col(hdr, re.compile(r"club|team", re.I), {ai, pi})
+        if ai is not None and pi is not None:                      # Award | Winner | Club
+            for r in body:
+                if len(r) <= max(ai, pi):
+                    continue
+                kind = next((k for k, rx in SEASON_KINDS if rx.search(r[ai][0])), None)
+                if not kind or not r[pi][0]:
+                    continue
+                rows.append({"kind": kind, "rank": 1, "person": r[pi][1][0] if r[pi][1] else None, "name": r[pi][0],
+                             "team": r[ti][1][0] if ti is not None and len(r) > ti and r[ti][1] else None, "value": None})
+            continue
+        if pi is not None and re.search(r"scorer|goalscor", section, re.I):   # Rank | Player | Club | Goals
+            ki, vi = _col(hdr, re.compile(r"^(rank|pos\.?|#)$", re.I)), _col(hdr, re.compile(r"goals?", re.I))
+            last = 0
+            for r in body:
+                if len(r) <= pi or not r[pi][0]:
+                    continue
+                rk = _rank(r[ki][0]) if ki is not None and len(r) > ki else None
+                rk = rk or last or 1
+                last = rk
+                if rk > 10:
+                    break
+                rows.append({"kind": "top_scorer", "rank": rk, "person": r[pi][1][0] if r[pi][1] else None, "name": r[pi][0],
+                             "team": r[ti][1][0] if ti is not None and len(r) > ti and r[ti][1] else None,
+                             "value": r[vi][0] if vi is not None and len(r) > vi else None})
+    return {"page": page, "season": season, "rows": rows}

@@ -57,7 +57,7 @@ def load(G, reg, S):
     award_pages = set(arts.get("awards") or [])
     clubs = (S.read(os.path.join(S.db, "clubs.json")) or {}).get("clubs") or {}
     club_by_qid = {c.get("qid"): int(fid) for fid, c in clubs.items() if c.get("qid") and fid.isdigit()}
-    n = {"pages": 0, "tables": 0, "awards": 0, "honours": 0, "edition_honours": 0, "players_new": 0, "sanity_dropped": 0, "conflicts": 0}
+    n = {"pages": 0, "season_pages": 0, "tables": 0, "awards": 0, "honours": 0, "edition_honours": 0, "players_new": 0, "sanity_dropped": 0, "conflicts": 0}
     done = set()
 
     def it(title):
@@ -199,4 +199,28 @@ def load(G, reg, S):
                     n["sanity_dropped"] += 1
                     continue
                 honour(eid, "winner", r["rank"], pid=pid, tid=team(r["team"]) if r.get("team") else None, value=r["value"])
+    # a season's own article: that season's honours on its competition's edition (the first source keeps an honour)
+    from graph.awards_wiki import extract_season
+    for page, fid in sorted((arts.get("seasons") or {}).items()):
+        html = AF.read_page(d, page)
+        if not html:
+            continue
+        got = extract_season(html, page)
+        if not got["season"] or not got["rows"]:
+            continue
+        n["season_pages"] += 1
+        cid = reg.mint("competition", "fotmob", int(fid))
+        eid = edition_for(G, reg, "wiki", f"{fid}|{got['season']}", cid, got["season"])
+        for r in got["rows"]:
+            if r["kind"] == "best_coach":
+                honour(eid, "best_coach", 1, kid=coach(r["person"], r["name"], page), first_wins=True)
+                continue
+            pid, born = player(r["person"], r["name"], page)
+            if pid is None:
+                continue
+            if born and _end_year(got["season"]) and int(born[:4]) > _end_year(got["season"]):
+                n["sanity_dropped"] += 1
+                continue
+            honour(eid, r["kind"], r["rank"], pid=pid, value=r["value"], first_wins=True)
+            n["edition_honours"] += 1
     return n

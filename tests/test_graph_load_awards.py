@@ -124,3 +124,21 @@ def test_born_after_the_year_is_dropped(tmp_path):
     out = awards.load(G, reg, S)
     assert out["sanity_dropped"] == 1
     assert G.c.execute("select count(*) from honour h join edition e on e.eid=h.eid where e.season='1958'").fetchone()[0] == 0
+
+
+def test_season_article_gives_that_seasons_honours(tmp_path):
+    aw = T('<tr><th>Award</th><th>Winner</th><th>Club</th></tr>'
+           f'<tr><td>Player of the Season</td><td>{L("Omar_Abdulrahman")}</td><td>x</td></tr>'
+           f'<tr><td>Best Emirati Player</td><td>{L("Ali_Mabkhout")}</td><td>x</td></tr>', "Awards")
+    items = {"Omar_Abdulrahman": item("Q60", "Omar Abdulrahman", "عمر عبدالرحمن", "1991-09-20"), "Ali_Mabkhout": item("Q61", "Ali Mabkhout", "علي مبخوت", "1990-10-05")}
+    S = mk(tmp_path, {"2016–17_UAE_Pro_League": aw}, items)
+    art = tmp_path / "graph" / ".cache" / "awards" / "articles.json"
+    a = json.loads(art.read_text(encoding="utf-8"))
+    a["awards"], a["seasons"] = [], {"2016–17_UAE_Pro_League": "538"}
+    art.write_text(json.dumps(a), encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 538)
+    awards.load(G, reg, S)
+    e = G.c.execute("select eid from edition where cid=? and season='2016/2017'", (lg,)).fetchone()[0]
+    got = dict(G.c.execute("select kind, pid from honour where eid=?", (e,)).fetchall())
+    assert got == {"best_player": reg.get("player", "wikidata", "Q60"), "best_local": reg.get("player", "wikidata", "Q61")}

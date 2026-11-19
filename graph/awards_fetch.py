@@ -28,6 +28,7 @@ ROOTS = ["Category:Association football player of the year awards", "Category:As
          "Category:Association football manager of the year awards", "Category:Association football player awards",
          "Category:Association football trophies and awards"]
 STATE_KEY = "state/graph/awards/cache.tar.gz"
+SEASON_BUDGET = 1500            # new season articles a run (a first run would otherwise take hours): the rest come the next weeks
 
 
 class HTTP:
@@ -215,6 +216,23 @@ def comp_articles(S, http):
     return out
 
 
+def pick_seasons(links, have, budget=SEASON_BUDGET):
+    """{season article: FotMob competition id}: every article already kept, plus up to `budget` new ones, the competitions
+    taking turns (each competition's links newest first, as its article lists them), so every league moves forward."""
+    out, queues, new = {}, {fid: list(v) for fid, v in sorted(links.items())}, 0
+    while any(queues.values()):
+        for fid in sorted(queues):
+            if not queues[fid]:
+                continue
+            t = queues[fid].pop(0)
+            if t in have:
+                out[t] = fid
+            elif new < budget:
+                out[t] = fid
+                new += 1
+    return out
+
+
 def run(S, http, d, limit=None):
     from graph.awards_wiki import extract
     os.makedirs(d, exist_ok=True)
@@ -236,7 +254,17 @@ def run(S, http, d, limit=None):
         titles = titles[:limit]
     _jsave(os.path.join(d, "articles.json"), {"awards": awards, "comps": comps})
     n = fetch_pages(http, d, titles)
+    from graph.awards_wiki import season_links, extract_season
+    have = set(_jload(os.path.join(d, "pages.json"), {}))
+    seasons = pick_seasons({fid: season_links(read_page(d, t) or b"") for fid, t in comps.items()}, have)
+    seasons = {**(prev.get("seasons") or {}), **seasons}
+    n["seasons"] = fetch_pages(http, d, sorted(seasons))
+    _jsave(os.path.join(d, "articles.json"), {"awards": awards, "comps": comps, "seasons": seasons})
     links = set(titles)
+    for t in seasons:
+        h = read_page(d, t)
+        if h:
+            links.update(x for r in extract_season(h, t)["rows"] for x in (r.get("person"), r.get("team")) if x)
     for t in titles:
         h = read_page(d, t)
         if not h:

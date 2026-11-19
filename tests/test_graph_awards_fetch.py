@@ -26,3 +26,9 @@ def test_items_resolve_humans_and_tm_ids(tmp_path):
     http = FakeHTTP({"pageprops": json.dumps(pp).encode(), "wbgetentities": json.dumps(ent).encode()})
     items = AF.resolve(http, str(tmp_path), ["Lionel_Messi"])
     assert items["Lionel_Messi"] == {"qid": "Q615", "human": True, "born": "1987-06-24", "ar": "ليونيل ميسي", "en": "Lionel Messi", "tm_player": "28003", "tm_club": None}
+
+
+def test_pick_seasons_takes_turns_and_keeps_a_budget():
+    links = {"538": ["2025–26_UAE_Pro_League", "2024–25_UAE_Pro_League", "2023–24_UAE_Pro_League"], "536": ["2025–26_Saudi_Pro_League", "2024–25_Saudi_Pro_League"]}
+    got = AF.pick_seasons(links, have={"2025–26_UAE_Pro_League"}, budget=3)
+    assert got == {"2025–26_UAE_Pro_League": "538", "2024–25_UAE_Pro_League": "538", "2025–26_Saudi_Pro_League": "536", "2024–25_Saudi_Pro_League": "536"}
