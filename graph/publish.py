@@ -142,3 +142,47 @@ def motm(G, out_dir, today=None, top=50):
     _dump(os.path.join(out_dir, "motm", "index.json"), index)
     _dump(os.path.join(out_dir, "motm", "players.json"), dict(sorted(players.items())))
     return {"matches": len(rows), "players": len(players)}
+
+
+def coaches(G, out_dir, gap_days=180):
+    """coaches/teams.json ({FotMob team id: spells, newest first}) and coaches/coaches.json ({Tifo coach id: name, FotMob id,
+    spells}): a spell is a coach's run of matches on one club's bench with no gap over gap_days, with its record."""
+    from datetime import date
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    fm_t = {a: int(b) for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='team' AND source='fotmob'") if str(b).isdigit()}
+    fm_k = {a: int(b) for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='coach' AND source='fotmob'") if str(b).isdigit()}
+    cname = {k: (n, a) for k, n, a in q("SELECT kid, name, name_ar FROM coach")}
+    tname = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
+    runs = defaultdict(list)
+    for kid, side, d, home, away, hs, as_ in q("""SELECT x.kid, x.side, substr(m.date,1,10), m.home, m.away, m.hs, m.as_ FROM match_coach x
+                                                 JOIN match m ON m.mid=x.mid WHERE m.hs IS NOT NULL AND m.date IS NOT NULL ORDER BY m.date"""):
+        tid, gf, ga = (home, hs, as_) if side == "h" else (away, as_, hs)
+        runs[(kid, tid)].append((d, gf, ga))
+    spells = []
+    for (kid, tid), ms in runs.items():
+        cur = None
+        for d, gf, ga in ms:
+            if cur and (date.fromisoformat(d) - date.fromisoformat(cur["end"])).days > gap_days:
+                spells.append(cur)
+                cur = None
+            if cur is None:
+                cur = {"kid": kid, "tid": tid, "start": d, "end": d, "m": 0, "w": 0, "d": 0, "l": 0, "gf": 0, "ga": 0}
+            cur["end"] = d
+            cur["m"] += 1
+            cur["gf"] += gf
+            cur["ga"] += ga
+            cur["w" if gf > ga else "l" if gf < ga else "d"] += 1
+        if cur:
+            spells.append(cur)
+    teams, people = defaultdict(list), defaultdict(lambda: {"spells": []})
+    for s in sorted(spells, key=lambda s: s["start"], reverse=True):
+        nm = cname.get(s["kid"]) or (None, None)
+        row = {"kid": s["kid"], "name": nm[0], "name_ar": nm[1], **{k: s[k] for k in ("start", "end", "m", "w", "d", "l", "gf", "ga")}}
+        if s["tid"] in fm_t:
+            teams[str(fm_t[s["tid"]])].append(row)
+        p = people[str(s["kid"])]
+        p.update(name=nm[0], name_ar=nm[1], fotmob=fm_k.get(s["kid"]))
+        p["spells"].append({"team": fm_t.get(s["tid"]), "team_name": tname.get(s["tid"]), **{k: s[k] for k in ("start", "end", "m", "w", "d", "l", "gf", "ga")}})
+    _dump(os.path.join(out_dir, "coaches", "teams.json"), dict(sorted(teams.items())))
+    _dump(os.path.join(out_dir, "coaches", "coaches.json"), dict(sorted(people.items())))
+    return {"spells": len(spells), "teams": len(teams), "coaches": len(people)}
