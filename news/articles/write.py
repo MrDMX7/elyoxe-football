@@ -52,6 +52,39 @@ class Writer:
                  "cache_read": getattr(u, "cache_read_input_tokens", 0) or 0, "cache_write": getattr(u, "cache_creation_input_tokens", 0) or 0}
         return art, usage
 
+    TOPICS = ("transfer", "injury", "statement", "presser", "official", "match", "other")
+    STAGES = ("rumour", "talks", "agreed", "here_we_go", "official")
+    LABEL_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["topic", "stage"],
+                    "properties": {"topic": {"type": "string", "enum": list(TOPICS)}, "stage": {"type": "string", "enum": list(STAGES) + ["none"]}}}
+    LABEL_ASK = ("Label this Arabic football news article for its page, by what the article as a whole is about, never by single words.\n"
+                 "topic: transfer = a player's or coach's move, signing, loan, contract, renewal or departure; injury = an injury, a "
+                 "player's fitness or return from injury; statement = mainly what someone said; presser = a press conference; official = "
+                 "an official announcement by a club, league, federation or court that is not a transfer; match = a result or a "
+                 "performance in a match; other = anything else (a stadium, money, the club's affairs, the fans).\n"
+                 "stage, for a transfer only, else none: rumour = reports, interest or speculation; talks = an offer or negotiations; "
+                 "agreed = an agreement reached, not yet announced; here_we_go = a trusted reporter says it is done; official = announced "
+                 "by the club or the player, or signed.\n\n")
+
+    def label(self, art, model="claude-haiku-5-5"):
+        """-> (topic, stage or None, usage): the chip on the article's page (owner 2026-11-19: a stadium's renovation went out as
+        «انتقالات · إشاعة» from the journal's keyword guess). A stage only for a transfer."""
+        body = "\n".join(p for s in art.get("sections") or [] for p in s.get("paragraphs") or [])[:3000]
+        text = self.LABEL_ASK + "العنوان: " + (art.get("headline") or "") + "\nالمقدمة: " + (art.get("standfirst") or "") + "\n\n" + body
+        msg = self._c().messages.create(model=model, max_tokens=100, messages=[{"role": "user", "content": text}],
+                                        output_config={"format": {"type": "json_schema", "schema": self.LABEL_SCHEMA}})
+        raw = next((b.text for b in msg.content if b.type == "text"), "")
+        try:
+            ans = json.loads(raw)
+            topic, stage = ans["topic"], ans["stage"]
+        except (ValueError, KeyError, TypeError) as e:
+            raise WriteError("label answer cannot be read: " + repr(raw[:80])) from e
+        if topic not in self.TOPICS or (stage != "none" and stage not in self.STAGES):
+            raise WriteError(f"label {topic!r} / {stage!r} is not one of ours")
+        u = msg.usage
+        usage = {"in": u.input_tokens or 0, "out": u.output_tokens or 0,
+                 "cache_read": getattr(u, "cache_read_input_tokens", 0) or 0, "cache_write": getattr(u, "cache_creation_input_tokens", 0) or 0}
+        return topic, (stage if topic == "transfer" and stage != "none" else None), usage
+
     PHOTO_SCHEMA = {"type": "object", "properties": {"best": {"type": "integer"}}, "required": ["best"], "additionalProperties": False}
     PHOTO_ASK = ("These are candidate photos, numbered from 0, for an Arabic football news article with the headline below. "
                  "Pick the one that best shows what the news is about: the player, the club or the event it names. A photo from a news "

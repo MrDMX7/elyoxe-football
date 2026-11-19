@@ -265,3 +265,29 @@ def test_the_same_news_written_twice_is_published_once(tmp_path, monkeypatch):
                       commons=lambda q: [])
     published = [x["id"] for x in st.get_json("news/articles.json")["articles"]]
     assert out["written"] == 1 and out["dupes"] >= 1 and len([p for p in published if p in (f"n-{a['id']}", "n-twin")]) == 1
+
+
+class WL(W):
+    """A writer that also labels its article (owner 2026-11-19: the label is the article's, not the journal's guess)."""
+    def __init__(self, answer):
+        super().__init__(); self.answer = answer
+
+    def label(self, art, model="claude-haiku-5-5"):
+        self.calls.append(("label", model))
+        if isinstance(self.answer, Exception):
+            raise self.answer
+        return self.answer[0], self.answer[1], {"in": 500, "out": 9, "cache_read": 0, "cache_write": 0}
+
+
+def test_the_article_carries_its_own_label_and_the_journals_guess_only_when_the_label_fails(tmp_path, monkeypatch):
+    monkeypatch.setattr(NR, "breaking", lambda s, items: False)
+    st, w = Store(LocalBackend(tmp_path / "a")), WL(("other", None))
+    go(st, NOW, w); go(st, NOW + timedelta(minutes=25), w)
+    doc = st.get_json(f"news/a/n-{TRANSFER['id']}.json")
+    assert (doc["topic"], doc["stage"], doc["labelled"]) == ("other", None, 1) and ("label", "claude-haiku-5-5") in w.calls
+    summary = next(a for a in st.get_json("news/articles.json")["articles"] if a["id"] == doc["id"])
+    assert (summary["topic"], summary["stage"]) == ("other", None)
+    st2, w2 = Store(LocalBackend(tmp_path / "b")), WL(RuntimeError("api down"))
+    go(st2, NOW, w2); go(st2, NOW + timedelta(minutes=25), w2)
+    d = st2.get_json(f"news/a/n-{TRANSFER['id']}.json")
+    assert (d["topic"], d["stage"]) == (TRANSFER["kind"], TRANSFER["stage"]) and "labelled" not in d

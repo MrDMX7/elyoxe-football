@@ -179,3 +179,13 @@ test("the goal videos: a slot in a match report only, filled in the page from v1
   assert.match(A.CLIENT, /"\/v1\/goals\/"\+/); assert.match(A.CLIENT, /preload="none"/); assert.match(A.CLIENT, /playsinline/);
   assert.match(A.CSS, /\.agoals video\{[^}]*max-height:70vh/);
 });
+
+test("the labels Haiku gives: «مباراة» files under reports, «other» reads «خبر», a stage only for a transfer (2026-11-19)", () => {
+  assert.equal(A.kindOf({ kind: "news", topic: "match" }), "مباراة");
+  assert.equal(A.kindOf({ kind: "news", topic: "other", stage: null }), "خبر");
+  assert.equal(A.kindOf({ kind: "news", topic: "transfer", stage: "official" }), "انتقالات · رسمي");
+  const n = A.newsIndexHtml([{ id: "n-1", kind: "news", topic: "match", headline: "ف", published: "2026-11-19T10:00:00Z" },
+    { id: "n-2", kind: "news", topic: "other", headline: "ع", published: "2026-11-19T09:00:00Z" }], Date.parse("2026-11-19T12:00:00Z"));
+  assert.match(n, /href="\/news\/n-1\/" data-t="report"/); assert.match(n, /href="\/news\/n-2\/" data-t="other"/);
+  assert.match(A.CLIENT, /"match":"مباراة"/); assert.match(A.CLIENT, /\["report","match"\]/);
+});
