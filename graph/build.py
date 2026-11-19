@@ -14,7 +14,7 @@ from graph.db import Graph  # noqa: E402
 from graph.ids import Registry  # noqa: E402
 from graph.src import Sources  # noqa: E402
 
-ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "rsssf", "schochastics", "martj42", "transfers"]
+ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "rsssf", "schochastics", "martj42", "transfers", "awards"]
 REQUIRED = {"fotmob_matches"}
 CACHE = os.path.join(HERE, ".cache")       # the registry and the published mirror: kept between runs (actions/cache)
 OUT = os.path.join(HERE, ".build")         # tifo.db and the report: rebuilt each run, never cached (1-2 GB)

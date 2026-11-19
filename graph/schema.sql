@@ -21,7 +21,9 @@ CREATE INDEX event_pid ON event(pid);
 CREATE TABLE match_coach(mid INTEGER, side TEXT, kid INTEGER, src TEXT NOT NULL, PRIMARY KEY(mid, side));
 CREATE TABLE standing(eid INTEGER, grp TEXT, rank INTEGER, tid INTEGER, played INTEGER, won INTEGER, drawn INTEGER, lost INTEGER,
   gf INTEGER, ga INTEGER, pts REAL, src TEXT NOT NULL, PRIMARY KEY(eid, grp, rank));
-CREATE TABLE honour(eid INTEGER, kind TEXT, rank INTEGER, tid INTEGER, pid INTEGER, kid INTEGER, value TEXT, src TEXT NOT NULL, PRIMARY KEY(eid, kind, rank));
+CREATE TABLE honour(eid INTEGER, kind TEXT, rank INTEGER, tid INTEGER, pid INTEGER, kid INTEGER, value TEXT, src TEXT NOT NULL);
+CREATE UNIQUE INDEX honour_u ON honour(eid, kind, rank, ifnull(pid, 0), ifnull(tid, 0), ifnull(kid, 0));   -- ties share a rank
+CREATE INDEX honour_pid ON honour(pid);
 CREATE TABLE transfer(pid INTEGER, from_tid INTEGER, to_tid INTEGER, date TEXT, season TEXT, fee INTEGER, type TEXT, src TEXT NOT NULL, PRIMARY KEY(pid, date, to_tid));
 CREATE TABLE spell(pid INTEGER, tid INTEGER, start TEXT, end TEXT, apps INTEGER, goals INTEGER, assists INTEGER, loan INTEGER, national INTEGER, youth INTEGER,
   src TEXT NOT NULL, PRIMARY KEY(pid, tid, start, src));

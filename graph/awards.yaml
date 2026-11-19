@@ -1,0 +1,49 @@
+# Overrides for the discovered award catalogue (spec §7.2). The catalogue itself comes from Wikipedia's award categories.
+# terms: Arabic for a section's award name (matched case-insensitively, longest first) when a page holds several awards.
+# names: an award page's Arabic name when Wikidata has none (or a better one).
+# skip:  "page" or "page|section" not to read.
+terms:
+  golden boot: الحذاء الذهبي
+  golden shoe: الحذاء الذهبي
+  silver boot: الحذاء الفضي
+  bronze boot: الحذاء البرونزي
+  golden ball: الكرة الذهبية
+  silver ball: الكرة الفضية
+  bronze ball: الكرة البرونزية
+  golden glove: القفاز الذهبي
+  best goalkeeper: أفضل حارس
+  goalkeeper: أفضل حارس
+  young player: أفضل لاعب شاب
+  best young player: أفضل لاعب شاب
+  fair play: اللعب النظيف
+  top scorers: الهدافين
+  top scorer: الهداف
+  top goalscorer: الهداف
+  player of the season: لاعب الموسم
+  player of the year: لاعب العام
+  player of the tournament: أفضل لاعب في البطولة
+  player of the match: رجل المباراة
+  most valuable player: اللاعب الأكثر قيمة
+  manager of the year: مدرب العام
+  manager of the season: مدرب الموسم
+  coach of the year: مدرب العام
+  coach: أفضل مدرب
+  manager: أفضل مدرب
+  goal of the season: هدف الموسم
+names:
+  Ballon d'Or: الكرة الذهبية
+  European Golden Shoe: الحذاء الذهبي الأوروبي
+  FIFA World Cup awards: جوائز كأس العالم
+  The Best FIFA Men's Player: جائزة الأفضل من فيفا
+  FIFA World Player of the Year: لاعب العام من فيفا
+  Golden Boy (award): الفتى الذهبي
+  Kopa Trophy: جائزة كوبا
+  Yashin Trophy: جائزة ياشين
+  Gerd Müller Trophy: جائزة غيرد مولر
+  FIFA Puskás Award: جائزة بوشكاش
+  AFC Player of the Year: أفضل لاعب في آسيا
+  Asian Footballer of the Year: أفضل لاعب في آسيا
+  African Footballer of the Year: أفضل لاعب في أفريقيا
+  Pichichi Trophy: جائزة بيتشيتشي
+  Premier League Player of the Season: لاعب الموسم في الدوري الإنجليزي
+skip: []

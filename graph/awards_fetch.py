@@ -280,3 +280,16 @@ def main(argv=None):
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def restore(S, d=CACHE):
+    """The last stage run's cache from S3 (the graph build runs on days the weekly stage does not)."""
+    try:
+        st = S.store()
+        raw = st.b.s3.get_object(Bucket=st.b.bucket, Key=STATE_KEY)["Body"].read()
+        with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as tf:
+            tf.extractall(os.path.dirname(d), filter="data")
+        return True
+    except Exception as e:
+        print(f"no awards cache in S3 ({type(e).__name__})", flush=True)
+        return False
