@@ -49,7 +49,9 @@ KICKOFF_WINDOW = 20           # minutes after kickoff within which a "start" pus
 END_WINDOW = 60               # minutes after full time
 GOAL_TYPES = ("goal", "own_goal", "penalty_goal")
 DISALLOWED = ("goal_disallowed", "goal_disallowed_offside")
-TEAM_EVENTS = ("start", "goal", "end", "video", "transfer")   # transfer: the club's official moves (pushtransfers.py)
+# transfer: the club's official moves (pushtransfers.py); article: a Tifo article about the club or the player, handed over by
+# the fast «Article pages» step (news/articles/push_jobs.py) once its page is up
+TEAM_EVENTS = ("start", "goal", "end", "video", "transfer", "article")
 # a player subscription stores player kinds (pushplayer.KINDS; written out: pushplayer imports this module, so nothing here may
 # read pushplayer while it loads; tests/test_pushplayer.py checks the two lists agree)
 EVENTS = TEAM_EVENTS + ("soon", "start11", "squad_out", "subin", "subout", "assist", "card", "pen", "potm")
@@ -57,7 +59,8 @@ DEFAULT_EVENTS = ("start", "goal", "end")      # a subscription that never chose
 MAX_SENDS = 5000              # per invoke: the sender's 5-minute budget, ~40 ms per send with a pooled session
 JOB_TTL = {"start": 600, "goal": 600, "end": 900, "video": 1800,   # seconds a handed-over job stays worth sending
            "soon": 1800, "start11": 1800, "squad_out": 1800, "subin": 600, "subout": 600, "assist": 600, "card": 600, "pen": 600,
-           "potm": 3600, "transfer": 6 * 3600}
+           "potm": 3600, "transfer": 6 * 3600, "article": 3 * 3600}
+ARTICLE_DAILY = 3             # article pushes per club or player a UAE day (spec 2026-11-19 §4)
 PLACEHOLDER_WAIT = 2          # minutes a «<TBD>» goal waits for its scorer's name when someone in the match is followed
 PLAYER_DAILY_CAP = 20         # player alerts per device per UAE day (owner 2026-10-09: «اذا تشوف اشياء تسوي مشاكل»)
 DATA = os.environ.get("TIFO_DATA", "https://d1n5aqaqkowltp.cloudfront.net")
@@ -435,7 +438,11 @@ def _invoke(event):
 
 # ------------------------------------------------------------------ subscriber choices (pure, tested)
 def wants(sub, kind):
+    """`article` is on by default: a subscription saved before the settings had its switch (no `art` flag) gets articles when
+    it gets goals («بدون حرق» keeps the kickoff only, and a match report gives the score away)."""
     ev = sub.get("events") or DEFAULT_EVENTS
+    if kind == "article" and not sub.get("art"):
+        return "goal" in ev
     return kind in ev
 
 
@@ -649,6 +656,9 @@ def run_jobs(jobs, table, send=None, subs_override=None, now=None):
         for team, data in sorted(job["payloads"].items(), key=lambda kv: not str(kv[0]).startswith("P")):
             k = data.get("kind") or kind
             is_player = str(team).startswith("P")
+            if k == "article" and subs_override is None and not cap_ok(table, f"art:{team}", day, cap=ARTICLE_DAILY):
+                stats["capped"] = stats.get("capped", 0) + 1       # this club or player had its 3 article pushes today
+                continue
             subs = subs_override if subs_override is not None else _subs(table, team)
             for s in subs:
                 if not wants(s, k) or s["endpoint"] in done_eps:
