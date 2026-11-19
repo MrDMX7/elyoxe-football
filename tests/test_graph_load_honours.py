@@ -64,7 +64,8 @@ def test_fjelstul_golden_ball_podium(tmp_path):
         "1,WC-1930,1930 FIFA Men's World Cup,A-1,Golden Ball,0,P-1,Nasazzi,José,T-84,Uruguay,URY\n"
         "2,WC-1930,1930 FIFA Men's World Cup,A-2,Silver Ball,0,P-2,Stábile,Guillermo,T-03,Argentina,ARG\n"
         "3,WC-1930,1930 FIFA Men's World Cup,A-4,Golden Boot,0,P-2,Stábile,Guillermo,T-03,Argentina,ARG\n"
-        "4,WC-1930,1930 FIFA Men's World Cup,A-9,FIFA Fair Play Trophy,0,,,,T-84,Uruguay,URY\n", encoding="utf-8")
+        "4,WC-1930,1930 FIFA Men's World Cup,A-9,FIFA Fair Play Trophy,0,,,,T-84,Uruguay,URY\n"
+        "5,WC-1991,1991 FIFA Women's World Cup,A-1,Golden Ball,0,P-9,Akers,Michelle,T-90,United States,USA\n", encoding="utf-8")
     (db / "fjelstul_players.csv").write_text("key_id,player_id,family_name,given_name,birth_date,player_wikipedia_link\n"
                                              "1,P-1,Nasazzi,José,1901-05-24,https://en.wikipedia.org/wiki/Jos%C3%A9_Nasazzi\n"
                                              "2,P-2,Stábile,Guillermo,1905-01-17,https://en.wikipedia.org/wiki/Guillermo_St%C3%A1bile\n", encoding="utf-8")
@@ -74,4 +75,5 @@ def test_fjelstul_golden_ball_podium(tmp_path):
     e = G.c.execute("select eid from edition where cid=? and season='1930'", (wc,)).fetchone()[0]
     got = {(k, r): n for k, r, n in G.c.execute("select h.kind, h.rank, coalesce(p.name, t.name) from honour h left join player p on p.pid=h.pid "
                                                 "left join team t on t.tid=h.tid where h.eid=?", (e,))}
+    assert G.c.execute("select count(*) from edition where season='1991'").fetchone()[0] == 0     # the women's World Cup is not the men's
     assert got == {("best_player", 1): "José Nasazzi", ("best_player", 2): "Guillermo Stábile", ("top_scorer", 1): "Guillermo Stábile", ("fair_play", 1): "Uruguay"}

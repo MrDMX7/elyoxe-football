@@ -17,11 +17,11 @@ def W(path, header, rows, gz=False):
 def test_world_cup_match_with_lineups_goals_cards_subs_coach_referee(tmp_path):
     db = tmp_path / "db" / ".cache"
     db.mkdir(parents=True)
-    W(db / "fjelstul_matches.csv", ["tournament_id", "match_id", "stage_name", "match_date", "stadium_id", "stadium_name", "city_name", "country_name",
+    W(db / "fjelstul_matches.csv", ["tournament_id", "tournament_name", "match_id", "stage_name", "match_date", "stadium_id", "stadium_name", "city_name", "country_name",
                                     "home_team_id", "home_team_name", "away_team_id", "away_team_name", "home_team_score", "away_team_score", "extra_time",
                                     "penalty_shootout", "home_team_score_penalties", "away_team_score_penalties"],
-      [["WC-1970", "M-1970-01", "group stage", "1970-05-31", "S-1", "Azteca", "Mexico City", "Mexico", "T-46", "Mexico", "T-72", "Soviet Union", "1", "1", "0", "0", "0", "0"],
-       ["WWC-1991", "M-W", "final", "1991-11-30", "S-2", "X", "Y", "China", "T-9", "USA", "T-8", "Norway", "2", "1", "0", "0", "0", "0"]])
+      [["WC-1970", "1970 FIFA Men's World Cup", "M-1970-01", "group stage", "1970-05-31", "S-1", "Azteca", "Mexico City", "Mexico", "T-46", "Mexico", "T-72", "Soviet Union", "1", "1", "0", "0", "0", "0"],
+       ["WC-1991", "1991 FIFA Women's World Cup", "M-W", "final", "1991-11-30", "S-2", "X", "Y", "China", "T-9", "USA", "T-8", "Norway", "2", "1", "0", "0", "0", "0"]])
     W(db / "fjelstul_player_appearances.csv", ["tournament_id", "match_id", "team_id", "home_team", "player_id", "family_name", "given_name", "shirt_number", "position_code", "starter", "substitute"],
       [["WC-1970", "M-1970-01", "T-46", "1", "P-1", "Calderón", "Ignacio", "1", "GK", "1", "0"],
        ["WC-1970", "M-1970-01", "T-46", "1", "P-2", "Valdivia", "Javier", "9", "FW", "1", "0"],

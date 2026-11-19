@@ -66,7 +66,7 @@ def load(G, reg, S):
     for r in csv.DictReader(open(aw, encoding="utf-8", newline="")):
         kind = AWARD.get(r["award_name"])
         tour = r.get("tournament_id") or ""
-        if not kind or not tour.startswith("WC-"):
+        if not kind or not tour.startswith("WC-") or "women" in (r.get("tournament_name") or "").lower():   # WC-1991 is the women's
             continue
         year = tour[3:7]
         eid = edition_for(G, reg, "fjelstul", f"{WORLD_CUP}|{year}", cid, year)

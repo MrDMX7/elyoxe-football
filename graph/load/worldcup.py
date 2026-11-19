@@ -12,7 +12,9 @@ def rows(S, name):
     p = os.path.join(S.db, f"fjelstul_{name}.csv")
     if not os.path.exists(p):
         return []
-    return [r for r in csv.DictReader(open(p, encoding="utf-8", newline="")) if (r.get("tournament_id") or "").startswith("WC-")]
+    men = {r["tournament_id"] for r in csv.DictReader(open(os.path.join(S.db, "fjelstul_matches.csv"), encoding="utf-8", newline=""))
+           if (r.get("tournament_id") or "").startswith("WC-") and "women" not in (r.get("tournament_name") or "").lower()}         if os.path.exists(os.path.join(S.db, "fjelstul_matches.csv")) else set()
+    return [r for r in csv.DictReader(open(p, encoding="utf-8", newline="")) if r.get("tournament_id") in men]   # WC-1991 is the women's
 
 
 def _i(v):
