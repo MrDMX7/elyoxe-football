@@ -87,3 +87,59 @@ def test_a_story_is_updated_three_times_at_most():
         qh = q(st, now=T0 + timedelta(hours=h)); assert qh.wants_update("s1", 2 * h + 2, None); qh.mark_written("s1", 2 * h + 2, None)
     assert not q(st, now=T0 + timedelta(hours=8)).wants_update("s1", 40, "official")
     assert st["news"]["count"] == 1
+
+
+# Pacing (owner, 2026-11-19: the night's backlog used the day's 60 by 04:50 UAE): 4 an hour at most, and no more than the
+# day's share so far (60 x the hours begun / 24), so the evening keeps its news. The desk's «اكتب» is not paced.
+PACED = {"daily": 60, "wait_minutes": 20, "per_hour": 4}
+MIDNIGHT_UAE = datetime(2026, 11, 18, 20, 0, tzinfo=timezone.utc)          # 00:00 on 19 Nov in the UAE
+
+
+def pq(state, desk=None, now=T0):
+    return Q.Queue(state, desk or {}, now, PACED)
+
+
+def _backlog(st, n, at):
+    first = pq(st, now=at)
+    for i in range(n):
+        first.offer(f"s{i}", [n - i])
+
+
+def test_the_first_hour_of_the_day_gets_its_share_not_the_backlog():
+    st = {}
+    _backlog(st, 100, MIDNIGHT_UAE - timedelta(hours=1))
+    got = pq(st, now=MIDNIGHT_UAE + timedelta(minutes=5)).ready()
+    assert got == ["s0", "s1", "s2"]                                     # 60 x 1/24 = 2.5, rounded up
+
+
+def test_four_an_hour_at_most_even_when_the_day_has_more_left():
+    st = {}
+    _backlog(st, 100, MIDNIGHT_UAE - timedelta(hours=1))
+    evening = MIDNIGHT_UAE + timedelta(hours=18)                          # 18:00 UAE, nothing written yet today
+    qq = pq(st, now=evening)
+    got = qq.ready()
+    assert len(got) == 4
+    for sid in got:
+        qq.mark_written(sid, 1, None)
+    assert pq(st, now=evening + timedelta(minutes=30)).ready() == []
+    assert len(pq(st, now=evening + timedelta(minutes=61)).ready()) == 4
+
+
+def test_the_share_counts_what_was_written_today():
+    st = {}
+    _backlog(st, 100, MIDNIGHT_UAE - timedelta(hours=1))
+    six = MIDNIGHT_UAE + timedelta(hours=6)                               # share by 06:59 = 60 x 7/24 = 17.5 -> 18
+    qq = pq(st, now=six)
+    st["news"]["count"] = 16
+    assert len(qq.ready()) == 2
+
+
+def test_the_desk_write_is_not_paced_but_still_counts():
+    st = {}
+    _backlog(st, 100, MIDNIGHT_UAE - timedelta(hours=1))
+    at = MIDNIGHT_UAE + timedelta(hours=18)
+    qq = pq(st, now=at)
+    for sid in qq.ready():
+        qq.mark_written(sid, 1, None)
+    desk = {"write": {"s50": at.isoformat(), "s51": at.isoformat()}}
+    assert pq(st, desk, now=at + timedelta(minutes=10)).ready() == ["s50", "s51"]

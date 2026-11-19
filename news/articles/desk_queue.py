@@ -3,8 +3,13 @@
 A story waits wait_minutes after it is first offered. The desk file (state/articles/desk.json, written by the desk page in
 Phase 2b) can «reject» it, or «write» it at once. At most `daily` new articles a UAE day, and «write» does not lift that.
 
+Pacing (owner, 2026-11-19), when the config has `per_hour`: at most that many new articles in any hour, and no more than the
+day's share so far, `daily` x the UAE hours begun / 24, so a night's backlog cannot use the evening's articles. The desk's
+«اكتب» is not paced, only counted.
+
 A written story is updated at most once an hour, and only for 2 or more new items or a higher stage. A queued story that
 leaves the journal's window is dropped."""
+import math
 from datetime import datetime, timedelta, timezone
 
 UAE = timezone(timedelta(hours=4))
@@ -50,12 +55,30 @@ class Queue:
         rej, now_ = set(self.desk.get("reject") or {}), set(self.desk.get("write") or {})
         due = [(sid not in now_, [-x for x in q["rank"]], sid) for sid, q in self.n["queue"].items()
                if sid not in rej and (sid in now_ or datetime.fromisoformat(q["first"]) + wait <= self.now)]
-        return [sid for _, _, sid in sorted(due)][:left]
+        order = [sid for _, _, sid in sorted(due)]
+        forced, rest = [s for s in order if s in now_], [s for s in order if s not in now_]
+        pace = self._pace()
+        if pace is not None:
+            rest = rest[:max(0, pace)]
+        return (forced + rest)[:left]
+
+    def _pace(self):
+        """How many more the pacing allows now, or None when the config has no `per_hour`."""
+        per_hour = self.cfg.get("per_hour")
+        if not per_hour:
+            return None
+        hour_ago = self.now - timedelta(hours=1)
+        stamps = [t for t in self.n.get("hour") or [] if datetime.fromisoformat(t) > hour_ago]
+        self.n["hour"] = stamps
+        uae = self.now.astimezone(UAE)
+        share = math.ceil(self.cfg["daily"] * (uae.hour + 1) / 24) - self.n["count"]
+        return min(per_hour - len(stamps), share)
 
     def mark_written(self, sid, items, stage):
         prev = self.n["done"].get(sid)
         if prev is None:
             self.n["count"] += 1
+            self.n.setdefault("hour", []).append(self.now.isoformat())
         self.n["done"][sid] = {"at": self.now.isoformat(), "items": items, "stage": stage,
                                "updates": prev.get("updates", 0) + 1 if prev else 0}
         self.n["queue"].pop(sid, None)
