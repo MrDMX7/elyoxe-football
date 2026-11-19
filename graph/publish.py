@@ -9,6 +9,8 @@ import json, os, re, unicodedata
 from collections import Counter, defaultdict
 
 GROUPS = [("women", re.compile(r"women|féminin|female|ladies|girls", re.I)),
+          ("club", re.compile(r"\b(f\.?c\.?|a\.?f\.?c\.?|s\.?c\.?|c\.?f\.?)\b.*(player|season|year)|\b(united|city|rovers|athletic|wanderers|albion|hotspur|county|town|"
+                              r"rangers|celtic|arsenal|chelsea|liverpool|everton|juventus|milan|inter|barcelona|real madrid|bayern|ajax|benfica|porto)\b.*player of the", re.I)),
           ("tournament", re.compile(r"world cup|euro\b|uefa euro|copa am|nations|asian cup|gulf cup|arab cup|african cup|cup of nations|olympic|"
                                     r"champions league|club world|confederations|gold cup|libertadores|tournament", re.I)),
           ("continent", re.compile(r"asia|afc\b|africa|caf\b|europe|uefa|south america|conmebol|concacaf|oceania|arab", re.I)),

@@ -142,3 +142,15 @@ def test_season_article_gives_that_seasons_honours(tmp_path):
     e = G.c.execute("select eid from edition where cid=? and season='2016/2017'", (lg,)).fetchone()[0]
     got = dict(G.c.execute("select kind, pid from honour where eid=?", (e,)).fetchall())
     assert got == {"best_player": reg.get("player", "wikidata", "Q60"), "best_local": reg.get("player", "wikidata", "Q61")}
+
+
+def test_a_redirect_is_read_once_as_its_article(tmp_path):
+    canon = BALLON.replace(b"<html>", b'<html><head><link rel="dc:isVersionOf" href="//en.wikipedia.org/wiki/Ballon_d%27Or"/></head>')
+    S = mk(tmp_path, {"Ballon d'Or": canon, "Ballon d'Or (award)": canon}, ITEMS)      # «(award)» sorts after; «Ballon d'Or A» before
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    awards.load(G, reg, S)
+    assert G.c.execute("select name from competition where kind='award'").fetchall() == [("Ballon d'Or",)]
+    S2 = mk(tmp_path / "b", {"Ballon d'Or": canon, "Ballon A": canon}, ITEMS)
+    G2, reg2 = Graph(str(tmp_path / "t2.db")), Registry()
+    awards.load(G2, reg2, S2)
+    assert G2.c.execute("select name from competition where kind='award'").fetchall() == [("Ballon d'Or",)]

@@ -13,7 +13,7 @@
 import os, re
 import yaml
 from graph import awards_fetch as AF
-from graph.awards_wiki import extract
+from graph.awards_wiki import canonical, extract
 from graph.link import edition_for
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -131,13 +131,24 @@ def load(G, reg, S):
                        (eid, kind, rank, tid, pid, kid, value, "wiki")).rowcount:
             n["honours"] += 1
 
-    pages = sorted(award_pages | set(comp_of))
-    for page in pages:
+    # a redirect («FIFA World Cup Golden Ball») serves its article's HTML: every article is read once, under its own title
+    # when that title is in the lists, else under the first title that reaches it; a competition's article keeps its title
+    by_canon = {}
+    for page in sorted(award_pages | set(comp_of)):
         if page in skip:
             continue
         html = AF.read_page(d, page)
         if not html:
             continue
+        canon = canonical(html, page)
+        cur = by_canon.get(canon)
+        if cur is None or page == canon or (page in comp_of and cur[0] not in comp_of):
+            by_canon[canon] = (page, html)
+    n["redirects"] = sum(1 for p in award_pages | set(comp_of) if AF.read_page(d, p)) - len(by_canon)
+    for canon in sorted(by_canon):
+        page, html = by_canon[canon]
+        if page not in comp_of:
+            page = canon
         n["pages"] += 1
         tables = [t for t in extract(html, page) if f"{page}|{t['section']}" not in skip]
         m = YEAR_PAGE.match(page)

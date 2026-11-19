@@ -10,7 +10,7 @@ const nm = (ar, en) => ar && AR.test(ar) ? esc(ar) : `<span class="lat">${esc(en
 const num = v => `<span class="num">${esc(v)}</span>`;
 const RANK = { 1: "الأول", 2: "الثاني", 3: "الثالث", 4: "الرابع", 5: "الخامس" };
 const GROUPS = [["world", "جوائز عالمية"], ["continent", "جوائز القارات"], ["tournament", "جوائز البطولات"], ["league", "جوائز الدوريات"],
-  ["country", "جوائز الدول"], ["women", "كرة القدم النسائية"]];
+  ["country", "جوائز الدول"], ["club", "جوائز الأندية"], ["women", "كرة القدم النسائية"]];
 const KIND = { top_scorer: "هداف", best_player: "أفضل لاعب في", best_goalkeeper: "أفضل حارس في", best_young: "أفضل لاعب شاب في",
   best_coach: "أفضل مدرب في", fair_play: "اللعب النظيف في", top_assist: "أكثر صانع أهداف في", best_local: "أفضل لاعب محلي في" };
 const awardName = a => nm(a.name_ar, a.name);

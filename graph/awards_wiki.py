@@ -11,6 +11,7 @@ SEASON = re.compile(r"^(\d{4})(?:\s*[–\-/]\s*(\d{4}|\d{2})(?!\d))?")
 H_YEAR = re.compile(r"\b(year|season|edition|tournament)\b|^ed\.?$", re.I)          # singular: «Years» / «Seasons» are spans and lists
 SKIP_SECTION = re.compile(r"multiple|by (player|club|team|country|nation|nationality|position|league)|all[- ]time|nominee|shortlist|"
                           r"finalist|record|statistic|dream team|team of|all[- ]star|selection|squad|list of (players|nominees)", re.I)
+NOT_A_WINNER = re.compile(r"^(not awarded|no award|not held|none|vacant|cancel+ed|withheld|abandoned|void|tb[ad]|n/?a|[—–-])\b|^[—–-]$", re.I)
 POSITIONS = re.compile(r"goalkeeper|defender|midfielder|forward|striker", re.I)
 H_TEAM = re.compile(r"club|team|nation|country|nationality|^nat\.?$|position|league", re.I)
 H_PERSON = re.compile(r"player|winner|scorer|^name|recipient|goalkeeper|manager|coach|footballer|best|^top", re.I)
@@ -183,7 +184,7 @@ def _rows(body, page, section, yi, pi, ti, vi, ki, kind, ci=None, ri=None):
                          "runner_up_name": r[ri][0] or None, "value": None})
             continue
         cell = r[pi]
-        if not cell[0]:
+        if not cell[0] or NOT_A_WINNER.search(cell[0]):
             continue
         rk = _rank(r[ki][0]) if ki is not None else None
         rows.append({"season": season, "rank": rk or 1, "person": cell[1][0] if cell[1] else None,
@@ -195,6 +196,12 @@ def _rows(body, page, section, yi, pi, ti, vi, ki, kind, ci=None, ri=None):
     if ki is None and not team_table and len(rows) > 3 * len({r["season"] for r in rows}):
         return None          # many names a season and no rank: nominees or a squad, not winners
     return {"page": page, "section": section, "kind": kind, "who": "team" if team_table else "person", "rows": rows}
+
+
+def canonical(html, page):
+    """The article a title is served from: «FIFA World Cup Golden Ball» redirects to «FIFA World Cup awards»."""
+    m = re.search(rb'rel="dc:isVersionOf" href="//[a-z]+\.wikipedia\.org/wiki/([^"]+)"', html if isinstance(html, bytes) else html.encode())
+    return urllib.parse.unquote(m.group(1).decode()).replace("_", " ") if m else page
 
 
 def extract(html, page):

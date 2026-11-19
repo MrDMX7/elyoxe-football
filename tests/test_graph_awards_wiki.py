@@ -95,3 +95,13 @@ def test_season_page_awards_and_scorers():
     links = season_links(b'<a rel="mw:WikiLink" href="./2016%E2%80%9317_UAE_Pro_League">x</a><a rel="mw:WikiLink" href="./Al_Ain_FC">y</a>'
                          b'<a rel="mw:WikiLink" href="./1973%E2%80%9374_UAE_Football_League">z</a><a rel="mw:WikiLink" href="./2016_in_UAE_football">w</a>')
     assert links == ["2016–17_UAE_Pro_League", "1973–74_UAE_Football_League"]
+
+
+def test_canonical_title_and_not_awarded_rows():
+    from graph.awards_wiki import canonical
+    h = b'<html><head><link rel="dc:isVersionOf" href="//en.wikipedia.org/wiki/FIFA_World_Cup_awards"/></head><body></body></html>'
+    assert canonical(h, "FIFA World Cup Golden Ball") == "FIFA World Cup awards"
+    assert canonical(b"<html><body></body></html>", "Ballon d'Or") == "Ballon d'Or"
+    t = T('<tr><th>Year</th><th>Player</th></tr>' + ''.join(f'<tr><td>{y}</td><td>{x}</td></tr>' for y, x in
+          ((2001, L("A")), (2002, "Not awarded"), (2003, L("B")), (2004, "—"), (2005, L("C")), (2020, "Cancelled due to COVID-19"))))
+    assert [r["season"] for r in extract(t, "X")[0]["rows"]] == ["2001", "2003", "2005"]

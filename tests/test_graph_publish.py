@@ -50,3 +50,10 @@ def test_a_missing_fotmob_id_does_not_break_publishing(tmp_path):
     G.xref("competition", 999, "fotmob", None, "fotmob-native")          # the archive has matches with no competition
     G.xref("player", 998, "fotmob", None, "fotmob-native")
     assert publish.awards(G, str(tmp_path / "o"))["awards"] == 1
+
+
+def test_club_awards_have_their_own_group():
+    assert publish.group("Arsenal F.C. Player of the Season") == "club"
+    assert publish.group("Chelsea F.C. Player of the Season award recipients") == "club"
+    assert publish.group("Ballon d'Or") == "world"
+    assert publish.group("FWA Footballer of the Year") == "country"
