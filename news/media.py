@@ -501,6 +501,22 @@ def player_forms(latin, ars, nick=()):
     return out
 
 
+# the graph's names for Al Tararwa held «منتخب الكويت تحت 21 سنة لكرة القدم» (a Wikidata label of his under-21 side), and its
+# «القدم» named him in every Kuwaiti post that says «لكرة القدم» (2026-11-20); Hugo's «هوغو (لاعب كرة قدم مواليد 2001)» is «هوغو»
+NOT_A_PERSON = {t for w in ["منتخب", "المنتخب", "نادي", "فريق", "تحت", "سنة", "عاما", "لكرة", "كرة", "القدم", "قدم", "لاعب",
+                            "مواليد", "الأولمبي", "الرديف", "أكاديمية"] for t in toks(w)}
+
+
+def person_name(n):
+    """The name without a bracketed note, or None when it is not a person's (a team, an age group: NOT_A_PERSON, digits, or more
+    than five words)."""
+    n = re.sub(r"\s*[(\[].*?[)\]]\s*", " ", n or "").strip()
+    tt = toks(n)
+    if not tt or len(tt) > 5 or re.search(r"\d", n) or set(tt) & NOT_A_PERSON:
+        return None
+    return n
+
+
 class Names:
     """Name data: teams.json, names/*.json, news/aliases.yaml, news/nations.json, FotMob's Arabic map when present, and the
     Tifo graph's other Arabic names per player (`player_aliases`: {FotMob player id: [Arabic name, ...]}, PLAYER_ALIASES)."""
@@ -549,10 +565,10 @@ class Names:
         return f
 
     def arabic(self, pid):
-        """Every Arabic name held for the player."""
+        """Every Arabic name held for the player that is a person's name (person_name())."""
         ars = [(self.players_ar.get(str(pid)) or {}).get("ar"), (self.fm.get("players") or {}).get(str(pid))] + \
               list(self.player_aliases.get(str(pid)) or [])
-        return [x for x in ars if x]
+        return [n for n in (person_name(x) for x in ars if x) if n]
 
     def player(self, pid, name):
         if pid in self._pf:
@@ -577,7 +593,7 @@ class Names:
                     list((self.fm.get("players") or {}).items()) + \
                     [(pid, n) for pid, ns in self.player_aliases.items() for n in ns or []]
             for pid, n in pairs:
-                tt = tuple(toks(n or ""))
+                tt = tuple(toks(person_name(n) or ""))
                 if tt:
                     words.update(tt)
                     full.setdefault(tt, set()).add(str(pid))
@@ -1079,6 +1095,16 @@ def club_minute_goal(ctx, v, ch, tx, teams, players, t_pub, note):
     return out if len({o[1] for o in out}) == 1 else []
 
 
+def youth_is_team(tx, spans):
+    """«… يسجل الهدف الأول للشباب» is Kuwait's Al-Shabab (2026-11-20; Saudi Arabia's too): a youth word of the title that is
+    inside a side's name there (`spans` from Ctx.mentions) is no youth word."""
+    p = next((p for p in YOUTH if " ".join(p) == tx.youth), None)
+    if not p:
+        return False
+    at = [i for i in range(len(tx.al) - len(p) + 1) if all(p[j] in tx.al[i + j] for j in range(len(p)))]
+    return bool(at) and all(any(s <= i and i + len(p) <= e for s, e, k, _ in spans if k == "team") for i in at)
+
+
 def classify(tx, ch=None):
     if tx.neg or tx.women:
         return None
@@ -1150,9 +1176,10 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
                 out.setdefault(cands[0][2], {"highlights": [], "goals": {}})["highlights"].append((v, cands[0][0]))
             continue
         # a goal clip
-        if tx.neg_goal or tx.old or tx.youth or tx.hl:
+        youth = tx.youth if not youth_is_team(tx, spans) else None
+        if tx.neg_goal or tx.old or youth or tx.hl:
             if trace is not None and players:
-                note(v, None, "goal", "no: " + str(tx.neg_goal or tx.old or tx.youth))
+                note(v, None, "goal", "no: " + str(tx.neg_goal or tx.old or youth))
             continue
         hits = []
         for pid in players:
@@ -1196,26 +1223,96 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
 # ------------------------------------------------------------------------------------------------ learned names
 # Abu Dhabi Sports and Dubai Sports wrote Serginho's 62' against Hatta «سيرجيو بيريرا» and Hugo's own goal «هوجو نيتو» (2026-11-19);
 # we hold «سيرجينيو» and «هوغو», and the graph's names did not have theirs either. A post that names none of the match's scorers but
-# whose score, minute or goal number fits exactly one goal is about that goal; the name it gives is then that scorer's when two
-# channels wrote the same one, or when one of its words is the scorer's own spelt another way (loose()). Words that are not part of
-# any player's name in the dictionary, the sides' names, and the name after a pass («بعرضية من …») are never a name; a full name
-# the dictionary holds for another player is never learnt.
+# whose score, minute or goal number fits exactly one goal is about that goal; the name it gives is then that scorer's when
+#   (a) two channels wrote the same one,
+#   (b) one of its words is the scorer's own spelt another way (loose()), or
+#   (c) its letters are those of the scorer's Latin name (skeleton_ar / skeleton_lat): «عبدالرحمن كوكو» for FotMob's
+#       «Abdelrahman Kuku», who has no Arabic name of ours (Kuwait, 2026-11-20; two in three of Iraq's scorers had none).
+# For (a) and (b) only words that are part of some player's name in the dictionary count; for all three the sides' names and the
+# name after a pass («بعرضية من …») never do, and a full name the dictionary holds for another player is never learnt.
 ASSIST_TOK = {toks(w)[0] for w in ["تمريرة", "بتمريرة", "صناعة", "بصناعة", "عرضية", "بعرضية", "صنع", "يصنع", "assist", "assisted",
                                     "pass", "cross"]}
 NAME_STOP = {t for ps in [GOAL_WORDS, HL_WORDS, EQ_WORDS, PEN_WORDS, OWN_WORDS, FK_WORDS, PLURAL_GOALS, NEG_GOAL, NEG_ALWAYS]
              + list(ORD_WORDS.values()) for p in ps for t in p} | set(GOAL_TOK) | set(ORD_TOK) | set(BREAK_ORD) | \
             {t for w in ["إلى", "ضد", "أمام", "مرمى", "شباك", "الدوري", "دوري", "النتيجة", "نتيجة", "الفريق", "نادي", "منتخب",
                          "لاعب", "اللاعب", "نجم", "النجم", "قائد", "المباراة", "مباراة", "اللقاء", "لقاء", "رائع", "رائعة", "جميل",
-                         "عالمي", "عالمية", "ويضاعف", "يضاعف", "يقلص", "يعادل", "يحرز", "يسجل"] for t in toks(w)}
+                         "عالمي", "عالمية", "ويضاعف", "يضاعف", "يقلص", "يعادل", "يحرز", "يسجل", "شاهد", "بتوقيع", "توقيع", "يهز",
+                         "منافسات", "بطولة", "الممتاز", "للموسم", "الرياضي", "الموسم", "نجوم", "القاتل", "مجددا", "اليوم"]
+             for t in toks(w)}
+
+# the letters a name keeps in either script (vowels, «ع» and hamza go; ج/غ/g/j are one letter, so are ك/ق/k/q/c, س/ص/ش/s)
+AR_SKEL = {"ب": "b", "پ": "b", "ت": "t", "ث": "t", "ط": "t", "ج": "g", "چ": "g", "گ": "g", "غ": "g", "ح": "h", "ه": "h", "ة": "h",
+           "خ": "k", "ك": "k", "ک": "k", "ق": "k", "د": "d", "ذ": "d", "ض": "d", "ر": "r", "ز": "z", "ظ": "z", "س": "s", "ش": "s",
+           "ص": "s", "ف": "f", "ڤ": "f", "ل": "l", "م": "m", "ن": "n"}
+LAT_SKEL = str.maketrans({"q": "k", "c": "k", "j": "g", "v": "f", "p": "b", "w": None, "y": None, "a": None, "e": None, "i": None,
+                          "o": None, "u": None})
+AR_LETTERS = re.compile("[ء-غف-يپچڤکگ]+")
 
 
-def name_runs(title, words, side_toks):
-    """-> [(token tuple, the words as written)]: 2-3 words in a row of the title (its hashtags left out) that are all words of
-    players' names, none a side's name, and not right after a pass («بعرضية من جواو سيلفا»)."""
+def _squeeze(s):
+    return re.sub(r"(.)\1+", r"\1", s)
+
+
+def skeleton_ar(s):
+    out = ""
+    for w in AR_LETTERS.findall(s or ""):
+        if w.startswith("ال") and len(w) > 4:
+            w = w[2:]
+        sk = "".join(AR_SKEL.get(c, "") for c in w)
+        out += sk[:-1] if sk.endswith("h") and len(sk) > 1 else sk
+    return _squeeze(out)
+
+
+def skeleton_lat(s, ch="k"):
+    s = unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore").decode().lower()
+    out = ""
+    for w in re.findall(r"[a-z]+", s):
+        if w in ("al", "el", "ul"):
+            continue
+        for a, b in (("kh", "k"), ("sh", "s"), ("ch", ch), ("th", "t"), ("dh", "d"), ("gh", "g"), ("ph", "f"), ("ck", "k"), ("qu", "k"),
+                     ("x", "ks")):
+            w = w.replace(a, b)
+        sk = re.sub(r"c(?=[eiy])", "s", w).translate(LAT_SKEL)
+        out += sk[:-1] if sk.endswith("h") and len(sk) > 1 else sk
+    return _squeeze(out)
+
+
+def _one_edit(a, b):
+    if abs(len(a) - len(b)) > 1:
+        return False
+    i = 0
+    while i < min(len(a), len(b)) and a[i] == b[i]:
+        i += 1
+    return a[i + 1:] == b[i + 1:] or a[i + 1:] == b[i:] or a[i:] == b[i + 1:]
+
+
+def letters_match(ar, latin):
+    a = skeleton_ar(ar)
+    if len(a) < 3:
+        return False
+    for ch in ("k", "s"):                         # «Michael» is «مايكل», «Achraf» «أشرف»
+        b = skeleton_lat(latin, ch)
+        if a == b or (min(len(a), len(b)) >= 5 and _one_edit(a, b)):
+            return True
+    return False
+
+
+def latin_names(latin):
+    """The Latin name, and its last two or three words («Mohammed Jawad Sharhan» -> «Jawad Sharhan»)."""
+    lt = [w for w in re.findall(r"[^\W\d_]+", latin or "") if w.lower() not in ("al", "el")]
+    return {" ".join(lt)} | {" ".join(lt[-k:]) for k in (2, 3) if len(lt) > k}
+
+
+def name_runs(title, words, side_toks, strict=True):
+    """-> [(token tuple, the words as written)] of the title (its hashtags left out), never a side's name nor right after a pass
+    («بعرضية من جواو سيلفا»). strict: 2-3 words in a row that are all words of players' names; else every 1-3 words in a row
+    that are not the title's other words (NAME_STOP), for letters_match() to judge."""
     raw = unicodedata.normalize("NFKC", BIDI.sub("", (title or "").translate(AR_DIGITS)))
     raw = re.sub(r"#[^\s#]+", " ", raw)
     tt = toks(raw)
-    ok = [t in words and t not in NAME_STOP and t not in side_toks and len(t) >= 3 and not t.isdigit() for t in tt]
+    side = [bool(a & side_toks) for a in alts(tt)]
+    ok = [t not in NAME_STOP and not side[i] and len(t) >= (3 if strict else 2) and AR_LETTERS.fullmatch(t) is not None
+          and (t in words or not strict) for i, t in enumerate(tt)]
     runs, i = [], 0
     while i < len(tt):
         if not ok[i]:
@@ -1223,8 +1320,12 @@ def name_runs(title, words, side_toks):
         j = i
         while j < len(tt) and ok[j]:
             j += 1
-        if 2 <= j - i <= 3 and not (set(tt[max(0, i - 2):i]) & ASSIST_TOK):
-            runs.append(tuple(tt[i:j]))
+        if strict:
+            if 2 <= j - i <= 3 and not (set(tt[max(0, i - 2):i]) & ASSIST_TOK):
+                runs.append(tuple(tt[i:j]))
+        else:
+            runs += [tuple(tt[a:b]) for a in range(i, j) for b in range(a + 1, min(a + 3, j) + 1)
+                     if not (set(tt[max(0, a - 2):a]) & ASSIST_TOK)]
         i = j
     ws = raw.split()
     out = []
@@ -1269,11 +1370,14 @@ def learn(videos, matches, names, chmap, blocked=()):
         if v["id"] in blocked or not ch or not t_pub:
             continue
         tx = Text(v["title"], v.get("desc"), ch.get("lang", "en"))
-        if classify(tx, ch) != "goal" or tx.neg_goal or tx.old or tx.youth or tx.hl or tx.plural:
+        if classify(tx, ch) != "goal" or tx.neg_goal or tx.old or tx.hl or tx.plural:
             continue
         if not (tx.scores or tx.minutes or tx.ordinal or tx.eq):
             continue
-        teams, players = ctx.mentions(tx.al)
+        spans = []
+        teams, players = ctx.mentions(tx.al, (), spans)
+        if tx.youth and not youth_is_team(tx, spans):
+            continue
         hit = pinned_goal(ctx, v, ch, tx, teams, players, t_pub)
         if not hit:
             continue
@@ -1281,22 +1385,33 @@ def learn(videos, matches, names, chmap, blocked=()):
         md = ctx.matches[mid]
         nat = md.get("comp") in names.national_comps
         side = {t for s in ("home", "away") for f in names.team(md[s], nat) for t in f}
-        groups.setdefault((mid, goal_key(g)), {"g": g, "posts": []})["posts"].append((v, ch["key"], name_runs(v["title"], words, side)))
+        groups.setdefault((mid, goal_key(g)), {"g": g, "posts": []})["posts"].append(
+            (v, ch["key"], name_runs(v["title"], words, side), name_runs(v["title"], words, side, strict=False)))
     out = {}
     for (mid, key), grp in groups.items():
         p = grp["g"]["player"]
         pid = str(p["id"])
         mine = names.player(p["id"], p.get("name"))
         own = {t for n in names.arabic(p["id"]) for t in toks(n) if len(t) >= 4 and t not in AR_GIVEN}
-        forms = {}
-        for v, chk, runs in grp["posts"]:
+        lat = latin_names(p.get("name"))
+        one_word = all(" " not in n for n in lat)
+
+        def fresh(f):
+            return f not in mine and not (full.get(f, set()) - {pid})
+
+        forms, take = {}, set()
+        for v, chk, runs, wins in grp["posts"]:
             for f, surf in runs:
-                if f in mine or (full.get(f, set()) - {pid}):
-                    continue
-                d = forms.setdefault(f, {"surf": surf, "posts": {}})
-                d["posts"].setdefault(v["id"], (v, chk))
+                if fresh(f):
+                    forms.setdefault(f, {"surf": surf, "posts": {}})["posts"].setdefault(v["id"], (v, chk))
+            # (c): the longest words of the post whose letters are his Latin name's (one word only when his name is one word)
+            hit = max(((f, surf) for f, surf in wins if fresh(f) and (len(f) > 1 or one_word)
+                       and any(letters_match(surf, n) for n in lat)), key=lambda x: len(x[0]), default=None)
+            if hit:
+                forms.setdefault(hit[0], {"surf": hit[1], "posts": {}})["posts"].setdefault(v["id"], (v, chk))
+                take.add(hit[0])
         shared = [f for f, d in forms.items() if len({c for _, c in d["posts"].values()}) >= 2]
-        take = set(shared) if len(shared) == 1 else set()
+        take |= set(shared) if len(shared) == 1 else set()
         take |= {f for f in forms if any(t == u or (loose(t) & loose(u)) for t in f for u in own)}
         for f in take:
             ps = list(forms[f]["posts"].values())
