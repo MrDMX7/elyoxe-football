@@ -159,6 +159,7 @@ def publish(S, out_dir, reg_path, rec, cov):
         st.put_state("graph/player_aliases_ar.json.gz", json.load(open(ap, encoding="utf-8")))
     st.put_state("graph/last.json", {"at": rec["started"], "matches": cov["counts"]["match"], "fotmob_matches": cov["by_src"]["match"].get("fotmob", 0),
                                       "secs": rec["secs"]})
+    st.put_state("graph/build.json", rec)          # each loader's result or error: the runner's log keeps only the tail
     rec["published"] = True
 
 
