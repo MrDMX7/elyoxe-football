@@ -35,6 +35,11 @@ def load(G, reg, S):
                 if reg.alias(t, "wikidata", v["qid"], i):
                     G.xref(t, i, "wikidata", v["qid"], "names-" + str(v.get("source")))
                     n["wikidata"] += 1
+                elif v.get("source") == "manual":        # checked by hand: the item's other record is this player (Ali Mabkhout)
+                    other = reg.get(t, "wikidata", v["qid"])
+                    keep = reg.merge(t, other, i)
+                    reg.run_merges.append((t, max(other, i), keep))
+                    n["manual_merged"] = n.get("manual_merged", 0) + 1
     for k, v in sorted((S.read(os.path.join(S.names, "referees_ar.json")) or {}).items()):
         rid = reg.get("referee", "fotmob-name", v.get("latin")) if v.get("latin") else None
         if rid and v.get("ar"):
