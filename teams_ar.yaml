@@ -82,3 +82,37 @@ uaepl_en:
   Al Dhafra: al-dhafra
   Hatta: hatta
   Bani Yas: bani-yas
+
+# `historic`: clubs only the old sources know (RSSSF, 365Scores, Wikipedia; no FotMob id): Latin name as the source spells it ->
+# Arabic. Read by graph/load/old_names.py for the season archive (2026-11-20). Merged or renamed clubs keep their own old name.
+historic:
+  "Al-Shabab": الشباب
+  "Al Shabab": الشباب
+  "Al-Shabab Al-Arabi": الشباب
+  "Emirates": الإمارات
+  "Al Emirates": الإمارات
+  "Al-Emirates": الإمارات
+  "Al-Sha'ab": الشعب
+  "Al Sha'ab": الشعب
+  "Al Shaab": الشعب
+  "Al-Shaab": الشعب
+  "Shaab": الشعب
+  "Dubai": دبي
+  "Al-Khaleej": الخليج
+  "Al Khaleej": الخليج
+  "Khaleej": الخليج
+  "Al Khalij": الخليج
+  "Al-Khalij": الخليج
+  "Fujeira": الفجيرة
+  "Al Ahly Fujeira": أهلي الفجيرة
+  "Al-Urooba": العروبة
+  "Oruba": العروبة
+  "Oroba (Sharjah)": العروبة
+  "Kalba Utd.": اتحاد كلباء
+  "Ras Al Khaima": رأس الخيمة
+  "Ras Al-Khaima": رأس الخيمة
+  "Ras Al Kheima": رأس الخيمة
+  "Dibba Al-Hisn": دبا الحصن
+  "Jazeera": الجزيرة
+  "Oman": عمان
+  "Oman (Ras Al-Khaimah)": عمان

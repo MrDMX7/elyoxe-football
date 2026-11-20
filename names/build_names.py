@@ -92,6 +92,33 @@ def get_json(url, params=None, tries=4, pause=0.0, timeout=40):
 # 1. collect the pool of players from the feed
 # --------------------------------------------------------------------------
 
+ARABIC = re.compile(r"[؀-ۿ]")
+
+
+def graph_players(ed, cid):
+    """The Latin-named players with a FotMob id in one of the graph's season files (v1/editions/<comp>.json, Tifo graph
+    phase 7): every season's top scorers, awards and man of the match leaders, the archive's old names."""
+    out = {}
+    for s in (ed or {}).get("seasons") or []:
+        rows = [r for k in ("top_scorers", "best_player", "best_young", "best_goalkeeper", "best_local", "top_assist") for r in s.get(k) or []]
+        rows += [{"fotmob": m[0], "name": m[1]} for m in s.get("motm") or []]
+        for r in rows:
+            if r.get("fotmob") and r.get("name") and not ARABIC.search(r["name"]):
+                out.setdefault(str(r["fotmob"]), {"name": r["name"], "teams": [], "country": None, "ages": [], "comps": [cid], "uae": cid == UAE_LEAGUE})
+    return out
+
+
+def graph_clubs(ed, cid):
+    """The Latin-named clubs with a FotMob id in a season file: champions, runners-up and table rows of every season."""
+    out = {}
+    for s in (ed or {}).get("seasons") or []:
+        rows = [s.get("champion") or {}, s.get("runner_up") or {}] + [{"fotmob": r[1], "name": r[2]} for r in s.get("table") or [] if len(r) > 2]
+        for t in rows:
+            if t.get("fotmob") and t.get("name") and not ARABIC.search(t["name"]):
+                out.setdefault(str(t["fotmob"]), {"name": t["name"], "teams": [], "country": None, "ages": [], "comps": [cid], "uae": False, "club": True})
+    return out
+
+
 def collect(cache: Path, match_days: int):
     """Returns {pid: {name, teams:set, country, birth_years:set, comps:set}}."""
     pool = {}
@@ -175,6 +202,13 @@ def collect(cache: Path, match_days: int):
                         comp=cid, uae=(cid == UAE_LEAGUE))
                     got += 1
     log(f"collect: {len(mids)} finished matches in {match_days} days, {got} lineup rows")
+    old = 0
+    for cid in comps:                     # the season archive's scorers, award winners and man of the match leaders
+        for pid, p in graph_players(get_json(f"{FEED}/editions/{cid}.json"), cid).items():
+            if pid not in pool:
+                pool[pid] = p
+                old += 1
+    log(f"collect: {old} more from the season archive (v1/editions)")
     log(f"collect: pool = {len(pool)} players")
     (cache / "pool.json").write_text(json.dumps(pool, ensure_ascii=False))
     (cache / "teams.json").write_text(json.dumps(teams, ensure_ascii=False))
@@ -208,6 +242,10 @@ def collect_clubs(cache: Path):
             for side in (m.get("home") or {}, m.get("away") or {}):
                 if side.get("id") and side.get("name") and not side.get("name_ar") and str(side["id"]) not in pool:
                     pool[str(side["id"])] = {"name": side["name"], "teams": [], "country": (c.get("country") or {}).get("iso2"), "ages": [], "comps": [c["id"]], "uae": False, "club": True}
+    for c in index["competitions"]:       # the season archive's champions, runners-up and old tables
+        for tid, t in graph_clubs(get_json(f"{FEED}/editions/{c['id']}.json"), c["id"]).items():
+            if tid not in pool and not (teams.get(tid) or {}).get("name_ar"):
+                pool[tid] = t
     log(f"collect clubs: pool = {len(pool)}")
     return pool, teams
 

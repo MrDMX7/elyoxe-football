@@ -1,0 +1,19 @@
+"""Arabic names for the clubs only the old sources know (RSSSF, 365Scores, Wikipedia: no FotMob id, so graph/load/names.py
+cannot reach them): teams_ar.yaml `historic`, by the Latin name as the source spells it. Runs after every source; fills
+name_ar only where it is empty."""
+import os
+import yaml
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+def historic():
+    return (yaml.safe_load(open(os.path.join(ROOT, "teams_ar.yaml"), encoding="utf-8")) or {}).get("historic") or {}
+
+
+def load(G, reg, S, names=None):
+    names = historic() if names is None else names
+    n = 0
+    for latin, ar in sorted(names.items()):
+        n += G.c.execute("UPDATE team SET name_ar=? WHERE name=? AND (name_ar IS NULL OR name_ar='')", (ar, latin)).rowcount
+    return {"teams": n}
