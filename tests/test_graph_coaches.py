@@ -108,3 +108,48 @@ def test_the_lineups_coach_is_never_replaced_by_the_league_history(tmp_path):
     coaches.load(G, reg, S)
     got = [G.c.execute("select c.name from match_coach x join coach c on c.kid=x.kid where x.mid=? and x.side='h'", (m,)).fetchone()[0] for m in mids]
     assert got == ["Abel Braga", "Caretaker", "Henk ten Cate"]
+
+
+def _trophies(tmp_path, lists):
+    t = tmp_path / "db" / ".cache" / "fm" / "t"
+    t.mkdir(parents=True)
+    for fid, trophies in lists.items():
+        (t / f"{fid}.json.gz").write_bytes(gzip.compress(json.dumps({"details": {"id": fid, "name": str(fid)}, "history": {"coachHistory": [], "trophyList": trophies}}).encode()))
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    for fid in lists:
+        reg.mint("team", "fotmob", fid)
+    return G, reg, Sources(str(tmp_path), s3=False)
+
+
+def test_a_trophy_with_no_competition_is_not_a_title_of_one_shared_competition(tmp_path):
+    G, reg, S = _trophies(tmp_path, {1: [{"name": "Regional Cup", "leagueId": "-1", "won": 1, "seasonsWon": "1950"}],
+                                     2: [{"name": "Other Cup", "leagueId": "-1", "won": 1, "seasonsWon": "1950"}]})
+    out = coaches.load(G, reg, S)
+    assert G.c.execute("select count(*) from honour").fetchone()[0] == 0 and out["conflicts"] == 0
+
+
+def test_two_clubs_fotmob_both_names_champions_of_one_season_are_co_champions(tmp_path):
+    G, reg, S = _trophies(tmp_path, {451: [{"name": "Liga Profesional", "leagueId": "112", "won": 1, "seasonsWon": "2003/2004"}],
+                                     453: [{"name": "Liga Profesional", "leagueId": "112", "won": 1, "seasonsWon": "2003/2004"}]})
+    out = coaches.load(G, reg, S)                                         # Apertura and Clausura: two champions, no conflict
+    got = sorted(t for (t,) in G.c.execute("select tid from honour where kind='champion'"))
+    assert got == sorted([reg.get("team", "fotmob", 451), reg.get("team", "fotmob", 453)]) and out["conflicts"] == 0
+
+
+def test_another_sources_champion_with_the_same_name_is_the_same_club(tmp_path):
+    G, reg, S = _trophies(tmp_path, {8000: [{"name": "Carioca", "leagueId": "10272", "won": 1, "seasonsWon": "1989"}],
+                                     8001: [{"name": "Carioca", "leagueId": "10272", "won": 1, "seasonsWon": "1990"}]})
+    fm, other = reg.get("team", "fotmob", 8000), reg.get("team", "fotmob", 8001)
+    G.put("team", {"tid": fm, "name": "Botafogo"}, "fotmob")
+    G.put("team", {"tid": other, "name": "Flamengo"}, "fotmob")
+    lg = reg.mint("competition", "fotmob", 10272)
+    for season, (sid, name) in (("1989", ("365-bota", "Botafogo")), ("1990", ("365-vasco", "Vasco da Gama"))):
+        t = reg.mint("team", "s365", sid)
+        G.put("team", {"tid": t, "name": name}, "s365")
+        G.xref("team", t, "s365", sid, "s365-native")
+        e = reg.mint("edition", "s365", f"10272|{season}")
+        G.put("edition", {"eid": e, "cid": lg, "season": season}, "s365")
+        G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'champion', 1, ?, 's365')", (e, t))
+    out = coaches.load(G, reg, S)
+    assert reg.get("team", "s365", "365-bota") == reg.get("team", "fotmob", 8000)      # one Botafogo now
+    assert out["conflicts"] == 1                                                     # Vasco against Flamengo stays a disagreement

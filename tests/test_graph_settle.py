@@ -1,0 +1,59 @@
+"""graph/load/settle.py: the disagreements between sources that a rule settles — a score that counts the shootout, home and
+away swapped, a birth date that is only a year — fixed in the data and taken off the conflict list. The rest stays for review."""
+from graph.db import Graph
+from graph.ids import Registry
+from graph.src import Sources
+from graph.load import settle
+
+
+def g(tmp_path):
+    return Graph(str(tmp_path / "t.db")), Registry()
+
+
+def match(G, mid, hs, as_, ph=None, pa=None):
+    G.put("match", {"mid": mid, "date": "2022-12-09", "home": 1, "away": 2, "hs": hs, "as_": as_, "pen_h": ph, "pen_a": pa}, "tm")
+
+
+def test_a_score_that_counts_the_shootout_is_the_draw(tmp_path):
+    G, reg = g(tmp_path)
+    match(G, 1, 5, 3, 4, 2)                                                  # Croatia-Brazil 2022: 1-1, 4-2 on penalties
+    G.conflict("match", 1, "score", "5-3", "tm", "1-1", "fjelstul")
+    match(G, 2, 0, 2)                                                        # Brazil-Paraguay 2011: 0-0, FotMob kept the shootout
+    G.conflict("match", 2, "score", "0-2", "fotmob", "0-0", "martj42")
+    out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select hs, as_, pen_h, pen_a from match where mid=1").fetchone() == (1, 1, 4, 2)
+    assert G.c.execute("select hs, as_, pen_h, pen_a from match where mid=2").fetchone() == (0, 0, 0, 2)
+    assert G.c.execute("select count(*) from conflict").fetchone()[0] == 0 and out["shootout"] == 2
+
+
+def test_the_same_score_the_other_way_round_is_home_and_away_swapped(tmp_path):
+    G, reg = g(tmp_path)
+    match(G, 1, 0, 2)
+    G.conflict("match", 1, "score", "0-2", "fotmob", "2-0", "sch")
+    G.conflict("match", 1, "hs", "0", "sch", "2", "sch")                     # the same disagreement field by field
+    G.conflict("match", 1, "as_", "2", "sch", "0", "sch")
+    out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select hs, as_ from match where mid=1").fetchone() == (0, 2)
+    assert G.c.execute("select count(*) from conflict").fetchone()[0] == 0 and out["swapped"] == 2
+
+
+def test_a_real_difference_stays_for_review(tmp_path):
+    G, reg = g(tmp_path)
+    match(G, 1, 0, 1)                                                        # Karbala-Al Qasim 2022: 0-1 or 1-1
+    G.conflict("match", 1, "score", "0-1", "fotmob", "1-1", "sch")
+    settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select hs, as_ from match where mid=1").fetchone() == (0, 1)
+    assert G.c.execute("select count(*) from conflict").fetchone()[0] == 1
+
+
+def test_a_birth_date_that_is_only_a_year_gives_way_to_the_full_date(tmp_path):
+    G, reg = g(tmp_path)
+    G.put("player", {"pid": 1, "name": "A", "born": "2003-01-01"}, "wikidata")
+    G.conflict("player", 1, "born", "2003-01-01", "wikidata", "2003-02-18", "fotmob")
+    G.put("player", {"pid": 2, "name": "B", "born": "1992-03-16"}, "fotmob")
+    G.conflict("player", 2, "born", "1992-03-16", "fotmob", "1992-01-01", "wikidata")
+    G.put("player", {"pid": 3, "name": "Keno", "born": "1989-09-10"}, "fotmob")
+    G.conflict("player", 3, "born", "1989-09-10", "fotmob", "1991-09-10", "wikidata")
+    out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert dict(G.c.execute("select pid, born from player")) == {1: "2003-02-18", 2: "1992-03-16", 3: "1989-09-10"}
+    assert [r[0] for r in G.c.execute("select tifo_id from conflict")] == [3] and out["birth_year_only"] == 2

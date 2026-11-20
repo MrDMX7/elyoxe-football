@@ -70,6 +70,8 @@ def load(G, reg, S):
                 lid = int(t.get("leagueId"))
             except (TypeError, ValueError):
                 continue
+            if lid <= 0:                              # FotMob's -1: a title it has no competition for (6,082 false «conflicts»)
+                continue
             cid = reg.mint("competition", "fotmob", lid)
             for kind, field in (("champion", "seasonsWon"), ("runner_up", "seasonsRunnerup")):
                 for s in filter(None, (x.strip() for x in str(t.get(field) or "").split(","))):
@@ -77,10 +79,16 @@ def load(G, reg, S):
                     eid = edition_for(G, reg, "fotmob-trophy", f"{lid}|{season}", cid, season)
                     cur = G.c.execute("SELECT tid, src FROM honour WHERE eid=? AND kind=?", (eid, kind)).fetchall()
                     if cur:
-                        if tid not in [c[0] for c in cur]:
-                            G.conflict("honour", eid, kind, str(cur[0][0]), cur[0][1], str(tid), "fotmob")
-                            n["conflicts"] += 1
-                        continue
+                        if tid in [c[0] for c in cur]:
+                            continue
+                        if not all(c[1] == "fotmob" for c in cur):
+                            if same_club(G, reg, cur[0][0], tid):
+                                n["clubs_linked"] = n.get("clubs_linked", 0) + 1
+                            else:
+                                G.conflict("honour", eid, kind, str(cur[0][0]), cur[0][1], str(tid), "fotmob")
+                                n["conflicts"] += 1
+                            continue
+                        # FotMob names two clubs for one season of one league: a split season (Apertura, Clausura), both won it
                     G.c.execute("INSERT OR IGNORE INTO honour(eid, kind, rank, tid, src) VALUES(?,?,1,?, 'fotmob')", (eid, kind, tid))
                     n["titles"] += 1
     # a Transfermarkt name on a club's bench in matches no coachHistory row covers (cups, the Club World Cup): FotMob's coach of
@@ -104,6 +112,18 @@ def load(G, reg, S):
                 n["tm_linked"] += 1
     n["between"] = fill_between(G)          # the cup and continental ties inside a league spell
     return n
+
+
+def same_club(G, reg, other, tid):
+    """Another source's champion and FotMob's claimant of the same title, with the same name once accents, case and
+    punctuation are gone (365Scores' «São Paulo» and FotMob's «Sao Paulo»), are one club: the other source's key is linked to
+    FotMob's team (Registry.link merges a record only that source made). A different name stays a disagreement."""
+    names = dict(G.c.execute("SELECT tid, name FROM team WHERE tid IN (?, ?)", (other, tid)).fetchall())
+    if not names.get(other) or fold(names.get(other)) != fold(names.get(tid)):
+        return False
+    for src, sid in G.c.execute("SELECT source, source_id FROM xref WHERE type='team' AND tifo_id=? AND source <> 'fotmob'", (other,)).fetchall():
+        reg.link("team", src, sid, tid)
+    return True
 
 
 def fill_between(G, max_gap_days=150):
