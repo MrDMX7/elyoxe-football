@@ -80,3 +80,9 @@ test("a scorer FotMob does not know links to his archive page", () => {
     top_scorers: [{ rank: 1, fotmob: null, tifo: 42, name: "زهير بخيت", value: "22" }] }] };
   assert.match(H.seasonsBody(ed, COMP, Object.assign({}, o, { person: id => id === 42 })), /<a href="\/p\/k42\/">زهير بخيت<\/a>/);
 });
+
+test("a club's name in that season (the archive's Arabic) beats today's", () => {
+  const ed = { seasons: [{ season: "2015/2016", matches: 182, champion: { fotmob: 102119, name: "الأهلي" }, runner_up: null, table: [], top_scorers: [] }] };
+  const h = H.seasonsBody(ed, COMP, Object.assign({}, o, { team: () => true, teamName: () => "شباب الأهلي" }));
+  assert.match(h, /<a href="\/t\/102119\/">الأهلي<\/a>/);
+});

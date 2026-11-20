@@ -12,7 +12,8 @@ const nm = s => AR.test(s || "") ? esc(s) : `<span class="lat">${esc(s || "")}</
 const num = v => `<span class="num">${esc(v)}</span>`;
 const slug = s => String(s).replace(/\//g, "-");
 const link = (href, ok, text) => ok ? `<a href="${href}">${text}</a>` : text;
-const teamL = (t, o) => t ? link(`/t/${t.fotmob}/`, t.fotmob && o.team && o.team(t.fotmob), nm((t.fotmob && o.teamName && o.teamName(t.fotmob)) || t.name)) : "—";
+// the archive's Arabic name is the club's name in that season (Shabab Al Ahli was الأهلي before 2017); the site's is for a Latin one
+const teamL = (t, o) => t ? link(`/t/${t.fotmob}/`, t.fotmob && o.team && o.team(t.fotmob), nm((!AR.test(t.name || "") && t.fotmob && o.teamName && o.teamName(t.fotmob)) || t.name)) : "—";
 const playerL = (p, o) => {
   const n = nm((p.fotmob && o.playerName && o.playerName(p.fotmob)) || p.name);
   if (p.fotmob) return link(`/p/${p.fotmob}/`, o.player && o.player(p.fotmob), n);

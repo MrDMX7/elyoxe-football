@@ -804,6 +804,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
         const rr = TRT.rumoursOf(TRR, { club:id, open:1 }).slice(0, 15); if (rr.length) nums += S.sec("إشاعات حوله", "", TRT.rumourList(rr, tn) + '<p class="src"><a href="/transfers/rumours/">كل الإشاعات</a></p>'); }
       if (rc) nums += S.sec("سجل النادي", "من 2010", rc); if (hm) nums += S.sec("كل نتايجه موسم بموسم", "", hm); if (xi) nums += S.sec("التشكيلة المعتادة", "هالموسم", xi); if (cu) nums += S.sec("لاعبينه في المنتخبات", "", cu); }
     const tv2 = S.travel(t, t.fixtures); if (tv2) nums += S.sec("سافر مع فريقك", "مباريات آسيا برا الدولة", tv2);
+    if (+id === 102119) nums = S.sec("الاندماج", "2017", "<p>شباب الأهلي هو اندماج ثلاثة أندية في 2017: الأهلي والشباب ودبي. في أرشيف تيفو، مواسم الأهلي قبل 2017 باسم «الأهلي»، والشباب ودبي لكل واحد سجله.</p>") + nums;
     if ((H2AX.teams || {})[String(id)]) nums += S.sec("سجله ضد كل الفرق", "في كل البطولات", `<p class="tools"><a class="btn" href="/t/${id}/h2h/">مواجهاته مع كل خصم</a></p>`);
     const gco = HP.clubCoaches(GCT[id], hpo), co = gco ? "" : S.coachesTeam(x538.coaches, id); if (gco) nums += S.sec("مدربين النادي عبر التاريخ", "كل البطولات", gco); else if (co) nums += S.sec("مدربين النادي عبر التاريخ", "في الدوري", co);
     if (x538.fortress && x538.fortress.stadiums){ const fs2 = x538.fortress.stadiums.filter(s => s.team === id); if (fs2.length) nums += S.sec("حصن الملعب", "", S.fortress({ since:x538.fortress.since, stadiums:fs2 })); }

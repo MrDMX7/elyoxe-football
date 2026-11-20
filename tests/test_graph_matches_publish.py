@@ -69,3 +69,10 @@ def test_one_match_twice_from_two_sources_is_written_once_with_the_more_detailed
     publish.matches(G, str(tmp_path / "o"), comps=(), teams=(5789,))
     t = json.load(open(tmp_path / "o" / "matches" / "team-5789.json", encoding="utf-8"))["matches"]
     assert [m["id"] for m in t if m["date"] == "1990-06-15"] == ["k950"]          # the record with the goal stays
+
+
+def test_a_match_before_a_clubs_merger_uses_the_name_it_had(tmp_path):
+    G, m2, old = world(tmp_path)
+    publish.matches(G, str(tmp_path / "o"), comps=(538,), teams=(), eras={102101: [["2017-07-01", "الجزيرة القديمة"]]})
+    s = json.load(open(tmp_path / "o" / "matches" / "538" / "2016-2017.json", encoding="utf-8"))
+    assert s["matches"][0]["h"] == [102101, "الجزيرة القديمة"]

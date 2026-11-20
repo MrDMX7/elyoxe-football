@@ -16,10 +16,17 @@ def historic_competitions():
     return (yaml.safe_load(open(os.path.join(ROOT, "teams_ar.yaml"), encoding="utf-8")) or {}).get("historic_competitions") or {}
 
 
-def load(G, reg, S, names=None, comps=None):
+def renames():
+    return (yaml.safe_load(open(os.path.join(ROOT, "teams_ar.yaml"), encoding="utf-8")) or {}).get("rename") or {}
+
+
+def load(G, reg, S, names=None, comps=None, rename=None):
     names = historic() if names is None else names
     comps = historic_competitions() if comps is None else comps
+    rename = renames() if rename is None else rename
     n, c = 0, 0
+    for latin, ar in sorted(rename.items()):          # forced: another source named one of our old clubs wrongly («الشباب العربي»)
+        n += G.c.execute("UPDATE team SET name_ar=? WHERE name=?", (ar, latin)).rowcount
     for latin, ar in sorted(names.items()):
         n += G.c.execute("UPDATE team SET name_ar=? WHERE name=? AND (name_ar IS NULL OR name_ar='')", (ar, latin)).rowcount
     for latin, ar in sorted(comps.items()):

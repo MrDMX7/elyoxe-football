@@ -30,3 +30,11 @@ def test_old_competitions_get_their_arabic_names_too(tmp_path):
     assert dict(G.c.execute("select name, name_ar from competition")) == {"FIFA World Cup qualification": "تصفيات كأس العالم", "Asian Games": "الألعاب الآسيوية"}
     assert out == {"teams": 0, "competitions": 1}
     assert old_names.historic_competitions()["Merdeka Tournament"] == "بطولة مرديكا"
+
+
+def test_a_forced_rename_beats_another_sources_arabic_name(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    G.put("team", {"tid": 1, "name": "Al Shabab Al Arabi", "name_ar": "الشباب العربي"}, "s365")
+    old_names.load(G, reg, Sources(str(tmp_path), s3=False), names={}, comps={}, rename={"Al Shabab Al Arabi": "الشباب"})
+    assert G.c.execute("select name_ar from team").fetchone()[0] == "الشباب"
+    assert old_names.renames()["Al Shabab Al Arabi"] == "الشباب"

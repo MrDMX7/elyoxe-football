@@ -196,7 +196,21 @@ def coaches(G, out_dir, gap_days=180, national_gap_days=730):
     return {"spells": len(spells), "teams": len(teams), "coaches": len(people)}
 
 
-def editions(G, out_dir):
+def era_names():
+    """teams_ar.yaml `era_names`: {FotMob team id: [[until, name]]}, the name a club had before a date (Shabab Al Ahli is
+    «الأهلي» before the 2017 merger)."""
+    import yaml
+    p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "teams_ar.yaml")
+    return {int(k): v for k, v in ((yaml.safe_load(open(p, encoding="utf-8")) or {}).get("era_names") or {}).items()}
+
+
+def _season_start(season):
+    """«2015/2016» -> 2015-08-01, «2016» -> 2016-01-01: when a season began, near enough for a name's era."""
+    s = str(season or "")
+    return f"{s[:4]}-08-01" if "/" in s else f"{s[:4]}-01-01"
+
+
+def editions(G, out_dir, eras=None):
     """editions/<FotMob competition>.json: every season of each of our competitions with its champion, runner-up, final table,
     top scorers, season awards (best player, young player, goalkeeper, coach, local player), the champion's coach, the man of
     the match leaders and the matches held: the season pages' data (phase 7). Newest season first."""
@@ -206,7 +220,12 @@ def editions(G, out_dir):
     tn = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
     pn = {p: (a or n) for p, n, a in q("SELECT pid, name, name_ar FROM player")}
     kn = {k: (a or n) for k, n, a in q("SELECT kid, name, name_ar FROM coach")}
-    team = lambda t: {"fotmob": fm_t.get(t), "name": tn.get(t)} if t else None
+    eras = era_names() if eras is None else eras
+    def at(t, when):
+        for until, name in eras.get(fm_t.get(t), []):
+            if when < until:
+                return name
+        return tn.get(t)
     n = 0
     for cid, fid in sorted(fm_c.items(), key=lambda x: x[1]):
         name, name_ar = q("SELECT name, name_ar FROM competition WHERE cid=?", (cid,))[0]
@@ -216,7 +235,7 @@ def editions(G, out_dir):
             for kind, rank, tid, pid, kid, value in q("SELECT kind, rank, tid, pid, kid, value FROM honour WHERE eid=? ORDER BY kind, rank", (eid,)):
                 hon[kind].append((rank, tid, pid, kid, value))
             whole = lambda v: int(v) if isinstance(v, float) and v.is_integer() else v           # the points column is REAL: 68, not 68.0
-            table = [[r, fm_t.get(t), tn.get(t), p, w, d, l, gf, ga, whole(pts)] for r, t, p, w, d, l, gf, ga, pts in
+            table = [[r, fm_t.get(t), at(t, _season_start(season)), p, w, d, l, gf, ga, whole(pts)] for r, t, p, w, d, l, gf, ga, pts in
                      q("SELECT rank, tid, played, won, drawn, lost, gf, ga, pts FROM standing WHERE eid=? ORDER BY grp, rank", (eid,))]
             matches = q("SELECT count(*) FROM match WHERE eid=?", (eid,))[0][0]
             if not hon and not table and not matches and not note:
@@ -228,6 +247,8 @@ def editions(G, out_dir):
                         GROUP BY w.pid ORDER BY n DESC, w.pid LIMIT 5""", (eid,))
             people = lambda kind: [{"rank": r, "fotmob": fm_p.get(p), **({} if fm_p.get(p) else {"tifo": p}), "name": pn.get(p), "value": v}
                                    for r, t, p, k, v in hon.get(kind, []) if p]
+            when = _season_start(season)
+            team = lambda t: {"fotmob": fm_t.get(t), "name": at(t, when)} if t else None
             seasons.append({"season": season, "matches": matches, "champion": team(champ), "runner_up": team((hon.get("runner_up") or [(None, None)])[0][1]),
                             "table": table, "top_scorers": people("top_scorer")[:10],
                             **{k: people(k)[:3] for k in ("best_player", "best_young", "best_goalkeeper", "best_local", "top_assist")},
@@ -282,7 +303,7 @@ def people(G, out_dir, min_wc=3, min_caps=30):
 
 
 
-def matches(G, out_dir, comps=(538,), teams=(5789,)):
+def matches(G, out_dir, comps=(538,), teams=(5789,), eras=None):
     """matches/<competition>/<season>.json and matches/team-<FotMob team>.json (graph phase 7, the old matches): every match
     of these competitions and national teams in the archive, with its score, scorers and cards, lineups and coaches where the
     archive has them. A match FotMob knows keeps its FotMob id (its page: /m/<id>/), any other is k<Tifo id> (/m/k<id>/);
@@ -298,6 +319,13 @@ def matches(G, out_dir, comps=(538,), teams=(5789,)):
     rn = {r: (a or n) for r, n, a in q("SELECT rid, name, name_ar FROM referee")}
     ed = {e: (fm_c.get(c), s) for e, c, s in q("SELECT eid, cid, season FROM edition")}
     pkey = lambda p: (str(fm_p[p]) if p in fm_p else f"k{p}") if p else None
+    eras = era_names() if eras is None else eras
+
+    def at(t, when):                          # the club's name on that day (Shabab Al Ahli was الأهلي before 2017)
+        for until, name in eras.get(fm_t.get(t), []):
+            if when < until:
+                return name
+        return tn.get(t)
 
     def records(mids):
         if not mids:
@@ -321,7 +349,7 @@ def matches(G, out_dir, comps=(538,), teams=(5789,)):
                    FROM match m JOIN pub_m USING(mid) WHERE m.hs IS NOT NULL ORDER BY m.date, m.mid"""):
             comp, season = ed.get(eid, (None, None))
             r = {"id": str(fm_m[mid]) if mid in fm_m else f"k{mid}", "date": d, "comp": comp, "season": season, "round": rnd,
-                 "h": [fm_t.get(h), tn.get(h)], "a": [fm_t.get(a), tn.get(a)], "s": [hs, as_],
+                 "h": [fm_t.get(h), at(h, d)], "a": [fm_t.get(a), at(a, d)], "s": [hs, as_],
                  "ht": [hth, hta] if hth is not None else None, "pen": [ph, pa] if ph is not None else None,
                  "venue": sn.get(sid), "ref": rn.get(rid), "ev": ev.get(mid), "lu": dict(lu[mid]) if mid in lu else None, "co": co.get(mid)}
             out.append({k: v for k, v in r.items() if v not in (None, [], {})})

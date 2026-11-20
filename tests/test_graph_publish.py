@@ -136,3 +136,22 @@ def test_caps_and_goals_from_the_national_teams_records(tmp_path):
                     f"k{caps_only}": ["United Arab Emirates", 120, 11, "1999–2011"]}
     ix = json.load(open(tmp_path / "o" / "people" / "index.json", encoding="utf-8"))
     assert f"k{caps_only}" in ix and ix[f"k{caps_only}"]["nat"] == "United Arab Emirates"     # 30 caps or more: a page of his own
+
+
+def test_a_club_keeps_the_name_it_had_in_that_season(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 538)
+    G.put("competition", {"cid": lg, "name": "Pro League"}, "fotmob")
+    G.xref("competition", lg, "fotmob", 538, "fotmob-native")
+    sa = reg.mint("team", "fotmob", 102119)
+    G.put("team", {"tid": sa, "name": "Al-Ahli", "name_ar": "شباب الأهلي"}, "fotmob")
+    G.xref("team", sa, "fotmob", 102119, "fotmob-native")
+    for season in ("2015/2016", "2022/2023"):
+        e = reg.mint("edition", "fotmob", f"538|{season}")
+        G.put("edition", {"eid": e, "cid": lg, "season": season}, "fotmob")
+        G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'champion', 1, ?, 'fotmob')", (e, sa))
+    G.c.commit()
+    publish.editions(G, str(tmp_path / "o"), eras={102119: [["2017-07-01", "الأهلي"]]})
+    d = json.load(open(tmp_path / "o" / "editions" / "538.json", encoding="utf-8"))
+    assert {s["season"]: s["champion"]["name"] for s in d["seasons"]} == {"2022/2023": "شباب الأهلي", "2015/2016": "الأهلي"}
+    assert publish.era_names()[102119] == [["2017-07-01", "الأهلي"]]

@@ -154,3 +154,13 @@ historic_competitions:
   "Nehru Cup": كأس نهرو
   "UEFA Nations League": دوري الأمم الأوروبية
   "CONCACAF Nations League": دوري أمم الكونكاكاف
+
+# `rename`: an Arabic name another source got wrong for one of our old clubs (forced; by the Latin name as the source spells it)
+rename:
+  "Al Shabab Al Arabi": الشباب
+  "Al-Shabab Al-Arabi Club (1958 - 2017)": الشباب
+
+# `era_names`: the name a club had before a date (FotMob id -> [[until, name]]). Shabab Al Ahli is the merger (2017) of Al Ahli,
+# Al Shabab and Dubai; FotMob keeps Al Ahli's id, so Al Ahli's seasons before it read «الأهلي»
+era_names:
+  102119: [["2017-07-01", "الأهلي"]]
