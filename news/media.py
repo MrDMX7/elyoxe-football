@@ -167,12 +167,13 @@ GOAL_WORDS = phrases([
     "ركلة جزاء", "ركلة حرة", "مقصية", "يهز الشباك", "هز الشباك", "هدف التعادل", "هدف الفوز"])
 # one of a side's goals, named by its number: «ثاني أهداف الزعيم» is the second goal, «يفتتح أهداف الزعيم» the first (Al Ain's own
 # X clips, 2026-11-19); «أهداف» there is not a clip of several goals
-ONE_OF_GOALS = {1: ["أول أهداف", "يفتتح أهداف", "افتتح أهداف", "يفتتح التسجيل", "افتتح التسجيل", "افتتاح التسجيل", "أول الأهداف"],
+ONE_OF_GOALS = {1: ["أول أهداف", "يفتتح أهداف", "افتتح أهداف", "يفتتح التسجيل", "افتتح التسجيل", "افتتاح التسجيل", "أول الأهداف",
+                    "أولى أهداف", "شريط الأهداف"],
                 2: ["ثاني أهداف", "ثاني الأهداف"], 3: ["ثالث أهداف", "ثالث الأهداف"], 4: ["رابع أهداف", "رابع الأهداف"],
                 5: ["خامس أهداف", "خامس الأهداف"]}
 # «كلباء يدرك التعادل عن طريقه تيتيه من علامة الجزاء» (Abu Dhabi Sports 2026-11-07) carries no «هدف»
 GOAL_WORDS += phrases(["يدرك التعادل", "أدرك التعادل", "يعادل النتيجة", "عادل النتيجة", "يقلص الفارق", "قلص الفارق",
-                       "من علامة الجزاء"])
+                       "من علامة الجزاء", "تسكن الشباك", "يسكنها الشباك", "يسكن الشباك", "سكنت الشباك"])
 GOAL_WORDS += phrases([w for ws in ONE_OF_GOALS.values() for w in ws])
 GOAL_WORDS_LANG = {"es": phrases(["anota", "marca", "tanto", "penalti", "penal", "cabezazo", "remate"]),
                    "pt": phrases(["marca", "golaço", "pênalti"]),
@@ -187,7 +188,7 @@ MANY_GOALS = phrases(["brace", "twice", "hat trick", "hattrick", "both goals", "
 PEN_WORDS = phrases(["penalty", "penalti", "penal", "pen", "spot kick", "rigore", "elfmeter", "pénalty", "ركلة جزاء", "بلنتي", "جزاء",
                      "علامة الجزاء", "نقطة الجزاء", "ركلة الجزاء"])
 OWN_WORDS = phrases(["own goal", "autogol", "autogoal", "autorete", "eigentor", "csc", "contre son camp", "هدف عكسي", "عكسي",
-                     "في مرماه", "بالخطأ"])
+                     "في مرماه", "بالخطأ", "في مرمى فريقه", "خطأ في مرمى"])     # «عمر كيتا يسجل خطأ في مرمى فريقه» (Dubai Sports)
 FK_WORDS = phrases(["free kick", "freekick", "ركلة حرة", "tiro libre", "punizione", "coup franc", "freistoss"])
 # «هدف التعادل» names the goal that levelled the score; «الهدف الثاني» the team's (or the match's) second goal
 EQ_WORDS = phrases(["هدف التعادل", "التعادل", "equaliser", "equalizer", "equalises", "equalizes", "levels it", "el empate", "gol del empate",
@@ -216,7 +217,7 @@ BREAK_ORD = {t for w in ["في", "من", "خلال", "الشوط", "شوط", "ا
                          "يحرز", "أحرز", "يضيف", "أضاف", "يكتفي", "يصنع"] for t in toks(w)}
 
 
-SCORE_VERB = {toks(w)[0] for w in ["يسجل", "سجل", "يحرز", "أحرز", "يضيف", "أضاف", "يقتنص"]}
+SCORE_VERB = {toks(w)[0] for w in ["يسجل", "سجل", "يحرز", "أحرز", "يضيف", "أضاف", "يقتنص", "مسجلا", "مسجلاً"]}
 
 
 def goal_number(tt):
@@ -342,6 +343,12 @@ def word_result(raw):
 # Dubai Sports' score after the goal, a hashtag and a number per side on two lines: «#الوصل 2\n#حتا 0» (2026-11-19). Not a
 # keycap («#أبوظبي_الرياضية 1⃣» is Abu Dhabi Sports' channel number)
 TAG_SCORE = re.compile(r"#[^\s#:]+:?[ \t]+(\d{1,2})(?![\d⃣])[ \t]*\n?\s*#[^\s#:]+:?[ \t]+(\d{1,2})(?![\d⃣])")
+HIS_COUNT = re.compile(r"(?:هدفه|هدفها)\s+(الأول|الثاني|الثالث|الرابع|الخامس)|(أول|ثاني|ثالث|رابع|خامس)\s+[أا]هدافه")
+ORD_N = {"الأول": 1, "أول": 1, "الثاني": 2, "ثاني": 2, "الثالث": 3, "ثالث": 3, "الرابع": 4, "رابع": 4, "الخامس": 5, "خامس": 5}
+SEASON_WORDS = re.compile(r"الموسم|موسم|في الدوري|بقميص|مع (?:نادي|فريق)?\s*\S+\s+(?:هذا|في)")
+SCORE_VERB_RE = re.compile(r"(?<!\S)[وف]?(?:يسج|سج|يحرز|أحرز|احرز|يضيف|أضاف|يقتنص|مسج)")
+NOT_EQ = re.compile(r"(?:يكسر|كسر|تكسر)\s+التعادل|بعد\s+(?:هدف\s+)?التعادل")
+CONFIRMED = re.compile(r"(?:تؤكد|يؤكد|أكدت|اكدت)\s+صحة|عدم\s+وجود\s+تسلل|يحتسب|احتساب")
 SAVED = re.compile(r"لكن\s+(?:\S+\s+){0,4}[وف]?(?:يتصدى|تصدى|يتصدي|تصدي)")
 DENIED = re.compile(r"(?<!\S)[وف]?(?:يحرم|تحرم|حرم|يمنع|تمنع|منع)\S*\s+(?:\S+\s+){0,3}من\s+(?:تسجيل|هدف|الهدف)")
 # keycap digits («#النصر: 1⃣», «الوحدة 3️⃣✖️0️⃣ خورفكان», Dubai and Sharjah Sports) are digits, «✖» a score's cross
@@ -396,14 +403,31 @@ class Text:
         ages = [int(a or b) for a, b in YOUTH_AGE.findall(self.raw + " " + prep(head))]
         self.youth_age = ages[0] if ages else None
         self.old = next((" ".join(p) for p in NEG_OLD if has(self.al, p)), None)
+        # «ويلفريد كانقا يسجّل ثالث أهدافه في الدوري هذا الموسم» is the goal, his third of the season (Thmanyah 2026-10-18): a
+        # scorer's count of the season is no compilation, and never the side's number; «هدفه الثاني في المواجهة» is his second
+        # of the match (his_n)
+        hc = HIS_COUNT.search(self.raw)
+        season = bool(SEASON_WORDS.search(self.raw))
+        if self.old and hc and season and SCORE_VERB_RE.search(self.raw):
+            self.old = None
+        self.his_n = ORD_N.get(hc.group(1) or hc.group(2)) if hc and not season else None
+        raw_ord = HIS_COUNT.sub(" ", self.raw)
+        tt_ord = toks(raw_ord)
+        al_ord = alts(tt_ord) if raw_ord != self.raw else self.al
         # «بنفس سيناريو الهدف الأول.. سعيد عزت … ويضاعف النتيجة» (Abu Dhabi Sports 2026-10-22) is the second goal, made like the
         # first: two numbers in one title tell no goal apart (ord_clash), and the clip goes on none
-        ords = ({n for n, ps in ORD_WORDS.items() if any(has(self.al, p) for p in ps)} | {goal_number(self.tt)}) - {None}
+        ords = ({n for n, ps in ORD_WORDS.items() if any(has(al_ord, p) for p in ps)} | {goal_number(tt_ord)}) - {None}
         self.ordinal = next(iter(ords)) if len(ords) == 1 else None
         self.ord_clash = len(ords) > 1
         self.neg_goal = next((" ".join(p) for p in NEG_GOAL if has(self.al, p) and not (self.ordinal and p in WOODWORK)), None)
         # «فرحة ساديو ماني بهدف التقدّم» is the celebration; «… يسجل … لتتعالى فرحة اللاعبين» (Sharjah 2026-11-19) is the goal
         # (its first Arabic word: «Siiiiiiiiuuuuu 🐐 فرحة رونالدو بثاني أهداف النصر», Thmanyah 2026-10-31)
+        # «تقنية الفيديو تؤكد صحة هدف أوكو بعدم وجود تسلل» confirms the goal; «حسام عوار يستغل خسارة حارس أبها للكرة ويسجّل الهدف الأول»
+        # is the goal after the keeper's mistake (Thmanyah 2026-10-24/30)
+        if self.neg_goal in ("تسلل", "التسلل", "var") and CONFIRMED.search(self.raw):
+            self.neg_goal = None
+        if self.neg_goal in ("حارس", "keeper", "goalkeeper") and SCORE_VERB_RE.search(self.raw):
+            self.neg_goal = None
         if not self.neg_goal and [t for t in self.tt if AR_LETTERS.fullmatch(t)][:1] == JOY:
             self.neg_goal = "فرحة"
         # «القائم يحرم الشامي من تسجيل الهدف الأول», «… ويحرم سبورتي من الهدف الثاني»: a post, a save (2026-11-20); «هدف قاتل يحرم
@@ -419,7 +443,8 @@ class Text:
         self.pen = any(has(self.al, p) for p in PEN_WORDS)
         self.own = any(has(self.al, p) for p in OWN_WORDS)
         self.fk = any(has(self.al, p) for p in FK_WORDS)
-        self.eq = any(has(self.al, p) for p in EQ_WORDS)
+        # «يكسر التعادل» breaks the tie, «وبعد هدف التعادل يعود ليتقدم» is the lead after it (Thmanyah 2026-10-24/29)
+        self.eq = any(has(self.al, p) for p in EQ_WORDS) and not NOT_EQ.search(self.raw)
         strict = GOAL_STRICT + GOAL_STRICT_LANG.get(lang, [])
         self.goal_at = [i for i in range(len(self.al)) if any(p[0] in self.al[i] and has(self.al[i:i + len(p)], p) for p in strict)]
         self.flags = [(flag_iso(a), flag_iso(b)) for a, b in FLAG.findall(title or "")]   # «🇯🇴 🆚 🇸🇾»
@@ -920,7 +945,8 @@ class Ctx:
                         lsurn.setdefault(combo, set()).update(pids)
             for form, pids in lsurn.items():
                 if len(pids) == 1:
-                    self.index.setdefault(form[0], []).append((form, ("player", next(iter(pids))), 2 if len(form) > 1 else 1))
+                    # («كانقا» for «كانغا», Thmanyah 2026-10-18: a long one-word name spelt loosely names him too)
+                    self.index.setdefault(form[0], []).append((form, ("player", next(iter(pids))), 2 if len(form) > 1 or len(form[0]) >= 6 else 1))
         for k in self.index:     # one entry per (form, entity)
             seen, lst = set(), []
             for f in self.index[k]:
@@ -1068,6 +1094,9 @@ def check_goal(v, ch, tx, md, g, gs, teams, players, t_pub, unnamed=False, side_
         return None, "free kick words, a penalty"
     if tx.own and g["type"] != "own_goal":
         return None, "own-goal words"
+    # «زياد الصحفي … مسجّلًا الثاني» is his goal for Al-Fayha, not his own goal for Al-Faisaly earlier (Thmanyah 2026-10-31)
+    if g["type"] == "own_goal" and not tx.own and not unnamed:
+        return None, "his own goal, and no own-goal words"
     conf = 55 + (10 if unnamed else 15 if pst >= 3 else 5)
     if named:
         conf += 10
@@ -1320,6 +1349,19 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
         scorers = {g["player"]["id"] for g in ctx.goals[mid]}
         if len({p for p, st in players.items() if st >= 2 and p in scorers and p not in pids}) >= 2:
             note(v, mid, "goal", "names the match's other scorers: its goals, not this one"); continue
+        if len(hits) > 1 and len(pids) == 1:
+            # the side's number before the match's («يسجّل السادس للشباب»: the 66' made it 5-1, six in all), then his own count
+            # («يسجّل هدفه الثاني في المواجهة») (Thmanyah 2026-10-19/30)
+            if tx.ordinal:
+                own_n = [h for h in hits if (h[2]["score"]["home"] if h[2].get("team") == "home" else h[2]["score"]["away"]) == tx.ordinal]
+                if len(own_n) == 1:
+                    hits = own_n
+            if len(hits) > 1 and tx.his_n:
+                his = sorted((g for g in ctx.goals[mid] if g["player"]["id"] in pids and g["type"] != "own_goal" and g.get("lb")),
+                             key=lambda g: g["lb"])
+                pick = [h for h in hits if len(his) >= tx.his_n and h[2] is his[tx.his_n - 1]]
+                if pick:
+                    hits = pick
         if len(hits) > 1:
             # one player's goals that were all scored before the clip came out (a later one fails the timing check), and neither
             # score nor minute in the title chose one: a brace/hat-trick clip shows them all, any other clip is left out
