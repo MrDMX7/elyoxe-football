@@ -23,7 +23,8 @@ def run(vids, docs=None):
 
 def test_each_missed_goal_lists_the_posts_that_looked_like_it_and_why():
     vids = [
-        vid("1", "ADSportsTV", "ماركينيو يفتتح التسجيل ويضع العين في المقدمة ⚽️ #العين_الظفرة", "2026-11-19T16:12:36Z"),
+        # (a name we don't know and nothing else to say which goal: «يفتتح التسجيل» would place it, 2026-11-20)
+        vid("1", "ADSportsTV", "ماركينيو يسجل ويضع العين في المقدمة ⚽️ #العين_الظفرة", "2026-11-19T16:12:36Z"),
         vid("2", "alainfcae", "د54: حسين رحيمي يسجل ثاني أهداف الزعيم 🔥 #العين_الظفرة", "2026-11-19T16:40:27Z",
             "https://pbs.twimg.com/amplify_video_thumb/2091176345514479616/img/a.jpg"),
         vid("3", "ADSportsTV", "عبدالله الكربي يطلق تسديدة قوية لا تُرد معلناً تقليص الفارق بالهدف الأول للظفرة ⚽️ #العين_الظفرة",
