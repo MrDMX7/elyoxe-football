@@ -6,5 +6,5 @@ cd /d "%~dp0.."
 echo %date% %time% start > news\.backfill-x.log
 rem Arguments go to xhistory.js (2026-11-20: --stop-at ISO-TIME, no new account after it, before the day's matches).
 node news\xhistory.js --upload %* >> news\.backfill-x.log 2>&1
-python -m news.media_backfill --days 32 --no-youtube >> news\.backfill-x.log 2>&1
+python -m news.media_backfill --days 33 --no-youtube >> news\.backfill-x.log 2>&1
 echo %date% %time% done %errorlevel% >> news\.backfill-x.log
