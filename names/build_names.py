@@ -108,6 +108,19 @@ def graph_players(ed, cid):
     return out
 
 
+def graph_match_players(mf):
+    """The Latin-named players with a FotMob id in one of the graph's old-match files (v1/matches/*): scorers, booked
+    players and lineups of the archive's match pages."""
+    out = {}
+    for m in (mf or {}).get("matches") or []:
+        cid = m.get("comp")
+        rows = [(e[4], e[5]) for e in m.get("ev") or []] + [(p[0], p[1]) for side in (m.get("lu") or {}).values() for p in side]
+        for name, key in rows:
+            if key and name and not str(key).startswith("k") and not ARABIC.search(name):
+                out.setdefault(str(key), {"name": name, "teams": [], "country": None, "ages": [], "comps": [cid] if cid else [], "uae": cid == UAE_LEAGUE})
+    return out
+
+
 def graph_clubs(ed, cid):
     """The Latin-named clubs with a FotMob id in a season file: champions, runners-up and table rows of every season."""
     out = {}
@@ -209,6 +222,14 @@ def collect(cache: Path, match_days: int):
                 pool[pid] = p
                 old += 1
     log(f"collect: {old} more from the season archive (v1/editions)")
+    mix, old = get_json(f"{FEED}/matches/index.json") or {}, 0     # the old matches' scorers and lineups
+    files = [f"{c}/{sl}" for c, sls in (mix.get("comps") or {}).items() for sl in sls] + [f"team-{t}" for t in (mix.get("teams") or {})]
+    for f in files:
+        for pid, p in graph_match_players(get_json(f"{FEED}/matches/{f}.json")).items():
+            if pid not in pool:
+                pool[pid] = p
+                old += 1
+    log(f"collect: {old} more from the old matches (v1/matches)")
     log(f"collect: pool = {len(pool)} players")
     (cache / "pool.json").write_text(json.dumps(pool, ensure_ascii=False))
     (cache / "teams.json").write_text(json.dumps(teams, ensure_ascii=False))

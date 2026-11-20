@@ -22,3 +22,11 @@ def test_latin_named_players_with_a_fotmob_id_join_the_pool():
 def test_latin_named_clubs_join_the_clubs_pool():
     got = B.graph_clubs(ED, 538)
     assert sorted(got) == ["9001"] and got["9001"]["name"] == "Al-Shabab Al-Arabi" and got["9001"]["club"] is True
+
+
+def test_the_players_of_the_old_matches_join_the_pool():
+    mf = {"matches": [{"id": "2253440", "comp": 538, "ev": [[19, 0, "yellow", "h", "Hmaid Rabei", "794114"], [68, 0, "goal", "a", "مايكل", "71419"]],
+                       "lu": {"h": [["Khalid Abdullah", "999", "31", 0], ["Old One", "k12", None, 1]]}}]}
+    got = B.graph_match_players(mf)
+    assert sorted(got) == ["794114", "999"]                          # Arabic already, or no FotMob id: left out
+    assert got["999"]["uae"] is True and got["999"]["comps"] == [538]

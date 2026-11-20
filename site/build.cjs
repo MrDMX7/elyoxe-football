@@ -450,7 +450,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     AWK = Object.fromEntries((AWI.awards || []).map(a => [a.key, a]));
   // the old players FotMob does not know (graph phase 7): /p/k<Tifo id>/ from v1/people/index.json, their honours in AWP["k<id>"]
   const PPL = (await get("people/index.json", 2)) || {}, person = id => !!PPL["k" + id];
-  const INTL = (await get("people/intl.json", 2)) || {}, PPG = require("./lib/people_pages.cjs");   // caps and goals for country (national team articles)
+  const INTL = (await get("people/intl.json", 2)) || {}, PPG = require("./lib/people_pages.cjs");
+  const MIX = (await get("matches/index.json", 2)) || { comps:{}, teams:{} };   // the old matches (v1/matches/*, graph phase 7)   // caps and goals for country (national team articles)
   // «رجل المباراة» (Tifo graph phase 3): v1/motm/* from graph/publish.py
   const MOTM = require("./lib/motm_pages.cjs"), MOI = await get("motm/index.json"), MOP = (await get("motm/players.json")) || {};
   // phase 6, at the whistle: every match finished since the graph's nightly build joins the man-of-the-match counts (lib/whistle.cjs)
@@ -803,6 +804,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
       if (x329["tournament-sim"] && simOk(329, x329["tournament-sim"])) nums += S.sec("فرص الإمارات في كأس الخليج", "", S.tsim(x329["tournament-sim"]));
       const x290 = compX[290] || {}; if (x290["tournament-sim"] && simOk(290, x290["tournament-sim"])) nums += S.sec("فرص الإمارات في كأس آسيا", "", S.tsim(x290["tournament-sim"]));
       if (fifa) nums += S.sec("تصنيف فيفا", "من 1992", S.fifa(fifa));
+      if ((MIX.teams || {})[id]) nums = S.sec("كل مباريات المنتخب عبر التاريخ", `${MIX.teams[id]} مباراة`, `<p class="tools"><a class="btn" href="/t/${id}/matches/">كل المباريات من أرشيف تيفو</a></p>`) + nums;
       if (natRatings && natRatings.uae) nums += S.sec("تصنيف تيفو للمنتخبات", "", `<p>الإمارات في المركز <b class="num">${natRatings.uae_world_rank}</b> عالمياً بتصنيف تيفو (<span class="num">${Math.round(natRatings.uae)}</span> نقطة).</p>`);
       if (abroad) { const ab = S.abroad(abroad); if (ab) nums += S.sec("الإماراتيين المحترفين برا", "", ab); }
       const nc = S.natClubs(t); if (nc) nums += S.sec("لاعبي المنتخب في أنديتهم", "", nc);
@@ -1273,6 +1275,26 @@ ${items}
       if (AWD.indexable(a)) urls.push(`/awards/${a.key}/`);
     });
   }
+  // the old matches (graph phase 7): v1/matches/<comp>/<season>.json and team-<id>.json; a match with a current page keeps it
+  const MA = require("./lib/match_archive.cjs"), MSEA = new Map(), MTEAM = new Map();
+  { const want = comps.filter(c => (MIX.comps || {})[c.id]).flatMap(c => MIX.comps[c.id].map(sl => [c.id, sl]));
+    (await pool(want, 8, ([cid, sl]) => get(`matches/${cid}/${sl}.json`, 2))).forEach((d, i) => { if (d && d.matches) MSEA.set(`${want[i][0]}|${want[i][1]}`, d.matches); });
+    for (const tid of Object.keys(MIX.teams || {})){ const d = await get(`matches/team-${tid}.json`, 2); if (d && d.matches) MTEAM.set(+tid, d.matches); } }
+  const curM = new Set([...matchSum.keys()].map(String)), compOf = id => { const c = (comps || []).find(x => +x.id === +id); return c ? { key:c.key, name_ar:c.name_ar } : null; };
+  const mo = Object.assign({}, hpo, { comp:compOf });
+  { const seen = new Set();
+    for (const ms of [...MSEA.values(), ...MTEAM.values()]) for (const m of ms){ if (seen.has(m.id) || curM.has(m.id)) continue; seen.add(m.id);
+      const cmp = compOf(m.comp), pth = MA.href(m), ok = MA.indexable(m);
+      write(pth.slice(1) + "index.html", page({ v5:{ nav:{ back:cmp ? `/c/${cmp.key}/s/${String(m.season).replace(/\//g, "-")}/` : "/", backLabel:cmp ? `موسم ${esc(m.season)}` : "الرئيسية", title:`${esc(m.h[1])} - ${esc(m.a[1])}`, trail:"" },
+        body:`<div class="lt"><h1>${esc(m.h[1])} ${esc(m.s[0])}-${esc(m.s[1])} ${esc(m.a[1])}</h1></div>` + MA.matchBody(m, mo) + U.foot(), tab:"more", sheets:"", data:{} },
+        path:pth, page:"ref", noindex:!ok, title:MA.title(m, cmp), desc:`${m.h[1]} ${m.s[0]}-${m.s[1]} ${m.a[1]}، ${m.date}${cmp ? `، ${cmp.name_ar} ${m.season || ""}` : ""}: النتيجة والأهداف والتشكيلة من أرشيف تيفو.`,
+        ld:bcLd([cmp && [cmp.name_ar, `/c/${cmp.key}/`], [`${m.h[1]} - ${m.a[1]}`, pth]].filter(Boolean)) }));
+      if (ok) urls.push(pth); }
+    for (const [tid, ms] of MTEAM){ const tn = (teamsJson.teams[tid] || {}).name_ar || TAR[tid] || String(tid), pth = `/t/${tid}/matches/`;
+      write(`t/${tid}/matches/index.html`, page({ v5:{ nav:{ back:`/t/${tid}/`, backLabel:esc(tn), title:"كل المباريات", trail:"" },
+        body:`<div class="lt"><h1>${esc(tn)}: كل المباريات</h1><p>كل مباريات ${esc(tn)} في أرشيف تيفو، من <span class="num">${esc(ms[0].date.slice(0, 4))}</span> لين <span class="num">${esc(ms[ms.length - 1].date.slice(0, 4))}</span> (<span class="num">${ms.length}</span> مباراة).</p></div>` + MA.listBody(ms.slice().reverse(), mo, "year") + U.foot(), tab:"more", sheets:"", data:{} },
+        path:pth, page:"ref", title:`كل مباريات ${tn} عبر التاريخ | تيفو`, desc:`كل مباريات ${tn} من ${ms[0].date.slice(0, 4)}: ${ms.length} مباراة بنتايجها وهدافينها.`, ld:bcLd([[tn, `/t/${tid}/`], ["كل المباريات", pth]]) }));
+      urls.push(pth); } }
   for (const c of comps){ const ed = EDS.get(+c.id); if (!ed) continue;
     const sNav = (title, back, label) => ({ back, backLabel:label, title, trail:"" }), ss = ed.seasons, arch = `/c/${c.key}/seasons/`, okA = ss.length >= 3;
     write(arch.slice(1) + "index.html", page({ v5:{ nav:sNav("كل المواسم", `/c/${c.key}/`, esc(c.name_ar)), body:`<div class="lt"><h1>${esc(c.name_ar)}: كل المواسم</h1><p>البطل والوصيف والهداف في كل موسم، من <span class="num">${esc(ss[ss.length - 1].season)}</span> لين <span class="num">${esc(ss[0].season)}</span>.</p></div>` + HP.seasonsBody(ed, c, hpo) + U.foot(), tab:"more", sheets:"", data:{} },
@@ -1282,7 +1304,7 @@ ${items}
     const mNow = MOI && MOI.comps && MOI.comps[c.id];   // the season in play (a split season, since 1 July) takes the whistle-fresh man of the match list
     if (mNow && /\//.test(ss[0].season)) ss[0].motm = (mNow.season || []).slice(0, 5);
     for (const s of ss.filter(HP.seasonRich)){ const sp = `/c/${c.key}/s/${HP.slug(s.season)}/`, okS = !!((s.table || []).length || (s.top_scorers || []).length), chN = s.champion && (hpo.teamName(s.champion.fotmob) || s.champion.name);
-      write(sp.slice(1) + "index.html", page({ v5:{ nav:sNav(`موسم ${esc(s.season)}`, arch, "كل المواسم"), body:`<div class="lt"><h1>${esc(c.name_ar)} <span class="num">${esc(s.season)}</span></h1></div>` + HP.seasonBody(s, c, hpo) + U.foot(), tab:"more", sheets:"", data:{} },
+      write(sp.slice(1) + "index.html", page({ v5:{ nav:sNav(`موسم ${esc(s.season)}`, arch, "كل المواسم"), body:`<div class="lt"><h1>${esc(c.name_ar)} <span class="num">${esc(s.season)}</span></h1></div>` + HP.seasonBody(s, c, hpo) + ((ml => ml.length ? U.grp("كل المباريات", "") + MA.listBody(ml, mo) : "")(MSEA.get(`${c.id}|${HP.slug(s.season)}`) || [])) + U.foot(), tab:"more", sheets:"", data:{} },
         path:sp, page:"ref", noindex:!okS, title:`${c.name_ar} ${s.season}: البطل والترتيب والهدافين | تيفو`, desc:`موسم ${s.season} من ${c.name_ar}${chN ? `: البطل ${chN}` : ""}، والترتيب النهائي والهدافين وأفضل اللاعبين.`,
         ld:bcLd([[c.name_ar, `/c/${c.key}/`], ["كل المواسم", arch], [s.season, sp]]) }));
       if (okS) urls.push(sp); } }

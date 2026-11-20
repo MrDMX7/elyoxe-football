@@ -280,3 +280,87 @@ def people(G, out_dir, min_wc=3, min_caps=30):
     _dump(os.path.join(out_dir, "people", "intl.json"), dict(sorted(caps.items())))
     return {"people": len(out), "intl": len(caps)}
 
+
+
+def matches(G, out_dir, comps=(538,), teams=(5789,)):
+    """matches/<competition>/<season>.json and matches/team-<FotMob team>.json (graph phase 7, the old matches): every match
+    of these competitions and national teams in the archive, with its score, scorers and cards, lineups and coaches where the
+    archive has them. A match FotMob knows keeps its FotMob id (its page: /m/<id>/), any other is k<Tifo id> (/m/k<id>/);
+    a player in it is his FotMob id or k<Tifo id>, as on the player pages."""
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    fm = lambda t: {a: int(b) for a, b in q(f"SELECT tifo_id, source_id FROM xref WHERE type='{t}' AND source='fotmob'") if str(b).isdigit()}
+    fm_c, fm_t, fm_p, fm_m = fm("competition"), fm("team"), fm("player"), fm("match")
+    rev_c, rev_t = {v: k for k, v in fm_c.items()}, {v: k for k, v in fm_t.items()}
+    tn = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
+    pn = {p: (a or n) for p, n, a in q("SELECT pid, name, name_ar FROM player")}
+    kn = {k: (a or n) for k, n, a in q("SELECT kid, name, name_ar FROM coach")}
+    sn = {s: n for s, n in q("SELECT sid, name FROM stadium")}
+    rn = {r: (a or n) for r, n, a in q("SELECT rid, name, name_ar FROM referee")}
+    ed = {e: (fm_c.get(c), s) for e, c, s in q("SELECT eid, cid, season FROM edition")}
+    pkey = lambda p: (str(fm_p[p]) if p in fm_p else f"k{p}") if p else None
+
+    def records(mids):
+        if not mids:
+            return []
+        G.c.execute("DROP TABLE IF EXISTS pub_m")
+        G.c.execute("CREATE TEMP TABLE pub_m(mid INTEGER PRIMARY KEY)")
+        G.c.executemany("INSERT INTO pub_m VALUES(?)", [(m,) for m in mids])
+        ev, lu, co = defaultdict(list), defaultdict(lambda: defaultdict(list)), defaultdict(dict)
+        for mid, minute, added, tp, side, pid in q("SELECT e.mid, e.minute, e.added, e.type, e.side, e.pid FROM event e JOIN pub_m USING(mid) "
+                                                   "WHERE e.type <> 'sub' ORDER BY e.mid, e.seq"):
+            ev[mid].append([minute, added or 0, tp, side, pn.get(pid), pkey(pid)])
+        for mid, pid, tid, shirt, started, home in q("""SELECT a.mid, a.pid, a.tid, a.shirt, a.started, m.home FROM appearance a JOIN pub_m USING(mid)
+                                                       JOIN match m ON m.mid=a.mid WHERE a.played=1 OR a.started=1
+                                                       ORDER BY a.mid, coalesce(a.started, 0) DESC, a.pid"""):
+            lu[mid]["h" if tid == home else "a"].append([pn.get(pid), pkey(pid), shirt, started])
+        for mid, side, kid in q("SELECT x.mid, x.side, x.kid FROM match_coach x JOIN pub_m USING(mid)"):
+            co[mid][side] = kn.get(kid)
+        out = []
+        for mid, eid, rnd, d, h, a, hs, as_, hth, hta, ph, pa, sid, rid in q(
+                """SELECT m.mid, m.eid, m.round, substr(m.date,1,10), m.home, m.away, m.hs, m.as_, m.ht_h, m.ht_a, m.pen_h, m.pen_a, m.sid, m.rid
+                   FROM match m JOIN pub_m USING(mid) WHERE m.hs IS NOT NULL ORDER BY m.date, m.mid"""):
+            comp, season = ed.get(eid, (None, None))
+            r = {"id": str(fm_m[mid]) if mid in fm_m else f"k{mid}", "date": d, "comp": comp, "season": season, "round": rnd,
+                 "h": [fm_t.get(h), tn.get(h)], "a": [fm_t.get(a), tn.get(a)], "s": [hs, as_],
+                 "ht": [hth, hta] if hth is not None else None, "pen": [ph, pa] if ph is not None else None,
+                 "venue": sn.get(sid), "ref": rn.get(rid), "ev": ev.get(mid), "lu": dict(lu[mid]) if mid in lu else None, "co": co.get(mid)}
+            out.append({k: v for k, v in r.items() if v not in (None, [], {})})
+        G.c.execute("DROP TABLE pub_m")
+        return out
+
+    def once(rs, key):
+        """One match from two sources not linked as twins (West Germany and Germany, 1990): the record with more detail."""
+        best = {}
+        for r in rs:
+            k = key(r)
+            w = (len(r.get("ev") or []) + sum(len(v) for v in (r.get("lu") or {}).values()), not r["id"].startswith("k"))
+            if k not in best or w > best[k][0]:
+                best[k] = (w, r)
+        keep = {id(v[1]) for v in best.values()}
+        return [r for r in rs if id(r) in keep]
+
+    d = os.path.join(out_dir, "matches")
+    index, n = {"comps": {}, "teams": {}}, 0
+    for fid in comps:
+        cid = rev_c.get(fid)
+        if cid is None:
+            continue
+        for eid, season in q("SELECT eid, season FROM edition WHERE cid=? ORDER BY season", (cid,)):
+            rs = once(records([m for (m,) in q("SELECT mid FROM match WHERE eid=?", (eid,))]),
+                      lambda r: (r["date"], frozenset((r["h"][1], r["a"][1]))))
+            if rs:
+                slug = season.replace("/", "-")
+                _dump(os.path.join(d, str(fid), f"{slug}.json"), {"comp": fid, "season": season, "matches": rs})
+                index["comps"].setdefault(str(fid), []).append(slug)
+                n += len(rs)
+    for ft in teams:
+        tid = rev_t.get(ft)
+        if tid is None:
+            continue
+        rs = once(records([m for (m,) in q("SELECT mid FROM match WHERE home=? OR away=?", (tid, tid))]), lambda r: r["date"])   # one match a day
+        if rs:
+            _dump(os.path.join(d, f"team-{ft}.json"), {"team": ft, "matches": rs})
+            index["teams"][str(ft)] = len(rs)
+            n += len(rs)
+    _dump(os.path.join(d, "index.json"), index)
+    return {"matches": n}

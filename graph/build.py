@@ -66,6 +66,7 @@ def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
         rec["coach_files"] = P.coaches(G, out_dir)      # v1/coaches/* (phase 5)
         rec["edition_files"] = P.editions(G, out_dir)   # v1/editions/* (phase 7: the season pages)
         rec["people_files"] = P.people(G, out_dir)      # v1/people/index.json: the old players' pages (/p/k<id>/)
+        rec["match_files"] = P.matches(G, out_dir)      # v1/matches/*: the old matches' pages (the Pro League, the national team)
     except Exception as e:
         traceback.print_exc()
         rec["awards_files"] = f"{type(e).__name__}: {str(e)[:200]}"
@@ -135,7 +136,7 @@ def publish(S, out_dir, reg_path, rec, cov):
     st.put_json("graph/coverage.json", {"generated": rec["started"], "counts": cov["counts"], "linked": cov["linked"], "arabic": cov["arabic"],
                                         "editions": cov["editions"]}, cache="static")
     sent = 0
-    for sub in ("awards", "motm", "coaches", "editions", "people"):
+    for sub in ("awards", "motm", "coaches", "editions", "people", "matches"):
         ad = os.path.join(out_dir, sub)
         for name in sorted(os.listdir(ad)) if os.path.isdir(ad) else []:
             if name.endswith(".json"):
