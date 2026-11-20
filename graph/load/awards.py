@@ -43,6 +43,10 @@ def _end_year(season):
     return int(m[-1]) if m else None
 
 
+# a link to a competition or one of its seasons is never a club ("Liga" is left out: Liga Deportiva Alajuelense is a club)
+NOT_A_CLUB = re.compile(r"(^|\s)(league|cup|championships?|super\s?cup|trophy)(\s|$)|^\d{4}([–-]\d{2,4})?\s", re.I)
+
+
 def load(G, reg, S):
     d = os.path.join(S.root, "graph", ".cache", "awards")
     if not os.path.exists(os.path.join(d, "items.json")) and S.s3:
@@ -99,10 +103,13 @@ def load(G, reg, S):
             G.put("coach", {"kid": kid, "name": f.get("en") or name, "name_ar": f.get("ar"), "born": f.get("born")}, "wikidata")
         return kid
 
+    not_clubs = {(t or "").replace("_", " ") for t in list(comp_of) + list(award_pages)}
+
     def team(title, name=None):
         f = it(title) if title else {}
-        if not f.get("qid"):
-            return None
+        t = (title or "").replace("_", " ")
+        if not f.get("qid") or t in not_clubs or NOT_A_CLUB.search(t):
+            return None                        # a competition, a season or an award never wins (UAE 1990–91 «not held» linked the league)
         tid = reg.get("team", "wikidata", f["qid"])
         if tid is None and f.get("tm_club"):
             ours = reg.get("team", "tm", str(f["tm_club"]))

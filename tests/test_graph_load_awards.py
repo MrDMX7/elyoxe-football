@@ -176,3 +176,34 @@ def test_the_same_scorer_from_two_sources_is_no_conflict_and_ties_stay(tmp_path)
     assert G.c.execute("select count(*) from conflict").fetchone()[0] == 0          # our count names him too
     e18 = G.c.execute("select eid from edition where cid=? and season='2017/2018'", (lg,)).fetchone()[0]
     assert G.c.execute("select count(*) from honour where eid=? and kind='top_scorer' and rank=1", (e18,)).fetchone()[0] == 2
+
+
+def test_a_season_that_links_the_league_itself_has_no_champion(tmp_path):
+    # Wikipedia's UAE list: 1990–91 «not held (Gulf War)» with the cells linking the league's own article
+    page = UAE.replace(b"</table>", ('<tr><td>1990–91</td><td>' + L("UAE_Pro_League") + ' (Gulf War)</td><td>' + L("UAE_Pro_League") + '</td></tr></table>').encode(), 1)
+    items = {"Sharjah_FC": {"qid": "Q30", "en": "Sharjah FC", "ar": "الشارقة", "human": False, "born": None, "tm_player": None, "tm_club": "7"},
+             "UAE_Pro_League": {"qid": "Q500", "en": "UAE Pro League", "ar": "الدوري الإماراتي للمحترفين", "human": False, "born": None, "tm_player": None, "tm_club": None}}
+    S = mk(tmp_path, {"UAE Pro League": page}, items, comps={"538": "UAE Pro League"})
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 538)
+    G.put("competition", {"cid": lg, "name": "Pro League"}, "fotmob")
+    awards.load(G, reg, S)
+    assert G.c.execute("select count(*) from honour h join edition e on e.eid=h.eid where e.season='1990/1991'").fetchone()[0] == 0
+    assert G.c.execute("select count(*) from team where name='UAE Pro League'").fetchone()[0] == 0
+    e = G.c.execute("select eid from edition where cid=? and season='1973/1974'", (lg,)).fetchone()[0]
+    assert G.c.execute("select count(*) from honour where eid=? and kind='champion'", (e,)).fetchone()[0] == 1   # the real rows still load
+
+
+def test_a_link_to_another_competition_or_a_season_article_is_not_a_club(tmp_path):
+    rows = ''.join(f'<tr><td>{s}</td><td>{L(c)}</td><td>{L(c)}</td></tr>' for s, c in (("1993–94", "Egyptian_Premier_League"), ("1994–95", "2026–27_UEFA_Nations_League")))
+    page = UAE.replace(b"</table>", (rows + '</table>').encode(), 1)
+    nc = lambda q, en: {"qid": q, "en": en, "ar": None, "human": False, "born": None, "tm_player": None, "tm_club": None}
+    items = {"Egyptian_Premier_League": nc("Q501", "Egyptian Premier League"), "2026–27_UEFA_Nations_League": nc("Q502", "2026–27 UEFA Nations League"),
+             "Sharjah_FC": {"qid": "Q30", "en": "Sharjah FC", "ar": "الشارقة", "human": False, "born": None, "tm_player": None, "tm_club": "7"}}
+    S = mk(tmp_path, {"UAE Pro League": page}, items, comps={"538": "UAE Pro League"})
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 538)
+    G.put("competition", {"cid": lg, "name": "Pro League"}, "fotmob")
+    awards.load(G, reg, S)
+    assert G.c.execute("select count(*) from honour h join edition e on e.eid=h.eid where e.season in ('1993/1994','1994/1995')").fetchone()[0] == 0
+    assert G.c.execute("select count(*) from team where name like '%League%'").fetchone()[0] == 0
