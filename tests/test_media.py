@@ -1050,3 +1050,22 @@ def test_the_first_of_the_matchs_goals_is_one_goal_and_a_save_is_after_but():
     assert not M.Text("جورج إيلينيكنا يهزّ شباك الاتفاق بتسديدة تمنح الاتحاد أول أهداف المواجهة 🟡🔥 #الاتفاق_الاتحاد").hl
     assert M.Text("كاراسكو يطلق تسديدة صاروخية، لكن عبدالله عبده يتصدى لها ببراعة 🧤🔥").neg_goal
     assert not M.Text("هدف! ⚽️ تسديدة قوية يتصدى لها أمين بخاري، لكن تسديدة ثانية من لاكازيت يحقق بها الهدف").neg_goal
+
+
+def test_a_scorer_of_another_week_named_in_a_post_does_not_hold_it_back():
+    # «أحمد الحمادي يسجل هدف التعادل لخورفكان في الدقيقة 87 …»: Al Dhafra's Mohammed Al Hammadi scored in another match a month
+    # later; that match is not this post's, so its scorer's name does not keep the post off the 87'
+    ajm = (149994, "Ajman", "عجمان")
+    later = _m(1000022718, 11027, "2026-11-18T09:49:00Z", (1, 0), DHA, ajm,
+               ("2026-11-18T09:49:39Z", "2026-11-18T10:55:19Z", "2026-11-18T11:46:14Z"),
+               [goal(58, "home", 689983, "Mohammed Al Hammadi", (1, 0))])
+    names = M.Names({str(t[0]): {"name": t[1], "name_ar": t[2]} for t in (KHO, DHA, ajm)},
+                    {"689983": {"ar": "محمد الحمادي"}, "562869": {"ar": "طارق تيسودالي"}}, {}, {}, {}, NATIONS)
+    v = {"id": "x1", "title": UAE_POSTS[9][1], "desc": "", "at": UAE_POSTS[9][2], "ch": "x_dubaisportstv", "source": "x", "url": "u"}
+    out = M.attach([v], [m for m in UAE_M if m["id"] == 6428998] + [later], names, CH_UAE, [])
+    assert [(mid, k) for mid, r in out.items() for k in r["goals"]] == [(6428998, "87-524057")]
+
+
+def test_a_celebration_after_a_cheer_and_his_first_that_was_the_sides_second():
+    assert M.Text("Siiiiiiiiuuuuu 🐐 فرحة رونالدو بثاني أهداف النصر 🟡  #الفيصلي_النصر").neg_goal == "فرحة"
+    assert M.Text("هدف كريستيانو رونالدو الأول والثاني للنصر ⚽️🎯").ordinal is None

@@ -227,8 +227,11 @@ def goal_number(tt):
                 and (i + 2 >= len(tt) or tt[i + 2] != "له"):
             return ORD_TOK[tt[i + 1]]
         if t in GOAL_TOK:
-            for u in tt[i + 1:i + 4]:
+            for j, u in enumerate(tt[i + 1:i + 4], i + 1):
                 if u in ORD_TOK:
+                    # «هدف كريستيانو رونالدو الأول والثاني للنصر»: his first, the side's second: no one number
+                    if j + 1 < len(tt) and tt[j + 1][:1] == "و" and tt[j + 1][1:] in ORD_TOK:
+                        return None
                     return ORD_TOK[u]
                 if u in BREAK_ORD or (u[:1] == "و" and u[1:] in BREAK_ORD) or u.isdigit() or u in GOAL_TOK:
                     break
@@ -400,7 +403,8 @@ class Text:
         self.ord_clash = len(ords) > 1
         self.neg_goal = next((" ".join(p) for p in NEG_GOAL if has(self.al, p) and not (self.ordinal and p in WOODWORK)), None)
         # «فرحة ساديو ماني بهدف التقدّم» is the celebration; «… يسجل … لتتعالى فرحة اللاعبين» (Sharjah 2026-11-19) is the goal
-        if not self.neg_goal and self.tt[:1] == JOY:
+        # (its first Arabic word: «Siiiiiiiiuuuuu 🐐 فرحة رونالدو بثاني أهداف النصر», Thmanyah 2026-10-31)
+        if not self.neg_goal and [t for t in self.tt if AR_LETTERS.fullmatch(t)][:1] == JOY:
             self.neg_goal = "فرحة"
         # «القائم يحرم الشامي من تسجيل الهدف الأول», «… ويحرم سبورتي من الهدف الثاني»: a post, a save (2026-11-20); «هدف قاتل يحرم
         # الهلال من الفوز» is still a goal
@@ -1453,6 +1457,11 @@ def pinned_goal(ctx, v, ch, tx, teams, players, t_pub):
     for mid, md in ctx.matches.items():
         h, a = md["home"]["id"], md["away"]["id"]
         if not (h in teams or a in teams or ch.get("team") in (h, a)):
+            continue
+        # only the matches the post can be about: out after kickoff and within 36 h of the end («أحمد الحمادي» for Khorfakkan's 87'
+        # also named Al Dhafra's Mohammed Al Hammadi, a scorer a month later, and that match held the post back, 2026-11-20)
+        k, end = ptime(md.get("kickoff_utc")), match_end(md)
+        if not k or t_pub < k or (end and t_pub > end + timedelta(hours=36)):
             continue
         gs = ctx.goals[mid]
         scorers = {g["player"]["id"] for g in gs}
