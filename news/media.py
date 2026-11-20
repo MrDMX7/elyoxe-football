@@ -201,7 +201,7 @@ NEG_ALWAYS = phrases([
     "entrevista", "conference de presse", "pressekonferenz", "conferenza stampa", "intervista", "training", "trains",
     "entrenamiento", "entrainement", "allenamento", "تدريب", "تدريبات", "التدريبات", "behind the scenes", "كواليس", "inside",
     "tunnel", "all access", "vlog", "unseen", "efootball", "pes", "simulation", "gameplay", "prediction", "predictions",
-    "توقعات", "توقع", "pronostico", "podcast", "بودكاست", "برنامج", "الاستوديو التحليلي", "studio", "episode", "حلقة", "الحلقة",
+    "توقعات", "توقع", "pronostico", "podcast", "بودكاست", "برنامج", "الاستوديو التحليلي", "studio", "استديو", "استوديو", "محلل", "يشرح", "episode", "حلقة", "الحلقة",
     "analysis", "تحليل", "brawl", "fight", "scuffle", "عراك", "شجار", "fans", "جماهير", "الجماهير", "المدرجات", "trailer",
     "promo", "tickets", "تذاكر", "kit", "جولة خاصة", "تغطية خاصة",
     # another sport between the same two countries (a broadcaster's channel carries them all)

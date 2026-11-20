@@ -560,6 +560,8 @@ def test_thmanyahs_celebration_disallowed_goal_and_talk_show_posts_are_not_a_goa
     assert M.Text("فرحة ساديو ماني بهدف التقدّم 🟡🔥\n\n#النصر_الخلود | #دوري_روشن_السعودي").neg_goal
     assert M.Text("بصناعة من تريزيقيه، مينساه يسجل الهدف الثاني للرياض، لكن حكم اللقاء يُلغيه بداعي التسلل ⚽️🚩 #الرياض_التعاون").neg_goal
     assert M.Text("هاتريك رونالدو يقود النصر للانتصار وترقب لقمة الشباب والأهلي | المنصة مع تركي العجمة").neg
+    # the studio's analyst on Al Ghannam's goal (Thmanyah 2026-10-24)
+    assert M.Text("عن هدف خالد الغنام؟ 🤔 مُحلّل «ثمانية» أحمد عفيفي @Ahmed1Afify يشرح🎙️ #الخلود_الاتفاق | #استديو_ثمانية").neg
     # the clips of the same goals that stay
     assert not M.Text("هدف ⚽️ مينساه يعزّز تقدم الرياض بالهدف الثاني، بتسديدة تستقر في شباك التعاون 🔴 #الرياض_التعاون | #دوري_روشن_السعودي").neg_goal
     assert not M.Text("ثلاثية كريستيانو رونالدو ضد الخلود").neg
