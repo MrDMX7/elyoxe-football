@@ -1,6 +1,7 @@
 """RSSSF's Arab league seasons before the other sources start (db/rsssf.py publishes v1/history/arab/<code>.json: every
 season's final table, its champion and the FotMob id of each club it could link): the tables as standings of the
-country's FotMob league, the champion as an honour, and the dated cup games of db/.cache/rsssf_clubs.json as matches. A
+country's FotMob league, the champion as an honour, the league round by round with its scorers (league_matches: linked to the source that has
+the match, its scorers added when it has none), and the dated cup games of db/.cache/rsssf_clubs.json as matches. A
 season whose table the graph already has (365Scores) keeps it; a club RSSSF could not link is a team of its own
 (`rsssf-name`, «<code>|<name>»)."""
 import os
@@ -15,8 +16,53 @@ def load(G, reg, S, codes=None):
         except Exception as e:
             print(f"db.rsssf not importable: {e}", flush=True)
             codes = []
-    n = {"seasons": 0, "standings": 0, "champions": 0, "matches": 0, "matches_linked": 0}
-    written = set()
+    n = {"seasons": 0, "standings": 0, "champions": 0, "matches": 0, "matches_linked": 0, "league_matches": 0, "league_linked": 0, "goals": 0}
+    written, idx = set(), MatchIndex(G)
+
+    def scorer(code, name):
+        k = f"{code}|{name}"
+        pid = reg.get("player", "rsssf-name", k) or reg.mint("player", "rsssf-name", k)
+        if ("p", pid) not in written:
+            written.add(("p", pid))
+            G.put("player", {"pid": pid, "name": name}, "rsssf")
+            G.xref("player", pid, "rsssf-name", k, "rsssf-native")
+        return pid
+
+    def league_match(code, eid, d, hn, hid, an, aid, hs, as_, goals):
+        """one league match of RSSSF's rounds: linked to the source that has it (FotMob, 365Scores) or added; its scorers as
+        goals and appearances, unless the match has its own events already"""
+        h, a = team(code, hn, hid), team(code, an, aid)
+        if h == a:
+            return
+        key = f"{code}|{d}|{hn}|{an}"
+        mid = twin(G, idx, d, h, a, hs, as_, "rsssf")
+        if mid:
+            mid = reg.link("match", "rsssf", key, mid) or mid
+            G.xref("match", mid, "rsssf", key, "date+teams")
+            n["league_linked"] += 1
+            if G.c.execute("SELECT 1 FROM event WHERE mid=? LIMIT 1", (mid,)).fetchone():
+                return                                   # the match's own scorers stand
+            flip = G.c.execute("SELECT home FROM match WHERE mid=?", (mid,)).fetchone()[0] == a
+        else:
+            mid = reg.mint("match", "rsssf", key)
+            idx.add(mid, d, h, a)
+            G.put("match", {"mid": mid, "eid": eid, "date": d, "home": h, "away": a, "hs": hs, "as_": as_, "status": "finished"}, "rsssf")
+            G.xref("match", mid, "rsssf", key, "rsssf-native")
+            n["league_matches"] += 1
+            flip = False
+        side_t = {"h": a if flip else h, "a": h if flip else a}
+        other = {"h": "a", "a": "h"}
+        events, apps = [], {}
+        for seq, (side, name, minute, kind) in enumerate(sorted(goals, key=lambda g: (g[2] if g[2] is not None else 999))):
+            pid = scorer(code, name)
+            sd = other[side] if flip else side                 # the side as the match row has it
+            events.append({"mid": mid, "seq": seq, "minute": minute, "added": 0, "type": kind, "side": sd, "tid": side_t[side], "pid": pid})
+            own_team = side_t[other[side]] if kind == "own_goal" else side_t[side]
+            ap = apps.setdefault(pid, {"mid": mid, "pid": pid, "tid": own_team, "played": 1, "goals": 0})
+            ap["goals"] += kind != "own_goal"
+        G.many("event", events, "rsssf")
+        G.many("appearance", list(apps.values()), "rsssf")
+        n["goals"] += len(events)
 
     def team(code, name, fid):
         if fid:
@@ -59,12 +105,13 @@ def load(G, reg, S, codes=None):
                     G.c.execute("INSERT OR IGNORE INTO standing VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                                 (eid, "", pos, team(code, name, fid), p, w, dr, l, gf, ga, pts, "rsssf"))
                     n["standings"] += 1
+            for d, hn, hid, an, aid, hs, as_, goals in s.get("league_matches") or []:
+                league_match(code, eid, d, hn, hid, an, aid, hs, as_, goals)
             if table and table[0][0] == 1:     # db/rsssf.py keeps a table only when its first club is the champions page's
                 if G.c.execute("INSERT OR IGNORE INTO honour(eid, kind, rank, tid, src) VALUES(?,?,?,?,?)",
                                (eid, "champion", 1, team(code, table[0][1], table[0][2]), "rsssf")).rowcount:
                     n["champions"] += 1
     clubs = S.read(os.path.join(S.db, "rsssf_clubs.json")) or {}
-    idx = MatchIndex(G)
     for fid in sorted(clubs, key=lambda x: int(x) if x.isdigit() else 0):
         if not fid.isdigit():
             continue

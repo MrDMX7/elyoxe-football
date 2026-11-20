@@ -214,6 +214,119 @@ def parse_season(t, label):
     return tables, results, scorers
 
 
+# ---- the league's matches round by round (graph phase 7: the old seasons' match pages). RSSSF writes a round's date in its
+# heading («Round 1 [Jan 25]», «Group 1 [Feb 22]», «[Mar 4]») and each match on a line of its own, its scorers in brackets after
+# it or on the next lines, in one of two shapes: «[Isaac Nassib 3, 44, Rodrigo Mendes 81; Walid Obaid 9]» (home ; away) or
+# «[Adib Obaid (12'; 64'), Dane Fayne (21') - Campo Romeo (52')]» (home - away). An «og» goal stays on the side it counted for.
+MONTHS = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), 1)}
+DATE_IN = re.compile(r"\[\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})\b[^\]]*\]", re.I)
+MATCH = re.compile(r"^\s*([A-Za-z][A-Za-z'.\- ()]*?)\s+(\d{1,2})-(\d{1,2})\s+([A-Za-z][A-Za-z'.\- ()]*?)\s*(\[.*)?$")
+# a heading at the line's start: «Cups 1999/2000», «Emir's Cup», «Super Cup 2002», «Promoted: ...», «Second Division» (never a
+# table row's «Relegated» or an indented «no relegation this season»)
+LEAGUE_END = re.compile(r"^(?:(?:[A-Za-z][A-Za-z'.\-]*\s+)*cups?\b.*|promoted\b.*|relegated\b.*|(?:second|first|third) division\b.*|division\s+\d.*)$", re.I)
+NOT_SCORERS = re.compile(r"\b(aet|pen|awd|abd|annulled|walkover|w/o)\b", re.I)
+
+
+def _minutes(s):
+    out = []
+    for m in re.finditer(r"(\d{1,3})\s*'?\s*(og|pen|p)?", s):
+        out.append((int(m.group(1)), "own_goal" if (m.group(2) or "").lower() == "og" else "goal"))
+    return out
+
+
+def _side(s, side):
+    """one side's scorers: «Name 3, 44, Other 81» or «Name (12'; 64'), Other (21')»"""
+    goals = []
+    if "(" in s:
+        for m in re.finditer(r"([^(),]+?)\s*\(([^)]*)\)", s):
+            name = re.sub(r"\s+", " ", m.group(1)).strip(" ,")
+            goals += [[side, name, mi, kind] for mi, kind in _minutes(m.group(2))]
+        return goals
+    name = None
+    for part in s.split(","):
+        m = re.match(r"\s*([^\d]*?)\s*(\d{1,3}\s*(?:og|pen|p)?)\s*$", part, re.I)
+        if not m:
+            continue
+        if m.group(1).strip():
+            name = re.sub(r"\s+", " ", m.group(1)).strip()
+        if name:
+            goals += [[side, name, mi, kind] for mi, kind in _minutes(m.group(2))]
+    return goals
+
+
+def _scorers(text, hs, as_):
+    """[[side, name, minute, goal|own_goal]] when they add up to the score, else [] (a scorer list RSSSF left short)"""
+    body = text.strip().lstrip("[").rstrip("]")
+    if not body or NOT_SCORERS.search(body) and not re.search(r"\d+\s*'", body) and ";" not in body:
+        return []
+    if "(" in body:
+        depth, cut = 0, None
+        for i, ch in enumerate(body):
+            depth += ch == "("
+            depth -= ch == ")"
+            if depth == 0 and body[i:i + 3] == " - ":
+                cut = i
+                break
+        home, away = (body[:cut], body[cut + 3:]) if cut is not None else ((body, "") if as_ == 0 else ("", body) if hs == 0 else (body, ""))
+    else:
+        home, away = (body.split(";", 1) + [""])[:2] if ";" in body else ((body, "") if as_ == 0 else ("", body) if hs == 0 else (body, ""))
+    goals = _side(home, "h") + _side(away, "a")
+    if sum(1 for g in goals if g[0] == "h") != hs or sum(1 for g in goals if g[0] == "a") != as_:
+        return []
+    return goals
+
+
+def table_name(n, names):
+    """the season table's row a match line's short name means: the same name, the same key («Shabab» / «Al-Shabab»), every
+    word the start of a word of it, its city included («R Khaima» / «Ras Al-Khaima», «Ahly F» / «Al-Ahly (Fujeira)»), or a
+    close spelling — and only when one row fits; else the name as written"""
+    if n in names:
+        return n
+    words = [w for w in fold(n).split() if w not in ("al", "el")]
+    city = lambda x: " ".join(sorted(set(canon(fold(x, paren=True)).split()) - {"al", "el"}))   # the key, its city kept
+    tests = (lambda r: city(n) == city(r), lambda r: nk(n) == nk(r),
+             lambda r: bool(words) and all(any(x.startswith(w) for x in fold(r, paren=True).split()) for w in words),
+             lambda r: variant(n, r))
+    for test in tests:
+        hit = list(dict.fromkeys(r for r in names if test(r)))       # in the order given: the season's published table first
+        if hit and len({city(r) for r in hit}) == 1:        # one row, or one name written two ways in two tables («Al Ain», «Al-Ain»)
+            return hit[0]
+    return n
+
+
+def league_rounds(t, label):
+    """[[date, home, away, hs, as, scorers]] of the league part of a season page (up to the first cup heading)"""
+    lines = t.splitlines()
+    y1, y2 = season_years(label)
+    if not y1:
+        return []
+    out, day = [], None
+    i = 0
+    while i < len(lines):
+        l = lines[i]
+        if cup_heading(lines, i) or (len(l.strip()) <= 60 and l[:1].strip() and not MATCH.match(l) and LEAGUE_END.match(l.strip())):
+            break
+        m = MATCH.match(l)
+        if not m:
+            d = DATE_IN.search(l)
+            if d:
+                mo, dd = MONTHS[d.group(1).lower()[:3]], int(d.group(2))
+                day = f"{y2 if mo <= 7 else y1}-{mo:02d}-{dd:02d}"
+            i += 1
+            continue
+        h, hs, as_, a, rest = m.group(1).strip(), int(m.group(2)), int(m.group(3)), m.group(4).strip(), m.group(5) or ""
+        if not rest and i + 1 < len(lines) and lines[i + 1].strip().startswith("["):
+            i += 1
+            rest = lines[i]
+        while rest and "]" not in rest and i + 1 < len(lines):      # a scorers list that wraps onto the next lines
+            i += 1
+            rest += " " + lines[i].strip()
+        if day:
+            out.append([day, h, a, hs, as_, _scorers(rest, hs, as_) if rest else []])
+        i += 1
+    return out
+
+
 def season_years(label):
     m = re.search(r"(\d{4})\s*/\s*(\d{2,4})", label or "")
     if m:
@@ -360,7 +473,8 @@ def main(argv=None):
             for b in tables:
                 for r in b["rows"]:
                     link(r[1])
-            parsed.append({"pg": pg, "season": season, "tables": tables, "results": results, "scorers": scorers, "champion": w})
+            parsed.append({"pg": pg, "season": season, "tables": tables, "results": results, "scorers": scorers, "champion": w,
+                           "rounds": league_rounds(t, label)})
         # two names in one table are two clubs, and so are two names in one season's tables unless they are one name spelled
         # two ways («Al-Jazeera» in the first stage, «Al-Jazira» in the second): they can't both be one of ours
         cooc = defaultdict(set)
@@ -409,9 +523,15 @@ def main(argv=None):
                     if me:
                         clubs_out[me]["matches"].append([d, opp if opp else "r:" + oname, home, gf, ga, f"rsssf:{code}:{sec}"])
             ch = next((c for c in s["champion"] if rows and same(rows[0][1], c)), (s["champion"] or [None])[0])
+            # the season's table names, the published table's first: a match line's short names mean these
+            tn = list(dict.fromkeys([r[1] for r in rows] + sorted({r[1] for b in s["tables"] for r in b["rows"]})))
             seasons.append({"season": s["season"], "page": s["pg"], "champion": ch, "stage": how,
                             "table": [[r[0], r[1], fid] + r[2:] for r, fid in zip(rows, fids)],
-                            "scorers": [[x[0], x[1], link(x[1]), x[2]] for x in s["scorers"]], "matches": len(s["results"])})
+                            "scorers": [[x[0], x[1], link(x[1]), x[2]] for x in s["scorers"]], "matches": len(s["results"]),
+                            # the league round by round: [date, home, its FotMob id, away, its id, hs, as, [[side, scorer, minute, kind]]]
+                            "league_matches": [[d, h, *(lambda hi, ai: (hi, a, ai) if hi is None or hi != ai else (None, a, None))(link(h), link(a)), hs, as_, sc]
+                                               for d, h, a, hs, as_, sc in ([d0, table_name(h0, tn), table_name(a0, tn), x, y, z]
+                                                                            for d0, h0, a0, x, y, z in s["rounds"])]})
         seasons.sort(key=lambda s: s["season"])
         print(code, len(parsed), "season pages;", sum(1 for s in seasons if s["table"]), "with a table;", sum(s["matches"] for s in seasons), "matches;",
               sum(1 for s in seasons if s["scorers"]), "with scorers; clubs linked", len(linked), "not", len(unl), sorted(unl)[:8])
