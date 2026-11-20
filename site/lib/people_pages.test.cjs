@@ -21,3 +21,13 @@ test("titles and indexing", () => {
   assert.equal(PP.indexable(TAL, HON), true);
   assert.equal(PP.indexable({ wc: [] }, [["x", "1991", "winner", 1, null]]), false);          // one award, no World Cup: a page, not indexed
 });
+
+test("the national team's record, from its article", () => {
+  const b = PP.intlBlock(["United Arab Emirates", 161, 52, "1983–1997"]);
+  assert.match(b, /مع المنتخب/);
+  assert.match(b, /<span class="num">161<\/span> مباراة دولية/);
+  assert.match(b, /<span class="num">52<\/span> هدف/);
+  assert.match(b, /1983–1997/);
+  assert.equal(PP.intlBlock(null), "");
+  assert.match(PP.personBody(TAL, HON, {}, ["United Arab Emirates", 161, 52, "1983–1997"]), /161/);
+});

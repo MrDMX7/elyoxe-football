@@ -10,7 +10,7 @@ KEYS = {"team": "tid", "player": "pid", "coach": "kid", "referee": "rid", "stadi
 REFS = {"team": [("match", "home"), ("match", "away"), ("appearance", "tid"), ("event", "tid"), ("standing", "tid"), ("honour", "tid"),
                  ("transfer", "from_tid"), ("transfer", "to_tid"), ("spell", "tid"), ("player_season", "tid")],
         "player": [("appearance", "pid"), ("event", "pid"), ("event", "pid2"), ("honour", "pid"), ("transfer", "pid"), ("spell", "pid"),
-                   ("player_season", "pid"), ("injury", "pid"), ("coach", "pid")],
+                   ("player_season", "pid"), ("injury", "pid"), ("coach", "pid"), ("intl_record", "pid")],
         "coach": [("match_coach", "kid"), ("honour", "kid")], "referee": [("match", "rid")], "stadium": [("match", "sid"), ("team", "sid")],
         "competition": [("edition", "cid"), ("player_season", "cid")], "edition": [("match", "eid"), ("standing", "eid"), ("honour", "eid")],
         "match": [("appearance", "mid"), ("event", "mid"), ("match_coach", "mid")]}

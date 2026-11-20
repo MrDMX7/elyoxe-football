@@ -283,3 +283,54 @@ def extract_season(html, page):
                     prev = (g, x["rank"])
             rows += [x for x in got if x["rank"] <= 10]
     return {"page": page, "season": season, "rows": rows}
+
+
+# ---- a national team's article: «Most appearances» and «Top goalscorers» (caps, goals and years for that country; the
+# totals of the players before FotMob, whose matches our archive holds only in part)
+RECORD_SECTION = re.compile(r"most (appearances|capped)|top (goal)?scorers|most goals|leading (goal)?scorers|player records", re.I)
+NOT_SENIOR = re.compile(r"women|under-\d|u-?\d{2}|olympic|\bb\b|futsal|beach|amputee|youth", re.I)
+
+
+def _num(text):
+    m = re.match(r"\s*(\d+)", text or "")
+    return int(m.group(1)) if m else None
+
+
+def intl_records(html):
+    doc = LH.fromstring(html.decode("utf-8", "replace") if isinstance(html, bytes) else html)
+    for st in doc.xpath("//style|//sup[contains(@class,'reference')]"):
+        st.drop_tree()
+    by = {}
+    for t in doc.xpath("//table[contains(concat(' ', normalize-space(@class), ' '), ' wikitable ')]"):
+        if not RECORD_SECTION.search(_section(t) or ""):
+            continue
+        g = grid(t)
+        if not g or not g[0]:
+            continue
+        hdr = [clean(c[0]) for c in g[0]]
+        col = lambda rx: next((i for i, h in enumerate(hdr) if re.search(rx, h, re.I)), None)
+        pi, ci, gi, yi = col(r"^(player|name)"), col(r"^(caps|apps|appearances)"), col(r"^goals"), col(r"career|years|period")
+        if pi is None or (ci is None and gi is None):
+            continue
+        for r in g[1:]:
+            if pi >= len(r) or not r[pi][1]:
+                continue
+            person = r[pi][1][0]
+            d = by.setdefault(person, {"person": person, "name": re.sub(r"\s*\(list\)\s*$", "", clean(r[pi][0])), "caps": None, "goals": None, "career": None})
+            for k, i in (("caps", ci), ("goals", gi)):
+                if i is not None and i < len(r) and d[k] is None:
+                    d[k] = _num(r[i][0])
+            if yi is not None and yi < len(r) and not d["career"]:
+                d["career"] = clean(r[yi][0]) or None
+    return list(by.values())
+
+
+def national_articles(html):
+    """The men's senior national teams Wikipedia's «List of men's national association football teams» links."""
+    h = html.decode("utf-8", "replace") if isinstance(html, bytes) else html
+    out = set()
+    for m in re.findall(r'href="\./([^"#]+_national_football_team)(?:#[^"]*)?"', h):
+        t = urllib.parse.unquote(m).replace("_", " ")
+        if not NOT_SENIOR.search(t):
+            out.add(t)
+    return sorted(out)

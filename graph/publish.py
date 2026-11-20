@@ -240,7 +240,7 @@ def editions(G, out_dir):
     return {"competitions": n}
 
 
-def people(G, out_dir, min_wc=3):
+def people(G, out_dir, min_wc=3, min_caps=30):
     """people/index.json: the players the site has no FotMob page for whose record is worth one (graph phase 7, the old
     players): a title or an award won (rank 1), or min_wc World Cup matches. Only what the archive holds in full: the Arabic
     name, birth and death, the national team, and each World Cup with its matches and goals (Fjelstul is complete). Their
@@ -257,16 +257,26 @@ def people(G, out_dir, min_wc=3):
         wc[pid][season][1] += goals
         nat[pid] = tname
     won = {p for (p,) in q("SELECT DISTINCT pid FROM honour WHERE rank=1 AND pid IS NOT NULL")}
-    keep = {p for p in won | {p for p, ys in wc.items() if sum(v[0] for v in ys.values()) >= min_wc} if p not in fm}
+    intl = {}                                 # his most-capped side's record from the national team's article
+    for pid, team, caps, goals, career in q("SELECT pid, team, caps, goals, career FROM intl_record ORDER BY coalesce(caps, 0)"):
+        intl[pid] = [team, caps, goals, career]
+    capped = {p for p, r in intl.items() if (r[1] or 0) >= min_caps}
+    keep = {p for p in won | capped | {p for p, ys in wc.items() if sum(v[0] for v in ys.values()) >= min_wc} if p not in fm}
     for pid, tname in q("""SELECT a.pid, coalesce(t.name_ar, t.name) FROM appearance a JOIN team t ON t.tid=a.tid
                            WHERE t.kind='national' AND a.played=1 GROUP BY a.pid, t.tid ORDER BY count(*) DESC"""):     # his most-played side first
         if pid in keep and pid not in nat:
             nat[pid] = tname
+    for pid, r in intl.items():
+        if pid in keep and pid not in nat:
+            nat[pid] = r[0]
     out = {}
     for pid, name, name_ar, born, died in q("SELECT pid, name, name_ar, born, died FROM player"):
         if pid in keep:
             out[f"k{pid}"] = {"name": name, "name_ar": name_ar, "born": born, "died": died, "nat": nat.get(pid),
                               "wc": [[y, v[0], v[1]] for y, v in sorted(wc.get(pid, {}).items(), reverse=True)]}
     _dump(os.path.join(out_dir, "people", "index.json"), dict(sorted(out.items())))
-    return {"people": len(out)}
+    fm_id = {a: b for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='player' AND source='fotmob'") if str(b).isdigit()}
+    caps = {(str(fm_id[p]) if p in fm_id else f"k{p}"): r for p, r in intl.items() if p in fm_id or p in keep}
+    _dump(os.path.join(out_dir, "people", "intl.json"), dict(sorted(caps.items())))
+    return {"people": len(out), "intl": len(caps)}
 

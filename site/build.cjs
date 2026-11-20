@@ -450,6 +450,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     AWK = Object.fromEntries((AWI.awards || []).map(a => [a.key, a]));
   // the old players FotMob does not know (graph phase 7): /p/k<Tifo id>/ from v1/people/index.json, their honours in AWP["k<id>"]
   const PPL = (await get("people/index.json", 2)) || {}, person = id => !!PPL["k" + id];
+  const INTL = (await get("people/intl.json", 2)) || {}, PPG = require("./lib/people_pages.cjs");   // caps and goals for country (national team articles)
   // «رجل المباراة» (Tifo graph phase 3): v1/motm/* from graph/publish.py
   const MOTM = require("./lib/motm_pages.cjs"), MOI = await get("motm/index.json"), MOP = (await get("motm/players.json")) || {};
   // phase 6, at the whistle: every match finished since the graph's nightly build joins the man-of-the-match counts (lib/whistle.cjs)
@@ -735,7 +736,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   const AWC = Object.fromEntries((comps || []).map(c => [c.id, c]));
   const MOB = id => MOTM.playerBlock(MOP[id], { hasPage:x => playerPages.has(String(x)), comp:c => (AWC[c] ? { name_ar:AWC[c].name_ar, href:`/c/${AWC[c].key}/` } : null),
     team:t => ((teamsJson && teamsJson.teams) || {})[t] && (teamsJson.teams[t].name_ar || teamsJson.teams[t].name), match:m => matchSum.has(m) || matchSum.has(String(m)) });
-  const AWB = id => MOB(id) + AWD.playerBlock(AWP[id], { award:k => AWK[k], comp:c => (AWC[c] ? { name_ar:AWC[c].name_ar, href:`/c/${AWC[c].key}/` } : null) });
+  const AWB = id => MOB(id) + PPG.intlBlock(INTL[id]) + AWD.playerBlock(AWP[id], { award:k => AWK[k], comp:c => (AWC[c] ? { name_ar:AWC[c].name_ar, href:`/c/${AWC[c].key}/` } : null) });
   const full = new Set((index.focus_teams || []).concat(Object.values(NAT).map(Number)));   /* QA 11/12: every Arab national team has a team file (squad + all fixtures, friendlies too) */ compData.filter(d => d.c.scope === "uae").forEach(d => (d.st && d.st.groups || []).forEach(g => g.rows.forEach(r => full.add(r.team.id))));
   const teams = await pool(tlist, 8, id => full.has(id) ? get(`team/${id}.json`) : null);
   // a club with no team file, or one with no squad in it (860 of 895 team pages, 2026-10-09: Al Nassr's «اللاعبين» was empty): its squad
@@ -1285,7 +1286,7 @@ ${items}
       if (okS) urls.push(sp); } }
   { const PP = require("./lib/people_pages.cjs"), compK = c => (AWC[c] ? { name_ar:AWC[c].name_ar, href:`/c/${AWC[c].key}/` } : null);
     for (const [k, p] of Object.entries(PPL)){ const hon = AWP[k] || [], pth = `/p/${k}/`, nmP = PP.nameOf(p), ok = PP.indexable(p, hon);
-      write(`p/${k}/index.html`, page({ v5:{ nav:{ back:"/awards/", backLabel:"الجوائز", title:esc(nmP), trail:"" }, body:`<div class="lt"><h1>${/[؀-ۿ]/.test(nmP) ? esc(nmP) : `<span class="lat">${esc(nmP)}</span>`}</h1></div>` + PP.personBody(p, hon, { award:x => AWK[x], comp:compK }) + U.foot(), tab:"more", sheets:"", data:{} },
+      write(`p/${k}/index.html`, page({ v5:{ nav:{ back:"/awards/", backLabel:"الجوائز", title:esc(nmP), trail:"" }, body:`<div class="lt"><h1>${/[؀-ۿ]/.test(nmP) ? esc(nmP) : `<span class="lat">${esc(nmP)}</span>`}</h1></div>` + PP.personBody(p, hon, { award:x => AWK[x], comp:compK }, INTL[k]) + U.foot(), tab:"more", sheets:"", data:{} },
         path:pth, page:"ref", noindex:!ok, title:PP.title(p), desc:`${nmP}: ألقابه وجوائزه${(p.wc || []).length ? " ومشاركاته في كأس العالم" : ""} من أرشيف تيفو.`, ld:bcLd([[nmP, pth]]) }));
       if (ok) urls.push(pth); } }
   refPage("/legends/", "أساطير الكورة الإماراتية | تيفو", "الطلياني وإسماعيل مطر وعمر عبدالرحمن وعلي مبخوت وغيرهم: مسيرتهم وأرقامهم، مع المصادر.", "أساطير الكورة الإماراتية", "مسيرة وأرقام أبرز لاعبين في تاريخ الكورة الإماراتية، وكل معلومة معها مصدرها.", S.legends(legRaw, hl, id => playerPages.has(String(id))) + '<p class="tools"><a class="btn" href="/memorable/">مباريات ما تنتسى</a></p>');   // W2.8: memorable matches sit under الأساطير

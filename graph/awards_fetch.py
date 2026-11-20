@@ -249,17 +249,23 @@ def run(S, http, d, limit=None):
         comps = prev.get("comps") or {}
     if not awards and prev.get("awards"):
         awards = prev["awards"]
-    titles = sorted(set(awards) | set(comps.values()))
+    from graph.awards_wiki import national_articles, intl_records
+    try:                                      # every men's national team: its caps and goals records (graph/load/intl_records.py)
+        national = national_articles(http.get(REST + urllib.parse.quote("List_of_men's_national_association_football_teams")))
+    except Exception as e:
+        print(f"national teams list failed ({e}); the last one", flush=True)
+        national = prev.get("national") or []
+    titles = sorted(set(awards) | set(comps.values()) | set(national))
     if limit:
         titles = titles[:limit]
-    _jsave(os.path.join(d, "articles.json"), {"awards": awards, "comps": comps})
+    _jsave(os.path.join(d, "articles.json"), {"awards": awards, "comps": comps, "national": national})
     n = fetch_pages(http, d, titles)
     from graph.awards_wiki import season_links, extract_season
     have = set(_jload(os.path.join(d, "pages.json"), {}))
     seasons = pick_seasons({fid: season_links(read_page(d, t) or b"") for fid, t in comps.items()}, have)
     seasons = {**(prev.get("seasons") or {}), **seasons}
     n["seasons"] = fetch_pages(http, d, sorted(seasons))
-    _jsave(os.path.join(d, "articles.json"), {"awards": awards, "comps": comps, "seasons": seasons})
+    _jsave(os.path.join(d, "articles.json"), {"awards": awards, "comps": comps, "seasons": seasons, "national": national})
     links = set(titles)
     for t in seasons:
         h = read_page(d, t)
@@ -272,6 +278,10 @@ def run(S, http, d, limit=None):
         for tb in extract(h, t):
             for r in tb["rows"]:
                 links.update(x for x in (r.get("person"), r.get("team"), r.get("runner_up")) if x)
+    for t in national:
+        h = read_page(d, t)
+        if h:
+            links.update(r["person"] for r in intl_records(h))
     items = resolve(http, d, sorted(links))
     return {"articles": len(titles), **n, "items": len(items), "humans": sum(1 for v in items.values() if v.get("human"))}
 

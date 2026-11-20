@@ -118,4 +118,20 @@ def test_people_files_for_the_players_the_site_has_no_page_for(tmp_path):
     ix = json.load(open(tmp_path / "o" / "people" / "index.json", encoding="utf-8"))
     assert ix == {f"k{old}": {"name": "Stanley Matthews", "name_ar": "ستانلي ماثيوز", "born": "1915-02-01", "died": None,
                               "nat": "إنجلترا", "wc": [["1954", 2, 1], ["1950", 1, 0]]}}
-    assert out == {"people": 1}                                       # Messi has his FotMob page already
+    assert out == {"people": 1, "intl": 0}                            # Messi has his FotMob page already
+
+
+def test_caps_and_goals_from_the_national_teams_records(tmp_path):
+    G, messi = graph(tmp_path)
+    old = G.c.execute("select pid from player where name='Stanley Matthews'").fetchone()[0]
+    G.c.execute("insert into intl_record values(?, 'England', 54, 11, '1934–1957', 'wikipedia')", (old,))
+    G.c.execute("insert into intl_record values(?, 'Argentina', 196, 116, '2005–present', 'wikipedia')", (messi,))
+    caps_only = 900
+    G.put("player", {"pid": caps_only, "name": "Subait Khater"}, "wikidata")
+    G.c.execute("insert into intl_record values(?, 'United Arab Emirates', 120, 11, '1999–2011', 'wikipedia')", (caps_only,))
+    publish.people(G, str(tmp_path / "o"))
+    intl = json.load(open(tmp_path / "o" / "people" / "intl.json", encoding="utf-8"))
+    assert intl == {"30981": ["Argentina", 196, 116, "2005–present"], f"k{old}": ["England", 54, 11, "1934–1957"],
+                    f"k{caps_only}": ["United Arab Emirates", 120, 11, "1999–2011"]}
+    ix = json.load(open(tmp_path / "o" / "people" / "index.json", encoding="utf-8"))
+    assert f"k{caps_only}" in ix and ix[f"k{caps_only}"]["nat"] == "United Arab Emirates"     # 30 caps or more: a page of his own

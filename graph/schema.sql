@@ -18,6 +18,7 @@ CREATE INDEX appearance_pid ON appearance(pid);
 CREATE TABLE event(mid INTEGER, seq INTEGER, minute INTEGER, added INTEGER, type TEXT, side TEXT, tid INTEGER, pid INTEGER, pid2 INTEGER,
   detail TEXT, src TEXT NOT NULL, PRIMARY KEY(mid, seq));
 CREATE INDEX event_pid ON event(pid);
+CREATE TABLE intl_record(pid INTEGER, team TEXT, caps INTEGER, goals INTEGER, career TEXT, src TEXT NOT NULL, PRIMARY KEY(pid, team));   -- a national team article's records table
 CREATE TABLE match_coach(mid INTEGER, side TEXT, kid INTEGER, src TEXT NOT NULL, PRIMARY KEY(mid, side));
 CREATE TABLE standing(eid INTEGER, grp TEXT, rank INTEGER, tid INTEGER, played INTEGER, won INTEGER, drawn INTEGER, lost INTEGER,
   gf INTEGER, ga INTEGER, pts REAL, src TEXT NOT NULL, PRIMARY KEY(eid, grp, rank));
