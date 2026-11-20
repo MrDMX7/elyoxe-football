@@ -73,3 +73,14 @@ def test_the_league_round_by_round_with_its_scorers(tmp_path):
     assert G.c.execute("select goals from appearance a join player p on p.pid=a.pid where a.mid=? and p.name='Bouri Lah'", (m99,)).fetchone()[0] == 2
     own = G.c.execute("select type, side from event where minute=78").fetchone()
     assert own == ("own_goal", "h")
+
+
+def test_one_bad_row_never_stops_the_loader(tmp_path):
+    data = dict(UAE, seasons=[{"season": "2001/2002", "champion": "Al-Ain", "table": [[1, "Al-Ain", 102117, 1, 1, 0, 0, 1, 0, 3]],
+                               "league_matches": [["2002-02-30", "Al-Ain", 102117, "Al-Nasr", 102123, 1, 0, []],
+                                                  ["2002-03-03", "Al-Ain", 102117, "Al-Wasl", 102111, 2, 0, []]]}])
+    S = mk(tmp_path)
+    (tmp_path / "mirror" / "history" / "arab" / "uae.json").write_text(json.dumps(data), encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    out = rsssf.load(G, reg, S, codes=["uae"])
+    assert out["league_matches"] == 1 and out["league_bad"] == 1 and out["champions"] == 1

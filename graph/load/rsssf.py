@@ -16,7 +16,7 @@ def load(G, reg, S, codes=None):
         except Exception as e:
             print(f"db.rsssf not importable: {e}", flush=True)
             codes = []
-    n = {"seasons": 0, "standings": 0, "champions": 0, "matches": 0, "matches_linked": 0, "league_matches": 0, "league_linked": 0, "goals": 0}
+    n = {"seasons": 0, "standings": 0, "champions": 0, "matches": 0, "matches_linked": 0, "league_matches": 0, "league_linked": 0, "league_bad": 0, "goals": 0}
     written, idx = set(), MatchIndex(G)
 
     def scorer(code, name):
@@ -106,7 +106,12 @@ def load(G, reg, S, codes=None):
                                 (eid, "", pos, team(code, name, fid), p, w, dr, l, gf, ga, pts, "rsssf"))
                     n["standings"] += 1
             for d, hn, hid, an, aid, hs, as_, goals in s.get("league_matches") or []:
-                league_match(code, eid, d, hn, hid, an, aid, hs, as_, goals)
+                try:
+                    league_match(code, eid, d, hn, hid, an, aid, hs, as_, goals)
+                except (ValueError, TypeError) as e:      # one bad row (a date that does not exist) never stops the loader
+                    n["league_bad"] += 1
+                    if n["league_bad"] <= 5:
+                        print(f"rsssf {code} {season} {d} {hn}-{an}: {e}", flush=True)
             if table and table[0][0] == 1:     # db/rsssf.py keeps a table only when its first club is the champions page's
                 if G.c.execute("INSERT OR IGNORE INTO honour(eid, kind, rank, tid, src) VALUES(?,?,?,?,?)",
                                (eid, "champion", 1, team(code, table[0][1], table[0][2]), "rsssf")).rowcount:

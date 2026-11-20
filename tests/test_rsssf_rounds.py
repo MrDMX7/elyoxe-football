@@ -92,3 +92,8 @@ def test_one_name_in_two_tables_spelled_two_ways_is_one_row():
     names = ["Al Ain", "Al-Ain", "Al Ahly", "Al-Ahly", "Bani Yas"]
     assert R.table_name("Ain", names) in ("Al Ain", "Al-Ain")
     assert R.table_name("Ahly", names) in ("Al Ahly", "Al-Ahly")
+
+
+def test_a_date_that_does_not_exist_is_not_kept():
+    page = "X 2001/02\n\nRound 1 [Feb 30]\nAin   1-0 Nasr\nRound 2 [Mar 3]\nWasl   2-0 Ahli\n"
+    assert [m[0] for m in R.league_rounds(page, "X 2001/02")] == ["2002-03-03"]

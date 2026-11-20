@@ -311,7 +311,10 @@ def league_rounds(t, label):
             d = DATE_IN.search(l)
             if d:
                 mo, dd = MONTHS[d.group(1).lower()[:3]], int(d.group(2))
-                day = f"{y2 if mo <= 7 else y1}-{mo:02d}-{dd:02d}"
+                try:                                       # a date that does not exist («Feb 30») dates nothing
+                    day = date(y2 if mo <= 7 else y1, mo, dd).isoformat()
+                except ValueError:
+                    day = None
             i += 1
             continue
         h, hs, as_, a, rest = m.group(1).strip(), int(m.group(2)), int(m.group(3)), m.group(4).strip(), m.group(5) or ""
