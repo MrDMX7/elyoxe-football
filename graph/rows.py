@@ -29,7 +29,7 @@ def match_rows(rec, eid, reg):
             seen.add((t, i))
             out["xref"].append((t, i, src, str(src_id), method, 1.0))
             row = dict(row)
-            row[{"team": "tid", "player": "pid", "referee": "rid", "stadium": "sid", "match": "mid"}[t]] = i
+            row[{"team": "tid", "player": "pid", "referee": "rid", "stadium": "sid", "match": "mid", "coach": "kid"}[t]] = i
             out[t].append(row)
         return i
 
@@ -80,6 +80,10 @@ def match_rows(rec, eid, reg):
             if p[0] and p[0] not in in_lineup:
                 in_lineup.add(p[0])
                 appear(p[0], p[1], side, p[2], p[3], int(bool(p[4])), p[5])
+    for side in ("h", "a"):                            # the lineup's coach: the bench in every competition, cups included
+        co = ((rec.get("lineups") or {}).get(side) or {}).get("coach")
+        if co and co[0]:
+            out["match_coach"].append((mid, side, ent("coach", co[0], {"name": co[1]})))
     for e in events:                                   # a scorer or assister whose side has no lineup row for him
         if e[1] == "g":
             side = e[2] if e[6] != "own" else ("a" if e[2] == "h" else "h")

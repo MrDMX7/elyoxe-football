@@ -4,7 +4,7 @@ import os
 from graph import fm
 from graph.rows import match_rows
 
-ENT = ("team", "player", "referee", "stadium", "match")
+ENT = ("team", "player", "referee", "stadium", "match", "coach")
 
 
 def load(G, reg, S, limit=None):
@@ -39,6 +39,7 @@ def load(G, reg, S, limit=None):
                 G.put(t, r, "fotmob")
         G.many("appearance", rows.get("appearance"), "fotmob")
         G.many("event", rows.get("event"), "fotmob")
+        G.c.executemany("INSERT OR IGNORE INTO match_coach VALUES(?, ?, ?, 'fotmob-lineup')", rows.get("match_coach", ()))
         for x in rows.get("xref", ()):
             G.xref(*x)
         n += 1

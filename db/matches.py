@@ -111,6 +111,9 @@ def compact(raw, mid):
                 rows.append([p.get("id"), p.get("name"), p.get("shirtNumber"), p.get("positionId"), starter, ((p.get("performance") or {}).get("rating"))])
         if rows:
             m["lineups"]["h" if side == "homeTeam" else "a"] = {"formation": t.get("formation"), "players": rows}
+            co = t.get("coach")
+            if isinstance(co, dict) and co.get("id"):       # the bench in every competition (coachHistory is the league only)
+                m["lineups"]["h" if side == "homeTeam" else "a"]["coach"] = [co.get("id"), co.get("name")]
     for e in ((c.get("matchFacts") or {}).get("events") or {}).get("events") or []:
         tp, side = e.get("type"), "h" if e.get("isHome") else "a"
         if tp == "Goal" and not e.get("isPenaltyShootoutEvent"):

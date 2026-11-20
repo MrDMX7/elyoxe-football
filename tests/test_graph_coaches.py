@@ -81,3 +81,30 @@ def test_a_national_team_spell_survives_the_gaps_between_tournaments(tmp_path):
     publish.coaches(G, str(tmp_path / "o"))
     d = json.load(open(tmp_path / "o" / "coaches" / "teams.json", encoding="utf-8"))["8570"]
     assert [(s["start"], s["end"], s["m"]) for s in d] == [("2010-07-10", "2013-10-15", 3)]
+
+
+def test_a_cup_match_between_two_of_a_coachs_league_matches_is_his():
+    G, reg = Graph(str(tmp_path_db := __import__("tempfile").mkdtemp()) + "/t.db"), Registry()
+    ain, opp, crespo, schreuder = 1, 2, 10, 11
+    days = [("2023-09-01", schreuder), ("2023-11-26", crespo), ("2024-02-13", None), ("2024-03-01", crespo), ("2024-05-25", None),
+            ("2024-06-30", None)]                       # Feb: an ACL tie between two league matches; May: after his last one, unknown
+    for k, (d, kid) in enumerate(days):
+        mid = reg.mint("match", "fotmob", 70 + k)
+        G.put("match", {"mid": mid, "date": d + "T15:00:00Z", "home": ain, "away": opp, "hs": 1, "as_": 0}, "fotmob")
+        if kid:
+            G.c.execute("insert into match_coach values(?, 'h', ?, 'fotmob')", (mid, kid))
+    out = coaches.fill_between(G)
+    got = [r[0] for r in G.c.execute("select x.kid from match m left join match_coach x on x.mid=m.mid and x.side='h' order by m.date")]
+    assert got == [schreuder, crespo, crespo, crespo, None, None] and out == 1
+    G.c.execute("insert into match_coach values((select mid from match where date like '2024-06-30%'), 'h', ?, 'fotmob')", (schreuder,))
+    assert coaches.fill_between(G) == 0                  # between Crespo and another coach: the handover is not guessed
+
+
+def test_the_lineups_coach_is_never_replaced_by_the_league_history(tmp_path):
+    G, reg, S, mids, e, jaz = setup(tmp_path)
+    caretaker = reg.mint("coach", "fotmob", 99)
+    G.put("coach", {"kid": caretaker, "name": "Caretaker"}, "fotmob")
+    G.c.execute("insert into match_coach values(?, 'h', ?, 'fotmob-lineup')", (mids[1], caretaker))
+    coaches.load(G, reg, S)
+    got = [G.c.execute("select c.name from match_coach x join coach c on c.kid=x.kid where x.mid=? and x.side='h'", (m,)).fetchone()[0] for m in mids]
+    assert got == ["Abel Braga", "Caretaker", "Henk ten Cate"]

@@ -58,7 +58,9 @@ def load(G, reg, S):
                 continue
             for (mid, home), kid in zip(ms, plan):
                 side = "h" if home == tid else "a"
-                cur = G.c.execute("SELECT kid FROM match_coach WHERE mid=? AND side=?", (mid, side)).fetchone()
+                cur = G.c.execute("SELECT kid, src FROM match_coach WHERE mid=? AND side=?", (mid, side)).fetchone()
+                if cur and cur[1] == "fotmob-lineup":
+                    continue                      # the match's own lineup named its bench: the season's count never overrides it
                 if cur and cur[0] != kid:
                     pairs[(cur[0], kid)] += 1
                 G.c.execute("INSERT OR REPLACE INTO match_coach VALUES(?,?,?,?)", (mid, side, kid, "fotmob"))
@@ -100,4 +102,33 @@ def load(G, reg, S):
         if a and b and a[1] == "tm" and fold(a[0]).split()[-1:] == fold(b[0]).split()[-1:]:
             if reg.link("coach", "tm-name", fold(a[0]), new) is not None:
                 n["tm_linked"] += 1
+    n["between"] = fill_between(G)          # the cup and continental ties inside a league spell
     return n
+
+
+def fill_between(G, max_gap_days=150):
+    """A team's match with no coach that lies between two of its matches with the same coach (no more than max_gap_days
+    apart) is his: FotMob's coachHistory is league-only, so a cup or continental tie sat coachless inside a spell (Crespo's
+    2024 Champions League run). A match at a handover, or after the last known one, stays empty. Returns the matches filled."""
+    from datetime import date
+    rows = G.c.execute("""SELECT m.mid, substr(m.date,1,10), 'h', m.home, x.kid FROM match m LEFT JOIN match_coach x ON x.mid=m.mid AND x.side='h'
+                          WHERE m.hs IS NOT NULL AND m.date IS NOT NULL AND m.home IS NOT NULL
+                          UNION ALL
+                          SELECT m.mid, substr(m.date,1,10), 'a', m.away, x.kid FROM match m LEFT JOIN match_coach x ON x.mid=m.mid AND x.side='a'
+                          WHERE m.hs IS NOT NULL AND m.date IS NOT NULL AND m.away IS NOT NULL
+                          ORDER BY 4, 2""").fetchall()
+    by = {}
+    for mid, d, side, tid, kid in rows:
+        by.setdefault(tid, []).append((mid, d, side, kid))
+    add = []
+    for ms in by.values():
+        known = [i for i, r in enumerate(ms) if r[3] is not None]
+        for a, b in zip(known, known[1:]):
+            if b - a < 2 or ms[a][3] != ms[b][3]:
+                continue
+            if (date.fromisoformat(ms[b][1]) - date.fromisoformat(ms[a][1])).days > max_gap_days:
+                continue
+            add += [(ms[i][0], ms[i][2], ms[a][3]) for i in range(a + 1, b)]
+    G.c.executemany("INSERT OR IGNORE INTO match_coach VALUES(?, ?, ?, 'between')", add)
+    return len(add)
+

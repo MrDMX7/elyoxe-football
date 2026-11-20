@@ -43,3 +43,24 @@ def test_own_goal_not_credited_and_scorer_without_lineup_kept():
 def test_xref_native():
     x = rows()["xref"]
     assert ("match", 1, "fotmob", "900", "fotmob-native", 1.0) in x
+
+
+def test_the_lineups_coach_is_the_matchs_coach():
+    from graph.ids import Registry
+    rec = dict(REC, lineups={"h": dict(REC["lineups"]["h"], coach=[78656, "Cosmin Olăroiu"]), "a": {"formation": "4-4-2", "players": [], "coach": None}})
+    reg = Registry()
+    rows = match_rows(rec, 1, reg)
+    kid = reg.get("coach", "fotmob", 78656)
+    assert rows["match_coach"] == [(reg.get("match", "fotmob", 900), "h", kid)]
+    assert rows["coach"] == [{"name": "Cosmin Olăroiu", "kid": kid}]
+
+
+def test_db_matches_compact_keeps_the_coach():
+    from db.matches import compact
+    raw = {"general": {"matchTimeUTCDate": "2026-08-20T22:00:00.000Z", "parentLeagueId": 538},
+           "header": {"teams": [{"id": 10, "name": "Al Ain", "score": 2}, {"id": 20, "name": "Al Wahda", "score": 1}]},
+           "content": {"lineup": {"homeTeam": {"formation": "4-3-3", "starters": [{"id": 1, "name": "K", "shirtNumber": "1", "positionId": 11}],
+                                               "coach": {"id": 78656, "name": "Cosmin Olăroiu"}},
+                                  "awayTeam": {"formation": "4-4-2", "starters": [{"id": 2, "name": "S", "shirtNumber": "9", "positionId": 115}]}}}}
+    m = compact(raw, "900")
+    assert m["lineups"]["h"]["coach"] == [78656, "Cosmin Olăroiu"] and "coach" not in m["lineups"]["a"]
