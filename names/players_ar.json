@@ -6280,10 +6280,12 @@
  },
  "170716": {
   "latin": "Al Hajeri Ahmad Mabkhout",
-  "ar": "الهجري أحمد مبخوت",
-  "source": "generated",
+  "ar": "علي مبخوت",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-11-20"
+  "checked": "2026-11-20",
+  "prev": "الهجري أحمد مبخوت",
+  "note": "FotMob names him by his family names (Al Hajeri Ahmad Mabkhout); he is Ali Mabkhout, the Pro League's top scorer (2016/17: 32)"
  },
  "170732": {
   "latin": "Askhat Tagybergen",
