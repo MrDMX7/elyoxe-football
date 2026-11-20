@@ -18,14 +18,16 @@ const coachL = (c, o) => { if (!c) return ""; const href = o.coach && o.coach(c.
 const year = d => (d || "").slice(0, 4);
 const pct = (w, m) => m ? Math.round((100 * w) / m) : 0;
 
-const seasonRich = s => !!(s && s.champion && ((s.table || []).length || (s.top_scorers || []).length || (s.matches || 0) >= 10));
+// a page for a season with a champion (or a note saying why there is none) and something more to show
+const seasonRich = s => !!(s && (s.champion || s.note) && ((s.table || []).length || (s.top_scorers || []).length || (s.matches || 0) >= 10));
 
 function seasonsBody(ed, comp, o) {
   o = o || {};
   const rows = (ed.seasons || []).map(s => {
     const top = (s.top_scorers || []).filter(p => p.rank === 1);
     const season = seasonRich(s) ? `<a href="/c/${comp.key}/s/${slug(s.season)}/">${num(s.season)}</a>` : num(s.season);
-    return `<tr><td>${season}</td><td>${teamL(s.champion, o)}</td><td>${teamL(s.runner_up, o)}</td><td>${top.map(p => `${playerL(p, o)} ${p.value ? `<span class="muted small">(${num(p.value)})</span>` : ""}`).join("، ")}</td></tr>`;
+    const who = s.note && !s.champion ? `<td colspan="2" class="muted">${esc(s.note)}</td>` : `<td>${teamL(s.champion, o)}</td><td>${teamL(s.runner_up, o)}</td>`;
+    return `<tr><td>${season}</td>${who}<td>${top.map(p => `${playerL(p, o)} ${p.value ? `<span class="muted small">(${num(p.value)})</span>` : ""}`).join("، ")}</td></tr>`;
   }).join("");
   return U.grp(`كل المواسم <span class="num">${(ed.seasons || []).length}</span>`,
     `<div class="tblw"><table class="tbl"><thead><tr><th>الموسم</th><th>البطل</th><th>الوصيف</th><th>الهداف</th></tr></thead><tbody>${rows}</tbody></table></div>`) +
@@ -34,10 +36,10 @@ function seasonsBody(ed, comp, o) {
 
 function seasonBody(s, comp, o) {
   o = o || {};
-  const facts = [["البطل", teamL(s.champion, o)], s.runner_up && ["الوصيف", teamL(s.runner_up, o)], s.champion_coach && ["مدرب البطل", coachL(s.champion_coach, o)],
+  const facts = [s.champion ? ["البطل", teamL(s.champion, o)] : s.note && ["الموسم", esc(s.note)], s.runner_up && ["الوصيف", teamL(s.runner_up, o)], s.champion_coach && ["مدرب البطل", coachL(s.champion_coach, o)],
     s.matches && ["المباريات", num(s.matches)]].filter(Boolean);
   const people = (title, list) => (list || []).length ? U.grp(title, `<ol class="lc">${list.map(p => `<li>${playerL(p, o)}${p.value ? ` <span class="muted small">${num(p.value)}</span>` : ""}</li>`).join("")}</ol>`) : "";
-  const table = (s.table || []).length ? U.grp("الترتيب النهائي", `<div class="tblw"><table class="tbl"><thead><tr><th>#</th><th class="tm">الفريق</th><th>لعب</th><th>ف</th><th>ت</th><th>خ</th><th>له</th><th>عليه</th><th>نقاط</th></tr></thead><tbody>${
+  const table = (s.table || []).length ? U.grp(s.note && !s.champion ? "الترتيب لحظة التوقف" : "الترتيب النهائي", `<div class="tblw"><table class="tbl"><thead><tr><th>#</th><th class="tm">الفريق</th><th>لعب</th><th>ف</th><th>ت</th><th>خ</th><th>له</th><th>عليه</th><th>نقاط</th></tr></thead><tbody>${
     s.table.map(r => `<tr><td>${num(r[0])}</td><td>${teamL({ fotmob: r[1], name: r[2] }, o)}</td>${r.slice(3, 9).map(v => `<td>${num(v == null ? "" : v)}</td>`).join("")}<td><b>${num(r[9] == null ? "" : r[9])}</b></td></tr>`).join("")}</tbody></table></div>`) : "";
   return U.grp("", `<ul class="lc">${facts.map(f => `<li><span class="muted">${f[0]}:</span> ${f[1]}</li>`).join("")}</ul>`) + table +
     people("الهدافين", s.top_scorers) + people("أفضل لاعب", s.best_player) + people("أفضل لاعب شاب", s.best_young) + people("أفضل حارس", s.best_goalkeeper) +

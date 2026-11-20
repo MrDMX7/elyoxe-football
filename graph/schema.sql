@@ -4,7 +4,7 @@ CREATE TABLE coach(kid INTEGER PRIMARY KEY, name TEXT, name_ar TEXT, born TEXT, 
 CREATE TABLE referee(rid INTEGER PRIMARY KEY, name TEXT, name_ar TEXT, country TEXT, src TEXT NOT NULL, filled TEXT);
 CREATE TABLE stadium(sid INTEGER PRIMARY KEY, name TEXT, name_ar TEXT, city TEXT, country TEXT, lat REAL, lon REAL, capacity INTEGER, src TEXT NOT NULL, filled TEXT);
 CREATE TABLE competition(cid INTEGER PRIMARY KEY, name TEXT, name_ar TEXT, kind TEXT, scope TEXT, country TEXT, tier INTEGER, src TEXT NOT NULL, filled TEXT);
-CREATE TABLE edition(eid INTEGER PRIMARY KEY, cid INTEGER NOT NULL, season TEXT NOT NULL, start TEXT, end TEXT, src TEXT NOT NULL, filled TEXT);
+CREATE TABLE edition(eid INTEGER PRIMARY KEY, cid INTEGER NOT NULL, season TEXT NOT NULL, start TEXT, end TEXT, status TEXT, note TEXT, src TEXT NOT NULL, filled TEXT);   -- status 'void': ended with no champion (graph/void_seasons.yaml)
 CREATE INDEX edition_cid ON edition(cid, season);
 CREATE TABLE match(mid INTEGER PRIMARY KEY, eid INTEGER, round TEXT, date TEXT, home INTEGER, away INTEGER, hs INTEGER, as_ INTEGER,
   ht_h INTEGER, ht_a INTEGER, et INTEGER, pen_h INTEGER, pen_a INTEGER, status TEXT, sid INTEGER, rid INTEGER, attendance INTEGER, src TEXT NOT NULL, filled TEXT);

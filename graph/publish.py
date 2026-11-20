@@ -211,7 +211,7 @@ def editions(G, out_dir):
     for cid, fid in sorted(fm_c.items(), key=lambda x: x[1]):
         name, name_ar = q("SELECT name, name_ar FROM competition WHERE cid=?", (cid,))[0]
         seasons = []
-        for eid, season in q("SELECT eid, season FROM edition WHERE cid=? ORDER BY season DESC", (cid,)):
+        for eid, season, note in q("SELECT eid, season, note FROM edition WHERE cid=? ORDER BY season DESC", (cid,)):
             hon = defaultdict(list)
             for kind, rank, tid, pid, kid, value in q("SELECT kind, rank, tid, pid, kid, value FROM honour WHERE eid=? ORDER BY kind, rank", (eid,)):
                 hon[kind].append((rank, tid, pid, kid, value))
@@ -219,7 +219,7 @@ def editions(G, out_dir):
             table = [[r, fm_t.get(t), tn.get(t), p, w, d, l, gf, ga, whole(pts)] for r, t, p, w, d, l, gf, ga, pts in
                      q("SELECT rank, tid, played, won, drawn, lost, gf, ga, pts FROM standing WHERE eid=? ORDER BY grp, rank", (eid,))]
             matches = q("SELECT count(*) FROM match WHERE eid=?", (eid,))[0][0]
-            if not hon and not table and not matches:
+            if not hon and not table and not matches and not note:
                 continue
             champ = (hon.get("champion") or [(None, None)])[0][1]
             coach = q("""SELECT x.kid, count(*) n FROM match_coach x JOIN match m ON m.mid=x.mid WHERE m.eid=? AND
@@ -232,7 +232,7 @@ def editions(G, out_dir):
                             **{k: people(k)[:3] for k in ("best_player", "best_young", "best_goalkeeper", "best_local", "top_assist")},
                             "best_coach": [{"kid": k, "name": kn.get(k)} for r, t, p, k, v in hon.get("best_coach", []) if k][:1],
                             "champion_coach": {"kid": coach[0][0], "name": kn.get(coach[0][0])} if coach else None,
-                            "motm": [[fm_p.get(p), pn.get(p), c] for p, c in motm if fm_p.get(p)]})
+                            "motm": [[fm_p.get(p), pn.get(p), c] for p, c in motm if fm_p.get(p)], **({"note": note} if note else {})})
         if seasons:
             _dump(os.path.join(out_dir, "editions", f"{fid}.json"), {"fotmob": fid, "name": name, "name_ar": name_ar, "seasons": seasons})
             n += 1

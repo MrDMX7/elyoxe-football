@@ -61,3 +61,16 @@ test("the site's Arabic names win over the graph's Latin ones", () => {
   assert.match(h, /<a href="\/p\/170716\/">علي مبخوت<\/a>/);
   assert.doesNotMatch(h, /Al Jazira|Ali Mabkhout/);
 });
+
+test("a cancelled season says so in the champion's place", () => {
+  const ed = { seasons: [{ season: "1990/1991", matches: 0, champion: null, runner_up: null, note: "ما انلعب بسبب حرب الخليج", table: [], top_scorers: [] },
+    { season: "2019/2020", matches: 133, champion: null, runner_up: null, note: "انلغى بسبب كورونا بدون بطل", table: [[1, 102119, "شباب الأهلي", 19, 13, 4, 2, 41, 13, 43]], top_scorers: [] }] };
+  const h = H.seasonsBody(ed, COMP, o);
+  assert.match(h, /<td colspan="2" class="muted">ما انلعب بسبب حرب الخليج<\/td>/);
+  assert.equal(H.seasonRich(ed.seasons[0]), false);
+  assert.equal(H.seasonRich(ed.seasons[1]), true);                 // its table up to the stop is worth a page
+  const p = H.seasonBody(ed.seasons[1], COMP, o);
+  assert.match(p, /انلغى بسبب كورونا بدون بطل/);
+  assert.match(p, /الترتيب لحظة التوقف/);
+  assert.doesNotMatch(p, /البطل:/);
+});
