@@ -32,3 +32,11 @@ def test_no_more_than_the_budget_of_search_pages_in_any_quarter_hour():
     assert node("H.wait([1e6 - 5000, 1e6 - 3000, 1e6 - 1000], 1e6, 3, %d)" % q) == q - 5000 + 1000
     # pages older than the window no longer count
     assert node("H.wait([1e6 - %d, 1e6 - 3000, 1e6 - 1000], 1e6, 3, %d)" % (q + 1, q)) == 0
+
+
+def test_the_pages_an_earlier_run_sent_count_against_the_budget(tmp_path):
+    # 2026-11-20: a second run started a minute after the first one ended counted from zero, and X stopped it at its 31st page
+    f = tmp_path / "pages.json"
+    f.write_text(json.dumps([1e9 - 1000, 1e9 - 20 * 60_000]), encoding="utf-8")
+    assert node(f"H.loadStamps({json.dumps(str(f).replace(chr(92), '/'))}, 1e9)") == [1e9 - 1000]
+    assert node(f"H.loadStamps({json.dumps(str(tmp_path / 'none.json').replace(chr(92), '/'))}, 1e9)") == []

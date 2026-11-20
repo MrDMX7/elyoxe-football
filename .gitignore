@@ -21,4 +21,5 @@ news/.cache/
 docs/AUDIT-DATA-*.md
 news/.x-cooldown.json
 news/.x-history.json
-news/.backfill-x.log
+news/.x-search-pages.json
+news/.backfill-x*.log
