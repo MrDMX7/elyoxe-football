@@ -105,6 +105,31 @@ class Graph:
         self.c.execute("UPDATE OR IGNORE xref SET tifo_id=? WHERE type=? AND tifo_id=?", (keep, t, drop))
         self.c.execute("DELETE FROM xref WHERE type=? AND tifo_id=?", (t, drop))
 
+    def remap_many(self, t, pairs):
+        """remap for many (drop, keep) pairs at once: each referencing table is read once for all of them (a loop of remap
+        reads the unindexed ones, event.pid2 and transfer among them, once a pair). No keep may itself be a drop."""
+        pairs = list(pairs)
+        if not pairs:
+            return
+        k = KEYS[t]
+        for drop, keep in pairs:
+            row = self.c.execute(f"SELECT * FROM {t} WHERE {k}=?", (drop,)).fetchone()
+            if row:
+                r = dict(zip(self.cols[t], row))
+                src = r.pop("src")
+                r.pop("filled", None)
+                r[k] = keep
+                self.put(t, r, src)
+        self.c.execute("CREATE TEMP TABLE remap_m(d INTEGER PRIMARY KEY, k INTEGER NOT NULL)")
+        self.c.executemany("INSERT INTO remap_m VALUES(?, ?)", pairs)
+        self.c.execute(f"DELETE FROM {t} WHERE {k} IN (SELECT d FROM remap_m)")
+        for table, col in REFS.get(t, ()):
+            self.c.execute(f"UPDATE OR IGNORE {table} SET {col}=(SELECT k FROM remap_m WHERE d={table}.{col}) WHERE {col} IN (SELECT d FROM remap_m)")
+            self.c.execute(f"DELETE FROM {table} WHERE {col} IN (SELECT d FROM remap_m)")
+        self.c.execute("UPDATE OR IGNORE xref SET tifo_id=(SELECT k FROM remap_m WHERE d=xref.tifo_id) WHERE type=? AND tifo_id IN (SELECT d FROM remap_m)", (t,))
+        self.c.execute("DELETE FROM xref WHERE type=? AND tifo_id IN (SELECT d FROM remap_m)", (t,))
+        self.c.execute("DROP TABLE remap_m")
+
     def close(self):
         self.c.commit()
         self.c.close()
