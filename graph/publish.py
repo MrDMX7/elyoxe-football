@@ -59,10 +59,11 @@ def awards(G, out_dir):
             if not who:
                 continue
             years[season].append({"rank": rank, "name": who[0], "name_ar": who[1], "fotmob": fm_player.get(pid) if pid else None,
+                                  **({"tifo": pid} if pid and not fm_player.get(pid) and not kid else {}),
                                   "team": (tname.get(tid) or (None, None))[1] or (tname.get(tid) or (None, None))[0] if (tid and pid) else None,
                                   "value": value})
-            if pid and fm_player.get(pid):
-                players[str(fm_player[pid])].append([key, season, "winner", rank, None])
+            if pid and not kid:                        # a player FotMob does not know is k<Tifo id> (his page: /p/k<id>/)
+                players[str(fm_player[pid]) if fm_player.get(pid) else f"k{pid}"].append([key, season, "winner", rank, None])
         if not years:
             continue
         wins = Counter()
@@ -78,8 +79,7 @@ def awards(G, out_dir):
                       "top": most[0] if most else None})
     for pid, season, kind, rank, cid in q("""SELECT h.pid, e.season, h.kind, h.rank, e.cid FROM honour h JOIN edition e ON e.eid=h.eid
                                              JOIN competition c ON c.cid=e.cid WHERE h.pid IS NOT NULL AND coalesce(c.kind,'') <> 'award'"""):
-        if fm_player.get(pid):
-            players[str(fm_player[pid])].append([None, season, kind, rank, fm_comp.get(cid)])
+        players[str(fm_player[pid]) if fm_player.get(pid) else f"k{pid}"].append([None, season, kind, rank, fm_comp.get(cid)])
     _dump(os.path.join(d, "index.json"), {"awards": sorted(index, key=lambda a: (-a["years"], a["key"]))})
     _dump(os.path.join(d, "players.json"), {k: sorted(v, key=lambda x: (x[1], x[2]), reverse=True) for k, v in sorted(players.items())})
     return {"awards": len(index), "players": len(players)}
@@ -226,7 +226,8 @@ def editions(G, out_dir):
                          ((x.side='h' AND m.home=?) OR (x.side='a' AND m.away=?)) GROUP BY x.kid ORDER BY n DESC LIMIT 1""", (eid, champ, champ)) if champ else []
             motm = q("""SELECT w.pid, count(*) n FROM match_award w JOIN match m ON m.mid=w.mid WHERE m.eid=? AND w.kind='motm'
                         GROUP BY w.pid ORDER BY n DESC, w.pid LIMIT 5""", (eid,))
-            people = lambda kind: [{"rank": r, "fotmob": fm_p.get(p), "name": pn.get(p), "value": v} for r, t, p, k, v in hon.get(kind, []) if p]
+            people = lambda kind: [{"rank": r, "fotmob": fm_p.get(p), **({} if fm_p.get(p) else {"tifo": p}), "name": pn.get(p), "value": v}
+                                   for r, t, p, k, v in hon.get(kind, []) if p]
             seasons.append({"season": season, "matches": matches, "champion": team(champ), "runner_up": team((hon.get("runner_up") or [(None, None)])[0][1]),
                             "table": table, "top_scorers": people("top_scorer")[:10],
                             **{k: people(k)[:3] for k in ("best_player", "best_young", "best_goalkeeper", "best_local", "top_assist")},
@@ -237,3 +238,35 @@ def editions(G, out_dir):
             _dump(os.path.join(out_dir, "editions", f"{fid}.json"), {"fotmob": fid, "name": name, "name_ar": name_ar, "seasons": seasons})
             n += 1
     return {"competitions": n}
+
+
+def people(G, out_dir, min_wc=3):
+    """people/index.json: the players the site has no FotMob page for whose record is worth one (graph phase 7, the old
+    players): a title or an award won (rank 1), or min_wc World Cup matches. Only what the archive holds in full: the Arabic
+    name, birth and death, the national team, and each World Cup with its matches and goals (Fjelstul is complete). Their
+    honours are awards/players.json's k<Tifo id> entries; never a career total (internationals before FotMob are partial)."""
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    fm = {a for (a,) in q("SELECT tifo_id FROM xref WHERE type='player' AND source='fotmob'")}
+    wc_cid = {a for (a,) in q("SELECT tifo_id FROM xref WHERE type='competition' AND source='fotmob' AND source_id IN ('77', 77)")}
+    wc = defaultdict(lambda: defaultdict(lambda: [0, 0]))
+    nat = {}
+    for pid, season, goals, tname in q(f"""SELECT a.pid, e.season, coalesce(a.goals,0), coalesce(t.name_ar, t.name) FROM appearance a
+                                         JOIN match m ON m.mid=a.mid JOIN edition e ON e.eid=m.eid JOIN team t ON t.tid=a.tid
+                                         WHERE a.played=1 AND e.cid IN ({",".join(map(str, wc_cid)) or "NULL"})"""):
+        wc[pid][season][0] += 1
+        wc[pid][season][1] += goals
+        nat[pid] = tname
+    won = {p for (p,) in q("SELECT DISTINCT pid FROM honour WHERE rank=1 AND pid IS NOT NULL")}
+    keep = {p for p in won | {p for p, ys in wc.items() if sum(v[0] for v in ys.values()) >= min_wc} if p not in fm}
+    for pid, tname in q("""SELECT a.pid, coalesce(t.name_ar, t.name) FROM appearance a JOIN team t ON t.tid=a.tid
+                           WHERE t.kind='national' AND a.played=1 GROUP BY a.pid, t.tid ORDER BY count(*) DESC"""):     # his most-played side first
+        if pid in keep and pid not in nat:
+            nat[pid] = tname
+    out = {}
+    for pid, name, name_ar, born, died in q("SELECT pid, name, name_ar, born, died FROM player"):
+        if pid in keep:
+            out[f"k{pid}"] = {"name": name, "name_ar": name_ar, "born": born, "died": died, "nat": nat.get(pid),
+                              "wc": [[y, v[0], v[1]] for y, v in sorted(wc.get(pid, {}).items(), reverse=True)]}
+    _dump(os.path.join(out_dir, "people", "index.json"), dict(sorted(out.items())))
+    return {"people": len(out)}
+

@@ -37,11 +37,13 @@ def test_award_files(tmp_path):
     assert a["top"] == ["ليونيل ميسي", 3, 30981]
     d = json.load(open(tmp_path / "o" / "awards" / "ballon-dor.json", encoding="utf-8"))
     assert d["years"][0]["season"] == "2011" and d["years"][0]["podium"][0]["fotmob"] == 30981
-    assert d["years"][-1]["podium"][0] == {"rank": 1, "name": "Stanley Matthews", "name_ar": None, "fotmob": None, "team": None, "value": "47"}
+    old = d["years"][-1]["podium"][0]
+    assert old == {"rank": 1, "name": "Stanley Matthews", "name_ar": None, "fotmob": None, "tifo": old["tifo"], "team": None, "value": "47"}
     assert d["most"][0] == ["ليونيل ميسي", 3, 30981]
     pl = json.load(open(tmp_path / "o" / "awards" / "players.json", encoding="utf-8"))
     assert ["ballon-dor", "2011", "winner", 1, None] in pl["30981"]                  # an award: its key
     assert [None, "2012/2013", "top_scorer", 1, 538] in pl["30981"]                   # an edition honour: the FotMob competition
+    assert pl[f"k{old['tifo']}"] == [["ballon-dor", "1956", "winner", 1, None]]          # a player FotMob does not know: k<Tifo id>
     assert out["awards"] == 1
 
 
@@ -76,6 +78,9 @@ def test_edition_files_for_season_pages(tmp_path):
     G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'champion', 1, ?, 's365')", (e, jaz))
     G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'runner_up', 1, ?, 'table')", (e, ain))
     G.c.execute("insert into honour(eid, kind, rank, pid, value, src) values(?, 'top_scorer', 1, ?, '33', 'tifo')", (e, mab))
+    zb = reg.mint("player", "rsssf", "Zoheir Bakhit")
+    G.put("player", {"pid": zb, "name": "Zoheir Bakhit"}, "rsssf")
+    G.c.execute("insert into honour(eid, kind, rank, pid, value, src) values(?, 'top_scorer', 2, ?, '20', 'rsssf')", (e, zb))
     G.c.execute("insert into standing values(?, '', 1, ?, 26, 22, 2, 2, 70, 20, 68.0, 's365')", (e, jaz))
     m = reg.mint("match", "fotmob", 1)
     G.put("match", {"mid": m, "eid": e, "date": "2017-01-01", "home": jaz, "away": ain, "hs": 2, "as_": 0}, "fotmob")
@@ -89,6 +94,28 @@ def test_edition_files_for_season_pages(tmp_path):
     s = d["seasons"][0]
     assert (s["season"], s["champion"]["fotmob"], s["champion"]["name"], s["runner_up"]["name"]) == ("2016/2017", 102101, "الجزيرة", "العين")
     assert s["top_scorers"][0] == {"rank": 1, "fotmob": 170716, "name": "علي مبخوت", "value": "33"}
+    assert s["top_scorers"][1] == {"rank": 2, "fotmob": None, "tifo": zb, "name": "Zoheir Bakhit", "value": "20"}   # links to /p/k<id>/
     assert s["table"][0] == [1, 102101, "الجزيرة", 26, 22, 2, 2, 70, 20, 68] and type(s["table"][0][9]) is int and s["motm"][0] == [170716, "علي مبخوت", 1]
     assert s["champion_coach"] == {"kid": k, "name": "Henk ten Cate"} and s["matches"] == 1
     assert out["competitions"] == 1
+
+
+def test_people_files_for_the_players_the_site_has_no_page_for(tmp_path):
+    G, messi = graph(tmp_path)
+    old = G.c.execute("select pid from player where name='Stanley Matthews'").fetchone()[0]
+    G.c.execute("update player set born='1915-02-01', name_ar='ستانلي ماثيوز' where pid=?", (old,))
+    eng = 500
+    G.put("team", {"tid": eng, "name": "England", "name_ar": "إنجلترا", "kind": "national"}, "fjelstul")
+    wc = 600
+    G.put("competition", {"cid": wc, "name": "World Cup", "name_ar": "كأس العالم"}, "fotmob")
+    G.xref("competition", wc, "fotmob", 77, "fotmob-native")
+    for i, y in enumerate(("1950", "1954", "1954")):
+        e = 700 + int(y)
+        G.c.execute("insert or ignore into edition(eid, cid, season, src) values(?, ?, ?, 'fjelstul')", (e, wc, y))
+        G.put("match", {"mid": 800 + i, "eid": e, "date": f"{y}-06-1{i}", "home": eng, "away": 1, "hs": 1, "as_": 0}, "fjelstul")
+        G.many("appearance", [{"mid": 800 + i, "pid": old, "tid": eng, "played": 1, "goals": 1 if i == 2 else 0}], "fjelstul")
+    out = publish.people(G, str(tmp_path / "o"))
+    ix = json.load(open(tmp_path / "o" / "people" / "index.json", encoding="utf-8"))
+    assert ix == {f"k{old}": {"name": "Stanley Matthews", "name_ar": "ستانلي ماثيوز", "born": "1915-02-01", "died": None,
+                              "nat": "إنجلترا", "wc": [["1954", 2, 1], ["1950", 1, 0]]}}
+    assert out == {"people": 1}                                       # Messi has his FotMob page already

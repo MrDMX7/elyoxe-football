@@ -13,7 +13,11 @@ const num = v => `<span class="num">${esc(v)}</span>`;
 const slug = s => String(s).replace(/\//g, "-");
 const link = (href, ok, text) => ok ? `<a href="${href}">${text}</a>` : text;
 const teamL = (t, o) => t ? link(`/t/${t.fotmob}/`, t.fotmob && o.team && o.team(t.fotmob), nm((t.fotmob && o.teamName && o.teamName(t.fotmob)) || t.name)) : "—";
-const playerL = (p, o) => link(`/p/${p.fotmob}/`, p.fotmob && o.player && o.player(p.fotmob), nm((p.fotmob && o.playerName && o.playerName(p.fotmob)) || p.name));
+const playerL = (p, o) => {
+  const n = nm((p.fotmob && o.playerName && o.playerName(p.fotmob)) || p.name);
+  if (p.fotmob) return link(`/p/${p.fotmob}/`, o.player && o.player(p.fotmob), n);
+  return link(`/p/k${p.tifo}/`, p.tifo && o.person && o.person(p.tifo), n);         // an old player: his archive page
+};
 const coachL = (c, o) => { if (!c) return ""; const href = o.coach && o.coach(c.kid); return link(href, !!href, nm((o.coachName && o.coachName(c.kid)) || c.name_ar || c.name)); };
 const year = d => (d || "").slice(0, 4);
 const pct = (w, m) => m ? Math.round((100 * w) / m) : 0;

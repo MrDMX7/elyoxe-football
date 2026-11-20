@@ -18,7 +18,9 @@ const indexable = a => (a.years || 0) >= 5;
 
 function who(p, o) {
   const n = nm(p.name_ar, p.name);
-  return p.fotmob && o.hasPage && o.hasPage(p.fotmob) ? `<a href="/p/${p.fotmob}/">${p.name_ar && AR.test(p.name_ar) ? esc(p.name_ar) : n}</a>` : n;
+  const shown = p.name_ar && AR.test(p.name_ar) ? esc(p.name_ar) : n;
+  if (p.fotmob && o.hasPage && o.hasPage(p.fotmob)) return `<a href="/p/${p.fotmob}/">${shown}</a>`;
+  return p.tifo && o.person && o.person(p.tifo) ? `<a href="/p/k${p.tifo}/">${shown}</a>` : n;      // an old player: his archive page
 }
 
 function indexBody(ix, o) {

@@ -43,3 +43,9 @@ test("small awards are not indexed", () => {
   assert.equal(AW.indexable(IX.awards[0]), true);
   assert.equal(AW.indexable(IX.awards[1]), false);
 });
+
+test("a winner FotMob does not know links to his archive page", () => {
+  const d = { key: "ballon-dor", years: [{ season: "1956", podium: [{ rank: 1, name: "Stanley Matthews", name_ar: "ستانلي ماثيوز", fotmob: null, tifo: 7, team: null, value: "47" }] }], most: [] };
+  assert.match(AW.awardBody(d, { hasPage: () => false, person: id => id === 7 }), /<a href="\/p\/k7\/">ستانلي ماثيوز<\/a>/);
+  assert.doesNotMatch(AW.awardBody(d, { hasPage: () => false, person: () => false }), /\/p\/k7\//);
+});

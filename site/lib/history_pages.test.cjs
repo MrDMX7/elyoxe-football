@@ -74,3 +74,9 @@ test("a cancelled season says so in the champion's place", () => {
   assert.match(p, /الترتيب لحظة التوقف/);
   assert.doesNotMatch(p, /البطل:/);
 });
+
+test("a scorer FotMob does not know links to his archive page", () => {
+  const ed = { seasons: [{ season: "1991/1992", champion: { fotmob: 102111, name: "الوصل" }, runner_up: null, table: [], matches: 0,
+    top_scorers: [{ rank: 1, fotmob: null, tifo: 42, name: "زهير بخيت", value: "22" }] }] };
+  assert.match(H.seasonsBody(ed, COMP, Object.assign({}, o, { person: id => id === 42 })), /<a href="\/p\/k42\/">زهير بخيت<\/a>/);
+});

@@ -448,6 +448,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // «الجوائز» (Tifo graph phase 2): v1/awards/* from graph/publish.py
   const AWD = require("./lib/awards.cjs"), AWI = (await get("awards/index.json")) || { awards:[] }, AWP = (await get("awards/players.json")) || {},
     AWK = Object.fromEntries((AWI.awards || []).map(a => [a.key, a]));
+  // the old players FotMob does not know (graph phase 7): /p/k<Tifo id>/ from v1/people/index.json, their honours in AWP["k<id>"]
+  const PPL = (await get("people/index.json", 2)) || {}, person = id => !!PPL["k" + id];
   // «رجل المباراة» (Tifo graph phase 3): v1/motm/* from graph/publish.py
   const MOTM = require("./lib/motm_pages.cjs"), MOI = await get("motm/index.json"), MOP = (await get("motm/players.json")) || {};
   // phase 6, at the whistle: every match finished since the graph's nightly build joins the man-of-the-match counts (lib/whistle.cjs)
@@ -728,7 +730,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   };
   // ---- 5. teams
   const tlist = [...teamIds], teamPages = new Set(), playerPages = new Set();
-  const hpo = { team:id => teamPages.has(+id), player:id => playerPages.has(String(id)), coach:coachHref, coachName:coachAr2,
+  const hpo = { team:id => teamPages.has(+id), player:id => playerPages.has(String(id)), person, coach:coachHref, coachName:coachAr2,
     teamName:id => (teamsJson.teams[id] || {}).name_ar || TAR[id] || null, playerName:id => nameOf(id) || null };
   const AWC = Object.fromEntries((comps || []).map(c => [c.id, c]));
   const MOB = id => MOTM.playerBlock(MOP[id], { hasPage:x => playerPages.has(String(x)), comp:c => (AWC[c] ? { name_ar:AWC[c].name_ar, href:`/c/${AWC[c].key}/` } : null),
@@ -1262,7 +1264,7 @@ ${items}
     await pool(AWI.awards, 8, async a => {
       const d = await get(`awards/${a.key}.json`, 1); if (!d || !(d.years || []).length) return;
       const nmA = a.name_ar || a.name, last = d.years[0], w = (last.podium || []).find(p => p.rank === 1);
-      write(`awards/${a.key}/index.html`, page({ v5:{ nav:awNav(esc(nmA), "/awards/", "الجوائز"), body:`<div class="lt"><h1>${AWD.awardName(a)}</h1><p>كل الفائزين من <span class="num">${esc(a.first)}</span> لين <span class="num">${esc(a.last)}</span>${w ? `، وآخرهم ${esc(w.name_ar || w.name)}` : ""}.</p></div>` + AWD.awardBody(d, { hasPage }) + U.foot(), tab:"more", sheets:"", data:{} },
+      write(`awards/${a.key}/index.html`, page({ v5:{ nav:awNav(esc(nmA), "/awards/", "الجوائز"), body:`<div class="lt"><h1>${AWD.awardName(a)}</h1><p>كل الفائزين من <span class="num">${esc(a.first)}</span> لين <span class="num">${esc(a.last)}</span>${w ? `، وآخرهم ${esc(w.name_ar || w.name)}` : ""}.</p></div>` + AWD.awardBody(d, { hasPage, person }) + U.foot(), tab:"more", sheets:"", data:{} },
         path:`/awards/${a.key}/`, page:"ref", noindex:!AWD.indexable(a), title:`${nmA}: كل الفائزين من ${a.first} إلى ${a.last} | تيفو`,
         desc:`كل الفائزين بـ${nmA} عبر التاريخ (${a.years} نسخة)${w ? `، آخرهم ${w.name_ar || w.name} في ${last.season}` : ""}.`, ld:bcLd([["الجوائز", "/awards/"], [nmA, `/awards/${a.key}/`]]) }));
       if (AWD.indexable(a)) urls.push(`/awards/${a.key}/`);
@@ -1281,6 +1283,11 @@ ${items}
         path:sp, page:"ref", noindex:!okS, title:`${c.name_ar} ${s.season}: البطل والترتيب والهدافين | تيفو`, desc:`موسم ${s.season} من ${c.name_ar}${chN ? `: البطل ${chN}` : ""}، والترتيب النهائي والهدافين وأفضل اللاعبين.`,
         ld:bcLd([[c.name_ar, `/c/${c.key}/`], ["كل المواسم", arch], [s.season, sp]]) }));
       if (okS) urls.push(sp); } }
+  { const PP = require("./lib/people_pages.cjs"), compK = c => (AWC[c] ? { name_ar:AWC[c].name_ar, href:`/c/${AWC[c].key}/` } : null);
+    for (const [k, p] of Object.entries(PPL)){ const hon = AWP[k] || [], pth = `/p/${k}/`, nmP = PP.nameOf(p), ok = PP.indexable(p, hon);
+      write(`p/${k}/index.html`, page({ v5:{ nav:{ back:"/awards/", backLabel:"الجوائز", title:esc(nmP), trail:"" }, body:`<div class="lt"><h1>${/[؀-ۿ]/.test(nmP) ? esc(nmP) : `<span class="lat">${esc(nmP)}</span>`}</h1></div>` + PP.personBody(p, hon, { award:x => AWK[x], comp:compK }) + U.foot(), tab:"more", sheets:"", data:{} },
+        path:pth, page:"ref", noindex:!ok, title:PP.title(p), desc:`${nmP}: ألقابه وجوائزه${(p.wc || []).length ? " ومشاركاته في كأس العالم" : ""} من أرشيف تيفو.`, ld:bcLd([[nmP, pth]]) }));
+      if (ok) urls.push(pth); } }
   refPage("/legends/", "أساطير الكورة الإماراتية | تيفو", "الطلياني وإسماعيل مطر وعمر عبدالرحمن وعلي مبخوت وغيرهم: مسيرتهم وأرقامهم، مع المصادر.", "أساطير الكورة الإماراتية", "مسيرة وأرقام أبرز لاعبين في تاريخ الكورة الإماراتية، وكل معلومة معها مصدرها.", S.legends(legRaw, hl, id => playerPages.has(String(id))) + '<p class="tools"><a class="btn" href="/memorable/">مباريات ما تنتسى</a></p>');   // W2.8: memorable matches sit under الأساطير
   refPage("/memorable/", "مباريات ما تنتسى في تاريخ الكورة الإماراتية | تيفو", "من تصفيات 1990 لين نهائي آسيا 2024: المباريات اللي صنعت تاريخ الكورة الإماراتية.", "مباريات ما تنتسى", "مباريات صنعت تاريخ الكورة الإماراتية، من الأحدث للأقدم.", S.memorable(memRaw, hm));
   refPage("/laws/", "قانون الكورة بالإماراتي: التسلل، اللمسة، البلنتي، الفار | تيفو", "ليش ألغى الحكم الهدف؟ شرح قوانين الكورة الرسمية (IFAB 2026/27) بالإماراتي: التسلل، لمسة اليد، البلنتي، الفار، والوقت بدل الضايع.", "قانون الكورة بالإماراتي", "شرح بسيط لقوانين الكورة من النص الرسمي لـIFAB (نسخة 2026/27)، وتحت كل شرح الجملة الرسمية نفسها.", S.laws(lawRaw, hw));
