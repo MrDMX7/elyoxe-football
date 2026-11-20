@@ -153,6 +153,8 @@ HL_WORDS = phrases([
     "resumen y goles", "goles del partido", "sintesi", "maxi sintesi", "résumé", "resume du match", "buts du match",
     "zusammenfassung", "alle tore", "melhores momentos", "gols da partida", "resumo", "samenvatting",
     "ملخص", "ملخص المباراة", "أهداف مباراة", "أهداف المباراة", "ملخص وأهداف", "جميع الأهداف", "أهداف اللقاء", "ملخص اللقاء"])
+# Thmanyah: «… شاهد أهداف المواجهة كاملة» is the match's goals; «أول أهداف المواجهة» one of them (Text.hl)
+HL_MATCH_GOALS = phrases(["أهداف المواجهة"])
 SUMMARY_WORDS = phrases(["highlights", "highlight", "recap", "resumen", "sintesi", "résumé", "zusammenfassung", "melhores momentos",
                          "resumo", "samenvatting", "ملخص"])
 # a goal, or a shot the title says went in (language-specific words only for that channel's language)
@@ -165,8 +167,12 @@ GOAL_WORDS = phrases([
     "ركلة جزاء", "ركلة حرة", "مقصية", "يهز الشباك", "هز الشباك", "هدف التعادل", "هدف الفوز"])
 # one of a side's goals, named by its number: «ثاني أهداف الزعيم» is the second goal, «يفتتح أهداف الزعيم» the first (Al Ain's own
 # X clips, 2026-11-19); «أهداف» there is not a clip of several goals
-ONE_OF_GOALS = {1: ["أول أهداف", "يفتتح أهداف", "افتتح أهداف", "يفتتح التسجيل", "افتتح التسجيل", "افتتاح التسجيل"],
-                2: ["ثاني أهداف"], 3: ["ثالث أهداف"], 4: ["رابع أهداف"], 5: ["خامس أهداف"]}
+ONE_OF_GOALS = {1: ["أول أهداف", "يفتتح أهداف", "افتتح أهداف", "يفتتح التسجيل", "افتتح التسجيل", "افتتاح التسجيل", "أول الأهداف"],
+                2: ["ثاني أهداف", "ثاني الأهداف"], 3: ["ثالث أهداف", "ثالث الأهداف"], 4: ["رابع أهداف", "رابع الأهداف"],
+                5: ["خامس أهداف", "خامس الأهداف"]}
+# «كلباء يدرك التعادل عن طريقه تيتيه من علامة الجزاء» (Abu Dhabi Sports 2026-11-07) carries no «هدف»
+GOAL_WORDS += phrases(["يدرك التعادل", "أدرك التعادل", "يعادل النتيجة", "عادل النتيجة", "يقلص الفارق", "قلص الفارق",
+                       "من علامة الجزاء"])
 GOAL_WORDS += phrases([w for ws in ONE_OF_GOALS.values() for w in ws])
 GOAL_WORDS_LANG = {"es": phrases(["anota", "marca", "tanto", "penalti", "penal", "cabezazo", "remate"]),
                    "pt": phrases(["marca", "golaço", "pênalti"]),
@@ -177,7 +183,9 @@ PLURAL_GOALS = phrases(["goals", "gols", "goles", "buts", "tore", "أهداف", 
                         "hat trick", "hattrick", "brace", "twice", "double", "doblete", "doppietta"])
 MANY_GOALS = phrases(["brace", "twice", "hat trick", "hattrick", "both goals", "doblete", "doppietta", "doublé", "هدفين", "ثنائية",
                       "هاتريك", "ثلاثية"])
-PEN_WORDS = phrases(["penalty", "penalti", "penal", "pen", "spot kick", "rigore", "elfmeter", "pénalty", "ركلة جزاء", "بلنتي", "جزاء"])
+# («منطقة الجزاء» is the penalty area: «الجزاء» alone is no penalty)
+PEN_WORDS = phrases(["penalty", "penalti", "penal", "pen", "spot kick", "rigore", "elfmeter", "pénalty", "ركلة جزاء", "بلنتي", "جزاء",
+                     "علامة الجزاء", "نقطة الجزاء", "ركلة الجزاء"])
 OWN_WORDS = phrases(["own goal", "autogol", "autogoal", "autorete", "eigentor", "csc", "contre son camp", "هدف عكسي", "عكسي",
                      "في مرماه", "بالخطأ"])
 FK_WORDS = phrases(["free kick", "freekick", "ركلة حرة", "tiro libre", "punizione", "coup franc", "freistoss"])
@@ -188,7 +196,9 @@ ORD_WORDS = {1: phrases(["الهدف الأول", "هدف أول", "first goal",
              2: phrases(["الهدف الثاني", "second goal", "segundo gol", "secondo gol", "deuxième but", "يضاعف النتيجة", "ضاعف النتيجة"]),
              3: phrases(["الهدف الثالث", "third goal", "tercer gol", "terzo gol", "troisième but"]),
              4: phrases(["الهدف الرابع", "fourth goal", "cuarto gol", "quarto gol"]),
-             5: phrases(["الهدف الخامس", "fifth goal", "quinto gol"])}
+             5: phrases(["الهدف الخامس", "fifth goal", "quinto gol"]),
+             6: phrases(["الهدف السادس"]), 7: phrases(["الهدف السابع"]), 8: phrases(["الهدف الثامن"]), 9: phrases(["الهدف التاسع"]),
+             10: phrases(["الهدف العاشر"])}
 for _n, _ws in ONE_OF_GOALS.items():
     ORD_WORDS[_n] += phrases(_ws)
 ONE_OF = [p for ws in ONE_OF_GOALS.values() for p in phrases(ws)]
@@ -197,16 +207,25 @@ ONE_OF = [p for ws in ONE_OF_GOALS.values() for p in phrases(ws)]
 # equaliser's, «الهدف الدولي الأول» the player's own)
 GOAL_TOK = {toks(w)[0] for w in ["هدف", "الهدف", "بهدف", "هدفا"]}
 ORD_TOK = {toks(w)[0]: n for n, ws in {1: ["الأول"], 2: ["الثاني", "ثاني", "ثان"], 3: ["الثالث", "ثالث"], 4: ["الرابع", "رابع"],
-                                        5: ["الخامس", "خامس"]}.items() for w in ws}
+                                        5: ["الخامس", "خامس"], 6: ["السادس", "سادس"], 7: ["السابع", "سابع"],
+                                        8: ["الثامن", "ثامن"], 9: ["التاسع", "تاسع"], 10: ["العاشر", "عاشر"]}.items() for w in ws}
 # «لا يكتفي بهدف واحد ويسجل الثاني له والثالث لفريقه» (Thmanyah, Al-Bulaihi 2026-10-22) is his second and his team's third: a verb
 # or «واحد» ends the look too
 BREAK_ORD = {t for w in ["في", "من", "خلال", "الشوط", "شوط", "الدقيقة", "دقيقة", "الجولة", "جولة", "الوقت", "مع", "على", "عن",
-                         "بعد", "قبل", "التعادل", "الفوز", "له", "الدولي", "الشخصي", "الاحترافي", "الموسم", "واحد", "يسجل", "سجل",
+                         "بعد", "قبل", "التعادل", "الفوز", "له", "الدولي", "الشخصي", "الاحترافي", "الموسم", "واحد", "يسجل", "سجل", "تمنح", "يمنح", "منح",
                          "يحرز", "أحرز", "يضيف", "أضاف", "يكتفي", "يصنع"] for t in toks(w)}
+
+
+SCORE_VERB = {toks(w)[0] for w in ["يسجل", "سجل", "يحرز", "أحرز", "يضيف", "أضاف", "يقتنص"]}
 
 
 def goal_number(tt):
     for i, t in enumerate(tt):
+        # «أغوديلو يسجل الثالث للنصر والثاني له» (Abu Dhabi Sports 2026-11-08): the side's number right after the verb, never
+        # the scorer's own («الثاني له»)
+        if (t in SCORE_VERB or (t[:1] == "و" and t[1:] in SCORE_VERB)) and i + 1 < len(tt) and tt[i + 1] in ORD_TOK \
+                and (i + 2 >= len(tt) or tt[i + 2] != "له"):
+            return ORD_TOK[tt[i + 1]]
         if t in GOAL_TOK:
             for u in tt[i + 1:i + 4]:
                 if u in ORD_TOK:
@@ -227,7 +246,7 @@ NEG_ALWAYS = phrases([
     "entrenamiento", "entrainement", "allenamento", "تدريب", "تدريبات", "التدريبات", "behind the scenes", "كواليس", "inside",
     "tunnel", "all access", "vlog", "unseen", "efootball", "pes", "simulation", "gameplay", "prediction", "predictions",
     "توقعات", "توقع", "pronostico", "podcast", "بودكاست", "برنامج", "الاستوديو التحليلي", "studio", "استديو", "استوديو", "محلل", "يشرح", "episode", "حلقة", "الحلقة",
-    "analysis", "تحليل", "brawl", "fight", "scuffle", "عراك", "شجار", "fans", "جماهير", "الجماهير", "المدرجات", "trailer",
+    "analysis", "تحليل", "ردة فعل", "يشيد", "بحثا عن", "يبحث عن", "تبحث عن", "brawl", "fight", "scuffle", "عراك", "شجار", "fans", "جماهير", "الجماهير", "المدرجات", "trailer",
     "promo", "tickets", "تذاكر", "kit", "جولة خاصة", "تغطية خاصة",
     # another sport between the same two countries (a broadcaster's channel carries them all)
     "volleyball", "voleibol", "basketball", "baloncesto", "basket", "handball", "balonmano", "tennis", "tenis", "futsal", "rugby",
@@ -263,7 +282,7 @@ NEG_GOAL = phrases([
     "celebrando", "celebra", "festejo", "festejos", "festeja", "festeggia", "festeggiamenti", "célébration", "comemora",
     "comemoração", "jubel", "يحتفل", "احتفالية",
     # «… لكن حكم اللقاء يُلغيه بداعي التسلل» (Thmanyah 2026-10-24): the word with its article, and the referee's verb
-    "التسلل", "يلغي", "يلغيه",
+    "التسلل", "يلغي", "يلغيه", "احتفالا",
     # «كاراسكو عن تغريدة نادي الشباب أثناء تنفيذه لـ ركلة حرة نتج عنها هدف ثاني للشباب» (Thmanyah 2026-11-01): him on a tweet
     "تغريدة", "تغريدته",
     "goal line", "chance", "chances", "فرصة", "almost", "nearly", "so close", "close call", "denied", "no goal", "not a goal", "كاد",
@@ -319,7 +338,11 @@ def word_result(raw):
 
 # Dubai Sports' score after the goal, a hashtag and a number per side on two lines: «#الوصل 2\n#حتا 0» (2026-11-19). Not a
 # keycap («#أبوظبي_الرياضية 1⃣» is Abu Dhabi Sports' channel number)
-TAG_SCORE = re.compile(r"#[^\s#]+[ \t]+(\d{1,2})(?![\d⃣])[ \t]*\n\s*#[^\s#]+[ \t]+(\d{1,2})(?![\d⃣])")
+TAG_SCORE = re.compile(r"#[^\s#:]+:?[ \t]+(\d{1,2})(?![\d⃣])[ \t]*\n?\s*#[^\s#:]+:?[ \t]+(\d{1,2})(?![\d⃣])")
+SAVED = re.compile(r"لكن\s+(?:\S+\s+){0,4}[وف]?(?:يتصدى|تصدى|يتصدي|تصدي)")
+DENIED = re.compile(r"(?<!\S)[وف]?(?:يحرم|تحرم|حرم|يمنع|تمنع|منع)\S*\s+(?:\S+\s+){0,3}من\s+(?:تسجيل|هدف|الهدف)")
+# keycap digits («#النصر: 1⃣», «الوحدة 3️⃣✖️0️⃣ خورفكان», Dubai and Sharjah Sports) are digits, «✖» a score's cross
+KEYCAP = re.compile("(\\d)️?⃣")
 SEASON = re.compile(r"(?<!\d)(20\d\d)\s*[/-]\s*((?:20)?\d\d)(?!\d)|(?<![\d/])(\d\d)/(\d\d)(?![\d/])")
 YEAR = re.compile(r"(?<![\d/.-])(19\d\d|20\d\d)(?![\d/.-])")
 DATE = re.compile(r"(?<!\d)(\d{1,2})\s*[-/.]\s*(\d{1,2})\s*[-/.]\s*(20\d\d)(?!\d)|(?<!\d)(20\d\d)-(\d\d)-(\d\d)(?!\d)")
@@ -346,12 +369,14 @@ class Text:
 
     def __init__(self, title, desc="", lang="en"):
         self.raw = unicodedata.normalize("NFKC", BIDI.sub("", (title or "").translate(AR_DIGITS)))
+        self.raw = KEYCAP.sub(r"\1", self.raw).replace("✖", "×").replace("️", "")
         self.tt = toks(title)
         self.al = alts(self.tt)
         head = (desc or "")[:200]
         self.dal = alts(toks(head))                          # the description's head: women/youth words only
         self.lang = lang
-        self.hl = any(has(self.al, p) for p in HL_WORDS)
+        self.hl = any(has(self.al, p) for p in HL_WORDS) or \
+            (any(has(self.al, p) for p in HL_MATCH_GOALS) and not any(has(self.al, p) for p in ONE_OF))
         self.summary = any(has(self.al, p) for p in SUMMARY_WORDS)       # a summary, not only the goals («أهداف المباراة»)
         gw = GOAL_WORDS + GOAL_WORDS_LANG.get(lang, [])
         self.goal = any(has(self.al, p) for p in gw) or bool(re.search(r"(?i)\bgo{2,}l\b|\bgo+la[cç]o\b", self.raw))
@@ -377,6 +402,14 @@ class Text:
         # «فرحة ساديو ماني بهدف التقدّم» is the celebration; «… يسجل … لتتعالى فرحة اللاعبين» (Sharjah 2026-11-19) is the goal
         if not self.neg_goal and self.tt[:1] == JOY:
             self.neg_goal = "فرحة"
+        # «القائم يحرم الشامي من تسجيل الهدف الأول», «… ويحرم سبورتي من الهدف الثاني»: a post, a save (2026-11-20); «هدف قاتل يحرم
+        # الهلال من الفوز» is still a goal
+        if not self.neg_goal and DENIED.search(self.raw):
+            self.neg_goal = "a goal denied"
+        # «كاراسكو يطلق تسديدة صاروخية، لكن عبدالله عبده يتصدى لها ببراعة» is the save; «تسديدة يتصدى لها أمين بخاري، لكن تسديدة ثانية
+        # من لاكازيت يحقق بها الهدف» the goal after it
+        if not self.neg_goal and SAVED.search(self.raw):
+            self.neg_goal = "saved"
         self.plural = any(has(self.al, p) for p in PLURAL_GOALS) and not self.hl and not any(has(self.al, p) for p in ONE_OF)
         self.many = any(has(self.al, p) for p in MANY_GOALS)
         self.pen = any(has(self.al, p) for p in PEN_WORDS)
@@ -506,7 +539,10 @@ def player_forms(latin, ars, nick=()):
             put([last], 2)
         if len(tt) >= 3:                                  # «Abdullah Al Salem» -> «Abdullah Salem» is not a form; the first + last is
             put([tt[0], last], 3)
-    for n in ars:
+    # «أحمد نور الله» is written «أحمد نورالله» too (Abu Dhabi Sports, Kalba 2026-11-07): both ways
+    ars = list(ars) + [re.sub(r"(\S)\s+(الله|الدين)(?!\w)", r"\1\2", n) for n in ars] + \
+        [re.sub(r"(\S{2,})(?<!عبد)(الله|الدين)(?!\w)", r"\1 \2", n) for n in ars]
+    for n in dict.fromkeys(ars):
         tt = [t for t in toks(n) if t]
         if not tt:
             continue
@@ -814,13 +850,22 @@ def video_made(image):
     return iso(datetime.fromtimestamp(((int(m.group(1)) >> 22) + 1288834974657) / 1000, UTC)) if m else None
 
 
+def clean_title(title, ch):
+    """The title without the channel's own hashtags (x_channels `drop_tags`)."""
+    for tag in (ch or {}).get("drop_tags") or ():
+        title = re.sub("[\u2066-\u2069\u200e\u200f]*" + re.escape(tag) + r"(?!\w)[\u2066-\u2069]*", " ", title or "")
+    return title
+
+
 def x_channels(accounts):
     """The official X accounts as channels. A broadcaster's (`kind: broadcaster`, 2026-10-07) is held to its competitions
     (`comps: [...]`) like its YouTube channel: a clip of a match outside them is not its."""
     return [{"key": "x_" + a["handle"].lower(), "id": a["handle"], "name": a.get("name") or a["handle"], "lang": a.get("lang", "en"),
              "kind": a.get("kind") or ("club" if a.get("team") else "league" if a.get("comp") or a.get("comps") else "confed"),
              "team": int(a["team"]) if a.get("team") else None,
-             "comps": {int(c) for c in (a.get("comps") or ([a["comp"]] if a.get("comp") else []))} or None, "journal": True, "platform": "x"}
+             "comps": {int(c) for c in (a.get("comps") or ([a["comp"]] if a.get("comp") else []))} or None, "journal": True, "platform": "x",
+             # its own hashtags («#الشارقة_الرياضية», Kuwait's «#الكويت #الرياضية …» on every post) name no side (2026-11-20)
+             "drop_tags": ["#" + (a.get("name") or a["handle"]).replace(" ", "_")] + list(a.get("drop_tags") or [])}
             for a in accounts or [] if a.get("tier") == "official"]
 
 
@@ -979,7 +1024,9 @@ def known_until(md):
     return ptime(md["_fetched"]) or datetime.min.replace(tzinfo=UTC)
 
 
-def check_goal(v, ch, tx, md, g, gs, teams, players, t_pub, unnamed=False):
+def check_goal(v, ch, tx, md, g, gs, teams, players, t_pub, unnamed=False, side_count=False):
+    """side_count: a goal number is the scoring side's, never the match's («الصقر … يسجل الهدف الثالث … عن طريق دينيس» is Al Saqer's
+    third, not the match's third that Al Bukayriyah scored, 2026-11-20): for a post that names none of the scorers."""
     h, a = md["home"]["id"], md["away"]["id"]
     own = ch.get("team")
     pid = g["player"]["id"]
@@ -1010,8 +1057,9 @@ def check_goal(v, ch, tx, md, g, gs, teams, players, t_pub, unnamed=False):
     ok, why = dates_ok(tx, md)
     if not ok:
         return None, why
-    if tx.pen and g["type"] != "penalty_goal":
-        return None, "penalty words, not a penalty"
+    # penalty words on a goal FotMob has as an ordinary one tell a player's goals apart only when nothing else does: «ابراهيم كميل
+    # يسجل الهدف السابع لنادي الكويت من علامة الجزاء» is the seventh whatever FotMob's type (checked after the number, below)
+    pen_unsure = tx.pen and g["type"] != "penalty_goal"
     if tx.fk and g["type"] == "penalty_goal":
         return None, "free kick words, a penalty"
     if tx.own and g["type"] != "own_goal":
@@ -1039,9 +1087,11 @@ def check_goal(v, ch, tx, md, g, gs, teams, players, t_pub, unnamed=False):
     if tx.ordinal and after:
         side = g.get("team")                    # the side the goal counts for (FotMob credits an own goal to the side it helps)
         mine = after[0] if side == "home" else after[1] if side == "away" else None
-        if tx.ordinal not in (mine, after[0] + after[1]):
+        if tx.ordinal not in ((mine,) if side_count else (mine, after[0] + after[1])):
             return None, f"goal number {tx.ordinal} words"
         conf += 5
+    if pen_unsure and not (tx.scores or tx.minutes or tx.ordinal):
+        return None, "penalty words, not a penalty"
     if t_pub <= lb + timedelta(minutes=45):
         conf += 5
     return conf, None
@@ -1172,7 +1222,7 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
         t_pub = ptime(v.get("at"))
         if not ch or not t_pub:
             continue
-        tx = Text(v["title"], v.get("desc"), ch.get("lang", "en"))
+        tx = Text(clean_title(v["title"], ch), v.get("desc"), ch.get("lang", "en"))
         kind = classify(tx, ch)
         if not kind:
             if trace is not None and (tx.hl or tx.goal):
@@ -1231,6 +1281,27 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
             hits = only_goal(ctx, v, ch, tx, teams, spans, t_pub, note)
         if not hits:
             hits = club_minute_goal(ctx, v, ch, tx, teams, players, t_pub, note)
+        # a broadcaster's or league's post that names none of the scorers (another spelling, FotMob's own goal for «خيمينيز يسجل
+        # التعادل», no name at all: «هدف عكسي يعيد العين إلى نقطة التعادل») but whose minute, goal number, equaliser or own-goal
+        # words, with the side and the time, fit exactly one goal (pinned_goal); a score alone is not enough (2026-11-20, the
+        # UAE goals of the month with no clip)
+        if not hits and ch.get("kind") in ("broadcaster", "league") and (tx.minutes or tx.ordinal or tx.eq or tx.own) \
+                and not tx.plural:                  # «ثلاثية مقابل هدف … شاهد أهداف المواجهة» is all of them
+            pin = pinned_goal(ctx, v, ch, tx, teams, players, t_pub)
+            # tied to the match: both sides named, or one with the minute and the score or number (Kuwait's post of a cup goal
+            # named one side of a league match and fitted its first goal, 2026-11-20)
+            if pin:
+                md_ = ctx.matches[pin[0]]
+                named_sides = (md_["home"]["id"] in teams) + (md_["away"]["id"] in teams)
+                if not (named_sides == 2 or (named_sides == 1 and tx.minutes and (tx.scores or tx.ordinal))):
+                    note(v, pin[0], "goal (no scorer named)", "one side named and no minute: not tied to the match")
+                    pin = None
+            if pin:
+                mid_, g_ = pin
+                conf, why = check_goal(v, ch, tx, ctx.matches[mid_], g_, ctx.goals[mid_], teams, {}, t_pub, unnamed=True, side_count=True)
+                note(v, mid_, f"goal (no scorer named) {g_.get('minute')}' {g_['player'].get('name')}", conf if conf else why)
+                if conf and conf >= 70:
+                    hits = [(conf, mid_, g_)]
         if not hits:
             continue
         mids = {h[1] for h in hits}
@@ -1391,7 +1462,7 @@ def pinned_goal(ctx, v, ch, tx, teams, players, t_pub):
         for g in gs:
             if not g.get("lb") or (weak and g["player"]["id"] not in weak):
                 continue
-            conf, _ = check_goal(v, ch, tx, md, g, gs, teams, {}, t_pub, unnamed=True)
+            conf, _ = check_goal(v, ch, tx, md, g, gs, teams, {}, t_pub, unnamed=True, side_count=True)
             if conf and conf >= 70:
                 hits.append((mid, g))
     return hits[0] if len(hits) == 1 else None
@@ -1407,7 +1478,7 @@ def learn(videos, matches, names, chmap, blocked=()):
         t_pub = ptime(v.get("at"))
         if v["id"] in blocked or not ch or not t_pub:
             continue
-        tx = Text(v["title"], v.get("desc"), ch.get("lang", "en"))
+        tx = Text(clean_title(v["title"], ch), v.get("desc"), ch.get("lang", "en"))
         if classify(tx, ch) != "goal" or tx.neg_goal or tx.old or tx.hl or tx.plural:
             continue
         if not (tx.scores or tx.minutes or tx.ordinal or tx.eq):

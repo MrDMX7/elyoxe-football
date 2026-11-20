@@ -469,7 +469,8 @@ def test_the_clubs_own_clip_with_the_minute_needs_no_name_we_know():
     assert run_ae("alainfcae", "د66: الهدف الأول للظفرة ⚽️ #العين_الظفرة", "2026-11-19T16:55:00Z") == {}
     assert run_ae("alainfcae", "د54: ماركينيو يسجل ⚽️ #العين_الظفرة", "2026-11-19T16:12:00Z") == {}
     # a broadcaster's or another club's channel is not the club: the name still has to be known there
-    assert run_ae("ADSportsTV", "د43: ماركينيو يفتتح التسجيل ⚽️ #العين_الظفرة", "2026-11-19T16:12:36Z") == {}
+    # a broadcaster's post with a name we don't know goes on the goal its minute and number fit (2026-11-20)
+    assert run_ae("ADSportsTV", "د43: ماركينيو يفتتح التسجيل ⚽️ #العين_الظفرة", "2026-11-19T16:12:36Z") == {1000022241: ["43-1572471"]}
     # a miss at that minute is still not a goal, and the club's ready-made animation is still not the goal
     assert run_ae("alainfcae", "د43: فرصة ضائعة من ماركينيو #العين_الظفرة", "2026-11-19T16:10:10Z") == {}
     acc = [{"handle": "alainfcae", "name": "العين", "lang": "ar", "tier": "official", "team": 102117}]
@@ -488,6 +489,7 @@ def test_a_scorers_name_spelt_another_way_still_names_him():
     assert run_ae("ADSportsTV", "عبدالله الكربى يقلص الفارق بالهدف الأول للظفرة ⚽️ #العين_الظفرة", "2026-11-19T16:55:01Z") \
         == {1000022241: ["66-794049"]}
     # one word spelt loosely is not enough on its own (it could be anyone's)
+    # «رحيم» names nobody, and one side with a number but no minute does not tie a nameless post to the match (2026-11-20)
     assert run_ae("ADSportsTV", "رحيم يسجل الهدف الثاني للعين ⚽️", "2026-11-19T16:43:30Z") == {}
     assert M.loose("طمين") & M.loose("تيمين") and M.loose("هوجو") & M.loose("هوغو") and M.loose("الزياني") & M.loose("زياني")
     assert not M.loose("حسين") & M.loose("محسن") and not M.loose("goal")
@@ -662,7 +664,8 @@ def test_the_goal_number_with_the_team_between():
 
 def test_two_broadcasters_teach_the_name_they_both_wrote():
     posts = [wh_post("ADSportsTV", AD_62), wh_post("dubaisportstv", DS_62)]
-    assert wh_goals(posts, wh_names()) == {}                       # «سيرجيو بيريرا» is not a name we have for Serginho
+    # «سيرجيو بيريرا» is not a name we have for Serginho; the goal number places both posts anyway (2026-11-20)
+    assert wh_goals(posts, wh_names()) == {"xADSportsTV1": "62-1393478", "xdubaisportstv1": "62-1393478"}
     got = M.learn(posts, [WAS_HAT], wh_names(), CH_WH)
     assert {p: sorted(f) for p, f in got.items()} == {"1393478": ["سيرجيو بيريرا"]}
     assert sorted(got["1393478"]["سيرجيو بيريرا"]["chs"]) == ["x_adsportstv", "x_dubaisportstv"]
@@ -675,7 +678,7 @@ def test_one_post_teaches_a_name_only_when_it_writes_the_scorers_own_name_anothe
     assert M.learn([wh_post("ADSportsTV", AD_62)], [WAS_HAT], wh_names(), CH_WH) == {}
     # «هوجو» is our «هوغو», too short to name him alone; the score and the goal number in the post are his own goal's
     og = [wh_post("dubaisportstv", DS_OG)]
-    assert wh_goals(og, wh_names()) == {}
+    assert wh_goals(og, wh_names()) == {"xdubaisportstv1": "90+7-1182091"}        # placed by its score and number alone too
     got = M.learn(og, [WAS_HAT], wh_names(), CH_WH)
     assert {p: sorted(f) for p, f in got.items()} == {"1182091": ["هوجو نيتو"]}
     assert wh_goals(og, wh_names({p: list(f) for p, f in got.items()})) == {"xdubaisportstv1": "90+7-1182091"}
@@ -833,7 +836,7 @@ def test_letters_match_the_latin_name():
 
 def test_a_scorer_with_no_arabic_name_learns_the_one_the_post_writes_in_its_letters():
     post = [kw_post("عبدالرحمن كوكو يسجل الهدف الأول للنصر", "2026-11-02T16:32:00Z", 1)]
-    assert kw_goals(post, kw_names()) == {}
+    assert kw_goals(post, kw_names()) == {}                                      # one side named, no minute: not without his name
     got = M.learn(post, [NAS_SHA], kw_names(), CH_KW)
     assert {p: sorted(f) for p, f in got.items()} == {"2435620": ["عبدالرحمن كوكو"]}
     assert kw_goals(post, kw_names({p: list(f) for p, f in got.items()})) == {"x1": "34-2435620"}
@@ -874,3 +877,176 @@ def test_a_broadcasters_post_of_the_result_in_words_is_the_matchs_video():
     assert hl(title, "2026-11-07T17:40:00Z") == {}                                          # the ball still in play
     # at half-time, or a lead in words that is not the final score: one goal or a half, not the match's video
     assert hl("الكوكب المراكشي يتقدم على الوداد الرياضي بهدف دون رد", "2026-11-07T16:50:00Z") == {}
+
+
+# The UAE goals of the month still without a clip (2026-11-20, owner «UAE first»): the broadcasters posted every one, but with a
+# score in keycaps («#النصر: 1⃣», «3️⃣✖️0️⃣»), a number after the verb («يسجل الثالث للنصر»), «يدرك التعادل … من علامة الجزاء», a
+# name we write otherwise («نورالله», «ديو ميرسي»), or another player's name than FotMob's («سوري كابا», «خيمينيز» on an own goal).
+# Real titles, times and match data.
+def _m(mid, comp, k, sc, home, away, P, ev):
+    return {"id": mid, "comp": comp, "kickoff_utc": k, "status": "finished", "score": {"home": sc[0], "away": sc[1]},
+            "home": {"id": home[0], "name": home[1], "name_ar": home[2]}, "away": {"id": away[0], "name": away[1], "name_ar": away[2]},
+            "periods": {"firstHalfStarted": P[0], "secondHalfStarted": P[1], "gameEnded": P[2]}, "events": ev}
+
+
+NAS = (102123, "Al-Nasr SC", "النصر"); UNI = (1552577, "United FC", "يونايتد"); JAZ = (102101, "Al-Jazira", "الجزيرة")
+WAS = (102111, "Al-Wasl", "الوصل"); DHA = (102118, "Al-Dhafra", "الظفرة"); KAL = (209190, "Kalba FC", "كلباء")
+SHA = (102119, "Shabab Al-Ahli Dubai FC", "شباب الأهلي"); AIN = (102117, "Al-Ain", "العين"); KHO = (149993, "Khorfakkan", "خورفكان")
+WAH = (102122, "Al-Wahda", "الوحدة"); SHJ = (102124, "Sharjah Cultural Club", "الشارقة")
+UAE_M = [
+    _m(1000022236, 538, "2026-11-08T12:55:00Z", (4, 1), NAS, UNI, ("2026-11-08T12:55:45Z", "2026-11-08T14:01:00Z", "2026-11-08T14:52:20Z"),
+       [goal(8, "away", 469701, "Mahmoud Dahoud", (0, 1)), goal(39, "home", 675762, "Ajdin Hrustić", (1, 1)),
+        goal(47, "home", 1039220, "Kevin Agudelo", (2, 1)), goal(54, "home", 1039220, "Kevin Agudelo", (3, 1)),
+        goal(90, "home", 734439, "Ramon Miérez", (4, 1), added=5)]),
+    _m(1000022237, 538, "2026-11-08T12:55:00Z", (2, 1), JAZ, WAS, ("2026-11-08T12:55:32Z", "2026-11-08T14:02:33Z", "2026-11-08T14:58:49Z"),
+       [goal(18, "home", 1258850, "Vinicius Mello", (1, 0)), goal(50, "away", 904270, "Khalifa Al Hammadi", (1, 1), "own_goal"),
+        goal(73, "home", 535603, "Malcom", (2, 1))]),
+    _m(1000022233, 538, "2026-11-07T12:55:00Z", (1, 3), DHA, KAL, ("2026-11-07T12:56:00Z", "2026-11-07T13:58:00Z", "2026-11-07T14:50:00Z"),
+       [goal(20, "home", 809170, "Karim El Berkaoui", (1, 0)), goal(50, "away", 644002, "Benjamin Tetteh", (1, 1), "penalty_goal"),
+        goal(52, "away", 619504, "Ahmad Nourollahi", (1, 2)), goal(90, "away", 1094302, "Juninho", (1, 3), added=5)]),
+    _m(6428995, 9943, "2026-10-22T16:00:00Z", (3, 2), SHA, AIN, ("2026-10-22T16:01:05Z", "2026-10-22T17:12:22Z", "2026-10-22T18:47:56Z"),
+       [goal(20, "home", 505281, "Saeid Ezatolahi", (1, 0), "penalty_goal"), goal(34, "home", 505281, "Saeid Ezatolahi", (2, 0)),
+        goal(45, "away", 964040, "Matías Palacios", (2, 1), added=6), goal(68, "away", 693678, "Wout Faes", (2, 2), "own_goal"),
+        goal(116, "home", 1320954, "Mateusão", (3, 2))]),
+    _m(6428998, 9943, "2026-10-24T12:55:00Z", (3, 2), KHO, DHA, ("2026-10-24T12:58:17Z", "2026-10-24T14:07:22Z", "2026-10-24T15:04:26Z"),
+       [goal(15, "away", 1236334, "Mohamed El Khaloui", (0, 1)), goal(44, "away", 1354185, "Dominique Mendy", (0, 2)),
+        goal(80, "home", 562869, "Tarik Tissoudali", (1, 2)), goal(87, "home", 524057, "Ahmed Mahmoud", (2, 2)),
+        goal(90, "home", 562869, "Tarik Tissoudali", (3, 2), "penalty_goal", added=7)]),
+    _m(1000022721, 11027, "2026-11-15T12:50:00Z", (3, 1), WAH, KHO, ("2026-11-15T12:51:30Z", "2026-11-15T13:57:52Z", "2026-11-15T14:47:55Z"),
+       [goal(22, "home", 1201810, "Facundo Kruspzky", (1, 0)), goal(45, "home", 1682287, "Arnau Pradas", (2, 0), added=3),
+        goal(54, "home", 1201810, "Facundo Kruspzky", (3, 0), "penalty_goal"), goal(67, "away", 1413380, "Akram Nakach", (3, 1))]),
+    _m(1000022722, 11027, "2026-11-15T12:50:00Z", (1, 1), UNI, SHJ, ("2026-11-15T12:50:14Z", "2026-11-15T13:57:48Z", "2026-11-15T14:47:01Z"),
+       [goal(39, "home", 1458013, "Dieu-Merci Michel", (1, 0)), goal(45, "away", 1515130, "Clinton Nsiala", (1, 1), added=3)])]
+N_UAE = M.Names({str(t[0]): {"name": t[1], "name_ar": t[2]} for t in (NAS, UNI, JAZ, WAS, DHA, KAL, SHA, AIN, KHO, WAH, SHJ)},
+                {"469701": {"ar": "محمود داوود"}, "675762": {"ar": "أيدين هروستيتش"}, "1039220": {"ar": "كيفن أغوديلو"},
+                 "734439": {"ar": "رامون ميريز"}, "1258850": {"ar": "فينيسيوس ميلو"}, "904270": {"ar": "خليفة الحمادي"}, "535603": {"ar": "مالكوم"},
+                 "809170": {"ar": "كريم البركاوي"}, "644002": {"ar": "بينجامين تيتيح"}, "619504": {"ar": "أحمد نورالهي"},
+                 "505281": {"ar": "سعيد عزت اللهي"}, "964040": {"ar": "ماتياس بالاسيوس"}, "693678": {"ar": "ووت فاس"}, "1320954": {"ar": "ماتيوساو"},
+                 "1236334": {"ar": "محمد الخلوي"}, "1354185": {"ar": "دومينيك ميندي"}, "562869": {"ar": "طارق تيسودالي"},
+                 "1201810": {"ar": "فاكوندو كروسبزكي"}, "1682287": {"ar": "أرناو براداس"}, "1413380": {"ar": "أكرم النقاش"},
+                 "1458013": {"ar": "ديوميرسي ميشيل"}, "1515130": {"ar": "كلينتون نسيالا"}},
+                {}, {}, {}, NATIONS, player_aliases={"644002": ["بينجامين تيتيه"], "619504": ["أحمد نور الله"], "1201810": ["فاكوندو"]})
+UAE_COMPS = [538, 11027, 9943, 11026, 329]
+CH_UAE = {c["key"]: c for c in M.x_channels([
+    {"handle": "ADSportsTV", "name": "أبوظبي الرياضية", "lang": "ar", "tier": "official", "kind": "broadcaster", "comps": UAE_COMPS},
+    {"handle": "dubaisportstv", "name": "دبي الرياضية", "lang": "ar", "tier": "official", "kind": "broadcaster", "comps": UAE_COMPS},
+    {"handle": "SharjahSportsTV", "name": "الشارقة الرياضية", "lang": "ar", "tier": "official", "kind": "broadcaster", "comps": UAE_COMPS}])}
+
+
+def uae_goal(handle, title, at):
+    v = {"id": "x1", "title": title, "desc": "", "at": at, "ch": "x_" + handle.lower(), "source": "x", "url": "u"}
+    return [(mid, k) for mid, r in M.attach([v], UAE_M, N_UAE, CH_UAE, []).items() for k in r["goals"]]
+
+
+def test_scores_in_keycaps_and_with_a_cross():
+    assert M.Text("هروسيتش يقتنص هدف التعادل للعميد في الدقيقة 38\n\n#النصر: 1⃣ \n#يونايتد: 1⃣\n\n#دوري_أدنوك_للمحترفين 🏆").scores == [(1, 1)]
+    assert M.Text("ليلة مميزة لمهاجم العميد..\n\nالنصر 3️⃣-1️⃣ يونايتد | أبوظبي الرياضية 2️⃣").scores == [(3, 1)]
+    assert M.Text("الوحدة 3️⃣✖️0️⃣ خورفكان").scores == [(3, 0)]
+    assert M.Text("#دوري_أدنوك_للمحترفين | #أبوظبي_الرياضية 1⃣").scores == []
+
+
+def test_more_ways_to_write_a_goal_and_its_number():
+    assert M.Text("أغوديلو يسجل الثالث للنصر والثاني له في المباراة").ordinal == 3
+    assert M.Text("فاكوندو دانييل يسجل ثالث الأهداف للوحدة من ركلة جزاء").ordinal == 3
+    tx = M.Text("كلباء يدرك التعادل عن طريقه تيتيه من علامة الجزاء ⚽")
+    assert tx.goal and tx.pen
+    assert ("احمد", "نورالله") in N_UAE.player(619504, "Ahmad Nourollahi")          # we hold «أحمد نور الله»
+
+
+UAE_POSTS = [  # (handle, title, at, the goal it is)
+    ("dubaisportstv", "⚽️ هـــــــدف  \nهروسيتش يقتنص هدف التعادل للعميد في الدقيقة 38\n\n#النصر: 1⃣ \n#يونايتد: 1⃣\n\n#دوري_أدنوك_للمحترفين 🏆 \n#دبي_الرياضية",
+     "2026-11-08T13:47:30Z", (1000022236, "39-675762")),
+    ("ADSportsTV", "أغوديلو يسجل الثالث للنصر والثاني له في المباراة.. ليلة مميزة لمهاجم العميد..\n\nالنصر 3️⃣-1️⃣ يونايتد | أبوظبي الرياضية 2️⃣ | #دوري_أدنوك_للمحترفين",
+     "2026-11-08T14:14:10Z", (1000022236, "54-1039220")),
+    ("dubaisportstv", "⚽️ هـــــــدف  \nأجوديلو يقتنص ثالث أهداف النصر بعد مجهود فردي رائع من قايدي في الدقيقة 54\n\n#النصر: 3⃣\n#يونايتد: 1⃣\n\n#دوري_أدنوك_للمحترفين 🏆 \n#دبي_الرياضية",
+     "2026-11-08T14:20:08Z", (1000022236, "54-1039220")),
+    ("ADSportsTV", "الوصل يعود ويسجل هدف التعادل ⚽\n\nعرضية متقنة من نيتو يترجمها خيمينيز بنجاح في الشباك\n\n#الجزيرة_الوصل \n#دوري_أدنوك_للمحترفين | #أبوظبي_الرياضية 1⃣",
+     "2026-11-08T14:11:24Z", (1000022237, "50-904270")),
+    ("dubaisportstv", "⚽️ هـــــــدف\nخيمينيز يسجل التعادل للإمبراطور في الدقيقة 50\n\n#الجزيرة: 1⃣\n#الوصل: 1⃣\n \n#دوري_أدنوك_للمحترفين 🏆\n#دبي_الرياضية",
+     "2026-11-08T14:15:37Z", (1000022237, "50-904270")),
+    ("ADSportsTV", "بعد العودة لتقنية الفيديو.. \n\nهدف أول للظفرة عن طريق سوري كابا ⚽\n\n#الظفرة_كلباء \n#دوري_أدنوك_للمحترفين | #أبوظبي_الرياضية 1⃣",
+     "2026-11-07T13:24:14Z", (1000022233, "20-809170")),
+    ("ADSportsTV", "كلباء يدرك التعادل عن طريقه تيتيه من علامة الجزاء ⚽\n\n#الظفرة_كلباء \n#دوري_أدنوك_للمحترفين | #أبوظبي_الرياضية 1⃣",
+     "2026-11-07T14:08:57Z", (1000022233, "50-644002")),
+    ("ADSportsTV", "كلباء يقلب الطاولة..\n\nهدف التقدم الثاني لكلباء بتوقيع أحمد نورالله بعد تمريرة مميزة ⚽\n\n#الظفرة_كلباء \n#دوري_أدنوك_للمحترفين | #أبوظبي_الرياضية 1⃣",
+     "2026-11-07T14:13:21Z", (1000022233, "52-619504")),
+    ("ADSportsTV", "العودة تكتمل..\n هدف عكسي يعيد العين إلى نقطة التعادل أمام شباب الأهلي\n #شباب_الأهلي_العين\n #كأس_رئيس_الدولة | #أبوظبي_الرياضية 1️⃣",
+     "2026-10-22T17:38:38Z", (6428995, "68-693678")),
+    ("dubaisportstv", "⚽️ هـــــــدف\n\nأحمد الحمادي يسجل هدف التعادل لخورفكان في الدقيقة 87\n\n#خورفكان 2\n#الظفرة 2\n\n#كأس_رئيس_الدولة 🏆\n#دبي_الرياضية",
+     "2026-10-24T14:53:15Z", (6428998, "87-524057")),
+    ("ADSportsTV", "فاكوندو يسجل هدفه الثاني والثالث للوحدة من علامة الجزاء ⚽\n\n#الوحدة_خورفكان \n#كأس_مصرف_أبوظبي_الإسلامي | #أبوظبي_الرياضية 1⃣",
+     "2026-11-15T14:08:57Z", (1000022721, "54-1201810")),
+    ("SharjahSportsTV", "فاكوندو يعود من جديد ويسجل الثالث للعنابي من علامة الجزاء \n\nالوحدة 3️⃣✖️0️⃣ خورفكان \n\n#كأس_مصرف_أبوظبي_الإسلامي\n#الشارقة_الرياضية",
+     "2026-11-15T14:11:00Z", (1000022721, "54-1201810")),
+    ("dubaisportstv", "⁨ ⚽️ هـــــــدف\n\nفاكوندو دانييل يسجل ثالث الأهداف للوحدة من ركلة جزاء في الدقيقة 54\n\n#الوحدة: 3⃣\n#خورفكان: 0⃣\n \n#كأس_مصرف_أبوظبي_الإسلامي 🏆\n#دبي_الرياضية",
+     "2026-11-15T14:18:24Z", (1000022721, "54-1201810")),
+    ("dubaisportstv", "⁨ ⚽️ هـــــــدف  \nديو ميرسي يقتنص أول أهداف يونايتد في الدقيقة 39  \n\n#يونايتد: 1⃣ \n#الشارقة: 0⃣\n\n#كأس_مصرف_أبوظبي_الإسلامي 🏆 \n#دبي_الرياضية",
+     "2026-11-15T13:31:40Z", (1000022722, "39-1458013")),
+    ("SharjahSportsTV", "يونايتد يفاجئ الشارقة ويفتتح التسجيل بقدم ديو ميرسي\n\nيونايتد 1️⃣✖️0️⃣ الشارقة \n\n#كأس_مصرف_أبوظبي_الإسلامي \n#الشارقة_الرياضية",
+     "2026-11-15T13:32:39Z", (1000022722, "39-1458013")),
+    ("ADSportsTV", "ديو ميرسي يسجل الهدف الأول ليونايتد من متابعة وتسديدة رائعة ⚽️\n\n#يونايتد_الشارقة \n#كأس_مصرف_أبوظبي_الإسلامي | #أبوظبي_الرياضية 2⃣",
+     "2026-11-15T13:32:41Z", (1000022722, "39-1458013"))]
+
+
+def test_a_broadcasters_post_that_fits_one_goal_goes_on_it_whatever_name_it_gives():
+    for handle, title, at, want in UAE_POSTS:
+        assert uae_goal(handle, title, at) == [want], title
+
+
+def test_a_score_alone_or_another_scorers_name_does_not_place_a_nameless_post():
+    # the score fits the 50' own goal, but nothing else in the title says which goal: no clip
+    assert uae_goal("dubaisportstv", "⚽️ هدف رائع\n\n#الجزيرة: 1⃣\n#الوصل: 1⃣", "2026-11-08T14:15:37Z") == []
+    # a post that names one of the match's scorers is judged on that name, not on its other evidence
+    assert uae_goal("dubaisportstv", "مالكوم يسجل هدف التعادل في الدقيقة 50\n#الجزيرة: 1⃣\n#الوصل: 1⃣", "2026-11-08T14:15:37Z") == []
+
+
+def test_a_goal_denied_a_reaction_or_an_attack_is_no_goals_clip():
+    for t in ("القائم يحرم الشامي من تسجيل الهدف الأول للمصري في شباك بترول أسيوط",
+              "القائم يمنع خالد الخرقاوي من تسجيل الهدف الأول للقادسية",
+              "نواف عبدالله يتألق ويحرم سبورتي من الهدف الثاني",
+              "القائم يحرم عجمان من هدف التقدم الثاني في اللحظات الأخيرة",
+              "ردة فعل خالد عيسى بعد الهدف الثاني لشباب الأهلي",
+              "حسين بابا يشيد بجمال الهدف الثاني لفريق العين",
+              "هجمة نيوم بحثًا عن الهدف الأول",
+              "فرحة تجمع مدرج الفيصلي بلاعبيه احتفالًا بأول الأهداف",
+              "الفيصلي يبحث عن الهدف الثاني، وتسديدتان من لاعبيه يتصدى لهما موسكيرا"):
+        tx = M.Text(t)
+        assert tx.neg or tx.neg_goal, t
+    assert not M.Text("هدف قاتل يحرم الهلال من الفوز").neg_goal          # a goal that denies a win is still the goal
+
+
+def test_a_channels_own_hashtags_name_no_side_and_one_side_needs_more():
+    # «#الشارقة_الرياضية» is Sharjah Sports, not Sharjah: a Scottish goal is not United-Sharjah's 39'
+    assert uae_goal("SharjahSportsTV", "أوين يفتتح التسجيل لأصحاب الأرض هيبرنيان 1️⃣ سيلتيك 0️⃣ #الدوري_الاسكتلندي #الشارقة_الرياضية",
+                    "2026-11-15T13:40:00Z") == []
+    # Kuwait's sports channel ends every post with «#الكويت #الرياضية …»; its post of another competition's goal names one side of
+    # the league match at most, and gives no minute: no clip
+    kw = M.x_channels([{"handle": "kuwaitsporttv", "name": "القناة الرياضية الكويتية", "lang": "ar", "tier": "official", "country": "kw",
+                        "kind": "broadcaster", "comps": [529], "drop_tags": ["#الكويت", "#الرياضية", "#وزارة_الإعلام_الكويت"]}])[0]
+    assert kw["drop_tags"] and M.clean_title("هدف #الكويت #الرياضية", kw).strip() == "هدف"
+    out = M.attach([kw_post("هدف استقلال دوشنبه الأول بمرمى النصر", "2026-11-02T16:32:00Z", 5)], [NAS_SHA], kw_names(), CH_KW, [])
+    assert out == {}
+
+
+def test_a_nameless_posts_goal_number_is_its_sides():
+    # Al Saqer's third goal posted while FotMob had the match at 2-1 (Al Bukayriyah's goal the third of the match): no clip
+    md = _m(1000018508, 10721, "2026-11-02T13:00:00Z", (2, 1), (1, "Al-Saqer FC", "الصقر"), (2, "Al Bukayriyah", "البكيرية"),
+            ("2026-11-02T13:00:30Z", "2026-11-02T14:03:00Z", "2026-11-02T14:55:00Z"),
+            [goal(10, "home", 11, "A", (1, 0)), goal(24, "home", 12, "B", (2, 0)), goal(65, "away", 13, "C", (2, 1))])
+    names = M.Names({"1": {"name": "Al-Saqer FC", "name_ar": "الصقر"}, "2": {"name": "Al Bukayriyah", "name_ar": "البكيرية"}}, {}, {}, {}, {}, NATIONS)
+    ch = {c["key"]: c for c in M.x_channels([{"handle": "thmanyahsports", "name": "رياضة ثمانية", "lang": "ar", "tier": "official",
+                                               "kind": "broadcaster", "comps": [10721]}])}
+    v = {"id": "x1", "title": "هدف! ⚽️ الصقر لا يتوقف ويسجل الهدف الثالث في شباك البكيرية عن طريق دينيس 🔥  #الصقر_البكيرية | #دوري_الأولى",
+         "desc": "", "at": "2026-11-02T14:10:00Z", "ch": "x_thmanyahsports", "source": "x", "url": "u"}
+    assert M.attach([v], [md], names, ch, []) == {}
+
+
+def test_the_matchs_goals_in_one_post_are_its_highlights():
+    tx = M.Text("ثلاثية مقابل هدف تمنح النصر ثالث انتصاراته تواليًا 🟡  شاهد أهداف المواجهة ⚽️🎥  #الفيصلي_النصر | #دوري_روشن_السعودي")
+    assert tx.hl and tx.ordinal is None
+
+
+def test_the_first_of_the_matchs_goals_is_one_goal_and_a_save_is_after_but():
+    assert not M.Text("جورج إيلينيكنا يهزّ شباك الاتفاق بتسديدة تمنح الاتحاد أول أهداف المواجهة 🟡🔥 #الاتفاق_الاتحاد").hl
+    assert M.Text("كاراسكو يطلق تسديدة صاروخية، لكن عبدالله عبده يتصدى لها ببراعة 🧤🔥").neg_goal
+    assert not M.Text("هدف! ⚽️ تسديدة قوية يتصدى لها أمين بخاري، لكن تسديدة ثانية من لاكازيت يحقق بها الهدف").neg_goal

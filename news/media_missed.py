@@ -109,7 +109,7 @@ def build(matches, docs, vids, names, chmap, trace, t):
         t_pub = M.ptime(v.get("at"))
         if not ch or not t_pub:
             continue
-        tx = M.Text(v.get("title"), v.get("desc"), ch.get("lang", "en"))
+        tx = M.Text(M.clean_title(v.get("title"), ch), v.get("desc"), ch.get("lang", "en"))
         if tx.hl or tx.neg or tx.women:
             continue
         teams, players = ctx.mentions(tx.al)
