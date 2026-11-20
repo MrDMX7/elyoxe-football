@@ -656,6 +656,8 @@ def test_the_goal_number_with_the_team_between():
     assert M.Text("هدف التعادل في الدقيقة الأولى من الوقت بدل الضائع").ordinal is None
     # his second, his team's third (Thmanyah, Al-Bulaihi 2026-10-22): no number rather than the wrong one
     assert M.Text("هدف! ⚽️ البليهي مجددًا، لا يكتفي بهدف واحد ويسجل الثاني له والثالث لفريقه 🔥").ordinal is None
+    # a goal's number in a player's words about a tweet is not that goal's clip
+    assert M.Text("كاراسكو عن تغريدة نادي الشباب أثناء تنفيذه لـ ركلة حرة نتج عنها هدف ثاني للشباب").neg_goal
 
 
 def test_two_broadcasters_teach_the_name_they_both_wrote():
@@ -811,6 +813,8 @@ def kw_goals(posts, names):
 
 def test_a_name_that_is_not_a_persons_is_no_form_of_him():
     assert ("القدم",) not in kw_names().player(915137, "Yaqoub Al Tararwa")
+    # a Brazilian's full name is a person's however long («أنطونيو جونيور» is how Abu Dhabi Sports names Kalba's Juninho)
+    assert M.person_name("أنطونيو فالمور أسيس دا سيلفا جونيور") and M.person_name("هوغو (لاعب كرة قدم مواليد 2001)") == "هوغو"
     assert kw_goals([kw_post("حازم الحاج حسن يسجل الهدف الثاني للنصر", "2026-11-02T17:27:00Z", 3)], kw_names()) == {"x3": "74-725164"}
 
 

@@ -264,6 +264,8 @@ NEG_GOAL = phrases([
     "comemoração", "jubel", "يحتفل", "احتفالية",
     # «… لكن حكم اللقاء يُلغيه بداعي التسلل» (Thmanyah 2026-10-24): the word with its article, and the referee's verb
     "التسلل", "يلغي", "يلغيه",
+    # «كاراسكو عن تغريدة نادي الشباب أثناء تنفيذه لـ ركلة حرة نتج عنها هدف ثاني للشباب» (Thmanyah 2026-11-01): him on a tweet
+    "تغريدة", "تغريدته",
     "goal line", "chance", "chances", "فرصة", "almost", "nearly", "so close", "close call", "denied", "no goal", "not a goal", "كاد",
     "كادت", "قريب", "casi", "quasi", "presque", "beinahe", "atajadón", "حارس", "keeper", "goalkeeper"])
 # the woodwork, which a title may name before the rebound that went in («القائم يرفض تسديدة كاكو.. والحسين رحيمي يكمل المهمة …
@@ -509,10 +511,11 @@ NOT_A_PERSON = {t for w in ["منتخب", "المنتخب", "نادي", "فري�
 
 def person_name(n):
     """The name without a bracketed note, or None when it is not a person's (a team, an age group: NOT_A_PERSON, digits, or more
-    than five words)."""
+    than eight words: FotMob's «أنطونيو فالمور أسيس دا سيلفا جونيور» for Juninho is six, and its «أنطونيو جونيور» is how Abu Dhabi
+    Sports names him)."""
     n = re.sub(r"\s*[(\[].*?[)\]]\s*", " ", n or "").strip()
     tt = toks(n)
-    if not tt or len(tt) > 5 or re.search(r"\d", n) or set(tt) & NOT_A_PERSON:
+    if not tt or len(tt) > 8 or re.search(r"\d", n) or set(tt) & NOT_A_PERSON:
         return None
     return n
 
