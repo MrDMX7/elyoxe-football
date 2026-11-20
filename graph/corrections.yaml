@@ -1,0 +1,33 @@
+# What a person decided from official sources, beating every source in every build (graph/load/corrections.py). Each entry
+# names its source. Researched 2026-11-20 (owner: «سو ريسيرج من موقع الاتحاد الإماراتي ... والفيفا»); the review list was
+# docs/GRAPH-CONFLICTS-2026-11-20.md.
+
+# an honour's winners, replaced (a player by his FotMob id, else by name; a name the archive lacks is added)
+honours:
+  - {comp: 538, season: "1991/1992", kind: top_scorer, value: "25", players: [{name: "Youssouf Atiq"}],
+     source: "RSSSF uae92: Youssouf Atiq (Al Ahly Dubai) 25, Zoheir Bakhit 22"}
+  - {comp: 538, season: "1999/2000", kind: top_scorer, value: "17", players: [{name: "Alboury Lah"}, {name: "Roberto Nilson"}, {name: "Juma'a Moussa"}],
+     source: "RSSSF uae00: three at 17 (Al-Wahda, Al-Sha'ab, Al-Nasr)"}
+  - {comp: 538, season: "2015/2016", kind: top_scorer, value: "25", players: [{fotmob: 141647}],
+     source: "Wikipedia 2015-16 UAE Pro League: Tagliabué 25; Mabkhout's golden boots are 2016-17 and 2020-21 (Kooora)"}
+  - {comp: 538, season: "2024/2025", kind: best_player, players: [{fotmob: 441309}],
+     source: "Pro League awards 2024-25 (Emarat Al Youm, 10 Aug 2025): Golden Ball Sardar Azmoun"}
+  - {comp: 538, season: "2024/2025", kind: best_goalkeeper, players: [{fotmob: 1138507}],
+     source: "Pro League awards 2024-25: Golden Glove Hamad Al Muqbali (FotMob: Hamad Abdullah)"}
+
+# the value shown was right: the disagreement is closed
+keep:
+  - {comp: 538, season: "1995/1996", kind: top_scorer, source: "Jassim Al Dokhi, one man two spellings (RSSSF)"}
+  - {comp: 538, season: "1996/1997", kind: top_scorer, source: "Bader Jassim (Wikipedia, UAE Pro League); Park Tae-ha never played here"}
+  - {comp: 538, season: "2002/2003", kind: top_scorer, source: "Cristián Montecinos 19 (Gulf News via Wikipedia)"}
+  - {comp: 538, season: "2003/2004", kind: runner_up, source: "RSSSF uae04: final round Al Ain 15, Al Ahli 13, Al Shabab 7"}
+  - {comp: 538, season: "2023/2024", kind: top_scorer, source: "Pro League Golden Boot: Omar Khribin 19 (Rahimi was player of the season)"}
+  - {comp: 538, season: "2024/2025", kind: top_scorer, source: "Pro League Golden Boot: Kodjo Laba 20"}
+
+matches:
+  - {date: "2023-02-17", home: 102111, away: 102123, score: [2, 0], source: "uaeproleague.ae: Al Wasl 2-0 Al Nasr"}
+
+players:
+  - {fotmob: 713207, born: "1993-02-12", source: "Seifeddine Jaziri: Wikipedia, Wikidata, 11v11"}
+  - {fotmob: 809170, born: "1995-03-29", source: "Karim El Berkaoui: ESPN, Soccerway, FootMercato"}
+  - {fotmob: 566112, born: "1989-09-10", source: "Keno: Wikipedia, ESPN"}
