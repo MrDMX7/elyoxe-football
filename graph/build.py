@@ -123,6 +123,19 @@ def publish_allowed(st, cov):
     return True
 
 
+def upload_files(out_dir, subs):
+    """(v1 key, path) of every .json under out_dir/<sub>/, subfolders included (matches/538/<season>.json)."""
+    out = []
+    for sub in subs:
+        ad = os.path.join(out_dir, sub)
+        for root, _, names in os.walk(ad):
+            for name in sorted(names):
+                if name.endswith(".json"):
+                    p = os.path.join(root, name)
+                    out.append((os.path.relpath(p, out_dir).replace(os.sep, "/"), p))
+    return sorted(out)
+
+
 def publish(S, out_dir, reg_path, rec, cov):
     st = S.store()
     if not publish_allowed(st, cov):
@@ -136,12 +149,9 @@ def publish(S, out_dir, reg_path, rec, cov):
     st.put_json("graph/coverage.json", {"generated": rec["started"], "counts": cov["counts"], "linked": cov["linked"], "arabic": cov["arabic"],
                                         "editions": cov["editions"]}, cache="static")
     sent = 0
-    for sub in ("awards", "motm", "coaches", "editions", "people", "matches"):
-        ad = os.path.join(out_dir, sub)
-        for name in sorted(os.listdir(ad)) if os.path.isdir(ad) else []:
-            if name.endswith(".json"):
-                st.put_json(f"{sub}/{name}", json.load(open(os.path.join(ad, name), encoding="utf-8")), cache="static")
-                sent += 1
+    for key, path in upload_files(out_dir, ("awards", "motm", "coaches", "editions", "people", "matches")):
+        st.put_json(key, json.load(open(path, encoding="utf-8")), cache="static")
+        sent += 1
     rec["awards_sent"] = sent
     ap = os.path.join(out_dir, "player_aliases_ar.json")
     if os.path.exists(ap):                               # docs/2026-11-19-player-aliases.md: news/media.py reads it

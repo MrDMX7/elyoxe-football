@@ -98,3 +98,15 @@ def test_publish_guard_counts_fotmob_matches():
     assert build.publish_allowed(st, cov) is False
     cov["by_src"]["match"]["fotmob"] = 990
     assert build.publish_allowed(st, cov) is True
+
+
+def test_the_upload_takes_the_files_in_subfolders_too(tmp_path):
+    from graph import build
+    (tmp_path / "matches" / "538").mkdir(parents=True)
+    (tmp_path / "matches" / "index.json").write_text("{}")
+    (tmp_path / "matches" / "538" / "2016-2017.json").write_text("{}")
+    (tmp_path / "awards").mkdir()
+    (tmp_path / "awards" / "index.json").write_text("{}")
+    (tmp_path / "awards" / "notes.txt").write_text("x")
+    got = sorted(k for k, _ in build.upload_files(str(tmp_path), ("awards", "matches", "people")))
+    assert got == ["awards/index.json", "matches/538/2016-2017.json", "matches/index.json"]
