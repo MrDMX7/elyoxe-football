@@ -776,3 +776,62 @@ def test_a_rerun_takes_off_a_clip_todays_matcher_no_longer_files_there(tmp_path,
     assert [c["id"] for c in extra["goals"]["69-102"]] == ["good0000001"]
     off = json.load(open(tmp_path / "cache" / "taken_off.json", encoding="utf-8"))
     assert [(x["goal"], x["id"]) for x in off] == [("69-102", "both0000001")] and off[0]["why"]
+
+
+# Al Nasr 2-2 Al Shabab, Kuwait Premier League, 2026-11-02, as Kuwait's sports channel posted its goals on X (2026-11-20, the
+# Arab leagues with no clip): Kuku has no Arabic name of ours, «للشباب» read as a youth word, and a graph «name» of Al Tararwa,
+# «منتخب الكويت تحت 21 سنة لكرة القدم», named him in every post that says «لكرة القدم». Real titles, times and ids.
+NAS_SHA = {"id": 6018582, "comp": 529, "kickoff_utc": "2026-11-02T15:45:00Z", "status": "finished", "score": {"home": 2, "away": 2},
+           "home": {"id": 101710, "name": "Al Nasr", "name_ar": "النصر"}, "away": {"id": 150412, "name": "Al-Shabab SC", "name_ar": "الشباب"},
+           "periods": {"firstHalfStarted": "2026-11-02T15:46:51Z", "secondHalfStarted": "2026-11-02T16:51:03Z", "gameEnded": "2026-11-02T17:40:10Z"},
+           "events": [goal(34, "home", 2435620, "Abdelrahman Kuku", (1, 0)), goal(60, "away", 915137, "Yaqoub Al Tararwa", (1, 1)),
+                      goal(74, "home", 725164, "Hazem Haj Hassen", (2, 1)), goal(90, "away", 1602390, "Geovane", (2, 2), added=3)]}
+KW_TAIL = " ضمن منافسات بطولة دوري زين الممتاز لكرة القدم للموسم الرياضي 2026-2027 #الكويت #الرياضية #وزارة_الإعلام_الكويت"
+CH_KW = {c["key"]: c for c in M.x_channels([{"handle": "kuwaitsporttv", "name": "القناة الرياضية الكويتية", "lang": "ar", "tier": "official",
+                                              "country": "kw", "kind": "broadcaster", "comps": [529]}])}
+
+
+def kw_names(learned=None):
+    n = M.Names({"101710": {"name": "Al Nasr", "name_ar": "النصر"}, "150412": {"name": "Al-Shabab SC", "name_ar": "الشباب"}},
+                {"915137": {"ar": "يعقوب الطراروة"}, "725164": {"ar": "حازم الحاج حسن"}, "1602390": {"ar": "جيوفاني"}}, {}, {}, {}, NATIONS,
+                player_aliases={"915137": ["منتخب الكويت تحت 21 سنة لكرة القدم", "يعقوب الطراروة"]})
+    if learned:
+        n.add_aliases(learned)
+    return n
+
+
+def kw_post(title, at, n):
+    return {"id": f"x{n}", "title": title + KW_TAIL, "desc": "", "at": at, "ch": "x_kuwaitsporttv", "source": "x", "url": "u"}
+
+
+def kw_goals(posts, names):
+    out = M.attach(posts, [NAS_SHA], names, CH_KW, [])
+    return {v["id"]: k for r in out.values() for k, l in r["goals"].items() for v, _ in l}
+
+
+def test_a_name_that_is_not_a_persons_is_no_form_of_him():
+    assert ("القدم",) not in kw_names().player(915137, "Yaqoub Al Tararwa")
+    assert kw_goals([kw_post("حازم الحاج حسن يسجل الهدف الثاني للنصر", "2026-11-02T17:27:00Z", 3)], kw_names()) == {"x3": "74-725164"}
+
+
+def test_the_club_al_shabab_is_not_a_youth_word():
+    assert kw_goals([kw_post("يعقوب الطراروة يسجل الهدف الأول للشباب", "2026-11-02T17:14:00Z", 2)], kw_names()) == {"x2": "60-915137"}
+    assert M.Text("هدف منتخب الشباب في كأس الخليج للشباب").youth                  # still a youth word without that club
+
+
+def test_letters_match_the_latin_name():
+    assert M.skeleton_ar("عبدالرحمن كوكو") == M.skeleton_lat("Abdelrahman Kuku")
+    assert M.skeleton_ar("هوجو") == M.skeleton_ar("هوغو") == M.skeleton_lat("Hugo")
+    assert M.skeleton_ar("مايكل كابريرا") == M.skeleton_lat("Michael Cabrera")
+    assert M.skeleton_ar("الطراروة") == M.skeleton_lat("Al Tararwa") == M.skeleton_lat("Tararwa")
+    assert M.skeleton_ar("كارلوس") != M.skeleton_lat("Breno Calixto")
+
+
+def test_a_scorer_with_no_arabic_name_learns_the_one_the_post_writes_in_its_letters():
+    post = [kw_post("عبدالرحمن كوكو يسجل الهدف الأول للنصر", "2026-11-02T16:32:00Z", 1)]
+    assert kw_goals(post, kw_names()) == {}
+    got = M.learn(post, [NAS_SHA], kw_names(), CH_KW)
+    assert {p: sorted(f) for p, f in got.items()} == {"2435620": ["عبدالرحمن كوكو"]}
+    assert kw_goals(post, kw_names({p: list(f) for p, f in got.items()})) == {"x1": "34-2435620"}
+    # the same post with another name in it teaches nothing: its letters are not Kuku's
+    assert M.learn([kw_post("كارلوس سيلفا يسجل الهدف الأول للنصر", "2026-11-02T16:32:00Z", 9)], [NAS_SHA], kw_names(), CH_KW) == {}

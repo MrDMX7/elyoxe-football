@@ -1,7 +1,7 @@
 """The official clip of every goal of the last month, and every match's highlights (owner 2026-11-19: «اريدك تحط جميع الاهداف
 خلال الشهر الماضي فتيفو سواء من اليوتيوب او من السوشال ميديا … بدون ما يستهلك api»).
 
-  python -m news.media_backfill [--days 32] [--dry] [--explain MATCH_ID] [--relist] [--only-new]
+  python -m news.media_backfill [--days 32] [--dry] [--explain MATCH_ID] [--relist] [--no-youtube] [--only yt_a,yt_b]
 
 news/media.py follows a match for 48 h (its highlights for 7 days) with what the channels' RSS feeds hold (their last 15
 uploads) and the X reader's inbox (its last 800 posts): a league channel that posts 40 clips on a match night rotates its feed
@@ -300,7 +300,7 @@ def turned_down(cur_goals, md, vids, names, chmap, blocked=()):
     return out
 
 
-def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=print, yt=True, remote=False):
+def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=print, yt=True, remote=False, only=None):
     t = t or M.now()
     t0 = t - timedelta(days=days, hours=12)
     matches = matches_of(store, t, days)
@@ -313,7 +313,8 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
     ctx = M.Ctx(matches, names)
     vids = {}
     if yt:
-        for v in youtube_videos(M.needed(chs, matches), ctx, t0, relist=relist, log=log, store=store, remote=remote):
+        want = [c for c in M.needed(chs, matches) if not only or c["key"] in only]       # --only: new channels, the rest left be
+        for v in youtube_videos(want, ctx, t0, relist=relist, log=log, store=store, remote=remote):
             vids[v["id"]] = v
     nyt = len(vids)
     for name in ("news/x-inbox.json", "news/x-history.json"):
@@ -449,6 +450,7 @@ def main(argv=None):
     ap.add_argument("--dry", action="store_true")
     ap.add_argument("--relist", action="store_true", help="list the channels again even if the cached listing is fresh")
     ap.add_argument("--no-youtube", action="store_true", help="only X and FotMob (after news/xhistory.js)")
+    ap.add_argument("--only", help="yt_a,yt_b: list and read only these YouTube channels (a channel just added)")
     ap.add_argument("--explain", nargs="?", const="all")
     ap.add_argument("--remote-pages", action="store_true", help="the watch pages are read by the runners (tifo-media-backfill.yml)")
     ap.add_argument("--read-pages", help="I/N: a runner reads its share of the to-do list's pages, and nothing else")
@@ -461,7 +463,8 @@ def main(argv=None):
         read_pages_shard(store, i, n)
         return 0
     cfg = yaml.safe_load(open(os.path.join(HERE, "sources.yaml"), encoding="utf-8"))
-    res = run(store, cfg, days=a.days, dry=a.dry, explain=a.explain, relist=a.relist, yt=not a.no_youtube, remote=a.remote_pages)
+    res = run(store, cfg, days=a.days, dry=a.dry, explain=a.explain, relist=a.relist, yt=not a.no_youtube, remote=a.remote_pages,
+              only=set(a.only.split(",")) if a.only else None)
     print(json.dumps({k: v for k, v in res.items() if k != "by_comp"}, ensure_ascii=False))
     import config
     names = {c["id"]: c.get("name_en") for c in config.competitions()}
