@@ -47,6 +47,25 @@ def _end_year(season):
 NOT_A_CLUB = re.compile(r"(^|\s)(league|cup|championships?|super\s?cup|trophy)(\s|$)|^\d{4}([–-]\d{2,4})?\s", re.I)
 
 
+NOISE = re.compile(r"\b(club|fc|sc|cf|ac|cd|sd|afc|the|\d+)\b")
+
+
+def alike(a, b):
+    """Two folded names of one club or one man: equal, the same last word (a surname), or the same once Wikipedia's extras
+    are gone («al shabab al arabi club 1958 2017») and close enough letter by letter («banni yas», «fc baniyas»)."""
+    from difflib import SequenceMatcher
+    if not (a and b):
+        return False
+    if a == b or a.split()[-1:] == b.split()[-1:]:
+        return True
+    ja, jb = "".join(NOISE.sub(" ", a).split()), "".join(NOISE.sub(" ", b).split())
+    if not ja or not jb:
+        return False
+    if ja == jb or (min(len(ja), len(jb)) >= 6 and (ja.startswith(jb) or jb.startswith(ja))):
+        return True
+    return SequenceMatcher(None, ja, jb).ratio() >= 0.88
+
+
 def load(G, reg, S):
     d = os.path.join(S.root, "graph", ".cache", "awards")
     if not os.path.exists(os.path.join(d, "items.json")) and S.s3:
@@ -130,9 +149,6 @@ def load(G, reg, S):
         t, k = ("player", "pid") if pid else ("team", "tid") if tid else ("coach", "kid")
         r = G.c.execute(f"SELECT name FROM {t} WHERE {k}=?", (pid or tid or kid,)).fetchone()
         return re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", (r[0] if r else "") or "").encode("ascii", "ignore").decode().lower()).strip()
-
-    def alike(a, b):
-        return bool(a and b) and (a == b or a.split()[-1:] == b.split()[-1:])
 
     def edition_set(eid, kind, entries):
         """One source table's honours of one kind for one edition (entries: rank, tid, pid, kid, value): written when the edition

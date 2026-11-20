@@ -207,3 +207,11 @@ def test_a_link_to_another_competition_or_a_season_article_is_not_a_club(tmp_pat
     awards.load(G, reg, S)
     assert G.c.execute("select count(*) from honour h join edition e on e.eid=h.eid where e.season in ('1993/1994','1994/1995')").fetchone()[0] == 0
     assert G.c.execute("select count(*) from team where name like '%League%'").fetchone()[0] == 0
+
+
+def test_two_spellings_of_one_club_or_one_man_are_alike():
+    assert awards.alike("al shabab al arabi", "al shabab al arabi club 1958 2017")     # Wikipedia's link carries the years
+    assert awards.alike("banni yas", "fc baniyas")
+    assert awards.alike("lionel messi", "messi")                                      # the same surname, as before
+    assert not awards.alike("al ain", "al wahda")
+    assert not awards.alike("omar khribin", "soufiane rahimi")
