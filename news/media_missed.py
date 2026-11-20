@@ -37,6 +37,7 @@ WHY_AR = [
     ("score is not this goal's", "النتيجة بالعنوان مب نتيجة هالهدف"),
     ("minute is not this goal's", "الدقيقة بالعنوان مب دقيقة هالهدف"),
     ("goal number", "رقم الهدف بالعنوان ما يطابق"),
+    ("two goal numbers", "العنوان يذكر رقمين لهدفين"),
     ("equaliser words", "يقول تعادل والنتيجة مب تعادل"),
     ("penalty words", "يقول ضربة جزاء وهو مب جزاء"),
     ("free kick words", "يقول ضربة حرة وهو جزاء"),

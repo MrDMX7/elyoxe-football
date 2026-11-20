@@ -304,6 +304,17 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
     log(json.dumps({"videos": len(vids), "youtube": nyt, "x": len(vids) - nyt}))
     trace = [] if explain is not None else None
     found = M.attach(list(vids.values()), matches, names, chmap, trace, blocked)
+    # the names the month's posts teach (M.learn()), kept for media.py too, and the clips they place
+    cur_l = store.get_state(M.LEARNED) or {}
+    merged_l, added_l = M.merge_learned(cur_l, M.learn(list(vids.values()), matches, names, chmap, blocked))
+    if added_l:
+        names.add_aliases(M.learned_aliases(added_l))
+        trace = [] if explain is not None else None
+        found = M.attach(list(vids.values()), matches, names, chmap, trace, blocked)
+        log(json.dumps({"learned": {p: {n: [e["match"], e["goal"], e["chs"]] for n, e in fs.items()} for p, fs in added_l.items()}},
+                       ensure_ascii=False))
+        if not dry:
+            store.put_state(M.LEARNED, merged_l)
     M.fotmob_links(found, matches, vids, blocked)
     oe_p = os.path.join(CACHE, "oembed.json")
     oe = jload(oe_p, {})

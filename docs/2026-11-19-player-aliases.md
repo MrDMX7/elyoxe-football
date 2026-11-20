@@ -43,9 +43,24 @@ What's left needs data rather than spelling rules: a different name for the same
 `media.load_names()` reads it on every run when it exists (`media.PLAYER_ALIASES`). Each form is used like the dictionary's
 own name: a full name names the player, and a long surname names him on its own. A missing or broken file changes nothing.
 
-## Learned forms (matcher side, next)
+## Learned forms (matcher side, built 2026-11-20)
 
-Once the graph file exists, the matcher can record the names official accounts used for goals it confirmed by other
-evidence: the club's own channel plus the minute, the score, or the goal number. It would write them to
-`state/news/media-learned-aliases.json` as `{"<fotmob pid>": {"<form>": {"n": 3, "last": iso, "src": "x_adsportstv"}}}`,
-for the graph to fold in with provenance `learned:media`.
+The graph file went up on 2026-11-20 (18,555 players) and still missed the channels' spellings: «سيرجيو بيريرا» for Serginho
+(Abu Dhabi Sports and Dubai Sports), «هوجو نيتو» for Hugo. `media.learn()` now records them, every run of `media.step` and of
+`media_backfill.run`:
+
+- A post that names none of the match's scorers, but whose score (also Dubai Sports' «#الوصل 2 #حتا 0»), minute or goal number
+  («هدف الوصل الثاني», «بهدف ثان») fits exactly one goal, is about that goal.
+- The name it gives is that scorer's when two channels wrote the same one, or when one of its words is the scorer's own spelt
+  another way (`loose()`: «هوجو» = «هوغو»). Only words that are part of some player's name in the dictionary count; the sides'
+  names and the name after a pass («بعرضية من …») never do, and a full name the dictionary holds for another player is never
+  learnt.
+
+`state/news/media-learned-aliases.json`:
+
+```json
+{"1393478": {"سيرجيو بيريرا": {"n": 2, "chs": ["x_adsportstv", "x_dubaisportstv"], "posts": ["x2123418430434836852", "…"],
+                               "match": 1000022240, "goal": "62-1393478", "at": "2026-11-19T14:09:39Z"}}}
+```
+
+`media.load_names()` adds these to the graph's names on every run. The graph can fold them in with provenance `learned:media`.
