@@ -36,10 +36,17 @@ function wait(stamps, now, budget = BUDGET, win = WINDOW) {
   const recent = stamps.filter(t => now - t < win).sort((p, q) => p - q);
   return recent.length < budget ? 0 : recent[recent.length - budget] + win - now + 1000;
 }
-const stamps = [];
+// The pages an earlier run sent in the last WINDOW count too (2026-11-20: a second run started a minute after the first one
+// ended counted from zero, and X stopped it at its 31st page)
+const PAGES = path.join(HERE, '.x-search-pages.json');
+function loadStamps(file = PAGES, now = Date.now()) {
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')).filter(t => now - t < WINDOW); } catch (e) { return []; }
+}
+const stamps = loadStamps();
 async function paced() {
   for (let w = wait(stamps, Date.now()); w > 0; w = wait(stamps, Date.now())) { log('pacing:', Math.round(w / 1000), 's'); await sleep(w); }
   stamps.push(Date.now());
+  try { fs.writeFileSync(PAGES, JSON.stringify(stamps.filter(t => Date.now() - t < WINDOW))); } catch (e) {}
 }
 
 async function main() {
@@ -115,6 +122,6 @@ async function main() {
   log('done:', box.items.length, 'posts with a video kept', limited ? '(stopped early)' : '');
 }
 
-module.exports = { order, wait };
+module.exports = { order, wait, loadStamps };
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });

@@ -201,7 +201,7 @@ NEG_ALWAYS = phrases([
     "entrevista", "conference de presse", "pressekonferenz", "conferenza stampa", "intervista", "training", "trains",
     "entrenamiento", "entrainement", "allenamento", "تدريب", "تدريبات", "التدريبات", "behind the scenes", "كواليس", "inside",
     "tunnel", "all access", "vlog", "unseen", "efootball", "pes", "simulation", "gameplay", "prediction", "predictions",
-    "توقعات", "توقع", "pronostico", "podcast", "بودكاست", "برنامج", "الاستوديو التحليلي", "studio", "episode", "حلقة", "الحلقة",
+    "توقعات", "توقع", "pronostico", "podcast", "بودكاست", "برنامج", "الاستوديو التحليلي", "studio", "استديو", "استوديو", "محلل", "يشرح", "episode", "حلقة", "الحلقة",
     "analysis", "تحليل", "brawl", "fight", "scuffle", "عراك", "شجار", "fans", "جماهير", "الجماهير", "المدرجات", "trailer",
     "promo", "tickets", "تذاكر", "kit", "جولة خاصة", "تغطية خاصة",
     # another sport between the same two countries (a broadcaster's channel carries them all)
@@ -237,6 +237,8 @@ NEG_GOAL = phrases([
     "القائم", "العارضة", "celebration", "celebrations", "احتفال", "reaction", "red card", "طرد", "tackle", "block", "clearance",
     "celebrando", "celebra", "festejo", "festejos", "festeja", "festeggia", "festeggiamenti", "célébration", "comemora",
     "comemoração", "jubel", "يحتفل", "احتفالية",
+    # «… لكن حكم اللقاء يُلغيه بداعي التسلل» (Thmanyah 2026-10-24): the word with its article, and the referee's verb
+    "التسلل", "يلغي", "يلغيه",
     "goal line", "chance", "chances", "فرصة", "almost", "nearly", "so close", "close call", "denied", "no goal", "not a goal", "كاد",
     "كادت", "قريب", "casi", "quasi", "presque", "beinahe", "atajadón", "حارس", "keeper", "goalkeeper"])
 # the woodwork, which a title may name before the rebound that went in («القائم يرفض تسديدة كاكو.. والحسين رحيمي يكمل المهمة …
@@ -275,6 +277,19 @@ MINUTE = re.compile(r"(?<![\d.:/-])(\d{1,3})\s*(?:\+\s*(\d{1,2}))?\s*['’′](?
                     r"|(?<!\w)د\s?(\d{1,3})(?:\s*\+\s*(\d{1,2}))?(?!\d)", re.I)            # «د43:» (Al Ain's clips)
 
 
+def vetoed(card, goal=True):
+    """Why a card kept from an earlier run is turned down by today's word lists, or None. The backfill (media-extra.json, the
+    published files) only ever added, so a veto word added later never reached what it had filed (Mané's celebration, a talk
+    show on Ronaldo's three goals, 2026-11-20). FotMob's own link is not judged by its title."""
+    if card.get("found_by") == "fotmob":
+        return None
+    tx = Text(card.get("title") or "")
+    return tx.neg or (tx.neg_goal if goal else None)
+
+
+JOY = toks("فرحة")
+
+
 class Text:
     """Everything the checks need from a title (and the first lines of a description)."""
 
@@ -292,6 +307,11 @@ class Text:
         # «Full Match Highlights» (MLS) is a summary of the whole match, not the replay «FULL MATCH»
         full_hl = has(self.al, ("full", "match", "highlights")) or has(self.al, ("full", "game", "highlights"))
         self.neg = next((" ".join(p) for p in NEG_ALWAYS if has(self.al, p) and not (full_hl and p[:1] == ("full",))), None)
+        # a show segment: the title ends with the show and its host, «… | المنصة مع تركي العجمة» (Thmanyah's YouTube, 2026-10-29,
+        # on all three of Ronaldo's goals); a post's own tail is its hashtags
+        tail = self.raw.rsplit("|", 1)[1] if "|" in self.raw else ""
+        if not self.neg and "#" not in tail and "مع" in toks(tail):
+            self.neg = "a show («| … مع …»)"
         self.women = next((" ".join(p) for p in WOMEN if has(self.al, p) or has(self.dal, p)), None)
         self.youth = next((" ".join(p) for p in YOUTH if has(self.al, p) or has(self.dal, p)), None)
         ages = [int(a or b) for a, b in YOUTH_AGE.findall(self.raw + " " + prep(head))]
@@ -299,6 +319,9 @@ class Text:
         self.old = next((" ".join(p) for p in NEG_OLD if has(self.al, p)), None)
         self.ordinal = next((n for n, ps in ORD_WORDS.items() if any(has(self.al, p) for p in ps)), None)
         self.neg_goal = next((" ".join(p) for p in NEG_GOAL if has(self.al, p) and not (self.ordinal and p in WOODWORK)), None)
+        # «فرحة ساديو ماني بهدف التقدّم» is the celebration; «… يسجل … لتتعالى فرحة اللاعبين» (Sharjah 2026-11-19) is the goal
+        if not self.neg_goal and self.tt[:1] == JOY:
+            self.neg_goal = "فرحة"
         self.plural = any(has(self.al, p) for p in PLURAL_GOALS) and not self.hl and not any(has(self.al, p) for p in ONE_OF)
         self.many = any(has(self.al, p) for p in MANY_GOALS)
         self.pen = any(has(self.al, p) for p in PEN_WORDS)
@@ -1476,10 +1499,11 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
             continue
         r = r or {"highlights": [], "goals": {}}
         end = match_end(md)
-        hl = sort_highlights(merge_cards(pack(r["highlights"], oe, chmap, hl=True), ex.get("highlights"), gone), end)
+        hl = sort_highlights(merge_cards(pack(r["highlights"], oe, chmap, hl=True),
+                                         [c for c in ex.get("highlights") or [] if not vetoed(c, goal=False)], gone), end)
         goals = {k: pack(l, oe, chmap) for k, l in r["goals"].items()}
         for k, l in (ex.get("goals") or {}).items():
-            goals[k] = merge_cards(goals.get(k), l, gone)
+            goals[k] = merge_cards(goals.get(k), [c for c in l if not vetoed(c)], gone)
         goals = {k: sort_goal(l) for k, l in goals.items() if l}
         if goals:
             clip_goals[md["id"]] = list(goals)
