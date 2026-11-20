@@ -39,6 +39,9 @@ from news.entities import norm, ar_variants, LATIN_STOP, AR_STOP
 
 STATE = "news/media.json"
 EXTRA = "news/media-extra.json"   # news/media_backfill.py: {"matches": {id: {"highlights": [card], "goals": {key: [card]}}}}
+# the names official posts gave scorers we know by another name (learn()): {player id: {name: {"n", "chs", "posts", "match",
+# "goal", "at"}}}; load_names() adds them, the graph folds them in (docs/2026-11-19-player-aliases.md)
+LEARNED = "news/media-learned-aliases.json"
 # the Tifo graph's Arabic names per player (graph/, owner 2026-11-19: «نسوي للاعبين أسامي aliases»): {"players": {FotMob player
 # id: [name, ...]}} or that map alone; read when it exists (docs/2026-11-19-player-aliases.md)
 PLAYER_ALIASES = "graph/player_aliases_ar.json.gz"
@@ -182,13 +185,35 @@ FK_WORDS = phrases(["free kick", "freekick", "ركلة حرة", "tiro libre", "p
 EQ_WORDS = phrases(["هدف التعادل", "التعادل", "equaliser", "equalizer", "equalises", "equalizes", "levels it", "el empate", "gol del empate",
                     "pareggio", "égalisation", "ausgleich"])
 ORD_WORDS = {1: phrases(["الهدف الأول", "هدف أول", "first goal", "opener", "opening goal", "primer gol", "primo gol", "premier but"]),
-             2: phrases(["الهدف الثاني", "second goal", "segundo gol", "secondo gol", "deuxième but"]),
+             2: phrases(["الهدف الثاني", "second goal", "segundo gol", "secondo gol", "deuxième but", "يضاعف النتيجة", "ضاعف النتيجة"]),
              3: phrases(["الهدف الثالث", "third goal", "tercer gol", "terzo gol", "troisième but"]),
              4: phrases(["الهدف الرابع", "fourth goal", "cuarto gol", "quarto gol"]),
              5: phrases(["الهدف الخامس", "fifth goal", "quinto gol"])}
 for _n, _ws in ONE_OF_GOALS.items():
     ORD_WORDS[_n] += phrases(_ws)
 ONE_OF = [p for ws in ONE_OF_GOALS.values() for p in phrases(ws)]
+# the number after «هدف» with the side between, «هدف الوصل الثاني», «هدف حتا الأول», «بهدف ثان للوصل» (Dubai Sports and Abu Dhabi
+# Sports, 2026-11-19); a word of BREAK_ORD ends the look («هدف في الشوط الثاني» is the half's, «هدف التعادل الثاني» the
+# equaliser's, «الهدف الدولي الأول» the player's own)
+GOAL_TOK = {toks(w)[0] for w in ["هدف", "الهدف", "بهدف", "هدفا"]}
+ORD_TOK = {toks(w)[0]: n for n, ws in {1: ["الأول"], 2: ["الثاني", "ثاني", "ثان"], 3: ["الثالث", "ثالث"], 4: ["الرابع", "رابع"],
+                                        5: ["الخامس", "خامس"]}.items() for w in ws}
+# «لا يكتفي بهدف واحد ويسجل الثاني له والثالث لفريقه» (Thmanyah, Al-Bulaihi 2026-10-22) is his second and his team's third: a verb
+# or «واحد» ends the look too
+BREAK_ORD = {t for w in ["في", "من", "خلال", "الشوط", "شوط", "الدقيقة", "دقيقة", "الجولة", "جولة", "الوقت", "مع", "على", "عن",
+                         "بعد", "قبل", "التعادل", "الفوز", "له", "الدولي", "الشخصي", "الاحترافي", "الموسم", "واحد", "يسجل", "سجل",
+                         "يحرز", "أحرز", "يضيف", "أضاف", "يكتفي", "يصنع"] for t in toks(w)}
+
+
+def goal_number(tt):
+    for i, t in enumerate(tt):
+        if t in GOAL_TOK:
+            for u in tt[i + 1:i + 4]:
+                if u in ORD_TOK:
+                    return ORD_TOK[u]
+                if u in BREAK_ORD or (u[:1] == "و" and u[1:] in BREAK_ORD) or u.isdigit() or u in GOAL_TOK:
+                    break
+    return None
 
 # never a match summary or a goal clip
 NEG_ALWAYS = phrases([
@@ -269,6 +294,9 @@ MONTHS.update({norm(m): i + 1 for i, m in enumerate(["يناير", "فبراير
 MONTHS.update({"ايار": 5, "حزيران": 6, "تموز": 7, "اب": 8, "ايلول": 9, "تشرين الاول": 10})
 
 SCORE = re.compile(r"(?<![\d/.:+])(\d{1,2})\s*(?:-|–|—|:|×|x|X)\s*(\d{1,2})(?![\d/.:]|\s*[-–/]\s*\d)")
+# Dubai Sports' score after the goal, a hashtag and a number per side on two lines: «#الوصل 2\n#حتا 0» (2026-11-19). Not a
+# keycap («#أبوظبي_الرياضية 1⃣» is Abu Dhabi Sports' channel number)
+TAG_SCORE = re.compile(r"#[^\s#]+[ \t]+(\d{1,2})(?![\d⃣])[ \t]*\n\s*#[^\s#]+[ \t]+(\d{1,2})(?![\d⃣])")
 SEASON = re.compile(r"(?<!\d)(20\d\d)\s*[/-]\s*((?:20)?\d\d)(?!\d)|(?<![\d/])(\d\d)/(\d\d)(?![\d/])")
 YEAR = re.compile(r"(?<![\d/.-])(19\d\d|20\d\d)(?![\d/.-])")
 DATE = re.compile(r"(?<!\d)(\d{1,2})\s*[-/.]\s*(\d{1,2})\s*[-/.]\s*(20\d\d)(?!\d)|(?<!\d)(20\d\d)-(\d\d)-(\d\d)(?!\d)")
@@ -317,7 +345,11 @@ class Text:
         ages = [int(a or b) for a, b in YOUTH_AGE.findall(self.raw + " " + prep(head))]
         self.youth_age = ages[0] if ages else None
         self.old = next((" ".join(p) for p in NEG_OLD if has(self.al, p)), None)
-        self.ordinal = next((n for n, ps in ORD_WORDS.items() if any(has(self.al, p) for p in ps)), None)
+        # «بنفس سيناريو الهدف الأول.. سعيد عزت … ويضاعف النتيجة» (Abu Dhabi Sports 2026-10-22) is the second goal, made like the
+        # first: two numbers in one title tell no goal apart (ord_clash), and the clip goes on none
+        ords = ({n for n, ps in ORD_WORDS.items() if any(has(self.al, p) for p in ps)} | {goal_number(self.tt)}) - {None}
+        self.ordinal = next(iter(ords)) if len(ords) == 1 else None
+        self.ord_clash = len(ords) > 1
         self.neg_goal = next((" ".join(p) for p in NEG_GOAL if has(self.al, p) and not (self.ordinal and p in WOODWORK)), None)
         # «فرحة ساديو ماني بهدف التقدّم» is the celebration; «… يسجل … لتتعالى فرحة اللاعبين» (Sharjah 2026-11-19) is the goal
         if not self.neg_goal and self.tt[:1] == JOY:
@@ -331,7 +363,7 @@ class Text:
         strict = GOAL_STRICT + GOAL_STRICT_LANG.get(lang, [])
         self.goal_at = [i for i in range(len(self.al)) if any(p[0] in self.al[i] and has(self.al[i:i + len(p)], p) for p in strict)]
         self.flags = [(flag_iso(a), flag_iso(b)) for a, b in FLAG.findall(title or "")]   # «🇯🇴 🆚 🇸🇾»
-        self.scores = [(int(a), int(b)) for a, b in SCORE.findall(self.raw) if int(a) <= 15 and int(b) <= 15]
+        self.scores = [(int(a), int(b)) for a, b in SCORE.findall(self.raw) + TAG_SCORE.findall(self.raw) if int(a) <= 15 and int(b) <= 15]
         # «العين 2 - 1 الظفرة | الجولة 9 - …»: a head with one score may be a result alone, Abu Dhabi Sports' name for its
         # highlights (2026-11-19); result_title() checks that the rest of the head is the two teams' names
         head = self.raw.split("|")[0]
@@ -491,7 +523,7 @@ class Names:
         self.people = {}
         for a, target in (al.get("people") or {}).items():
             self.people.setdefault(norm(target), []).append(a)
-        self._tf, self._pf = {}, {}
+        self._tf, self._pf, self._known = {}, {}, None
 
     def iso_of(self, team):
         t = self.teams.get(str(team.get("id"))) or {}
@@ -516,14 +548,44 @@ class Names:
         self._tf[key] = f
         return f
 
+    def arabic(self, pid):
+        """Every Arabic name held for the player."""
+        ars = [(self.players_ar.get(str(pid)) or {}).get("ar"), (self.fm.get("players") or {}).get(str(pid))] + \
+              list(self.player_aliases.get(str(pid)) or [])
+        return [x for x in ars if x]
+
     def player(self, pid, name):
         if pid in self._pf:
             return self._pf[pid]
-        ars = [(self.players_ar.get(str(pid)) or {}).get("ar"), (self.fm.get("players") or {}).get(str(pid))] + \
-              list(self.player_aliases.get(str(pid)) or [])
-        f = player_forms(name, [x for x in ars if x], self.people.get(norm(name or ""), []))
+        f = player_forms(name, self.arabic(pid), self.people.get(norm(name or ""), []))
         self._pf[pid] = f
         return f
+
+    def add_aliases(self, extra):
+        """More Arabic names per player ({player id: [name, ...]}, the learned ones: learn())."""
+        for pid, ns in (extra or {}).items():
+            have = list(self.player_aliases.get(str(pid)) or [])
+            self.player_aliases[str(pid)] = have + [n for n in ns if n not in have]
+        self._pf.clear()
+        self._known = None
+
+    def known_names(self):
+        """-> (every word of every Arabic player name, {a full Arabic name's tokens: {player ids}})."""
+        if getattr(self, "_known", None) is None:
+            words, full = set(), {}
+            pairs = [(pid, (d or {}).get("ar")) for pid, d in self.players_ar.items()] + \
+                    list((self.fm.get("players") or {}).items()) + \
+                    [(pid, n) for pid, ns in self.player_aliases.items() for n in ns or []]
+            for pid, n in pairs:
+                tt = tuple(toks(n or ""))
+                if tt:
+                    words.update(tt)
+                    full.setdefault(tt, set()).add(str(pid))
+            for ns in self.people.values():
+                for n in ns:
+                    words.update(toks(n))
+            self._known = (words, full)
+        return self._known
 
 
 # ------------------------------------------------------------------------------------------------ matches
@@ -930,6 +992,8 @@ def check_goal(v, ch, tx, md, g, gs, teams, players, t_pub, unnamed=False):
         if not after or after[0] != after[1]:
             return None, "equaliser words, the score is not level"
         conf += 5
+    if tx.ord_clash:
+        return None, "two goal numbers in the title"
     if tx.ordinal and after:
         side = g.get("team")                    # the side the goal counts for (FotMob credits an own goal to the side it helps)
         mine = after[0] if side == "home" else after[1] if side == "away" else None
@@ -1127,6 +1191,136 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
             key = goal_key(g)
             out.setdefault(mid_, {"highlights": [], "goals": {}})["goals"].setdefault(key, []).append((v, conf))
     return out
+
+
+# ------------------------------------------------------------------------------------------------ learned names
+# Abu Dhabi Sports and Dubai Sports wrote Serginho's 62' against Hatta «سيرجيو بيريرا» and Hugo's own goal «هوجو نيتو» (2026-11-19);
+# we hold «سيرجينيو» and «هوغو», and the graph's names did not have theirs either. A post that names none of the match's scorers but
+# whose score, minute or goal number fits exactly one goal is about that goal; the name it gives is then that scorer's when two
+# channels wrote the same one, or when one of its words is the scorer's own spelt another way (loose()). Words that are not part of
+# any player's name in the dictionary, the sides' names, and the name after a pass («بعرضية من …») are never a name; a full name
+# the dictionary holds for another player is never learnt.
+ASSIST_TOK = {toks(w)[0] for w in ["تمريرة", "بتمريرة", "صناعة", "بصناعة", "عرضية", "بعرضية", "صنع", "يصنع", "assist", "assisted",
+                                    "pass", "cross"]}
+NAME_STOP = {t for ps in [GOAL_WORDS, HL_WORDS, EQ_WORDS, PEN_WORDS, OWN_WORDS, FK_WORDS, PLURAL_GOALS, NEG_GOAL, NEG_ALWAYS]
+             + list(ORD_WORDS.values()) for p in ps for t in p} | set(GOAL_TOK) | set(ORD_TOK) | set(BREAK_ORD) | \
+            {t for w in ["إلى", "ضد", "أمام", "مرمى", "شباك", "الدوري", "دوري", "النتيجة", "نتيجة", "الفريق", "نادي", "منتخب",
+                         "لاعب", "اللاعب", "نجم", "النجم", "قائد", "المباراة", "مباراة", "اللقاء", "لقاء", "رائع", "رائعة", "جميل",
+                         "عالمي", "عالمية", "ويضاعف", "يضاعف", "يقلص", "يعادل", "يحرز", "يسجل"] for t in toks(w)}
+
+
+def name_runs(title, words, side_toks):
+    """-> [(token tuple, the words as written)]: 2-3 words in a row of the title (its hashtags left out) that are all words of
+    players' names, none a side's name, and not right after a pass («بعرضية من جواو سيلفا»)."""
+    raw = unicodedata.normalize("NFKC", BIDI.sub("", (title or "").translate(AR_DIGITS)))
+    raw = re.sub(r"#[^\s#]+", " ", raw)
+    tt = toks(raw)
+    ok = [t in words and t not in NAME_STOP and t not in side_toks and len(t) >= 3 and not t.isdigit() for t in tt]
+    runs, i = [], 0
+    while i < len(tt):
+        if not ok[i]:
+            i += 1; continue
+        j = i
+        while j < len(tt) and ok[j]:
+            j += 1
+        if 2 <= j - i <= 3 and not (set(tt[max(0, i - 2):i]) & ASSIST_TOK):
+            runs.append(tuple(tt[i:j]))
+        i = j
+    ws = raw.split()
+    out = []
+    for r in runs:
+        surf = next((" ".join(ws[a:b]) for a in range(len(ws)) for b in range(a + 1, min(a + 6, len(ws)) + 1)
+                     if tuple(toks(" ".join(ws[a:b]))) == r), " ".join(r))
+        out.append((r, re.sub(r"^\W+|\W+$", "", surf)))
+    return out
+
+
+def pinned_goal(ctx, v, ch, tx, teams, players, t_pub):
+    """-> (match id, goal) when the post names none of the scorers of the matches it is tied to (a side named, or a side's own
+    channel) and exactly one goal of them passes the checks a nameless clip has to pass; a scorer's name too short to name him
+    alone («هوجو» for «هوغو») leaves only his goals."""
+    hits = []
+    for mid, md in ctx.matches.items():
+        h, a = md["home"]["id"], md["away"]["id"]
+        if not (h in teams or a in teams or ch.get("team") in (h, a)):
+            continue
+        gs = ctx.goals[mid]
+        scorers = {g["player"]["id"] for g in gs}
+        if any(st >= 2 for p, st in players.items() if p in scorers):
+            return None
+        weak = {p for p in players if p in scorers}
+        for g in gs:
+            if not g.get("lb") or (weak and g["player"]["id"] not in weak):
+                continue
+            conf, _ = check_goal(v, ch, tx, md, g, gs, teams, {}, t_pub, unnamed=True)
+            if conf and conf >= 70:
+                hits.append((mid, g))
+    return hits[0] if len(hits) == 1 else None
+
+
+def learn(videos, matches, names, chmap, blocked=()):
+    """-> {player id: {name as written: {"n": posts, "chs": channels, "posts": ids, "match", "goal", "at"}}}, names not held yet."""
+    ctx = Ctx(matches, names)
+    words, full = names.known_names()
+    groups = {}
+    for v in videos:
+        ch = chmap.get(v["ch"])
+        t_pub = ptime(v.get("at"))
+        if v["id"] in blocked or not ch or not t_pub:
+            continue
+        tx = Text(v["title"], v.get("desc"), ch.get("lang", "en"))
+        if classify(tx, ch) != "goal" or tx.neg_goal or tx.old or tx.youth or tx.hl or tx.plural:
+            continue
+        if not (tx.scores or tx.minutes or tx.ordinal or tx.eq):
+            continue
+        teams, players = ctx.mentions(tx.al)
+        hit = pinned_goal(ctx, v, ch, tx, teams, players, t_pub)
+        if not hit:
+            continue
+        mid, g = hit
+        md = ctx.matches[mid]
+        nat = md.get("comp") in names.national_comps
+        side = {t for s in ("home", "away") for f in names.team(md[s], nat) for t in f}
+        groups.setdefault((mid, goal_key(g)), {"g": g, "posts": []})["posts"].append((v, ch["key"], name_runs(v["title"], words, side)))
+    out = {}
+    for (mid, key), grp in groups.items():
+        p = grp["g"]["player"]
+        pid = str(p["id"])
+        mine = names.player(p["id"], p.get("name"))
+        own = {t for n in names.arabic(p["id"]) for t in toks(n) if len(t) >= 4 and t not in AR_GIVEN}
+        forms = {}
+        for v, chk, runs in grp["posts"]:
+            for f, surf in runs:
+                if f in mine or (full.get(f, set()) - {pid}):
+                    continue
+                d = forms.setdefault(f, {"surf": surf, "posts": {}})
+                d["posts"].setdefault(v["id"], (v, chk))
+        shared = [f for f, d in forms.items() if len({c for _, c in d["posts"].values()}) >= 2]
+        take = set(shared) if len(shared) == 1 else set()
+        take |= {f for f in forms if any(t == u or (loose(t) & loose(u)) for t in f for u in own)}
+        for f in take:
+            ps = list(forms[f]["posts"].values())
+            out.setdefault(pid, {})[forms[f]["surf"]] = {
+                "n": len(ps), "chs": sorted({c for _, c in ps}), "posts": sorted(v["id"] for v, _ in ps)[:10], "match": mid,
+                "goal": key, "at": min(v["at"] for v, _ in ps)}
+    return out
+
+
+def learned_aliases(doc):
+    """The learned file -> {player id: [name, ...]} for Names.add_aliases()."""
+    return {str(p): [n for n in fs] for p, fs in (doc or {}).items() if isinstance(fs, dict) and fs}
+
+
+def merge_learned(cur, new):
+    """-> (the file with the new names added, {player id: {name: entry}} of those that were not in it)."""
+    merged = {p: dict(fs) for p, fs in (cur or {}).items() if isinstance(fs, dict)}
+    added = {}
+    for p, fs in (new or {}).items():
+        for n, e in fs.items():
+            if n not in merged.get(p, {}):
+                merged.setdefault(p, {})[n] = e
+                added.setdefault(p, {})[n] = e
+    return merged, added
 
 
 # ------------------------------------------------------------------------------------------------ the step
@@ -1348,8 +1542,13 @@ def load_names(store, cfg_national, cache_dir=None):
         pa = store.get_state(PLAYER_ALIASES) or {}
     except Exception:
         pa = {}
-    return Names(teams, rd(os.path.join(ROOT, "names", "players_ar.json")), rd(os.path.join(ROOT, "names", "clubs_ar.json")), fm, al,
-                 rd(os.path.join(HERE, "nations.json")), cfg_national, player_aliases=pa.get("players", pa))
+    names = Names(teams, rd(os.path.join(ROOT, "names", "players_ar.json")), rd(os.path.join(ROOT, "names", "clubs_ar.json")), fm, al,
+                  rd(os.path.join(HERE, "nations.json")), cfg_national, player_aliases=dict(pa.get("players", pa)))
+    try:
+        names.add_aliases(learned_aliases(store.get_state(LEARNED)))
+    except Exception:
+        pass
+    return names
 
 
 def national_comps():
@@ -1473,6 +1672,19 @@ def step(store, cfg, t=None, prefetched=None, xbox=None, dry=False, explain=None
     blocked = set(str(x) for x in ((cfg.get("media") or {}).get("block") or []))
     trace = []                                           # also the morning report's (news/media_missed.py)
     found = attach(list(vids.values()), matches, names, chmap, trace, blocked)
+    # the names this run's posts taught (learn()): kept, and the clips they place filed in this same run
+    try:
+        cur_l = store.get_state(LEARNED) or {}
+        merged_l, added_l = merge_learned(cur_l, learn(list(vids.values()), matches, names, chmap, blocked))
+        if added_l:
+            names.add_aliases(learned_aliases(added_l))
+            trace = []
+            found = attach(list(vids.values()), matches, names, chmap, trace, blocked)
+            log(json.dumps({"learned": {p: list(fs) for p, fs in added_l.items()}}, ensure_ascii=False))
+            if not dry:
+                store.put_state(LEARNED, merged_l)
+    except Exception as e:                               # never the step's failure
+        errs["learn"] = f"{type(e).__name__}: {str(e)[:160]}"
     fotmob_links(found, matches, vids, blocked)          # FotMob's own links: the match's highlights and a clip per goal event
     # embed checks, once per attached YouTube video (a gone video is dropped, a no-embed one opens on YouTube)
     oe = st.setdefault("oembed", {})

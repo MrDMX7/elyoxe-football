@@ -281,6 +281,25 @@ def youtube_videos(chs, ctx, t0, relist=False, workers=6, log=print, store=None,
 
 
 # ------------------------------------------------------------------------------------------------ the run
+def turned_down(cur_goals, md, vids, names, chmap, blocked=()):
+    """-> {(goal key, card id): why} for the goal clips an earlier run filed whose post this run holds and today's matcher, given
+    that post and this match alone, no longer puts on that goal (Dubai Sports' round-up «… بثنائية طارمي وبيريرا» on Taremi's
+    goal, 2026-11-20: once «بيريرا» named Serginho it named two scorers). FotMob's own links are not judged here."""
+    ids = {c.get("id") for l in cur_goals.values() for c in l if c.get("found_by") != "fotmob" and c.get("id") in vids}
+    if not ids:
+        return {}
+    trace = []
+    got = (M.attach([vids[i] for i in ids], [md], names, chmap, trace, blocked).get(md["id"]) or {}).get("goals") or {}
+    placed = {(k, v["id"]) for k, l in got.items() for v, _ in l}
+    out = {}
+    for k, l in cur_goals.items():
+        for c in l:
+            if c.get("id") in ids and (k, c["id"]) not in placed:
+                notes = [n for n in trace if n["video"] == c["id"] and not isinstance(n["result"], int)]
+                out[(k, c["id"])] = str(notes[-1]["result"]) if notes else "no longer this goal's"
+    return out
+
+
 def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=print, yt=True, remote=False):
     t = t or M.now()
     t0 = t - timedelta(days=days, hours=12)
@@ -304,6 +323,17 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
     log(json.dumps({"videos": len(vids), "youtube": nyt, "x": len(vids) - nyt}))
     trace = [] if explain is not None else None
     found = M.attach(list(vids.values()), matches, names, chmap, trace, blocked)
+    # the names the month's posts teach (M.learn()), kept for media.py too, and the clips they place
+    cur_l = store.get_state(M.LEARNED) or {}
+    merged_l, added_l = M.merge_learned(cur_l, M.learn(list(vids.values()), matches, names, chmap, blocked))
+    if added_l:
+        names.add_aliases(M.learned_aliases(added_l))
+        trace = [] if explain is not None else None
+        found = M.attach(list(vids.values()), matches, names, chmap, trace, blocked)
+        log(json.dumps({"learned": {p: {n: [e["match"], e["goal"], e["chs"]] for n, e in fs.items()} for p, fs in added_l.items()}},
+                       ensure_ascii=False))
+        if not dry:
+            store.put_state(M.LEARNED, merged_l)
     M.fotmob_links(found, matches, vids, blocked)
     oe_p = os.path.join(CACHE, "oembed.json")
     oe = jload(oe_p, {})
@@ -323,7 +353,7 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
         for vid, r in zip(todo, ex.map(M.oembed, todo)):
             oe[vid] = dict(r, at=M.iso(t))
     jsave(oe_p, oe)
-    added_list = []
+    added_list, off_list, down = [], [], {}
     ex_doc = store.get_state(M.EXTRA) or {}
     extra = ex_doc.get("matches") or {}
     keep_after = M.iso(t - timedelta(days=KEEP_EXTRA_D))
@@ -337,10 +367,17 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
         goals_new = {k: c for k, c in ((k, M.pack(l, oe, chmap)) for k, l in r["goals"].items()) if c}
         cur = store.get_json(f"media/{mid}.json") or {}
         end = M.match_end(md)
-        # what an earlier run filed that today's vetoes turn down (M.vetoed): off the page
+        # what an earlier run filed that today's vetoes turn down (M.vetoed), or that today's matcher, given the post and this
+        # match alone, no longer puts on that goal (turned_down): off the page
         cur_hl = [c for c in cur.get("highlights") or [] if not M.vetoed(c, goal=False)]
         cur_goals_all = cur.get("goals") or {}
-        cur_goals = {k: [c for c in l if not M.vetoed(c)] for k, l in cur_goals_all.items()}
+        down[mid] = turned_down(cur_goals_all, md, vids, names, chmap, blocked)
+        for k, l in cur_goals_all.items():
+            for c in l:
+                if (k, c.get("id")) in down[mid]:
+                    off_list.append({"match": mid, "teams": f"{md['home'].get('name')} - {md['away'].get('name')}", "goal": k,
+                                     "id": c.get("id"), "title": c.get("title"), "why": down[mid][(k, c.get("id"))]})
+        cur_goals = {k: [c for c in l if not M.vetoed(c) and (k, c.get("id")) not in down[mid]] for k, l in cur_goals_all.items()}
         stats["taken_off"] += len(cur.get("highlights") or []) - len(cur_hl) +             sum(len(l) for l in cur_goals_all.values()) - sum(len(l) for l in cur_goals.values())
         # FotMob's copy of the summary under every goal (media.fotmob_links no longer files it there): to the highlights
         uses = {}
@@ -387,9 +424,11 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
             for k, l in goals_new.items():
                 e["goals"][k] = M.merge_cards(e["goals"].get(k), l)
     extra = {k: v for k, v in extra.items() if (v.get("kickoff_utc") or "") >= keep_after}
-    for v in extra.values():
+    for mk, v in extra.items():
+        dn = down.get(int(mk)) or down.get(mk) or {}
         v["highlights"] = [c for c in v.get("highlights") or [] if not M.vetoed(c, goal=False)]
-        v["goals"] = {k: l for k, l in ((k, [c for c in l if not M.vetoed(c)]) for k, l in (v.get("goals") or {}).items()) if l}
+        v["goals"] = {k: l for k, l in ((k, [c for c in l if not M.vetoed(c) and (k, c.get("id")) not in dn])
+                                        for k, l in (v.get("goals") or {}).items()) if l}
     if not dry:
         store.put_state(M.EXTRA, {"generated": M.iso(t), "matches": extra})
     if explain is not None:
@@ -398,6 +437,7 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
                 log(json.dumps(tr, ensure_ascii=False))
     tot = {k: sum(v[k] for v in by_comp.values()) for k in ("goals", "before", "after")}
     jsave(os.path.join(CACHE, "added.json"), added_list)          # every goal given a clip this run, to read by eye
+    jsave(os.path.join(CACHE, "taken_off.json"), off_list)        # and every clip judged again and taken off
     return dict(stats, total=tot, by_comp=by_comp)
 
 

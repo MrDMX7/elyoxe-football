@@ -598,3 +598,181 @@ def test_a_rerun_takes_off_the_clips_a_newer_veto_turns_down(tmp_path, monkeypat
     assert res["taken_off"] == 2                                                   # off the page: the show and the celebration
     extra = store.get_state(M.EXTRA)["matches"][str(KSA_IRQ["id"])]
     assert extra["highlights"] == [] and {k: [c["id"] for c in l] for k, l in extra["goals"].items()} == {"69-102": ["good0000001"]}
+
+
+# Al Wasl 2-1 Hatta, UAE Pro League, 2026-11-19: Abu Dhabi Sports and Dubai Sports both posted Serginho's 62' as «سيرجيو بيريرا»
+# and Dubai Sports Hugo's own goal as «هوجو نيتو»; our names are «سيرجينيو» and «هوغو», so all three were turned down (the
+# morning report of 11-20). Real titles, times and ids.
+WAS_HAT = {"id": 1000022240, "comp": 538, "kickoff_utc": "2026-11-19T12:45:00Z", "status": "finished", "score": {"home": 2, "away": 1},
+           "home": {"id": 102111, "name": "Al-Wasl", "name_ar": "الوصل"}, "away": {"id": 102113, "name": "Hatta", "name_ar": "حتا"},
+           "periods": {"firstHalfStarted": "2026-11-19T12:45:35Z", "firstHalfEnded": "2026-11-19T13:32:45Z",
+                       "secondHalfStarted": "2026-11-19T13:49:24Z", "gameEnded": "2026-11-19T14:41:15Z"},
+           "events": [goal(16, "home", 619506, "Mehdi Taremi", (1, 0)), goal(62, "home", 1393478, "Serginho", (2, 0)),
+                      goal(90, "away", 1182091, "Hugo", (2, 1), "own_goal", added=7)]}
+# other players of the dictionary: the words names are made of, and a full name that is someone else's
+WH_PLAYERS = {"619506": {"ar": "مهدي طارمي"}, "1393478": {"ar": "سيرجينيو"}, "1182091": {"ar": "هوغو"},
+              "9001": {"ar": "سيرجيو راموس"}, "9002": {"ar": "بيبي بيريرا"}, "9003": {"ar": "هوجو ألميدا"}, "9004": {"ar": "بيدرو نيتو"},
+              "1282441": {"ar": "ريناتو جونيور"}, "9005": {"ar": "جواو فيليكس"}, "9006": {"ar": "برناردو سيلفا"}}
+WH_TEAMS = {"102111": {"name": "Al-Wasl", "name_ar": "الوصل"}, "102113": {"name": "Hatta", "name_ar": "حتا"}}
+CH_WH = {c["key"]: c for c in M.x_channels([
+    {"handle": "ADSportsTV", "name": "أبوظبي الرياضية", "lang": "ar", "tier": "official", "kind": "broadcaster", "comps": [538, 11027, 9943]},
+    {"handle": "dubaisportstv", "name": "دبي الرياضية", "lang": "ar", "tier": "official", "kind": "broadcaster", "comps": [538, 11027, 9943]}])}
+AD_62 = ("برأسية متقنة.. سيرجيو بيريرا يرتقي لعرضية رائعة ويضاعف النتيجة بهدف ثان للوصل ⚽️\n\n#الوصل_حتا \n"
+         "#دوري_أدنوك_للمحترفين | #أبوظبي_الرياضية 1⃣", "2026-11-19T14:09:39Z")
+DS_62 = ("سيرجيو بيريرا يحرز هدف الوصل الثاني في مرمى حتا \n\n#الوصل 2\n#حتا 0\n\n#دبي_الرياضية\n#دوري_أدنوك_للمحترفين",
+         "2026-11-19T14:12:18Z")
+DS_OG = ("هوجو نيتو يحرز هدف حتا الأول بالخطأ في مرمى فريقه الوصل \n\n#الوصل 2\n#حتا 1\n\n#دبي_الرياضية\n#دوري_أدنوك_للمحترفين",
+         "2026-11-19T14:44:19Z")
+
+
+def wh_names(learned=None):
+    n = M.Names(WH_TEAMS, WH_PLAYERS, {}, {}, {}, NATIONS)
+    if learned:
+        n.add_aliases(learned)
+    return n
+
+
+def wh_post(handle, title_at, n=1):
+    title, at = title_at
+    return {"id": f"x{handle}{n}", "title": title, "desc": "", "at": at, "ch": "x_" + handle.lower(), "source": "x",
+            "url": f"https://x.com/{handle}/status/{n}"}
+
+
+def wh_goals(posts, names):
+    out = M.attach(posts, [WAS_HAT], names, CH_WH, [])
+    return {v["id"]: k for r in out.values() for k, l in r["goals"].items() for v, _ in l}
+
+
+def test_dubai_sports_writes_the_score_after_the_goal_in_its_hashtags():
+    assert M.Text(DS_62[0]).scores == [(2, 0)] and M.Text(DS_OG[0]).scores == [(2, 1)]
+    assert M.Text(AD_62[0]).scores == []                          # «#أبوظبي_الرياضية 1⃣» alone is no score
+
+
+def test_the_goal_number_with_the_team_between():
+    assert M.Text(DS_62[0]).ordinal == 2                           # «هدف الوصل الثاني»
+    assert M.Text(AD_62[0]).ordinal == 2                           # «بهدف ثان»
+    assert M.Text(DS_OG[0]).ordinal == 1                           # «هدف حتا الأول»
+    assert M.Text("هدف عالمي في الشوط الثاني").ordinal is None      # the half, not the goal
+    assert M.Text("هدف التعادل في الدقيقة الأولى من الوقت بدل الضائع").ordinal is None
+    # his second, his team's third (Thmanyah, Al-Bulaihi 2026-10-22): no number rather than the wrong one
+    assert M.Text("هدف! ⚽️ البليهي مجددًا، لا يكتفي بهدف واحد ويسجل الثاني له والثالث لفريقه 🔥").ordinal is None
+
+
+def test_two_broadcasters_teach_the_name_they_both_wrote():
+    posts = [wh_post("ADSportsTV", AD_62), wh_post("dubaisportstv", DS_62)]
+    assert wh_goals(posts, wh_names()) == {}                       # «سيرجيو بيريرا» is not a name we have for Serginho
+    got = M.learn(posts, [WAS_HAT], wh_names(), CH_WH)
+    assert {p: sorted(f) for p, f in got.items()} == {"1393478": ["سيرجيو بيريرا"]}
+    assert sorted(got["1393478"]["سيرجيو بيريرا"]["chs"]) == ["x_adsportstv", "x_dubaisportstv"]
+    learned = {p: list(f) for p, f in got.items()}
+    assert wh_goals(posts, wh_names(learned)) == {"xADSportsTV1": "62-1393478", "xdubaisportstv1": "62-1393478"}
+
+
+def test_one_post_teaches_a_name_only_when_it_writes_the_scorers_own_name_another_way():
+    # one channel alone: «سيرجيو بيريرا» shares nothing with «سيرجينيو»
+    assert M.learn([wh_post("ADSportsTV", AD_62)], [WAS_HAT], wh_names(), CH_WH) == {}
+    # «هوجو» is our «هوغو», too short to name him alone; the score and the goal number in the post are his own goal's
+    og = [wh_post("dubaisportstv", DS_OG)]
+    assert wh_goals(og, wh_names()) == {}
+    got = M.learn(og, [WAS_HAT], wh_names(), CH_WH)
+    assert {p: sorted(f) for p, f in got.items()} == {"1182091": ["هوجو نيتو"]}
+    assert wh_goals(og, wh_names({p: list(f) for p, f in got.items()})) == {"xdubaisportstv1": "90+7-1182091"}
+
+
+def test_another_players_name_or_the_one_after_the_pass_is_never_learned():
+    # both channels name the player who made the goal: a full name the dictionary holds for someone else, and an unknown one
+    # after «بعرضية من»
+    for title in ("ريناتو جونيور يصنع والوصل يضاعف النتيجة 2-0 أمام حتا", "بعرضية من جواو سيلفا.. الوصل يضاعف النتيجة 2-0 أمام حتا"):
+        posts = [wh_post("ADSportsTV", (title, "2026-11-19T14:09:39Z")), wh_post("dubaisportstv", (title + " ⚽️", "2026-11-19T14:12:18Z"))]
+        assert M.learn(posts, [WAS_HAT], wh_names(), CH_WH) == {}, title
+    # a post that already names the scorer teaches nothing
+    named = wh_post("dubaisportstv", ("مهدي طارمي يفتتح التسجيل للوصل 1-0 أمام حتا", "2026-11-19T13:02:00Z"))
+    assert M.learn([named], [WAS_HAT], wh_names(), CH_WH) == {}
+
+
+def test_load_names_reads_the_learned_names(tmp_path):
+    from store import Store, LocalBackend
+    store = Store(LocalBackend(str(tmp_path)))
+    store.put_json("teams.json", {"teams": WH_TEAMS})
+    store.put_state(M.LEARNED, {"1393478": {"سيرجيو بيريرا": {"n": 2, "chs": ["x_adsportstv", "x_dubaisportstv"]}}})
+    names = M.load_names(store, frozenset(), cache_dir=str(tmp_path / "cache"))
+    assert ("سيرجيو", "بيريرا") in names.player(1393478, "Serginho")
+
+
+def test_step_learns_a_name_and_files_its_clips_in_the_same_run(tmp_path, monkeypatch):
+    from store import Store, LocalBackend
+    store = Store(LocalBackend(str(tmp_path)))
+    day = {"matches": [{k: WAS_HAT[k] for k in ("id", "comp", "kickoff_utc", "status", "score", "home", "away")}]}
+    store.put_json("day/20261119.json", day); store.put_json("day/20261120.json", {"matches": []})
+    store.put_json(f"match/{WAS_HAT['id']}.json", WAS_HAT)
+    store.put_json("teams.json", {"teams": WH_TEAMS})
+    acc = [{"handle": "ADSportsTV", "name": "أبوظبي الرياضية", "lang": "ar", "tier": "official", "kind": "broadcaster", "comps": [538]},
+           {"handle": "dubaisportstv", "name": "دبي الرياضية", "lang": "ar", "tier": "official", "kind": "broadcaster", "comps": [538]}]
+    box = {"items": [{"id": str(i), "handle": h, "text": ta[0], "at": ta[1], "url": f"https://x.com/{h}/status/{i}", "video": True}
+                     for i, (h, ta) in enumerate([("ADSportsTV", AD_62), ("dubaisportstv", DS_62), ("dubaisportstv", DS_OG)])]}
+    monkeypatch.setattr(M, "fetch_feeds", lambda chs, prefetched=None, workers=6: ({}, {}))
+    monkeypatch.setattr(M, "oembed", lambda vid: {"s": 200})
+    monkeypatch.setattr(M, "load_names", lambda store, nat, cache_dir=None: wh_names(M.learned_aliases(store.get_state(M.LEARNED))))
+    cfg = {"youtube": [], "media": {"youtube": []}, "x": {"accounts": acc}}
+    t = datetime(2026, 11, 19, 15, 0, tzinfo=timezone.utc)
+    M.step(store, cfg, t=t, xbox=box, push=None)
+    doc = store.get_json(f"media/{WAS_HAT['id']}.json")
+    assert {k: sorted(c["id"] for c in l) for k, l in doc["goals"].items()} == {"62-1393478": ["x0", "x1"], "90+7-1182091": ["x2"]}
+    learned = store.get_state(M.LEARNED)
+    assert sorted(learned) == ["1182091", "1393478"] and learned["1393478"]["سيرجيو بيريرا"]["n"] == 2
+    assert M.step(store, cfg, t=t, xbox=box, push=None)["written"] == 0           # learnt once: nothing new the second time
+
+
+# Shabab Al Ahli 3-2 Al Ain, President's Cup, 2026-10-22: Ezatolahi scored from the spot at 20' and again at 34', a penalty too
+# though FotMob has it as a plain goal. Abu Dhabi Sports' post of the second, «بنفس سيناريو الهدف الأول.. … ويضاعف النتيجة …»,
+# names the first goal to say it was the same again; with his name learnt it went on the 20' (dry run 2026-11-20)
+SHA_AIN = {"id": 6428995, "comp": 9943, "kickoff_utc": "2026-10-22T16:00:00Z", "status": "finished", "score": {"home": 3, "away": 2},
+           "home": {"id": 102119, "name": "Shabab Al-Ahli Dubai FC", "name_ar": "شباب الأهلي"}, "away": {"id": 102117, "name": "Al-Ain", "name_ar": "العين"},
+           "periods": {"firstHalfStarted": "2026-10-22T16:01:05Z", "secondHalfStarted": "2026-10-22T17:12:22Z", "gameEnded": "2026-10-22T18:47:56Z"},
+           "events": [goal(20, "home", 505281, "Saeid Ezatolahi", (1, 0), "penalty_goal"), goal(34, "home", 505281, "Saeid Ezatolahi", (2, 0))]}
+
+
+def test_a_title_with_two_goal_numbers_places_no_goal():
+    tx = M.Text("بنفس سيناريو الهدف الأول..  سعيد عزت يضع بصمته ويضاعف النتيجة لشباب الأهلي من علامة الجزاء⚽️")
+    assert tx.ordinal is None and tx.ord_clash
+    assert M.Text("برأسية متقنة.. سيرجيو بيريرا يرتقي لعرضية رائعة ويضاعف النتيجة بهدف ثان للوصل").ordinal == 2    # the same number twice
+    names = M.Names({"102119": {"name": "Shabab Al-Ahli Dubai FC", "name_ar": "شباب الأهلي"}, "102117": {"name": "Al-Ain", "name_ar": "العين"}},
+                    {"505281": {"ar": "سعيد عزت اللهي"}}, {}, {}, {}, NATIONS, player_aliases={"505281": ["سعيد عزت"]})
+    post = lambda title, at, n: {"id": f"x{n}", "title": title, "desc": "", "at": at, "ch": "x_adsportstv", "source": "x", "url": "u"}
+    out = M.attach([post("سعيد عزت يسجل هدف التقدم الأول لشباب الأهلي من علامة الجزاء ⚽️ #شباب_الأهلي_العين", "2026-10-22T16:22:12Z", 1),
+                    post("بنفس سيناريو الهدف الأول..  سعيد عزت يضع بصمته ويضاعف النتيجة لشباب الأهلي من علامة الجزاء⚽️ #شباب_الأهلي_العين",
+                         "2026-10-22T16:37:13Z", 2)], [SHA_AIN], names, CH_WH, [])
+    assert {v["id"]: k for r in out.values() for k, l in r["goals"].items() for v, _ in l} == {"x1": "20-505281"}
+
+
+def test_a_rerun_takes_off_a_clip_todays_matcher_no_longer_files_there(tmp_path, monkeypatch):
+    # Dubai Sports' round-up «… #الوصل يتغلب على #حتا بثنائية طارمي وبيريرا» went on Taremi's goal while «بيريرا» named nobody;
+    # with Serginho's learnt name it names two scorers and is no goal's clip (2026-11-20). A post this run holds is judged again
+    # against its own match; one it does not hold, and FotMob's own link, are left as they are
+    from news import media_backfill as B
+    store = _ksa_store(tmp_path)
+    vid = lambda i, title, at: {"id": i, "source": "youtube", "url": f"https://www.youtube.com/watch?v={i}", "vertical": False,
+                                "title": title, "desc": "", "at": at, "ch": "yt_ksasports", "image": None}
+    good = vid("good0000001", "الهدف الثاني لمنتخبنا الوطني سجله اللاعب عبدالله الحمدان- السعودية 2- العراق 0", "2026-09-29T19:11:10Z")
+    both = vid("both0000001", "السعودية تتغلب على العراق بهدفي عبدالله السالم وعبدالله الحمدان", "2026-09-29T19:40:00Z")
+    card = lambda v, **k: dict({"id": v["id"], "url": v["url"], "title": v["title"], "source": "youtube", "channel": "x",
+                                "published": v["at"], "embed": True, "conf": 70, "found_by": "tifo"}, **k)
+    gone = dict(card(both), id="notheld0001")
+    fm = dict(card(both), id="fotmob00001", found_by="fotmob")
+    store.put_json(f"media/{KSA_IRQ['id']}.json", {"generated": "2026-09-29T21:05:00Z", "match": KSA_IRQ["id"], "highlights": [],
+                                                   "goals": {"69-102": [card(good), card(both), gone, fm]}})
+    store.put_state(M.EXTRA, {"matches": {str(KSA_IRQ["id"]): {"kickoff_utc": KSA_IRQ["kickoff_utc"], "highlights": [],
+                                                                "goals": {"69-102": [card(good), card(both)]}}}})
+    monkeypatch.setattr(B, "youtube_videos", lambda chs, ctx, t0, relist=False, log=print, store=None, remote=False: [good, both])
+    monkeypatch.setattr(B, "CACHE", str(tmp_path / "cache"))
+    monkeypatch.setattr(M, "oembed", lambda vid: {"s": 200})
+    monkeypatch.setattr(M, "load_names", lambda store, nat, cache_dir=None: M.Names(TEAMS, PLAYERS, {}, {}, ALIASES, NATIONS, {329}))
+    monkeypatch.setattr(M, "national_comps", lambda: frozenset({329}))
+    res = B.run(store, CFG_KSA, t=datetime(2026, 10, 1, 10, 0, tzinfo=timezone.utc), days=3, log=lambda *a: None)
+    doc = store.get_json(f"media/{KSA_IRQ['id']}.json")
+    assert sorted(c["id"] for c in doc["goals"]["69-102"]) == ["fotmob00001", "good0000001", "notheld0001"]
+    assert res["taken_off"] == 1
+    extra = store.get_state(M.EXTRA)["matches"][str(KSA_IRQ["id"])]
+    assert [c["id"] for c in extra["goals"]["69-102"]] == ["good0000001"]
+    off = json.load(open(tmp_path / "cache" / "taken_off.json", encoding="utf-8"))
+    assert [(x["goal"], x["id"]) for x in off] == [("69-102", "both0000001")] and off[0]["why"]
