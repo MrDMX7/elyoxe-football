@@ -743,3 +743,36 @@ def test_a_title_with_two_goal_numbers_places_no_goal():
                     post("بنفس سيناريو الهدف الأول..  سعيد عزت يضع بصمته ويضاعف النتيجة لشباب الأهلي من علامة الجزاء⚽️ #شباب_الأهلي_العين",
                          "2026-10-22T16:37:13Z", 2)], [SHA_AIN], names, CH_WH, [])
     assert {v["id"]: k for r in out.values() for k, l in r["goals"].items() for v, _ in l} == {"x1": "20-505281"}
+
+
+def test_a_rerun_takes_off_a_clip_todays_matcher_no_longer_files_there(tmp_path, monkeypatch):
+    # Dubai Sports' round-up «… #الوصل يتغلب على #حتا بثنائية طارمي وبيريرا» went on Taremi's goal while «بيريرا» named nobody;
+    # with Serginho's learnt name it names two scorers and is no goal's clip (2026-11-20). A post this run holds is judged again
+    # against its own match; one it does not hold, and FotMob's own link, are left as they are
+    from news import media_backfill as B
+    store = _ksa_store(tmp_path)
+    vid = lambda i, title, at: {"id": i, "source": "youtube", "url": f"https://www.youtube.com/watch?v={i}", "vertical": False,
+                                "title": title, "desc": "", "at": at, "ch": "yt_ksasports", "image": None}
+    good = vid("good0000001", "الهدف الثاني لمنتخبنا الوطني سجله اللاعب عبدالله الحمدان- السعودية 2- العراق 0", "2026-09-29T19:11:10Z")
+    both = vid("both0000001", "السعودية تتغلب على العراق بهدفي عبدالله السالم وعبدالله الحمدان", "2026-09-29T19:40:00Z")
+    card = lambda v, **k: dict({"id": v["id"], "url": v["url"], "title": v["title"], "source": "youtube", "channel": "x",
+                                "published": v["at"], "embed": True, "conf": 70, "found_by": "tifo"}, **k)
+    gone = dict(card(both), id="notheld0001")
+    fm = dict(card(both), id="fotmob00001", found_by="fotmob")
+    store.put_json(f"media/{KSA_IRQ['id']}.json", {"generated": "2026-09-29T21:05:00Z", "match": KSA_IRQ["id"], "highlights": [],
+                                                   "goals": {"69-102": [card(good), card(both), gone, fm]}})
+    store.put_state(M.EXTRA, {"matches": {str(KSA_IRQ["id"]): {"kickoff_utc": KSA_IRQ["kickoff_utc"], "highlights": [],
+                                                                "goals": {"69-102": [card(good), card(both)]}}}})
+    monkeypatch.setattr(B, "youtube_videos", lambda chs, ctx, t0, relist=False, log=print, store=None, remote=False: [good, both])
+    monkeypatch.setattr(B, "CACHE", str(tmp_path / "cache"))
+    monkeypatch.setattr(M, "oembed", lambda vid: {"s": 200})
+    monkeypatch.setattr(M, "load_names", lambda store, nat, cache_dir=None: M.Names(TEAMS, PLAYERS, {}, {}, ALIASES, NATIONS, {329}))
+    monkeypatch.setattr(M, "national_comps", lambda: frozenset({329}))
+    res = B.run(store, CFG_KSA, t=datetime(2026, 10, 1, 10, 0, tzinfo=timezone.utc), days=3, log=lambda *a: None)
+    doc = store.get_json(f"media/{KSA_IRQ['id']}.json")
+    assert sorted(c["id"] for c in doc["goals"]["69-102"]) == ["fotmob00001", "good0000001", "notheld0001"]
+    assert res["taken_off"] == 1
+    extra = store.get_state(M.EXTRA)["matches"][str(KSA_IRQ["id"])]
+    assert [c["id"] for c in extra["goals"]["69-102"]] == ["good0000001"]
+    off = json.load(open(tmp_path / "cache" / "taken_off.json", encoding="utf-8"))
+    assert [(x["goal"], x["id"]) for x in off] == [("69-102", "both0000001")] and off[0]["why"]
