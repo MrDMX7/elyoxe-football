@@ -14,9 +14,19 @@ def test_a_latin_named_old_club_gets_its_arabic_name_and_a_named_one_keeps_it(tm
     G.put("team", {"tid": c, "name": "Unknown FC"}, "rsssf")
     out = old_names.load(G, reg, Sources(str(tmp_path), s3=False), names={"Al-Shabab Al-Arabi": "الشباب", "Emirates": "الإمارات"})
     got = dict(G.c.execute("select name, name_ar from team"))
-    assert got == {"Al-Shabab Al-Arabi": "الشباب", "Emirates": "نادي الإمارات", "Unknown FC": None} and out == {"teams": 1}
+    assert got == {"Al-Shabab Al-Arabi": "الشباب", "Emirates": "نادي الإمارات", "Unknown FC": None} and out["teams"] == 1
 
 
 def test_the_house_list_reads_from_teams_ar_yaml():
     names = old_names.historic()
     assert names["Al-Sha'ab"] == "الشعب" and names["Kalba Utd."] == "اتحاد كلباء"
+
+
+def test_old_competitions_get_their_arabic_names_too(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    G.put("competition", {"cid": 1, "name": "FIFA World Cup qualification"}, "martj42")
+    G.put("competition", {"cid": 2, "name": "Asian Games", "name_ar": "الألعاب الآسيوية"}, "martj42")
+    out = old_names.load(G, reg, Sources(str(tmp_path), s3=False), names={}, comps={"FIFA World Cup qualification": "تصفيات كأس العالم", "Asian Games": "دورة الألعاب الآسيوية"})
+    assert dict(G.c.execute("select name, name_ar from competition")) == {"FIFA World Cup qualification": "تصفيات كأس العالم", "Asian Games": "الألعاب الآسيوية"}
+    assert out == {"teams": 0, "competitions": 1}
+    assert old_names.historic_competitions()["Merdeka Tournament"] == "بطولة مرديكا"

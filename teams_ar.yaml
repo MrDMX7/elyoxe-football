@@ -127,3 +127,30 @@ historic:
   "North Yemen": اليمن الشمالي
   "South Yemen": اليمن الجنوبي
   "Dutch East Indies": جزر الهند الشرقية الهولندية
+
+# `historic_competitions`: competitions only the old sources name (martj42's internationals, Fjelstul): name -> Arabic
+historic_competitions:
+  "FIFA World Cup qualification": تصفيات كأس العالم
+  "AFC Asian Cup qualification": تصفيات كأس آسيا
+  "UEFA Euro qualification": تصفيات بطولة أمم أوروبا
+  "African Cup of Nations qualification": تصفيات كأس أمم أفريقيا
+  "African Cup of Nations": كأس أمم أفريقيا
+  "UEFA Euro": بطولة أمم أوروبا
+  "Copa América": كوبا أمريكا
+  "Gold Cup": الكأس الذهبية
+  "Asian Games": دورة الألعاب الآسيوية
+  "Olympic Games": الألعاب الأولمبية
+  "Confederations Cup": كأس القارات
+  "Arab Cup": كأس العرب
+  "Gulf Cup": كأس الخليج العربي
+  "Arab Games": دورة الألعاب العربية
+  "WAFF Championship": بطولة غرب آسيا
+  "United Arab Emirates Friendship Tournament": دورة الإمارات الودية
+  "Merdeka Tournament": بطولة مرديكا
+  "Palestine Cup": كأس فلسطين
+  "OSN Cup": كأس OSN
+  "Kirin Cup": كأس كيرين
+  "King's Cup": كأس الملك
+  "Nehru Cup": كأس نهرو
+  "UEFA Nations League": دوري الأمم الأوروبية
+  "CONCACAF Nations League": دوري أمم الكونكاكاف

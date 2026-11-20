@@ -364,3 +364,66 @@ def matches(G, out_dir, comps=(538,), teams=(5789,)):
             n += len(rs)
     _dump(os.path.join(d, "index.json"), index)
     return {"matches": n}
+
+
+def h2h(G, out_dir, league=538, nationals=(5789,), min_meetings=3):
+    """h2h-all/<a>-<b>.json and h2h-all/index.json: every meeting of two teams in every competition the archive holds — the
+    clubs that played our league against each other, our national teams against every opponent — with the totals, the split
+    by competition, the first meeting and each side's biggest win. A team is its FotMob id or k<Tifo id>; the pair key is the
+    two sorted as text, its counts read from the first one's side. One meeting a day (two sources, one match)."""
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    fm = lambda t: {a: int(b) for a, b in q(f"SELECT tifo_id, source_id FROM xref WHERE type='{t}' AND source='fotmob'") if str(b).isdigit()}
+    fm_c, fm_t, fm_m = fm("competition"), fm("team"), fm("match")
+    tkey = lambda t: str(fm_t[t]) if t in fm_t else f"k{t}"
+    tn = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
+    cn = {c: (a or n) for c, n, a in q("SELECT cid, name, name_ar FROM competition")}
+    ed = {e: (c, s) for e, c, s in q("SELECT eid, cid, season FROM edition")}
+    rev_c, rev_t = {v: k for k, v in fm_c.items()}, {v: k for k, v in fm_t.items()}
+    clubs = set()
+    if rev_c.get(league):
+        for h, a in q("SELECT m.home, m.away FROM match m JOIN edition e ON e.eid=m.eid WHERE e.cid=?", (rev_c[league],)):
+            clubs.update((h, a))
+    nat = {rev_t[n] for n in nationals if n in rev_t}
+    pairs = defaultdict(dict)
+    for mid, eid, d, h, a, hs, as_ in q("SELECT mid, eid, substr(date,1,10), home, away, hs, as_ FROM match WHERE hs IS NOT NULL AND date IS NOT NULL ORDER BY date, mid"):
+        if not ((h in clubs and a in clubs) or h in nat or a in nat) or h == a:
+            continue
+        x, y = sorted((tkey(h), tkey(a)))
+        pairs[(x, y)].setdefault(d, (mid, eid, h, a, hs, as_))          # one meeting a day
+    knm = {tkey(t): n for t, n in tn.items()}
+    d_out, index = os.path.join(out_dir, "h2h-all"), {"pairs": {}, "teams": defaultdict(list)}
+    for (x, y), days in sorted(pairs.items()):
+        if len(days) < min_meetings:
+            continue
+        w, goals, by, big, ms = [0, 0, 0], [0, 0], {}, [None, None], []
+        for d, (mid, eid, h, a, hs, as_) in sorted(days.items()):
+            gx, gy = (hs, as_) if tkey(h) == x else (as_, hs)
+            goals[0] += gx
+            goals[1] += gy
+            r = 0 if gx > gy else 2 if gy > gx else 1
+            w[r] += 1
+            cid, season = ed.get(eid, (None, None))
+            name = cn.get(cid) or ""
+            if not name or name.startswith("FotMob "):          # a FotMob competition with no details: «FotMob 0»
+                name = "بطولة ثانية"
+            b = by.setdefault(name, [name, 0, 0, 0, 0])
+            b[1] += 1
+            b[2 + r] += 1
+            mk = str(fm_m[mid]) if mid in fm_m else f"k{mid}"
+            if r != 1:
+                side, margin = (0, gx - gy) if r == 0 else (1, gy - gx)
+                cur = big[side]
+                hi, lo = max(gx, gy), min(gx, gy)
+                if cur is None or (margin, hi) > cur[0]:
+                    big[side] = ((margin, hi), [d, f"{hi}-{lo}", mk])
+            ms.append([d, name, season, tkey(h), hs, as_, tkey(a), mk])
+        _dump(os.path.join(d_out, f"{x}-{y}.json"), {"teams": [x, y], "names": [knm.get(x), knm.get(y)],
+                                                     "n": len(days), "w": w, "goals": goals, "first": min(days),
+                                                     "by_comp": sorted(by.values(), key=lambda b: (-b[1], b[0])),
+                                                     "biggest": [b[1] if b else None for b in big], "matches": ms[::-1]})
+        index["pairs"][f"{x}-{y}"] = len(days)
+        index["teams"][x].append([y, len(days), w[0], w[1], w[2]])
+        index["teams"][y].append([x, len(days), w[2], w[1], w[0]])
+    index["teams"] = {k: sorted(v, key=lambda r: (-r[1], r[0])) for k, v in sorted(index["teams"].items())}
+    _dump(os.path.join(d_out, "index.json"), index)
+    return {"pairs": len(index["pairs"])}

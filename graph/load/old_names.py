@@ -1,5 +1,6 @@
 """Arabic names for the clubs only the old sources know (RSSSF, 365Scores, Wikipedia: no FotMob id, so graph/load/names.py
-cannot reach them): teams_ar.yaml `historic`, by the Latin name as the source spells it. Runs after every source; fills
+cannot reach them): teams_ar.yaml `historic`, by the Latin name as the source spells it, and the old competitions'
+names from `historic_competitions`. Runs after every source; fills
 name_ar only where it is empty."""
 import os
 import yaml
@@ -11,9 +12,16 @@ def historic():
     return (yaml.safe_load(open(os.path.join(ROOT, "teams_ar.yaml"), encoding="utf-8")) or {}).get("historic") or {}
 
 
-def load(G, reg, S, names=None):
+def historic_competitions():
+    return (yaml.safe_load(open(os.path.join(ROOT, "teams_ar.yaml"), encoding="utf-8")) or {}).get("historic_competitions") or {}
+
+
+def load(G, reg, S, names=None, comps=None):
     names = historic() if names is None else names
-    n = 0
+    comps = historic_competitions() if comps is None else comps
+    n, c = 0, 0
     for latin, ar in sorted(names.items()):
         n += G.c.execute("UPDATE team SET name_ar=? WHERE name=? AND (name_ar IS NULL OR name_ar='')", (ar, latin)).rowcount
-    return {"teams": n}
+    for latin, ar in sorted(comps.items()):
+        c += G.c.execute("UPDATE competition SET name_ar=? WHERE name=? AND (name_ar IS NULL OR name_ar='')", (ar, latin)).rowcount
+    return {"teams": n, "competitions": c}

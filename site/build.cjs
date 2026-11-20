@@ -451,7 +451,16 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // the old players FotMob does not know (graph phase 7): /p/k<Tifo id>/ from v1/people/index.json, their honours in AWP["k<id>"]
   const PPL = (await get("people/index.json", 2)) || {}, person = id => !!PPL["k" + id];
   const INTL = (await get("people/intl.json", 2)) || {}, PPG = require("./lib/people_pages.cjs");
-  const MIX = (await get("matches/index.json", 2)) || { comps:{}, teams:{} };   // the old matches (v1/matches/*, graph phase 7)   // caps and goals for country (national team articles)
+  const MIX = (await get("matches/index.json", 2)) || { comps:{}, teams:{} };   // the old matches (v1/matches/*, graph phase 7)
+  const MA = require("./lib/match_archive.cjs"), MSEA = new Map(), MTEAM = new Map();
+  { const want = comps.filter(c => (MIX.comps || {})[c.id]).flatMap(c => MIX.comps[c.id].map(sl => [c.id, sl]));
+    (await pool(want, 8, ([cid, sl]) => get(`matches/${cid}/${sl}.json`, 2))).forEach((d, i) => { if (d && d.matches) MSEA.set(`${want[i][0]}|${want[i][1]}`, d.matches); });
+    for (const tid of Object.keys(MIX.teams || {})){ const d = await get(`matches/team-${tid}.json`, 2); if (d && d.matches) MTEAM.set(+tid, d.matches); } }
+  const ARCHM = new Set([...MSEA.values(), ...MTEAM.values()].flatMap(ms => ms.map(m => m.id))), CURM = new Set([...matchSum.keys()].map(String));
+  // every meeting of two teams in every competition (v1/h2h-all/*, graph/publish.h2h)
+  const H2A = require("./lib/h2h_all.cjs"), H2AX = (await get("h2h-all/index.json", 2)) || { pairs:{}, teams:{} }, H2AD = new Map();
+  { const ks = Object.keys(H2AX.pairs || {}); (await pool(ks, 8, k => get(`h2h-all/${k}.json`, 2))).forEach((d, i) => { if (d) H2AD.set(ks[i], d); }); }
+  const h2o = { match:id => CURM.has(String(id)) || ARCHM.has(String(id)) };   // caps and goals for country (national team articles)
   // «رجل المباراة» (Tifo graph phase 3): v1/motm/* from graph/publish.py
   const MOTM = require("./lib/motm_pages.cjs"), MOI = await get("motm/index.json"), MOP = (await get("motm/players.json")) || {};
   // phase 6, at the whistle: every match finished since the graph's nightly build joins the man-of-the-match counts (lib/whistle.cjs)
@@ -700,7 +709,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   const DZ = {}; ((DERBIES && DERBIES.derbies) || []).forEach(d => { DZ[String(d.h2h || "").replace(/^h2h\/|\.json$/g, "")] = d.name_ar; });
   for (const [k, h] of Object.entries(H2H)){
     const [a, b] = k.split("-"), na = (teamsJson.teams[a] || {}).name_ar || a, nb = (teamsJson.teams[b] || {}).name_ar || b;
-    write(`h2h/${k}/index.html`, page({ art:[colors[a] || ["#5C6660"], colors[b] || ["#3D4A44"]], path:`/h2h/${k}/`, page:"h2h", title:`تاريخ مواجهات ${na} و${nb}: كل النتائج | تيفو`, desc:`سجل مواجهات ${na} و${nb}: كم فاز كل فريق وكم تعادلوا، وكل النتايج.`, body:`<p class="crumbs">${DZ[k] ? '<a href="/derbies/">الديربيات العربية</a>' : '<a href="/c/uae-pro-league/#hist">تاريخ الدوري</a>'}</p><h1>${DZ[k] ? esc(DZ[k]) : esc(na) + " و" + esc(nb)}</h1>` + S.h2hPage(h, (() => { const now = Date.now(), ids = [+a, +b]; let nx = null; for (const m of matchSum.values()) if (m.status === "scheduled" && m.home && m.away && ids.includes(m.home.id) && ids.includes(m.away.id) && Date.parse(m.kickoff_utc) > now && (!nx || m.kickoff_utc < nx.kickoff_utc)) nx = m; return nx; })()) }));
+    write(`h2h/${k}/index.html`, page({ art:[colors[a] || ["#5C6660"], colors[b] || ["#3D4A44"]], path:`/h2h/${k}/`, page:"h2h", title:`تاريخ مواجهات ${na} و${nb}: كل النتائج | تيفو`, desc:`سجل مواجهات ${na} و${nb}: كم فاز كل فريق وكم تعادلوا، وكل النتايج.`, body:`<p class="crumbs">${DZ[k] ? '<a href="/derbies/">الديربيات العربية</a>' : '<a href="/c/uae-pro-league/#hist">تاريخ الدوري</a>'}</p><h1>${DZ[k] ? esc(DZ[k]) : esc(na) + " و" + esc(nb)}</h1>` + S.h2hPage(h, (() => { const now = Date.now(), ids = [+a, +b]; let nx = null; for (const m of matchSum.values()) if (m.status === "scheduled" && m.home && m.away && ids.includes(m.home.id) && ids.includes(m.away.id) && Date.parse(m.kickoff_utc) > now && (!nx || m.kickoff_utc < nx.kickoff_utc)) nx = m; return nx; })()) + ((g => g ? H2A.pairBody(Object.assign({}, g, { names:g.teams.map((t, i) => (t === a ? na : t === b ? nb : g.names[i])) }), h2o) : "")(H2AD.get(H2A.key(a, b)))) }));
     urls.push(`/h2h/${k}/`);
   }
 
@@ -795,6 +804,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
         const rr = TRT.rumoursOf(TRR, { club:id, open:1 }).slice(0, 15); if (rr.length) nums += S.sec("إشاعات حوله", "", TRT.rumourList(rr, tn) + '<p class="src"><a href="/transfers/rumours/">كل الإشاعات</a></p>'); }
       if (rc) nums += S.sec("سجل النادي", "من 2010", rc); if (hm) nums += S.sec("كل نتايجه موسم بموسم", "", hm); if (xi) nums += S.sec("التشكيلة المعتادة", "هالموسم", xi); if (cu) nums += S.sec("لاعبينه في المنتخبات", "", cu); }
     const tv2 = S.travel(t, t.fixtures); if (tv2) nums += S.sec("سافر مع فريقك", "مباريات آسيا برا الدولة", tv2);
+    if ((H2AX.teams || {})[String(id)]) nums += S.sec("سجله ضد كل الفرق", "في كل البطولات", `<p class="tools"><a class="btn" href="/t/${id}/h2h/">مواجهاته مع كل خصم</a></p>`);
     const gco = HP.clubCoaches(GCT[id], hpo), co = gco ? "" : S.coachesTeam(x538.coaches, id); if (gco) nums += S.sec("مدربين النادي عبر التاريخ", "كل البطولات", gco); else if (co) nums += S.sec("مدربين النادي عبر التاريخ", "في الدوري", co);
     if (x538.fortress && x538.fortress.stadiums){ const fs2 = x538.fortress.stadiums.filter(s => s.team === id); if (fs2.length) nums += S.sec("حصن الملعب", "", S.fortress({ since:x538.fortress.since, stadiums:fs2 })); }
     // national team (144, 145, 59, 39)
@@ -1276,11 +1286,7 @@ ${items}
     });
   }
   // the old matches (graph phase 7): v1/matches/<comp>/<season>.json and team-<id>.json; a match with a current page keeps it
-  const MA = require("./lib/match_archive.cjs"), MSEA = new Map(), MTEAM = new Map();
-  { const want = comps.filter(c => (MIX.comps || {})[c.id]).flatMap(c => MIX.comps[c.id].map(sl => [c.id, sl]));
-    (await pool(want, 8, ([cid, sl]) => get(`matches/${cid}/${sl}.json`, 2))).forEach((d, i) => { if (d && d.matches) MSEA.set(`${want[i][0]}|${want[i][1]}`, d.matches); });
-    for (const tid of Object.keys(MIX.teams || {})){ const d = await get(`matches/team-${tid}.json`, 2); if (d && d.matches) MTEAM.set(+tid, d.matches); } }
-  const curM = new Set([...matchSum.keys()].map(String)), compOf = id => { const c = (comps || []).find(x => +x.id === +id); return c ? { key:c.key, name_ar:c.name_ar } : null; };
+  const curM = CURM, compOf = id => { const c = (comps || []).find(x => +x.id === +id); return c ? { key:c.key, name_ar:c.name_ar } : null; };
   const mo = Object.assign({}, hpo, { comp:compOf });
   { const seen = new Set();
     for (const ms of [...MSEA.values(), ...MTEAM.values()]) for (const m of ms){ if (seen.has(m.id) || curM.has(m.id)) continue; seen.add(m.id);
@@ -1294,6 +1300,19 @@ ${items}
       write(`t/${tid}/matches/index.html`, page({ v5:{ nav:{ back:`/t/${tid}/`, backLabel:esc(tn), title:"كل المباريات", trail:"" },
         body:`<div class="lt"><h1>${esc(tn)}: كل المباريات</h1><p>كل مباريات ${esc(tn)} في أرشيف تيفو، من <span class="num">${esc(ms[0].date.slice(0, 4))}</span> لين <span class="num">${esc(ms[ms.length - 1].date.slice(0, 4))}</span> (<span class="num">${ms.length}</span> مباراة).</p></div>` + MA.listBody(ms.slice().reverse(), mo, "year") + U.foot(), tab:"more", sheets:"", data:{} },
         path:pth, page:"ref", title:`كل مباريات ${tn} عبر التاريخ | تيفو`, desc:`كل مباريات ${tn} من ${ms[0].date.slice(0, 4)}: ${ms.length} مباراة بنتايجها وهدافينها.`, ld:bcLd([[tn, `/t/${tid}/`], ["كل المباريات", pth]]) }));
+      urls.push(pth); } }
+  // the pairs FotMob never listed get a page of their own; every team, its record against each opponent
+  { const pairHref = (x, y) => (H2H[`${x}-${y}`] ? `/h2h/${x}-${y}/` : H2H[`${y}-${x}`] ? `/h2h/${y}-${x}/` : H2AD.has(H2A.key(x, y)) ? `/h2h/${H2A.key(x, y)}/` : null);
+    const knm = {}; for (const d of H2AD.values()) d.teams.forEach((t, i) => { knm[t] = (!t.startsWith("k") && ((teamsJson.teams[t] || {}).name_ar || TAR[t])) || d.names[i]; });
+    for (const [k, d] of H2AD){ const [x, y] = d.teams; if (H2H[`${x}-${y}`] || H2H[`${y}-${x}`]) continue;
+      const na = knm[x] || x, nb = knm[y] || y, pth = `/h2h/${k}/`, ok = d.n >= 5;
+      write(`h2h/${k}/index.html`, page({ v5:{ nav:{ back:"/", backLabel:"الرئيسية", title:`${esc(na)} و${esc(nb)}`, trail:"" }, body:`<div class="lt"><h1>${esc(na)} و${esc(nb)}</h1></div>` + H2A.pairBody(Object.assign({}, d, { names:[na, nb] }), h2o) + U.foot(), tab:"more", sheets:"", data:{} },
+        path:pth, page:"ref", noindex:!ok, title:`تاريخ مواجهات ${na} و${nb}: كل النتائج | تيفو`, desc:`سجل مواجهات ${na} و${nb} في كل البطولات من ${d.first.slice(0, 4)}: ${d.n} مواجهة.`, ld:bcLd([[`${na} و${nb}`, pth]]) }));
+      if (ok) urls.push(pth); }
+    for (const [t, rows] of Object.entries(H2AX.teams || {})){ if (t.startsWith("k") || !teamPages.has(+t)) continue;
+      const tn = knm[t] || t, pth = `/t/${t}/h2h/`;
+      write(`t/${t}/h2h/index.html`, page({ v5:{ nav:{ back:`/t/${t}/`, backLabel:esc(tn), title:"ضد كل الفرق", trail:"" }, body:`<div class="lt"><h1>${esc(tn)} ضد كل الفرق</h1><p>مواجهات ${esc(tn)} مع كل فريق لعب معاه ثلاث مرات أو أكثر، في كل البطولات.</p></div>` + H2A.teamBody(t, rows, knm, { pair:pairHref }) + U.foot(), tab:"more", sheets:"", data:{} },
+        path:pth, page:"ref", title:`${tn} ضد كل الفرق: سجل المواجهات في كل البطولات | تيفو`, desc:`سجل ${tn} ضد كل خصومه: المواجهات والفوز والتعادل والخسارة في الدوري والكؤوس وآسيا.`, ld:bcLd([[tn, `/t/${t}/`], ["ضد كل الفرق", pth]]) }));
       urls.push(pth); } }
   for (const c of comps){ const ed = EDS.get(+c.id); if (!ed) continue;
     const sNav = (title, back, label) => ({ back, backLabel:label, title, trail:"" }), ss = ed.seasons, arch = `/c/${c.key}/seasons/`, okA = ss.length >= 3;
