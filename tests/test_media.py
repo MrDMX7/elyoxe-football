@@ -839,3 +839,38 @@ def test_a_scorer_with_no_arabic_name_learns_the_one_the_post_writes_in_its_lett
     assert kw_goals(post, kw_names({p: list(f) for p, f in got.items()})) == {"x1": "34-2435620"}
     # the same post with another name in it teaches nothing: its letters are not Kuku's
     assert M.learn([kw_post("كارلوس سيلفا يسجل الهدف الأول للنصر", "2026-11-02T16:32:00Z", 9)], [NAS_SHA], kw_names(), CH_KW) == {}
+
+
+# Kawkab Marrakech 2-1 Wydad, Botola Pro, 2026-11-07: Arryadia (the league's broadcaster, SNRT) posts a video of every match on X
+# with the result in words, «… يحقق الفوز على الوداد الرياضي بهدفين مقابل واحد …» (2026-11-20, Morocco had no clip at all)
+KAC_WAC = {"id": 6487515, "comp": 530, "kickoff_utc": "2026-11-07T16:00:00Z", "status": "finished", "score": {"home": 2, "away": 1},
+           "home": {"id": 102042, "name": "Kawkab Marrakech", "name_ar": "الكوكب المراكشي"},
+           "away": {"id": 102050, "name": "Wydad Casablanca", "name_ar": "الوداد الرياضي"},
+           "periods": {"firstHalfStarted": "2026-11-07T16:00:30Z", "secondHalfStarted": "2026-11-07T17:03:00Z", "gameEnded": "2026-11-07T17:59:42Z"},
+           "events": [goal(30, "home", 1, "A", (1, 0)), goal(50, "away", 2, "B", (1, 1)), goal(80, "home", 3, "C", (2, 1))]}
+CH_MA = {c["key"]: c for c in M.x_channels([{"handle": "arryadiatv", "name": "الرياضية المغربية", "lang": "ar", "tier": "official",
+                                              "country": "ma", "kind": "broadcaster", "comps": [530]}])}
+N_MA = M.Names({"102042": {"name": "Kawkab Marrakech", "name_ar": "الكوكب المراكشي"}, "102050": {"name": "Wydad Casablanca", "name_ar": "الوداد الرياضي"}},
+               {}, {}, {}, {}, NATIONS)
+
+
+def test_a_result_in_words():
+    assert M.Text("الكوكب المراكشي يحقق الفوز على الوداد الرياضي بهدفين مقابل واحد، برسم الجولة السابعة").result_scores == [(2, 1)]
+    assert M.Text("الدفاع الحسني الجديدي يهزم الوداد الرياضي بهدف دون رد").result_scores == [(1, 0)]
+    assert M.Text("تعادل إيجابي يحسم مواجهة الرجاء الرياضي واتحاد طنجة بهدف لمثله").result_scores == [(1, 1)]
+    assert M.Text("فوزه على نظيره الأنغولي بأربعة أهداف مقابل هدف واحد").result_scores == [(4, 1)]
+    assert M.Text("الفوز بخماسية لهدفين على أمل تزنيت").result_scores == [(5, 2)]
+    assert M.Text("يحقق فوزا عريضا على المغرب التطواني برباعية").result_scores == []      # four to how many?
+    assert M.Text("سعيد عزت يسجل هدف التقدم الأول لشباب الأهلي").result_scores == []
+
+
+def test_a_broadcasters_post_of_the_result_in_words_is_the_matchs_video():
+    post = lambda title, at: {"id": "x1", "title": title, "desc": "", "at": at, "ch": "x_arryadiatv", "source": "x", "url": "u"}
+    hl = lambda title, at="2026-11-07T18:29:01Z": {mid: [v["id"] for v, _ in r["highlights"]] for mid, r in
+                                                    M.attach([post(title, at)], [KAC_WAC], N_MA, CH_MA, []).items() if r["highlights"]}
+    title = "الكوكب المراكشي يحقق الفوز على الوداد الرياضي بهدفين مقابل واحد، برسم الجولة السابعة من البطولة الاحترافية «إنوي»."
+    assert hl(title) == {6487515: ["x1"]}
+    assert hl(title.replace("بهدفين مقابل واحد", "بهدف دون رد")) == {}                     # not this match's score
+    assert hl(title, "2026-11-07T17:40:00Z") == {}                                          # the ball still in play
+    # at half-time, or a lead in words that is not the final score: one goal or a half, not the match's video
+    assert hl("الكوكب المراكشي يتقدم على الوداد الرياضي بهدف دون رد", "2026-11-07T16:50:00Z") == {}

@@ -296,6 +296,27 @@ MONTHS.update({norm(m): i + 1 for i, m in enumerate(["يناير", "فبراير
 MONTHS.update({"ايار": 5, "حزيران": 6, "تموز": 7, "اب": 8, "ايلول": 9, "تشرين الاول": 10})
 
 SCORE = re.compile(r"(?<![\d/.:+])(\d{1,2})\s*(?:-|–|—|:|×|x|X)\s*(\d{1,2})(?![\d/.:]|\s*[-–/]\s*\d)")
+# a result in words, «بهدفين مقابل واحد», «بهدف دون رد», «بهدف لمثله», «بأربعة أهداف مقابل هدف واحد», «بخماسية لهدفين» (Arryadia's
+# post of every Botola match on X, 2026-11-20); «برباعية» alone says four to how many: no score
+_WN = {"هدف": 1, "هدفا": 1, "واحد": 1, "هدف واحد": 1, "هدفين": 2, "هدفان": 2, "اثنين": 2, "ثلاثية": 3, "ثلاثة": 3, "ثلاث": 3,
+       "رباعية": 4, "أربعة": 4, "اربعة": 4, "خماسية": 5, "خمسة": 5, "سداسية": 6, "ستة": 6, "سباعية": 7, "سبعة": 7}
+WORD_RESULT = re.compile(
+    r"ب(هدفين|هدفان|هدف|ثلاثية|رباعية|خماسية|سداسية|سباعية|(?:ثلاثة|أربعة|اربعة|خمسة|ستة|سبعة)\s+[أا]هداف)\s+"
+    r"(?:(نظيف\w*|دون\s+رد|بدون\s+رد)|(لمثله|لمثلهما)|(?:مقابل\s+|ل)(هدف\s+واحد|هدفين|هدف|واحد|ثلاثة|ثلاث|اثنين))")
+
+
+def word_result(raw):
+    out = []
+    for m in WORD_RESULT.finditer(raw or ""):
+        a = _WN.get(m.group(1).split()[0], 0)
+        b = 0 if m.group(2) else a if m.group(3) else _WN.get(m.group(4), 0)
+        if a and (b or m.group(2)):
+            out.append((a, b))
+    if not out and re.search(r"تعادل\s+سلبي|بدون\s+[أا]هداف", raw or ""):
+        out.append((0, 0))
+    return out[:1]
+
+
 # Dubai Sports' score after the goal, a hashtag and a number per side on two lines: «#الوصل 2\n#حتا 0» (2026-11-19). Not a
 # keycap («#أبوظبي_الرياضية 1⃣» is Abu Dhabi Sports' channel number)
 TAG_SCORE = re.compile(r"#[^\s#]+[ \t]+(\d{1,2})(?![\d⃣])[ \t]*\n\s*#[^\s#]+[ \t]+(\d{1,2})(?![\d⃣])")
@@ -366,6 +387,7 @@ class Text:
         self.goal_at = [i for i in range(len(self.al)) if any(p[0] in self.al[i] and has(self.al[i:i + len(p)], p) for p in strict)]
         self.flags = [(flag_iso(a), flag_iso(b)) for a, b in FLAG.findall(title or "")]   # «🇯🇴 🆚 🇸🇾»
         self.scores = [(int(a), int(b)) for a, b in SCORE.findall(self.raw) + TAG_SCORE.findall(self.raw) if int(a) <= 15 and int(b) <= 15]
+        self.result_scores = word_result(self.raw)
         # «العين 2 - 1 الظفرة | الجولة 9 - …»: a head with one score may be a result alone, Abu Dhabi Sports' name for its
         # highlights (2026-11-19); result_title() checks that the rest of the head is the two teams' names
         head = self.raw.split("|")[0]
@@ -928,10 +950,11 @@ def check_highlights(v, ch, tx, md, gs, teams, youth_m, t_pub):
     final = (md["score"]["home"], md["score"]["away"]) if md.get("score") else None
     now_sc = score_at(md, gs, t_pub)
     conf = 60
-    if tx.scores:
-        if not all(any(either(s, r) for r in rs) for s in tx.scores):
+    scores = tx.scores or tx.result_scores
+    if scores:
+        if not all(any(either(s, r) for r in rs) for s in scores):
             return None, "a score this match never had"
-        if not any(either(s, now_sc) or (final and either(s, final)) for s in tx.scores):
+        if not any(either(s, now_sc) or (final and either(s, final)) for s in scores):
             return None, "not the score at the time"
         conf += 15
     if tx.old:
@@ -1161,6 +1184,13 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
             continue
         spans = []
         teams, players = ctx.mentions(tx.al, tx.flags if kind == "hl" else (), spans)
+        # a broadcaster's or league's post of the result in words that names no scorer, «الكوكب المراكشي يحقق الفوز على الوداد
+        # الرياضي بهدفين مقابل واحد» (Arryadia on X): the match's video, held to that score and to the final whistle
+        # (only the final score, after the final whistle: «غلطة سراي يتقدم على ليل بثلاثة أهداف لهدفين» is one goal, mid-match)
+        in_words = kind == "goal" and tx.result_scores and not tx.minutes and ch.get("kind") in ("broadcaster", "league") \
+            and not any(st >= 2 for st in players.values())
+        if in_words:
+            kind = "hl"
         if kind == "hl":
             cands = []
             for mid, md in ctx.matches.items():
@@ -1168,6 +1198,11 @@ def attach(videos, matches, names, chmap, trace=None, blocked=()):
                 if not ((h in teams or ch.get("team") == h) and (a in teams or ch.get("team") == a)):
                     continue
                 conf, why = check_highlights(v, ch, tx, md, ctx.goals[mid], teams, ctx.youth[mid], t_pub)
+                if conf and in_words:
+                    end, final = match_end(md), (md.get("score") or {})
+                    if not (end and t_pub >= end - timedelta(minutes=10)) or \
+                            not any(either(s, (final.get("home"), final.get("away"))) for s in tx.result_scores):
+                        conf, why = None, "a result in words that is not the final one"
                 note(v, mid, "highlights", conf if conf else why)
                 if conf and conf >= 70:
                     cands.append((conf, -abs((t_pub - (match_end(md) or t_pub)).total_seconds()), mid))

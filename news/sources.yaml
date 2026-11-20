@@ -146,6 +146,9 @@ x:
     # 2026-11-20: X bio «الحساب الرسمي للقناة الرياضية - وزارة الاعلام الكويت», 57K; the Kuwait Premier League's rights holder,
     # posts every goal («كارلوس يسجل الهدف الثاني للفحيحيل ضمن منافسات بطولة دوري زين الممتاز …»)
     - {handle: kuwaitsporttv, name: "القناة الرياضية الكويتية", lang: ar, tier: official, country: kw, kind: broadcaster, comps: [529]}
+    # 2026-11-20: X bio «Compte officiel de la télévision sportive marocaine #Arryadia … #SNRT», 412K; Botola's broadcaster, posts
+    # a video of every match with the result in words (its YouTube carries only statements)
+    - {handle: arryadiatv, name: "الرياضية المغربية", lang: ar, tier: official, country: ma, kind: broadcaster, comps: [530, 11840]}
     - {handle: UaeProLeague, name: "دوري أدنوك", lang: ar, tier: official, country: ae, comp: 538, comps: [538, 11027, 11026]}
     - {handle: QSL, name: "دوري نجوم قطر", lang: ar, tier: official, country: qa, comps: [535, 11018]}
     - {handle: TheAFCCL_ar, name: "دوري أبطال آسيا", lang: ar, tier: official, comps: [525, 10622, 9469, 9470]}
