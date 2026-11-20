@@ -26,7 +26,7 @@ function personBody(p, honours, o, intl) {
     '<p class="src">من أرشيف تيفو: الألقاب والجوائز من ويكيبيديا وRSSSF وعدّنا، وكأس العالم من قاعدة بيانات كأس العالم (Fjelstul).</p>';
 }
 
-const title = p => `${nameOf(p)}: ألقابه وجوائزه ومشاركاته في كأس العالم | تيفو`;
+const title = p => `${nameOf(p)}: ألقابه وجوائزه ${(p.wc || []).length ? "ومشاركاته في كأس العالم" : "ومسيرته مع المنتخب"} | تيفو`;
 // indexed when there is more than one line to read: two titles or awards, or a World Cup
 const indexable = (p, honours) => (p.wc || []).length > 0 || (honours || []).filter(h => h[3] === 1).length >= 2;
 

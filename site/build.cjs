@@ -927,6 +927,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // «كشّاف تيفو» (owner bold idea 6): the young Arab players' pool and their points per match (lib/scout.cjs), for /scout/ and
   // the Cards Lambda (saas/cards src/tifo_scout.py reads scout/points.json)
   const SCOUT = require("./lib/scout.cjs"), SCD = SCOUT.build(D.values(), { natTeams:new Set(Object.values(NAT).map(Number)), nameOf });
+  // a retired player FotMob knows (no current page) gets his archive page at /p/<FotMob id>/: from here every link reaches it
+  const ARCH = new Set(Object.keys(PPL).filter(k => !k.startsWith("k") && !playerPages.has(k))); ARCH.forEach(k => playerPages.add(k));
   SCD.pool.players.forEach(p => { if (playerPages.has(String(p.id))) p.pg = 1; });
   write("scout/pool.json", JSON.stringify(SCD.pool)); write("scout/points.json", JSON.stringify(SCD.points));
   console.log(`scout: ${SCD.pool.players.length} young Arab players, ${Object.values(SCD.points.players).reduce((n, m) => n + m.length, 0)} appearances`);
@@ -1285,7 +1287,8 @@ ${items}
         ld:bcLd([[c.name_ar, `/c/${c.key}/`], ["كل المواسم", arch], [s.season, sp]]) }));
       if (okS) urls.push(sp); } }
   { const PP = require("./lib/people_pages.cjs"), compK = c => (AWC[c] ? { name_ar:AWC[c].name_ar, href:`/c/${AWC[c].key}/` } : null);
-    for (const [k, p] of Object.entries(PPL)){ const hon = AWP[k] || [], pth = `/p/${k}/`, nmP = PP.nameOf(p), ok = PP.indexable(p, hon);
+    for (const [k, p] of Object.entries(PPL)){ if (!k.startsWith("k") && !ARCH.has(k)) continue;   // a current player keeps his own page
+      const hon = AWP[k] || [], pth = `/p/${k}/`, nmP = PP.nameOf(p), ok = PP.indexable(p, hon);
       write(`p/${k}/index.html`, page({ v5:{ nav:{ back:"/awards/", backLabel:"الجوائز", title:esc(nmP), trail:"" }, body:`<div class="lt"><h1>${/[؀-ۿ]/.test(nmP) ? esc(nmP) : `<span class="lat">${esc(nmP)}</span>`}</h1></div>` + PP.personBody(p, hon, { award:x => AWK[x], comp:compK }, INTL[k]) + U.foot(), tab:"more", sheets:"", data:{} },
         path:pth, page:"ref", noindex:!ok, title:PP.title(p), desc:`${nmP}: ألقابه وجوائزه${(p.wc || []).length ? " ومشاركاته في كأس العالم" : ""} من أرشيف تيفو.`, ld:bcLd([[nmP, pth]]) }));
       if (ok) urls.push(pth); } }

@@ -31,3 +31,7 @@ test("the national team's record, from its article", () => {
   assert.equal(PP.intlBlock(null), "");
   assert.match(PP.personBody(TAL, HON, {}, ["United Arab Emirates", 161, 52, "1983–1997"]), /161/);
 });
+
+test("no World Cup, no World Cup in the title", () => {
+  assert.equal(PP.title({ name: "Ismail Matar", name_ar: "إسماعيل مطر", wc: [] }), "إسماعيل مطر: ألقابه وجوائزه ومسيرته مع المنتخب | تيفو");
+});

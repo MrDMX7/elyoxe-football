@@ -116,9 +116,10 @@ def test_people_files_for_the_players_the_site_has_no_page_for(tmp_path):
         G.many("appearance", [{"mid": 800 + i, "pid": old, "tid": eng, "played": 1, "goals": 1 if i == 2 else 0}], "fjelstul")
     out = publish.people(G, str(tmp_path / "o"))
     ix = json.load(open(tmp_path / "o" / "people" / "index.json", encoding="utf-8"))
-    assert ix == {f"k{old}": {"name": "Stanley Matthews", "name_ar": "ستانلي ماثيوز", "born": "1915-02-01", "died": None,
-                              "nat": "إنجلترا", "wc": [["1954", 2, 1], ["1950", 1, 0]]}}
-    assert out == {"people": 1, "intl": 0}                            # Messi has his FotMob page already
+    assert ix[f"k{old}"] == {"name": "Stanley Matthews", "name_ar": "ستانلي ماثيوز", "born": "1915-02-01", "died": None,
+                             "nat": "إنجلترا", "wc": [["1954", 2, 1], ["1950", 1, 0]]}
+    assert "30981" in ix                  # FotMob knows him: keyed by his FotMob id, a page wherever the site has no current one
+    assert out == {"people": 2, "intl": 0}
 
 
 def test_caps_and_goals_from_the_national_teams_records(tmp_path):

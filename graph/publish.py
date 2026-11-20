@@ -241,12 +241,11 @@ def editions(G, out_dir):
 
 
 def people(G, out_dir, min_wc=3, min_caps=30):
-    """people/index.json: the players the site has no FotMob page for whose record is worth one (graph phase 7, the old
-    players): a title or an award won (rank 1), or min_wc World Cup matches. Only what the archive holds in full: the Arabic
+    """people/index.json: the players whose record is worth a page (graph phase 7, the old players), keyed k<Tifo id> or,
+    where FotMob knows him, his FotMob id (the site writes that page only when it has no current one: a retired player): a title or an award won (rank 1), or min_wc World Cup matches. Only what the archive holds in full: the Arabic
     name, birth and death, the national team, and each World Cup with its matches and goals (Fjelstul is complete). Their
     honours are awards/players.json's k<Tifo id> entries; never a career total (internationals before FotMob are partial)."""
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
-    fm = {a for (a,) in q("SELECT tifo_id FROM xref WHERE type='player' AND source='fotmob'")}
     wc_cid = {a for (a,) in q("SELECT tifo_id FROM xref WHERE type='competition' AND source='fotmob' AND source_id IN ('77', 77)")}
     wc = defaultdict(lambda: defaultdict(lambda: [0, 0]))
     nat = {}
@@ -261,7 +260,7 @@ def people(G, out_dir, min_wc=3, min_caps=30):
     for pid, team, caps, goals, career in q("SELECT pid, team, caps, goals, career FROM intl_record ORDER BY coalesce(caps, 0)"):
         intl[pid] = [team, caps, goals, career]
     capped = {p for p, r in intl.items() if (r[1] or 0) >= min_caps}
-    keep = {p for p in won | capped | {p for p, ys in wc.items() if sum(v[0] for v in ys.values()) >= min_wc} if p not in fm}
+    keep = won | capped | {p for p, ys in wc.items() if sum(v[0] for v in ys.values()) >= min_wc}
     for pid, tname in q("""SELECT a.pid, coalesce(t.name_ar, t.name) FROM appearance a JOIN team t ON t.tid=a.tid
                            WHERE t.kind='national' AND a.played=1 GROUP BY a.pid, t.tid ORDER BY count(*) DESC"""):     # his most-played side first
         if pid in keep and pid not in nat:
@@ -269,14 +268,15 @@ def people(G, out_dir, min_wc=3, min_caps=30):
     for pid, r in intl.items():
         if pid in keep and pid not in nat:
             nat[pid] = r[0]
+    fm_id = {a: b for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='player' AND source='fotmob'") if str(b).isdigit()}
+    key = lambda p: str(fm_id[p]) if p in fm_id else f"k{p}"   # FotMob's id where it has one: the site writes /p/<id>/ when no current page
     out = {}
     for pid, name, name_ar, born, died in q("SELECT pid, name, name_ar, born, died FROM player"):
         if pid in keep:
-            out[f"k{pid}"] = {"name": name, "name_ar": name_ar, "born": born, "died": died, "nat": nat.get(pid),
+            out[key(pid)] = {"name": name, "name_ar": name_ar, "born": born, "died": died, "nat": nat.get(pid),
                               "wc": [[y, v[0], v[1]] for y, v in sorted(wc.get(pid, {}).items(), reverse=True)]}
     _dump(os.path.join(out_dir, "people", "index.json"), dict(sorted(out.items())))
-    fm_id = {a: b for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='player' AND source='fotmob'") if str(b).isdigit()}
-    caps = {(str(fm_id[p]) if p in fm_id else f"k{p}"): r for p, r in intl.items() if p in fm_id or p in keep}
+    caps = {key(p): r for p, r in intl.items() if p in fm_id or p in keep}
     _dump(os.path.join(out_dir, "people", "intl.json"), dict(sorted(caps.items())))
     return {"people": len(out), "intl": len(caps)}
 
