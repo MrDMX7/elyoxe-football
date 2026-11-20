@@ -327,7 +327,7 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
     ex_doc = store.get_state(M.EXTRA) or {}
     extra = ex_doc.get("matches") or {}
     keep_after = M.iso(t - timedelta(days=KEEP_EXTRA_D))
-    stats = {"written": 0, "goal_keys_added": 0, "clips_added": 0, "highlights_added": 0}
+    stats = {"written": 0, "goal_keys_added": 0, "clips_added": 0, "highlights_added": 0, "taken_off": 0}
     by_comp = {}
     for md in matches:
         mid = md["id"]
@@ -337,17 +337,21 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
         goals_new = {k: c for k, c in ((k, M.pack(l, oe, chmap)) for k, l in r["goals"].items()) if c}
         cur = store.get_json(f"media/{mid}.json") or {}
         end = M.match_end(md)
+        # what an earlier run filed that today's vetoes turn down (M.vetoed): off the page
+        cur_hl = [c for c in cur.get("highlights") or [] if not M.vetoed(c, goal=False)]
+        cur_goals_all = cur.get("goals") or {}
+        cur_goals = {k: [c for c in l if not M.vetoed(c)] for k, l in cur_goals_all.items()}
+        stats["taken_off"] += len(cur.get("highlights") or []) - len(cur_hl) +             sum(len(l) for l in cur_goals_all.values()) - sum(len(l) for l in cur_goals.values())
         # FotMob's copy of the summary under every goal (media.fotmob_links no longer files it there): to the highlights
-        cur_goals = cur.get("goals") or {}
         uses = {}
         for k, l in cur_goals.items():
             for c in l:
                 uses.setdefault(c.get("url"), set()).add(k)
-        hl_urls = {c.get("url") for c in (cur.get("highlights") or []) + hl_new}
+        hl_urls = {c.get("url") for c in cur_hl + hl_new}
         summary = [c for l in cur_goals.values() for c in l
                    if c.get("found_by") == "fotmob" and (c.get("url") in hl_urls or len(uses[c.get("url")]) > 1)]
         sid = {c["id"] for c in summary}
-        hl = M.sort_highlights(M.merge_cards(M.merge_cards(cur.get("highlights"), hl_new, blocked),
+        hl = M.sort_highlights(M.merge_cards(M.merge_cards(cur_hl, hl_new, blocked),
                                              [dict(c, kind=c.get("kind") or "summary") for c in summary], blocked), end)
         goals = {k: [c for c in l if c.get("id") not in sid] for k, l in cur_goals.items()}
         for k, l in goals_new.items():
@@ -367,7 +371,7 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
             added_list.append({"match": mid, "comp": md.get("comp"), "teams": f"{md['home'].get('name')} - {md['away'].get('name')}",
                                "goal": k, "scorer": (g.get("player") or {}).get("name"), "score": g.get("score"), "type": g.get("type"),
                                "clips": [(c.get("channel"), c.get("title"), c.get("url"), c.get("published")) for c in goals[k]]})
-        same = json.dumps({"h": cur.get("highlights") or [], "g": cur_goals}, sort_keys=True, ensure_ascii=False) == \
+        same = json.dumps({"h": cur.get("highlights") or [], "g": cur_goals_all}, sort_keys=True, ensure_ascii=False) == \
             json.dumps({"h": hl, "g": goals}, sort_keys=True, ensure_ascii=False)
         if not same:
             if not dry:
@@ -375,7 +379,7 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
             stats["written"] += 1
             stats["goal_keys_added"] += len(new_keys)
             stats["clips_added"] += sum(max(0, len(goals.get(k) or []) - len(cur_goals.get(k) or [])) for k in goals)
-            stats["highlights_added"] += max(0, len(hl) - len(cur.get("highlights") or []))
+            stats["highlights_added"] += max(0, len(hl) - len(cur_hl))
             stats["summaries_moved"] = stats.get("summaries_moved", 0) + len(sid)
         if (md.get("kickoff_utc") or "") >= keep_after and (hl_new or goals_new):
             e = extra.setdefault(str(mid), {"kickoff_utc": md.get("kickoff_utc"), "highlights": [], "goals": {}})
@@ -383,6 +387,9 @@ def run(store, cfg, t=None, days=32, dry=False, explain=None, relist=False, log=
             for k, l in goals_new.items():
                 e["goals"][k] = M.merge_cards(e["goals"].get(k), l)
     extra = {k: v for k, v in extra.items() if (v.get("kickoff_utc") or "") >= keep_after}
+    for v in extra.values():
+        v["highlights"] = [c for c in v.get("highlights") or [] if not M.vetoed(c, goal=False)]
+        v["goals"] = {k: l for k, l in ((k, [c for c in l if not M.vetoed(c)]) for k, l in (v.get("goals") or {}).items()) if l}
     if not dry:
         store.put_state(M.EXTRA, {"generated": M.iso(t), "matches": extra})
     if explain is not None:

@@ -552,3 +552,47 @@ def test_a_result_title_is_a_summary_not_only_the_goals():
     kind = lambda title: M.pack([(dict(v, title=title), 95)], {}, CH_YT_AE, hl=True)[0]["kind"]
     assert kind(v["title"]) == "summary"
     assert kind("أهداف مباراة العين 2 - 1 الظفرة") == "goals"
+
+
+def test_thmanyahs_celebration_disallowed_goal_and_talk_show_posts_are_not_a_goals_clip():
+    # the Thmanyah X pass of the month backfill (2026-11-20): Mané's goal got only «فرحة ساديو ماني بهدف التقدّم» (the celebration),
+    # Mensah's the post that says the referee ruled it out for offside, Ronaldo's three a talk show segment about his hat-trick
+    assert M.Text("فرحة ساديو ماني بهدف التقدّم 🟡🔥\n\n#النصر_الخلود | #دوري_روشن_السعودي").neg_goal
+    assert M.Text("بصناعة من تريزيقيه، مينساه يسجل الهدف الثاني للرياض، لكن حكم اللقاء يُلغيه بداعي التسلل ⚽️🚩 #الرياض_التعاون").neg_goal
+    assert M.Text("هاتريك رونالدو يقود النصر للانتصار وترقب لقمة الشباب والأهلي | المنصة مع تركي العجمة").neg
+    # the clips of the same goals that stay
+    assert not M.Text("هدف ⚽️ مينساه يعزّز تقدم الرياض بالهدف الثاني، بتسديدة تستقر في شباك التعاون 🔴 #الرياض_التعاون | #دوري_روشن_السعودي").neg_goal
+    assert not M.Text("ثلاثية كريستيانو رونالدو ضد الخلود").neg
+    assert not M.Text("📹| شاهد.. عمر كيتا يسجل بالخطأ في مرماه، ليمنح الشارقة هدف التقدم في شباك شباب الأهلي 🥅، لتتعالى فرحة اللاعبين").neg_goal
+    assert not M.Text("العين 2 - 1 الظفرة | الجولة 9 - دوري أدنوك للمحترفين").neg
+
+
+def test_a_rerun_takes_off_the_clips_a_newer_veto_turns_down(tmp_path, monkeypatch):
+    # the backfill only ever added: the celebration and talk-show clips it filed before those words were vetoes (2026-11-20)
+    # stayed on the pages and in media-extra.json, which the step merges back. A rerun now takes them off both; FotMob's own
+    # link for a goal is not judged by its title
+    from news import media_backfill as B
+    store = _ksa_store(tmp_path)
+    card = lambda vid, title, **k: dict({"id": vid, "url": f"https://www.youtube.com/watch?v={vid}", "title": title, "source": "youtube",
+                                          "channel": "x", "published": "2026-09-29T19:00:00Z", "embed": True, "conf": 80,
+                                          "found_by": "tifo"}, **k)
+    good = card("good0000001", "هدف عبدالله الحمدان الثاني في شباك العراق")
+    joy = card("joy00000001", "فرحة عبدالله الحمدان بالهدف الثاني")
+    show = card("show0000001", "ثنائية الحمدان ترسم الطريق | المنصة مع تركي العجمة")
+    fm = card("fotmob00001", "فرحة", found_by="fotmob")
+    store.put_json(f"media/{KSA_IRQ['id']}.json", {"generated": "2026-09-29T21:05:00Z", "match": KSA_IRQ["id"],
+                                                   "highlights": [dict(show, kind="summary")], "goals": {"69-102": [good, joy, fm]}})
+    store.put_state(M.EXTRA, {"matches": {str(KSA_IRQ["id"]): {"kickoff_utc": KSA_IRQ["kickoff_utc"], "highlights": [show],
+                                                                "goals": {"69-102": [good, joy], "55-101": [show]}}}})
+    monkeypatch.setattr(B, "youtube_videos", lambda chs, ctx, t0, relist=False, log=print, store=None, remote=False: [])
+    monkeypatch.setattr(B, "CACHE", str(tmp_path / "cache"))
+    monkeypatch.setattr(M, "oembed", lambda vid: {"s": 200})
+    monkeypatch.setattr(M, "load_names", lambda store, nat, cache_dir=None: M.Names(TEAMS, PLAYERS, {}, {}, ALIASES, NATIONS, {329}))
+    monkeypatch.setattr(M, "national_comps", lambda: frozenset({329}))
+    res = B.run(store, CFG_KSA, t=datetime(2026, 10, 1, 10, 0, tzinfo=timezone.utc), days=3, log=lambda *a: None)
+    doc = store.get_json(f"media/{KSA_IRQ['id']}.json")
+    assert doc["highlights"] == []
+    assert [c["id"] for c in doc["goals"]["69-102"]] == ["good0000001", "fotmob00001"]
+    assert res["taken_off"] == 2                                                   # off the page: the show and the celebration
+    extra = store.get_state(M.EXTRA)["matches"][str(KSA_IRQ["id"])]
+    assert extra["highlights"] == [] and {k: [c["id"] for c in l] for k, l in extra["goals"].items()} == {"69-102": ["good0000001"]}
