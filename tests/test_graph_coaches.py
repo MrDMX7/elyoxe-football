@@ -153,3 +153,18 @@ def test_another_sources_champion_with_the_same_name_is_the_same_club(tmp_path):
     out = coaches.load(G, reg, S)
     assert reg.get("team", "s365", "365-bota") == reg.get("team", "fotmob", 8000)      # one Botafogo now
     assert out["conflicts"] == 1                                                     # Vasco against Flamengo stays a disagreement
+
+
+def test_two_spellings_of_one_club_across_sources_are_one_club(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    a, b, c = reg.mint("team", "s365", "x"), reg.mint("team", "fotmob", 1), reg.mint("team", "fotmob", 2)
+    G.put("team", {"tid": a, "name": "America MG"}, "s365")
+    G.xref("team", a, "s365", "x", "s365-native")
+    G.put("team", {"tid": b, "name": "America Mineiro"}, "fotmob")
+    G.put("team", {"tid": c, "name": "KuPS"}, "fotmob")
+    assert not coaches.same_club(G, reg, a, c)
+    G.c.execute("update team set name='America-MG' where tid=?", (b,))
+    assert coaches.same_club(G, reg, a, b)                                       # «America MG» and «America-MG»
+    G.c.execute("update team set name='RoPS Rovaniemi' where tid=?", (b,))
+    G.c.execute("update team set name='RoPS Rovaniemen' where tid=?", (a,))
+    assert coaches.same_club(G, reg, a, b)

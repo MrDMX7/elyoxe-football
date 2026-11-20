@@ -119,7 +119,8 @@ def same_club(G, reg, other, tid):
     punctuation are gone (365Scores' «São Paulo» and FotMob's «Sao Paulo»), are one club: the other source's key is linked to
     FotMob's team (Registry.link merges a record only that source made). A different name stays a disagreement."""
     names = dict(G.c.execute("SELECT tid, name FROM team WHERE tid IN (?, ?)", (other, tid)).fetchall())
-    if not names.get(other) or fold(names.get(other)) != fold(names.get(tid)):
+    from graph.load.awards import alike
+    if not names.get(other) or not names.get(tid) or not alike(fold(names[other]), fold(names[tid])):
         return False
     for src, sid in G.c.execute("SELECT source, source_id FROM xref WHERE type='team' AND tifo_id=? AND source <> 'fotmob'", (other,)).fetchall():
         reg.link("team", src, sid, tid)
