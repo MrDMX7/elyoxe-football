@@ -12,6 +12,7 @@ class Registry:
         self.map = dict(d.get("map") or {})
         self.merged = dict(d.get("merged") or {})
         self.run_merges = []          # (type, dropped id, kept id) done by this build: graph.build remaps their rows
+        self.unlinked = set()         # keys this build removed on purpose (a wrong link): not a move
         self._rev = None              # {(type, id): sources whose keys name it}, built on first need
 
     @staticmethod
@@ -91,6 +92,14 @@ class Registry:
             return True
         return cur == self.resolve(t, tifo_id)
 
+    def unlink(self, t, src, sid):
+        """(src, sid) was tied to the wrong entity (another man's Wikidata item): the key goes, so the next lookup finds or
+        mints the right one. Listed in unlinked, so the build does not read it as an id that moved."""
+        k = self.key(t, src, sid)
+        if self.map.pop(k, None) is not None:
+            self.unlinked.add(k)
+            self._rev = None
+
     def merge(self, t, a, b):
         a, b = self.resolve(t, a), self.resolve(t, b)
         if a == b:
@@ -120,6 +129,8 @@ class Registry:
         """Keys of the old registry whose entity changed: the old id no longer leads where the key now points."""
         out = []
         for k, i in old.map.items():
+            if k in self.unlinked:          # undone on purpose; a later loader may tie it to the right man
+                continue
             t = k.split("|", 1)[0]
             if self.map.get(k) is None or self.resolve(t, self.map[k]) != self.resolve(t, old.resolve(t, i)):
                 out.append(k)
