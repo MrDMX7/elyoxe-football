@@ -270,7 +270,9 @@ def run(S, http, d, limit=None):
         national = prev.get("national") or []
     from graph.load.awards import _conf
     comp_pages = {t for ts in (_conf().get("comp_pages") or {}).values() for t in ts or []}   # a league's own list articles
-    titles = sorted(set(awards) | set(comps.values()) | set(national) | comp_pages)
+    from graph.motm_wiki import pages as motm_pages, official_motm
+    motm = set(motm_pages())                  # the tournaments' match pages: the organiser's man of the match (graph/load/official_motm.py)
+    titles = sorted(set(awards) | set(comps.values()) | set(national) | comp_pages | motm)
     if limit:
         titles = titles[:limit]
     _jsave(os.path.join(d, "articles.json"), {"awards": awards, "comps": comps, "national": national})
@@ -297,6 +299,10 @@ def run(S, http, d, limit=None):
         h = read_page(d, t)
         if h:
             links.update(r["person"] for r in intl_records(h))
+    for t in motm:
+        h = read_page(d, t)
+        if h:
+            links.update(r["person"] for r in official_motm(h) if r.get("person"))
     items = resolve(http, d, sorted(links))
     return {"articles": len(titles), **n, "items": len(items), "humans": sum(1 for v in items.values() if v.get("human"))}
 
