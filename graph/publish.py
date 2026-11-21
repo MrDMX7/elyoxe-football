@@ -336,21 +336,21 @@ def matches(G, out_dir, comps=ARAB_LEAGUES, teams=(5789,), eras=None):
             return []
         G.c.execute("DROP TABLE IF EXISTS pub_m")
         G.c.execute("CREATE TEMP TABLE pub_m(mid INTEGER PRIMARY KEY)")
-        G.c.executemany("INSERT INTO pub_m VALUES(?)", [(m,) for m in mids])
+        G.c.executemany("INSERT INTO pub_m VALUES(?)", [(m,) for m in mids])     # CROSS JOIN: pub_m first, never a scan of the big tables
         ev, lu, co = defaultdict(list), defaultdict(lambda: defaultdict(list)), defaultdict(dict)
-        for mid, minute, added, tp, side, pid in q("SELECT e.mid, e.minute, e.added, e.type, e.side, e.pid FROM event e JOIN pub_m USING(mid) "
+        for mid, minute, added, tp, side, pid in q("SELECT e.mid, e.minute, e.added, e.type, e.side, e.pid FROM pub_m CROSS JOIN event e ON e.mid=pub_m.mid "
                                                    "WHERE e.type <> 'sub' ORDER BY e.mid, e.seq"):
             ev[mid].append([minute, added or 0, tp, side, pn.get(pid), pkey(pid)])
-        for mid, pid, tid, shirt, started, home in q("""SELECT a.mid, a.pid, a.tid, a.shirt, a.started, m.home FROM appearance a JOIN pub_m USING(mid)
+        for mid, pid, tid, shirt, started, home in q("""SELECT a.mid, a.pid, a.tid, a.shirt, a.started, m.home FROM pub_m CROSS JOIN appearance a ON a.mid=pub_m.mid
                                                        JOIN match m ON m.mid=a.mid WHERE a.played=1 OR a.started=1
                                                        ORDER BY a.mid, coalesce(a.started, 0) DESC, a.pid"""):
             lu[mid]["h" if tid == home else "a"].append([pn.get(pid), pkey(pid), shirt, started])
-        for mid, side, kid in q("SELECT x.mid, x.side, x.kid FROM match_coach x JOIN pub_m USING(mid)"):
+        for mid, side, kid in q("SELECT x.mid, x.side, x.kid FROM pub_m CROSS JOIN match_coach x ON x.mid=pub_m.mid"):
             co[mid][side] = kn.get(kid)
         out = []
         for mid, eid, rnd, d, h, a, hs, as_, hth, hta, ph, pa, sid, rid in q(
                 """SELECT m.mid, m.eid, m.round, substr(m.date,1,10), m.home, m.away, m.hs, m.as_, m.ht_h, m.ht_a, m.pen_h, m.pen_a, m.sid, m.rid
-                   FROM match m JOIN pub_m USING(mid) WHERE m.hs IS NOT NULL ORDER BY m.date, m.mid"""):
+                   FROM pub_m CROSS JOIN match m ON m.mid=pub_m.mid WHERE m.hs IS NOT NULL ORDER BY m.date, m.mid"""):
             comp, season = ed.get(eid, (None, None))
             r = {"id": str(fm_m[mid]) if mid in fm_m else f"k{mid}", "date": d, "comp": comp, "season": season, "round": rnd,
                  "h": [fm_t.get(h), at(h, d)], "a": [fm_t.get(a), at(a, d)], "s": [hs, as_],
