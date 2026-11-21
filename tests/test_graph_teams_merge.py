@@ -133,3 +133,15 @@ def test_a_national_record_that_met_fotmobs_is_another_team():
     from graph.load.teams import national_pairs
     teams = [(370, "Mexico", None, "national", True), (17835, "Mexico", None, None, False)]
     assert national_pairs(teams, frozenset({(370, 17835)}), {370: 9, 17835: 9}, {17835: 1.0}) == []
+
+
+def test_one_old_club_from_rsssf_and_schochastics_is_one_club():
+    from graph.load.teams import source_twins
+    # (tid, name, country, kind, fotmob)
+    teams = [(100, "Al Tersana", "EGY", "club", False), (200, "Al-Tersana", "EGY", None, False),        # one club, two sources
+             (101, "RC Kouba", "ALG", None, False), (201, "RC Kouba", "ALG", None, False),             # they met: two clubs
+             (102, "Hilal", "MAR", None, False), (202, "Hilal", "TUN", None, False),                   # two countries
+             (103, "Olympic", "EGY", None, False), (104, "Olympic", "EGY", None, False), (203, "Olympic", "EGY", None, False)]  # two of one source
+    src = {100: {"rsssf-name"}, 200: {"sch"}, 101: {"rsssf-name"}, 201: {"sch"}, 102: {"rsssf-name"}, 202: {"sch"},
+           103: {"rsssf-name"}, 104: {"rsssf-name"}, 203: {"sch"}}
+    assert source_twins(teams, src, frozenset({(101, 201)})) == [(200, 100)]

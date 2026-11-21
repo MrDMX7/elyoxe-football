@@ -180,6 +180,25 @@ def national_pairs(teams, met, played, share, min_share=0.5):
     return sorted(out)
 
 
+def source_twins(teams, src_of, met=frozenset()):
+    """[(drop, keep)]: one old club RSSSF and schochastics each hold, neither FotMob's (the Egyptian, Moroccan, Algerian and
+    Tunisian clubs of the old seasons): the same name after folding, the same country, one record of that name in each source,
+    never met. The lower id is kept."""
+    by = defaultdict(lambda: defaultdict(list))
+    for tid, name, country, kind, fm in teams:
+        if fm or kind == "national" or not country or not name:
+            continue
+        for s in src_of.get(tid, ()):
+            if s in ("rsssf-name", "sch"):
+                by[(country, squash(fold(name)))][s].append(tid)
+    out = []
+    for srcs in by.values():
+        a, b = srcs.get("rsssf-name") or [], srcs.get("sch") or []
+        if len(a) == 1 and len(b) == 1 and a[0] != b[0] and (min(a[0], b[0]), max(a[0], b[0])) not in met:
+            out.append((max(a[0], b[0]), min(a[0], b[0])))
+    return sorted(out)
+
+
 def countries(q):
     """{tid: country}: the team's own, else the league country it played or won in most."""
     own = {tid: c for tid, c in q("SELECT tid, country FROM team")}
@@ -217,7 +236,12 @@ def candidates(c, alias=None, guard=None, era=None):
             vs[me] += other in nationalish
     share = {t: vs[t] / n for t, n in played.items() if n}
     gone = {d for d, _ in out}
-    return sorted(out + [p for p in national_pairs(teams, met, played, share) if p[0] not in gone])
+    out += [p for p in national_pairs(teams, met, played, share) if p[0] not in gone]
+    src_of = defaultdict(set)
+    for k, t in keyed.items():
+        src_of[t].add(k.split(":", 1)[0])
+    gone = {d for d, _ in out} | {k for _, k in out}
+    return sorted(out + [p for p in source_twins(teams, src_of, met) if p[0] not in gone and p[1] not in gone])
 
 
 def settle_conflicts(G, merged):
