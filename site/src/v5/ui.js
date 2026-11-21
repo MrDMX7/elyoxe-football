@@ -126,7 +126,7 @@
   // ------------------------------------------------------------------ names, crests, colours
   U.tname = function (t) { if (!t) return ""; var ar = t.name_ar || cfg.tn[t.id]; return ar ? esc(ar) : '<span class="lat">' + esc(t.name || "") + "</span>"; };
   U.tnameT = function (t) { return t ? (t.name_ar || cfg.tn[t.id] || t.name || "") : ""; };
-  U.pname = function (p) { if (!p) return ""; var ar = p.id != null && cfg.pn[p.id]; return ar ? esc(ar) : '<span class="lat">' + esc(p.name || "") + "</span>"; };
+  U.pname = function (p) { if (!p) return ""; var ar = (p.id != null && cfg.pn[p.id]) || (/[؀-ۿ]/.test(p.name || "") && p.name); return ar ? esc(ar) : '<span class="lat">' + esc(p.name || "") + "</span>"; };
   U.pnameT = function (p) { return p ? ((p.id != null && cfg.pn[p.id]) || p.name || "") : ""; };
   U.crest = function (t, cls) { if (!t || !t.id || t.nocrest) return '<span class="cr ' + (cls || "") + '"></span>';
     if (t.logo) return '<img class="cr' + (cls ? " " + cls : "") + '" src="' + esc(t.logo) + '" alt="" width="24" height="24" loading="lazy" onerror="this.style.visibility=\'hidden\'">';   /* 365Scores' crests, as the encyclopedia shows them */

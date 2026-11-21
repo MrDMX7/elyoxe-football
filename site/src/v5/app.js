@@ -426,7 +426,9 @@
   }
   var FX = null;
   function selectRound(b) { $$("#rounds button").forEach(function (x) { x.setAttribute("aria-selected", String(x === b)); }); b.scrollIntoView({ inline: "center", block: "nearest", behavior: RM ? "auto" : "smooth" });
-    var box = $("#roundlist"), rs = $("#rounds"), cid = rs.dataset.comp, key = rs.dataset.key, r = b.dataset.r; box.classList.add("dim");
+    var box = $("#roundlist"), rs = $("#rounds"), cid = rs.dataset.comp, key = rs.dataset.key, r = b.dataset.r;
+    if (rs.dataset.static) { $$("[data-rk]", box).forEach(function (x) { x.hidden = x.dataset.rk !== r; }); return; }   // an old season: every round is in the page
+    box.classList.add("dim");
     var lk = $("#rdlink"); if (lk && key) { if (/^\d+$/.test(r)) { lk.href = "/c/" + key + "/r/" + r + "/"; var tt = $(".rt", lk); if (tt) tt.firstChild.textContent = "صفحة الجولة " + r; lk.hidden = false; } else lk.hidden = true; }
     (FX ? Promise.resolve(FX) : get("comp/" + cid + "/fixtures.json").then(function (j) { FX = U.rounds(j); return FX; })).then(function (R) { box.innerHTML = U.roundMatches(R.by[r] || []); box.classList.remove("dim"); localize(box); }).catch(function () { box.classList.remove("dim"); }); }
   // a player's career and match log load from his own files the first time their segment opens (or now, when the page opens on it)
