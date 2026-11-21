@@ -86,3 +86,18 @@ def test_one_winner_spelled_two_ways_is_the_same_honour(tmp_path):
 def test_names_that_only_share_a_first_name_are_two_men(tmp_path):
     assert not settle._same_man("mohamed salah", "mohamed elneny") and not settle._same_man("ali", "ali mabkhout")
     assert settle._same_man("Jassim Al Dokhi", "jassim al-dokhi") and settle._same_man("Stabæk", "stabaek")
+
+
+def test_a_champion_that_is_no_team_of_ours_gives_way_to_the_one_that_is(tmp_path):
+    # 365Scores' women's and under-21 champions (Coupe de France Féminine, Eredivisie Vrouwen, Premier League 2) name a side
+    # it never gave us; FotMob's is a team we hold
+    G, reg = g(tmp_path)
+    G.put("team", {"tid": 2663, "name": "Paris Saint Germain"}, "fotmob")
+    G.put("team", {"tid": 10, "name": "Lille"}, "fotmob")
+    G.put("team", {"tid": 11, "name": "Red Star"}, "fotmob")
+    G.c.executemany("insert into honour(eid, kind, rank, tid, src) values(?, 'champion', 1, ?, 's365')", [(1, 8704), (2, 10)])
+    G.conflict("honour", 1, "champion", "8704", "s365", "2663", "fotmob")
+    G.conflict("honour", 2, "champion", "10", "s365", "11", "fotmob")       # two teams we hold: stays for review
+    out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select eid, tid from honour order by eid").fetchall() == [(1, 2663), (2, 10)]
+    assert [r[0] for r in G.c.execute("select tifo_id from conflict")] == [2] and out["no_such_team"] == 1

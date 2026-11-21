@@ -84,7 +84,7 @@ def _shootout(d, x, pens):
 
 
 def load(G, reg, S):
-    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0}
+    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0, "no_such_team": 0}
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     groups = {}
     for rowid, mid, field, kept, ksrc, other, osrc in q("SELECT rowid, tifo_id, field, kept, kept_src, other, other_src FROM conflict "
@@ -132,4 +132,13 @@ def load(G, reg, S):
         if not re.search(r"\d", f"{kept}{other}") and _same_men(kept, other):    # «106908/None»: ids, not names
             G.c.execute("DELETE FROM conflict WHERE rowid=?", (rowid,))
             n["same_names"] += 1
+    # a champion or runner-up that is no team of ours (365Scores' women's and under-21 sides it never gave us) gives way
+    # to the one we hold
+    teams = {t for (t,) in q("SELECT tid FROM team")}
+    for rowid, eid, field, kept, other in q("""SELECT rowid, tifo_id, field, kept, other FROM conflict
+                                              WHERE type='honour' AND field IN ('champion', 'runner_up')"""):
+        if str(kept).isdigit() and str(other).isdigit() and int(kept) not in teams and int(other) in teams:
+            G.c.execute("UPDATE OR IGNORE honour SET tid=? WHERE eid=? AND kind=? AND tid=?", (int(other), eid, field, int(kept)))
+            G.c.execute("DELETE FROM conflict WHERE rowid=?", (rowid,))
+            n["no_such_team"] += 1
     return n
