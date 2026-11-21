@@ -12,6 +12,13 @@ AWARD = {"Golden Ball": ("best_player", 1), "Silver Ball": ("best_player", 2), "
 WORLD_CUP = 77
 
 
+def stale(reg, pid_f, qid):
+    """A Fjelstul key tied through a Wikidata item the names loader unlinked this build (another man's: Salah's Q1354960 on
+    Mohamed Hamed) goes with it, so his World Cup is tied again to the right man."""
+    if qid and reg.key("player", "wikidata", qid) in reg.unlinked:
+        reg.unlink("player", "fjelstul", pid_f)
+
+
 def resolver(G, reg, S, n=None):
     """player(fjelstul id, given, family) -> Tifo id: through his Wikipedia article's Wikidata item (the awards cache) to ours,
     else a player of his own; his row written once a build."""
@@ -32,6 +39,7 @@ def resolver(G, reg, S, n=None):
         link = p.get("player_wikipedia_link") or ""
         title = urllib.parse.unquote(link.rsplit("/wiki/", 1)[1]) if "/wiki/" in link else None
         f = (items.get(title) or {}) if title else {}
+        stale(reg, pid_f, f.get("qid"))
         pid = reg.get("player", "fjelstul", pid_f)
         if pid is None and f.get("qid") and f.get("human"):
             pid = reg.get("player", "wikidata", f["qid"])
