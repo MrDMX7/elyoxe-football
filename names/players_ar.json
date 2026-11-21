@@ -22212,10 +22212,12 @@
  },
  "523663": {
   "latin": "Caio",
-  "ar": "كايو",
-  "source": "generated",
+  "ar": "كايو لوكاس",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-11-21",
+  "prev": "كايو",
+  "note": "Caio Lucas (FotMob slug caio-lucas), Sharjah winger and UAE international; Emarat Al Youm and Annahar write «كايو لوكاس»: https://www.annahar.com/Sports/199778"
  },
  "523693": {
   "latin": "Kentaro Kakoi",
@@ -63690,10 +63692,12 @@
  },
  "1055270": {
   "latin": "Issam Faiz",
-  "ar": "عصام فايز",
-  "source": "generated",
+  "ar": "عصام فائز",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-11-21",
+  "prev": "عصام فايز",
+  "note": "spelling: Emarat Al Youm writes «عصام فائز» (first UAE call-up, Al Nasr): https://www.emaratalyoum.com/sports/local/2024-03-13-1.1834809"
  },
  "1055316": {
   "latin": "Anis Ben Slimane",
