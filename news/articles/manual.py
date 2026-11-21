@@ -13,7 +13,7 @@ Hand-written articles are extra: they never count in the day's 60 or take a paci
 journal run is in progress (it saves the same file), and re-read just before each write."""
 import argparse, json, subprocess, sys, time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from store import Store, S3Backend
 from . import news_pick, sources, facts, check, photo, publish
@@ -22,6 +22,17 @@ from .run import BUCKET, http_bytes
 from .write import NO_NEWS, Writer
 
 MODEL = "claude-sonnet-5-5"
+# The sheet's own words leaking into the text: style rule 9 («لا تكتب عن المصادر ولا عن عملك»). The older stories' note
+# («أرقام بيانات تيفو هي أرقام اليوم لا ذلك اليوم») was copied into a thin article to reach the word floor (2026-11-21).
+LEAKS = ("ورقة الحقائق", "الورقة", "أرقام اليوم", "لا ذلك اليوم", "أرقام محدثة حتى اليوم", "محدّثة حتى اليوم")
+
+
+def _checks(core, sheet, words):
+    fails = check.check_news(core, sheet, words)
+    text = " ".join([core.get("standfirst") or ""] + [p for s in core.get("sections") or [] for p in s.get("paragraphs") or []]
+                    + list(core.get("facts_box") or []))
+    fails += [f"the sheet's words «{w}» in the text: write the news, never about the sheet or Tifo's data" for w in LEAKS if w in text]
+    return fails
 
 
 def _ctx():
@@ -37,23 +48,49 @@ def _names(ar, s):
     return news_pick.words(" ".join(ar.get((k, int(i))) or "" for k, i in s.get("anchor") or []))
 
 
-def export(d: Path, n: int):
+MONTHS_AR = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"]
+
+
+def _at(s):
+    return datetime.fromisoformat((s or "1970-01-01T00:00:00+00:00").replace("Z", "+00:00"))
+
+
+def export(d: Path, n: int, days=None):
+    """days: (from, to) in days before now, by the story's last item: the journal's older stories (owner 2026-11-21: «اكتب
+    اخبار من اليوم اول شي بعدين انتقل لاهم الاخبار من الايام والاسابيع والشهور الماضية»), biggest first (news_pick.rank_key),
+    eligible as on their own day. Without it, the API's queue."""
     store, get, stories, items, teams, ar = _ctx()
     now = datetime.now(timezone.utc)
     nn = (store.get_state(STATE) or {}).get("news") or {}
     desk = store.get_state(DESK) or {}
     skip = set(nn.get("done") or {}) | set(desk.get("reject") or {}) | {a[2:] for a in nn.get("withdrawn") or []}
-    recent = nn.get("recent") or []
+    skip |= {a["id"][2:] for a in (store.get_json(publish.ALL) or {}).get("articles") or [] if a["id"].startswith("n-")}
+    recent = list(nn.get("recent") or [])
     (d / "sheets").mkdir(parents=True, exist_ok=True)
-    order = sorted(((q.get("rank") or [], sid) for sid, q in (nn.get("queue") or {}).items()), reverse=True)
+    if days:
+        lo, hi = now - timedelta(days=days[1]), now - timedelta(days=days[0])
+        pteam = {}
+        try:
+            pteam = (store.get_state("news/state.json") or {}).get("pteam") or {}
+        except Exception:
+            pass
+        cands = [s for s in stories.values() if lo <= _at(s.get("last_at")) < hi
+                 and news_pick.eligible(s, teams, pteam, _at(s.get("last_at")), items=items)]
+        order = sorted(((news_pick.rank_key(s, items, teams), s["id"]) for s in cands), reverse=True)
+    else:
+        order = sorted(((q.get("rank") or [], sid) for sid, q in (nn.get("queue") or {}).items()), reverse=True)
     picked = []
     for _, sid in order:
         s = stories.get(sid)
         if not s or sid in skip or (d / f"{sid}.json").exists():
             continue
-        if news_pick.near_duplicate(s, items, recent, now, _names(ar, s)):
+        when = _at(s.get("last_at")) if days else now
+        if news_pick.near_duplicate(s, items, recent, when, _names(ar, s)):
             continue
         picked.append(s)
+        first = items.get((s.get("items") or [""])[0]) or {}
+        recent.append({"id": f"n-{sid}", "anchor": s.get("anchor"), "at": when.isoformat(),
+                       "words": sorted(news_pick.words(first.get("title")) - _names(ar, s))})
         if len(picked) >= n:
             break
 
@@ -61,9 +98,15 @@ def export(d: Path, n: int):
         try:
             texts, _ = sources.collect(s, items)
             sheet, meta = facts.news_sheet(s, items, texts, get, ar, teams)
+            date = None
+            if days and days[1] > 1:                     # an older story: its day, and Tifo's numbers are today's
+                f = _at(s.get("first_at") or s.get("last_at")).astimezone(timezone(timedelta(hours=4)))
+                sheet["تاريخ الخبر"] = f"{f.day} {MONTHS_AR[f.month - 1]} {f.year}"
+                sheet["ملاحظة"] = "الخبر من تاريخه أعلاه: اكتبه بزمنه. أرقام «بيانات تيفو» هي أرقام اليوم لا ذلك اليوم."
+                date = _at(s.get("first_at") or s.get("last_at")).isoformat()
             cands = photo.news_candidates(texts, s, items, photo.commons(meta["query"]) if meta.get("query") else [])
             (d / "sheets" / f"{s['id']}.json").write_text(json.dumps(sheet, ensure_ascii=False, indent=1), encoding="utf-8")
-            (d / f"{s['id']}.json").write_text(json.dumps({"story": s, "meta": meta, "cands": cands, "sheet": sheet, "title": _title(s, items)},
+            (d / f"{s['id']}.json").write_text(json.dumps({"story": s, "meta": meta, "cands": cands, "sheet": sheet, "title": _title(s, items), "date": date},
                                                           ensure_ascii=False), encoding="utf-8")
             return s["id"], None
         except Exception as e:
@@ -116,7 +159,7 @@ def publish_dir(d: Path, sids=()):
             none.append((sid, len(s.get("items") or []))); out["no_news"] += 1
             (d / "done" / f"{sid}.json").write_text('"no news"', encoding="utf-8"); continue
         core = {k: art.get(k) for k in ("headline", "standfirst", "sections", "facts_box", "sources_cited")}
-        fails = check.check_news(core, sheet, words)
+        fails = _checks(core, sheet, words)
         if fails:
             (d / "fails" / f"{sid}.json").write_text(json.dumps(fails, ensure_ascii=False, indent=1), encoding="utf-8"); out["failed"] += 1; continue
         (d / "fails" / f"{sid}.json").unlink(missing_ok=True)
@@ -128,6 +171,8 @@ def publish_dir(d: Path, sids=()):
         img = photo.news_pick(aid, cands, meta["card_teams"], http_bytes, store, subject=meta["subject"], headline=core["headline"])
         doc = publish.article_doc(aid, "news", core, meta, img, MODEL, now.isoformat(), None)
         doc["breaking"] = False
+        if rec.get("date"):                                            # an older story stands at its own day in the lists
+            doc["published"] = rec["date"]
         topic, stage = art.get("topic"), art.get("stage")
         doc["topic"] = topic if topic in Writer.TOPICS else s.get("kind")
         doc["stage"] = (stage if stage in Writer.STAGES else None) if doc["topic"] == "transfer" else None
@@ -164,7 +209,7 @@ def check_dir(d: Path, sids):
             print(sid, "ERROR", e); continue
         if str(art.get("headline") or "").strip(" «»\"") == NO_NEWS:
             print(sid, "no news"); continue
-        fails = check.check_news({k: art.get(k) for k in ("headline", "standfirst", "sections", "facts_box", "sources_cited")}, sheet, words)
+        fails = _checks({k: art.get(k) for k in ("headline", "standfirst", "sections", "facts_box", "sources_cited")}, sheet, words)
         print(sid, "OK" if not fails else "FAIL " + json.dumps(fails, ensure_ascii=False))
 
 
@@ -174,9 +219,11 @@ def main(argv=None):
     p.add_argument("dir")
     p.add_argument("sids", nargs="*")
     p.add_argument("--n", type=int, default=40)
+    p.add_argument("--days", help="FROM-TO days back, e.g. 0-1 (today), 1-7, 7-30")
     a = p.parse_args(argv)
     d = Path(a.dir)
-    {"export": lambda: export(d, a.n), "publish": lambda: publish_dir(d, set(a.sids)), "check": lambda: check_dir(d, a.sids)}[a.cmd]()
+    days = tuple(float(x) for x in a.days.split("-")) if a.days else None
+    {"export": lambda: export(d, a.n, days), "publish": lambda: publish_dir(d, set(a.sids)), "check": lambda: check_dir(d, a.sids)}[a.cmd]()
     return 0
 
 
