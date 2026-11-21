@@ -54,3 +54,85 @@ comp_pages:
   530: [List of Moroccan football champions]                     # Botola Pro
   544: [List of Tunisian football champions, List of Tunisian Ligue Professionnelle 1 top scorers]   # Tunisia Ligue I
   535: [Qatar National First Division top scorers]               # Qatar Stars League (its top flight's scorers since 1972-73)
+# places: who gives an award, for an Arabic name shared by several awards (graph/award_names.py): words of the award page's
+# English name (matched case-insensitively, the longest first) -> what follows the Arabic name. Written by hand, never guessed.
+places:
+  ACF Fiorentina: في فيورنتينا
+  AFC Annual Awards: من الاتحاد الآسيوي
+  AFC Asian Cup: في كأس آسيا
+  AIFF: في الهند
+  African Footballer: في أفريقيا
+  Algerian: في الجزائر
+  Asian Footballer: في آسيا
+  Asian Young Footballer: في آسيا
+  Azerbaijani: في أذربيجان
+  Belgian: في بلجيكا
+  Bola de Ouro: في البرازيل
+  Brentford: في برينتفورد
+  Bristol Rovers: في بريستول روفرز
+  Bulgarian: في بلغاريا
+  Canada Soccer: في كندا
+  Canadian Premier League: في الدوري الكندي الممتاز
+  Canadian Soccer League: في الدوري الكندي
+  Chelsea: في تشيلسي
+  Copa América: في كوبا أمريكا
+  Coventry City: في كوفنتري سيتي
+  Croatian: في كرواتيا
+  Czech: في التشيك
+  Don Balón: من مجلة دون بالون
+  Dutch Footballer: في هولندا
+  El País: من صحيفة إل باييس
+  English Football Hall of Fame: في إنجلترا
+  Eredivisie: في الدوري الهولندي
+  Everton: في إيفرتون
+  FAI International: في أيرلندا
+  FIFA: من فيفا
+  FIFA World Cup: في كأس العالم
+  FIFPRO: من فيفبرو
+  Footballer of the Year (Germany): في ألمانيا
+  Globe Soccer: من غلوب سوكر
+  Gran Galà del Calcio: في إيطاليا
+  Greek: في اليونان
+  Gullballen: في السويد
+  Haveeru: في جزر المالديف
+  Hong Kong: في هونغ كونغ
+  I-League: في الدوري الهندي
+  Inter Milan: في إنتر ميلان
+  Iran: في إيران
+  Italian Football Hall of Fame: في إيطاليا
+  LPFP: في البرتغال
+  La Liga: في الدوري الإسباني
+  League Managers Association: في إنجلترا
+  Wellington Phoenix: في ولينغتون فينيكس
+  Liverpool: في ليفربول
+  Luton Town: في لوتون تاون
+  MLS: في الدوري الأمريكي
+  Maldives: في جزر المالديف
+  Meistriliiga: في الدوري الإستوني
+  Miguel Muñoz: في الدوري الإسباني
+  Moldovan: في مولدوفا
+  New Zealand: في نيوزيلندا
+  North American Soccer League: في دوري أمريكا الشمالية
+  PFA: في إنجلترا
+  Panchina d'Oro: في إيطاليا
+  Pichichi: في الدوري الإسباني
+  Piłka Nożna: في بولندا
+  Premio Bulgarelli: في إيطاليا
+  Preston North End: في بريستون نورث إند
+  Prêmio Craque do Brasileirão: في الدوري البرازيلي
+  Rinus Michels: في هولندا
+  Scottish: في اسكتلندا
+  Serbian: في صربيا
+  Serie A: في الدوري الإيطالي
+  Sheffield United: في شيفيلد يونايتد
+  Slovenian: في سلوفينيا
+  South American: في أمريكا الجنوبية
+  South Korean: في كوريا الجنوبية
+  Swiss: في سويسرا
+  The FA: في إنجلترا
+  Trophées UNFP: في فرنسا
+  U.S. Soccer: في الولايات المتحدة
+  UEFA European Championship: في بطولة أمم أوروبا
+  Vereinigung der Vertragsfußballspieler: في ألمانيا
+  Vietnamese: في فيتنام
+  Zarra: في الدوري الإسباني
