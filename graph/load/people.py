@@ -104,8 +104,10 @@ def load(G, reg, S):
         if f:
             names[f].append((pid, born))
     dup = {pid: (f, born) for f, rows in names.items() if len(rows) > 1 for pid, born in rows}
+    by_qid = wikidata_pairs(S, {pid for rows in names.values() for pid, _ in rows})
     if not dup:
-        return {"candidates": 0, "merged": 0}
+        G.remap_many("player", by_qid)
+        return {"candidates": 0, "merged": len(by_qid), "by_wikidata": len(by_qid)}
     G.c.execute("CREATE TEMP TABLE people_dup(pid INTEGER PRIMARY KEY)")
     G.c.executemany("INSERT INTO people_dup VALUES(?)", [(p,) for p in dup])
     teams, span, clubs_c, nat_c = defaultdict(set), {}, defaultdict(set), defaultdict(set)
@@ -128,6 +130,43 @@ def load(G, reg, S):
     G.c.execute("DROP TABLE people_dup")
     rows = [Person(pid, f, born, frozenset(teams.get(pid, ())), *span.get(pid, (None, None)), pid in fm,
                    frozenset(clubs_c.get(pid, ())), frozenset(nat_c.get(pid, ())), frozenset(comps.get(pid, ()))) for pid, (f, born) in dup.items()]
-    merged = pairs(rows)
+    merged = union(pairs(rows) + by_qid, fm)
     G.remap_many("player", merged)
-    return {"candidates": len(rows), "merged": len(merged)}
+    return {"candidates": len(rows), "merged": len(merged), "by_wikidata": len(by_qid)}
+
+
+def wikidata_pairs(S, known):
+    """Two old players the names job found on one Wikidata item (names/people_ar.json, k<Tifo id>: Ali Daei's caps for
+    Iran and his goals for Al Shabab were two records) are one: (drop, keep), the lower id kept."""
+    import os
+    by = defaultdict(list)
+    for k, v in ((S.read(os.path.join(S.names, "people_ar.json")) if S else None) or {}).items():
+        if str(k).startswith("k") and str(k)[1:].isdigit() and v.get("qid") and v.get("source") in ("wikidata", "arwiki", "manual"):
+            pid = int(k[1:])
+            if pid in known:
+                by[v["qid"]].append(pid)
+    return [(p, min(ps)) for ps in by.values() if len(ps) > 1 for p in ps if p != min(ps)]
+
+
+def union(prs, fotmob=()):
+    """(drop, keep) pairs from several rules as one set of merges: every record of a group goes to one record (the one FotMob
+    knows, else the lowest id), and no kept record is itself merged away."""
+    parent = {}
+
+    def root(x):
+        while parent.get(x, x) != x:
+            x = parent[x]
+        return x
+    for a, b in prs:
+        ra, rb = root(a), root(b)
+        if ra != rb:
+            parent[max(ra, rb)] = min(ra, rb)
+    groups = defaultdict(set)
+    for x in set(parent) | set(parent.values()):
+        groups[root(x)].add(x)
+    out = []
+    for g in groups.values():
+        fm = sorted(p for p in g if p in fotmob)
+        keep = fm[0] if fm else min(g)
+        out += [(p, keep) for p in g if p != keep and p not in fotmob]
+    return sorted(out)

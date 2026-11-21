@@ -107,3 +107,18 @@ def test_a_title_holder_with_no_dates_joins_the_only_player_of_that_name_in_that
     assert people.pairs([profile, elsewhere]) == []                     # a namesake in another competition: not him
     twin = P(3, "youssouf atiq", None, frozenset({78}), "2010-01-01", "2011-01-01", False, comps=frozenset({538}))
     assert people.pairs([profile, scorer, twin]) == []                  # two of that name in it: no guess
+
+
+def test_two_records_the_names_job_found_on_one_wikidata_item_are_one_player(tmp_path):
+    (tmp_path / "names").mkdir()
+    (tmp_path / "names" / "people_ar.json").write_text(
+        '{"k5": {"latin": "Ali Daei", "ar": "علي دائي", "source": "wikidata", "qid": "Q159622"},'
+        ' "k9": {"latin": "Ali Daei", "ar": "علي دائي", "source": "wikidata", "qid": "Q159622"},'
+        ' "k11": {"latin": "X", "ar": "اكس", "source": "generated", "qid": "Q1"}}', encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    for pid in (5, 9, 11):
+        G.put("player", {"pid": pid, "name": "Ali Daei" if pid < 11 else "X"}, "rsssf")
+    G.c.execute("insert into honour(eid, kind, rank, pid, src) values(1, 'top_scorer', 1, 9, 'rsssf')")
+    out = people.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert [p for (p,) in G.c.execute("select pid from player order by pid")] == [5, 11]
+    assert G.c.execute("select pid from honour").fetchone()[0] == 5 and out["by_wikidata"] == 1
