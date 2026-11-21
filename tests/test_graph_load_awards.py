@@ -241,3 +241,38 @@ def test_a_leagues_list_of_champions_gives_its_editions_honours(tmp_path):
     assert alg[("champion", 1)][0] == reg.get("team", "wikidata", "Q52") and alg[("runner_up", 1)][0] == reg.get("team", "wikidata", "Q54")
     assert alg[("top_scorer", 1)][1:] == (reg.get("player", "wikidata", "Q62"), "25")
     assert hon(516, "1964/1965")[("top_scorer", 1)][2] == "21"          # unlinked man: a name-only player with his goals
+def test_a_names_or_sponsorship_table_gives_no_people(tmp_path):
+    # Iraq Stars League «Names» (Period | Name) and the FA Cup «Sponsorship» (Period | Sponsor | Name): the «Name» column is the
+    # competition's own name, once read as a best player / a winner; a real man whose name only looks like one (Cupido) stays
+    names = T('<tr><th>Period</th><th>Name</th></tr>' + ''.join(
+        f'<tr><td>{p}</td><td>{n}</td></tr>' for p, n in (("1974–88", "National Clubs First Division League"), ("1988–89", "Advanced League"),
+                                                           ("2013–14", "Zain Iraq League"), ("2023–24", "Stars League"))), "Names")
+    scorers = T('<tr><th>Season</th><th>Player</th><th>Goals</th></tr>' + ''.join(
+        f'<tr><td>{p}</td><td>{n}</td><td>20</td></tr>' for p, n in (("1974–75", "Cupido"), ("1975–76", "Junior Ligue"), ("1976–77", "Hussein Saeed"))),
+        "Top scorers")
+    page = b'<html><body>' + names[12:-14] + scorers[12:-14] + b'</body></html>'
+    sponsor = T('<tr><th>Period</th><th>Sponsor</th><th>Name</th></tr>' + ''.join(
+        f'<tr><td>{p}</td><td>{s}</td><td>{n}</td></tr>' for p, s, n in (("1994–98", "Littlewoods", "The FA Cup sponsored by Littlewoods"),
+                                                                     ("2006–11", "E.ON", "The FA Cup sponsored by E.ON"),
+                                                                     ("2015–16", "Emirates", "Emirates FA Cup"))), "Sponsorship")
+    fair = T('<tr><th>Year</th><th>Winner</th></tr>' + ''.join(
+        f'<tr><td>{y}</td><td>{n}</td></tr>' for y, n in (("2012", "Sven Kramer"), ("2014", "World Cup volunteers"), ("2016", "Lionel Goodman"))))
+    S = mk(tmp_path, {"Iraq Stars League": page, "FA Cup": sponsor, "FIFA Fair Play Award": fair}, ITEMS, comps={"25": "Iraq Stars League"})
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    reg.mint("competition", "fotmob", 25)
+    out = awards.load(G, reg, S)
+    got = {r[0] for r in G.c.execute("select name from player")}
+    assert not got & {"National Clubs First Division League", "Advanced League", "Zain Iraq League", "Stars League",
+                      "The FA Cup sponsored by Littlewoods", "The FA Cup sponsored by E.ON", "Emirates FA Cup", "World Cup volunteers"}
+    assert {"Cupido", "Junior Ligue", "Hussein Saeed", "Sven Kramer", "Lionel Goodman"} <= got
+    assert out["not_a_person"] == 8
+    assert G.c.execute("select count(*) from honour where pid is null and tid is null and kid is null").fetchone()[0] == 0
+
+
+def test_a_name_that_is_a_competition_is_not_a_person():
+    for n in ("Premier League", "The FA Cup", "Fuchs Premier League", "First Division League", "World Cup volunteers",
+              "The AXA sponsored FA Cup (1998–1999)The FA Cup sponsored by AXA (1999–2002)", "Liga MX", "Asian Cup Trophy",
+              "AFC Championship"):
+        assert awards.not_a_person(n), n
+    for n in ("Cupido", "Calixte Ligue", "Junior Ligue", "Leaguer Smith", "Cupper", "Hussein Saeed", "", None):
+        assert not awards.not_a_person(n), n

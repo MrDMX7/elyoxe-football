@@ -47,6 +47,16 @@ def _end_year(season):
 NOT_A_CLUB = re.compile(r"(^|\s)(league|cup|championships?|super\s?cup|trophy)(\s|$)|^\d{4}([–-]\d{2,4})?\s", re.I)
 
 
+# a winner's cell that names a competition, its sponsor's name for it or a crowd, not a man: a league's «Names» table
+# (Period | Name: «Zain Iraq League») or the FA Cup's «Sponsorship» table («Emirates FA Cup»), whose «Name» column reads as
+# a winner, and FIFA Fair Play 2014 «World Cup volunteers». Whole words only: Cupido and Junior Ligue are players
+COMPETITION_WORD = re.compile(r"\b(leagues?|cups?|division|liga|championships?|trophy|volunteers|sponsored)\b", re.I)
+
+
+def not_a_person(name):
+    return bool(name and COMPETITION_WORD.search(name))
+
+
 NOISE = re.compile(r"\b(club|fc|sc|cf|ac|cd|sd|afc|the|\d+)\b")
 
 
@@ -83,7 +93,8 @@ def load(G, reg, S):
     award_pages = set(arts.get("awards") or []) - set(comp_of)
     clubs = (S.read(os.path.join(S.db, "clubs.json")) or {}).get("clubs") or {}
     club_by_qid = {c.get("qid"): int(fid) for fid, c in clubs.items() if c.get("qid") and fid.isdigit()}
-    n = {"pages": 0, "season_pages": 0, "tables": 0, "awards": 0, "honours": 0, "edition_honours": 0, "players_new": 0, "sanity_dropped": 0, "conflicts": 0}
+    n = {"pages": 0, "season_pages": 0, "tables": 0, "awards": 0, "honours": 0, "edition_honours": 0, "players_new": 0, "sanity_dropped": 0, "conflicts": 0,
+         "not_a_person": 0}
     done = set()
 
     def it(title):
@@ -109,6 +120,9 @@ def load(G, reg, S):
             return pid, f.get("born")
         if title and f.get("qid"):
             return None, None                  # a link to something that is not a person
+        if not_a_person(name) or (title and not_a_person(title.replace("_", " "))):      # not by competition name: «Mineiro» is both
+            n["not_a_person"] += 1             # a competition's own name, never a player page nor a winner
+            return None, None
         key = f"{page}|{name}"
         pid = reg.get("player", "wiki-name", key) or reg.mint("player", "wiki-name", key)
         if ("p", pid) not in done:
