@@ -1,6 +1,6 @@
 """Edition honours from our own data (spec §7.3), before Wikipedia's (the first source of an honour keeps it):
-  * top scorer: our count for an edition whose scoring matches have goal events (≥ 90%; own goals never count; ties share
-    the rank, top 10), then the published scorers files (v1/history/scorers/<comp>: FotMob's leader lists and Transfermarkt
+  * top scorer: our count for an edition whose scoring matches have goal events (≥ 90%) and whose goals have their scorer
+    (≥ 95%; own goals never count; ties share the rank, top 10), then the published scorers files (v1/history/scorers/<comp>: FotMob's leader lists and Transfermarkt
     since 2012), then RSSSF's Arab scorers (v1/history/arab/<code>);
   * champion and runner-up: a knockout edition's final in our matches (two legs: the aggregate; a draw we cannot decide is
     left), then rank 2 of a final table whose rank 1 is the edition's champion (so a table still being played never names
@@ -38,8 +38,14 @@ def load(G, reg, S, arab_codes=None):
     # 1. top scorers we can count
     cov = G.c.execute("""SELECT m.eid, count(*), sum(EXISTS(SELECT 1 FROM event v WHERE v.mid=m.mid AND v.type IN ('goal','penalty_goal','own_goal')))
                          FROM match m WHERE m.eid IS NOT NULL AND coalesce(m.hs,0)+coalesce(m.as_,0) > 0 GROUP BY m.eid""").fetchall()
+    named = dict(G.c.execute("""SELECT m.eid, count(*) FROM event v JOIN match m ON m.mid=v.mid WHERE m.eid IS NOT NULL
+                                 AND v.type IN ('goal','penalty_goal','own_goal') AND v.pid IS NOT NULL GROUP BY m.eid"""))
+    goals = dict(G.c.execute("SELECT eid, sum(coalesce(hs,0)+coalesce(as_,0)) FROM match WHERE eid IS NOT NULL GROUP BY eid"))
     for eid, total, with_ev in cov:
         if total < 3 or with_ev < 0.9 * total or _has(G, eid, "top_scorer"):
+            continue
+        if named.get(eid, 0) < 0.95 * (goals.get(eid) or 0):     # most goals with no scorer (FotMob's old seasons: Bundesliga
+            n["top_scorer_unnamed"] += 1                           # 2011/12, 495 of 875) would crown the wrong man
             continue
         rows = G.c.execute("""SELECT v.pid, count(*) FROM event v JOIN match m ON m.mid=v.mid
                               WHERE m.eid=? AND v.type IN ('goal','penalty_goal') AND v.pid IS NOT NULL GROUP BY v.pid""", (eid,)).fetchall()

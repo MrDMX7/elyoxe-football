@@ -88,3 +88,15 @@ def test_a_qualification_competition_has_no_champion(tmp_path):
     match(G, reg, eid, 1, 10, 20, 2, 1, rnd="Final")
     honours.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "m"), s3=False))
     assert G.c.execute("select count(*) from honour where eid=? and kind in ('champion','runner_up')", (eid,)).fetchone()[0] == 0
+
+
+def test_no_own_top_scorer_when_most_goals_have_no_scorer(tmp_path):
+    # Bundesliga 2011/12: a goal event for each of 875 goals, 495 of them with no player (FotMob's old seasons): our count
+    # crowned Harnik (17) over Huntelaar (29)
+    G, reg, cid, eid = base(tmp_path)
+    a = reg.mint("player", "fotmob", 1)
+    match(G, reg, eid, 1, 10, 20, 2, 0, goals=[("goal", a), ("goal", None)])
+    match(G, reg, eid, 2, 20, 10, 2, 0, goals=[("goal", None), ("goal", None)])
+    match(G, reg, eid, 3, 10, 30, 1, 0, goals=[("goal", None)])
+    honours.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "m"), s3=False))
+    assert G.c.execute("select count(*) from honour where eid=? and kind='top_scorer'", (eid,)).fetchone()[0] == 0
