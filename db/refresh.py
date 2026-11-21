@@ -51,6 +51,7 @@ STAGES = [   # name, module, args, every (days)
     ("photos_identity", "photos.build", ["--identity-only"], 7),      # who every Wikidata person is (~28 queries): namesakes' photos out, leads gated
     ("wiki_ar", "db.wiki_ar", ["--upload"], 30),                     # Arabic Wikipedia's lead for players and clubs
     ("awards", "graph.awards_fetch", ["--upload"], 7),               # every football award Wikipedia lists + its links' Wikidata facts (spec §7.4)
+    ("managers", "graph.wiki_managers", ["--upload"], 7),            # the main Arab clubs' managers by spell from Wikipedia (graph/wiki_managers.yaml)
     ("graph", "graph.build", ["--upload"], 1),                        # the connected database (docs/superpowers/specs/2026-11-19-tifo-graph-design.md): tifo.db + coverage, ~8 min
     ("audit", "db.audit", [], 1),                                    # last: every number checked against itself, FotMob now and 365Scores (docs/AUDIT-DATA-<date>.md)
     ("scorers365", "db.scorers365", ["--upload"], 1),              # after the audit: it reads today's scorers_missing list (2026-10-18: before it, it read yesterday's)

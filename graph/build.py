@@ -14,7 +14,7 @@ from graph.db import Graph  # noqa: E402
 from graph.ids import Registry  # noqa: E402
 from graph.src import Sources  # noqa: E402
 
-ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "tm_lineups", "rsssf", "schochastics", "martj42", "worldcup", "intl_goals", "coaches", "transfers",
+ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "tm_lineups", "rsssf", "schochastics", "martj42", "worldcup", "intl_goals", "coaches", "wiki_managers", "transfers",
          "honours", "fjelstul", "awards", "intl_records", "old_names", "people", "teams", "void", "settle", "corrections", "sofascore", "motm"]      # an edition honour's first source keeps it: our counts, Fjelstul, then Wikipedia
 REQUIRED = {"fotmob_matches"}
 CACHE = os.path.join(HERE, ".cache")       # the registry and the published mirror: kept between runs (actions/cache)
