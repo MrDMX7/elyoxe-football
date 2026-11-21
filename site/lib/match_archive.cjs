@@ -56,16 +56,18 @@ function title(m, comp) {
 const indexable = m => !!((m.ev || []).length || (m.lu && Object.keys(m.lu).length));
 
 // a season's (or a team's) matches, round by round (or year by year), each linked to its page
-function listBody(ms, o, by) {
+function listBody(ms, o, by, teamId) {
+  // the current match rows (src/v5/ui.js U.mrow, through lib/season_view.cjs): by round, or by year with each match's date and,
+  // on a team's list, its result for that team
   o = o || {};
-  const groups = new Map();
+  const SV = require("./season_view.cjs"), groups = new Map();
   for (const m of ms) {
     const k = by === "year" ? m.date.slice(0, 4) : (m.round || "");
     if (!groups.has(k)) groups.set(k, []);
     groups.get(k).push(m);
   }
-  return [...groups].map(([k, l]) => U.grp(by === "year" ? num(k) : k ? `الجولة ${num(k)}` : "",
-    `<ul class="lc">${l.map(m => `<li><a href="${href(m)}"><span class="num muted small">${esc(m.date)}</span> ${nm(m.h[1])} ${num(m.s[0])} - ${num(m.s[1])} ${nm(m.a[1])}</a></li>`).join("")}</ul>`)).join("");
+  const opt = Object.assign({ date: 1 }, teamId != null ? { team: +teamId } : {});
+  return [...groups].map(([k, l]) => U.grp(by === "year" ? num(k) : k ? `الجولة ${num(k)}` : "", SV.fixtures(l).matches.map(m => U.mrow(m, opt)).join(""))).join("");
 }
 
 // a club's all-matches list from the season files (v1/matches/<comp>/<season>.json): each match under both sides' ids, once

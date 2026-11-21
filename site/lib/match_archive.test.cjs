@@ -67,3 +67,14 @@ test("a match page names its man of the match, linked", () => {
   assert.match(h, /رجل المباراة:<\/span> <a href="\/p\/k12\/">خالد إسماعيل<\/a>/);
   assert.doesNotMatch(M.matchBody(OLD, o), /رجل المباراة/);
 });
+
+test("a team's all-matches list in the current match rows: by year, each with its date and the team's result", () => {
+  const ms = [Object.assign({}, M1, { id: "k7", date: "1990-06-09", h: [5789, "الإمارات"], a: [7804, "كوريا الجنوبية"], s: [0, 2] }),
+    Object.assign({}, M1, { id: "k8", date: "1996-12-04", h: [5789, "الإمارات"], a: [null, "الكويت"], s: [1, 0] })];
+  const l = M.listBody(ms, {}, "year", 5789);
+  assert.match(l, /class="mr/);
+  assert.match(l, /href="\/m\/k8\/"/);
+  assert.match(l, /<i class="rsl L">خ<\/i>/);                   // 1990: lost
+  assert.match(l, /<i class="rsl W">ف<\/i>/);                   // 1996: won
+  assert.match(l, /1996/);
+});

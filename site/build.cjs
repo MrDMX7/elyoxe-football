@@ -1310,7 +1310,7 @@ ${items}
       if (ok) urls.push(pth); }
     for (const [tid, ms] of [...MTEAM, ...[...MCLUB].filter(([t]) => teamPages.has(t))]){ const tn = (teamsJson.teams[tid] || {}).name_ar || TAR[tid] || String(tid), pth = `/t/${tid}/matches/`, lg = MTEAM.has(tid) ? "" : " في الدوري";   // a club's list is its league seasons
       write(`t/${tid}/matches/index.html`, page({ v5:{ nav:{ back:`/t/${tid}/`, backLabel:esc(tn), title:"كل المباريات", trail:"" },
-        body:`<div class="lt"><h1>${esc(tn)}: كل المباريات</h1><p>كل مباريات ${esc(tn)}${lg} في أرشيف تيفو، من <span class="num">${esc(ms[0].date.slice(0, 4))}</span> لين <span class="num">${esc(ms[ms.length - 1].date.slice(0, 4))}</span> (<span class="num">${ms.length}</span> مباراة).</p></div>` + MA.listBody(ms.slice().reverse(), mo, "year") + U.foot(), tab:"more", sheets:"", data:{} },
+        body:`<div class="lt"><h1>${esc(tn)}: كل المباريات</h1><p>كل مباريات ${esc(tn)}${lg} في أرشيف تيفو، من <span class="num">${esc(ms[0].date.slice(0, 4))}</span> لين <span class="num">${esc(ms[ms.length - 1].date.slice(0, 4))}</span> (<span class="num">${ms.length}</span> مباراة).</p></div>` + MA.listBody(ms.slice().reverse(), mo, "year", tid) + U.foot(), tab:"more", sheets:"", data:{} },
         path:pth, page:"ref", title:`كل مباريات ${tn}${lg} عبر التاريخ | تيفو`, desc:`كل مباريات ${tn}${lg} من ${ms[0].date.slice(0, 4)}: ${ms.length} مباراة بنتايجها وهدافينها.`, ld:bcLd([[tn, `/t/${tid}/`], ["كل المباريات", pth]]) }));
       urls.push(pth); } }
   // the pairs FotMob never listed get a page of their own; every team, its record against each opponent
