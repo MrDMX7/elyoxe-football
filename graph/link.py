@@ -19,23 +19,32 @@ class MatchIndex:
     def add(self, mid, d, h, a):
         self.by[(h, d[:10])].append((mid, a))
 
-    def find(self, d, h, a):
+    def candidates(self, d, h, a):
+        """(mid, swapped) of every match this game could be, best first: the exact date before ±1 day, the same home first"""
         for dd in _days(d):
             for mid, aa in self.by.get((h, dd), ()):
                 if aa == a:
-                    return mid, False
+                    yield mid, False
             for mid, aa in self.by.get((a, dd), ()):
                 if aa == h:
-                    return mid, True
-        return None, None
+                    yield mid, True
+
+    def find(self, d, h, a):
+        return next(self.candidates(d, h, a), (None, None))
 
 
-def twin(G, idx, d, h, a, hs, as_, src):
-    """The graph's match for this game, or None. A different score is logged (the graph keeps the higher source's)."""
-    mid, swapped = idx.find(d, h, a)
-    if mid is None:
+def twin(G, idx, d, h, a, hs, as_, src, mine=None):
+    """The graph's match for this game, or None. A different score is logged (the graph keeps the higher source's).
+    mine {mid: (hs, as_)}: the matches this source's own rows already claimed in this build, each with the score its row
+    gave (in the match's orientation). One source's two rows are one game only when they agree on the score; with another
+    score they are two meetings (a return leg RSSSF dates the same day, a replay), so such a match is skipped."""
+    for mid, swapped in idx.candidates(d, h, a):
+        x, y = (as_, hs) if swapped else (hs, as_)
+        if mine is not None and mid in mine and mine[mid] != (x, y):
+            continue
+        break
+    else:
         return None
-    x, y = (as_, hs) if swapped else (hs, as_)
     kept = G.c.execute("SELECT hs, as_, src FROM match WHERE mid=?", (mid,)).fetchone()
     if kept and None not in (kept[0], x) and (kept[0], kept[1]) != (x, y):
         G.conflict("match", mid, "score", f"{kept[0]}-{kept[1]}", kept[2], f"{x}-{y}", src)

@@ -18,6 +18,16 @@ def load(G, reg, S, codes=None):
             codes = []
     n = {"seasons": 0, "standings": 0, "champions": 0, "matches": 0, "matches_linked": 0, "league_matches": 0, "league_linked": 0, "league_bad": 0, "goals": 0}
     written, idx = set(), MatchIndex(G)
+    mine = {}            # the matches RSSSF's own league rows claimed in this build: {mid: (hs, as_) as the row gave it}
+
+    def fresh(key, mid):
+        """the row's registry key, or «key#2», «key#3»… when the key already names a match another RSSSF row of this build
+        claimed: two meetings one key (or an older build's collapse of A v B and B v A) get an id each"""
+        k, i = key, 1
+        while (cur := reg.get("match", "rsssf", k)) is not None and cur != mid and cur in mine:
+            i += 1
+            k = f"{key}#{i}"
+        return k
 
     def scorer(code, name):
         k = f"{code}|{name}"
@@ -34,17 +44,19 @@ def load(G, reg, S, codes=None):
         h, a = team(code, hn, hid), team(code, an, aid)
         if h == a:
             return
-        key = f"{code}|{d}|{hn}|{an}"
-        mid = twin(G, idx, d, h, a, hs, as_, "rsssf")
+        mid = twin(G, idx, d, h, a, hs, as_, "rsssf", mine)
+        key = fresh(f"{code}|{d}|{hn}|{an}", mid)
         if mid:
             mid = reg.link("match", "rsssf", key, mid) or mid
             G.xref("match", mid, "rsssf", key, "date+teams")
             n["league_linked"] += 1
+            flip = G.c.execute("SELECT home FROM match WHERE mid=?", (mid,)).fetchone()[0] == a
+            mine.setdefault(mid, (as_, hs) if flip else (hs, as_))
             if G.c.execute("SELECT 1 FROM event WHERE mid=? LIMIT 1", (mid,)).fetchone():
                 return                                   # the match's own scorers stand
-            flip = G.c.execute("SELECT home FROM match WHERE mid=?", (mid,)).fetchone()[0] == a
         else:
             mid = reg.mint("match", "rsssf", key)
+            mine[mid] = (hs, as_)
             idx.add(mid, d, h, a)
             G.put("match", {"mid": mid, "eid": eid, "date": d, "home": h, "away": a, "hs": hs, "as_": as_, "status": "finished"}, "rsssf")
             G.xref("match", mid, "rsssf", key, "rsssf-native")

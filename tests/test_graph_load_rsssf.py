@@ -84,3 +84,40 @@ def test_one_bad_row_never_stops_the_loader(tmp_path):
     G, reg = Graph(str(tmp_path / "t.db")), Registry()
     out = rsssf.load(G, reg, S, codes=["uae"])
     assert out["league_matches"] == 1 and out["league_bad"] == 1 and out["champions"] == 1
+
+
+def _league(tmp_path, rows):
+    data = dict(UAE, seasons=[{"season": "1999/2000", "champion": "Al-Ain", "table": [], "league_matches": rows}])
+    S = mk(tmp_path)
+    (tmp_path / "mirror" / "history" / "arab" / "uae.json").write_text(json.dumps(data), encoding="utf-8")
+    (tmp_path / "db" / ".cache" / "rsssf_clubs.json").write_text("{}")
+    return S
+
+
+def test_two_meetings_of_one_source_stay_two_matches(tmp_path):
+    """RSSSF dates both legs of a pairing the same (or next) day: A v B and B v A, or the same pairing listed twice with
+    another score, are two meetings, never one match with a score conflict between RSSSF and itself"""
+    rows = [["1999-11-05", "Kirkuk", 1, "Al-Jaish", 2, 2, 3, []],
+            ["1999-11-05", "Al-Jaish", 2, "Kirkuk", 1, 1, 0, []],          # the return leg, dated the same day
+            ["1999-11-06", "Kirkuk", 1, "Al-Jaish", 2, 4, 1, []],          # the pairing again, another score, a day off
+            ["1999-11-05", "Kirkuk", 1, "Al-Jaish", 2, 2, 3, []]]          # a true duplicate of row 1: still one match
+    S, reg = _league(tmp_path, rows), Registry()
+    for i in range(2):                                                   # the second build reuses the registry's ids
+        G = Graph(str(tmp_path / f"t{i}.db"))
+        out = rsssf.load(G, reg, S, codes=["uae"])
+        got = sorted(G.c.execute("select date, hs, as_ from match").fetchall())
+        assert got == [("1999-11-05", 1, 0), ("1999-11-05", 2, 3), ("1999-11-06", 4, 1)], got
+        assert G.c.execute("select count(*) from conflict where field='score'").fetchone()[0] == 0
+        assert out["league_matches"] == 3
+
+
+def test_a_stale_registry_collapse_is_split(tmp_path):
+    """an older build linked the return leg's key to the first leg's id: the return leg now gets an id of its own"""
+    rows = [["1999-11-05", "Kirkuk", 1, "Al-Jaish", 2, 2, 3, []],
+            ["1999-11-05", "Al-Jaish", 2, "Kirkuk", 1, 1, 0, []]]
+    S, G, reg = _league(tmp_path, rows), Graph(str(tmp_path / "t.db")), Registry()
+    first = reg.mint("match", "rsssf", "uae|1999-11-05|Kirkuk|Al-Jaish")
+    reg.link("match", "rsssf", "uae|1999-11-05|Al-Jaish|Kirkuk", first)
+    rsssf.load(G, reg, S, codes=["uae"])
+    mids = [r[0] for r in G.c.execute("select mid from match order by hs")]
+    assert len(set(mids)) == 2 and first in mids
