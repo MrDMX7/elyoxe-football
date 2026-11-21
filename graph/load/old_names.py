@@ -31,4 +31,8 @@ def load(G, reg, S, names=None, comps=None, rename=None):
         n += G.c.execute("UPDATE team SET name_ar=? WHERE name=? AND (name_ar IS NULL OR name_ar='')", (ar, latin)).rowcount
     for latin, ar in sorted(comps.items()):
         c += G.c.execute("UPDATE competition SET name_ar=? WHERE name=? AND (name_ar IS NULL OR name_ar='')", (ar, latin)).rowcount
-    return {"teams": n, "competitions": c}
+    p = 0                                                 # the old players FotMob does not know (names/people_ar.json, k<Tifo id>)
+    for k, v in sorted((S.read(os.path.join(S.names, "people_ar.json")) or {}).items()):
+        if str(k).startswith("k") and str(k)[1:].isdigit() and v.get("ar"):
+            p += G.c.execute("UPDATE player SET name_ar=? WHERE pid=? AND (name_ar IS NULL OR name_ar='')", (v["ar"], int(k[1:]))).rowcount
+    return {"teams": n, "competitions": c, "players": p}

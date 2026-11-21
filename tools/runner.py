@@ -285,6 +285,8 @@ def job_streams(log):
 
 def job_names(log):
     rc, tail = run(log, [PY, "build_names.py"], cwd=ROOT / "names", timeout=3 * 3600)
+    if rc == 0:   # the old players FotMob does not know (k<Tifo id>: RSSSF's scorers, Wikipedia's winners) -> names/people_ar.json
+        run(log, [PY, "build_names.py", "--kind", "people"], cwd=ROOT / "names", timeout=2 * 3600)
     if rc == 0:   # «يُكتب أيضاً»: other Arabic spellings from Arabic Wikipedia redirects (never fatal; committed with names/)
         run(log, [PY, "aka.py"], cwd=ROOT / "names", timeout=30 * 60)
     if rc == 0 and subprocess.run(["git", "status", "--porcelain", "--", "names/"], cwd=ROOT, capture_output=True, text=True).stdout.strip():

@@ -121,6 +121,40 @@ def graph_match_players(mf):
     return out
 
 
+def idkey(k):
+    """a FotMob id or a Tifo id («k12»), as a number to sort by"""
+    return int(str(k).lstrip("k"))
+
+
+def people_pool(people, match_files):
+    """The old players the graph knows by its own id only (k<Tifo id>: RSSSF's scorers, Wikipedia's award winners) with a
+    Latin name: v1/people/index.json's (their birth year an age hint) and the old matches' scorers and lineups (v1/matches/*,
+    the UAE's). «historic»: Wikidata's candidates born before 1978 are not marked down for it."""
+    out = {}
+    for k, p in (people or {}).items():
+        if k.startswith("k") and p.get("name") and not p.get("name_ar") and not ARABIC.search(p["name"]):
+            born = (p.get("born") or "")[:4]
+            out[k] = {"name": p["name"], "teams": [], "country": None, "ages": [int(TODAY[:4]) - int(born)] if born.isdigit() else [],
+                      "comps": [], "uae": p.get("nat") == "الإمارات", "historic": True}
+    for mf in match_files:
+        for m in (mf or {}).get("matches") or []:
+            rows = [(e[4], e[5]) for e in m.get("ev") or []] + [(p[0], p[1]) for side in (m.get("lu") or {}).values() for p in side]
+            for name, key in rows:
+                if key and str(key).startswith("k") and name and not ARABIC.search(name) and key not in out:
+                    out[key] = {"name": name, "teams": [], "country": None, "ages": [], "comps": [m.get("comp")] if m.get("comp") else [],
+                                "uae": m.get("comp") == UAE_LEAGUE or mf.get("team") == UAE_NATIONAL, "historic": True}
+    return out
+
+
+def collect_people(cache: Path):
+    people = get_json(f"{FEED}/people/index.json") or {}
+    mix = get_json(f"{FEED}/matches/index.json") or {}
+    files = [f"{c}/{sl}" for c, sls in (mix.get("comps") or {}).items() for sl in sls] + [f"team-{t}" for t in (mix.get("teams") or {})]
+    pool = people_pool(people, [get_json(f"{FEED}/matches/{f}.json") for f in files])
+    log(f"collect people (k<Tifo id>): pool = {len(pool)}")
+    return pool, {}
+
+
 def graph_clubs(ed, cid):
     """The Latin-named clubs with a FotMob id in a season file: champions, runners-up and table rows of every season."""
     out = {}
@@ -512,7 +546,7 @@ def score(p, e, fifa, tq):
             sc += 1; why.append("dob~")
         else:
             sc -= 3; why.append("dob-")
-    elif e["dob"] and e["dob"] < 1978:
+    elif e["dob"] and e["dob"] < 1978 and not p.get("historic"):     # the archive's old players were born then
         sc -= 2; why.append("old")
     # club
     clubs = set(e["clubs"])
@@ -835,7 +869,7 @@ def main():
     ap.add_argument("--reuse-pool", action="store_true", help="use cached pool.json")
     ap.add_argument("--retry-generated", action="store_true")
     ap.add_argument("--limit", type=int, default=0)
-    ap.add_argument("--kind", choices=["players", "coaches", "referees", "clubs"], default="players")
+    ap.add_argument("--kind", choices=["players", "coaches", "referees", "clubs", "people"], default="players")
     ap.add_argument("--no-wikidata", action="store_true", help="skip the Wikidata pass (Gemini only; --retry-generated later)")
     a = ap.parse_args()
     global OUT, KIND
@@ -845,7 +879,9 @@ def main():
     cache = Path(a.cache)
     cache.mkdir(parents=True, exist_ok=True)
 
-    if a.kind in ("referees", "clubs"):
+    if a.kind == "people":
+        pool, teams = collect_people(cache)
+    elif a.kind in ("referees", "clubs"):
         pool, teams = (collect_referees if a.kind == "referees" else collect_clubs)(cache)
     elif a.kind == "coaches":
         pool, teams = (json.loads((cache / "coach_pool.json").read_text()), json.loads((cache / "teams.json").read_text())) if a.reuse_pool and (cache / "coach_pool.json").exists() else collect_coaches(cache)
@@ -865,7 +901,7 @@ def main():
 
     def save():
         tmp = OUT.with_suffix(".tmp")
-        tmp.write_text(json.dumps(dict(sorted(out.items(), key=lambda kv: int(kv[0]))),
+        tmp.write_text(json.dumps(dict(sorted(out.items(), key=lambda kv: idkey(kv[0]))),
                                   ensure_ascii=False, indent=1))
         tmp.replace(OUT)
 
@@ -873,7 +909,7 @@ def main():
             or (a.retry_generated and out[pid]["source"] == "generated"
                 and not out[pid].get("qid"))]
     # UAE players first so a partial run still serves the league
-    todo.sort(key=lambda pid: (not pool[pid].get("uae"), int(pid)))
+    todo.sort(key=lambda pid: (not pool[pid].get("uae"), idkey(pid)))
     if a.limit:
         todo = todo[:a.limit]
     log(f"{len(out)} already done, {len(todo)} to resolve")

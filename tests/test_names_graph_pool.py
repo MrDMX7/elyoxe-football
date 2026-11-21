@@ -30,3 +30,28 @@ def test_the_players_of_the_old_matches_join_the_pool():
     got = B.graph_match_players(mf)
     assert sorted(got) == ["794114", "999"]                          # Arabic already, or no FotMob id: left out
     assert got["999"]["uae"] is True and got["999"]["comps"] == [538]
+
+
+def test_the_old_players_without_a_fotmob_id_join_a_pool_of_their_own():
+    people = {"k107599": {"name": "Adnan Al Talyani", "name_ar": "عدنان الطلياني", "born": "1964-10-30", "nat": "الإمارات", "wc": []},
+              "k114377": {"name": "Youssouf Atiq", "name_ar": None, "born": None, "nat": None, "wc": []},
+              "131661": {"name": "Ismail Matar", "name_ar": None, "born": "1983-04-07", "nat": "الإمارات", "wc": []}}
+    mf = {"matches": [{"id": "k1", "comp": 538, "ev": [[31, 0, "goal", "a", "Ali Daei", "k226000"]], "lu": {}}]}
+    got = B.people_pool(people, [mf])
+    assert sorted(got) == ["k114377", "k226000"]               # Arabic already, or a FotMob id (the players' job): left out
+    assert got["k226000"]["uae"] is True and got["k226000"]["historic"] is True and got["k114377"]["ages"] == []
+    assert B.people_pool({"k9": {"name": "Old Man", "name_ar": None, "born": "1964-10-30"}}, [])["k9"]["ages"] == [int(B.TODAY[:4]) - 1964]
+
+
+def test_an_archive_player_born_before_1978_is_not_marked_down_for_it():
+    e = {"labels": {"en": "Ali Daei"}, "aliases": [], "occ": [B.FOOTBALLER], "country": [], "dob": 1969, "clubs": []}
+    modern = {"name": "Ali Daei", "teams": [], "country": None, "ages": []}
+    assert B.score(dict(modern, historic=True), e, {}, {})[0] > B.score(modern, e, {}, {})[0]
+
+
+def test_tifo_ids_sort_with_the_fotmob_ones():
+    assert sorted(["k12", "7", "k3"], key=B.idkey) == ["k3", "7", "k12"]
+
+
+def test_an_old_player_whose_name_is_arabic_already_is_left_out():
+    assert B.people_pool({"k1": {"name": "إيفان ديماس", "name_ar": None}}, []) == {}

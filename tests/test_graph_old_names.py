@@ -28,7 +28,7 @@ def test_old_competitions_get_their_arabic_names_too(tmp_path):
     G.put("competition", {"cid": 2, "name": "Asian Games", "name_ar": "الألعاب الآسيوية"}, "martj42")
     out = old_names.load(G, reg, Sources(str(tmp_path), s3=False), names={}, comps={"FIFA World Cup qualification": "تصفيات كأس العالم", "Asian Games": "دورة الألعاب الآسيوية"})
     assert dict(G.c.execute("select name, name_ar from competition")) == {"FIFA World Cup qualification": "تصفيات كأس العالم", "Asian Games": "الألعاب الآسيوية"}
-    assert out == {"teams": 0, "competitions": 1}
+    assert (out["teams"], out["competitions"]) == (0, 1)
     assert old_names.historic_competitions()["Merdeka Tournament"] == "بطولة مرديكا"
 
 
@@ -38,3 +38,14 @@ def test_a_forced_rename_beats_another_sources_arabic_name(tmp_path):
     old_names.load(G, reg, Sources(str(tmp_path), s3=False), names={}, comps={}, rename={"Al Shabab Al Arabi": "الشباب"})
     assert G.c.execute("select name_ar from team").fetchone()[0] == "الشباب"
     assert old_names.renames()["Al Shabab Al Arabi"] == "الشباب"
+
+
+def test_the_old_players_arabic_names_by_tifo_id(tmp_path):
+    (tmp_path / "names").mkdir()
+    (tmp_path / "names" / "people_ar.json").write_text(
+        '{"k7": {"latin": "Ali Daei", "ar": "علي دائي", "source": "wikidata"}, "k8": {"latin": "X", "ar": "اكس", "source": "generated"}}', encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    G.put("player", {"pid": 7, "name": "Ali Daei"}, "rsssf")
+    G.put("player", {"pid": 8, "name": "X", "name_ar": "اسم موجود"}, "wikidata")
+    out = old_names.load(G, reg, Sources(str(tmp_path), s3=False), names={}, comps={}, rename={})
+    assert dict(G.c.execute("select pid, name_ar from player")) == {7: "علي دائي", 8: "اسم موجود"} and out["players"] == 1
