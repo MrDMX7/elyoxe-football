@@ -52,3 +52,17 @@ test("an old match's date carries its year", () => {
   const v = P.match(md, { archive: 1, x: {} });
   assert.match(v.body, /data-f="dy">[^<]*2002</);
 });
+
+test("the meetings of any two teams from the archive's own matches, when the every-competition file has none", () => {
+  const lists = [[{ id: "a1", date: "1998-06-10", comp: 77, season: "1998", h: [8256, "البرازيل"], a: [8570, "ألمانيا"], s: [1, 0] },
+                  { id: "a2", date: "2002-06-30", comp: 77, season: "2002", h: [8570, "ألمانيا"], a: [8256, "البرازيل"], s: [0, 2] }],
+                 [{ id: "a2", date: "2002-06-30", comp: 77, season: "2002", h: [8570, "ألمانيا"], a: [8256, "البرازيل"], s: [0, 2] },   // the same match listed twice
+                  { id: "a3", date: "2003-01-01", comp: 538, season: "2002/2003", h: [null, "دبي"], a: [8256, "البرازيل"], s: [0, 1] }]];
+  const P = V.pairs(lists, id => (id === 77 ? "كأس العالم" : ""));
+  const p = P.get("8256-8570");
+  assert.deepEqual(p.teams, ["8256", "8570"]);
+  assert.equal(p.matches.length, 2);
+  assert.deepEqual(p.matches[0], ["1998-06-10", "كأس العالم", "1998", "8256", 1, 0, "8570", "a1"]);
+  const md = V.md({ id: "a2", date: "2002-06-30", comp: 77, h: [8570, "ألمانيا"], a: [8256, "البرازيل"], s: [0, 2] });
+  assert.deepEqual(V.h2h(p, md).summary, { home_wins: 0, draws: 0, away_wins: 1 });
+});

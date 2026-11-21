@@ -39,4 +39,22 @@ function h2h(pair, d) {
   return { summary: s, matches: before.slice().reverse().map(x => ({ id: x[7], href: "/m/" + x[7] + "/", kickoff_utc: x[0] + "T12:00:00Z", home: side(x[3]), away: side(x[6]), score: { home: x[4], away: x[5] } })) };
 }
 
-module.exports = { md, lineups, h2h };
+// every two teams' meetings in the archive's own matches (v1/matches/*: the leagues' seasons and the tournaments), in the
+// every-competition pair files' shape, for the pairs those files do not hold (graph/publish.h2h covers the UAE's)
+function pairs(lists, compName) {
+  const out = new Map(), seen = new Set();
+  for (const ms of lists) for (const m of ms) {
+    if (seen.has(m.id) || !m.h[0] || !m.a[0] || !m.s || m.s[0] == null) continue;
+    seen.add(m.id);
+    const a = String(m.h[0]), b = String(m.a[0]), key = [a, b].sort().join("-");
+    if (!out.has(key)) out.set(key, { teams: [a, b].sort(), names: [], matches: [] });
+    const p = out.get(key);
+    p.names[p.teams.indexOf(a)] = m.h[1];
+    p.names[p.teams.indexOf(b)] = m.a[1];
+    p.matches.push([m.date, compName(m.comp) || "", m.season || "", a, m.s[0], m.s[1], b, m.id]);
+  }
+  for (const p of out.values()) p.matches.sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0));
+  return out;
+}
+
+module.exports = { md, lineups, h2h, pairs };

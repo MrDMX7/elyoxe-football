@@ -1294,14 +1294,15 @@ ${items}
   // the old matches (graph phase 7): v1/matches/<comp>/<season>.json and team-<id>.json; a match with a current page keeps it
   const curM = CURM, compOf = id => { const c = (comps || []).find(x => +x.id === +id); return c ? { key:c.key, name_ar:c.name_ar } : null; };
   const mo = Object.assign({}, hpo, { comp:compOf });
+  const APAIRS = MV.pairs([...MSEA.values(), ...MTEAM.values()], id => (compOf(id) || {}).name_ar);   // two teams' meetings in the archive
   { const seen = new Set();
     for (const ms of [...MSEA.values(), ...MTEAM.values()]) for (const m of ms){ if (seen.has(m.id) || curM.has(m.id)) continue; seen.add(m.id);
       const cmp = compOf(m.comp), pth = MA.href(m), ok = MA.indexable(m);
       // the old match in the current match page's design (lib/match_view.cjs -> src/v5/pages.js P.match, archive mode): header,
       // events, the lineups as lists, its info, the meetings before it in every competition
-      const md = MV.md(m), pr = /^n/.test(String(md.home.id)) || /^n/.test(String(md.away.id)) ? null : H2AD.get(H2A.key(md.home.id, md.away.id));
-      Object.assign(md, { h2h:MV.h2h(pr, md) });
-      const v5m = P5.match(md, { archive:1, x:{ lu:MV.lineups(m, md), h2h:pr ? `/h2h/${H2A.key(md.home.id, md.away.id)}/` : null, share:"",
+      const md = MV.md(m), pk = /^n/.test(String(md.home.id)) || /^n/.test(String(md.away.id)) ? null : H2A.key(md.home.id, md.away.id), pr = pk && H2AD.get(pk);
+      Object.assign(md, { h2h:MV.h2h(pr || (pk && APAIRS.get(pk)), md) });      // the every-competition file, else the archive's own matches
+      const v5m = P5.match(md, { archive:1, x:{ lu:MV.lineups(m, md), h2h:pr ? `/h2h/${pk}/` : null, share:"",
         ana:'<p class="src">من أرشيف تيفو: النتيجة والأحداث والتشكيلات من FotMob وTransfermarkt وRSSSF وقواعد بيانات المنتخبات وكأس العالم، حسب ما يتوفر لكل مباراة.</p>' } });
       v5m.nav = { back:cmp ? `/c/${cmp.key}/s/${String(m.season).replace(/\//g, "-")}/` : "/", backLabel:cmp ? `موسم ${esc(m.season)}` : "الرئيسية", title:`${esc(m.h[1])} - ${esc(m.a[1])}`, trail:"" };
       write(pth.slice(1) + "index.html", page({ v5:v5m,
