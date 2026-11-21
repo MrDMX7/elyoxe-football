@@ -31,10 +31,14 @@ def load(G, reg, S, titles=None):
     name = dict(G.c.execute("SELECT tid, name FROM team"))
     by_day = {}
     apps = dict(G.c.execute("SELECT mid, count(*) FROM appearance GROUP BY mid"))
-    for mid, day, h, a, hs, as_ in G.c.execute("SELECT mid, substr(date,1,10), home, away, hs, as_ FROM match WHERE date IS NOT NULL"):
+    ours = {e for (e,) in G.c.execute("""SELECT e.eid FROM edition e JOIN xref x ON x.type='competition' AND x.source='fotmob'
+                                          AND x.tifo_id=e.cid""")}           # the editions the site publishes (a FotMob competition's)
+    eid = {}
+    for mid, e, day, h, a, hs, as_ in G.c.execute("SELECT mid, eid, substr(date,1,10), home, away, hs, as_ FROM match WHERE date IS NOT NULL"):
         by_day.setdefault(day, []).append((mid, h, a, hs, as_))
-    for v in by_day.values():                  # one game held twice (Transfermarkt's and the World Cup set's): the lineup's first
-        v.sort(key=lambda m: -apps.get(m[0], 0))
+        eid[mid] = e
+    for v in by_day.values():   # one game held twice (Transfermarkt's «FIWC» and the World Cup's): ours with a lineup, then the fuller lineup
+        v.sort(key=lambda m: (-(eid.get(m[0]) in ours and apps.get(m[0], 0) > 0), -apps.get(m[0], 0)))
     n = {"pages": 0, "awards": 0, "linked": 0, "no_match": 0, "no_player": 0}
     rows = []
     for t in titles if titles is not None else sorted(pages()):

@@ -102,3 +102,21 @@ def test_one_game_held_twice_gets_the_award_on_the_record_with_its_lineup(tmp_pa
     G.put("match", {"mid": 9, "date": "2022-11-20", "home": 1, "away": 2, "hs": 0, "as_": 2}, "tm")   # the same game, no lineup
     OM.load(G, reg, S, titles=["2022 FIFA World Cup Group A"])
     assert G.c.execute("select mid, pid from match_award where kind='motm' and mid in (9, 10)").fetchall() == [(10, 100)]
+
+
+def test_one_game_held_twice_gets_the_award_in_the_competition_we_publish_when_that_record_has_a_lineup(tmp_path):
+    # Transfermarkt's «FIWC 2021/2022» copy of a World Cup game has a fuller lineup than the World Cup's own record: the season
+    # page counts the World Cup's, so the award goes there
+    S, G, reg = _world(tmp_path)
+    wc, tm = reg.mint("competition", "fotmob", 77), reg.mint("competition", "tm", "FIWC")
+    G.put("competition", {"cid": wc, "name": "World Cup"}, "fotmob")
+    G.xref("competition", wc, "fotmob", 77, "fotmob-native")
+    G.put("competition", {"cid": tm, "name": "FIWC"}, "tm")
+    e77, etm = reg.mint("edition", "fotmob", "77|2022"), reg.mint("edition", "tm", "FIWC|2021/2022")
+    G.put("edition", {"eid": e77, "cid": wc, "season": "2022"}, "fotmob")
+    G.put("edition", {"eid": etm, "cid": tm, "season": "2021/2022"}, "tm")
+    G.c.execute("update match set eid=? where mid=10", (e77,))
+    G.put("match", {"mid": 9, "eid": etm, "date": "2022-11-20", "home": 1, "away": 2, "hs": 0, "as_": 2}, "tm")
+    G.c.executemany("INSERT INTO appearance(mid, pid, tid, played, src) VALUES(9,?,2,1,'tm')", [(100,), (101,), (200,)])
+    OM.load(G, reg, S, titles=["2022 FIFA World Cup Group A"])
+    assert G.c.execute("select mid from match_award where kind='motm' and mid in (9, 10)").fetchall() == [(10,)]
