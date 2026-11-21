@@ -457,6 +457,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   { const want = comps.filter(c => (MIX.comps || {})[c.id]).flatMap(c => MIX.comps[c.id].map(sl => [c.id, sl]));
     (await pool(want, 8, ([cid, sl]) => get(`matches/${cid}/${sl}.json`, 2))).forEach((d, i) => { if (d && d.matches) MSEA.set(`${want[i][0]}|${want[i][1]}`, d.matches); });
     for (const tid of Object.keys(MIX.teams || {})){ const d = await get(`matches/team-${tid}.json`, 2); if (d && d.matches) MTEAM.set(+tid, d.matches); } }
+  // a club's all-matches page (/t/<id>/matches/) from the season files: 20 archive matches or more, a team with team-<id>.json keeps its own
+  const MCLUB = MA.teamMatches([...MSEA.values()], { min:20, skip:new Set(MTEAM.keys()) });
   const ARCHM = new Set([...MSEA.values(), ...MTEAM.values()].flatMap(ms => ms.map(m => m.id))), CURM = new Set([...matchSum.keys()].map(String));
   // every meeting of two teams in every competition (v1/h2h-all/*, graph/publish.h2h)
   const H2A = require("./lib/h2h_all.cjs"), H2AX = (await get("h2h-all/index.json", 2)) || { pairs:{}, teams:{} }, H2AD = new Map();
@@ -806,6 +808,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
       if (rc) nums += S.sec("سجل النادي", "من 2010", rc); if (hm) nums += S.sec("كل نتايجه موسم بموسم", "", hm); if (xi) nums += S.sec("التشكيلة المعتادة", "هالموسم", xi); if (cu) nums += S.sec("لاعبينه في المنتخبات", "", cu); }
     const tv2 = S.travel(t, t.fixtures); if (tv2) nums += S.sec("سافر مع فريقك", "مباريات آسيا برا الدولة", tv2);
     if (+id === 102119) nums = S.sec("الاندماج", "2017", "<p>شباب الأهلي هو اندماج ثلاثة أندية في 2017: الأهلي والشباب ودبي. في أرشيف تيفو، مواسم الأهلي قبل 2017 باسم «الأهلي»، والشباب ودبي لكل واحد سجله.</p>") + nums;
+    if (MCLUB.has(+id)) nums += S.sec("كل مباريات النادي في الأرشيف", `${MCLUB.get(+id).length} مباراة`, `<p class="tools"><a class="btn" href="/t/${id}/matches/">كل المباريات من أرشيف تيفو</a></p>`);
     if ((H2AX.teams || {})[String(id)]) nums += S.sec("سجله ضد كل الفرق", "في كل البطولات", `<p class="tools"><a class="btn" href="/t/${id}/h2h/">مواجهاته مع كل خصم</a></p>`);
     const gco = HP.clubCoaches(GCT[id], hpo), co = gco ? "" : S.coachesTeam(x538.coaches, id); if (gco) nums += S.sec("مدربين النادي عبر التاريخ", "كل البطولات", gco); else if (co) nums += S.sec("مدربين النادي عبر التاريخ", "في الدوري", co);
     if (x538.fortress && x538.fortress.stadiums){ const fs2 = x538.fortress.stadiums.filter(s => s.team === id); if (fs2.length) nums += S.sec("حصن الملعب", "", S.fortress({ since:x538.fortress.since, stadiums:fs2 })); }
@@ -1298,10 +1301,10 @@ ${items}
         path:pth, page:"ref", noindex:!ok, title:MA.title(m, cmp), desc:`${m.h[1]} ${m.s[0]}-${m.s[1]} ${m.a[1]}، ${m.date}${cmp ? `، ${cmp.name_ar} ${m.season || ""}` : ""}: النتيجة والأهداف والتشكيلة من أرشيف تيفو.`,
         ld:bcLd([cmp && [cmp.name_ar, `/c/${cmp.key}/`], [`${m.h[1]} - ${m.a[1]}`, pth]].filter(Boolean)) }));
       if (ok) urls.push(pth); }
-    for (const [tid, ms] of MTEAM){ const tn = (teamsJson.teams[tid] || {}).name_ar || TAR[tid] || String(tid), pth = `/t/${tid}/matches/`;
+    for (const [tid, ms] of [...MTEAM, ...[...MCLUB].filter(([t]) => teamPages.has(t))]){ const tn = (teamsJson.teams[tid] || {}).name_ar || TAR[tid] || String(tid), pth = `/t/${tid}/matches/`, lg = MTEAM.has(tid) ? "" : " في الدوري";   // a club's list is its league seasons
       write(`t/${tid}/matches/index.html`, page({ v5:{ nav:{ back:`/t/${tid}/`, backLabel:esc(tn), title:"كل المباريات", trail:"" },
-        body:`<div class="lt"><h1>${esc(tn)}: كل المباريات</h1><p>كل مباريات ${esc(tn)} في أرشيف تيفو، من <span class="num">${esc(ms[0].date.slice(0, 4))}</span> لين <span class="num">${esc(ms[ms.length - 1].date.slice(0, 4))}</span> (<span class="num">${ms.length}</span> مباراة).</p></div>` + MA.listBody(ms.slice().reverse(), mo, "year") + U.foot(), tab:"more", sheets:"", data:{} },
-        path:pth, page:"ref", title:`كل مباريات ${tn} عبر التاريخ | تيفو`, desc:`كل مباريات ${tn} من ${ms[0].date.slice(0, 4)}: ${ms.length} مباراة بنتايجها وهدافينها.`, ld:bcLd([[tn, `/t/${tid}/`], ["كل المباريات", pth]]) }));
+        body:`<div class="lt"><h1>${esc(tn)}: كل المباريات</h1><p>كل مباريات ${esc(tn)}${lg} في أرشيف تيفو، من <span class="num">${esc(ms[0].date.slice(0, 4))}</span> لين <span class="num">${esc(ms[ms.length - 1].date.slice(0, 4))}</span> (<span class="num">${ms.length}</span> مباراة).</p></div>` + MA.listBody(ms.slice().reverse(), mo, "year") + U.foot(), tab:"more", sheets:"", data:{} },
+        path:pth, page:"ref", title:`كل مباريات ${tn}${lg} عبر التاريخ | تيفو`, desc:`كل مباريات ${tn}${lg} من ${ms[0].date.slice(0, 4)}: ${ms.length} مباراة بنتايجها وهدافينها.`, ld:bcLd([[tn, `/t/${tid}/`], ["كل المباريات", pth]]) }));
       urls.push(pth); } }
   // the pairs FotMob never listed get a page of their own; every team, its record against each opponent
   { const pairHref = (x, y) => (H2H[`${x}-${y}`] ? `/h2h/${x}-${y}/` : H2H[`${y}-${x}`] ? `/h2h/${y}-${x}/` : H2AD.has(H2A.key(x, y)) ? `/h2h/${H2A.key(x, y)}/` : null);

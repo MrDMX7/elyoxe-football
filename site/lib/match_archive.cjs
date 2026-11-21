@@ -67,4 +67,22 @@ function listBody(ms, o, by) {
     `<ul class="lc">${l.map(m => `<li><a href="${href(m)}"><span class="num muted small">${esc(m.date)}</span> ${nm(m.h[1])} ${num(m.s[0])} - ${num(m.s[1])} ${nm(m.a[1])}</a></li>`).join("")}</ul>`)).join("");
 }
 
-module.exports = { matchBody, listBody, title, indexable, href };
+// a club's all-matches list from the season files (v1/matches/<comp>/<season>.json): each match under both sides' ids, once
+// (a match listed by two season files counts once), oldest first; only teams with at least o.min matches, none in o.skip
+// (a team with its own team-<id>.json keeps that list), and, with o.keep, only the teams it accepts (those with a page)
+function teamMatches(lists, o) {
+  o = o || {};
+  const by = new Map(), seen = new Map();
+  for (const ms of lists) for (const m of ms || []) for (const side of [m.h, m.a]) {
+    const id = side && side[0] != null && side[0] !== "" ? +side[0] : NaN;
+    if (!Number.isFinite(id) || (o.skip && o.skip.has(id)) || (o.keep && !o.keep(id))) continue;
+    if (!seen.has(id)) { seen.set(id, new Set()); by.set(id, []); }
+    if (seen.get(id).has(String(m.id))) continue;
+    seen.get(id).add(String(m.id)); by.get(id).push(m);
+  }
+  const out = new Map();
+  for (const [id, ms] of by) if (ms.length >= (o.min || 1)) out.set(id, ms.sort((x, y) => String(x.date).localeCompare(String(y.date))));
+  return out;
+}
+
+module.exports = { matchBody, listBody, title, indexable, href, teamMatches };

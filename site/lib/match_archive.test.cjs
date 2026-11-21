@@ -49,3 +49,15 @@ test("an old match with no starters marked shows who played, not a lineup of sub
   assert.doesNotMatch(h, /الاحتياط/);
   assert.doesNotMatch(h, /التشكيلة: الجزيرة/);
 });
+
+test("a club's matches from the season files: grouped by side, deduplicated, oldest first, only past the floor, never a team with its own file", () => {
+  const mk = (id, date, h, a) => ({ id, date, comp: 538, season: "x", h: [h, "H"], a: [a, "A"], s: [1, 0] });
+  const s1 = [mk("1", "2016-10-08", 102117, 102101), mk("2", "2016-09-01", 102101, 5789), mk("3", "2016-11-01", null, 102117)];
+  const s2 = [mk("1", "2016-10-08", 102117, 102101), mk("4", "2015-05-01", "102101", 102117)];
+  const g = M.teamMatches([s1, s2], { min: 3, skip: new Set([5789]) });
+  assert.deepEqual([...g.keys()].sort(), [102101, 102117]);
+  assert.deepEqual(g.get(102117).map(m => m.id), ["4", "1", "3"]);
+  assert.deepEqual(g.get(102101).map(m => m.id), ["4", "2", "1"]);
+  assert.equal(M.teamMatches([s1, s2], { min: 4 }).size, 0);
+  assert.equal(M.teamMatches([s1, s2], { min: 1, keep: id => id === 102117 }).size, 1);
+});
