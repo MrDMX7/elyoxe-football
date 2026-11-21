@@ -289,6 +289,8 @@ def job_names(log):
         run(log, [PY, "build_names.py", "--kind", "people"], cwd=ROOT / "names", timeout=2 * 3600)
     if rc == 0:   # «يُكتب أيضاً»: other Arabic spellings from Arabic Wikipedia redirects (never fatal; committed with names/)
         run(log, [PY, "aka.py"], cwd=ROOT / "names", timeout=30 * 60)
+    if rc == 0:   # every name against FotMob's own Arabic -> names/review_fotmob.csv (never fatal, never writes a name)
+        run(log, [PY, "-m", "names.verify"], cwd=ROOT, timeout=10 * 60)
     if rc == 0 and subprocess.run(["git", "status", "--porcelain", "--", "names/"], cwd=ROOT, capture_output=True, text=True).stdout.strip():
         run(log, ["git", "add", "names/"])
         run(log, ["git", "commit", "-q", "-m", f"names: weekly Arabic names for new players ({datetime.now().date()})"])
