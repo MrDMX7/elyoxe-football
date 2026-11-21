@@ -284,7 +284,8 @@ OLD_NAMES = {"uefa champions league": {"european cup"}, "copa america": {"south 
              "serie a": {"italian football championship", "divisione nazionale", "prima divisione"},
              "uae pro league": {"arabian gulf league", "uae arabian gulf league"}, "uefa europa league": {"uefa cup"},
              "caf champions league": {"african cup of champions clubs"},
-             "afc champions league elite": {"asian club championship", "afc champions league"}}
+             "afc champions league elite": {"asian club championship", "afc champions league"},
+             "premier league": {"football league first division", "football league"}}
 
 
 def _words(s):
@@ -316,6 +317,15 @@ def own_season(page, comp):
         return True
     mine = [w for w in own.split() if w not in GENERIC]
     return any(_kin(w, x) for w in name.split() if w not in GENERIC for x in mine)
+
+
+def owner(page, fid, comps):
+    """The competition a season article belongs to: the one it was filed under, else the only other that owns it («2011–12
+    Premier League» filed under the Champions League, whose article links every big league's season), else none."""
+    if own_season(page, comps.get(str(fid))):
+        return str(fid)
+    hits = [k for k, t in comps.items() if own_season(page, t)]
+    return hits[0] if len(hits) == 1 else None
 
 
 def season_links(html):

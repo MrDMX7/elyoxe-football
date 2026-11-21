@@ -277,10 +277,15 @@ def run(S, http, d, limit=None):
         titles = titles[:limit]
     _jsave(os.path.join(d, "articles.json"), {"awards": awards, "comps": comps, "national": national})
     n = fetch_pages(http, d, titles)
-    from graph.awards_wiki import season_links, extract_season, own_season
+    from graph.awards_wiki import season_links, extract_season, own_season, owner
     have = set(_jload(os.path.join(d, "pages.json"), {}))
     seasons = pick_seasons({fid: [x for x in season_links(read_page(d, t) or b"") if own_season(x, t)] for fid, t in comps.items()}, have)
-    seasons = {t: f for t, f in {**(prev.get("seasons") or {}), **seasons}.items() if not (comps.get(f) or comps.get(str(f))) or own_season(t, comps.get(f) or comps.get(str(f)))}
+    cs = {str(k): v for k, v in comps.items()}
+    merged, seasons = {**(prev.get("seasons") or {}), **seasons}, {}
+    for t, f in merged.items():                # a season filed under another competition goes to its own, or out
+        o = owner(t, f, cs) if cs.get(str(f)) else str(f)
+        if o is not None:
+            seasons[t] = int(o) if str(o).isdigit() else o
     n["seasons"] = fetch_pages(http, d, sorted(seasons))
     _jsave(os.path.join(d, "articles.json"), {"awards": awards, "comps": comps, "seasons": seasons, "national": national})
     links = set(titles)

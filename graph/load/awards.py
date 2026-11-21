@@ -285,12 +285,15 @@ def load(G, reg, S):
                     continue
                 honour(eid, "winner", r["rank"], pid=pid, tid=team(r["team"]) if r.get("team") else None, value=r["value"])
     # a season's own article: that season's honours on its competition's edition (the first source keeps an honour)
-    from graph.awards_wiki import extract_season, own_season
+    from graph.awards_wiki import extract_season, owner
     comp_of = {str(k): v for k, v in (arts.get("comps") or {}).items()}
     for page, fid in sorted((arts.get("seasons") or {}).items()):
-        if comp_of.get(str(fid)) and not own_season(page, comp_of[str(fid)]):     # another competition's season its article links (Vydra on the Premier League)
-            n["season_not_own"] += 1
-            continue
+        if comp_of.get(str(fid)):              # another competition's season its article links (Vydra on the Premier League) goes to its own
+            own = owner(page, fid, comp_of)
+            if own is None:
+                n["season_not_own"] += 1
+                continue
+            fid = own
         html = AF.read_page(d, page)
         if not html:
             continue

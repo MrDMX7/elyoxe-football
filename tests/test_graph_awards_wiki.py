@@ -202,3 +202,13 @@ def test_a_season_under_the_countrys_adjective_or_the_competitions_old_name_is_i
     assert not own_season("1923_South_American_Championship_squads", "Copa América")
     assert not own_season("1964_Intercontinental_Cup", "UEFA Champions League")
     assert own_season("1997–98_UEFA_Cup", "UEFA Europa League") and own_season("1990_African_Cup_of_Champions_Clubs", "CAF Champions League")
+
+
+def test_a_season_filed_under_another_competition_goes_to_the_one_it_belongs_to():
+    from graph.awards_wiki import owner
+    # «2011–12 Premier League» was filed under the Champions League (42): its article links every big league's season
+    comps = {"42": "UEFA Champions League", "47": "Premier League", "87": "La Liga"}
+    assert owner("2011–12_Premier_League", "42", comps) == "47"
+    assert owner("2011–12_UEFA_Champions_League", "42", comps) == "42"
+    assert owner("1964_Intercontinental_Cup", "42", comps) is None
+    assert owner("1990–91_Football_League_First_Division", "47", comps) == "47"     # the top flight before the Premier League
