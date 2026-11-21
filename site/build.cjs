@@ -93,7 +93,7 @@ const isLiveSec = h => LIVE_IDS.some(id => h.includes('id="' + id + '"'));
 // lib/v5.cjs legacy5() turns it into the same skeleton. The SEO head (title, description, canonical or noindex, OG, JSON-LD,
 // manifest) is the same for both and never depends on the template.
 const MSEO = require("./lib/match_seo.cjs");   // «معلق مباراة X و Y» (owner 2026-10-09)
-const U = require("./src/v5/ui.js"), P5 = require("./src/v5/pages.js"), SV = require("./lib/season_view.cjs"), PSEO = require("./lib/player_seo.cjs"), NFY = require("./src/notify.js");
+const U = require("./src/v5/ui.js"), P5 = require("./src/v5/pages.js"), SV = require("./lib/season_view.cjs"), MV = require("./lib/match_view.cjs"), PSEO = require("./lib/player_seo.cjs"), NFY = require("./src/notify.js");
 // owner items 7, 8, 3 (docs/ENGAGEMENT.md): «نبّهني», «توقع وتحدى ربعك», «المعلقين»; their pure halves prerender here, the browser
 // halves load on the pages that use them (page() below)
 const NFM = require("./src/notify.js"), TPM = require("./src/predict.js"), VCM = require("./src/voices.js");
@@ -1297,8 +1297,14 @@ ${items}
   { const seen = new Set();
     for (const ms of [...MSEA.values(), ...MTEAM.values()]) for (const m of ms){ if (seen.has(m.id) || curM.has(m.id)) continue; seen.add(m.id);
       const cmp = compOf(m.comp), pth = MA.href(m), ok = MA.indexable(m);
-      write(pth.slice(1) + "index.html", page({ v5:{ nav:{ back:cmp ? `/c/${cmp.key}/s/${String(m.season).replace(/\//g, "-")}/` : "/", backLabel:cmp ? `موسم ${esc(m.season)}` : "الرئيسية", title:`${esc(m.h[1])} - ${esc(m.a[1])}`, trail:"" },
-        body:`<div class="lt"><h1>${esc(m.h[1])} ${esc(m.s[0])}-${esc(m.s[1])} ${esc(m.a[1])}</h1></div>` + MA.matchBody(m, mo) + U.foot(), tab:"more", sheets:"", data:{} },
+      // the old match in the current match page's design (lib/match_view.cjs -> src/v5/pages.js P.match, archive mode): header,
+      // events, the lineups as lists, its info, the meetings before it in every competition
+      const md = MV.md(m), pr = /^n/.test(String(md.home.id)) || /^n/.test(String(md.away.id)) ? null : H2AD.get(H2A.key(md.home.id, md.away.id));
+      Object.assign(md, { h2h:MV.h2h(pr, md) });
+      const v5m = P5.match(md, { archive:1, x:{ lu:MV.lineups(m, md), h2h:pr ? `/h2h/${H2A.key(md.home.id, md.away.id)}/` : null, share:"",
+        ana:'<p class="src">من أرشيف تيفو: النتيجة والأحداث والتشكيلات من FotMob وTransfermarkt وRSSSF وقواعد بيانات المنتخبات وكأس العالم، حسب ما يتوفر لكل مباراة.</p>' } });
+      v5m.nav = { back:cmp ? `/c/${cmp.key}/s/${String(m.season).replace(/\//g, "-")}/` : "/", backLabel:cmp ? `موسم ${esc(m.season)}` : "الرئيسية", title:`${esc(m.h[1])} - ${esc(m.a[1])}`, trail:"" };
+      write(pth.slice(1) + "index.html", page({ v5:v5m,
         path:pth, page:"ref", noindex:!ok, title:MA.title(m, cmp), desc:`${m.h[1]} ${m.s[0]}-${m.s[1]} ${m.a[1]}، ${m.date}${cmp ? `، ${cmp.name_ar} ${m.season || ""}` : ""}: النتيجة والأهداف والتشكيلة من أرشيف تيفو.`,
         ld:bcLd([cmp && [cmp.name_ar, `/c/${cmp.key}/`], [`${m.h[1]} - ${m.a[1]}`, pth]].filter(Boolean)) }));
       if (ok) urls.push(pth); }
@@ -1332,7 +1338,7 @@ ${items}
       // the season in the current competition page's design (lib/season_view.cjs -> src/v5/pages.js P.comp, archive mode): its table,
       // its matches round by round (or month by month), its scorers, and its honours in «التاريخ»; the chips walk the seasons
       const nb = SV.around(ss, s.season), sLink = (x, t) => `<a class="chip" href="/c/${c.key}/s/${HP.slug(x)}/">${t} <span class="num">${esc(x)}</span></a>`;
-      const v5s = P5.comp(Object.assign({}, c, { season:s.season, dormant:false }), { st:SV.standings(s), fx:SV.fixtures(MSEA.get(`${c.id}|${HP.slug(s.season)}`) || []), stats:SV.stats(s), archive:1, x:{
+      const v5s = P5.comp(Object.assign({}, c, { season:s.season, dormant:false }), { st:SV.standings(s, MSEA.get(`${c.id}|${HP.slug(s.season)}`) || []), fx:SV.fixtures(MSEA.get(`${c.id}|${HP.slug(s.season)}`) || []), stats:SV.stats(s), archive:1, x:{
         crumbs:`<a href="/c/${c.key}/">${esc(c.name_ar)}</a>، <a href="${arch}">كل المواسم</a>`,
         chips:[nb.older && sLink(nb.older, "الموسم اللي قبله"), nb.newer && sLink(nb.newer, "اللي بعده"), `<a class="chip" href="${arch}">كل المواسم</a>`].filter(Boolean).join(""),
         note:s.note ? `<p class="note mt">${esc(s.note)}</p>` : "", table:"", fx:"", num:"", hist:HP.seasonBody(Object.assign({}, s, { table:[], top_scorers:[] }), c, hpo) } });

@@ -9,11 +9,29 @@ function team(id, name, i) {
   return id ? { id, name_ar: name } : { id: "n" + i + "-" + String(name || "").replace(/\s+/g, "-"), name_ar: name, nocrest: true };
 }
 
-// the final table: [rank, FotMob id, name, played, won, drawn, lost, for, against, points] -> one group of the current rows
-function standings(s) {
+// the final table: [rank, FotMob id, name, played, won, drawn, lost, for, against, points] -> one group of the current rows; a
+// tournament the archive holds no table for: its group tables counted from its group matches («Group A»), 3 points a win
+function standings(s, ms) {
   const rows = (s.table || []).map((r, i) => ({ rank: r[0], team: team(r[1], r[2], i), played: r[3], won: r[4], drawn: r[5], lost: r[6], gf: r[7], ga: r[8],
     gd: r[7] != null && r[8] != null ? r[7] - r[8] : null, pts: r[9] }));
-  return rows.length ? { groups: [{ rows }] } : null;
+  if (rows.length) return { groups: [{ rows }] };
+  const by = new Map();
+  for (const m of ms || []) {
+    if (!/^group\b/i.test(String(m.round || "")) || !m.s || m.s[0] == null) continue;
+    if (!by.has(m.round)) by.set(m.round, new Map());
+    const g = by.get(m.round);
+    [[m.h, m.s[0], m.s[1]], [m.a, m.s[1], m.s[0]]].forEach(([t, f, a], k) => {
+      const key = String(t[0] || t[1]);
+      if (!g.has(key)) g.set(key, { team: team(t[0], t[1], "g" + key), played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, pts: 0 });
+      const r = g.get(key);
+      r.played++; r.gf += f; r.ga += a; if (f > a) { r.won++; r.pts += 3; } else if (f === a) { r.drawn++; r.pts++; } else r.lost++;
+    });
+  }
+  if (!by.size) return null;
+  const groups = [...by.keys()].sort().map(name => ({ name, rows: [...by.get(name).values()].map(r => Object.assign(r, { gd: r.gf - r.ga }))
+    .sort((x, y) => y.pts - x.pts || y.gd - x.gd || y.gf - x.gf || y.won - x.won || String(x.team.name_ar).localeCompare(String(y.team.name_ar), "ar"))
+    .map((r, i) => Object.assign({ rank: i + 1 }, r)) }));
+  return { groups };
 }
 
 // the season's matches, finished, by round; a season the archive holds no rounds for, by month (أكتوبر 2002)

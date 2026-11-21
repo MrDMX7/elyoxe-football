@@ -66,3 +66,18 @@ test("an old scorer's Arabic name is set as Arabic, not in the Latin style", () 
   assert.equal(U.pname({ id: "k238460", name: "علي دائي" }), "علي دائي");
   assert.match(U.pname({ id: "k1", name: "Ali Daei" }), /class="lat"/);
 });
+
+test("a tournament's group tables, counted from its group matches when the archive holds none", () => {
+  const G = [{ id: "1", date: "2022-11-20", round: "Group A", h: [1, "قطر"], a: [2, "الإكوادور"], s: [0, 2] },
+    { id: "2", date: "2022-11-21", round: "Group A", h: [3, "السنغال"], a: [4, "هولندا"], s: [0, 2] },
+    { id: "3", date: "2022-11-25", round: "Group A", h: [1, "قطر"], a: [3, "السنغال"], s: [1, 3] },
+    { id: "4", date: "2022-11-25", round: "Group A", h: [4, "هولندا"], a: [2, "الإكوادور"], s: [1, 1] },
+    { id: "5", date: "2022-11-29", round: "Group B", h: [5, "إنجلترا"], a: [6, "ويلز"], s: [3, 0] },
+    { id: "6", date: "2022-12-03", round: "Round of 16", h: [4, "هولندا"], a: [7, "أمريكا"], s: [3, 1] }];
+  const st = V.standings({ table: [] }, G);
+  assert.deepEqual(st.groups.map(g => g.name), ["Group A", "Group B"]);
+  const a = st.groups[0].rows;
+  assert.deepEqual(a.map(r => [r.rank, r.team.name_ar, r.pts, r.gd]), [[1, "الإكوادور", 4, 2], [2, "هولندا", 4, 2], [3, "السنغال", 3, 0], [4, "قطر", 0, -4]]);
+  assert.equal(a[0].played, 2);                                          // level on all we hold: by name
+  assert.equal(V.standings({ table: [] }, [{ id: "9", date: "2001-01-01", round: "1", h: [1, "x"], a: [2, "y"], s: [1, 0] }]), null);   // a league with no table: none
+});

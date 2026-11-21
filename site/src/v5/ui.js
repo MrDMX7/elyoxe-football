@@ -42,9 +42,9 @@
   function relDay(iso) { if (!cfg.today || !iso) return ""; var a = U.ymd(iso).split("-").map(Number), b = cfg.today.split("-").map(Number), diff = Math.round((Date.UTC(a[0], a[1] - 1, a[2]) - Date.UTC(b[0], b[1] - 1, b[2])) / 864e5); return diff === 0 ? "اليوم" : diff === 1 ? "بكرة" : diff === -1 ? "أمس" : ""; }
   U.relDay = relDay;
   // <time> elements carry the instant; app.js rewrites them in the visitor's zone (f: t time, d date, dt both, r relative)
-  function tm(iso, f) { if (!iso) return ""; var txt = f === "d" ? U.dname(iso) : f === "ds" ? U.dname(iso, 1) : f === "dt" ? U.dname(iso) + "، " + U.hhmm(iso) : f === "r" ? (relDay(iso) || U.dname(iso)) : U.hhmm(iso); return '<time data-u="' + esc(iso) + '" data-f="' + (f || "t") + '">' + esc(txt) + "</time>"; }
+  function tm(iso, f) { if (!iso) return ""; var txt = f === "dy" ? U.dname(iso) + " " + String(iso).slice(0, 4) : f === "d" ? U.dname(iso) : f === "ds" ? U.dname(iso, 1) : f === "dt" ? U.dname(iso) + "، " + U.hhmm(iso) : f === "r" ? (relDay(iso) || U.dname(iso)) : U.hhmm(iso); return '<time data-u="' + esc(iso) + '" data-f="' + (f || "t") + '">' + esc(txt) + "</time>"; }
   U.tm = tm;
-  U.timeText = function (iso, f) { return f === "d" ? U.dname(iso) : f === "ds" ? U.dname(iso, 1) : f === "dt" ? U.dname(iso) + "، " + U.hhmm(iso) : f === "r" ? (relDay(iso) || U.dname(iso)) : U.hhmm(iso); };
+  U.timeText = function (iso, f) { return f === "dy" ? U.dname(iso) + " " + String(iso).slice(0, 4) : f === "d" ? U.dname(iso) : f === "ds" ? U.dname(iso, 1) : f === "dt" ? U.dname(iso) + "، " + U.hhmm(iso) : f === "r" ? (relDay(iso) || U.dname(iso)) : U.hhmm(iso); };
   U.ago = function (iso) { var m = Math.max(1, Math.round(((cfg.now || Date.now()) - Date.parse(iso)) / 6e4)); if (!isFinite(m)) return ""; return m < 60 ? "قبل " + m + (m > 10 ? " دقيقة" : " دقايق") : m < 1440 ? "قبل " + Math.round(m / 60) + " ساعة" : "قبل " + Math.round(m / 1440) + " يوم"; };
 
   // ------------------------------------------------------------------ links (prerendered pages get a path, the rest a query the browser renders)
@@ -386,7 +386,7 @@
   var PRAY = { fajr: "الفجر", dhuhr: "الظهر", asr: "العصر", maghrib: "المغرب", isha: "العشاء" };
   U.info = function (md, o) {
     o = o || {}; var v = md.venue || {}, rows = [];
-    rows.push({ icon: "calendar", c: "#FF3B30", t: "الموعد", v: md.date_tbd ? "ما تحدد" : tm(md.kickoff_uae || md.kickoff_utc, md.time_tbd ? "d" : "dt") });
+    rows.push({ icon: "calendar", c: "#FF3B30", t: "الموعد", v: md.date_tbd ? "ما تحدد" : tm(md.kickoff_uae || md.kickoff_utc, md.date_fmt || (md.time_tbd ? "d" : "dt")) });
     rows.push({ icon: "comps", c: "#FF9500", t: "البطولة", href: L("c", md.comp), v: esc(U.compName(md.comp, md)) + (U.roundLabel(md) ? " · " + esc(U.roundLabel(md)) : "") });
     var vn = v.name_ar || v.name_en || v.name; if (vn) rows.push({ icon: "pin", c: "#34C759", t: "الملعب", sub: v.name_ar ? "" : '<span class="lat">' + esc(vn) + "</span>", v: v.name_ar ? esc(v.name_ar) : esc(U.city(v.city || "") || v.city || ""), href: v.lat != null ? "https://www.openstreetmap.org/?mlat=" + v.lat + "&mlon=" + v.lon + "#map=15/" + v.lat + "/" + v.lon : null, ext: 1 });
     if (md.referee && md.referee.name) rows.push({ icon: "whistle", c: "#8E8E93", t: "الحكم", v: esc(md.referee.name) });
