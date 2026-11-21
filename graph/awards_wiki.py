@@ -345,13 +345,17 @@ def extract_season(html, page):
     doc = LH.fromstring(html.decode("utf-8", "replace") if isinstance(html, bytes) else html)
     for st in doc.xpath("//style|//sup[contains(@class,'reference')]"):
         st.drop_tree()
-    rows = []
+    rows, leagues = [], []
     for t in doc.xpath("//table[contains(concat(' ', normalize-space(@class), ' '), ' wikitable ')]"):
         g, section = grid(t), _section(t)
         if not g or not g[0]:
             continue
         hdr = [c[0] for c in g[0]]
         body = g[1:]
+        if (_col(hdr, re.compile(r"^(pos\.?|position|#|rank)$", re.I)) is not None and _col(hdr, re.compile(r"^(team|club)", re.I)) is not None
+                and _col(hdr, re.compile(r"^(pts\.?|points)$", re.I)) is not None):
+            leagues.append((hdr, body))                            # a league table: its champion and runner-up, below
+            continue
         ai = _col(hdr, H_AWARD)
         pi = _col(hdr, re.compile(r"player|winner|name|recipient", re.I), {ai} if ai is not None else set())
         ti = _col(hdr, re.compile(r"club|team", re.I), {ai, pi})
@@ -386,6 +390,12 @@ def extract_season(html, page):
                     x["rank"] = prev[1] if prev and prev[0] == g else i + 1
                     prev = (g, x["rank"])
             rows += [x for x in got if x["rank"] <= 10]
+    if len(leagues) == 1:                                          # one league table (not a season of groups): first and second
+        hdr, body = leagues[0]
+        ti = _col(hdr, re.compile(r"^(team|club)", re.I))
+        top = [r for r in body if len(r) > ti and r[ti][1]][:2]
+        for kind, r in zip(("champion", "runner_up"), top):
+            rows.append({"kind": kind, "rank": 1, "person": None, "name": r[ti][0], "team": r[ti][1][0], "value": None})
     return {"page": page, "season": season, "rows": rows}
 
 

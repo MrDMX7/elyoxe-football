@@ -212,3 +212,17 @@ def test_a_season_filed_under_another_competition_goes_to_the_one_it_belongs_to(
     assert owner("2011–12_UEFA_Champions_League", "42", comps) == "42"
     assert owner("1964_Intercontinental_Cup", "42", comps) is None
     assert owner("1990–91_Football_League_First_Division", "47", comps) == "47"     # the top flight before the Premier League
+
+
+def test_a_season_page_with_one_league_table_gives_its_champion_and_runner_up():
+    from graph.awards_wiki import extract_season
+    t = lambda title: ('<section><h2>' + title + '</h2><table class="wikitable"><tr><th>Pos</th><th>Team</th><th>Pld</th><th>Pts</th></tr>'
+                       '<tr><td>1</td><td><a rel="mw:WikiLink" href="./Kuwait_SC" title="Kuwait SC">Kuwait SC</a></td><td>26</td><td>60</td></tr>'
+                       '<tr><td>2</td><td><a rel="mw:WikiLink" href="./Al-Qadsia_SC" title="Al-Qadsia SC">Al-Qadsia</a></td><td>26</td><td>55</td></tr>'
+                       '<tr><td>3</td><td><a rel="mw:WikiLink" href="./Al-Arabi_SC_(Kuwait)" title="Al-Arabi SC (Kuwait)">Al-Arabi</a></td><td>26</td><td>50</td></tr></table></section>')
+    h = ('<html><body>' + t("League table") + '</body></html>').encode()
+    got = extract_season(h, "2012–13_Kuwaiti_Premier_League")
+    kinds = [(r["kind"], r["team"]) for r in got["rows"]]
+    assert ("champion", "Kuwait_SC") in kinds and ("runner_up", "Al-Qadsia_SC") in kinds
+    two = ('<html><body>' + t("Group A") + t("Group B") + '</body></html>').encode()      # two tables: groups, no champion
+    assert not [r for r in extract_season(two, "2012–13_Kuwaiti_Premier_League")["rows"] if r["kind"] in ("champion", "runner_up")]

@@ -94,7 +94,7 @@ def load(G, reg, S):
     clubs = (S.read(os.path.join(S.db, "clubs.json")) or {}).get("clubs") or {}
     club_by_qid = {c.get("qid"): int(fid) for fid, c in clubs.items() if c.get("qid") and fid.isdigit()}
     n = {"pages": 0, "season_pages": 0, "tables": 0, "awards": 0, "honours": 0, "edition_honours": 0, "players_new": 0, "sanity_dropped": 0, "conflicts": 0,
-         "not_a_person": 0, "season_not_own": 0}
+         "not_a_person": 0, "season_not_own": 0, "table_not_final": 0}
     done = set()
 
     def it(title):
@@ -303,8 +303,11 @@ def load(G, reg, S):
         n["season_pages"] += 1
         cid = reg.mint("competition", "fotmob", int(fid))
         eid = edition_for(G, reg, "wiki", f"{fid}|{got['season']}", cid, got["season"])
-        per = {}
+        per, table = {}, {}
         for r in got["rows"]:
+            if r["kind"] in ("champion", "runner_up"):      # the season page's league table (awards_wiki.extract_season)
+                table[r["kind"]] = team(r["team"], r["name"])
+                continue
             if r["kind"] == "best_coach":
                 per.setdefault("best_coach", []).append((1, None, None, coach(r["person"], r["name"], page), None))
                 continue
@@ -315,6 +318,15 @@ def load(G, reg, S):
                 n["sanity_dropped"] += 1
                 continue
             per.setdefault(r["kind"], []).append((r["rank"], None, pid, None, r["value"]))
+        if table.get("champion"):                  # its first must be the season's champion, else it is not the final standing
+            cur = {t for (t,) in G.c.execute("SELECT tid FROM honour WHERE eid=? AND kind='champion'", (eid,))}
+            if cur and table["champion"] not in cur:
+                n["table_not_final"] += 1
+            else:
+                if not cur:
+                    per["champion"] = [(1, table["champion"], None, None, None)]
+                if table.get("runner_up"):
+                    per["runner_up"] = [(1, table["runner_up"], None, None, None)]
         for kind, entries in per.items():
             edition_set(eid, kind, entries)
     return n
