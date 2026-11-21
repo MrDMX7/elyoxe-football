@@ -309,9 +309,12 @@ def people(G, out_dir, min_wc=3, min_caps=30):
 
 # the Arab top leagues whose old seasons the archive holds (RSSSF): UAE first, its output unchanged
 ARAB_LEAGUES = (538, 536, 535, 519, 530, 516, 544, 524, 529)
+# the tournaments, every edition the archive holds (each match with its official man of the match, graph/load/official_motm.py):
+# World Cup, Euro, Asian Cup, Africa Cup, Copa América, Club World Cup, Arab Cup, Gulf Cup
+TOURNAMENTS = (77, 50, 290, 289, 44, 78, 10242, 329)
 
 
-def matches(G, out_dir, comps=ARAB_LEAGUES, teams=(5789,), eras=None):
+def matches(G, out_dir, comps=ARAB_LEAGUES + TOURNAMENTS, teams=(5789,), eras=None):
     """matches/<competition>/<season>.json and matches/team-<FotMob team>.json (graph phase 7, the old matches): every match
     of these competitions and national teams in the archive, with its score, scorers and cards, lineups and coaches where the
     archive has them. A match FotMob knows keeps its FotMob id (its page: /m/<id>/), any other is k<Tifo id> (/m/k<id>/);

@@ -63,6 +63,8 @@ def load(G, reg, S):
         got = reg.link("competition", "martj42", name, reg.mint("competition", "fotmob", fid))
         if got is not None:
             G.xref("competition", got, "martj42", name, "manual")
+            if not G.c.execute("SELECT 1 FROM xref WHERE type='competition' AND source='fotmob' AND source_id=?", (str(fid),)).fetchone():
+                G.xref("competition", got, "fotmob", fid, "manual")   # FotMob gave none of its matches (the Asian Cup): publish reads xref
     vote_alias(reg, "competition", cvotes, "martj42", min_n=10, share=0.9)
     vote_alias(reg, "edition", evotes, "martj42", min_n=3, share=0.9)
     linked = new = 0

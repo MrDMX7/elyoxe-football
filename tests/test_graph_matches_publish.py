@@ -102,3 +102,18 @@ def test_a_match_carries_its_man_of_the_match(tmp_path):
     publish.matches(G, str(tmp_path / "o"), comps=(538,), teams=(5789,))
     t = json.load(open(tmp_path / "o" / "matches" / "team-5789.json", encoding="utf-8"))
     assert t["matches"][0]["motm"] == ["عدنان الطلياني", f"k{old}"]
+
+
+def test_by_default_the_big_tournaments_are_published_too(tmp_path):
+    G, m2, old = world(tmp_path)
+    wc, e = 9600, 9601
+    G.put("competition", {"cid": wc, "name": "World Cup"}, "fotmob")
+    G.xref("competition", wc, "fotmob", 77, "fotmob-native")
+    G.put("edition", {"eid": e, "cid": wc, "season": "2002"}, "fjelstul")
+    tid = lambda f: G.c.execute("select tifo_id from xref where type='team' and source='fotmob' and source_id=?", (str(f),)).fetchone()[0]
+    G.put("match", {"mid": 961, "eid": e, "date": "2002-06-03", "home": tid(5789), "away": tid(7804), "hs": 2, "as_": 1}, "fjelstul")
+    G.c.commit()
+    assert {77, 50, 290, 289, 44, 78, 10242, 329} <= set(publish.TOURNAMENTS)
+    publish.matches(G, str(tmp_path / "o"))
+    ix = json.load(open(tmp_path / "o" / "matches" / "index.json", encoding="utf-8"))
+    assert ix["comps"]["77"] == ["2002"]

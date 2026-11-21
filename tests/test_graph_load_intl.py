@@ -83,3 +83,18 @@ def test_martj42_major_tournaments_by_the_curated_map(tmp_path):
     martj42.load(G, reg, Sources(str(tmp_path), s3=False))
     assert reg.get("competition", "martj42", "AFC Asian Cup") == ac
     assert G.c.execute("select e.cid from match m join edition e on e.eid=m.eid where m.src='martj42'").fetchone()[0] == ac
+
+
+def test_a_curated_tournament_carries_fotmobs_id_in_xref_even_when_another_source_minted_it(tmp_path):
+    # the Asian Cup: 365Scores' record (6196) came first and the registry ties FotMob's 290 to it, but no FotMob loader writes
+    # 290 to xref (FotMob gave us none of its matches), so publish.matches, which reads xref, never saw the Asian Cup
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    (db / "martj42_results.csv").write_text("date,home_team,away_team,home_score,away_score,tournament,city,country,neutral\n"
+                                            "1996-12-04,United Arab Emirates,Kuwait,1,0,AFC Asian Cup,Abu Dhabi,United Arab Emirates,FALSE\n", encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    ac = reg.mint("competition", "s365", "6196")
+    reg.link("competition", "fotmob", 290, ac)
+    G.put("competition", {"cid": ac, "name": "Asian Cup"}, "s365")
+    martj42.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select tifo_id from xref where type='competition' and source='fotmob' and source_id='290'").fetchone() == (ac,)
