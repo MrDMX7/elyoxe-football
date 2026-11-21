@@ -91,6 +91,28 @@ def parse(raw, listing=False):
             if not name or not start or (end is None and not is_open) or (end and end < start):
                 continue
             out.append({"name": name, "title": (row[ni][1] or [None])[0], "start": start, "end": end, "open": is_open})
+    return out or parse_list(doc)
+
+
+AR_SEC = re.compile("مدرب|المدربين|المدربون")
+SPAN = re.compile(r"^(?P<name>[^()]+?)\s*\((?P<a>\d{4})\s*[–\-−]\s*(?P<b>\d{4})\)")
+
+
+def parse_list(doc):
+    """A coaches list, one a line with his years (Arabic Wikipedia: «الأب جيكو (1939–1952)» under «المدربون»), when the
+    article has no table: July of the first year to June of the last, so one coach's last season and the next one's first
+    never overlap."""
+    out = []
+    for li in doc.xpath("//li"):
+        sec = _section(li)
+        if not (AR_SEC.search(sec) or SEC_OK.search(sec)) or SEC_NO.search(sec):
+            continue
+        m = SPAN.match(" ".join(li.text_content().split()))
+        if not m or int(m["b"]) < int(m["a"]):
+            continue
+        a = li.xpath(".//a[@title]")
+        out.append({"name": m["name"].strip(), "title": a[0].get("title") if a else None, "start": f"{m['a']}-07-01",
+                    "end": f"{m['b']}-06-30", "open": False})
     return out
 
 

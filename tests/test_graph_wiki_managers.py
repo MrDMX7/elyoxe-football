@@ -82,3 +82,23 @@ def test_loader_reuses_the_clubs_fotmob_coach_by_name(tmp_path):
 def test_loader_skips_without_cache(tmp_path):
     G, reg = Graph(str(tmp_path / "t.db")), Registry()
     assert "skipped" in LW.load(G, reg, Sources(str(tmp_path), s3=False), clubs={1: ["X"]})
+
+
+def test_an_arabic_list_of_coaches_by_years_gives_spells_july_to_june():
+    from graph.wiki_managers import parse
+    # Arabic Wikipedia «نادي الوداد الرياضي», section «المدربون»: a list, one coach a line with his years
+    h = ('<html><body><section><h2>المدربون</h2><ul><li>الأب جيكو (1939–1952)</li><li>محمد مسون (1952–1953)</li>'
+         '<li><a href="./بادو_الزاكي" title="بادو الزاكي">بادو الزاكي</a> (2002–2004)</li><li>لاعب بلا سنوات</li></ul></section>'
+         '<section><h2>الرؤساء</h2><ul><li>رئيس (1990–1995)</li></ul></section></body></html>').encode()
+    got = [(s["name"], s["start"], s["end"], s["title"]) for s in parse(h)]
+    assert got == [("الأب جيكو", "1939-07-01", "1952-06-30", None), ("محمد مسون", "1952-07-01", "1953-06-30", None),
+                   ("بادو الزاكي", "2002-07-01", "2004-06-30", "بادو الزاكي")]
+
+
+def test_a_coach_read_from_an_arabic_page_has_his_arabic_name(tmp_path):
+    G, reg, S, mids, fm = _setup(tmp_path)
+    d = tmp_path / "graph" / ".cache" / "managers"
+    h = '<html><body><section><h2>المدربون</h2><ul><li>ناصر ضاعن (1968–1970)</li></ul></section></body></html>'.encode()
+    (d / "pages" / (WM._key("ar:نادي العين") + ".html.gz")).write_bytes(gzip.compress(h))
+    LW.load(G, reg, S, clubs={102117: ["ar:نادي العين"]})
+    assert G.c.execute("select c.name, c.name_ar from match_coach x join coach c on c.kid=x.kid where x.mid=?", (mids[0],)).fetchone() == ("ناصر ضاعن", "ناصر ضاعن")

@@ -54,7 +54,8 @@ def load(G, reg, S, clubs=None):
                 continue
             key = s["title"] or me
             kid = reg.mint("coach", "wiki", key)
-            if G.put("coach", {"kid": kid, "name": s["name"]}, "wiki"):
+            arabic = any("؀" <= ch <= "ۿ" for ch in s["name"])     # read from an Arabic page: his Arabic name too
+            if G.put("coach", {"kid": kid, "name": s["name"], **({"name_ar": s["name"]} if arabic else {})}, "wiki"):
                 G.xref("coach", kid, "wiki", key, "wiki-native")
                 n["coaches_new"] += 1
             kids[me] = kid
