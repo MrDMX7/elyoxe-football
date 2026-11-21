@@ -215,3 +215,29 @@ def test_two_spellings_of_one_club_or_one_man_are_alike():
     assert awards.alike("lionel messi", "messi")                                      # the same surname, as before
     assert not awards.alike("al ain", "al wahda")
     assert not awards.alike("omar khribin", "soufiane rahimi")
+
+
+def test_a_leagues_list_of_champions_gives_its_editions_honours(tmp_path):
+    # awards.yaml comp_pages: «List of Moroccan football champions» is Botola Pro's (FotMob 530) and «List of Algerian football
+    # champions» Algeria's Ligue 1 (516): a «Winners» club column is the champion, «Name (Club, 21 goals)» the top scorer
+    html = open(os.path.join(os.path.dirname(__file__), "fixtures", "awards_arab_champions.html"), "rb").read()
+    club = lambda q, en: {"qid": q, "en": en, "ar": None, "human": False, "born": None, "tm_player": None, "tm_club": None}
+    items = {"Wydad_AC": club("Q50", "Wydad AC"), "Maghreb_of_Fez": club("Q51", "Maghreb Fez"), "CR_Belouizdad": club("Q52", "CR Belouizdad"),
+             "MSP_Batna": club("Q53", "MSP Batna"), "USM_Alger": club("Q54", "USM Alger"), "MC_Alger": club("Q55", "MC Alger"),
+             "NA_Hussein_Dey": club("Q56", "NA Hussein Dey"), "Paradou_AC": club("Q57", "Paradou AC"),
+             "Hassan_Akesbi": item("Q60", "Hassan Akesbi", born="1934-01-01"), "Soufiane_Benjdida": item("Q61", "Soufiane Benjdida", born="2000-01-01"),
+             "Hacène_Lalmas": item("Q62", "Hacène Lalmas", born="1943-01-01"), "Adil_Boulbina": item("Q63", "Adil Boulbina", born="2003-01-01")}
+    S = mk(tmp_path, {"List of Moroccan football champions": html, "List of Algerian football champions": html}, items)
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    awards.load(G, reg, S)
+    assert G.c.execute("select count(*) from competition where kind='award'").fetchone()[0] == 0
+    hon = lambda fid, season: dict(((k, r), (t, p, v)) for k, r, t, p, v in G.c.execute(
+        "select h.kind, h.rank, h.tid, h.pid, h.value from honour h join edition e on e.eid=h.eid where e.cid=? and e.season=?",
+        (reg.get("competition", "fotmob", fid), season)))
+    mar = hon(530, "2025/2026")
+    assert mar[("champion", 1)][0] == reg.get("team", "wikidata", "Q51") and mar[("top_scorer", 1)][1] == reg.get("player", "wikidata", "Q61")
+    assert ("champion", 1) not in hon(530, "1957/1958")              # «KAC Marrakech (1)» unlinked: no club, no player
+    alg = hon(516, "1965/1966")
+    assert alg[("champion", 1)][0] == reg.get("team", "wikidata", "Q52") and alg[("runner_up", 1)][0] == reg.get("team", "wikidata", "Q54")
+    assert alg[("top_scorer", 1)][1:] == (reg.get("player", "wikidata", "Q62"), "25")
+    assert hon(516, "1964/1965")[("top_scorer", 1)][2] == "21"          # unlinked man: a name-only player with his goals

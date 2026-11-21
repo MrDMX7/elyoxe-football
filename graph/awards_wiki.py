@@ -11,7 +11,16 @@ SEASON = re.compile(r"^(\d{4})(?:\s*[–\-/]\s*(\d{4}|\d{2})(?!\d))?")
 H_YEAR = re.compile(r"\b(year|season|edition|tournament)\b|^ed\.?$", re.I)          # singular: «Years» / «Seasons» are spans and lists
 SKIP_SECTION = re.compile(r"multiple|by (player|club|team|country|nation|nationality|position|league)|all[- ]time|nominee|shortlist|"
                           r"finalist|record|statistic|dream team|team of|all[- ]star|selection|squad|list of (players|nominees)", re.I)
-NOT_A_WINNER = re.compile(r"^(not awarded|no award|not held|none|vacant|cancel+ed|withheld|abandoned|void|tb[ad]|n/?a|[—–-])\b|^[—–-]$", re.I)
+NOT_A_WINNER = re.compile(r"^(not awarded|no award|not held|none|vacant|cancel+ed|withheld|abandoned|void|tb[ad]|n/?a|[—–-]|"
+                          r"no competition|no championship|not? completed)\b|^[—–-]$", re.I)
+CHAMP_COL = re.compile(r"^(winners?|champions?)$", re.I)        # a club column beside a scorer column on a league's list of champions
+SCORER_CELL = re.compile(r"^(.+?)\s*\(([^()]+?),\s*(\d+)\s*goals?\)$", re.I)   # «Hocine Saadi (NA Hussein Dey, 21 goals)»
+
+
+def _same(link, text):
+    a = urllib.parse.unquote(link or "").replace("_", " ").strip().lower()
+    b = (text or "").strip().lower()
+    return bool(b) and (a == b or a.startswith(b + " ("))
 POSITIONS = re.compile(r"goalkeeper|defender|midfielder|forward|striker", re.I)
 H_TEAM = re.compile(r"club|team|nation|country|nationality|^nat\.?$|position|league", re.I)
 H_PERSON = re.compile(r"player|winner|scorer|^name|recipient|goalkeeper|manager|coach|footballer|best|^top", re.I)
@@ -143,14 +152,27 @@ def table_rows(g, page, section):
     teams = {i for i, h in enumerate(hdr) if H_TEAM.search(h)}
     award_cols = [i for i, h in enumerate(hdr) if i != yi and i not in teams and (H_PERSON.search(h) or _kind(h))
                   and not H_VALUE.search(h) and not H_RANK.search(h)]
+    ri = _col(hdr, H_RUNNER, {yi})
+    ci = _col(hdr, H_CHAMP, {yi, ri}) if ri is not None else None
+    if ri is not None and ci in award_cols and len(award_cols) >= 2:
+        # a league's list of champions: «Season | Winner | Runner-up | Third place | Top goalscorer» -> the champion table and
+        # each other award column on its own
+        out = [got for got in [_rows(body, page, section, yi, None, None, None, None, "champion_table", ci, ri)] if got]
+        for i in award_cols:
+            if i != ci:
+                got = _rows(body, page, f"{section} — {hdr[i]}", yi, i, None, None, None, _kind(hdr[i]) or "winner")
+                if got:
+                    out.append(got)
+        return out
     if len(award_cols) >= 2 and len({hdr[i] for i in award_cols}) == len(award_cols) and not any(H_RUNNER.search(hdr[i]) for i in award_cols):
+        scorer_beside = any(_kind(hdr[i]) == "top_scorer" for i in award_cols)
         out = []
         for i in award_cols:
-            got = _rows(body, page, f"{section} — {hdr[i]}", yi, i, None, None, None, _kind(hdr[i]) or "winner")
+            kind = "champion" if scorer_beside and CHAMP_COL.match(hdr[i]) else (_kind(hdr[i]) or "winner")
+            got = _rows(body, page, f"{section} — {hdr[i]}", yi, i, None, None, None, kind)
             if got:
                 out.append(got)
         return out
-    ri = _col(hdr, H_RUNNER, {yi})
     ci = _col(hdr, H_CHAMP, {yi, ri}) if ri is not None else None
     team_table = ri is not None and ci is not None
     pi = None if team_table else _col(hdr, H_PERSON, {yi} | {i for i, h in enumerate(hdr) if H_TEAM.search(h)})
@@ -186,7 +208,17 @@ def _rows(body, page, section, yi, pi, ti, vi, ki, kind, ci=None, ri=None):
         cell = r[pi]
         if not cell[0] or NOT_A_WINNER.search(cell[0]):
             continue
+        if kind == "champion":                                     # a club column: the champion, no runner-up
+            rows.append({"season": season, "rank": 1, "person": None, "name": cell[0], "team": cell[1][0] if cell[1] else None,
+                         "runner_up": None, "runner_up_name": None, "value": None})
+            continue
         rk = _rank(r[ki][0]) if ki is not None else None
+        m = SCORER_CELL.match(cell[0]) if ti is None and vi is None else None
+        if m:                                                      # «Name (Club, 21 goals)»: the man, his club, his goals
+            person = next((l for l in cell[1] if _same(l, m.group(1))), None)
+            club = next((l for l in cell[1] if _same(l, m.group(2))), None) or next((l for l in cell[1] if l != person), None)
+            rows.append({"season": season, "rank": rk or 1, "person": person, "name": m.group(1), "team": club, "value": m.group(3)})
+            continue
         rows.append({"season": season, "rank": rk or 1, "person": cell[1][0] if cell[1] else None,
                      "name": (cell[3][0] if cell[3] and not cell[1] else cell[0]),
                      "team": (r[ti][1][0] if ti is not None and r[ti][1] else None),
@@ -195,7 +227,8 @@ def _rows(body, page, section, yi, pi, ti, vi, ki, kind, ci=None, ri=None):
         return None
     if ki is None and not team_table and len(rows) > 3 * len({r["season"] for r in rows}):
         return None          # many names a season and no rank: nominees or a squad, not winners
-    return {"page": page, "section": section, "kind": kind, "who": "team" if team_table else "person", "rows": rows}
+    who = "team" if team_table or kind == "champion" else "person"
+    return {"page": page, "section": section, "kind": kind, "who": who, "rows": rows}
 
 
 def canonical(html, page):

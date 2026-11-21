@@ -47,3 +47,10 @@ names:
   Pichichi Trophy: جائزة بيتشيتشي
   Premier League Player of the Season: لاعب الموسم في الدوري الإنجليزي
 skip: []
+# comp_pages: a league's own list articles (FotMob competition id -> enwiki titles), read like its article: champion,
+# runner-up and top scorer a season, for the leagues whose main article does not carry them all
+comp_pages:
+  516: [List of Algerian football champions]                     # Algeria Ligue 1
+  530: [List of Moroccan football champions]                     # Botola Pro
+  544: [List of Tunisian football champions, List of Tunisian Ligue Professionnelle 1 top scorers]   # Tunisia Ligue I
+  535: [Qatar National First Division top scorers]               # Qatar Stars League (its top flight's scorers since 1972-73)

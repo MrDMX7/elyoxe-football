@@ -77,7 +77,10 @@ def load(G, reg, S):
     conf = _conf()
     terms, names, skip = conf.get("terms") or {}, conf.get("names") or {}, set(conf.get("skip") or [])
     comp_of = {t: fid for fid, t in (arts.get("comps") or {}).items()}
-    award_pages = set(arts.get("awards") or [])
+    for fid, ts in (conf.get("comp_pages") or {}).items():          # a league's list articles read like its own article
+        for t in ts or []:
+            comp_of.setdefault(t, str(fid))
+    award_pages = set(arts.get("awards") or []) - set(comp_of)
     clubs = (S.read(os.path.join(S.db, "clubs.json")) or {}).get("clubs") or {}
     club_by_qid = {c.get("qid"): int(fid) for fid, c in clubs.items() if c.get("qid") and fid.isdigit()}
     n = {"pages": 0, "season_pages": 0, "tables": 0, "awards": 0, "honours": 0, "edition_honours": 0, "players_new": 0, "sanity_dropped": 0, "conflicts": 0}
@@ -214,7 +217,7 @@ def load(G, reg, S):
                 per = {}
                 for r in t["rows"]:
                     eid = edition_for(G, reg, "wiki", f"{fid}|{r['season']}", cid, r["season"])
-                    if t["kind"] == "champion_table":
+                    if t["kind"] in ("champion_table", "champion"):
                         per.setdefault((eid, "champion"), []).append((1, team(r["team"], r["name"]), None, None, None))
                         if r.get("runner_up"):
                             per.setdefault((eid, "runner_up"), []).append((1, team(r["runner_up"], r.get("runner_up_name")), None, None, None))
@@ -222,6 +225,8 @@ def load(G, reg, S):
                     if t["kind"] == "coach":
                         per.setdefault((eid, "best_coach"), []).append((r["rank"], None, None, coach(r["person"], r["name"], page), r["value"]))
                         continue
+                    if t["kind"] == "winner" and not r["person"] and re.search(r"\(\d+\)$", r["name"] or ""):
+                        continue                    # «CA Casablanca (1)»: an unlinked club with its title count, not a man
                     pid, born = player(r["person"], r["name"], page)
                     if pid is None:
                         continue
@@ -232,7 +237,7 @@ def load(G, reg, S):
                 for (eid, kind), entries in per.items():
                     edition_set(eid, kind, entries)
                 continue
-            if t["kind"] == "champion_table":
+            if t["kind"] in ("champion_table", "champion"):
                 continue
             generic = GENERIC.match(t["section"].strip()) or len(tables) == 1
             key = base if generic else f"{base}|{t['section']}"

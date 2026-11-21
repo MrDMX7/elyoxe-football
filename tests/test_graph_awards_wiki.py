@@ -1,3 +1,4 @@
+import os
 from graph.awards_wiki import extract, season_label, grid
 from lxml import html as LH
 
@@ -113,3 +114,25 @@ def test_season_scorers_without_a_rank_column_rank_by_goals():
            f'<tr><td>{L("A")}</td><td>x</td><td>8</td></tr><tr><td>{L("B")}</td><td>x</td><td>8</td></tr><tr><td>{L("C")}</td><td>x</td><td>6</td></tr>', "Top goalscorers")
     got = extract_season(sc, "2024–25 UEFA Nations League")
     assert [(r["person"], r["rank"]) for r in got["rows"]] == [("A", 1), ("B", 1), ("C", 3)]
+
+
+ARAB = open(os.path.join(os.path.dirname(__file__), "fixtures", "awards_arab_champions.html"), "rb").read()
+
+
+def test_arab_champions_list_gives_champion_runner_up_and_scorer_with_goals():
+    t = {(x["section"], x["kind"]): x for x in extract(ARAB, "List of Algerian football champions")}
+    ch = t[("List of champions", "champion_table")]["rows"]
+    assert [(r["season"], r["team"], r["runner_up"]) for r in ch] == [
+        ("1964/1965", "CR_Belouizdad", "MSP_Batna"), ("1965/1966", "CR_Belouizdad", "USM_Alger"), ("2024/2025", "MC_Alger", "CR_Belouizdad")]
+    sc = t[("List of champions — Top goalscorer", "top_scorer")]["rows"]
+    assert [(r["season"], r["person"], r["name"], r["team"], r["value"]) for r in sc] == [
+        ("1964/1965", None, "Hocine Saadi", "NA_Hussein_Dey", "21"), ("1965/1966", "Hacène_Lalmas", "Hacène Lalmas", "CR_Belouizdad", "25"),
+        ("2024/2025", "Adil_Boulbina", "Adil Boulbina", "Paradou_AC", "20")]
+
+
+def test_a_winners_column_beside_a_scorer_column_is_the_champion():
+    t = {x["kind"]: x for x in extract(ARAB, "List of Moroccan football champions") if x["section"].startswith("After")}
+    assert t["champion"]["who"] == "team"
+    assert [(r["season"], r["team"]) for r in t["champion"]["rows"]] == [("1956/1957", "Wydad_AC"), ("1957/1958", None), ("2025/2026", "Maghreb_of_Fez")]
+    assert [(r["season"], r["person"], r["name"]) for r in t["top_scorer"]["rows"]] == [
+        ("1956/1957", None, "Abdelkarim Zidani"), ("1957/1958", "Hassan_Akesbi", "Hassan Akesbi"), ("2025/2026", "Soufiane_Benjdida", "Soufiane Benjdida")]

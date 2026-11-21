@@ -255,7 +255,9 @@ def run(S, http, d, limit=None):
     except Exception as e:
         print(f"national teams list failed ({e}); the last one", flush=True)
         national = prev.get("national") or []
-    titles = sorted(set(awards) | set(comps.values()) | set(national))
+    from graph.load.awards import _conf
+    comp_pages = {t for ts in (_conf().get("comp_pages") or {}).values() for t in ts or []}   # a league's own list articles
+    titles = sorted(set(awards) | set(comps.values()) | set(national) | comp_pages)
     if limit:
         titles = titles[:limit]
     _jsave(os.path.join(d, "articles.json"), {"awards": awards, "comps": comps, "national": national})
