@@ -183,3 +183,12 @@ def test_one_club_spelled_apart_in_english_but_alike_in_arabic_is_one_club(tmp_p
     G.c.execute("update team set name='HSC Hannover', name_ar='هانوفر' where tid=?", (c,))
     assert not coaches.same_club(G, reg, c, d)                                   # nor one club's name inside another's
     assert coaches.same_club(G, reg, a, b) and reg.get("team", "s365", "x") == reg.get("team", "fotmob", 1)
+
+
+def test_a_tournaments_trophy_season_named_by_its_host_is_its_year():
+    from graph.load.coaches import trophy_season
+    # FotMob's coaches' trophies: «2022 Qatar» made a second World Cup 2022 beside the one with the matches
+    assert trophy_season(77, "2022 Qatar") == "2022" and trophy_season(290, "2007 Indonesia / Malaysia / Thailand / Vietnam") == "2007"
+    assert trophy_season(44, "2016  USA") == "2016" and trophy_season(78, "2025 USA") == "2025"
+    assert trophy_season(112, "1985 Metropolitano") == "1985 Metropolitano"        # a league's second title that year stays
+    assert trophy_season(47, "2017/2018") == "2017/2018" and trophy_season(77, "2010-2011") == "2010/2011"

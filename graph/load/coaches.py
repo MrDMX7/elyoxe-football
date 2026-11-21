@@ -8,6 +8,17 @@ from collections import Counter, defaultdict
 from graph.fm import norm_season
 from graph.link import edition_for
 
+# the tournaments FotMob's trophies name by their host («2022 Qatar»): World Cup, Euro, Asian Cup, Africa Cup, Copa América,
+# Club World Cup, Arab Cup, Gulf Cup
+TOURNAMENTS = {77, 50, 290, 289, 44, 78, 10242, 329}
+
+
+def trophy_season(lid, s):
+    """A coach's trophy season: a tournament's «2022 Qatar» is its 2022 (not a second World Cup beside the one with the
+    matches); a league's «1985 Metropolitano» stays (Argentina's second title that year)"""
+    m = re.match(r"^(\d{4})\s+[^\d/\-]", str(s or "").strip())
+    return m.group(1) if lid in TOURNAMENTS and m else norm_season(s)
+
 
 def fold(s):
     return re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore").decode().lower()).strip()
@@ -75,7 +86,7 @@ def load(G, reg, S):
             cid = reg.mint("competition", "fotmob", lid)
             for kind, field in (("champion", "seasonsWon"), ("runner_up", "seasonsRunnerup")):
                 for s in filter(None, (x.strip() for x in str(t.get(field) or "").split(","))):
-                    season = norm_season(s)
+                    season = trophy_season(lid, s)
                     eid = edition_for(G, reg, "fotmob-trophy", f"{lid}|{season}", cid, season)
                     cur = G.c.execute("SELECT tid, src FROM honour WHERE eid=? AND kind=?", (eid, kind)).fetchall()
                     if cur:
