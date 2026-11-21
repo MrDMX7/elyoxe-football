@@ -23,8 +23,9 @@ const coachL = (c, o) => { if (!c) return ""; const href = o.coach && o.coach(c.
 const year = d => (d || "").slice(0, 4);
 const pct = (w, m) => m ? Math.round((100 * w) / m) : 0;
 
-// a page for a season with a champion (or a note saying why there is none) and something more to show
-const seasonRich = s => !!(s && (s.champion || s.note) && ((s.table || []).length || (s.top_scorers || []).length || (s.matches || 0) >= 10));
+// a page for a season with a champion (or a note saying why there is none) and something more to show, or for an old
+// season's match list alone (RSSSF's Arab leagues: the matches, no champion known); its index rule stays table or scorers
+const seasonRich = s => !!(s && ((s.champion || s.note) && ((s.table || []).length || (s.top_scorers || []).length) || (s.matches || 0) >= 10));
 
 function seasonsBody(ed, comp, o) {
   o = o || {};

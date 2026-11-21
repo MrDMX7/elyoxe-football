@@ -62,6 +62,11 @@ test("the site's Arabic names win over the graph's Latin ones", () => {
   assert.doesNotMatch(h, /Al Jazira|Ali Mabkhout/);
 });
 
+test("an old season with its matches but no known champion is a page for its match list (RSSSF's Arab leagues)", () => {
+  assert.equal(H.seasonRich({ season: "1980/1981", matches: 132, champion: null, runner_up: null, table: [], top_scorers: [] }), true);
+  assert.equal(H.seasonRich({ season: "1980/1981", matches: 4, champion: null, runner_up: null, table: [], top_scorers: [] }), false);
+});
+
 test("a cancelled season says so in the champion's place", () => {
   const ed = { seasons: [{ season: "1990/1991", matches: 0, champion: null, runner_up: null, note: "ما انلعب بسبب حرب الخليج", table: [], top_scorers: [] },
     { season: "2019/2020", matches: 133, champion: null, runner_up: null, note: "انلغى بسبب كورونا بدون بطل", table: [[1, 102119, "شباب الأهلي", 19, 13, 4, 2, 41, 13, 43]], top_scorers: [] }] };

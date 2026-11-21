@@ -76,3 +76,20 @@ def test_a_match_before_a_clubs_merger_uses_the_name_it_had(tmp_path):
     publish.matches(G, str(tmp_path / "o"), comps=(538,), teams=(), eras={102101: [["2017-07-01", "الجزيرة القديمة"]]})
     s = json.load(open(tmp_path / "o" / "matches" / "538" / "2016-2017.json", encoding="utf-8"))
     assert s["matches"][0]["h"] == [102101, "الجزيرة القديمة"]
+
+
+def test_by_default_every_arab_top_league_in_the_archive_is_published(tmp_path):
+    G, m2, old = world(tmp_path)
+    sa, e = 9536, 9537                                            # RSSSF's Saudi league, 1980/81
+    G.put("competition", {"cid": sa, "name": "Saudi Pro League"}, "fotmob")
+    G.xref("competition", sa, "fotmob", 536, "fotmob-native")
+    G.put("edition", {"eid": e, "cid": sa, "season": "1980/1981"}, "rsssf")
+    tid = lambda f: G.c.execute("select tifo_id from xref where type='team' and source='fotmob' and source_id=?", (str(f),)).fetchone()[0]
+    G.put("match", {"mid": 960, "eid": e, "date": "1981-01-02", "home": tid(102117), "away": tid(102101), "hs": 1, "as_": 0}, "rsssf")
+    G.c.commit()
+    assert {536, 538} <= set(publish.ARAB_LEAGUES)
+    publish.matches(G, str(tmp_path / "o"))
+    ix = json.load(open(tmp_path / "o" / "matches" / "index.json", encoding="utf-8"))
+    assert ix == {"comps": {"538": ["2016-2017"], "536": ["1980-1981"]}, "teams": {"5789": 1}}
+    s = json.load(open(tmp_path / "o" / "matches" / "536" / "1980-1981.json", encoding="utf-8"))
+    assert [m["id"] for m in s["matches"]] == ["k960"] and s["matches"][0]["comp"] == 536
