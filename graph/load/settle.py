@@ -83,8 +83,32 @@ def _shootout(d, x, pens):
     return diff if max(diff) >= 2 and diff[0] != diff[1] else None
 
 
+CLUB_WORDS = {"club", "athletic", "athletique", "athletico", "sporting", "sportive", "sports", "sport", "union", "association", "football",
+              "fc", "sc", "ac", "cf", "cd", "de", "of", "the", "al", "el", "riadhi", "olympique", "olympic", "fk", "afc", "cs", "as", "us"}
+
+
+def _initials(words):
+    """«kawkab athletique club de marrakech» -> «kacm»; a first word of three letters or less is an abbreviation kept whole
+    («kac marrakesh» -> «kacm»)"""
+    ws = [w for w in words if w not in ("de", "of", "the")]
+    return "".join(w if i == 0 and len(w) <= 3 else w[0] for i, w in enumerate(ws))
+
+
+def same_club(a, b):
+    """One club under two names (a league table's and Wikipedia's): one is the other's initials («kacm»), or one name's own
+    words are all in the other's («raja club athletic» in «raja casablanca»); «wydad casablanca» and «wydad fes» stay two."""
+    wa, wb = (a or "").lower().split(), (b or "").lower().split()
+    if not wa or not wb:
+        return False
+    for x, y in ((wa, wb), (wb, wa)):
+        if len(y) == 1 and len(y[0]) >= 3 and _initials(x) == y[0]:
+            return True
+    oa, ob = {w for w in wa if w not in CLUB_WORDS}, {w for w in wb if w not in CLUB_WORDS}
+    return bool(oa and ob) and (oa <= ob or ob <= oa)
+
+
 def load(G, reg, S):
-    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0, "no_such_team": 0, "extra_goals": 0}
+    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0, "no_such_team": 0, "extra_goals": 0, "same_club": 0}
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     groups = {}
     for rowid, mid, field, kept, ksrc, other, osrc in q("SELECT rowid, tifo_id, field, kept, kept_src, other, other_src FROM conflict "
@@ -140,6 +164,11 @@ def load(G, reg, S):
         if not re.search(r"\d", f"{kept}{other}") and _same_men(kept, other):    # «106908/None»: ids, not names
             G.c.execute("DELETE FROM conflict WHERE rowid=?", (rowid,))
             n["same_names"] += 1
+    # one club under two names in a champion or runner-up disagreement («kawkab athletic club de marrakech» and «kacm»)
+    for rowid, kept, other in q("SELECT rowid, kept, other FROM conflict WHERE type='honour' AND field IN ('champion', 'runner_up')"):
+        if not re.search(r"\d", f"{kept}{other}") and same_club(kept, other):
+            G.c.execute("DELETE FROM conflict WHERE rowid=?", (rowid,))
+            n["same_club"] += 1
     # a champion or runner-up that is no team of ours (365Scores' women's and under-21 sides it never gave us) gives way
     # to the one we hold
     teams = {t for (t,) in q("SELECT tid FROM team")}

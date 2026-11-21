@@ -140,3 +140,16 @@ def test_more_goal_events_than_goals_drops_the_shootout_kicks_and_the_doubles(tm
     got = [r for r in G.c.execute("select mid, count(*) from event group by mid")]
     assert got == [(1, 2), (2, 1), (3, 2)]              # a brace in one minute that the score holds stays
     assert out["extra_goals"] == 3
+
+
+def test_one_club_under_its_initials_or_a_shorter_name_is_the_same_honour(tmp_path):
+    from graph.load.settle import same_club
+    assert same_club("kawkab athletique club de marrakech", "kacm") and same_club("kac marrakesh", "kacm")
+    assert same_club("kenitra athletic club", "kac kenitra") and same_club("raja casablanca", "raja club athletic")
+    assert not same_club("wydad casablanca", "wydad fes") and not same_club("maghreb association sportive fes", "fus rabat")
+    assert not same_club("cr belouizdad", "na hussein dey") and not same_club("", "js saoura")
+    G, reg = g(tmp_path)
+    G.conflict("honour", 1, "runner_up", "kawkab athletic club de marrakech", "table", "kacm", "wiki")
+    G.conflict("honour", 2, "runner_up", "maghreb association sportive fes", "table", "fus rabat", "wiki")
+    out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert [r[0] for r in G.c.execute("select tifo_id from conflict")] == [2] and out["same_club"] == 1
