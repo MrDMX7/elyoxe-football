@@ -53,3 +53,43 @@ def test_s365_uses_the_curated_fotmob_map_and_season_labels(tmp_path):
     s365.load(G, reg, S)
     assert reg.get("competition", "s365", 5930) == wc
     assert G.c.execute("select eid from honour where kind='champion' and tid=?", (reg.get("team", "fotmob", 6706),)).fetchone()[0] == e22
+
+
+def _add_comp(tmp_path, row, champions, fm_league=None):
+    m = tmp_path / "mirror" / "s365"
+    ix = json.loads((m / "index.json").read_text(encoding="utf-8"))
+    ix["comps"].append(row)
+    ix["countries"].setdefault(str(row[3]), ["", fm_league[0] if fm_league else "X"])
+    (m / "index.json").write_text(json.dumps(ix), encoding="utf-8")
+    (m / "comp" / ("%d.json" % row[0])).write_text(json.dumps({"id": str(row[0]), "champions": champions, "tables": {}, "live": {}}), encoding="utf-8")
+    if fm_league:
+        p = tmp_path / "db" / ".cache" / "fm_allleagues.json"
+        al = json.loads(p.read_text())
+        al["countries"].append({"name": fm_league[0], "leagues": [{"id": fm_league[1], "name": fm_league[2]}]})
+        p.write_text(json.dumps(al))
+
+
+def test_s365_skips_champions_of_competitions_with_unreliable_seasons(tmp_path):
+    S = mk(tmp_path)
+    _add_comp(tmp_path, [128, "كأس سومن", "Suomen Cup", 1, 0, 67, "1955", "2025", 0, 0, 0, 0], [["1988", 5, [], 1]])
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    out = s365.load(G, reg, S)
+    suomen = reg.get("competition", "s365", 128)
+    assert G.c.execute("select count(*) from honour h join edition e on e.eid=h.eid where e.cid=?", (suomen,)).fetchone()[0] == 0
+    assert out["champions"] == 2
+
+
+def test_s365_does_not_link_a_mens_competition_to_a_womens_one(tmp_path):
+    S = mk(tmp_path)
+    _add_comp(tmp_path, [23, "السوبر الإيطالي", "Supercoppa Italiana", 3, 1, 38, "1988/1989", "2025/2026", 0, 0, 0, 0], [], ("Italy", 11015, "Supercoppa Italiana"))
+    _add_comp(tmp_path, [6215, "", "Frauen Bundesliga", 4, 0, 30, "1990", "2025", 0, 0, 0, 0], [], ("Germany", 9001, "Frauen Bundesliga"))
+    _add_comp(tmp_path, [6216, "", "Bundesliga", 5, 0, 30, "1990", "2025", 0, 0, 0, 0], [], ("Austria", 9000, "Bundesliga Frauen"))
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    women = reg.mint("competition", "fotmob", 11015)
+    frauen = reg.mint("competition", "fotmob", 9001)
+    s365.load(G, reg, S)
+    assert reg.get("competition", "s365", 23) != women
+    assert reg.get("competition", "s365", 6215) == frauen
+    assert reg.get("competition", "s365", 6216) != reg.mint("competition", "fotmob", 9000)
+    assert s365.women("Eredivisie Vrouwen") and s365.women("Coupe de France Féminine") and s365.women("Damallsvenskan") \
+        and s365.women("Toppserien Kvinner") and s365.women("Serie A Femminile") and not s365.women("Danish Superliga")

@@ -12,6 +12,20 @@ def fold(s):
     return re.sub(r"[^a-z0-9]+", " ", s).strip()
 
 
+# 365 competitions whose champions list is wrong against Wikipedia (checked 2026-11-21), so it is not loaded at all:
+# FotMob carries the right list for each. 128 Suomen Cup: years before 2002 slide a year (its 1988 KuPS won 1989,
+# 1969-71 all "Mps"); 6238 Icelandic League Cup: lower-division winners (KB, Berserkir, Ymir) for Breidablik, FH,
+# KR, Valur; 6152 Belgian and 82 Turkish Super Cups: old editions shifted a year or duplicated (Goztepe 2020/21).
+UNRELIABLE_CHAMPIONS = {128, 6238, 6152, 82}
+# FotMob women's leagues whose name carries no gender word (11015 "Supercoppa Italiana" is the women's Supercoppa).
+FOTMOB_WOMEN = {11015}
+WOMEN = re.compile(r"\b(women|womens|ladies|female|femminile|feminine|feminin|femenina|feminino|frauen|vrouwen|dames|dam|damer|damallsvenskan|kvinner|kvinnor|naiset|kvenna)\b")
+
+
+def women(name):
+    return bool(WOMEN.search(fold(name)))
+
+
 def load(G, reg, S):
     ix = S.published("s365/index.json")
     if not ix:
@@ -21,7 +35,8 @@ def load(G, reg, S):
     al = S.read(os.path.join(S.db, "fm_allleagues.json")) or {}
     for grp in al.get("countries") or []:
         for lg in grp.get("leagues") or []:
-            fm_by.setdefault((fold(grp.get("name")), fold(lg.get("name"))), []).append(int(lg["id"]))
+            fm_by.setdefault((fold(grp.get("name")), fold(lg.get("name"))), []).append(
+                (int(lg["id"]), women(lg.get("name")) or int(lg["id"]) in FOTMOB_WOMEN))
     n = {"teams": 0, "teams_linked": 0, "comps": 0, "comps_linked": 0, "champions": 0, "standings": 0, "matches": 0, "matches_linked": 0}
     for sid, ar, en, cc, fid in sorted(ix.get("teams") or [], key=lambda r: r[0]):
         if fid:
@@ -42,7 +57,7 @@ def load(G, reg, S):
     for row in sorted(ix.get("comps") or [], key=lambda r: r[0]):
         cid_s, ar, en, cc, ko = row[0], row[1], row[2], row[3], row[4]
         cname = (countries.get(str(cc)) or [None, None])[1]
-        cands = [curated[cid_s]] if cid_s in curated else fm_by.get((fold(cname), fold(en)), [])
+        cands = [curated[cid_s]] if cid_s in curated else [f for f, w in fm_by.get((fold(cname), fold(en)), []) if w == women(en)]
         if len(cands) == 1 and reg.link("competition", "s365", cid_s, reg.mint("competition", "fotmob", cands[0])) is not None:
             G.xref("competition", reg.get("competition", "s365", cid_s), "s365", cid_s, "s365-fm-map" if cid_s in curated else "country+name")
             n["comps_linked"] += 1
@@ -67,7 +82,7 @@ def load(G, reg, S):
         def team(sid):
             return reg.get("team", "s365", sid) or reg.mint("team", "s365", sid)
 
-        for season, winner, vals, *_ in d.get("champions") or []:
+        for season, winner, vals, *_ in [] if cid_s in UNRELIABLE_CHAMPIONS else d.get("champions") or []:
             if winner:
                 eid = edition(season)
                 G.c.execute("INSERT OR IGNORE INTO honour(eid, kind, rank, tid, value, src) VALUES(?,?,?,?,?,?)",
