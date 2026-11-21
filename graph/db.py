@@ -13,7 +13,7 @@ REFS = {"team": [("match", "home"), ("match", "away"), ("appearance", "tid"), ("
                    ("player_season", "pid"), ("injury", "pid"), ("coach", "pid"), ("intl_record", "pid")],
         "coach": [("match_coach", "kid"), ("honour", "kid")], "referee": [("match", "rid")], "stadium": [("match", "sid"), ("team", "sid")],
         "competition": [("edition", "cid"), ("player_season", "cid")], "edition": [("match", "eid"), ("standing", "eid"), ("honour", "eid")],
-        "match": [("appearance", "mid"), ("event", "mid"), ("match_coach", "mid")]}
+        "match": [("appearance", "mid"), ("event", "mid"), ("match_coach", "mid"), ("match_award", "mid")]}
 CHECK = {"match": ("hs", "as_"), "player": ("born",), "team": (), "edition": ("cid", "season")}
 
 
