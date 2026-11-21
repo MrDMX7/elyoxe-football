@@ -1,6 +1,6 @@
 """The match-report fact sheet (spec: «Every article is written from one fact sheet»). Built from the public v1/ files only:
-match/<id>.json, comp/<id>/standings.json, comp/<id>/fixtures.json, and the graph's motm/, coaches/, editions/ and awards/
-files for «من أرشيف تيفو» (graph_sheet). Keys are Arabic, as in the blind tests the owner judged
+match/<id>.json, comp/<id>/standings.json, comp/<id>/fixtures.json, and the graph's motm/, coaches/, editions/, awards/,
+h2h-all/ and matches/ files for «من أرشيف تيفو» (graph_sheet). Keys are Arabic, as in the blind tests the owner judged
 (content/social/tifo/articles-test/2026-11-18/build.py). The writer never does arithmetic: totals, differences, the winner
 and each team's games played are in the sheet. A round played after a postponed one is stated (ADNOC 11-18: round 7 was
 moved to 29-30 December, so after round 8 every team had played 7)."""
@@ -168,11 +168,73 @@ def _record(spells):
     return f"{m} مباراة: {w} فوز، {d} تعادل، {l} خسارة" if m else None
 
 
+def _match_days(md):
+    return {(md.get("kickoff_utc") or "")[:10], (md.get("kickoff_uae") or "")[:10]} - {""}
+
+
+def _meetings(md, get):
+    """The two teams' meetings in every competition before this match, oldest first, from h2h-all/<a>-<b>.json (the pair
+    key is the two FotMob ids sorted as text): [(date, competition, home id, home goals, away goals, away id)]. This match
+    is left out by its id, or by its day when the graph knows it under another id: two teams never meet twice a day."""
+    h, a = str(md["home"]["id"]), str(md["away"]["id"])
+    f = get("h2h-all/%s-%s.json" % tuple(sorted((h, a)))) or {}
+    day = _match_days(md)
+    return sorted((d, comp, hk, hs, as_, ak) for d, comp, _season, hk, hs, as_, ak, mk in f.get("matches") or []
+                  if str(mk) != str(md["id"]) and d not in day and {hk, ak} == {h, a} and hs is not None and as_ is not None)
+
+
+def _h2h(ms, md, team):
+    """The compact all-competition head-to-head lines: W/D/L, goals, the first and last meeting and the biggest win."""
+    nm = {str(md[s]["id"]): team[s] for s in ("home", "away")}
+    h, a = str(md["home"]["id"]), str(md["away"]["id"])
+    w, g = {h: 0, a: 0, None: 0}, {h: 0, a: 0}
+    for _d, _c, hk, hs, as_, ak in ms:
+        g[hk] += hs
+        g[ak] += as_
+        w[hk if hs > as_ else ak if as_ > hs else None] += 1
+    line = lambda m: f"{nm[m[2]]} {m[3]} - {m[4]} {nm[m[5]]} ({m[0]}، {m[1]})"
+    out = {"عدد المواجهات": len(ms), f"فوز {team['home']}": w[h], "تعادل": w[None], f"فوز {team['away']}": w[a],
+           "الأهداف": f"{team['home']} {g[h]} - {g[a]} {team['away']}", "أول مواجهة": line(ms[0]), "آخر مواجهة": line(ms[-1])}
+    won = [m for m in ms if m[3] != m[4]]
+    if won:                                # the widest margin, then the most goals, then the latest
+        out["أكبر فوز"] = line(max(won, key=lambda m: (abs(m[3] - m[4]), max(m[3], m[4]), m[0])))
+    return out
+
+
+def _vs_record(md, get, names, team, who):
+    """Each scorer's earlier matches and goals against this opponent, read from matches/team-<id>.json (published only for the
+    teams whose every match the archive holds: our national team). A match without his lineup counts only if he scored in it."""
+    PL = names.get("players", {})
+    have = set((get("matches/index.json") or {}).get("teams") or {})
+    ids = {s: md[s]["id"] for s in ("home", "away")}
+    day = _match_days(md)
+    out = {}
+    for s, o in (("home", "away"), ("away", "home")):
+        if not who.get(s) or str(ids[s]) not in have:
+            continue
+        ms = [m for m in (get(f"matches/team-{ids[s]}.json") or {}).get("matches") or []
+              if {(m.get("h") or [None])[0], (m.get("a") or [None])[0]} == {ids[s], ids[o]}
+              and str(m.get("id")) != str(md["id"]) and m.get("date") not in day]
+        for pid, latin in who[s].items():
+            k, apps, goals = str(pid), 0, 0
+            for m in ms:
+                side = "h" if (m.get("h") or [None])[0] == ids[s] else "a"
+                g = sum(1 for e in m.get("ev") or [] if e[2] in ("goal", "penalty_goal") and e[3] == side and str(e[5]) == k)
+                played = any(str(p[1]) == k for p in (m.get("lu") or {}).get(side) or [])
+                apps += 1 if (played or g) else 0
+                goals += g
+            if apps:
+                out[f"{_ar(PL, pid, latin)} ضد {team[o]}"] = f"لعب {apps} مباراة وسجل {goals} هدف"
+    return out
+
+
 def graph_sheet(md, get, names):
     """«من أرشيف تيفو» (Tifo graph phase 8): what the graph knows around this match, from its published v1 files only
     (graph/publish.py): the man of the match (the top FotMob rating, the graph's rule) with his count this season and in his
     career including this match, each coach's record before it (overall and at this club), each club's titles in this
-    competition and the last champion, and the individual awards of the players who scored or were man of the match.
+    competition and the last champion, and the individual awards of the players who scored or were man of the match; and
+    from h2h-all/ and matches/, the two teams' meetings in every competition before it (record, goals, first, last, biggest
+    win), each coach's record against this opponent on this club's bench, and each scorer's earlier record against it.
     A file that is missing or fails leaves its part out; the sheet never guesses."""
     out = {}
     try:
@@ -195,6 +257,12 @@ def graph_sheet(md, get, names):
             out["رجل المباراة (أعلى تقييم)"] = {"اللاعب": _ar(PL, top["id"], top.get("name")), "التقييم": float(top["rating"]),
                                                "مرات رجل المباراة هالموسم مع هالمباراة": now,
                                                "مرات رجل المباراة في مسيرته مع هالمباراة": (pl.get("total") or 0) + new}
+        try:
+            meet = _meetings(md, get)
+        except Exception:                  # its own file: a bad one costs the head-to-head lines only
+            meet = []
+        if meet:
+            out["المواجهات بين الفريقين في كل البطولات قبل هالمباراة"] = _h2h(meet, md, team)
         co = get("coaches/coaches.json") or {}
         by_fm = {c.get("fotmob"): c for c in co.values() if c.get("fotmob")}
         rec = {}
@@ -203,8 +271,14 @@ def graph_sheet(md, get, names):
             g = by_fm.get(c.get("id"))
             if not g:
                 continue
-            r = {"كل مسيرته": _record(g.get("spells") or []),
-                 f"مع {team[s]}": _record([x for x in g.get("spells") or [] if x.get("team") == md[s]["id"]])}
+            mine = [x for x in g.get("spells") or [] if x.get("team") == md[s]["id"]]
+            r = {"كل مسيرته": _record(g.get("spells") or []), f"مع {team[s]}": _record(mine)}
+            vs = [m for m in meet if any(x.get("start") and x.get("end") and x["start"] <= m[0] <= x["end"] for x in mine)]
+            if vs:                         # his meetings with this opponent on this club's bench (within his spells' dates)
+                me, o = str(md[s]["id"]), ("away" if s == "home" else "home")
+                res = [(hs, as_) if hk == me else (as_, hs) for _d, _c, hk, hs, as_, _ak in vs]
+                r[f"مع {team[s]} ضد {team[o]}"] = _record([{"m": len(res), "w": sum(f > a for f, a in res),
+                                                         "d": sum(f == a for f, a in res), "l": sum(f < a for f, a in res)}])
             rec[_ar(CO, c.get("id"), c.get("name"))] = {k: v for k, v in r.items() if v}
         if rec:
             out["سجل المدربين قبل هالمباراة"] = rec
@@ -231,6 +305,18 @@ def graph_sheet(md, get, names):
                 titles[_ar(PL, p["id"], p.get("name"))] = t[:8]
         if titles:
             out["ألقاب فردية للاعبين"] = titles
+        side_of = {p.get("id"): s for s in ("home", "away") for k in ("starters", "subs") for p in (lu.get(s) or {}).get(k) or []}
+        scorers = {"home": {}, "away": {}}
+        for e in md.get("events") or []:
+            p = e.get("player") or {}
+            if e.get("type") in ("goal", "penalty_goal") and side_of.get(p.get("id")):
+                scorers[side_of[p["id"]]][p["id"]] = p.get("name")
+        try:
+            vs = _vs_record(md, get, names, team, scorers)
+        except Exception:                  # matches/ is its own file too
+            vs = {}
+        if vs:
+            out["سجل اللاعبين ضد هالمنافس قبل هالمباراة"] = vs
     except Exception as e:                         # the archive is extra: a report never fails because of it
         print(json.dumps({"graph_sheet_error": str(e)[:200]}))
         return {}
