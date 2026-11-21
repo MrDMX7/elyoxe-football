@@ -84,7 +84,7 @@ def _shootout(d, x, pens):
 
 
 def load(G, reg, S):
-    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0, "no_such_team": 0}
+    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0, "no_such_team": 0, "extra_goals": 0}
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     groups = {}
     for rowid, mid, field, kept, ksrc, other, osrc in q("SELECT rowid, tifo_id, field, kept, kept_src, other, other_src FROM conflict "
@@ -149,4 +149,17 @@ def load(G, reg, S):
             G.c.execute("UPDATE OR IGNORE honour SET tid=? WHERE eid=? AND kind=? AND tid=?", (int(other), eid, field, int(kept)))
             G.c.execute("DELETE FROM conflict WHERE rowid=?", (rowid,))
             n["no_such_team"] += 1
+    # more goal events than goals: the shootout's kicks kept as goals (FotMob 2011, minute 121 on), then a goal kept twice
+    # (the same minute, side and man); a match whose score holds its events is never touched
+    G.c.execute("CREATE TEMP TABLE over_m AS SELECT m.mid FROM match m JOIN (SELECT mid, count(*) g FROM event WHERE type IN "
+                "('goal','penalty_goal','own_goal') GROUP BY mid) e ON e.mid=m.mid WHERE e.g > coalesce(m.hs,0)+coalesce(m.as_,0)")
+    n["extra_goals"] += G.c.execute("""DELETE FROM event WHERE mid IN (SELECT mid FROM over_m) AND minute >= 121
+                                       AND type IN ('goal','penalty_goal','own_goal')""").rowcount
+    n["extra_goals"] += G.c.execute("""DELETE FROM event WHERE mid IN (SELECT o.mid FROM over_m o JOIN match m ON m.mid=o.mid
+                                       WHERE (SELECT count(*) FROM event v WHERE v.mid=o.mid AND v.type IN ('goal','penalty_goal','own_goal'))
+                                       > coalesce(m.hs,0)+coalesce(m.as_,0))
+                                       AND type IN ('goal','penalty_goal','own_goal') AND pid IS NOT NULL AND rowid NOT IN (
+                                       SELECT min(rowid) FROM event WHERE type IN ('goal','penalty_goal','own_goal') AND pid IS NOT NULL
+                                       GROUP BY mid, minute, side, pid)""").rowcount
+    G.c.execute("DROP TABLE over_m")
     return n

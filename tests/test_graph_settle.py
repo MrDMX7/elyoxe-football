@@ -124,3 +124,19 @@ def test_fotmobs_old_score_with_the_shootout_in_it_gives_way_to_the_real_one(tmp
     settle.load(G, reg, Sources(str(tmp_path), s3=False))
     assert G.c.execute("select hs, as_, pen_h, pen_a from match").fetchone() == (2, 1, 1, 3)
     assert G.c.execute("select count(*) from conflict").fetchone()[0] == 0
+
+
+def test_more_goal_events_than_goals_drops_the_shootout_kicks_and_the_doubles(tmp_path):
+    # FotMob 2011 kept the shootout's kicks as goals at minute 121; a goal kept twice (minute 7, the same man)
+    G, reg = g(tmp_path)
+    G.put("match", {"mid": 1, "date": "2011-07-16", "home": 1, "away": 2, "hs": 1, "as_": 1}, "fotmob")
+    G.put("match", {"mid": 2, "date": "2025-02-07", "home": 1, "away": 2, "hs": 0, "as_": 1}, "fotmob")
+    G.put("match", {"mid": 3, "date": "2025-02-08", "home": 1, "away": 2, "hs": 2, "as_": 0}, "fotmob")
+    G.many("event", [{"mid": 1, "seq": 0, "minute": 6, "type": "goal", "side": "a"}, {"mid": 1, "seq": 1, "minute": 18, "type": "goal", "side": "h"},
+                     {"mid": 1, "seq": 2, "minute": 121, "type": "penalty_goal", "side": "h"}, {"mid": 1, "seq": 3, "minute": 121, "type": "penalty_goal", "side": "a"},
+                     {"mid": 2, "seq": 0, "minute": 7, "type": "goal", "side": "a", "pid": 9}, {"mid": 2, "seq": 1, "minute": 7, "type": "goal", "side": "a", "pid": 9},
+                     {"mid": 3, "seq": 0, "minute": 7, "type": "goal", "side": "h", "pid": 9}, {"mid": 3, "seq": 1, "minute": 7, "type": "goal", "side": "h", "pid": 9}], "fotmob")
+    out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    got = [r for r in G.c.execute("select mid, count(*) from event group by mid")]
+    assert got == [(1, 2), (2, 1), (3, 2)]              # a brace in one minute that the score holds stays
+    assert out["extra_goals"] == 3
