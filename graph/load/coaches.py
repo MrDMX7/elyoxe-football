@@ -118,13 +118,25 @@ def same_club(G, reg, other, tid):
     """Another source's champion and FotMob's claimant of the same title, with the same name once accents, case and
     punctuation are gone (365Scores' «São Paulo» and FotMob's «Sao Paulo»), are one club: the other source's key is linked to
     FotMob's team (Registry.link merges a record only that source made). A different name stays a disagreement."""
-    names = dict(G.c.execute("SELECT tid, name FROM team WHERE tid IN (?, ?)", (other, tid)).fetchall())
+    rows = {t: (n, a) for t, n, a in G.c.execute("SELECT tid, name, name_ar FROM team WHERE tid IN (?, ?)", (other, tid)).fetchall()}
+    (n1, a1), (n2, a2) = rows.get(other, (None, None)), rows.get(tid, (None, None))
     from graph.load.awards import alike
-    if not names.get(other) or not names.get(tid) or not alike(fold(names[other]), fold(names[tid])):
+    if not ((n1 and n2 and alike(fold(n1), fold(n2))) or arabic_alike(a1, a2)):
         return False
     for src, sid in G.c.execute("SELECT source, source_id FROM xref WHERE type='team' AND tifo_id=? AND source <> 'fotmob'", (other,)).fetchall():
         reg.link("team", src, sid, tid)
     return True
+
+
+def arabic_alike(a, b):
+    """Two Arabic names of one club whose English names part ways (365's «América Mineiro», FotMob's «America MG», both
+    «أمريكا مينيرو» give or take a letter; «Aarhus» and «AGF», both «آرهوس»): equal, or close letter by letter once spaces
+    are gone. No shared-word or prefix rule: «أتليتيكو مينيرو» shares the city, «هانوفر» sits inside «هانوفر 96»."""
+    from difflib import SequenceMatcher
+    ja, jb = "".join(str(a or "").split()), "".join(str(b or "").split())
+    if not ja or not jb or ja.isascii() or jb.isascii():
+        return False
+    return ja == jb or SequenceMatcher(None, ja, jb).ratio() >= 0.88
 
 
 def fill_between(G, max_gap_days=150):

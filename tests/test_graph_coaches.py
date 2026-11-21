@@ -168,3 +168,18 @@ def test_two_spellings_of_one_club_across_sources_are_one_club(tmp_path):
     G.c.execute("update team set name='RoPS Rovaniemi' where tid=?", (b,))
     G.c.execute("update team set name='RoPS Rovaniemen' where tid=?", (a,))
     assert coaches.same_club(G, reg, a, b)
+
+
+def test_one_club_spelled_apart_in_english_but_alike_in_arabic_is_one_club(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()                        # 365's «América Mineiro», FotMob's «America MG»
+    a, b = reg.mint("team", "s365", "x"), reg.mint("team", "fotmob", 1)
+    c, d = reg.mint("team", "s365", "y"), reg.mint("team", "fotmob", 2)
+    G.put("team", {"tid": a, "name": "América Mineiro", "name_ar": "أمريكا مينيرو"}, "s365")
+    G.xref("team", a, "s365", "x", "s365-native")
+    G.put("team", {"tid": b, "name": "America MG", "name_ar": "أميريكا مينيرو"}, "fotmob")
+    G.put("team", {"tid": c, "name": "Atletico Mineiro", "name_ar": "أتليتيكو مينيرو"}, "s365")
+    G.put("team", {"tid": d, "name": "Hannover 96", "name_ar": "هانوفر 96"}, "fotmob")
+    assert not coaches.same_club(G, reg, c, b)                                   # the city alone is not the club
+    G.c.execute("update team set name='HSC Hannover', name_ar='هانوفر' where tid=?", (c,))
+    assert not coaches.same_club(G, reg, c, d)                                   # nor one club's name inside another's
+    assert coaches.same_club(G, reg, a, b) and reg.get("team", "s365", "x") == reg.get("team", "fotmob", 1)
