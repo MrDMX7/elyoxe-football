@@ -113,3 +113,26 @@ def test_a_world_cup_match_held_the_other_way_round_turns_without_a_conflict(tmp
     worldcup.load(G, reg, Sources(str(tmp_path), s3=False))
     assert G.c.execute("select home, away, hs, as_ from match where mid=?", (mid,)).fetchone() == (usa, bel, 3, 0)
     assert G.c.execute("select count(*) from conflict").fetchone()[0] == 0
+
+
+def test_a_world_cup_game_transfermarkt_filed_under_its_own_competition_joins_the_world_cups_season(tmp_path):
+    # Netherlands 2-2 Argentina, 2022: Transfermarkt's «FIWC 2021/2022» held it first (it outranks Fjelstul), so the World
+    # Cup's 2022 season page missed it and its man of the match
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    W(db / "fjelstul_matches.csv", ["tournament_id", "tournament_name", "match_id", "stage_name", "match_date", "stadium_id", "stadium_name", "city_name", "country_name",
+                                    "home_team_id", "home_team_name", "away_team_id", "away_team_name", "home_team_score", "away_team_score", "extra_time",
+                                    "penalty_shootout", "home_team_score_penalties", "away_team_score_penalties"],
+      [["WC-2022", "2022 FIFA Men's World Cup", "M-2022-57", "quarter-finals", "2022-12-09", "S-1", "Lusail Stadium", "Lusail", "Qatar",
+        "T-48", "Netherlands", "T-03", "Argentina", "2", "2", "1", "1", "3", "4"]])
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    ned, arg = reg.mint("team", "martj42", "Netherlands"), reg.mint("team", "martj42", "Argentina")
+    tmc = reg.mint("competition", "tm", "FIWC")
+    G.put("competition", {"cid": tmc, "name": "FIWC"}, "tm")
+    etm = reg.mint("edition", "tm", "FIWC|2021")
+    G.put("edition", {"eid": etm, "cid": tmc, "season": "2021/2022"}, "tm")
+    mid = reg.mint("match", "tm", "3888")
+    G.put("match", {"mid": mid, "eid": etm, "date": "2022-12-09", "home": ned, "away": arg, "hs": 2, "as_": 2}, "tm")
+    worldcup.load(G, reg, Sources(str(tmp_path), s3=False))
+    cid, season = G.c.execute("select e.cid, e.season from match m join edition e on e.eid=m.eid where m.mid=?", (mid,)).fetchone()
+    assert (cid, season) == (reg.get("competition", "fotmob", 77), "2022")

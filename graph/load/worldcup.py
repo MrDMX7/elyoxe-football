@@ -66,7 +66,11 @@ def load(G, reg, S):
         sid = reg.get("stadium", "fjelstul", m["stadium_id"]) or reg.mint("stadium", "fjelstul", m["stadium_id"])
         G.put("stadium", {"sid": sid, "name": m["stadium_name"], "city": m["city_name"], "country": m["country_name"]}, "fjelstul")
         pens = m.get("penalty_shootout") == "1"
-        G.put("match", {"mid": mid, "eid": edition_for(G, reg, "fjelstul", f"{WORLD_CUP}|{year}", cid, year), "round": m["stage_name"],
+        eid = edition_for(G, reg, "fjelstul", f"{WORLD_CUP}|{year}", cid, year)
+        G.c.execute("""UPDATE match SET eid=? WHERE mid=? AND (eid IS NULL OR eid IN (SELECT e.eid FROM edition e WHERE NOT EXISTS(
+                       SELECT 1 FROM xref x WHERE x.type='competition' AND x.source='fotmob' AND x.tifo_id=e.cid) AND e.cid<>?))""",
+                    (eid, mid, cid))   # a source's own competition (Transfermarkt's «FIWC»): it is the World Cup, whatever source ranks first
+        G.put("match", {"mid": mid, "eid": eid, "round": m["stage_name"],
                         "date": m["match_date"], "home": h, "away": a, "hs": hs, "as_": as_, "et": _i(m.get("extra_time")),
                         "pen_h": _i(m["home_team_score_penalties"]) if pens else None, "pen_a": _i(m["away_team_score_penalties"]) if pens else None,
                         "status": "finished", "sid": sid}, "fjelstul")
