@@ -213,9 +213,41 @@ def check_dir(d: Path, sids):
         print(sid, "OK" if not fails else "FAIL " + json.dumps(fails, ensure_ascii=False))
 
 
+def web_import(d: Path):
+    """Sheets a researcher built from the web (sheets/<id>.json with «date_iso», «teams_en», «الصور» and verbatim source
+    texts) -> the publish records: teams by their name in teams.json, the photo candidates from the sheet."""
+    store, get, stories, items, teams, ar = _ctx()
+    by_name = {}
+    for tid, t in teams.items():
+        for k in ("name", "name_ar", "short", "name_en"):
+            if (t or {}).get(k):
+                by_name.setdefault(str(t[k]).lower(), int(tid))
+    n = 0
+    for f in sorted((d / "sheets").glob("*.json")):
+        sid = f.stem
+        if (d / f"{sid}.json").exists():
+            continue
+        try:
+            sheet = json.loads(f.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        tids = [by_name[x.lower()] for x in sheet.pop("teams_en", []) or [] if isinstance(x, str) and x.lower() in by_name]
+        photos = [c for c in sheet.pop("الصور", []) or [] if isinstance(c, dict) and c.get("url")]
+        day = sheet.pop("date_iso", None)
+        f.write_text(json.dumps(sheet, ensure_ascii=False, indent=1), encoding="utf-8")
+        story = {"id": sid, "anchor": [["team", t] for t in tids], "items": [], "kind": None, "stage": None}
+        meta = {"story": sid, "teams": tids, "players": [], "stage": None, "items": 0,
+                "subject": ar.get(("team", tids[0])) if tids else None, "query": None, "card_teams": tids}
+        date = f"{day}T12:00:00+00:00" if day else None
+        (d / f"{sid}.json").write_text(json.dumps({"story": story, "meta": meta, "cands": photos, "sheet": sheet, "title": "", "date": date},
+                                                  ensure_ascii=False), encoding="utf-8")
+        n += 1
+    print(json.dumps({"imported": n}))
+
+
 def main(argv=None):
     p = argparse.ArgumentParser()
-    p.add_argument("cmd", choices=["export", "publish", "check"])
+    p.add_argument("cmd", choices=["export", "publish", "check", "web-import"])
     p.add_argument("dir")
     p.add_argument("sids", nargs="*")
     p.add_argument("--n", type=int, default=40)
@@ -223,7 +255,7 @@ def main(argv=None):
     a = p.parse_args(argv)
     d = Path(a.dir)
     days = tuple(float(x) for x in a.days.split("-")) if a.days else None
-    {"export": lambda: export(d, a.n, days), "publish": lambda: publish_dir(d, set(a.sids)), "check": lambda: check_dir(d, a.sids)}[a.cmd]()
+    {"export": lambda: export(d, a.n, days), "publish": lambda: publish_dir(d, set(a.sids)), "check": lambda: check_dir(d, a.sids), "web-import": lambda: web_import(d)}[a.cmd]()
     return 0
 
 
