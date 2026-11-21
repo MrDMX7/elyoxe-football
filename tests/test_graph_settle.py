@@ -153,3 +153,9 @@ def test_one_club_under_its_initials_or_a_shorter_name_is_the_same_honour(tmp_pa
     G.conflict("honour", 2, "runner_up", "maghreb association sportive fes", "table", "fus rabat", "wiki")
     out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
     assert [r[0] for r in G.c.execute("select tifo_id from conflict")] == [2] and out["same_club"] == 1
+
+
+def test_an_arab_name_in_two_transliterations_is_one_man():
+    from graph.load.settle import _same_man
+    assert _same_man("tareq al saeed", "tarek el said") and _same_man("mohammed salem al enazi", "mohamed salem al-enezi")
+    assert not _same_man("hussein al meri", "mamoun diop") and not _same_man("ali daei", "adel khamis")

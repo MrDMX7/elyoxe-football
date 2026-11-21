@@ -29,10 +29,22 @@ def _one_typo(a, b):
     return a[i + 1:] == b[i + 1:] or a[i:] == b[i + 1:] or a[i + 1:] == b[i:]
 
 
+TRANSLIT = (("q", "k"), ("ee", "i"), ("ou", "u"), ("oo", "u"), ("mm", "m"), ("ss", "s"))
+
+
+def _tr(t):
+    """an Arab name's word in one transliteration: «el» is «al», «tareq» «tarek», «saeed» «said», «mohammed» «mohamed»"""
+    t = "al" if t == "el" else t
+    for x, y in TRANSLIT:
+        t = t.replace(x, y)
+    return t
+
+
 def _same_man(a, b):
     """One man's two spellings: the same words; or the same number of words one letter apart (6+ letters); or every word of
-    the shorter name (2+ words) starting a different word of the longer («bienve maranon» in «bienvenido maranon morejon»)."""
-    a, b = _toks(a), _toks(b)
+    the shorter name (2+ words) starting a different word of the longer («bienve maranon» in «bienvenido maranon morejon»);
+    the words compared in one transliteration («tareq al saeed», «tarek el said»)."""
+    a, b = [_tr(t) for t in _toks(a)], [_tr(t) for t in _toks(b)]
     if not a or not b:
         return False
     if a == b:
