@@ -116,6 +116,14 @@ def load(G, reg, S):
                         G.c.execute("UPDATE match SET hs=?, as_=?, pen_h=coalesce(pen_h, ?), pen_a=coalesce(pen_a, ?) WHERE mid=?", (d[0], d[1], sh[0], sh[1], mid))
                         done = "shootout"
                         break
+            src = q("SELECT other_src FROM conflict WHERE rowid=?", (rows[0][0],)) if key[1] == "score" else []
+            if not done and ph is None and src and src[0][0] == "tm":
+                # a second leg Transfermarkt scored with its shootout (Lille 2-1 Aston Villa, 2024: «5-5» = 2-1 + 3-4): the
+                # difference has a winner, who scored 3 to 12 and won by 3 at most
+                dh, da = o[0] - k[0], o[1] - k[1]
+                if min(dh, da) >= 0 and dh != da and 3 <= max(dh, da) <= 12 and abs(dh - da) <= 3:
+                    G.c.execute("UPDATE match SET pen_h=?, pen_a=? WHERE mid=?", (dh, da, mid))
+                    done = "shootout"
         if done:
             G.c.executemany("DELETE FROM conflict WHERE rowid=?", [(r[0],) for r in rows])
             n[done] += 1

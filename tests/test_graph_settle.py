@@ -101,3 +101,16 @@ def test_a_champion_that_is_no_team_of_ours_gives_way_to_the_one_that_is(tmp_pat
     out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
     assert G.c.execute("select eid, tid from honour order by eid").fetchall() == [(1, 2663), (2, 10)]
     assert [r[0] for r in G.c.execute("select tifo_id from conflict")] == [2] and out["no_such_team"] == 1
+
+
+def test_a_second_leg_transfermarkt_scored_with_its_shootout_fills_the_shootout(tmp_path):
+    # Lille 2-1 Aston Villa, 18 April 2024 (2-2 on aggregate, Villa 4-3 on penalties): Transfermarkt's «5-5» is 2-1 plus 3-4
+    G, reg = g(tmp_path)
+    for mid, hs, as_ in ((1, 2, 1), (2, 1, 0), (3, 2, 0)):
+        G.put("match", {"mid": mid, "date": "2024-04-18", "home": 1, "away": 2, "hs": hs, "as_": as_, "round": "1/4"}, "fotmob")
+    G.conflict("match", 1, "score", "2-1", "fotmob", "5-5", "tm")
+    G.conflict("match", 2, "score", "1-0", "fotmob", "4-2", "tm")
+    G.conflict("match", 3, "score", "2-0", "fotmob", "3-0", "tm")        # one goal more: another count, not a shootout
+    out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select mid, hs, as_, pen_h, pen_a from match order by mid").fetchall() == [(1, 2, 1, 3, 4), (2, 1, 0, 3, 2), (3, 2, 0, None, None)]
+    assert [r[0] for r in G.c.execute("select tifo_id from conflict")] == [3] and out["shootout"] == 2
