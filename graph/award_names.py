@@ -52,7 +52,7 @@ def _shared(names):
 
 
 def distinct(rows, table=None):
-    """rows: (cid, English name, Arabic name or None). Returns {cid: Arabic name or None}, no Arabic name held twice."""
+    """rows: (cid, English name, Arabic name or None). Returns {cid: Arabic name or None}, an Arabic name held twice only where no rule parts them."""
     table = places() if table is None else table
     en = {cid: name for cid, name, _ in rows}
     out = {cid: ar for cid, _, ar in rows}
@@ -73,7 +73,4 @@ def distinct(rows, table=None):
                     q.append(t)
             if q:
                 out[cid] = f"{n} {' '.join(q)}"
-    for cids in _shared(out):
-        for cid in cids:
-            out[cid] = None
-    return out
+    return out                                     # what no rule parts keeps its Arabic name shared: an English page is worse

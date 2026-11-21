@@ -32,9 +32,9 @@ def test_a_place_the_name_already_says_is_not_repeated():
     assert got == {1: "لاعب العام من فيفا", 2: "لاعب العام من فيفا للسيدات"}
 
 
-def test_what_no_rule_parts_keeps_no_arabic_name_rather_than_a_shared_one():
+def test_what_no_rule_parts_keeps_its_arabic_name_shared_rather_than_an_english_page():
     got = distinct([(1, "Golden Foot — Winners", "القدم الذهبية"), (2, "Golden Foot — Legends", "القدم الذهبية")], PLACES)
-    assert got == {1: None, 2: None}
+    assert got == {1: "القدم الذهبية", 2: "القدم الذهبية"}
 
 
 def test_no_arabic_name_stays_none():
