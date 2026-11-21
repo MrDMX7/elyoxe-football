@@ -24,13 +24,15 @@ def load(G, reg, S, clubs=None):
         if tid is None:
             continue
         spells, seen = [], set()
-        for t in titles:
-            raw = AF.read_page(d, t)
+        for t in titles:                           # the first article that gives spells (English, then Arabic): two pages' spells
+            raw = AF.read_page(d, t)               # of one club overlap here and there, and an overlapped date is nobody's
             for s in WM.parse(raw, t.startswith("List of")) if raw else []:
                 k = (fold(s["name"]), s["start"])
                 if k not in seen:
                     seen.add(k)
                     spells.append(s)
+            if spells and not t.startswith("List of"):
+                break
         if not spells:
             continue
         n["clubs"] += 1

@@ -120,3 +120,13 @@ def test_a_period_left_as_0000_gives_no_spell():
     a = ('<html><body><section><h2>المدربين السابقين</h2><table class="wikitable"><tr><th>الفترة</th><th>المدرب</th></tr>'
          '<tr><td>0000–0000</td><td>يوريسيتش ستريشكو</td></tr><tr><td>2003–2004</td><td>إيلي بلاسي</td></tr></table></section></body></html>').encode()
     assert [s["name"] for s in parse(a)] == ["إيلي بلاسي"]
+
+
+def test_a_clubs_second_article_is_read_only_when_the_first_gives_no_spell(tmp_path):
+    # English then Arabic: two pages' spells of one club overlap a day here and there, and an overlapped date is nobody's
+    G, reg, S, mids, fm = _setup(tmp_path)
+    d = tmp_path / "graph" / ".cache" / "managers"
+    h = '<html><body><section><h2>المدربون</h2><ul><li>مدرب آخر (1960–1975)</li></ul></section></body></html>'.encode()
+    (d / "pages" / (WM._key("ar:نادي العين") + ".html.gz")).write_bytes(gzip.compress(h))
+    LW.load(G, reg, S, clubs={102117: ["Al Ain FC", "ar:نادي العين"]})
+    assert G.c.execute("select c.name from match_coach x join coach c on c.kid=x.kid where x.mid=?", (mids[0],)).fetchone() == ("Nasser Dhaen",)
