@@ -66,3 +66,13 @@ def test_what_moves_from_a_record_filed_the_other_way_round_turns_its_sides(tmp_
     assert G.c.execute("select mid, side from event").fetchall() == [(6, "h")]
     assert G.c.execute("select mid, side from match_coach").fetchall() == [(6, "a")]
     assert G.c.execute("select count(*) from conflict").fetchone()[0] == 0              # turned first: no false disagreement
+
+
+def test_a_record_filed_the_other_way_round_with_both_coaches_turns_them_both(tmp_path):
+    # the build of 21 Nov 17:32: «UNIQUE constraint failed: match_coach.mid, match_coach.side» swapping h and a in one pass
+    G, reg = world(tmp_path)
+    G.put("match", {"mid": 5, "date": "2003-01-10", "home": 2, "away": 1, "hs": 1, "as_": 2}, "sch")
+    G.put("match", {"mid": 6, "date": "2003-01-10", "home": 1, "away": 2, "hs": 2, "as_": 1}, "rsssf")
+    G.c.executemany("insert into match_coach values(5, ?, ?, 'sch')", [("h", 77), ("a", 88)])
+    twins.load(G, reg, None)
+    assert sorted(G.c.execute("select mid, side, kid from match_coach")) == [(6, "a", 77), (6, "h", 88)]

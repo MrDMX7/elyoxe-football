@@ -29,8 +29,9 @@ def load(G, reg, S):
             turned.append((drop[0],))
     # a record filed the other way round is turned first (its sides with it), so the merge sees no false disagreement
     G.c.executemany("UPDATE match SET home=away, away=home, hs=as_, as_=hs, ht_h=ht_a, ht_a=ht_h, pen_h=pen_a, pen_a=pen_h WHERE mid=?", turned)
-    for t in ("event", "match_coach"):
-        G.c.executemany(f"UPDATE {t} SET side=CASE side WHEN 'h' THEN 'a' WHEN 'a' THEN 'h' ELSE side END WHERE mid=?", turned)
+    for t in ("event", "match_coach"):        # through «x»: match_coach holds one row a side, so h and a never swap in one pass
+        for a, b in (("h", "x"), ("a", "h"), ("x", "a")):
+            G.c.executemany(f"UPDATE {t} SET side='{b}' WHERE mid=? AND side='{a}'", turned)
     for t in DETAIL:                          # what the kept record holds already is never copied: a goal counted once
         G.c.executemany(f"DELETE FROM {t} WHERE mid=? AND EXISTS(SELECT 1 FROM {t} k WHERE k.mid=?)", pairs)
     G.remap_many("match", pairs)
