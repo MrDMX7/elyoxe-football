@@ -114,3 +114,13 @@ def test_a_second_leg_transfermarkt_scored_with_its_shootout_fills_the_shootout(
     out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
     assert G.c.execute("select mid, hs, as_, pen_h, pen_a from match order by mid").fetchall() == [(1, 2, 1, 3, 4), (2, 1, 0, 3, 2), (3, 2, 0, None, None)]
     assert [r[0] for r in G.c.execute("select tifo_id from conflict")] == [3] and out["shootout"] == 2
+
+
+def test_fotmobs_old_score_with_the_shootout_in_it_gives_way_to_the_real_one(tmp_path):
+    # Real Madrid 2-1 Bayern, 25 April 2012 (Bayern 3-1 on penalties): FotMob's old record says «3-4», schochastics 2-1
+    G, reg = g(tmp_path)
+    G.put("match", {"mid": 1, "date": "2012-04-25", "home": 1, "away": 2, "hs": 3, "as_": 4}, "fotmob")
+    G.conflict("match", 1, "score", "3-4", "fotmob", "2-1", "sch")
+    settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select hs, as_, pen_h, pen_a from match").fetchone() == (2, 1, 1, 3)
+    assert G.c.execute("select count(*) from conflict").fetchone()[0] == 0
