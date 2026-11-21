@@ -97,3 +97,13 @@ def test_remap_many_does_what_remap_does_one_by_one(tmp_path):
     for sql in ("select * from player order by pid", "select mid, pid from appearance order by 1, 2", "select pid, pid2 from event",
                 "select pid from honour", "select tifo_id, source_id from xref order by 2"):
         assert a.c.execute(sql).fetchall() == b.c.execute(sql).fetchall(), sql
+
+
+def test_a_title_holder_with_no_dates_joins_the_only_player_of_that_name_in_that_competition():
+    profile = P(1, "youssouf atiq", None, frozenset(), None, None, False, comps=frozenset({538}))
+    scorer = P(2, "youssouf atiq", None, frozenset({77}), "1991-10-01", "1992-05-01", False, comps=frozenset({538}))
+    assert people.pairs([profile, scorer]) == [(2, 1)]                  # neither FotMob's: the lower id is kept
+    elsewhere = scorer._replace(comps=frozenset({290}))
+    assert people.pairs([profile, elsewhere]) == []                     # a namesake in another competition: not him
+    twin = P(3, "youssouf atiq", None, frozenset({78}), "2010-01-01", "2011-01-01", False, comps=frozenset({538}))
+    assert people.pairs([profile, scorer, twin]) == []                  # two of that name in it: no guess
