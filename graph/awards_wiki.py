@@ -272,6 +272,33 @@ SEASON_TITLE = re.compile(r"^(\d{4}(?:[–-]\d{2,4})?)[ _](.+)$")
 SEASON_LINK = re.compile(r"(league|liga|serie|bundesliga|ligue|division|cup|championship|eredivisie|primeira|s[uü]per lig)", re.I)
 
 
+GENERIC = {"league", "premier", "pro", "professional", "first", "division", "the", "fa", "football", "national", "championship",
+           "liga", "serie", "ligue", "primera", "super", "top"}
+LOWER = re.compile(r"\b(second|third|fourth|2|ii|iii|b|reserves?|women|womens|youth|u\d{2}|under|cup|shield|president|presidents|"
+                   r"super cup|play ?offs?|qualification|qualifying|amateur|regional)\b")
+
+
+def _words(s):
+    s = re.sub(r"\([^)]*\)", " ", s.replace("_", " ").lower())
+    return " ".join(re.sub(r"[^\w\s]", "", s).split())
+
+
+def own_season(page, comp):
+    """A season article is the competition's own (the Premier League's article links the Championship's and the Champions
+    League's seasons too: their top scorers landed on the Premier League's 2017/18): its name holds the competition's or is
+    held by it («1993–94 FA Premier League»), or they share a word of their own («UAE Arabian Gulf League», the UAE Pro
+    League's old name); never a lower division, a cup or the women's game the competition's own name does not say."""
+    m = SEASON_TITLE.match(page.replace("_", " "))
+    if not m or not comp:
+        return False
+    name, own = _words(m.group(2)), _words(comp)
+    if any(w not in own.split() and not re.search(rf"\b{re.escape(w)}\b", own) for w in LOWER.findall(name)):
+        return False
+    if own in name or name in own:
+        return True
+    return bool((set(name.split()) & set(own.split())) - GENERIC)
+
+
 def season_links(html):
     """Season articles a competition's article links («2016–17_UAE_Pro_League»), in page order, once each."""
     out = []

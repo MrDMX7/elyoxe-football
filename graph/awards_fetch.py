@@ -277,10 +277,10 @@ def run(S, http, d, limit=None):
         titles = titles[:limit]
     _jsave(os.path.join(d, "articles.json"), {"awards": awards, "comps": comps, "national": national})
     n = fetch_pages(http, d, titles)
-    from graph.awards_wiki import season_links, extract_season
+    from graph.awards_wiki import season_links, extract_season, own_season
     have = set(_jload(os.path.join(d, "pages.json"), {}))
-    seasons = pick_seasons({fid: season_links(read_page(d, t) or b"") for fid, t in comps.items()}, have)
-    seasons = {**(prev.get("seasons") or {}), **seasons}
+    seasons = pick_seasons({fid: [x for x in season_links(read_page(d, t) or b"") if own_season(x, t)] for fid, t in comps.items()}, have)
+    seasons = {t: f for t, f in {**(prev.get("seasons") or {}), **seasons}.items() if not (comps.get(f) or comps.get(str(f))) or own_season(t, comps.get(f) or comps.get(str(f)))}
     n["seasons"] = fetch_pages(http, d, sorted(seasons))
     _jsave(os.path.join(d, "articles.json"), {"awards": awards, "comps": comps, "seasons": seasons, "national": national})
     links = set(titles)

@@ -179,3 +179,15 @@ def test_arabic_champion_and_runner_up_headers():
     assert len(t) == 1 and t[0]["kind"] == "champion_table"
     assert [(r["season"], r["team"], r["runner_up"]) for r in t[0]["rows"]][:2] == [
         ("1973/1974", "ar:نادي_الكويت", "ar:نادي_القادسية_(الكويت)"), ("1974/1975", "ar:نادي_الكويت", "ar:نادي_القادسية_(الكويت)")]
+
+
+def test_a_season_article_is_its_competitions_only():
+    from graph.awards_wiki import own_season
+    # the Premier League's article links the Championship's and the Champions League's seasons: their top scorers (Vydra,
+    # Ronaldo) landed on the Premier League's 2017/18
+    assert own_season("2017–18 Premier League", "Premier League") and own_season("1993–94 FA Premier League", "Premier League")
+    assert own_season("2012–13 UAE Arabian Gulf League", "UAE Pro League") and own_season("2016–17 Saudi Professional League", "Saudi Pro League")
+    assert not own_season("2017–18 EFL Championship", "Premier League") and not own_season("2017–18 UEFA Champions League", "Premier League")
+    assert not own_season("2019–20 Egyptian Second Division", "Egyptian Premier League")
+    assert not own_season("2019–20 Egypt Cup", "Egyptian Premier League") and not own_season("2020–21 UAE President's Cup", "UAE Pro League")
+    assert own_season("2010_FIFA_World_Cup", "FIFA World Cup") and not own_season("2011 FIFA Women's World Cup", "FIFA World Cup")
