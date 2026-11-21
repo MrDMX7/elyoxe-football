@@ -22,17 +22,21 @@ _key = AF._key
 MONTHS = {m.lower(): i for i, m in enumerate(calendar.month_name) if m}
 MONTHS.update({m.lower(): i for i, m in enumerate(calendar.month_abbr) if m})
 MONTHS["sept"] = 9
+MONTHS.update({m: i + 1 for i, ms in enumerate((("يناير",), ("فبراير",), ("مارس",), ("أبريل", "ابريل"), ("مايو",), ("يونيو",), ("يوليو",),
+               ("أغسطس", "اغسطس"), ("سبتمبر",), ("أكتوبر", "اكتوبر"), ("نوفمبر",), ("ديسمبر",))) for m in ms})   # Arabic Wikipedia's dates
 YEAR = re.compile(r"^(\d{4})$")
-D_M_Y = re.compile(r"^(\d{1,2})\s+([A-Za-z]+)\.?\s+(\d{4})$")
+D_M_Y = re.compile(r"^(\d{1,2})\s+([^\d\s.]+)\.?\s+(\d{4})$")
 M_D_Y = re.compile(r"^([A-Za-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})$")
 M_Y = re.compile(r"^([A-Za-z]+)\.?\s+(\d{4})$")
 OPEN = re.compile(r"^(present|current|now|incumbent|today)\b", re.I)
 ROLE = re.compile(r"\s*\((caretaker|interim|player[- ]manager|player[- ]coach|acting)[^)]*\)", re.I)
-SEC_OK = re.compile(r"manager|coach|trainer", re.I)          # not «Management»: the board
+SEC_OK = re.compile(r"manager|coach|trainer|مدرب", re.I)          # not «Management»: the board
 SEC_NO = re.compile(r"president|chairm|board|owner|captain|kit|sponsor|player", re.I)
-H_NAME = re.compile(r"^(name|head coach|manager|coach|head coaches|managers|trainer)$", re.I)
-H_FROM = re.compile(r"^(from|start|appointed|began)$", re.I)
-H_TO = re.compile(r"^(to|until|end|left|departed|till)$", re.I)
+H_NAME = re.compile(r"^(name|head coach|manager|coach|head coaches|managers|trainer|الاسم|الأسم|المدرب|اسم المدرب)$", re.I)
+H_FROM = re.compile(r"^(from|start|appointed|began|من|بدأ|بداية)$", re.I)
+H_TO = re.compile(r"^(to|until|end|left|departed|till|إلى|الى|إنتهى|انتهى|حتى|نهاية)$", re.I)
+H_PERIOD = re.compile(r"^(period|years|tenure|الفترة|السنوات)$", re.I)              # one column «1973–1985» (or written «1985–1973»)
+SPAN_Y = re.compile(r"^(\d{4})\s*[–\-−]\s*(\d{4})$")
 
 
 def day(text, end=False):
@@ -59,7 +63,7 @@ def day(text, end=False):
 def _cols(header):
     names = [clean(c[0]).split("}")[-1].strip() for c in header]      # a tooltip's inline style leaks into «Nat.»
     pick = lambda rx: next((i for i, h in enumerate(names) if rx.match(h)), None)
-    return pick(H_NAME), pick(H_FROM), pick(H_TO)
+    return pick(H_NAME), pick(H_FROM), pick(H_TO), pick(H_PERIOD)
 
 
 def parse(raw, listing=False):
@@ -73,8 +77,8 @@ def parse(raw, listing=False):
         g = grid(table)
         if len(g) < 2:
             continue
-        ni, fi, ti = _cols(g[0])
-        if ni is None or fi is None or ti is None:
+        ni, fi, ti, pi = _cols(g[0])
+        if ni is None or ((fi is None or ti is None) and pi is None):
             continue
         sec = _section(table)
         if SEC_NO.search(sec) and not SEC_OK.search(sec):
@@ -82,6 +86,14 @@ def parse(raw, listing=False):
         if not SEC_OK.search(sec) and not (listing and not sec) and not re.search(r"coach|manager", clean(g[0][ni][0]), re.I):
             continue
         for row in g[1:]:
+            if fi is None or ti is None:                           # one period column: July of the first year to June of the last
+                if len(row) <= max(ni, pi) or row[ni][2]:
+                    continue
+                m, name = SPAN_Y.match(clean(row[pi][0])), ROLE.sub("", clean(row[ni][0])).strip()
+                if m and name and min(int(m.group(1)), int(m.group(2))) >= 1880:      # «0000–0000»: the page does not know
+                    a, b = sorted((int(m.group(1)), int(m.group(2))))
+                    out.append({"name": name, "title": (row[ni][1] or [None])[0], "start": f"{a}-07-01", "end": f"{b}-06-30", "open": False})
+                continue
             if len(row) <= max(ni, fi, ti) or row[ni][2]:
                 continue
             name = ROLE.sub("", clean(row[ni][0])).strip()

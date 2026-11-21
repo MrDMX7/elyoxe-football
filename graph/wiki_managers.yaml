@@ -27,7 +27,7 @@
 101747: ["Tala'ea El Gaish SC"]
 101754: ["ENPPI SC"]
 205189: ["Smouha SC"]
-517894: ["Pyramids FC"]
+517894: ["Pyramids FC", "ar:نادي بيراميدز"]
 # Botola
 102049: ["Raja CA", "ar:نادي الرجاء الرياضي"]
 102050: ["Wydad AC"]
@@ -36,10 +36,10 @@
 316652: ["RS Berkane"]
 102037: ["Hassania Agadir"]
 102033: ["Difaâ Hassani El Jadidi"]
-102043: ["Maghreb de Fès"]
+102043: ["Maghreb de Fès", "ar:نادي المغرب الفاسي"]
 102042: ["Kawkab Marrakech"]
 # UAE Pro League
-102119: ["Shabab Al Ahli Club"]
+102119: ["Shabab Al Ahli Club", "ar:نادي شباب الأهلي"]
 102111: ["Al-Wasl F.C."]
 102117: ["Al Ain FC"]
 102123: ["Al-Nasr SC (Dubai)", "ar:نادي النصر (الإمارات)"]

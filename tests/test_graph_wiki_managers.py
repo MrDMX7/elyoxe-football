@@ -102,3 +102,21 @@ def test_a_coach_read_from_an_arabic_page_has_his_arabic_name(tmp_path):
     (d / "pages" / (WM._key("ar:نادي العين") + ".html.gz")).write_bytes(gzip.compress(h))
     LW.load(G, reg, S, clubs={102117: ["ar:نادي العين"]})
     assert G.c.execute("select c.name, c.name_ar from match_coach x join coach c on c.kid=x.kid where x.mid=?", (mids[0],)).fetchone() == ("ناصر ضاعن", "ناصر ضاعن")
+
+
+def test_arabic_coaches_tables_with_from_and_to_or_one_period():
+    from graph.wiki_managers import parse
+    a = ('<html><body><section><h2>مدربي نادي بيراميدز</h2><table class="wikitable"><tr><th>الأسم</th><th>بدأ</th><th>إنتهى</th></tr>'
+         '<tr><td><a rel="mw:WikiLink" href="./ستيفان_ريجر" title="ستيفان ريجر">ستيفان ريجر</a></td><td>1 يوليو 2012</td><td>30 يونيو 2013</td></tr></table></section>'
+         '<section><h2>المدربين السابقين</h2><table class="wikitable"><tr><th>الفترة</th><th>المدرب</th></tr>'
+         '<tr><td>1985–1973</td><td>نادور هيدبغكوتي</td></tr></table></section></body></html>').encode()
+    got = [(s["name"], s["start"], s["end"]) for s in parse(a)]
+    assert ("ستيفان ريجر", "2012-07-01", "2013-06-30") in got
+    assert ("نادور هيدبغكوتي", "1973-07-01", "1985-06-30") in got           # a period written either way round
+
+
+def test_a_period_left_as_0000_gives_no_spell():
+    from graph.wiki_managers import parse
+    a = ('<html><body><section><h2>المدربين السابقين</h2><table class="wikitable"><tr><th>الفترة</th><th>المدرب</th></tr>'
+         '<tr><td>0000–0000</td><td>يوريسيتش ستريشكو</td></tr><tr><td>2003–2004</td><td>إيلي بلاسي</td></tr></table></section></body></html>').encode()
+    assert [s["name"] for s in parse(a)] == ["إيلي بلاسي"]
