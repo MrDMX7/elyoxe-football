@@ -276,3 +276,17 @@ def test_a_name_that_is_a_competition_is_not_a_person():
         assert awards.not_a_person(n), n
     for n in ("Cupido", "Calixte Ligue", "Junior Ligue", "Leaguer Smith", "Cupper", "Hussein Saeed", "", None):
         assert not awards.not_a_person(n), n
+
+
+def test_an_arabic_wikipedia_list_gives_top_scorers_with_arabic_names(tmp_path):
+    # awards.yaml comp_pages: «ar:قائمة هدافي دوري المحترفين السعودي» is the Saudi Pro League's (FotMob 536)
+    html = open(os.path.join(os.path.dirname(__file__), "fixtures", "awards_ar_saudi_scorers.html"), "rb").read()
+    items = {"ar:محمد_العبدلي": item("Q70", "Mohammed Al-Abdali", "محمد العبدلي", "1950-01-01")}
+    S = mk(tmp_path, {"ar:قائمة هدافي دوري المحترفين السعودي": html}, items)
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    awards.load(G, reg, S)
+    top = lambda season: G.c.execute("select h.pid, h.value from honour h join edition e on e.eid=h.eid where e.cid=? and e.season=? and h.kind='top_scorer'",
+                                     (reg.get("competition", "fotmob", 536), season)).fetchall()
+    assert top("1974/1975") == [(reg.get("player", "wikidata", "Q70"), "13")]
+    (pid, _), = top("1976/1977")                                          # «ناصر عيد», no article: a name-only player in Arabic
+    assert G.c.execute("select name, name_ar from player where pid=?", (pid,)).fetchone() == ("ناصر عيد", "ناصر عيد")

@@ -136,3 +136,46 @@ def test_a_winners_column_beside_a_scorer_column_is_the_champion():
     assert [(r["season"], r["team"]) for r in t["champion"]["rows"]] == [("1956/1957", "Wydad_AC"), ("1957/1958", None), ("2025/2026", "Maghreb_of_Fez")]
     assert [(r["season"], r["person"], r["name"]) for r in t["top_scorer"]["rows"]] == [
         ("1956/1957", None, "Abdelkarim Zidani"), ("1957/1958", "Hassan_Akesbi", "Hassan Akesbi"), ("2025/2026", "Soufiane_Benjdida", "Soufiane Benjdida")]
+
+
+# ---- Arabic Wikipedia list pages («ar:» titles): Arabic headers, Arabic-Indic digits, links kept as «ar:» titles
+def _fx(name):
+    return open(os.path.join(os.path.dirname(__file__), "fixtures", name), "rb").read()
+
+
+def test_season_label_reads_arabic_digits_and_long_years():
+    assert season_label("٢٠١٩–٢٠") == "2019/2020" and season_label("2019-2020") == "2019/2020" and season_label("۱۹۹۸") == "1998"
+
+
+def test_arabic_saudi_scorers_by_season():
+    t = extract(_fx("awards_ar_saudi_scorers.html"), "ar:قائمة هدافي دوري المحترفين السعودي")
+    assert len(t) == 1 and t[0]["kind"] == "top_scorer" and t[0]["who"] == "person"
+    rows = t[0]["rows"]
+    first = rows[0]
+    assert (first["season"], first["person"], first["name"], first["team"], first["value"]) == (
+        "1974/1975", "ar:محمد_العبدلي", "محمد سعد العبدلي", "ar:نادي_النصر_(السعودية)", "13")
+    assert "1975/1976" not in {r["season"] for r in rows}                # «أُلغي»: cancelled, no winner
+    nasser = next(r for r in rows if r["season"] == "1976/1977")
+    assert nasser["person"] is None and nasser["name"] == "ناصر عيد" and nasser["team"] == "ar:نادي_القادسية_(السعودية)"
+    assert len({r["season"] for r in rows}) >= 45
+
+
+def test_arabic_kuwait_scorers_and_egypt_scorers():
+    k = extract(_fx("awards_ar_kuwait.html"), "ar:الدوري الكويتي")
+    assert [x["kind"] for x in k] == ["top_scorer"]
+    r = next(x for x in k[0]["rows"] if x["season"] == "1962/1963")
+    assert (r["person"], r["team"], r["value"]) == ("ar:عبد_الرحمن_الدولة", "ar:النادي_العربي_(الكويت)", "15 هدف")
+    e = extract(_fx("awards_ar_egypt_scorers.html"), "ar:قائمة هدافي الدوري المصري الممتاز")
+    assert [x["kind"] for x in e] == ["top_scorer"]
+    r = next(x for x in e[0]["rows"] if x["season"] == "1949/1950")
+    assert (r["person"], r["name"], r["value"], r["team"]) == ("ar:حمديتو_أحمد", "حمديتو أحمد", "10", "ar:نادي_الترسانة_(مصر)")
+
+
+def test_arabic_champion_and_runner_up_headers():
+    L = lambda t: f'<a rel="mw:WikiLink" href="./{t}">{t}</a>'
+    body = '<tr><td>الموسم</td><td>البطل</td><td>الوصيف</td></tr>' + ''.join(
+        f'<tr><td>{s}</td><td>{L("نادي_الكويت")}</td><td>{L("نادي_القادسية_(الكويت)")}</td></tr>' for s in ("١٩٧٣–٧٤", "1974-1975", "1975–76"))
+    t = extract(T(body, "الأبطال"), "ar:الدوري الكويتي")
+    assert len(t) == 1 and t[0]["kind"] == "champion_table"
+    assert [(r["season"], r["team"], r["runner_up"]) for r in t[0]["rows"]][:2] == [
+        ("1973/1974", "ar:نادي_الكويت", "ar:نادي_القادسية_(الكويت)"), ("1974/1975", "ar:نادي_الكويت", "ar:نادي_القادسية_(الكويت)")]

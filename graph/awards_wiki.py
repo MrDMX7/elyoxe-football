@@ -8,11 +8,12 @@ from lxml import html as LH
 REF = re.compile(r"\[(?:\d+|[a-z]|note \d+|nb \d+)\]", re.I)
 MARK = re.compile(r"[†‡*^§¶#]+")
 SEASON = re.compile(r"^(\d{4})(?:\s*[–\-/]\s*(\d{4}|\d{2})(?!\d))?")
-H_YEAR = re.compile(r"\b(year|season|edition|tournament)\b|^ed\.?$", re.I)          # singular: «Years» / «Seasons» are spans and lists
+H_YEAR = re.compile(r"\b(year|season|edition|tournament)\b|^ed\.?$|^(الموسم|السنة|العام)$", re.I)          # singular: «Years» / «Seasons» are spans and lists
 SKIP_SECTION = re.compile(r"multiple|by (player|club|team|country|nation|nationality|position|league)|all[- ]time|nominee|shortlist|"
-                          r"finalist|record|statistic|dream team|team of|all[- ]star|selection|squad|list of (players|nominees)", re.I)
+                          r"finalist|record|statistic|dream team|team of|all[- ]star|selection|squad|list of (players|nominees)|"
+                          r"حسب (ال)?(نادي|لاعب|محافظة|بلدية|دولة|بلد|جنسية)|أكثر|التاريخي", re.I)
 NOT_A_WINNER = re.compile(r"^(not awarded|no award|not held|none|vacant|cancel+ed|withheld|abandoned|void|tb[ad]|n/?a|[—–-]|"
-                          r"no competition|no championship|not? completed)\b|^[—–-]$", re.I)
+                          r"no competition|no championship|not? completed)\b|^[—–-]$|^(ألغي|ملغ|لم يقم|لم تقم|لا يوجد|توقف)", re.I)
 CHAMP_COL = re.compile(r"^(winners?|champions?)$", re.I)        # a club column beside a scorer column on a league's list of champions
 SCORER_CELL = re.compile(r"^(.+?)\s*\(([^()]+?),\s*(\d+)\s*goals?\)$", re.I)   # «Hocine Saadi (NA Hussein Dey, 21 goals)»
 
@@ -22,20 +23,26 @@ def _same(link, text):
     b = (text or "").strip().lower()
     return bool(b) and (a == b or a.startswith(b + " ("))
 POSITIONS = re.compile(r"goalkeeper|defender|midfielder|forward|striker", re.I)
-H_TEAM = re.compile(r"club|team|nation|country|nationality|^nat\.?$|position|league", re.I)
-H_PERSON = re.compile(r"player|winner|scorer|^name|recipient|goalkeeper|manager|coach|footballer|best|^top", re.I)
-H_CHAMP = re.compile(r"champion|winner", re.I)
-H_RUNNER = re.compile(r"runner", re.I)
-H_VALUE = re.compile(r"goals?\b|points?\b|votes?\b|^pts|%", re.I)
-H_RANK = re.compile(r"^(rank|place|pos\.?)$", re.I)
-KINDS = [("top_scorer", re.compile(r"scorer|golden boot|goalscor|pichichi|capocannoniere|torj[aä]ger|golden shoe|top goal", re.I)),
-         ("best_goalkeeper", re.compile(r"goalkeeper|golden glove|yashin|zamora", re.I)),
+H_TEAM = re.compile(r"club|team|nation|country|nationality|^nat\.?$|position|league|النادي|الفريق|البلد|الجنسية|المنتخب|الدولة", re.I)
+H_PERSON = re.compile(r"player|winner|scorer|^name|recipient|goalkeeper|manager|coach|footballer|best|^top|^(اللاعب|الهداف|الفائز|المدرب)$", re.I)
+H_CHAMP = re.compile(r"champion|winner|البطل\b", re.I)
+H_RUNNER = re.compile(r"runner|الوصيف", re.I)
+H_VALUE = re.compile(r"goals?\b|points?\b|votes?\b|^pts|%|أهداف", re.I)
+H_RANK = re.compile(r"^(rank|place|pos\.?|الترتيب|المركز)$", re.I)
+KINDS = [("top_scorer", re.compile(r"scorer|golden boot|goalscor|pichichi|capocannoniere|torj[aä]ger|golden shoe|top goal|هداف", re.I)),
+         ("best_goalkeeper", re.compile(r"goalkeeper|golden glove|yashin|zamora|حارس", re.I)),
          ("best_young", re.compile(r"young|golden boy|kopa|rookie|revelation|breakthrough", re.I)),
-         ("coach", re.compile(r"manager|coach", re.I))]
+         ("coach", re.compile(r"manager|coach|مدرب", re.I))]
+
+
+# Arabic Wikipedia: Arabic-Indic digits read as Western ones, and the short vowels and tatweel go («الهدّاف» is «الهداف»)
+DIGITS = {**{0x660 + i: str(i) for i in range(10)}, **{0x6F0 + i: str(i) for i in range(10)},
+          **{c: None for c in [*range(0x64B, 0x653), 0x670, 0x640]}}
+ARABIC = re.compile(r"[؀-ۿ]")
 
 
 def clean(t):
-    return re.sub(r"\s+", " ", MARK.sub("", REF.sub("", t or ""))).strip()
+    return re.sub(r"\s+", " ", MARK.sub("", REF.sub("", (t or "").translate(DIGITS)))).strip()
 
 
 def season_label(text):
@@ -137,6 +144,8 @@ def table_rows(g, page, section):
     nh = 0
     while nh < len(g) and g[nh] and all(c[2] for c in g[nh]):
         nh += 1
+    if not nh and g and g[0] and not any(c[1] for c in g[0]) and any(ARABIC.search(c[0]) and H_YEAR.search(c[0]) for c in g[0]):
+        nh = 1                    # Arabic Wikipedia often writes its header row in <td>: «الموسم | الهداف | النادي | الأهداف»
     if not nh or nh >= len(g):
         return []
     # the header is the all-<th> row naming the most distinct columns, not a separator row («Ballon d'Or (1956–2009)»)
@@ -178,7 +187,7 @@ def table_rows(g, page, section):
     pi = None if team_table else _col(hdr, H_PERSON, {yi} | {i for i, h in enumerate(hdr) if H_TEAM.search(h)})
     if not team_table and pi is None:
         return []
-    ti = None if team_table else _col(hdr, re.compile(r"club|team", re.I), {yi, pi})
+    ti = None if team_table else _col(hdr, re.compile(r"club|team|النادي|الفريق", re.I), {yi, pi})
     vi = _col(hdr, H_VALUE, {yi, pi, ti})
     ki = _col(hdr, H_RANK, {yi})
     if team_table:
@@ -244,6 +253,12 @@ def extract(html, page):
     out = []
     for t in doc.xpath("//table[contains(concat(' ', normalize-space(@class), ' '), ' wikitable ')]"):
         out.extend(table_rows(grid(t), page, _section(t)))
+    if page.startswith("ar:"):                  # an Arabic Wikipedia page links Arabic articles: «ar:نادي_النصر_(السعودية)»
+        for tb in out:
+            for r in tb["rows"]:
+                for k in ("person", "team", "runner_up"):
+                    if r.get(k):
+                        r[k] = "ar:" + r[k]
     return out
 
 

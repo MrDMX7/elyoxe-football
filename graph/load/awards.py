@@ -127,7 +127,7 @@ def load(G, reg, S):
         pid = reg.get("player", "wiki-name", key) or reg.mint("player", "wiki-name", key)
         if ("p", pid) not in done:
             done.add(("p", pid))
-            G.put("player", {"pid": pid, "name": name}, "wikidata")
+            G.put("player", {"pid": pid, "name": name, **({"name_ar": name} if page.startswith("ar:") else {})}, "wikidata")
         return pid, None
 
     def coach(title, name, page):
@@ -179,7 +179,7 @@ def load(G, reg, S):
             top_m, top_t = min(e[0] for e in entries), min(c[0] for c in cur)
             mine = [label(e[1], e[2], e[3]) for e in entries if e[0] == top_m]
             theirs = [label(c[1], c[2], c[3]) for c in cur if c[0] == top_t]
-            if not any(alike(x, y) for x in mine for y in theirs):
+            if all(mine) and not any(alike(x, y) for x in mine for y in theirs):     # an Arabic-only name folds to "": no evidence
                 G.conflict("honour", eid, kind, "; ".join(theirs), cur[0][4], "; ".join(mine), "wiki")
                 n["conflicts"] += 1
             return

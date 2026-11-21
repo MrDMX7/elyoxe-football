@@ -54,6 +54,10 @@ comp_pages:
   530: [List of Moroccan football champions]                     # Botola Pro
   544: [List of Tunisian football champions, List of Tunisian Ligue Professionnelle 1 top scorers]   # Tunisia Ligue I
   535: [Qatar National First Division top scorers]               # Qatar Stars League (its top flight's scorers since 1972-73)
+# «ar:» titles are Arabic Wikipedia's (English Wikipedia has no such list for these leagues): their Arabic headers are read too
+  536: [ar:قائمة هدافي دوري المحترفين السعودي]                     # Saudi Pro League top scorers since 1974-75
+  529: [ar:الدوري الكويتي]                                         # Kuwait Premier League: «قائمة هدافي كل موسم»
+  519: [ar:قائمة هدافي الدوري المصري الممتاز]                       # Egyptian Premier League top scorers since 1948-49
 # places: who gives an award, for an Arabic name shared by several awards (graph/award_names.py): words of the award page's
 # English name (matched case-insensitively, the longest first) -> what follows the Arabic name. Written by hand, never guessed.
 places:

@@ -22,6 +22,9 @@ CACHE = os.path.join(HERE, ".cache", "awards")
 REST = "https://en.wikipedia.org/api/rest_v1/page/html/"
 API = "https://en.wikipedia.org/w/api.php"
 WD = "https://www.wikidata.org/w/api.php"
+AR = "ar:"                      # a title read from Arabic Wikipedia («ar:قائمة هدافي دوري المحترفين السعودي»), kept under that key
+AR_REST = "https://ar.wikipedia.org/api/rest_v1/page/html/"
+AR_API = "https://ar.wikipedia.org/w/api.php"
 UA = {"User-Agent": "elyoxe-tifo/0.1 (hello@elyoxe.com)"}
 ROOTS = ["Category:Association football player of the year awards", "Category:Association football top scorer awards",
          "Category:Association football goalkeeper awards", "Category:Association football young player of the year awards",
@@ -92,7 +95,8 @@ def fetch_pages(http, d, titles, max_age_days=30):
             n["kept"] += 1
             continue
         try:
-            body = http.get(REST + urllib.parse.quote(t.replace(" ", "_"), safe="'(),!"))
+            rest, name = (AR_REST, t[len(AR):]) if t.startswith(AR) else (REST, t)
+            body = http.get(rest + urllib.parse.quote(name.replace(" ", "_"), safe="'(),!"))
         except Exception as e:
             n["failed"] += 1
             continue
@@ -149,49 +153,58 @@ def resolve(http, d, titles):
     new = sorted({t for t in titles if t and t not in items})
     for i in range(0, len(new), 50):
         batch = new[i:i + 50]
-        q = {"action": "query", "prop": "pageprops", "ppprop": "wikibase_item", "redirects": "1", "format": "json", "formatversion": "2",
-             "titles": "|".join(t.replace("_", " ") for t in batch)}
-        try:
-            r = json.loads(http.get(API + "?" + urllib.parse.urlencode(q)))
-        except Exception as e:
-            print(f"pageprops: {e}", flush=True)
-            continue
-        qr = r.get("query") or {}
-        alias = {}
-        for k in ("normalized", "redirects"):
-            for x in qr.get(k) or []:
-                alias[x["from"]] = x["to"]
-        qid_of = {pg["title"]: (pg.get("pageprops") or {}).get("wikibase_item") for pg in qr.get("pages") or []}
-        got = {}
-        for t in batch:
-            name = t.replace("_", " ")
-            for _ in range(3):
-                name = alias.get(name, name)
-            got[t] = qid_of.get(name)
-        ids = sorted({q for q in got.values() if q})
-        facts = {}
-        for j in range(0, len(ids), 50):
-            q2 = {"action": "wbgetentities", "ids": "|".join(ids[j:j + 50]), "props": "labels|claims", "languages": "ar|en", "format": "json"}
-            try:
-                ents = json.loads(http.get(WD + "?" + urllib.parse.urlencode(q2))).get("entities") or {}
-            except Exception as e:
-                print(f"wbgetentities: {e}", flush=True)
-                continue
-            for qid, e in ents.items():
-                c, lab = e.get("claims") or {}, e.get("labels") or {}
-                born = _claim(c, "P569")
-                facts[qid] = {"qid": qid, "human": (_claim(c, "P31") or {}).get("id") == "Q5" or any(
-                    ((s.get("mainsnak") or {}).get("datavalue") or {}).get("value", {}).get("id") == "Q5" for s in c.get("P31") or []),
-                              "born": born["time"][1:11] if isinstance(born, dict) and born.get("time") else None,
-                              "ar": (lab.get("ar") or {}).get("value"), "en": (lab.get("en") or {}).get("value"),
-                              "tm_player": _claim(c, "P2446"), "tm_club": _claim(c, "P7223")}
-        for t, qid in got.items():
-            items[t] = facts.get(qid) or {"qid": qid, "human": False, "born": None, "ar": None, "en": None, "tm_player": None, "tm_club": None}
+        for api, ar in ((API, False), (AR_API, True)):                  # «ar:» links ask Arabic Wikipedia
+            part = [t for t in batch if t.startswith(AR) == ar]
+            if part:
+                _resolve_batch(http, api, part, items)
         if (i // 50) % 20 == 0:
             _jsave(p, items)
             print(f"awards items: {len(items)}", flush=True)
     _jsave(p, items)
     return items
+
+
+def _resolve_batch(http, api, batch, items):
+    """One batch of titles of one wiki: pageprops -> Wikidata items -> facts, into `items` under the titles as given."""
+    bare = {t: t[len(AR):] if t.startswith(AR) else t for t in batch}
+    q = {"action": "query", "prop": "pageprops", "ppprop": "wikibase_item", "redirects": "1", "format": "json", "formatversion": "2",
+         "titles": "|".join(bare[t].replace("_", " ") for t in batch)}
+    try:
+        r = json.loads(http.get(api + "?" + urllib.parse.urlencode(q)))
+    except Exception as e:
+        print(f"pageprops: {e}", flush=True)
+        return
+    qr = r.get("query") or {}
+    alias = {}
+    for k in ("normalized", "redirects"):
+        for x in qr.get(k) or []:
+            alias[x["from"]] = x["to"]
+    qid_of = {pg["title"]: (pg.get("pageprops") or {}).get("wikibase_item") for pg in qr.get("pages") or []}
+    got = {}
+    for t in batch:
+        name = bare[t].replace("_", " ")
+        for _ in range(3):
+            name = alias.get(name, name)
+        got[t] = qid_of.get(name)
+    ids = sorted({q for q in got.values() if q})
+    facts = {}
+    for j in range(0, len(ids), 50):
+        q2 = {"action": "wbgetentities", "ids": "|".join(ids[j:j + 50]), "props": "labels|claims", "languages": "ar|en", "format": "json"}
+        try:
+            ents = json.loads(http.get(WD + "?" + urllib.parse.urlencode(q2))).get("entities") or {}
+        except Exception as e:
+            print(f"wbgetentities: {e}", flush=True)
+            continue
+        for qid, e in ents.items():
+            c, lab = e.get("claims") or {}, e.get("labels") or {}
+            born = _claim(c, "P569")
+            facts[qid] = {"qid": qid, "human": (_claim(c, "P31") or {}).get("id") == "Q5" or any(
+                ((s.get("mainsnak") or {}).get("datavalue") or {}).get("value", {}).get("id") == "Q5" for s in c.get("P31") or []),
+                          "born": born["time"][1:11] if isinstance(born, dict) and born.get("time") else None,
+                          "ar": (lab.get("ar") or {}).get("value"), "en": (lab.get("en") or {}).get("value"),
+                          "tm_player": _claim(c, "P2446"), "tm_club": _claim(c, "P7223")}
+    for t, qid in got.items():
+        items[t] = facts.get(qid) or {"qid": qid, "human": False, "born": None, "ar": None, "en": None, "tm_player": None, "tm_club": None}
 
 
 def comp_articles(S, http):

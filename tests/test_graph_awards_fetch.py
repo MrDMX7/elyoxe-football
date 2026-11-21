@@ -32,3 +32,19 @@ def test_pick_seasons_takes_turns_and_keeps_a_budget():
     links = {"538": ["2025–26_UAE_Pro_League", "2024–25_UAE_Pro_League", "2023–24_UAE_Pro_League"], "536": ["2025–26_Saudi_Pro_League", "2024–25_Saudi_Pro_League"]}
     got = AF.pick_seasons(links, have={"2025–26_UAE_Pro_League"}, budget=3)
     assert got == {"2025–26_UAE_Pro_League": "538", "2024–25_UAE_Pro_League": "538", "2025–26_Saudi_Pro_League": "536", "2024–25_Saudi_Pro_League": "536"}
+
+
+def test_ar_titles_come_from_arabic_wikipedia(tmp_path):
+    http = FakeHTTP({"ar.wikipedia.org/api/rest_v1/page/html/": b"<html>ar</html>"})
+    AF.fetch_pages(http, str(tmp_path), ["ar:الدوري الكويتي"], max_age_days=0)
+    assert "ar.wikipedia.org" in http.calls[0] and "ar%3A" not in http.calls[0]
+    assert AF.read_page(str(tmp_path), "ar:الدوري الكويتي") == b"<html>ar</html>"
+
+
+def test_ar_links_resolve_through_arabic_wikipedia(tmp_path):
+    pp = {"query": {"pages": [{"title": "نادي الكويت", "pageprops": {"wikibase_item": "Q7"}}], "normalized": [{"from": "نادي_الكويت", "to": "نادي الكويت"}]}}
+    ent = {"entities": {"Q7": {"labels": {"ar": {"value": "نادي الكويت"}, "en": {"value": "Kuwait SC"}}, "claims": {}}}}
+    http = FakeHTTP({"ar.wikipedia.org/w/api.php?action=query": json.dumps(pp).encode(), "wbgetentities": json.dumps(ent).encode()})
+    items = AF.resolve(http, str(tmp_path), ["ar:نادي_الكويت"])
+    assert items["ar:نادي_الكويت"]["qid"] == "Q7" and items["ar:نادي_الكويت"]["en"] == "Kuwait SC"
+    assert not any("en.wikipedia.org" in c for c in http.calls)
