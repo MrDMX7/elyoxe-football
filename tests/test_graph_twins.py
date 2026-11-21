@@ -76,3 +76,18 @@ def test_a_record_filed_the_other_way_round_with_both_coaches_turns_them_both(tm
     G.c.executemany("insert into match_coach values(5, ?, ?, 'sch')", [("h", 77), ("a", 88)])
     twins.load(G, reg, None)
     assert sorted(G.c.execute("select mid, side, kid from match_coach")) == [(6, "a", 77), (6, "h", 88)]
+
+
+def test_the_kept_record_takes_the_others_competition_when_only_the_other_is_one_we_publish(tmp_path):
+    # Argentina 2-0 Mexico, 2022: Transfermarkt's record (kept, it ranks first) sat in its «FIWC 2021/2022»; the World Cup's
+    # record sat in the World Cup 2022, and the season page lost the game and Messi's man of the match with it
+    G, reg = world(tmp_path)
+    G.put("competition", {"cid": 77, "name": "World Cup"}, "fotmob")
+    G.xref("competition", 77, "fotmob", 77, "fotmob-native")
+    G.put("competition", {"cid": 900, "name": "FIWC"}, "tm")
+    G.put("edition", {"eid": 1, "cid": 77, "season": "2022"}, "fotmob")
+    G.put("edition", {"eid": 2, "cid": 900, "season": "2021/2022"}, "tm")
+    G.put("match", {"mid": 5, "eid": 1, "date": "2022-11-26", "home": 1, "away": 2, "hs": 2, "as_": 0}, "martj42")
+    G.put("match", {"mid": 6, "eid": 2, "date": "2022-11-26", "home": 1, "away": 2, "hs": 2, "as_": 0}, "tm")
+    twins.load(G, reg, None)
+    assert G.c.execute("select mid, eid from match").fetchall() == [(6, 1)]

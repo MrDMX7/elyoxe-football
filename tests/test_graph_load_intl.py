@@ -98,3 +98,26 @@ def test_a_curated_tournament_carries_fotmobs_id_in_xref_even_when_another_sourc
     G.put("competition", {"cid": ac, "name": "Asian Cup"}, "s365")
     martj42.load(G, reg, Sources(str(tmp_path), s3=False))
     assert G.c.execute("select tifo_id from xref where type='competition' and source='fotmob' and source_id='290'").fetchone() == (ac,)
+
+
+def test_a_curated_tournaments_game_held_in_another_sources_competition_moves_to_the_tournament(tmp_path):
+    # Argentina 2-0 Mexico, 2022, was Transfermarkt's game in its «FIWC 2021/2022»; martj42 knows it is the World Cup
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    (db / "martj42_results.csv").write_text("date,home_team,away_team,home_score,away_score,tournament,city,country,neutral\n"
+                                            "2022-11-26,Argentina,Mexico,2,0,FIFA World Cup,Lusail,Qatar,TRUE\n"
+                                            "2021-06-11,Turkey,Italy,0,3,UEFA Euro,Rome,Italy,FALSE\n", encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    wc, eu, tmc = reg.mint("competition", "fotmob", 77), reg.mint("competition", "fotmob", 50), reg.mint("competition", "tm", "FIWC")
+    for cid, n, s in ((wc, "World Cup", "fotmob"), (eu, "EURO", "fotmob"), (tmc, "FIWC", "tm")):
+        G.put("competition", {"cid": cid, "name": n}, s)
+    G.xref("competition", wc, "fotmob", 77, "fotmob-native")
+    G.xref("competition", eu, "fotmob", 50, "fotmob-native")
+    for e, cid, season, s in ((1, wc, "2022", "fotmob"), (2, tmc, "2021/2022", "tm"), (3, eu, "2020", "fotmob")):
+        G.put("edition", {"eid": e, "cid": cid, "season": season}, s)
+    arg, mex = reg.mint("team", "martj42", "Argentina"), reg.mint("team", "martj42", "Mexico")
+    tur, ita = reg.mint("team", "martj42", "Turkey"), reg.mint("team", "martj42", "Italy")
+    G.put("match", {"mid": 50, "eid": 2, "date": "2022-11-26", "home": arg, "away": mex, "hs": 2, "as_": 0}, "tm")
+    G.put("match", {"mid": 51, "eid": 2, "date": "2021-06-11", "home": tur, "away": ita, "hs": 0, "as_": 3}, "tm")   # Euro 2020, played in 2021
+    martj42.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select mid, eid from match order by mid").fetchall() == [(50, 1), (51, 3)]

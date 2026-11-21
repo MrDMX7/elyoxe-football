@@ -19,7 +19,10 @@ def load(G, reg, S):
         for mid, n in G.c.execute(f"SELECT mid, count(*) FROM {t} GROUP BY mid"):
             held[mid] += n
     home = dict(G.c.execute("SELECT mid, home FROM match"))
-    pairs, turned = [], []
+    eid = dict(G.c.execute("SELECT mid, eid FROM match WHERE eid IS NOT NULL"))
+    ours = {e for (e,) in G.c.execute("""SELECT e.eid FROM edition e JOIN xref x ON x.type='competition' AND x.source='fotmob'
+                                          AND x.tifo_id=e.cid""")}               # the editions the site publishes
+    pairs, turned, moved = [], [], []
     for ms in groups.values():
         if len(ms) != 2 or ms[0][1] != ms[1][1]:
             continue
@@ -27,6 +30,9 @@ def load(G, reg, S):
         pairs.append((drop[0], keep[0]))
         if home[drop[0]] != home[keep[0]]:
             turned.append((drop[0],))
+        if eid.get(drop[0]) in ours and eid.get(keep[0]) not in ours:     # Transfermarkt's «FIWC» kept: the World Cup's season wins
+            moved.append((eid[drop[0]], keep[0]))
+    G.c.executemany("UPDATE match SET eid=? WHERE mid=?", moved)
     # a record filed the other way round is turned first (its sides with it), so the merge sees no false disagreement
     G.c.executemany("UPDATE match SET home=away, away=home, hs=as_, as_=hs, ht_h=ht_a, ht_a=ht_h, pen_h=pen_a, pen_a=pen_h WHERE mid=?", turned)
     for t in ("event", "match_coach"):        # through «x»: match_coach holds one row a side, so h and a never swap in one pass

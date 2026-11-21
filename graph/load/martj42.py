@@ -68,6 +68,19 @@ def load(G, reg, S):
     vote_alias(reg, "competition", cvotes, "martj42", min_n=10, share=0.9)
     vote_alias(reg, "edition", evotes, "martj42", min_n=3, share=0.9)
     linked = new = 0
+    ours = {e for (e,) in G.c.execute("""SELECT e.eid FROM edition e JOIN xref x ON x.type='competition' AND x.source='fotmob'
+                                          AND x.tifo_id=e.cid""")}               # the editions the site publishes
+
+    def curated(name, y):
+        """The curated tournament's edition of that year (or the year before: Euro 2020 and the 2021 Africa Cup were played a
+        year late), when the graph holds it"""
+        fid = FOTMOB.get(name)
+        cid = reg.get("competition", "fotmob", fid) if fid else None
+        for season in ((y, str(int(y) - 1)) if cid else ()):
+            hit = G.c.execute("SELECT eid FROM edition WHERE cid=? AND season=? ORDER BY eid LIMIT 1", (cid, season)).fetchone()
+            if hit:
+                return hit[0]
+        return None
     for r, h, a, hs, as_, mid in rows:
         for tid, nm in ((h, r["home_team"]), (a, r["away_team"])):
             G.put("team", {"tid": tid, "name": nm, "kind": "national"}, "martj42")
@@ -77,6 +90,10 @@ def load(G, reg, S):
         if mid:
             G.xref("match", mid, "martj42", key, "date+teams")
             linked += 1
+            cur = G.c.execute("SELECT eid FROM match WHERE mid=?", (mid,)).fetchone()
+            e = curated(r["tournament"], r["date"][:4]) if cur and cur[0] not in ours else None
+            if e:                              # Transfermarkt's «FIWC»/«AFAC» held it: it is the curated tournament's game
+                G.c.execute("UPDATE match SET eid=? WHERE mid=?", (e, mid))
             continue
         cid = reg.get("competition", "martj42", r["tournament"]) or reg.mint("competition", "martj42", r["tournament"])
         G.put("competition", {"cid": cid, "name": r["tournament"], "scope": "international"}, "martj42")
