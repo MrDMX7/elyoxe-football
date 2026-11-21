@@ -15,7 +15,7 @@ from graph.ids import Registry  # noqa: E402
 from graph.src import Sources  # noqa: E402
 
 ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "tm_lineups", "rsssf", "schochastics", "martj42", "worldcup", "intl_goals", "coaches", "wiki_managers", "transfers",
-         "honours", "fjelstul", "awards", "intl_records", "old_names", "people", "teams", "twins", "void", "settle", "corrections", "sofascore", "official_motm", "motm"]      # an edition honour's first source keeps it: our counts, Fjelstul, then Wikipedia
+         "honours", "fjelstul", "awards", "intl_records", "old_names", "people", "teams", "twins", "fotmob_ar", "void", "settle", "corrections", "sofascore", "official_motm", "motm"]      # an edition honour's first source keeps it: our counts, Fjelstul, then Wikipedia
 REQUIRED = {"fotmob_matches"}
 CACHE = os.path.join(HERE, ".cache")       # the registry and the published mirror: kept between runs (actions/cache)
 OUT = os.path.join(HERE, ".build")         # tifo.db and the report: rebuilt each run, never cached (1-2 GB)
