@@ -1,0 +1,21 @@
+# One club under two names the name rule (graph/load/teams.py) cannot see: an abbreviation or a nickname.
+# [weaker source's name, FotMob's name]; the two must also be in the same country, and FotMob must have exactly that club.
+same:
+  - ["Sporting KC", "Sporting Kansas City"]
+  - ["America Mineiro", "America MG"]
+  - ["Hearts", "Heart of Midlothian"]
+  - ["Odd BK", "Odds Ballklubb"]
+  - ["Odd", "Odds Ballklubb"]
+  - ["Junior FC", "Atletico Junior"]
+  - ["Vaasa PS", "VPS"]
+  - ["Aarhus", "AGF"]
+  # Emirates Club (Ras Al Khaimah) still exists (FotMob 102121); teams_ar.yaml `historic` lists its old spellings only for
+  # the Arabic name, and that list keeps them from the name rule: named here. Not Al Shabab, Al Ahli or Dubai (the 2017 merger).
+  - ["Emirates", "Emirates Club"]
+  - ["Al Emirates", "Emirates Club"]
+  - ["Al-Emirates", "Emirates Club"]
+
+# [name, name]: close letter by letter, two clubs all the same.
+apart:
+  - ["Parahyba FC", "Parnahyba"]
+  - ["Reggina", "Reggiana"]
