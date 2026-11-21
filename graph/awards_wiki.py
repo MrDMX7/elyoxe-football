@@ -2,6 +2,7 @@
 a season with a linked person (an award, a top scorer list) or with a champion and a runner-up club. Merged cells are
 unfolded first, so a year spanning a three-row podium dates all three rows. Pure: no network, no graph."""
 import re
+import unicodedata
 import urllib.parse
 from lxml import html as LH
 
@@ -278,9 +279,22 @@ LOWER = re.compile(r"\b(second|third|fourth|2|ii|iii|b|reserves?|women|womens|yo
                    r"super cup|play ?offs?|qualification|qualifying|amateur|regional)\b")
 
 
+# a competition's season articles under its old names
+OLD_NAMES = {"uefa champions league": {"european cup"}, "copa america": {"south american championship"},
+             "serie a": {"italian football championship", "divisione nazionale", "prima divisione"},
+             "uae pro league": {"arabian gulf league", "uae arabian gulf league"}, "uefa europa league": {"uefa cup"},
+             "caf champions league": {"african cup of champions clubs"},
+             "afc champions league elite": {"asian club championship", "afc champions league"}}
+
+
 def _words(s):
-    s = re.sub(r"\([^)]*\)", " ", s.replace("_", " ").lower())
-    return " ".join(re.sub(r"[^\w\s]", "", s).split())
+    s = unicodedata.normalize("NFKD", re.sub(r"\([^)]*\)", " ", s.replace("_", " ").lower())).encode("ascii", "ignore").decode()
+    return " ".join(re.sub(r"[^\w\s]", " ", s).split())
+
+
+def _kin(a, b):
+    """one word, or the country and its adjective (Kuwait/Kuwaiti, Iraq/Iraqi, Egypt/Egyptian)"""
+    return a == b or (min(len(a), len(b)) >= 4 and (a.startswith(b) or b.startswith(a)))
 
 
 def own_season(page, comp):
@@ -292,11 +306,16 @@ def own_season(page, comp):
     if not m or not comp:
         return False
     name, own = _words(m.group(2)), _words(comp)
+    if re.search(r"\b(final|finals|squads)\b", name):         # one match, or the squads: not a season
+        return False
+    if name in OLD_NAMES.get(own, ()):
+        return True
     if any(w not in own.split() and not re.search(rf"\b{re.escape(w)}\b", own) for w in LOWER.findall(name)):
         return False
     if own in name or name in own:
         return True
-    return bool((set(name.split()) & set(own.split())) - GENERIC)
+    mine = [w for w in own.split() if w not in GENERIC]
+    return any(_kin(w, x) for w in name.split() if w not in GENERIC for x in mine)
 
 
 def season_links(html):

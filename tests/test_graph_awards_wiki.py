@@ -191,3 +191,14 @@ def test_a_season_article_is_its_competitions_only():
     assert not own_season("2019–20 Egyptian Second Division", "Egyptian Premier League")
     assert not own_season("2019–20 Egypt Cup", "Egyptian Premier League") and not own_season("2020–21 UAE President's Cup", "UAE Pro League")
     assert own_season("2010_FIFA_World_Cup", "FIFA World Cup") and not own_season("2011 FIFA Women's World Cup", "FIFA World Cup")
+
+
+def test_a_season_under_the_countrys_adjective_or_the_competitions_old_name_is_its_own():
+    from graph.awards_wiki import own_season
+    assert own_season("2015–16_Kuwaiti_Premier_League", "Kuwait Premier League") and own_season("2005–06_Iraqi_Premier_League", "Iraq Stars League")
+    assert own_season("1989–90_European_Cup", "UEFA Champions League") and own_season("1959_South_American_Championship", "Copa América")
+    assert own_season("2014–15_Arabian_Gulf_League", "UAE Pro League") and own_season("1945–46_Italian_Football_Championship", "Serie A")
+    assert not own_season("1990_European_Cup_final", "UEFA Champions League")                 # one match, not a season
+    assert not own_season("1923_South_American_Championship_squads", "Copa América")
+    assert not own_season("1964_Intercontinental_Cup", "UEFA Champions League")
+    assert own_season("1997–98_UEFA_Cup", "UEFA Europa League") and own_season("1990_African_Cup_of_Champions_Clubs", "CAF Champions League")
