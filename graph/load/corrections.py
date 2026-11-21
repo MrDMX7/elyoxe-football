@@ -56,7 +56,8 @@ def load(G, reg, S, conf=None):
             G.c.execute("DELETE FROM conflict WHERE type='match' AND tifo_id=?", (r[0],))
             n["matches"] = n.get("matches", 0) + 1
     for p in conf.get("players") or []:
-        pid = reg.get("player", "fotmob", int(p["fotmob"]))
+        # FotMob id, or the Wikidata QID for a player FotMob never had (old internationals)
+        pid = reg.get("player", "fotmob", int(p["fotmob"])) if "fotmob" in p else reg.get("player", "wikidata", p["wikidata"])
         if pid is None:
             continue
         if p.get("born"):

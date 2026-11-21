@@ -31,3 +31,36 @@ players:
   - {fotmob: 713207, born: "1993-02-12", source: "Seifeddine Jaziri: Wikipedia, Wikidata, 11v11"}
   - {fotmob: 809170, born: "1995-03-29", source: "Karim El Berkaoui: ESPN, Soccerway, FootMercato"}
   - {fotmob: 566112, born: "1989-09-10", source: "Keno: Wikipedia, ESPN"}
+  # 2026-11-21 born conflicts, most-played first; each date is the Wikipedia infobox value backed by the source it cites
+  # https://en.wikipedia.org/wiki/Pepe_(footballer,_born_February_1983) cites the FIFA squad list
+  - {wikidata: Q485697, born: "1983-02-26", source: "Pepe: FIFA squad list via Wikipedia"}
+  # https://en.wikipedia.org/wiki/Germán_Cano cites https://fdp.fifa.org/assetspublic/ce119/pdf/SquadLists-English.pdf p5
+  - {fotmob: 113616, born: "1988-01-02", source: "Germán Cano: FIFA Club World Cup 2023 squad list"}
+  # https://en.wikipedia.org/wiki/Agustín_Marchesín cites the FIFA Club World Cup 2025 squad list
+  - {fotmob: 164020, born: "1988-03-16", source: "Agustín Marchesín: FIFA Club World Cup 2025 squad list"}
+  # https://en.wikipedia.org/wiki/Lucas_Evangelista cites the FIFA squad list
+  - {fotmob: 452269, born: "1995-02-06", source: "Lucas Evangelista: FIFA squad list via Wikipedia"}
+  # https://en.wikipedia.org/wiki/Cucho_Hernández cites https://www.fifadata.com/document/FWYC/2019/pdf/FWYC_2019_SquadLists.pdf
+  - {fotmob: 852071, born: "1999-04-20", source: "Cucho Hernández: FIFA U-20 World Cup 2019 squad list"}
+  # https://en.wikipedia.org/wiki/Mahmoud_Al-Mawas cites https://fdp.fifa.org/assetspublic/ce14/pdf/SquadLists-English.pdf p14
+  - {fotmob: 647105, born: "1993-01-01", source: "Mahmoud Al-Mawas: FIFA Arab Cup 2021 squad list"}
+  # https://en.wikipedia.org/wiki/Damián_Álvarez_(footballer,_born_1979) cites the FIFA Club World Cup 2008 squad list
+  - {wikidata: Q1158567, born: "1979-05-21", source: "Damián Álvarez: FIFA Club World Cup 2008 squad list"}
+  # https://en.wikipedia.org/wiki/Paul_Gallagher_(footballer) cites The PFA Footballers' Who's Who 2009-10
+  - {wikidata: Q1050055, born: "1984-08-09", source: "Paul Gallagher: PFA Footballers' Who's Who 2009-10"}
+  # https://en.wikipedia.org/wiki/Daniel_Muñoz_(footballer) cites https://www.premierleague.com/players/76353/Daniel-Mu%C3%B1oz/overview
+  - {fotmob: 859282, born: "1996-05-26", source: "Daniel Muñoz: Premier League profile"}
+  # https://en.wikipedia.org/wiki/Andrés_Cubas cites https://fdp.fifa.org/assetspublic/ce281/pdf/SquadLists-English.pdf
+  - {fotmob: 529625, born: "1996-05-11", source: "Andrés Cubas: FIFA World Cup 2026 squad list"}
+  # https://en.wikipedia.org/wiki/Mark_Beevers cites The PFA Footballers' Who's Who 2010-11
+  - {wikidata: Q3849445, born: "1989-11-21", source: "Mark Beevers: PFA Footballers' Who's Who 2010-11"}
+  # https://en.wikipedia.org/wiki/Nicky_Wroe cites The PFA Footballers' Who's Who 2010-11
+  - {wikidata: Q7028715, born: "1985-09-28", source: "Nicky Wroe: PFA Footballers' Who's Who 2010-11"}
+  # https://en.wikipedia.org/wiki/Brad_Potts cites https://www.11v11.com/players/brad-potts-239718/
+  - {fotmob: 363345, born: "1994-07-03", source: "Brad Potts: 11v11 (AFS Enterprises)"}
+  # https://en.wikipedia.org/wiki/Wesley_(footballer,_born_November_1996) cites https://www.premierleague.com/players/15580/Wesley/overview
+  - {fotmob: 656562, born: "1996-11-24", source: "Wesley Moraes: Premier League profile"}
+  # https://en.wikipedia.org/wiki/Danny_Woodards cites The PFA Footballers' Who's Who 2008-09
+  - {wikidata: Q5220953, born: "1983-10-08", source: "Danny Woodards: PFA Footballers' Who's Who 2008-09"}
+  # https://en.wikipedia.org/wiki/Deon_Hotto cites his FIFA player profile (370377)
+  - {fotmob: 454319, born: "1990-10-29", source: "Deon Hotto: FIFA player profile"}

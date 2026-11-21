@@ -52,3 +52,17 @@ def test_decisions_beat_the_sources_and_close_the_disagreements(tmp_path):
 def test_the_file_reads():
     c = corrections.read()
     assert any(h["season"] == "1999/2000" and len(h["players"]) == 3 for h in c["honours"])
+
+
+def test_a_player_without_a_fotmob_id_is_named_by_his_wikidata_id(tmp_path):
+    G, reg, eds, atiq, tag, jaz = world(tmp_path)
+    pepe = reg.mint("player", "wikidata", "Q485697")
+    G.put("player", {"pid": pepe, "name": "Pepe", "born": "1984-02-26"}, "wikidata")
+    G.conflict("player", pepe, "born", "1984-02-26", "wikidata", "1983-02-26", "tm")
+    G.c.commit()
+    conf = {"players": [{"wikidata": "Q485697", "born": "1983-02-26", "source": "FPF"},
+                        {"wikidata": "Q1", "born": "1900-01-01", "source": "nobody here"}]}
+    out = corrections.load(G, reg, Sources(str(tmp_path), s3=False), conf=conf)
+    assert G.c.execute("select born from player where pid=?", (pepe,)).fetchone()[0] == "1983-02-26"
+    assert G.c.execute("select count(*) from conflict where tifo_id=? and field='born'", (pepe,)).fetchone()[0] == 0
+    assert out["players"] == 1
