@@ -159,3 +159,14 @@ def test_an_arab_name_in_two_transliterations_is_one_man():
     from graph.load.settle import _same_man
     assert _same_man("tareq al saeed", "tarek el said") and _same_man("mohammed salem al enazi", "mohamed salem al-enezi")
     assert not _same_man("hussein al meri", "mamoun diop") and not _same_man("ali daei", "adel khamis")
+
+
+def test_a_group_winner_against_the_overall_champion_in_a_league_once_played_in_groups_is_no_disagreement(tmp_path):
+    # Ligue 2 until 1992/93: FotMob names every group's winner, 365Scores the overall champion; both are right
+    G, reg = g(tmp_path)
+    G.put("competition", {"cid": 1, "name": "Ligue 2"}, "s365")
+    for eid, season in ((10, "1985/1986"), (11, "1995/1996")):
+        G.put("edition", {"eid": eid, "cid": 1, "season": season}, "s365")
+        G.conflict("honour", eid, "champion", "5", "s365", "6", "fotmob")
+    out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert [r[0] for r in G.c.execute("select tifo_id from conflict")] == [11] and out["group_era"] == 1

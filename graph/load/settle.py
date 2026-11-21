@@ -119,8 +119,12 @@ def same_club(a, b):
     return bool(oa and ob) and (oa <= ob or ob <= oa)
 
 
+# leagues once played in groups, and the first season they were one table
+GROUP_ERAS = {"Ligue 2": "1993/1994"}
+
+
 def load(G, reg, S):
-    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0, "no_such_team": 0, "extra_goals": 0, "same_club": 0}
+    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0, "no_such_team": 0, "extra_goals": 0, "same_club": 0, "group_era": 0}
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     groups = {}
     for rowid, mid, field, kept, ksrc, other, osrc in q("SELECT rowid, tifo_id, field, kept, kept_src, other, other_src FROM conflict "
@@ -181,6 +185,13 @@ def load(G, reg, S):
         if not re.search(r"\d", f"{kept}{other}") and same_club(kept, other):
             G.c.execute("DELETE FROM conflict WHERE rowid=?", (rowid,))
             n["same_club"] += 1
+    # a league once played in groups: FotMob names each group's winner, 365Scores the overall champion; both are right
+    for rowid, eid in q("""SELECT f.rowid, f.tifo_id FROM conflict f JOIN edition e ON e.eid=f.tifo_id JOIN competition c ON c.cid=e.cid
+                            WHERE f.type='honour' AND f.field='champion' AND f.other_src='fotmob'"""):
+        name, season = q("SELECT c.name, e.season FROM edition e JOIN competition c ON c.cid=e.cid WHERE e.eid=?", (eid,))[0]
+        if name in GROUP_ERAS and season < GROUP_ERAS[name]:
+            G.c.execute("DELETE FROM conflict WHERE rowid=?", (rowid,))
+            n["group_era"] += 1
     # a champion or runner-up that is no team of ours (365Scores' women's and under-21 sides it never gave us) gives way
     # to the one we hold
     teams = {t for (t,) in q("SELECT tid FROM team")}
