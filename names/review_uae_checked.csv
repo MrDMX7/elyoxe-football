@@ -4,7 +4,7 @@ key,english,generated_ar,verdict,correct_ar,source_url
 197054,Khalid Eissa,خالد عيسى,ok,خالد عيسى,https://www.emaratalyoum.com/sports/local/2026-03-18-1.2026532
 1138507,Hamad Al Meqbaali,حمد المقبالي,ok,حمد المقبالي,https://www.emaratalyoum.com/sports/local/2026-03-18-1.2026532
 198280,Ismail Ahmed,إسماعيل أحمد,ok,إسماعيل أحمد,https://www.goal.com/ar/أخبار/كأس-آسيا-2019--بروفايل-منتخب-الإمارات---الأبيض-الباحث-عن-أول-لقب-له/1njxegu9knxqz1ep7xhbi3bcww
-1104103,Kouame Kouadio,كوامي كواديو,unsure,,https://www.albayan.ae/sports/football/big-players/44343 (Al Bayan writes «كوامي كويدو»; also known as Kouame Autonne «أوتون»)
+1104103,Kouame Kouadio,كوامي كواديو,fixed,كوامي أوتون,"https://ar.wikipedia.org/wiki/كوامي_أوتون (Wikidata Q84175053, birth date 2000-09-22 matches; Al Bayan writes «كوامي كويدو», player known as Kouame Autonne)"
 1831494,Yousif Al Marzooqi,يوسف المرزوقي,unsure,,https://www.albayan.ae/sports/uae-stadiums/1563186 (search summary showed «يوسف المزروعي»; not confirmed on the page)
 1650394,Mohammad Juma,محمد جمعة,unsure,,https://www.albayan.ae/sports/uae-stadiums/1563186 (a «محمد جمعة المنصوري» is listed; not tied to this id)
 821897,Khaled Ebraheim,خالد إبراهيم,unsure,,no Arabic source found
@@ -13,3 +13,20 @@ key,english,generated_ar,verdict,correct_ar,source_url
 1353470,Brahian Palacios,براهيم بالاسيوس,unsure,,"https://www.fotmob.com/pl/players/1353470 (first name is Brahian, «براهيان» likely; no Arabic press source found)"
 1324923,Khalifa Sembaij,خليفة سبيعي,unsure,,https://www.fotmob.com/players/1324923/khalifa-sembaij (no Arabic source)
 1840832,Abou Ibrahima Konate,أبو كوناتي,unsure,,https://www.fotmob.com/players/1840832/abou-konate (FotMob calls him Abou Konate)
+608428,Youssoufou Niakaté,يوسف نياكاتي,ok,يوسف نياكاتي,"https://ar.wikipedia.org/wiki/يوسف_نياكاتي (Wikidata Q24005952, birth date matches)"
+581132,Chris Bedia,كريس بيديا,ok,كريس بيديا,https://www.365scores.com/ar/football/player/chris-bedia-44091
+670881,Suhail Al Noobi,سهيل النوبي,ok,سهيل النوبي,https://www.aletihad.ae/articleamp/6116/2020/سهيل-النوبي..-«التألق-942»!
+794192,Majid Rashid,ماجد راشد,ok,ماجد راشد,https://www.emaratalyoum.com/sports/local/2025-12-27-1.2000965
+576030,Shaheen Abdalla,شاهين عبدالله,fixed,شاهين عبد الرحمن,"https://www.fotmob.com/ar/players/576030 (ESPN: Shahin Abdulrahman, same birth date 1992-11-16)"
+625159,Majid Surour,ماجد سرور,ok,ماجد سرور,https://www.aletihad.ae/news/الرياضي/4169614/ماجد-سرور-إلى-فرنسا-لعلاج-الرباط-الصليبي
+618734,Khalid Bawazir,خالد باوزير,ok,خالد باوزير,https://www.albayan.ae/sports/uae-stadiums/1542687
+618634,Mohammad Abdulbasit,محمد عبد الباسط,ok,محمد عبد الباسط,https://www.emaratalyoum.com/sports/local/2026-09-23-1.2085541 (writes «محمد عبدالباسط»)
+173075,Khaled Al Senaani,خالد السناني,ok,خالد السناني,https://www.albayan.ae/sports/uae-stadiums/adnoc-pro-league/1352903
+618340,Abdalla Al Naqbi,عبدالله النقبي,ok,عبدالله النقبي,https://www.emaratalyoum.com/sports/local/2026-02-24-1.2018604
+794049,Abdulla Al Karbi,عبدالله الكربي,ok,عبدالله الكربي,https://www.emaratalyoum.com/sports/local/2025-10-17-1.1980698
+618610,Khalid Al Darmaki,خالد الدرمكي,ok,خالد الدرمكي,https://www.fotmob.com/ar/players/618610/khaled-khamis (full name «خالد علي خميس عبيد بن محمود الدرمكي»)
+670825,Omar Ahmed Rashed,عمر الخديم,ok,عمر الخديم,"https://www.wikidata.org/wiki/Q28731767 (Wikidata item is labelled Omar Ahmed Rashed = Omar Al Khodaim, born 1992-12-09, Dibba Al Fujairah then Emirates Club; DB appearances for this id are Dibba Al Fujairah and Emirates Club; source wikidata, not generated)"
+256854,Marius Høibråten,ماريوس هويبراتين,unsure,,no Arabic press spelling found
+930024,Dinko Horkaš,دينكو هوركاش,unsure,,no Arabic press spelling found
+959400,Ahmed Jashkak,أحمد جشك,unsure,,https://www.livesport.com/player/jshak-ahmed/xGPPtNx0/ (English Jshak; no Arabic press source)
+721012,Ahmed Al Hosani,أحمد الحوسني,unsure,,https://www.soccerway.com/player/al-hosani-ahmed/Em4XVsO7 (no Arabic press source ties the name)
