@@ -14,6 +14,22 @@ same:
   - ["Emirates", "Emirates Club"]
   - ["Al Emirates", "Emirates Club"]
   - ["Al-Emirates", "Emirates Club"]
+  # {country, keys}: one old club kept twice by two weaker sources and by no FotMob record, so the name rule cannot join them.
+  # keys are «source:source_id» as in xref; the lower Tifo id is kept. Never a FotMob key, never by the name rule.
+  # The old Dubai CSC (until the 2017 merger into Shabab Al Ahli, which stays its own club): RSSSF's and schochastics' «Dubai».
+  - {country: UAE, keys: ["rsssf-name:uae|Dubai", "sch:Dubai (United Arab Emirates)"]}
+  - {country: KSA, keys: ["rsssf-name:sau|Al-Nijmeh", "sch:Al Nijmeh (Saudi Arabia)"]}
+  - {country: KSA, keys: ["rsssf-name:sau|Sadous", "sch:Sadous (Saudi Arabia)"]}
+  - {country: QAT, keys: ["rsssf-name:qat|Al Ittifaq", "rsssf-name:qat|Al-Ittifaq", "sch:Al Ittifaq (Qatar)"]}
+  - {country: IRQ, keys: ["rsssf-name:iraq|Al-Bareed", "sch:Al Bareed (Iraq)"]}
+  - {country: IRQ, keys: ["rsssf-name:iraq|Al-Jaish", "sch:Al Jaish (Iraq)"]}
+  - {country: IRQ, keys: ["rsssf-name:iraq|Al-Ramadi", "sch:Al Ramadi (Iraq)"]}
+  - {country: IRQ, keys: ["rsssf-name:iraq|Furat", "sch:Furat (Iraq)"]}
+  - {country: IRQ, keys: ["rsssf-name:iraq|Maysan", "sch:Maysan (Iraq)"]}
+  - {country: IRQ, keys: ["rsssf-name:iraq|Pires", "sch:Pires (Iraq)"]}
+  - {country: IRQ, keys: ["rsssf-name:iraq|Salahaddin", "sch:Salahaddin (Iraq)"]}
+  - {country: IRQ, keys: ["rsssf-name:iraq|Shatra", "sch:Shatra (Iraq)"]}
+  - {country: IRQ, keys: ["rsssf-name:iraq|Sirwan (Sulimaniya)", "sch:Sirwan Sulimaniya (Iraq)"]}
 
 # [name, name]: close letter by letter, two clubs all the same.
 apart:

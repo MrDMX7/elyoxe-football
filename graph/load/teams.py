@@ -12,6 +12,9 @@ Rules:
     letter, and neither is a reserve, youth or women's side the other is not; or graph/team_aliases.yaml names the pair
     (abbreviations: «KC», «MG», «Hearts»);
   * exactly one FotMob club fits (two: it stays apart);
+  * two records neither of which is FotMob's (RSSSF's and schochastics' «Dubai», the old Dubai CSC) are joined only when
+    graph/team_aliases.yaml names them in `same` by source key with a country (never by the name rule): the same country,
+    clubs, never met, none FotMob's; the lower Tifo id is kept, and if it folds into a FotMob record the others follow it;
   * a historic UAE club (teams_ar.yaml `historic`, `rename`) and a club FotMob keeps under a later name (`era_names`: Shabab
     Al Ahli, the 2017 merger) are never folded by the name rule: Al Shabab, Al Ahli and Dubai stay three clubs.
 Rebuilt in every build and never written to the registry (as the people merge), so a rule fixed tomorrow undoes today's merge."""
@@ -62,7 +65,17 @@ def aliases(path=ALIASES):
         d = yaml.safe_load(open(path, encoding="utf-8")) or {}
     except OSError:
         return {}
-    return {fold(a): fold(b) for a, b in d.get("same") or []}
+    return {fold(e[0]): fold(e[1]) for e in d.get("same") or [] if not isinstance(e, dict)}
+
+
+def joins(path=ALIASES):
+    """[(country, [source key, ...])] from team_aliases.yaml `same` entries {country, keys}: one club kept twice by two weaker
+    sources. A key is «source:source_id» as in xref («rsssf-name:uae|Dubai», «sch:Dubai (United Arab Emirates)»)."""
+    try:
+        d = yaml.safe_load(open(path, encoding="utf-8")) or {}
+    except OSError:
+        return []
+    return [(e["country"], list(e["keys"])) for e in d.get("same") or [] if isinstance(e, dict)]
 
 
 def apart(path=ALIASES):
@@ -84,9 +97,36 @@ def guarded():
     return names, {int(k) for k in (d.get("era_names") or {})}
 
 
-def pairs(teams, met=frozenset(), alias=None, guard=frozenset(), era=frozenset(), never=frozenset()):
-    """[(drop, keep)]. teams: [(tid, name, country, kind, fotmob)]; met: {(a, b)} of teams that played each other."""
-    alias = alias or {}
+def joined(teams, keyed, groups, met=frozenset()):
+    """[(drop, keep)] of the named groups of non-FotMob records (team_aliases.yaml `same` {country, keys}). A group with a key
+    that names no record, a FotMob record, a national team, another country, or two records that met is left alone whole."""
+    by = {t[0]: t for t in teams}
+    out = []
+    for country, keys in groups:
+        ids = [keyed.get(k) for k in keys]
+        if None in ids or any(i not in by for i in ids):
+            continue
+        ids = sorted(set(ids))
+        if len(ids) < 2 or any(by[i][4] or by[i][3] == "national" or by[i][2] != country for i in ids):
+            continue
+        if any((a, b) in met for a in ids for b in ids if a < b):
+            continue
+        out += [(i, ids[0]) for i in ids[1:]]
+    return out
+
+
+def pairs(teams, met=frozenset(), alias=None, guard=frozenset(), era=frozenset(), never=frozenset(), keyed=None, groups=()):
+    """[(drop, keep)]. teams: [(tid, name, country, kind, fotmob)]; met: {(a, b)} of teams that played each other;
+    keyed: {«source:source_id»: tid}; groups: [(country, [key, ...])] of non-FotMob records named as one club."""
+    joins_ = joined(teams, keyed or {}, groups, met)
+    gone = {d for d, _ in joins_}
+    fm = fotmob_pairs([t for t in teams if t[0] not in gone], met, alias or {}, guard, era, never)
+    into = dict(fm)
+    return sorted(fm + [(d, into.get(k, k)) for d, k in joins_])
+
+
+def fotmob_pairs(teams, met, alias, guard, era, never):
+    """[(drop, keep)] of non-FotMob records folded into a FotMob record (the alias list or the name rule)."""
     fm_by_c = defaultdict(list)
     for t in teams:
         if t[4] and t[2] and t[3] != "national":
@@ -133,7 +173,10 @@ def candidates(c, alias=None, guard=None, era=None):
     cc = countries(q)
     teams = [(tid, name, cc.get(tid), kind, tid in fm) for tid, name, kind in q("SELECT tid, name, kind FROM team")]
     met = {(min(h, a), max(h, a)) for h, a in q("SELECT DISTINCT home, away FROM match WHERE home IS NOT NULL AND away IS NOT NULL")}
-    return pairs(teams, met, aliases() if alias is None else alias, guard, era, apart())
+    keyed = {f"{s}:{i}": t for t, s, i in q("SELECT tifo_id, source, source_id FROM xref WHERE type='team'")}
+    # era_names are keyed by FotMob id (102119): the Tifo record carrying that id is the one the name rule must not touch
+    era = set(era) | {keyed[f"fotmob:{e}"] for e in era if f"fotmob:{e}" in keyed}
+    return pairs(teams, met, aliases() if alias is None else alias, guard, era, apart(), keyed, joins())
 
 
 def settle_conflicts(G, merged):

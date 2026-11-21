@@ -51,6 +51,43 @@ def test_historic_uae_clubs_and_era_names_stay_separate():
     assert T.fold("Al-Shabab Al-Arabi") in g and 102119 in e
 
 
+DUBAI = [("UAE", ["rsssf-name:uae|Dubai", "sch:Dubai (United Arab Emirates)"])]
+KEYED = {"rsssf-name:uae|Dubai": 19755, "sch:Dubai (United Arab Emirates)": 19770, "fotmob:102119": 659}
+
+
+def dubai(*extra):
+    return [t(659, "Shabab Al Ahli", "UAE", True), t(19755, "Dubai", "UAE", False), t(19770, "Dubai", "UAE", False), *extra]
+
+
+def test_alias_list_joins_two_non_fotmob_records_into_the_lower_id():
+    # the old Dubai CSC, once from RSSSF and once from schochastics: one club, kept under the lower Tifo id
+    assert T.pairs(dubai(), guard={T.fold("Dubai")}, era={659}, keyed=KEYED, groups=DUBAI) == [(19770, 19755)]
+    # the name rule alone never joins them (no FotMob record), and never folds Dubai into Shabab Al Ahli (the 2017 merger)
+    assert T.pairs(dubai(), guard={T.fold("Dubai")}, era={659}) == []
+    assert T.pairs(dubai(), era={659}) == []
+
+
+def test_explicit_join_refused_across_countries_with_fotmob_or_when_they_met():
+    assert T.pairs(dubai(), keyed=KEYED, groups=[("KSA", DUBAI[0][1])]) == []
+    assert T.pairs(dubai(), keyed=KEYED, groups=[("UAE", ["fotmob:102119", "rsssf-name:uae|Dubai"])]) == []
+    assert T.pairs(dubai(), met={(19755, 19770)}, keyed=KEYED, groups=DUBAI) == []
+    assert T.pairs(dubai(), keyed=KEYED, groups=[("UAE", ["rsssf-name:uae|Dubai", "sch:nobody"])]) == []
+
+
+def test_explicit_join_chains_into_fotmob_when_the_kept_record_folds():
+    # 9's name alone folds into nothing; joined to 5, it goes where 5 goes
+    teams = [t(1, "Al Jaish", "IRQ", True), t(5, "Al-Jaish", "IRQ", False), t(9, "Army Club Baghdad", "IRQ", False)]
+    keyed = {"rsssf-name:iraq|Al-Jaish": 5, "sch:Al Jaish (Iraq)": 9}
+    assert T.pairs(teams, keyed=keyed, groups=[("IRQ", list(keyed))]) == [(5, 1), (9, 1)]
+
+
+def test_yaml_joins_read():
+    g = dict((tuple(k), c) for c, k in T.joins())
+    assert g[tuple(DUBAI[0][1])] == "UAE"
+    assert all(len(k) >= 2 and c for c, k in T.joins())
+    assert not any("102119" in x or "fotmob:" in x for _, k in T.joins() for x in k)
+
+
 def test_yaml_aliases_read():
     a = T.aliases()
     assert a[T.fold("Sporting KC")] == T.fold("Sporting Kansas City")
