@@ -5,7 +5,63 @@ fixed in the data and taken off the conflict list; what no rule settles stays th
     Brazil, 2022, was 1-1 and 4-2 on penalties) or the shootout alone (FotMob's Brazil «0-2» Paraguay, 2011, was 0-0): the
     draw is the score, the difference the shootout;
   * the same score the other way round: one source had home and away swapped, the result is the same;
-  * a birth date that is only a year (Wikidata's «2003-01-01» for a man born in 2003): the full date of that year."""
+  * a birth date that is only a year (Wikidata's «2003-01-01» or «1983-00-00» for a man born in that year): the full date;
+  * an honour's winners, the same men spelled two ways (our «bienve maranon», Wikipedia's «bienvenido maranon morejon»;
+    «mabululo», «mabululu»): the names shown stay. A tie against one man, or two different surnames, stays for review."""
+import re
+import unicodedata
+
+FOLD = str.maketrans({"æ": "ae", "ø": "o", "ß": "ss", "đ": "d", "ł": "l", "ı": "i"})
+
+
+def _toks(s):
+    s = unicodedata.normalize("NFKD", str(s).lower().translate(FOLD)).encode("ascii", "ignore").decode()
+    return re.findall(r"[a-z0-9]+", s)
+
+
+def _one_typo(a, b):
+    """a and b differ by at most one letter changed, added or dropped."""
+    if abs(len(a) - len(b)) > 1:
+        return False
+    i = 0
+    while i < min(len(a), len(b)) and a[i] == b[i]:
+        i += 1
+    return a[i + 1:] == b[i + 1:] or a[i:] == b[i + 1:] or a[i + 1:] == b[i:]
+
+
+def _same_man(a, b):
+    """One man's two spellings: the same words; or the same number of words one letter apart (6+ letters); or every word of
+    the shorter name (2+ words) starting a different word of the longer («bienve maranon» in «bienvenido maranon morejon»)."""
+    a, b = _toks(a), _toks(b)
+    if not a or not b:
+        return False
+    if a == b:
+        return True
+    s, l = sorted((a, b), key=len)
+    if len(s) == len(l):
+        x, y = "".join(s), "".join(l)
+        return min(len(x), len(y)) >= 6 and _one_typo(x, y) and s[-1][0] == l[-1][0]
+    if len(s) < 2:
+        return False
+    used = set()
+    for t in s:
+        j = next((j for j, u in enumerate(l) if j not in used and u.startswith(t)), None)
+        if j is None:
+            return False
+        used.add(j)
+    return True
+
+
+def _same_men(a, b):
+    A, B = [x for x in str(a).split(";") if x.strip()], [x for x in str(b).split(";") if x.strip()]
+    if not A or len(A) != len(B):
+        return False
+    for x in A:
+        m = next((y for y in B if _same_man(x, y)), None)
+        if m is None:
+            return False
+        B.remove(m)
+    return True
 
 
 def _pair(s):
@@ -28,7 +84,7 @@ def _shootout(d, x, pens):
 
 
 def load(G, reg, S):
-    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0}
+    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0}
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     groups = {}
     for rowid, mid, field, kept, ksrc, other, osrc in q("SELECT rowid, tifo_id, field, kept, kept_src, other, other_src FROM conflict "
@@ -66,9 +122,14 @@ def load(G, reg, S):
     for rowid, pid, kept, other in q("SELECT rowid, tifo_id, kept, other FROM conflict WHERE type='player' AND field='born'"):
         a, b = str(kept or ""), str(other or "")
         for vague, full in ((a, b), (b, a)):
-            if vague.endswith("-01-01") and not full.endswith("-01-01") and vague[:4] == full[:4] and len(full) >= 10:
+            year_only = lambda d: d.endswith("-01-01") or d[4:8] == "-00-"
+            if year_only(vague) and not year_only(full) and vague[:4] == full[:4] and len(full) >= 10:
                 G.c.execute("UPDATE player SET born=? WHERE pid=?", (full[:10], pid))
                 G.c.execute("DELETE FROM conflict WHERE rowid=?", (rowid,))
                 n["birth_year_only"] += 1
                 break
+    for rowid, kept, other in q("SELECT rowid, kept, other FROM conflict WHERE type='honour'"):
+        if not re.search(r"\d", f"{kept}{other}") and _same_men(kept, other):    # «106908/None»: ids, not names
+            G.c.execute("DELETE FROM conflict WHERE rowid=?", (rowid,))
+            n["same_names"] += 1
     return n

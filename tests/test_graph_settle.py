@@ -57,3 +57,32 @@ def test_a_birth_date_that_is_only_a_year_gives_way_to_the_full_date(tmp_path):
     out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
     assert dict(G.c.execute("select pid, born from player")) == {1: "2003-02-18", 2: "1992-03-16", 3: "1989-09-10"}
     assert [r[0] for r in G.c.execute("select tifo_id from conflict")] == [3] and out["birth_year_only"] == 2
+
+
+def test_a_birth_date_with_month_zero_is_only_a_year_too(tmp_path):
+    G, reg = g(tmp_path)
+    G.put("player", {"pid": 1, "name": "A", "born": "1983-09-26"}, "tm")
+    G.conflict("player", 1, "born", "1983-09-26", "tm", "1983-00-00", "wikidata")     # Wikidata's year-only, Fjelstul's copy
+    G.conflict("player", 1, "born", "1983-09-26", "tm", "1983-00-00", "fjelstul")
+    out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select born from player").fetchone()[0] == "1983-09-26"
+    assert G.c.execute("select count(*) from conflict").fetchone()[0] == 0 and out["birth_year_only"] == 2
+
+
+def test_one_winner_spelled_two_ways_is_the_same_honour(tmp_path):
+    G, reg = g(tmp_path)
+    G.conflict("honour", 1, "top_scorer", "bienve maranon", "tifo", "bienvenido maranon morejon", "wiki")
+    G.conflict("honour", 2, "top_scorer", "alain kaluyituka dioko", "rsssf", "dioko kaluyituka", "wiki")
+    G.conflict("honour", 3, "top_scorer", "mabululo", "tifo", "mabululu", "wiki")
+    G.conflict("honour", 4, "top_scorer", "ahmed hassan", "tifo", "hossam salama", "wiki")              # two men: stays
+    G.conflict("honour", 5, "top_scorer", "ganiyu bolayi oseni; bienve maranon", "tifo", "bienvenido maranon morejon", "wiki")   # a tie or one: stays
+    G.conflict("honour", 6, "top_scorer", "ahmed ali", "tifo", "ahmed ali kamel; hassan ali", "wiki")
+    G.conflict("honour", 7, "champion", "8704", "s365", "2663", "fotmob")                                # team ids: not names
+    G.conflict("honour", 8, "top_scorer", "106908/None", "earlier", "106909/None", "fjelstul")          # one digit apart, two men
+    out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert [r[0] for r in G.c.execute("select tifo_id from conflict order by 1")] == [4, 5, 6, 7, 8] and out["same_names"] == 3
+
+
+def test_names_that_only_share_a_first_name_are_two_men(tmp_path):
+    assert not settle._same_man("mohamed salah", "mohamed elneny") and not settle._same_man("ali", "ali mabkhout")
+    assert settle._same_man("Jassim Al Dokhi", "jassim al-dokhi") and settle._same_man("Stabæk", "stabaek")
