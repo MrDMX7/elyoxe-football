@@ -150,6 +150,36 @@ def fotmob_pairs(teams, met, alias, guard, era, never):
     return sorted(out)
 
 
+# one country, two spellings (Wikipedia/Transfermarkt against FotMob)
+COUNTRY = [{"united states", "usa"}, {"czech republic", "czechia"}, {"turkey", "turkiye"}, {"united arab emirates", "uae"},
+           {"ivory coast", "cote d'ivoire"}, {"south korea", "korea republic"}, {"north korea", "korea dpr"}, {"iran", "ir iran"},
+           {"china", "china pr"}, {"republic of ireland", "ireland"}, {"dr congo", "congo dr"}, {"cape verde", "cabo verde"},
+           {"bosnia and herzegovina", "bosnia herzegovina"}]
+
+
+def _country(name):
+    f = " ".join(fold(name).replace("-", " ").split())
+    return next((min(g) for g in COUNTRY if f in g), f)
+
+
+def national_pairs(teams, met, played, share, min_share=0.5):
+    """[(drop, keep)]: a record without a FotMob id named as a country (Transfermarkt's «Mexico», «United Arab Emirates»)
+    whose games are mostly against national teams folds into FotMob's national team of that name; of two FotMob records of
+    one name (FotMob holds Mexico twice) the one with games. A record that met it is another team."""
+    nat = defaultdict(list)
+    for tid, name, _, kind, fm in teams:
+        if fm and kind == "national" and name:
+            nat[_country(name)].append(tid)
+    out = []
+    for tid, name, _, kind, fm in teams:
+        if fm or kind in ("national", "club") or not name or share.get(tid, 0) < min_share:
+            continue
+        fits = [k for k in nat.get(_country(name), ()) if played.get(k, 0) > 0]
+        if len(fits) == 1 and (min(tid, fits[0]), max(tid, fits[0])) not in met:
+            out.append((tid, fits[0]))
+    return sorted(out)
+
+
 def countries(q):
     """{tid: country}: the team's own, else the league country it played or won in most."""
     own = {tid: c for tid, c in q("SELECT tid, country FROM team")}
@@ -176,7 +206,18 @@ def candidates(c, alias=None, guard=None, era=None):
     keyed = {f"{s}:{i}": t for t, s, i in q("SELECT tifo_id, source, source_id FROM xref WHERE type='team'")}
     # era_names are keyed by FotMob id (102119): the Tifo record carrying that id is the one the name rule must not touch
     era = set(era) | {keyed[f"fotmob:{e}"] for e in era if f"fotmob:{e}" in keyed}
-    return pairs(teams, met, aliases() if alias is None else alias, guard, era, apart(), keyed, joins())
+    out = pairs(teams, met, aliases() if alias is None else alias, guard, era, apart(), keyed, joins())
+    # national teams (graph/load/teams.national_pairs): who plays whom, and how much of it against a country's team
+    named = {_country(t[1]) for t in teams if t[3] == "national" and t[1]}
+    nationalish = {t[0] for t in teams if t[3] == "national" or (t[3] != "club" and t[1] and _country(t[1]) in named)}
+    played, vs = Counter(), Counter()
+    for h, a in q("SELECT home, away FROM match WHERE home IS NOT NULL AND away IS NOT NULL"):
+        for me, other in ((h, a), (a, h)):
+            played[me] += 1
+            vs[me] += other in nationalish
+    share = {t: vs[t] / n for t, n in played.items() if n}
+    gone = {d for d, _ in out}
+    return sorted(out + [p for p in national_pairs(teams, met, played, share) if p[0] not in gone])
 
 
 def settle_conflicts(G, merged):

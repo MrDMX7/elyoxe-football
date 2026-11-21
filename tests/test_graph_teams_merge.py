@@ -116,3 +116,20 @@ def test_load_remaps_and_settles_the_honour_conflict(tmp_path):
 def test_build_runs_teams_after_people_before_settle():
     o = build.ORDER
     assert o.index("people") < o.index("teams") < o.index("settle")
+
+
+def test_transfermarkts_national_team_record_folds_into_fotmobs_national_team():
+    from graph.load.teams import national_pairs
+    # (tid, name, country, kind, fotmob): FotMob holds Mexico twice (370 with 1,015 matches, 4192 with none)
+    teams = [(370, "Mexico", None, "national", True), (4192, "Mexico", None, "national", True), (17835, "Mexico", None, None, False),
+             (1320, "UAE", None, "national", True), (18779, "United Arab Emirates", None, None, False),
+             (500, "Mexico", "MEX", "club", False), (18275, "Serbia", None, None, False)]
+    played = {370: 1015, 4192: 0, 1320: 620, 17835: 25, 18779: 4, 500: 30, 18275: 12}
+    share = {17835: 0.72, 18779: 1.0, 500: 0.0, 18275: 0.67}        # of its games, against national teams
+    assert national_pairs(teams, frozenset(), played, share) == [(17835, 370), (18779, 1320)]   # Serbia: no FotMob record to join
+
+
+def test_a_national_record_that_met_fotmobs_is_another_team():
+    from graph.load.teams import national_pairs
+    teams = [(370, "Mexico", None, "national", True), (17835, "Mexico", None, None, False)]
+    assert national_pairs(teams, frozenset({(370, 17835)}), {370: 9, 17835: 9}, {17835: 1.0}) == []
