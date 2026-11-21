@@ -61,3 +61,9 @@ test("a club's matches from the season files: grouped by side, deduplicated, old
   assert.equal(M.teamMatches([s1, s2], { min: 4 }).size, 0);
   assert.equal(M.teamMatches([s1, s2], { min: 1, keep: id => id === 102117 }).size, 1);
 });
+
+test("a match page names its man of the match, linked", () => {
+  const h = M.matchBody({ ...OLD, motm: ["خالد إسماعيل", "k12"] }, o);
+  assert.match(h, /رجل المباراة:<\/span> <a href="\/p\/k12\/">خالد إسماعيل<\/a>/);
+  assert.doesNotMatch(M.matchBody(OLD, o), /رجل المباراة/);
+});

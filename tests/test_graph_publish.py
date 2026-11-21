@@ -85,6 +85,9 @@ def test_edition_files_for_season_pages(tmp_path):
     m = reg.mint("match", "fotmob", 1)
     G.put("match", {"mid": m, "eid": e, "date": "2017-01-01", "home": jaz, "away": ain, "hs": 2, "as_": 0}, "fotmob")
     G.c.execute("insert into match_award values(?, 'motm', ?, ?, '9.1', 'fotmob-rating')", (m, mab, jaz))
+    m2 = reg.mint("match", "fotmob", 2)                   # an organiser's award to a man FotMob never had: his archive page
+    G.put("match", {"mid": m2, "eid": e, "date": "2017-01-08", "home": ain, "away": jaz, "hs": 1, "as_": 0}, "fotmob")
+    G.c.execute("insert into match_award values(?, 'motm', ?, ?, NULL, 'official')", (m2, zb, ain))
     k = reg.mint("coach", "fotmob", 150526)
     G.put("coach", {"kid": k, "name": "Henk ten Cate"}, "fotmob")
     G.c.execute("insert into match_coach values(?, 'h', ?, 'fotmob')", (m, k))
@@ -96,7 +99,8 @@ def test_edition_files_for_season_pages(tmp_path):
     assert s["top_scorers"][0] == {"rank": 1, "fotmob": 170716, "name": "علي مبخوت", "value": "33"}
     assert s["top_scorers"][1] == {"rank": 2, "fotmob": None, "tifo": zb, "name": "Zoheir Bakhit", "value": "20"}   # links to /p/k<id>/
     assert s["table"][0] == [1, 102101, "الجزيرة", 26, 22, 2, 2, 70, 20, 68] and type(s["table"][0][9]) is int and s["motm"][0] == [170716, "علي مبخوت", 1]
-    assert s["champion_coach"] == {"kid": k, "name": "Henk ten Cate"} and s["matches"] == 1
+    assert s["motm"][1] == [None, "Zoheir Bakhit", 1, zb]
+    assert s["champion_coach"] == {"kid": k, "name": "Henk ten Cate"} and s["matches"] == 2
     assert out["competitions"] == 1
 
 

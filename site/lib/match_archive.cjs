@@ -33,7 +33,8 @@ function matchBody(m, o) {
     (m.ht ? `<p class="muted">الشوط الأول ${num(m.ht[0])} - ${num(m.ht[1])}</p>` : "");
   const facts = [["التاريخ", num(m.date)], (m.comp || m.season) && ["البطولة", seasonLink(m, o)], m.round && ["الجولة", num(m.round)],
     m.venue && ["الملعب", nm(m.venue)], m.ref && ["الحكم", nm(m.ref)],
-    m.co && m.co.h && [`مدرب ${esc(m.h[1])}`, nm(m.co.h)], m.co && m.co.a && [`مدرب ${esc(m.a[1])}`, nm(m.co.a)]].filter(Boolean);
+    m.co && m.co.h && [`مدرب ${esc(m.h[1])}`, nm(m.co.h)], m.co && m.co.a && [`مدرب ${esc(m.a[1])}`, nm(m.co.a)],
+    m.motm && m.motm[0] && ["رجل المباراة", player(m.motm[0], m.motm[1], o)]].filter(Boolean);
   const ev = (m.ev || []).filter(e => EV[e[2]]);
   const evs = ev.length ? U.grp("الأحداث", `<ol class="lc">${ev.map(e => `<li>${minute(e)}' ${EV[e[2]]}: ${player(e[4], e[5], o)} <span class="muted small">(${esc((e[3] === "h" ? m.h : m.a)[1])})</span></li>`).join("")}</ol>`) : "";
   const side = (k, t) => {

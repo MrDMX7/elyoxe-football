@@ -93,3 +93,12 @@ def test_by_default_every_arab_top_league_in_the_archive_is_published(tmp_path):
     assert ix == {"comps": {"538": ["2016-2017"], "536": ["1980-1981"]}, "teams": {"5789": 1}}
     s = json.load(open(tmp_path / "o" / "matches" / "536" / "1980-1981.json", encoding="utf-8"))
     assert [m["id"] for m in s["matches"]] == ["k960"] and s["matches"][0]["comp"] == 536
+
+
+def test_a_match_carries_its_man_of_the_match(tmp_path):
+    G, m2, old = world(tmp_path)
+    G.c.execute("insert into match_award values(?, 'motm', ?, NULL, NULL, 'official')", (m2, old))
+    G.c.commit()
+    publish.matches(G, str(tmp_path / "o"), comps=(538,), teams=(5789,))
+    t = json.load(open(tmp_path / "o" / "matches" / "team-5789.json", encoding="utf-8"))
+    assert t["matches"][0]["motm"] == ["عدنان الطلياني", f"k{old}"]

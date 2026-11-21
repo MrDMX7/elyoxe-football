@@ -51,7 +51,7 @@ function seasonBody(s, comp, o) {
     people("الهدافين", s.top_scorers) + people("أفضل لاعب", s.best_player) + people("أفضل لاعب شاب", s.best_young) + people("أفضل حارس", s.best_goalkeeper) +
     people("أفضل لاعب محلي", s.best_local) + people("أكثر صانع أهداف", s.top_assist) +
     ((s.best_coach || []).length ? U.grp("أفضل مدرب", `<p>${s.best_coach.map(c => coachL(c, o)).join("، ")}</p>`) : "") +
-    ((s.motm || []).length ? U.grp("رجل المباراة", `<ol class="lc">${s.motm.map(m => `<li>${playerL({ fotmob: m[0], name: m[1] }, o)} <span class="muted small">${num(m[2])}</span></li>`).join("")}</ol>`) : "") +
+    ((s.motm || []).length ? U.grp("رجل المباراة", `<ol class="lc">${s.motm.map(m => `<li>${playerL({ fotmob: m[0], name: m[1], tifo: m[3] }, o)} <span class="muted small">${num(m[2])}</span></li>`).join("")}</ol>`) : "") +
     U.grp("", U.row({ href: `/c/${comp.key}/seasons/`, icon: "hist", c: "#FF9500", t: `كل مواسم ${esc(comp.name_ar)}` }));
 }
 

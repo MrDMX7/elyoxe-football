@@ -91,3 +91,8 @@ test("a club's name in that season (the archive's Arabic) beats today's", () => 
   const h = H.seasonsBody(ed, COMP, Object.assign({}, o, { team: () => true, teamName: () => "شباب الأهلي" }));
   assert.match(h, /<a href="\/t\/102119\/">الأهلي<\/a>/);
 });
+
+test("an organiser's man of the match FotMob never had links to his archive page", () => {
+  const h = H.seasonBody({ ...S16, motm: [[170716, "علي مبخوت", 7], [null, "ريفالدو", 2, 4411]] }, COMP, { ...o, person: id => id === 4411 });
+  assert.match(h, /<a href="\/p\/k4411\/">ريفالدو<\/a>/);
+});

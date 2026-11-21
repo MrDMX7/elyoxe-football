@@ -258,7 +258,7 @@ def editions(G, out_dir, eras=None):
                             **{k: people(k)[:3] for k in ("best_player", "best_young", "best_goalkeeper", "best_local", "top_assist")},
                             "best_coach": [{"kid": k, "name": kn.get(k)} for r, t, p, k, v in hon.get("best_coach", []) if k][:1],
                             "champion_coach": {"kid": coach[0][0], "name": kn.get(coach[0][0])} if coach else None,
-                            "motm": [[fm_p.get(p), pn.get(p), c] for p, c in motm if fm_p.get(p)], **({"note": note} if note else {})})
+                            "motm": [[fm_p[p], pn.get(p), c] if fm_p.get(p) else [None, pn.get(p), c, p] for p, c in motm], **({"note": note} if note else {})})
         if seasons:
             _dump(os.path.join(out_dir, "editions", f"{fid}.json"), {"fotmob": fid, "name": name, "name_ar": name_ar, "seasons": seasons})
             n += 1
@@ -351,6 +351,7 @@ def matches(G, out_dir, comps=ARAB_LEAGUES, teams=(5789,), eras=None):
             lu[mid]["h" if tid == home else "a"].append([pn.get(pid), pkey(pid), shirt, started])
         for mid, side, kid in q("SELECT x.mid, x.side, x.kid FROM pub_m CROSS JOIN match_coach x ON x.mid=pub_m.mid"):
             co[mid][side] = kn.get(kid)
+        mo = {mid: [pn.get(pid), pkey(pid)] for mid, pid in q("SELECT w.mid, w.pid FROM pub_m CROSS JOIN match_award w ON w.mid=pub_m.mid WHERE w.kind='motm'")}
         out = []
         for mid, eid, rnd, d, h, a, hs, as_, hth, hta, ph, pa, sid, rid in q(
                 """SELECT m.mid, m.eid, m.round, substr(m.date,1,10), m.home, m.away, m.hs, m.as_, m.ht_h, m.ht_a, m.pen_h, m.pen_a, m.sid, m.rid
@@ -359,7 +360,7 @@ def matches(G, out_dir, comps=ARAB_LEAGUES, teams=(5789,), eras=None):
             r = {"id": str(fm_m[mid]) if mid in fm_m else f"k{mid}", "date": d, "comp": comp, "season": season, "round": rnd,
                  "h": [fm_t.get(h), at(h, d)], "a": [fm_t.get(a), at(a, d)], "s": [hs, as_],
                  "ht": [hth, hta] if hth is not None else None, "pen": [ph, pa] if ph is not None else None,
-                 "venue": sn.get(sid), "ref": rn.get(rid), "ev": ev.get(mid), "lu": dict(lu[mid]) if mid in lu else None, "co": co.get(mid)}
+                 "venue": sn.get(sid), "ref": rn.get(rid), "ev": ev.get(mid), "lu": dict(lu[mid]) if mid in lu else None, "co": co.get(mid), "motm": mo.get(mid)}
             out.append({k: v for k, v in r.items() if v not in (None, [], {})})
         G.c.execute("DROP TABLE pub_m")
         return out
