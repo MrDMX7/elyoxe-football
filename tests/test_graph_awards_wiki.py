@@ -226,3 +226,9 @@ def test_a_season_page_with_one_league_table_gives_its_champion_and_runner_up():
     assert ("champion", "Kuwait_SC") in kinds and ("runner_up", "Al-Qadsia_SC") in kinds
     two = ('<html><body>' + t("Group A") + t("Group B") + '</body></html>').encode()      # two tables: groups, no champion
     assert not [r for r in extract_season(two, "2012–13_Kuwaiti_Premier_League")["rows"] if r["kind"] in ("champion", "runner_up")]
+
+
+def test_a_season_several_competitions_could_own_goes_to_the_one_named_exactly():
+    from graph.awards_wiki import owner
+    comps = {"42": "UEFA Champions League", "47": "Premier League", "519": "Egyptian Premier League", "529": "Kuwait Premier League"}
+    assert owner("2011–12_Premier_League", "42", comps) == "47"        # «premier league» is in the Egyptian's and Kuwait's names too

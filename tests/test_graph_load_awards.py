@@ -323,3 +323,33 @@ def test_a_season_pages_league_table_gives_the_runner_up_when_its_first_is_the_c
 def test_a_league_table_whose_first_is_not_the_champion_gives_nothing(tmp_path):
     got, kw, qd = _kuwait(tmp_path, "qd")              # a regular season before a championship round: not the final standing
     assert got == {"champion": qd}
+
+
+def _kuwait_named(tmp_path):
+    """the champion held under a record named like the table's first, not that record"""
+    import types
+    t = ('<section><h2>League table</h2><table class="wikitable"><tr><th>Pos</th><th>Team</th><th>Pld</th><th>Pts</th></tr>'
+         '<tr><td>1</td><td><a rel="mw:WikiLink" href="./Kuwait_SC" title="Kuwait SC">Kuwait SC</a></td><td>26</td><td>60</td></tr>'
+         '<tr><td>2</td><td><a rel="mw:WikiLink" href="./Al-Qadsia_SC" title="Al-Qadsia SC">Al-Qadsia</a></td><td>26</td><td>55</td></tr></table></section>')
+    items = {"Kuwait_SC": {"qid": "Q81", "en": "Kuwait SC", "ar": "الكويت", "human": False, "born": None, "tm_player": None, "tm_club": "81"},
+             "Al-Qadsia_SC": {"qid": "Q82", "en": "Al-Qadsia SC", "ar": "القادسية", "human": False, "born": None, "tm_player": None, "tm_club": "82"}}
+    S = mk(tmp_path, {"2012–13_Kuwaiti_Premier_League": ('<html><body>' + t + '</body></html>').encode()}, items, comps={"529": "Kuwait Premier League"})
+    art = tmp_path / "graph" / ".cache" / "awards" / "articles.json"
+    a = json.loads(art.read_text(encoding="utf-8"))
+    a["awards"], a["seasons"] = [], {"2012–13_Kuwaiti_Premier_League": 529}
+    art.write_text(json.dumps(a), encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 529)
+    kw, qd, other = reg.mint("team", "tm", "81"), reg.mint("team", "tm", "82"), reg.mint("team", "s365", "9")
+    G.put("team", {"tid": other, "name": "Kuwait"}, "s365")
+    e = reg.mint("edition", "fotmob", "529|2012/2013")
+    G.put("edition", {"eid": e, "cid": lg, "season": "2012/2013"}, "fotmob")
+    G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'champion', 1, ?, 's365')", (e, other))
+    awards.load(G, reg, S)
+    return dict(G.c.execute("select kind, tid from honour where eid=?", (e,)).fetchall()), kw, qd
+
+
+def test_a_league_tables_first_that_is_the_champion_under_another_record_of_the_club_still_gives_the_runner_up(tmp_path):
+    # Qatar 2015/16: the champion «Al-Rayyan» (365Scores' record), the table's «Al-Rayyan SC» (its Wikidata item's): one club
+    got, kw, qd = _kuwait_named(tmp_path)
+    assert got["runner_up"] == qd and got["champion"] != kw

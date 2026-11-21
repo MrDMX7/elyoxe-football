@@ -325,6 +325,10 @@ def owner(page, fid, comps):
     if own_season(page, comps.get(str(fid))):
         return str(fid)
     hits = [k for k, t in comps.items() if own_season(page, t)]
+    if len(hits) > 1:                          # «premier league» is in the Egyptian's and Kuwait's names too: the one named exactly
+        m = SEASON_TITLE.match(page.replace("_", " "))
+        exact = [k for k in hits if m and _words(comps[k]) == _words(m.group(2))]
+        hits = exact if len(exact) == 1 else hits
     return hits[0] if len(hits) == 1 else None
 
 
