@@ -34,10 +34,15 @@ function standings(s, ms) {
   return { groups };
 }
 
+// a knockout round as the current rounds name it (src/v5/ui.js U.rounds orders them, U.stageAr reads them): «Round of 16» and
+// «round of 16» one chip, the third place before the final
+const KO = [[/^round of 32$/i, "1/16"], [/^round of 16$/i, "1/8"], [/quarter/i, "1/4"], [/semi/i, "1/2"], [/third|3rd/i, "3rd place"], [/^finals?$/i, "Final"]];
+const roundKey = r => { const s = String(r).trim(), k = KO.find(x => x[0].test(s)); return k ? k[1] : s; };
+
 // the season's matches, finished, by round; a season the archive holds no rounds for, by month (أكتوبر 2002)
 function fixtures(ms) {
   const month = d => (d && d.length >= 7 ? MONTHS[+d.slice(5, 7) - 1] + " " + d.slice(0, 4) : "—");
-  return { matches: (ms || []).map((m, i) => ({ id: m.id, href: "/m/" + m.id + "/", round: m.round != null && m.round !== "" ? String(m.round) : month(m.date), status: "finished",
+  return { matches: (ms || []).map((m, i) => ({ id: m.id, href: "/m/" + m.id + "/", round: m.round != null && m.round !== "" ? roundKey(m.round) : month(m.date), status: "finished",
     score: { home: m.s[0], away: m.s[1] }, penalties: m.pen ? { home: m.pen[0], away: m.pen[1] } : null, kickoff_utc: (m.date || "") + "T12:00:00Z",
     home: team(m.h[0], m.h[1], "h" + i), away: team(m.a[0], m.a[1], "a" + i) })) };
 }

@@ -81,3 +81,11 @@ test("a tournament's group tables, counted from its group matches when the archi
   assert.equal(a[0].played, 2);                                          // level on all we hold: by name
   assert.equal(V.standings({ table: [] }, [{ id: "9", date: "2001-01-01", round: "1", h: [1, "x"], a: [2, "y"], s: [1, 0] }]), null);   // a league with no table: none
 });
+
+test("a tournament's knockout rounds named as the current rounds: one chip each, in order", () => {
+  const ms = ["Group A", "Round of 16", "round of 16", "Third Place Play-Off", "Quarter-Finals", "Semi-Finals", "Final", "Round of 32"]
+    .map((r, i) => ({ id: "x" + i, date: "2022-12-0" + (i + 1), round: r, h: [1, "a"], a: [2, "b"], s: [1, 0] }));
+  assert.deepEqual(V.fixtures(ms).matches.map(m => m.round), ["Group A", "1/8", "1/8", "3rd place", "1/4", "1/2", "Final", "1/16"]);
+  const U = require("../src/v5/ui.js"), R = U.rounds(V.fixtures(ms));
+  assert.deepEqual(R.order, ["Group A", "1/16", "1/8", "1/4", "1/2", "3rd place", "Final"]);
+});
