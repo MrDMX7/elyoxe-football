@@ -38,7 +38,7 @@ def test_the_report_counts_each_kind_and_lists_what_differs_with_both_names():
     fm = {"1": "علي المعماري", "2": "علي طاهر إبراهيم", "3": "علي مبخوت"}
     fm["5"], ours["5"] = "إيجور إدواردو شليمبر", {"latin": "Igor Serrote", "ar": "إيغور سيروتي", "source": "generated"}
     out = report(ours, fm, first={"1"})
-    assert out["counts"] == {"agree": 1, "consistent": 1, "spelling": 1, "differs": 1, "none": 1}
+    assert out["counts"] == {"agree": 1, "consistent": 1, "spelling": 1, "differs": 1, "none": 1, "approved": 0}
     assert [(r["id"], r["kind"]) for r in out["review"]] == [("1", "spelling"), ("5", "differs")]   # the UAE's first
     assert out["status"] == {"1": "spelling", "2": "consistent", "3": "agree", "4": "none", "5": "differs"}
 
@@ -46,3 +46,10 @@ def test_the_report_counts_each_kind_and_lists_what_differs_with_both_names():
 def test_abd_and_abu_written_joined_or_apart_are_one_name():
     assert classify("راشد عبدالله", "راشد عبد الله سهيل") == "consistent"
     assert classify("عبد الرحمن", "عبدالرحمن") == "agree"
+
+
+def test_a_name_the_owner_approved_never_comes_back_for_review():
+    # owner 2026-11-22: «أسماء لعيبة الإمارات اعتمد ours»
+    ours = {"1": {"latin": "Ali Al Memari", "ar": "علي المعمري", "source": "manual", "owner_ok": "2026-11-22"}}
+    out = report(ours, {"1": "علي المعماري"}, first={"1"})
+    assert out["review"] == [] and out["status"] == {"1": "approved"} and out["counts"]["approved"] == 1

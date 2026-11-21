@@ -51,10 +51,10 @@ def classify(ours, fotmob):
 
 def report(ours, fm, first=frozenset()):
     """{counts, status {id: kind}, review [the «differs», `first` ids first]} for names/players_ar.json against FotMob's"""
-    counts = {"agree": 0, "consistent": 0, "spelling": 0, "differs": 0, "none": 0}
+    counts = {"agree": 0, "consistent": 0, "spelling": 0, "differs": 0, "none": 0, "approved": 0}
     status, review = {}, []
     for pid, v in ours.items():
-        k = classify(v.get("ar"), fm.get(str(pid)))
+        k = "approved" if v.get("owner_ok") else classify(v.get("ar"), fm.get(str(pid)))     # the owner's word is final
         counts[k] += 1
         status[str(pid)] = k
         if k in ("differs", "spelling"):

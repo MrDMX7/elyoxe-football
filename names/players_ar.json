@@ -5968,9 +5968,12 @@
  "148315": {
   "latin": "Christian Benteke",
   "ar": "كريستيان بينتيكي",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q60326",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «كريستيان بنتيكي»",
+  "owner_ok": "2026-11-22"
  },
  "148331": {
   "latin": "Anthony Moris",
@@ -6563,9 +6566,12 @@
  "163616": {
   "latin": "Luka Milivojević",
   "ar": "لوكا ميليفويفيتش",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q3702687",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «لوكا ميليفويفتش»",
+  "owner_ok": "2026-11-22"
  },
  "163670": {
   "latin": "Ivan Perišić",
@@ -9567,9 +9573,12 @@
  "198280": {
   "latin": "Ismail Ahmed",
   "ar": "إسماعيل أحمد",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-11-21"
+  "checked": "2026-11-21",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «محمد إسماعيل أحمد إسماعيل»",
+  "owner_ok": "2026-11-22"
  },
  "198316": {
   "latin": "Michael Gregoritsch",
@@ -11679,10 +11688,13 @@
  "256854": {
   "latin": "Marius Høibråten",
   "ar": "ماريوس هويبراتين",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q13534455",
   "checked": "2026-09-27",
-  "wd_label": "ماريوس هويبروتين"
+  "wd_label": "ماريوس هويبروتين",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «ماريوس كريستوفر هويبراتن»",
+  "owner_ok": "2026-11-22"
  },
  "257868": {
   "latin": "Juan Fernando Garro",
@@ -13129,9 +13141,12 @@
  "289258": {
   "latin": "Gastón Álvarez Suárez",
   "ar": "غاستون ألفاريس سواريز",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q5876281",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «غاستون سواريز»",
+  "owner_ok": "2026-11-22"
  },
  "289278": {
   "latin": "Darwin Machís",
@@ -14217,9 +14232,12 @@
  "308890": {
   "latin": "Mohammed Khalaf",
   "ar": "محمد خلف",
-  "source": "arwiki",
+  "source": "manual",
   "qid": "Q24061192",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "arwiki",
+  "note": "owner approved ours over FotMob's «محمد أحمد الحمادي»",
+  "owner_ok": "2026-11-22"
  },
  "308892": {
   "latin": "Haboush Salbukh",
@@ -14364,9 +14382,12 @@
  "309160": {
   "latin": "Ahmed Shambih",
   "ar": "أحمد شامبيه",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q24150908",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «أحمد محمد شمبيه»",
+  "owner_ok": "2026-11-22"
  },
  "309162": {
   "latin": "Luiz Ceará",
@@ -14573,9 +14594,12 @@
  "311017": {
   "latin": "Habib Al Fardan",
   "ar": "حبيب الفردان",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q3782331",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «حبيب فردان عبد الله»",
+  "owner_ok": "2026-11-22"
  },
  "311112": {
   "latin": "Mohammed Majrashi",
@@ -14734,9 +14758,12 @@
  "315560": {
   "latin": "Abdulla Al Tamimi",
   "ar": "عبدالله التميمي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «عبد الله محمد اسماعيل عبد الغفور تميم»",
+  "owner_ok": "2026-11-22"
  },
  "315814": {
   "latin": "Kenan Bajrič",
@@ -15054,9 +15081,12 @@
  "321140": {
   "latin": "Valentino Lazaro",
   "ar": "فالينتينو لازارو",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q1450945",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «فالانتينو لازارو»",
+  "owner_ok": "2026-11-22"
  },
  "321397": {
   "latin": "Juan Cámara",
@@ -15744,10 +15774,13 @@
  "358676": {
   "latin": "Carlinhos",
   "ar": "كارلينهوس",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q28377784",
   "checked": "2026-09-27",
-  "wd_label": "كارلينهوس جونيور"
+  "wd_label": "كارلينهوس جونيور",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «كارلوس فينيسيوز سانتوس دي جيسوس»",
+  "owner_ok": "2026-11-22"
  },
  "358936": {
   "latin": "Ozan Tufan",
@@ -16208,9 +16241,12 @@
  "372978": {
   "latin": "Georgios Giakoumakis",
   "ar": "جيورجيوس جياكوماكيس",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q20090771",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «جيورغوس جياكوماكيس»",
+  "owner_ok": "2026-11-22"
  },
  "380942": {
   "latin": "Gervane Kastaneer",
@@ -17635,9 +17671,12 @@
  "430995": {
   "latin": "Gjoko Zajkov",
   "ar": "جوكو زايكوف",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q17152630",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «جيوكو زايكوف»",
+  "owner_ok": "2026-11-22"
  },
  "431025": {
   "latin": "Darko Velkovski",
@@ -19919,9 +19958,12 @@
  "474680": {
   "latin": "Federico Cartabia",
   "ar": "فيديريكو كارتابيا",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q5857549",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «كارتابيا»",
+  "owner_ok": "2026-11-22"
  },
  "476769": {
   "latin": "Deyverson",
@@ -20622,9 +20664,12 @@
  "495962": {
   "latin": "Nemanja Maksimović",
   "ar": "نيمانيا مكسيموفيتش",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q16236874",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «نيمانيا ماكسيموفيتش»",
+  "owner_ok": "2026-11-22"
  },
  "496042": {
   "latin": "Yerry Mina",
@@ -20650,10 +20695,13 @@
  "496648": {
   "latin": "Diney Borges",
   "ar": "ديني بورغيس",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q18637312",
   "checked": "2026-09-27",
-  "wd_label": "ديني إديلسون"
+  "wd_label": "ديني إديلسون",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «ديني»",
+  "owner_ok": "2026-11-22"
  },
  "496732": {
   "latin": "Max O'Leary",
@@ -21125,9 +21173,12 @@
  "505281": {
   "latin": "Saeid Ezatolahi",
   "ar": "سعيد عزت اللهي",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q7398276",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «سعيد إزاتولاهي»",
+  "owner_ok": "2026-11-22"
  },
  "505310": {
   "latin": "Ahmadreza Zendehrouh",
@@ -22217,7 +22268,8 @@
   "qid": null,
   "checked": "2026-11-21",
   "prev": "كايو",
-  "note": "Caio Lucas (FotMob slug caio-lucas), Sharjah winger and UAE international; Emarat Al Youm and Annahar write «كايو لوكاس»: https://www.annahar.com/Sports/199778"
+  "note": "Caio Lucas (FotMob slug caio-lucas), Sharjah winger and UAE international; Emarat Al Youm and Annahar write «كايو لوكاس»: https://www.annahar.com/Sports/199778",
+  "owner_ok": "2026-11-22"
  },
  "523693": {
   "latin": "Kentaro Kakoi",
@@ -22960,9 +23012,12 @@
  "532220": {
   "latin": "Saman Ghoddos",
   "ar": "سامان قدوس",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q16632974",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «سامان غودوس»",
+  "owner_ok": "2026-11-22"
  },
  "532456": {
   "latin": "Gabriel Leite",
@@ -26466,10 +26521,13 @@
  "600850": {
   "latin": "Alejandro Romero",
   "ar": "أليخاندرو روميرو",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q19319791",
   "checked": "2026-09-27",
-  "wd_label": "أليخاندرو روميرو غامارا"
+  "wd_label": "أليخاندرو روميرو غامارا",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «اليخاندرو كاكو»",
+  "owner_ok": "2026-11-22"
  },
  "601024": {
   "latin": "Jane Thabantṧo",
@@ -26849,9 +26907,12 @@
  "608428": {
   "latin": "Youssoufou Niakaté",
   "ar": "يوسف نياكاتي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «يوسف نياكيتي»",
+  "owner_ok": "2026-11-22"
  },
  "608633": {
   "latin": "Marvwan Hussein",
@@ -28729,9 +28790,12 @@
  "618619": {
   "latin": "Salem Sultan",
   "ar": "سالم سلطان",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q24450706",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «سليم سلطان سالم سعيد الشرجي»",
+  "owner_ok": "2026-11-22"
  },
  "618622": {
   "latin": "Yousef Hazam",
@@ -29100,9 +29164,12 @@
  "618859": {
   "latin": "Abdulrahman Yousef",
   "ar": "يوسف عبدالرحمن",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q79351424",
-  "checked": "2026-10-04"
+  "checked": "2026-10-04",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «عبد الرحمن يوسف خميس مبارك خميس»",
+  "owner_ok": "2026-11-22"
  },
  "618860": {
   "latin": "Madallah Al Olayan",
@@ -29353,9 +29420,12 @@
  "619504": {
   "latin": "Ahmad Nourollahi",
   "ar": "أحمد نورالهي",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q15602720",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «أحمد نور الله»",
+  "owner_ok": "2026-11-22"
  },
  "619506": {
   "latin": "Mehdi Taremi",
@@ -29965,9 +30035,12 @@
  "623547": {
   "latin": "Cristian Guanca",
   "ar": "كريستيان جوانكا",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q19047002",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «جوانكا»",
+  "owner_ok": "2026-11-22"
  },
  "623698": {
   "latin": "In-Beom Hwang",
@@ -30341,9 +30414,12 @@
  "628504": {
   "latin": "Mohammad Juma",
   "ar": "محمد جمعة",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «البلوشي محمد جمعة عيد غريب جمعة»",
+  "owner_ok": "2026-11-22"
  },
  "628816": {
   "latin": "Felix Beijmo",
@@ -30432,9 +30508,12 @@
  "629823": {
   "latin": "Azizjon Ganiev",
   "ar": "عزيزجون غانييف",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q28098786",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «عزيزيون جانييف»",
+  "owner_ok": "2026-11-22"
  },
  "629899": {
   "latin": "Ikrom Alibaev",
@@ -31176,9 +31255,12 @@
  "638746": {
   "latin": "Adryelson",
   "ar": "أدريلسون",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q55759804",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «أدريلسون ليما سيلفا»",
+  "owner_ok": "2026-11-22"
  },
  "638771": {
   "latin": "Lucas Martínez Quarta",
@@ -31754,10 +31836,13 @@
  "643712": {
   "latin": "Saviour Godwin",
   "ar": "سافيور غودوين",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q21621371",
   "checked": "2026-09-27",
-  "wd_label": "ساڤيور جودوين"
+  "wd_label": "ساڤيور جودوين",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «سافيور جودوين»",
+  "owner_ok": "2026-11-22"
  },
  "643717": {
   "latin": "Taiwo Awoniyi",
@@ -31841,9 +31926,12 @@
  "644002": {
   "latin": "Benjamin Tetteh",
   "ar": "بينجامين تيتيح",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q21287596",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «بينجامين تيتيه»",
+  "owner_ok": "2026-11-22"
  },
  "644005": {
   "latin": "Tameem Al Muhaza",
@@ -32091,9 +32179,12 @@
  "647108": {
   "latin": "Omar Khrbin",
   "ar": "عمر خربين",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q16236257",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «عمر خريبين»",
+  "owner_ok": "2026-11-22"
  },
  "647245": {
   "latin": "Mauro Pittón",
@@ -32959,9 +33050,12 @@
  "658658": {
   "latin": "Selim Amallah",
   "ar": "سليم أملاح",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q22003119",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «سليم أمال الله»",
+  "owner_ok": "2026-11-22"
  },
  "658785": {
   "latin": "Charmaine Häusl",
@@ -33540,9 +33634,12 @@
  "668727": {
   "latin": "Jorge Fernandes",
   "ar": "جورج فيرنانديز",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «جورجي فيرنانديز»",
+  "owner_ok": "2026-11-22"
  },
  "668809": {
   "latin": "Kheireddine Boussouf",
@@ -34523,9 +34620,12 @@
  "675762": {
   "latin": "Ajdin Hrustić",
   "ar": "أيدين هروستيتش",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q29109911",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «أجدن هروستك»",
+  "owner_ok": "2026-11-22"
  },
  "675779": {
   "latin": "Nozim Babadzhanov",
@@ -35803,9 +35903,12 @@
  "693678": {
   "latin": "Wout Faes",
   "ar": "ووت فاس",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q30014588",
-  "checked": "2026-10-04"
+  "checked": "2026-10-04",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «ووت فيس»",
+  "owner_ok": "2026-11-22"
  },
  "693748": {
   "latin": "Emad Hamdy",
@@ -35838,9 +35941,12 @@
  "694002": {
   "latin": "Junior Flemmings",
   "ar": "جونيور فليمينجس",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q23772458",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «جونيور فليمنغز»",
+  "owner_ok": "2026-11-22"
  },
  "694029": {
   "latin": "Luis Miquissone",
@@ -36092,9 +36198,12 @@
  "699684": {
   "latin": "Jobson",
   "ar": "جوبسون",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «جوبسون سوزا سانتوس»",
+  "owner_ok": "2026-11-22"
  },
  "699693": {
   "latin": "Fernando Medeiros",
@@ -36389,9 +36498,12 @@
  "713207": {
   "latin": "Seifeddine Jaziri",
   "ar": "سيف الدين الجزيري",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q17486017",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «سيف الدين جزيري»",
+  "owner_ok": "2026-11-22"
  },
  "713208": {
   "latin": "Bassem Srarfi",
@@ -37819,9 +37931,12 @@
  "734439": {
   "latin": "Ramón Miérez",
   "ar": "رامون ميريز",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q28058689",
-  "checked": "2026-10-04"
+  "checked": "2026-10-04",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «رامون نازارينو مييريز»",
+  "owner_ok": "2026-11-22"
  },
  "734470": {
   "latin": "Amjad Attwan",
@@ -37955,9 +38070,12 @@
  "736081": {
   "latin": "Kodjo Laba",
   "ar": "كودجو لابا",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q28112115",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «لابا كودجو»",
+  "owner_ok": "2026-11-22"
  },
  "736082": {
   "latin": "Thabang Sesiny",
@@ -38406,9 +38524,12 @@
  "743720": {
   "latin": "Charles Pickel",
   "ar": "شارليس بيكيل",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q24256738",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «تشارلز بيكل»",
+  "owner_ok": "2026-11-22"
  },
  "743859": {
   "latin": "Abdulrahman Al Rio",
@@ -38846,9 +38967,12 @@
  "750077": {
   "latin": "Lourency",
   "ar": "لورينسي",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q27927842",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «لورينسي دو ناسكيمنتو رودريجيز»",
+  "owner_ok": "2026-11-22"
  },
  "750084": {
   "latin": "Perotti",
@@ -40526,9 +40650,12 @@
  "776660": {
   "latin": "Yuri",
   "ar": "يوري",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «جيفيرسون يوري دي سوسا ماتياس»",
+  "owner_ok": "2026-11-22"
  },
  "776689": {
   "latin": "Caoimhín Kelleher",
@@ -41978,9 +42105,12 @@
  "795096": {
   "latin": "Hamad Al Mansoori",
   "ar": "حمد المنصوري",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «حمد عبد الله ناصر»",
+  "owner_ok": "2026-11-22"
  },
  "795107": {
   "latin": "Saoud Abdulrazaq",
@@ -43869,9 +43999,12 @@
  "821897": {
   "latin": "Khaled Ebraheim",
   "ar": "خالد إبراهيم",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «خالد الظنحاني»",
+  "owner_ok": "2026-11-22"
  },
  "821999": {
   "latin": "Joe Abrigo",
@@ -44763,10 +44896,13 @@
  "832398": {
   "latin": "Luís Haquín",
   "ar": "لويس هاكين",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q40833256",
   "checked": "2026-09-27",
-  "wd_label": "لويس هاكوين"
+  "wd_label": "لويس هاكوين",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «لويس فيرناندو هاكوين لوبيز»",
+  "owner_ok": "2026-11-22"
  },
  "832400": {
   "latin": "Ramiro Vaca",
@@ -45355,9 +45491,12 @@
  "839896": {
   "latin": "Firas Ben Larbi",
   "ar": "فراس بالعربي",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q98684788",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «فراس بن العربي»",
+  "owner_ok": "2026-11-22"
  },
  "840183": {
   "latin": "Henry Vaca",
@@ -48466,9 +48605,12 @@
  "863156": {
   "latin": "Adam Gnezda Čerin",
   "ar": "آدم غنيزدا تشيرين",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q47088738",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «آدم جنيزدا سيرين»",
+  "owner_ok": "2026-11-22"
  },
  "863158": {
   "latin": "Marlon",
@@ -48513,7 +48655,8 @@
   "qid": null,
   "checked": "2026-09-29",
   "prev": "لوانزينهو",
-  "note": "461: reviewed against Arab sports media spelling"
+  "note": "461: reviewed against Arab sports media spelling",
+  "owner_ok": "2026-11-22"
  },
  "863359": {
   "latin": "Andy Irving",
@@ -48838,9 +48981,12 @@
  "866406": {
   "latin": "Willyan",
   "ar": "ويليان",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «ويليان دا سيلفا روشا»",
+  "owner_ok": "2026-11-22"
  },
  "866415": {
   "latin": "Kaio",
@@ -49933,9 +50079,12 @@
  "882307": {
   "latin": "Rashed Salem",
   "ar": "راشد سالم",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-11-08"
+  "checked": "2026-11-08",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «راشد مبارك»",
+  "owner_ok": "2026-11-22"
  },
  "882312": {
   "latin": "Khalfan Hassan Khalfan",
@@ -49947,9 +50096,12 @@
  "882318": {
   "latin": "Hamad Madhad",
   "ar": "حمد مضهد",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «حمد مدحد»",
+  "owner_ok": "2026-11-22"
  },
  "882321": {
   "latin": "Nahyan Saeed",
@@ -51375,9 +51527,12 @@
  "903133": {
   "latin": "Ersin Destanoğlu",
   "ar": "إرسين ديستان أوغلو",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q60050402",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «إرسين ديستانوغلو»",
+  "owner_ok": "2026-11-22"
  },
  "903233": {
   "latin": "Yahia Attiyat Allah",
@@ -52430,9 +52585,12 @@
  "920588": {
   "latin": "Yousef Al Ameri",
   "ar": "يوسف العامري",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q98075936",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «يوسف الأميري»",
+  "owner_ok": "2026-11-22"
  },
  "920861": {
   "latin": "Adrian Benedyczak",
@@ -53114,9 +53272,12 @@
  "925642": {
   "latin": "Cho Yu-Min",
   "ar": "تشو يو مين",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q50420882",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «يو مين شو»",
+  "owner_ok": "2026-11-22"
  },
  "925647": {
   "latin": "Jin-Seob Park",
@@ -53335,9 +53496,12 @@
  "929161": {
   "latin": "Salam Khairi",
   "ar": "سلام خيري",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «سالم خيري»",
+  "owner_ok": "2026-11-22"
  },
  "929166": {
   "latin": "Faisal Darisi",
@@ -55589,10 +55753,13 @@
  "948252": {
   "latin": "Regi Lushkja",
   "ar": "ريجي لوشكيا",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q16902195",
   "checked": "2026-09-27",
-  "wd_label": "ريجى لوشكچا"
+  "wd_label": "ريجى لوشكچا",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «ريجي لوشكجا»",
+  "owner_ok": "2026-11-22"
  },
  "948488": {
   "latin": "Albano Aleksi",
@@ -57026,9 +57193,12 @@
  "959024": {
   "latin": "Adeel Al Chadli",
   "ar": "عديل الشاذلي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «عادل وجدان الشاذلي»",
+  "owner_ok": "2026-11-22"
  },
  "959025": {
   "latin": "Mohamad Abdulla Essa",
@@ -57631,9 +57801,12 @@
  "964950": {
   "latin": "Abdelrahman Rakan",
   "ar": "عبد الرحمن راكان",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «عبد الرحمن أحمد عبد الله»",
+  "owner_ok": "2026-11-22"
  },
  "964991": {
   "latin": "Hossam Loutfy",
@@ -58226,9 +58399,12 @@
  "971816": {
   "latin": "Ousseynou Ndiaye",
   "ar": "أوسينو نداي",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q109796894",
-  "checked": "2026-11-20"
+  "checked": "2026-11-20",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «أوساينو ندياي»",
+  "owner_ok": "2026-11-22"
  },
  "971901": {
   "latin": "Ezequiel Centurión",
@@ -58968,9 +59144,12 @@
  "981858": {
   "latin": "Neto",
   "ar": "نيتو",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q65030450",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «أنطونيو فيالهو دي كارفالو نيتو»",
+  "owner_ok": "2026-11-22"
  },
  "981862": {
   "latin": "Jadsom",
@@ -62313,9 +62492,12 @@
  "1039220": {
   "latin": "Kevin Agudelo",
   "ar": "كيفن أغوديلو",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q65953178",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «كيفن أندريس أجوديلو أرديلا»",
+  "owner_ok": "2026-11-22"
  },
  "1039245": {
   "latin": "Pa Babou",
@@ -62519,9 +62701,12 @@
  "1041838": {
   "latin": "Eisa Al Houti",
   "ar": "عيسى الهوتي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «عيسى حوتي»",
+  "owner_ok": "2026-11-22"
  },
  "1041907": {
   "latin": "Cheon Seong-Hoon",
@@ -63699,7 +63884,8 @@
   "qid": null,
   "checked": "2026-11-21",
   "prev": "عصام فايز",
-  "note": "spelling: Emarat Al Youm writes «عصام فائز» (first UAE call-up, Al Nasr): https://www.emaratalyoum.com/sports/local/2024-03-13-1.1834809"
+  "note": "spelling: Emarat Al Youm writes «عصام فائز» (first UAE call-up, Al Nasr): https://www.emaratalyoum.com/sports/local/2024-03-13-1.1834809",
+  "owner_ok": "2026-11-22"
  },
  "1055316": {
   "latin": "Anis Ben Slimane",
@@ -64665,9 +64851,12 @@
  "1069974": {
   "latin": "Erik",
   "ar": "إيريك",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «إيريك مانديز»",
+  "owner_ok": "2026-11-22"
  },
  "1069975": {
   "latin": "José Aldo",
@@ -66835,9 +67024,12 @@
  "1093253": {
   "latin": "Burak Ince",
   "ar": "براق إنجه",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q68015462",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «بوراك»",
+  "owner_ok": "2026-11-22"
  },
  "1093285": {
   "latin": "Fabiano Parisi",
@@ -66898,9 +67090,12 @@
  "1094242": {
   "latin": "João Victor",
   "ar": "جواو فكتور",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q78185189",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «جواو فيكتور لوكاس ويسنر»",
+  "owner_ok": "2026-11-22"
  },
  "1094243": {
   "latin": "Marcus Meloni",
@@ -66919,9 +67114,12 @@
  "1094302": {
   "latin": "Juninho",
   "ar": "جونينيو",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «أنطونيو فالمور أسيس دا سيلفا جونيور»",
+  "owner_ok": "2026-11-22"
  },
  "1094503": {
   "latin": "Abdulla Hamad",
@@ -67025,10 +67223,13 @@
  "1094909": {
   "latin": "Gláuber",
   "ar": "غلاوبر",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q78027448",
   "checked": "2026-09-27",
-  "wd_label": "غلاوبر سيكويرا"
+  "wd_label": "غلاوبر سيكويرا",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «جلوبير سيكيرا دوس سانتوس ليما»",
+  "owner_ok": "2026-11-22"
  },
  "1094911": {
   "latin": "Natan Felipe",
@@ -67677,7 +67878,8 @@
   "checked": "2026-09-29",
   "wd_label": "برونو كونسيساو",
   "prev": "برونو",
-  "note": "461: reviewed against Arab sports media spelling"
+  "note": "461: reviewed against Arab sports media spelling",
+  "owner_ok": "2026-11-22"
  },
  "1104103": {
   "latin": "Kouame Kouadio",
@@ -67687,7 +67889,8 @@
   "checked": "2026-11-21",
   "wd_label": "كوامي أوتون",
   "prev": "كوامي كواديو",
-  "note": "Known as Kouame Autonne; Wikidata Q84175053 birth date 2000-09-22 matches this FotMob id, Arabic Wikipedia article «كوامي أوتون»: https://ar.wikipedia.org/wiki/كوامي_أوتون"
+  "note": "Known as Kouame Autonne; Wikidata Q84175053 birth date 2000-09-22 matches this FotMob id, Arabic Wikipedia article «كوامي أوتون»: https://ar.wikipedia.org/wiki/كوامي_أوتون",
+  "owner_ok": "2026-11-22"
  },
  "1104104": {
   "latin": "Saile Samuel",
@@ -68011,9 +68214,12 @@
  "1107547": {
   "latin": "Ravil Tagir",
   "ar": "رافيل طاهر",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q68845886",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «رافيل تاجير»",
+  "owner_ok": "2026-11-22"
  },
  "1107620": {
   "latin": "Jarell Quansah",
@@ -68068,9 +68274,12 @@
  "1108026": {
   "latin": "Nassim Chadli",
   "ar": "نسيم شاذلي",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q106962850",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «نسيم الشاذلي»",
+  "owner_ok": "2026-11-22"
  },
  "1108031": {
   "latin": "Kandet Diawara",
@@ -68321,9 +68530,12 @@
  "1110052": {
   "latin": "M'Hammed Rabii",
   "ar": "امحمد ربيع",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «محمد ربيع»",
+  "owner_ok": "2026-11-22"
  },
  "1110346": {
   "latin": "Ghanem Ahmed",
@@ -69122,9 +69334,12 @@
  "1118487": {
   "latin": "Mackenzie Hunt",
   "ar": "ماكنزي هنت",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q128804164",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «ماكنزي جيمس هانت»",
+  "owner_ok": "2026-11-22"
  },
  "1118540": {
   "latin": "David Ayala",
@@ -70455,9 +70670,12 @@
  "1132080": {
   "latin": "Rafael Pereira",
   "ar": "رافائيل بيريرا",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q90581858",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «رافاييل أنطونيو بيرييرا»",
+  "owner_ok": "2026-11-22"
  },
  "1132121": {
   "latin": "Bartłomiej Wdowik",
@@ -71450,9 +71668,12 @@
  "1138138": {
   "latin": "Leandro Spadacio",
   "ar": "لياندرو سباداسيو",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q84175046",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «لياندرو سباداكيو ليتي»",
+  "owner_ok": "2026-11-22"
  },
  "1138444": {
   "latin": "Alex Monis",
@@ -71464,9 +71685,12 @@
  "1138507": {
   "latin": "Hamad Al Meqbaali",
   "ar": "حمد المقبالي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «حمد عبد الله»",
+  "owner_ok": "2026-11-22"
  },
  "1138508": {
   "latin": "Idrissa Thiam",
@@ -71576,9 +71800,12 @@
  "1139657": {
   "latin": "Jonatas Santos",
   "ar": "جوناثان سانتوس",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q91964722",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «جوناتاس سانتوس»",
+  "owner_ok": "2026-11-22"
  },
  "1139937": {
   "latin": "Alejandro Organista",
@@ -72019,9 +72246,12 @@
  "1158225": {
   "latin": "Milson",
   "ar": "ميلسون",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q96201181",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «فيليزيو مينديس جواو ميلسون»",
+  "owner_ok": "2026-11-22"
  },
  "1158512": {
   "latin": "Juanlu Sánchez",
@@ -72726,10 +72956,13 @@
  "1173473": {
   "latin": "Matheus Saldanha",
   "ar": "ماثيوس سالدانها",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q98597254",
   "checked": "2026-09-27",
-  "wd_label": "سالدانا"
+  "wd_label": "سالدانا",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «ماتيوس بونيفاسيو سالدانيا مارينيو»",
+  "owner_ok": "2026-11-22"
  },
  "1173474": {
   "latin": "Rafael Navarro",
@@ -72874,9 +73107,12 @@
  "1174008": {
   "latin": "Aleksandar Vasiljević",
   "ar": "ألكسندر فاسيليفيتش",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q105816487",
-  "checked": "2026-11-15"
+  "checked": "2026-11-15",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «أليكسندر فاسيلييفيتش»",
+  "owner_ok": "2026-11-22"
  },
  "1174298": {
   "latin": "Guilherme Biro",
@@ -72985,7 +73221,8 @@
   "qid": null,
   "checked": "2026-09-29",
   "prev": "غيليرمي",
-  "note": "461: reviewed against Arab sports media spelling"
+  "note": "461: reviewed against Arab sports media spelling",
+  "owner_ok": "2026-11-22"
  },
  "1174680": {
   "latin": "Fabrício",
@@ -75114,9 +75351,12 @@
  "1192191": {
   "latin": "Marcelinho",
   "ar": "مارسيلينيو",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q104839644",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «مارسيلو جوزيه دي ليما فيلهو»",
+  "owner_ok": "2026-11-22"
  },
  "1192393": {
   "latin": "Víctor Chust",
@@ -75450,9 +75690,12 @@
  "1197115": {
   "latin": "Oumar Traoré",
   "ar": "عمر تراوري",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q101418515",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «عمر ترايوري»",
+  "owner_ok": "2026-11-22"
  },
  "1197164": {
   "latin": "Hassan Al Harbi",
@@ -76084,9 +76327,12 @@
  "1201280": {
   "latin": "Rúben Canedo",
   "ar": "روبن كانيدو",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q104245652",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «روبن فيليب»",
+  "owner_ok": "2026-11-22"
  },
  "1201330": {
   "latin": "Caio Roque",
@@ -76175,9 +76421,12 @@
  "1201810": {
   "latin": "Facundo Kruspzky",
   "ar": "فاكوندو كروسبزكي",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q101084360",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «فاكوندو»",
+  "owner_ok": "2026-11-22"
  },
  "1201814": {
   "latin": "Juan Carlos Portillo",
@@ -76344,9 +76593,12 @@
  "1202921": {
   "latin": "Adis Jašić",
   "ar": "أديس ياشيتش",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q106586994",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «أديس ياسيتش»",
+  "owner_ok": "2026-11-22"
  },
  "1202924": {
   "latin": "Ibrahim Saadeh",
@@ -77080,9 +77332,12 @@
  "1210509": {
   "latin": "Rafael Rodrigues",
   "ar": "رافائيل رودريغيز",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q108219743",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «رافاييل رودريغيز»",
+  "owner_ok": "2026-11-22"
  },
  "1210616": {
   "latin": "Iva Gelashvili",
@@ -77284,9 +77539,12 @@
  "1212082": {
   "latin": "Brahima Diarra",
   "ar": "براهيما ديارا",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q104161834",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «براهما ديارا»",
+  "owner_ok": "2026-11-22"
  },
  "1212097": {
   "latin": "Dillon De Silva",
@@ -78633,9 +78891,12 @@
  "1228539": {
   "latin": "Abdulla Abbas Al Balooshi",
   "ar": "عبدالله عباس البلوشي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «عبد الله عباس البلوش»",
+  "owner_ok": "2026-11-22"
  },
  "1228543": {
   "latin": "Mubarak Shanan",
@@ -78720,9 +78981,12 @@
  "1229101": {
   "latin": "Nemanja Jović",
   "ar": "نيمانيا يوفيتش",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q106163047",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «نيمانيا كوفيتش»",
+  "owner_ok": "2026-11-22"
  },
  "1229104": {
   "latin": "Zerroug Boucif",
@@ -79566,9 +79830,12 @@
  "1236334": {
   "latin": "Mohamed El Khaloui",
   "ar": "محمد الخلوي",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q109912005",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «محمد الخالوي»",
+  "owner_ok": "2026-11-22"
  },
  "1236377": {
   "latin": "Tomás Ángel",
@@ -79629,9 +79896,12 @@
  "1237978": {
   "latin": "Jay-Dee Geusens",
   "ar": "جاي دي جوزينز",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q108864216",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «جاي دي جيسينس»",
+  "owner_ok": "2026-11-22"
  },
  "1238055": {
   "latin": "Ángel Stringa",
@@ -81111,10 +81381,13 @@
  "1249746": {
   "latin": "Juan Pedroza",
   "ar": "خوان بيدروزا",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q81930478",
   "checked": "2026-09-27",
-  "wd_label": "سيباستيان بيدروزا"
+  "wd_label": "سيباستيان بيدروزا",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «سيباستيان بيدروزا»",
+  "owner_ok": "2026-11-22"
  },
  "1249785": {
   "latin": "Yang Bai",
@@ -81140,9 +81413,12 @@
  "1249953": {
   "latin": "Ousmane Camara",
   "ar": "عثمان كامارا",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q130210699",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «عثمان كمارا»",
+  "owner_ok": "2026-11-22"
  },
  "1249959": {
   "latin": "Zhaslan Zhumashev",
@@ -81924,9 +82200,12 @@
  "1257049": {
   "latin": "Rikelme",
   "ar": "ريكيلمي",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q115492462",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «ريكلمي»",
+  "owner_ok": "2026-11-22"
  },
  "1257080": {
   "latin": "Matthieu Epolo",
@@ -83346,9 +83625,12 @@
  "1273890": {
   "latin": "Jean N'Guessan",
   "ar": "جيان نغيسان",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q107542185",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «نيقوسيان جان فريدريك كواديو»",
+  "owner_ok": "2026-11-22"
  },
  "1274060": {
   "latin": "Neil El Aynaoui",
@@ -83627,9 +83909,12 @@
  "1279037": {
   "latin": "Igor Gomes",
   "ar": "إيغور غوميز",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q114554397",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «ايغور غوميس»",
+  "owner_ok": "2026-11-22"
  },
  "1279040": {
   "latin": "Gavi",
@@ -84957,9 +85242,12 @@
  "1289401": {
   "latin": "Abdulla Abdelaziz",
   "ar": "عبدالله عبد العزيز",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «عبد العزيز محمد»",
+  "owner_ok": "2026-11-22"
  },
  "1289515": {
   "latin": "Ahmed Khaled",
@@ -85153,9 +85441,12 @@
  "1291309": {
   "latin": "Lithierry",
   "ar": "ليثيري",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «ليثيري دا سيلفا نيفيس»",
+  "owner_ok": "2026-11-22"
  },
  "1291324": {
   "latin": "Haukur Haraldsson",
@@ -86316,9 +86607,12 @@
  "1307398": {
   "latin": "Ali Al Memari",
   "ar": "علي المعمري",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «علي المعماري»",
+  "owner_ok": "2026-11-22"
  },
  "1307695": {
   "latin": "Owen Gene",
@@ -87473,9 +87767,12 @@
  "1320954": {
   "latin": "Mateusão",
   "ar": "ماتيوساو",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q114642457",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «ماتيوس دياس ليما»",
+  "owner_ok": "2026-11-22"
  },
  "1320958": {
   "latin": "Matheus Cunha",
@@ -87712,9 +88009,12 @@
  "1324727": {
   "latin": "Adham Hegazy",
   "ar": "أدهم حجازي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «أمجد إسماعيل أحمد إسماعيل»",
+  "owner_ok": "2026-11-22"
  },
  "1324871": {
   "latin": "Ben Gannon-Doak",
@@ -87734,9 +88034,12 @@
  "1324923": {
   "latin": "Khalifa Sembaij",
   "ar": "خليفة سبيعي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-10-11"
+  "checked": "2026-10-11",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «خليفة عبد الرحمن صالح سمبيج»",
+  "owner_ok": "2026-11-22"
  },
  "1324924": {
   "latin": "Mayed Saeed",
@@ -88707,9 +89010,12 @@
  "1336024": {
   "latin": "Offoe Amesimeku Leonard",
   "ar": "أوفوي أميسيميكو ليونارد",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «ليونارد أوفو أميسيميكو»",
+  "owner_ok": "2026-11-22"
  },
  "1336106": {
   "latin": "David Zalazar",
@@ -90770,9 +91076,12 @@
  "1353351": {
   "latin": "Adyson",
   "ar": "أديسون",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q110780768",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «أديسون دو ناسيمينتو سواريس»",
+  "owner_ok": "2026-11-22"
  },
  "1353364": {
   "latin": "Anthony Valencia",
@@ -90820,16 +91129,22 @@
  "1353469": {
   "latin": "Biro",
   "ar": "بيرو",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «غيليرمي بيرو»",
+  "owner_ok": "2026-11-22"
  },
  "1353470": {
   "latin": "Brahian Palacios",
   "ar": "براهيم بالاسيوس",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q123348890",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «براهيان بالاسيوس ألزاتي»",
+  "owner_ok": "2026-11-22"
  },
  "1353490": {
   "latin": "Munashe Garan'anga",
@@ -93071,9 +93386,12 @@
  "1378855": {
   "latin": "Elián Irala",
   "ar": "إيليان إيرالا",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q117830560",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «إيليان ماتيو»",
+  "owner_ok": "2026-11-22"
  },
  "1378979": {
   "latin": "Fernando Cicéron",
@@ -93561,9 +93879,12 @@
  "1384310": {
   "latin": "Maro Katinić",
   "ar": "مارو كاتينيتش",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q135463190",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «مارو كاتانيتش»",
+  "owner_ok": "2026-11-22"
  },
  "1384324": {
   "latin": "Luka Tičić",
@@ -93631,9 +93952,12 @@
  "1384975": {
   "latin": "Rejan Alivoda",
   "ar": "ريجان أليفودا",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q136773053",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «ريغان أليفودا»",
+  "owner_ok": "2026-11-22"
  },
  "1384982": {
   "latin": "Rauf Rüstamli",
@@ -94138,9 +94462,12 @@
  "1393478": {
   "latin": "Serginho",
   "ar": "سيرجينيو",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q114350084",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «سيرجينهو»",
+  "owner_ok": "2026-11-22"
  },
  "1393480": {
   "latin": "Skelly Alvero",
@@ -94567,9 +94894,12 @@
  "1399227": {
   "latin": "Rodrigo",
   "ar": "رودريغو",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q117087271",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «رودريجو أوليفيرا دي ألميدا»",
+  "owner_ok": "2026-11-22"
  },
  "1399359": {
   "latin": "Fredy Martínez",
@@ -94927,9 +95257,12 @@
  "1402593": {
   "latin": "Nemanja Đeković",
   "ar": "نيمانيا جيكوفيتش",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q115481501",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «نيمانجا ديكوفيتش»",
+  "owner_ok": "2026-11-22"
  },
  "1402611": {
   "latin": "Diego Hernández",
@@ -95025,9 +95358,12 @@
  "1403545": {
   "latin": "Sékou Gassama",
   "ar": "سيكو غاساما",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q141496726",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «سيكو جاساما»",
+  "owner_ok": "2026-11-22"
  },
  "1403643": {
   "latin": "Mohamed Saoud",
@@ -95622,9 +95958,12 @@
  "1412721": {
   "latin": "Zé Welinton",
   "ar": "زي ويلينتون",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «جوزيه ويلينتون كامبوس مينيزيس»",
+  "owner_ok": "2026-11-22"
  },
  "1412794": {
   "latin": "Charles Ondo",
@@ -95846,9 +96185,12 @@
  "1414482": {
   "latin": "Mubarak Zamah",
   "ar": "مبارك زامة",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «مبارك بيني زمح»",
+  "owner_ok": "2026-11-22"
  },
  "1414577": {
   "latin": "Matheus Gonçalves",
@@ -96008,9 +96350,12 @@
  "1416571": {
   "latin": "Bernard Faye",
   "ar": "برنارد فاي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «برنارد بابكر فايي»",
+  "owner_ok": "2026-11-22"
  },
  "1416581": {
   "latin": "Callum Osmand",
@@ -96332,9 +96677,12 @@
  "1420509": {
   "latin": "Mohammad Ghorbani",
   "ar": "محمد قرباني",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q112079646",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «مهدي قرباني»",
+  "owner_ok": "2026-11-22"
  },
  "1420722": {
   "latin": "Jayden Turfkruier",
@@ -96626,9 +96974,12 @@
  "1422580": {
   "latin": "Asher Agbinone",
   "ar": "أشير أغبينوني",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q130608565",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «آشر كريس أوفيغا أغبينوني»",
+  "owner_ok": "2026-11-22"
  },
  "1422585": {
   "latin": "Danilo Palacios",
@@ -97912,9 +98263,12 @@
  "1435445": {
   "latin": "Lorran",
   "ar": "لوران",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q117184158",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «لوران لوكاس بيريا دي سوسا»",
+  "owner_ok": "2026-11-22"
  },
  "1435689": {
   "latin": "Semih Kiliçsoy",
@@ -98059,9 +98413,12 @@
  "1436227": {
   "latin": "Ghaith Wahabi",
   "ar": "غيث الوهابي",
-  "source": "wikidata",
+  "source": "manual",
   "qid": "Q111530198",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "wikidata",
+  "note": "owner approved ours over FotMob's «غيث وهبي»",
+  "owner_ok": "2026-11-22"
  },
  "1436239": {
   "latin": "Rodrigo Gelado",
@@ -98248,9 +98605,12 @@
  "1437079": {
   "latin": "Rocky Marciano",
   "ar": "روكي مارسيانو",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «روكي ماركيانو»",
+  "owner_ok": "2026-11-22"
  },
  "1437159": {
   "latin": "Shinnosuke Fukuda",
@@ -98739,9 +99099,12 @@
  "1441638": {
   "latin": "Abdoulaye Touré",
   "ar": "عبدلاي توري",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «عبد الله توريه»",
+  "owner_ok": "2026-11-22"
  },
  "1441734": {
   "latin": "Amine Ghodbane",
@@ -99153,9 +99516,12 @@
  "1448067": {
   "latin": "Damián García",
   "ar": "داميان غارسيا",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q116919607",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «داميان جارسيا»",
+  "owner_ok": "2026-11-22"
  },
  "1448104": {
   "latin": "Ethan Kohler",
@@ -99286,9 +99652,12 @@
  "1451225": {
   "latin": "Adama Diallo",
   "ar": "أداما ديالو",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «آدما آلان ديالو»",
+  "owner_ok": "2026-11-22"
  },
  "1451265": {
   "latin": "Malick Diouf",
@@ -100141,9 +100510,12 @@
  "1458813": {
   "latin": "Mateus Henrique",
   "ar": "ماتيوس هنريكي",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q119206749",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «ماتيوس هنريك»",
+  "owner_ok": "2026-11-22"
  },
  "1458867": {
   "latin": "Felipe Motta",
@@ -100640,9 +101012,12 @@
  "1466558": {
   "latin": "Teun Gijselhart",
   "ar": "تون غيسيلهارت",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q124737310",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «تون جيزلهارت»",
+  "owner_ok": "2026-11-22"
  },
  "1466684": {
   "latin": "Šimun Hrgović",
@@ -100990,9 +101365,12 @@
  "1474593": {
   "latin": "Victor Hugo",
   "ar": "فيكتور هوغو",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «فيكتور هوقو»",
+  "owner_ok": "2026-11-22"
  },
  "1474739": {
   "latin": "Safwan Mazlan",
@@ -101047,9 +101425,12 @@
  "1476546": {
   "latin": "Arielson",
   "ar": "أرييلسون",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q122333183",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «اريلسون»",
+  "owner_ok": "2026-11-22"
  },
  "1476710": {
   "latin": "Christian Díaz",
@@ -101840,9 +102221,12 @@
  "1489242": {
   "latin": "Gerónimo Rivera",
   "ar": "خيرونيمو ريفيرا",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q122896534",
-  "checked": "2026-10-11"
+  "checked": "2026-10-11",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «لوتشيانو خيرونيمو ريفيرا فلوريس»",
+  "owner_ok": "2026-11-22"
  },
  "1489298": {
   "latin": "Taoufik Cherifi",
@@ -101896,9 +102280,12 @@
  "1491069": {
   "latin": "Salih Malkoçoglu",
   "ar": "صالح مالكوتش أوغلو",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q123182291",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «صالح مالكوجلو»",
+  "owner_ok": "2026-11-22"
  },
  "1491234": {
   "latin": "Islam Abdallah",
@@ -103442,9 +103829,12 @@
  "1515130": {
   "latin": "Clinton Nsiala",
   "ar": "كلينتون نسيالا",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q124097957",
-  "checked": "2026-09-28"
+  "checked": "2026-09-28",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «كلينتون نسيالا-ماكينغو»",
+  "owner_ok": "2026-11-22"
  },
  "1515132": {
   "latin": "Hugo Cuenca",
@@ -103855,9 +104245,12 @@
  "1520104": {
   "latin": "Ahmadou Ama Camara",
   "ar": "أحمدو أما كامارا",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «أحمدو كامارا»",
+  "owner_ok": "2026-11-22"
  },
  "1520107": {
   "latin": "Mohamed Azzi",
@@ -104254,9 +104647,12 @@
  "1524517": {
   "latin": "Guga",
   "ar": "غوغا",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q122839902",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «قوقا»",
+  "owner_ok": "2026-11-22"
  },
  "1524518": {
   "latin": "Hélio Varela",
@@ -104548,9 +104944,12 @@
  "1526865": {
   "latin": "Oumar Keita",
   "ar": "عمر كيتا",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «أومار كيتا»",
+  "owner_ok": "2026-11-22"
  },
  "1526975": {
   "latin": "Sotiris Kontouris",
@@ -104569,9 +104968,12 @@
  "1527038": {
   "latin": "Aleksa Puric",
   "ar": "أليكسا بوريتش",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q127271981",
-  "checked": "2026-10-11"
+  "checked": "2026-10-11",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «أليكسا بوريك»",
+  "owner_ok": "2026-11-22"
  },
  "1527051": {
   "latin": "Mallek Janeer",
@@ -104737,9 +105139,12 @@
  "1528821": {
   "latin": "Anas Mittache",
   "ar": "أنس ميطاش",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «أنس ميتشي»",
+  "owner_ok": "2026-11-22"
  },
  "1528822": {
   "latin": "Mohammad Nasser",
@@ -105257,9 +105662,12 @@
  "1536970": {
   "latin": "Moussa Ndiaye",
   "ar": "موسى ندياي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «موسى نداي»",
+  "owner_ok": "2026-11-22"
  },
  "1537301": {
   "latin": "Subhi Al Dawi",
@@ -105285,9 +105693,12 @@
  "1537679": {
   "latin": "Nikola Vukić",
   "ar": "نيكولا فوكيتش",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q134396626",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «نيكولا فوكييتش»",
+  "owner_ok": "2026-11-22"
  },
  "1538240": {
   "latin": "Salifou Tapsoba",
@@ -105826,9 +106237,12 @@
  "1553035": {
   "latin": "Mersad Seifi",
   "ar": "مرصاد سيفي",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q120750911",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «ميرساد سيفي»",
+  "owner_ok": "2026-11-22"
  },
  "1553099": {
   "latin": "Mikel Jauregizar",
@@ -106332,9 +106746,12 @@
  "1554115": {
   "latin": "Arshia Sarshogh",
   "ar": "أرشيا سرشوق",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q123532749",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «أرشيا سارشوغ»",
+  "owner_ok": "2026-11-22"
  },
  "1554116": {
   "latin": "Mohammadjavad Hosseinnejad",
@@ -107327,9 +107744,12 @@
  "1572725": {
   "latin": "Djordje Skoko",
   "ar": "جورجي سكوكو",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q140159344",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «سكوكو»",
+  "owner_ok": "2026-11-22"
  },
  "1572809": {
   "latin": "Amadou Koné",
@@ -107460,9 +107880,12 @@
  "1575574": {
   "latin": "Abdoul Traoré",
   "ar": "عبدول تراوري",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «عبد الكريم تراوري»",
+  "owner_ok": "2026-11-22"
  },
  "1575649": {
   "latin": "Luca Klimowicz",
@@ -109280,9 +109703,12 @@
  "1605202": {
   "latin": "Leandrinho",
   "ar": "لياندرينيو",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q127377661",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «لياندرينهو»",
+  "owner_ok": "2026-11-22"
  },
  "1605574": {
   "latin": "Abdoul Ayindé",
@@ -110414,16 +110840,22 @@
  "1614804": {
   "latin": "Anthony Dennis",
   "ar": "أنطوني دينيس",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q127247950",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «أنتوني جونيور دينيس»",
+  "owner_ok": "2026-11-22"
  },
  "1614849": {
   "latin": "Dramane Koumare",
   "ar": "درامان كوماري",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «دراماني كوماري»",
+  "owner_ok": "2026-11-22"
  },
  "1614857": {
   "latin": "Alasana Yirajang",
@@ -111387,9 +111819,12 @@
  "1628264": {
   "latin": "Anass Taouil",
   "ar": "أنس طويل",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-11-08"
+  "checked": "2026-11-08",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «أنس تاويل»",
+  "owner_ok": "2026-11-22"
  },
  "1628279": {
   "latin": "Atiq Walid",
@@ -111548,9 +111983,12 @@
  "1634624": {
   "latin": "Igor Serrote",
   "ar": "إيغور سيروتي",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q130639265",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «إيجور إدواردو شليمبر»",
+  "owner_ok": "2026-11-22"
  },
  "1634626": {
   "latin": "Thiago Beltrame",
@@ -114288,9 +114726,12 @@
  "1659921": {
   "latin": "Nermin Mujkić",
   "ar": "نيرمين مويكيتش",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q131150078",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «نرمين مويكيتش»",
+  "owner_ok": "2026-11-22"
  },
  "1659957": {
   "latin": "Ahmed Magdy",
@@ -116783,9 +117224,12 @@
  "1682287": {
   "latin": "Arnau Pradas",
   "ar": "أرناو براداس",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q135477863",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «ارناو باراداس»",
+  "owner_ok": "2026-11-22"
  },
  "1682298": {
   "latin": "Unai Santos",
@@ -117695,9 +118139,12 @@
  "1687503": {
   "latin": "Mahamadou Camara",
   "ar": "محمدو كامارا",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «مامادو كامارا»",
+  "owner_ok": "2026-11-22"
  },
  "1687506": {
   "latin": "Faraji Karmoune",
@@ -119888,9 +120335,12 @@
  "1697968": {
   "latin": "João Alves",
   "ar": "جواو ألفيس",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «جوان فيكتور ألفيس فيريرا»",
+  "owner_ok": "2026-11-22"
  },
  "1697971": {
   "latin": "Amirdzhon Safarov",
@@ -120421,9 +120871,12 @@
  "1705336": {
   "latin": "Baba Belllo Ilou",
   "ar": "بابا بيلو إيلو",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «بابا إيلو»",
+  "owner_ok": "2026-11-22"
  },
  "1705393": {
   "latin": "Rayane Abdelmadjid Mahrouz",
@@ -120631,9 +121084,12 @@
  "1708009": {
   "latin": "Serafim",
   "ar": "سيرافيم",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «فينيسيوس ليما سيرافيم»",
+  "owner_ok": "2026-11-22"
  },
  "1708148": {
   "latin": "Pedro Soma",
@@ -121591,9 +122047,12 @@
  "1719273": {
   "latin": "Louay Trayi",
   "ar": "لؤي تراعي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «لؤي آل ترايي»",
+  "owner_ok": "2026-11-22"
  },
  "1719279": {
   "latin": "Mohammed Jawad",
@@ -122900,9 +123359,12 @@
  "1735850": {
   "latin": "Tarek Issaoui",
   "ar": "طارق العيساوي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «طارق عيساوي»",
+  "owner_ok": "2026-11-22"
  },
  "1735851": {
   "latin": "Alex Teixeira",
@@ -123313,9 +123775,12 @@
  "1744765": {
   "latin": "Ridwan Popoola",
   "ar": "رضوان بوبولا",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q138487279",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «عبدالرزاق بوبولا»",
+  "owner_ok": "2026-11-22"
  },
  "1744785": {
   "latin": "Ghaith Yeferni",
@@ -124576,9 +125041,12 @@
  "1771194": {
   "latin": "Joshua Udoh",
   "ar": "جوشوا أودوه",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «جوشوا أوده»",
+  "owner_ok": "2026-11-22"
  },
  "1771196": {
   "latin": "Cassiano Kiala",
@@ -125172,9 +125640,12 @@
  "1782788": {
   "latin": "Mobin Dehghan",
   "ar": "مبين دهقان",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «موبين أمير دهقان»",
+  "owner_ok": "2026-11-22"
  },
  "1783365": {
   "latin": "Joaquín Salas",
@@ -128183,9 +128654,12 @@
  "1813918": {
   "latin": "Favour Ogbu",
   "ar": "فافور أوغبو",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q141495944",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «فافر إينيكا»",
+  "owner_ok": "2026-11-22"
  },
  "1813921": {
   "latin": "Haza Shehab",
@@ -128373,9 +128847,12 @@
  "1816326": {
   "latin": "Wesley Delgado",
   "ar": "ويسلي ديلغادو",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «ويسلي ديلقادو»",
+  "owner_ok": "2026-11-22"
  },
  "1816371": {
   "latin": "Walid El Hani",
@@ -129264,9 +129741,12 @@
  "1826659": {
   "latin": "Rostand Djooh",
   "ar": "روستاند دجوه",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «روستاند ديلورد مينبويه جوه»",
+  "owner_ok": "2026-11-22"
  },
  "1826763": {
   "latin": "Mame Niang",
@@ -130086,9 +130566,12 @@
  "1831538": {
   "latin": "Vitão",
   "ar": "فيتاو",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «فيتور فارغاس»",
+  "owner_ok": "2026-11-22"
  },
  "1831543": {
   "latin": "Jean Faelix Mendy",
@@ -130261,9 +130744,12 @@
  "1835026": {
   "latin": "Thiago",
   "ar": "تياغو",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «تياغو سا غوميز سكاربينو»",
+  "owner_ok": "2026-11-22"
  },
  "1835054": {
   "latin": "Bendegúz Kovács",
@@ -130352,9 +130838,12 @@
  "1837012": {
   "latin": "Rashed Salem Maqdami",
   "ar": "راشد سالم مقدمي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «راشد سالم ناصر حميد مقدامي»",
+  "owner_ok": "2026-11-22"
  },
  "1837016": {
   "latin": "Ahmad Malalla",
@@ -136307,9 +136796,12 @@
  "1932713": {
   "latin": "Yann Llahona",
   "ar": "يان لاهونا",
-  "source": "generated",
+  "source": "manual",
   "qid": "Q140633383",
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «يان ليهونا بوناتيرا»",
+  "owner_ok": "2026-11-22"
  },
  "1932786": {
   "latin": "Patricio Schroeder",
@@ -141338,9 +141830,12 @@
  "2196563": {
   "latin": "Ibrahima Ndiaye",
   "ar": "إبراهيما ندياي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-09-27"
+  "checked": "2026-09-27",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «إبراهيمـا جونيور نداي»",
+  "owner_ok": "2026-11-22"
  },
  "2199807": {
   "latin": "Mohammed Ziyadi",
@@ -144055,16 +144550,22 @@
  "2363801": {
   "latin": "Abdallah Hassani",
   "ar": "عبد الله حميسي",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-10-18"
+  "checked": "2026-10-18",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «عبدالله حاميسي حساني»",
+  "owner_ok": "2026-11-22"
  },
  "2364509": {
   "latin": "Vuk Butulija",
   "ar": "فوك بوتوليجا",
-  "source": "generated",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-10-18"
+  "checked": "2026-10-18",
+  "prev_source": "generated",
+  "note": "owner approved ours over FotMob's «فوك بوتوليا»",
+  "owner_ok": "2026-11-22"
  },
  "2364510": {
   "latin": "Mesfer Al-Adwani",
