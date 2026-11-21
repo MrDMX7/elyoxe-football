@@ -176,10 +176,12 @@
  },
  "k106663": {
   "latin": "Hamid BERGUIGUA",
-  "ar": "حميد برقيوة",
-  "source": "generated",
+  "ar": "حميد برقيقة",
+  "source": "manual",
   "qid": null,
-  "checked": "2026-11-21"
+  "checked": "2026-11-21",
+  "prev": "حميد برقيوة",
+  "note": "spelling: Hamid BERGUIGUA; reviewed against https://en.wikipedia.org/wiki/Hamid_Berguiga"
  },
  "k106680": {
   "latin": "Farès FELLAHI",
