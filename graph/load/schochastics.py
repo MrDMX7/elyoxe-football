@@ -11,6 +11,17 @@ def _season(d):
     return f"{d.year}/{d.year + 1}" if d.month >= 7 else f"{d.year - 1}/{d.year}"
 
 
+def fresh(seen, key, score):
+    """The row's match key: a second row of one key with another score (a placeholder date, the season's 1 July: Lens–Cannes
+    2-2 and 3-1 «on 1937-07-01») is another match, key#2; the same row again is the same match."""
+    k, n = key, 1
+    while k in seen and seen[k] != score:
+        n += 1
+        k = f"{key}#{n}"
+    seen[k] = score
+    return k
+
+
 def load(G, reg, S):
     import duckdb
     from db.history import BLANK
@@ -50,12 +61,13 @@ def load(G, reg, S):
     vote_alias(reg, "edition", evotes, "sch", min_n=5, share=0.9)
     # pass 2: rows
     new = linked = 0
-    done, eids = set(), {}
+    done, eids, seen = set(), {}, {}
     for i, (d, hi, ai, gh, ga, comp, lvl, hn, an, cc) in enumerate(rows):
+        key = fresh(seen, f"{d}|{hi}|{ai}", (gh, ga))
         if i in twins:
-            got = reg.link("match", "sch", f"{d}|{hi}|{ai}", twins[i])
+            got = reg.link("match", "sch", key, twins[i])
             if got is not None:
-                G.xref("match", got, "sch", f"{d}|{hi}|{ai}", "date+teams")
+                G.xref("match", got, "sch", key, "date+teams")
                 linked += 1
                 continue
         cid = reg.get("competition", "sch", comp) or reg.mint("competition", "sch", comp)
@@ -77,9 +89,9 @@ def load(G, reg, S):
                 G.put("team", {"tid": tid, "name": nm, "kind": "club"}, "sch")
                 if not G.c.execute("SELECT 1 FROM xref WHERE type='team' AND source='sch' AND source_id=?", (key,)).fetchone():
                     G.xref("team", tid, "sch", key, "sch-native")
-        mid = reg.mint("match", "sch", f"{d}|{hi}|{ai}")
+        mid = reg.mint("match", "sch", key)
         G.put("match", {"mid": mid, "eid": eid, "date": str(d), "home": h, "away": a, "hs": gh, "as_": ga, "status": "finished"}, "sch")
-        G.xref("match", mid, "sch", f"{d}|{hi}|{ai}", "sch-native")
+        G.xref("match", mid, "sch", key, "sch-native")
         idx.add(mid, str(d), h, a)
         new += 1
         if new % 100000 == 0:

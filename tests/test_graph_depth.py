@@ -136,3 +136,13 @@ def test_a_world_cup_game_transfermarkt_filed_under_its_own_competition_joins_th
     worldcup.load(G, reg, Sources(str(tmp_path), s3=False))
     cid, season = G.c.execute("select e.cid, e.season from match m join edition e on e.eid=m.eid where m.mid=?", (mid,)).fetchone()
     assert (cid, season) == (reg.get("competition", "fotmob", 77), "2022")
+
+
+def test_one_placeholder_date_holding_two_meetings_of_one_fixture_is_two_matches():
+    # schochastics dates many 1937/38 games to the season's 1 July: Lens–Cannes 2-2 and 3-1 «on one day» were two games
+    from graph.load.schochastics import fresh
+    seen = {}
+    assert fresh(seen, "1937-07-01|Lens|Cannes", (2, 2)) == "1937-07-01|Lens|Cannes"
+    assert fresh(seen, "1937-07-01|Lens|Cannes", (3, 1)) == "1937-07-01|Lens|Cannes#2"
+    assert fresh(seen, "1937-07-01|Lens|Cannes", (2, 2)) == "1937-07-01|Lens|Cannes"          # the same row again: the same match
+    assert fresh(seen, "1937-07-01|Lens|Cannes", (3, 1)) == "1937-07-01|Lens|Cannes#2"
