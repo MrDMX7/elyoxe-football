@@ -228,13 +228,20 @@
 
   }
   // ------------------------------------------------------------------ player
+  // FotMob's Arabic profiles leave some trophy names in English (QA 2026-11-21 on 205 /p/ pages: «Presidents Cup» on 70,
+  // «Qatar Challenge Shield» 27, «Qatar Super Shield» 17, «Super Cup» 8 …); an Arabic name passes through untouched
+  var TROPHY_AR = { "Presidents Cup": "كأس رئيس الدولة", "President's Cup": "كأس رئيس الدولة", "Qatar Challenge Shield": "درع التحدي القطري",
+    "Qatar Super Shield": "درع السوبر القطري", "Super Cup": "كأس السوبر", "Super Copa": "كأس السوبر", "Challenge Cup": "كأس التحدي",
+    "World Cup": "كأس العالم", "Champions League": "دوري الأبطال", "Gulf Cup": "كأس الخليج", "Botola Pro": "البطولة الاحترافية",
+    "Kirin Cup": "كأس كيرين", "Florida Cup": "كأس فلوريدا", "League Cup": "كأس الرابطة", "Pro League": "دوري المحترفين" };
+  P.trophyAr = function (n) { n = n == null ? "" : String(n); return TROPHY_AR[n.trim()] || n; };
   // the career pane: FotMob seasons (clubs, national team), trophies, transfers, market value, injuries (Transfermarkt)
   P.playerCareer = function (d) {   // {prof, tm, transfers}
     var C = (d.prof && d.prof.career) || {}, T = d.tm || {};
     var seasons = function (k, title) { var c = C[k]; if (!c || !c.seasons || !c.seasons.length) return ""; var tot = c.seasons.reduce(function (a, x) { a[0] += +x[3] || 0; a[1] += +x[4] || 0; a[2] += +x[5] || 0; return a; }, [0, 0, 0]);
       return U.grp(title + ' <span class="num">' + tot[0] + " مباراة · " + tot[1] + " هدف</span>", '<div class="tblw"><table class="tbl"><thead><tr><th>الموسم</th><th class="tm">الفريق</th><th>مباريات</th><th>أهداف</th><th>صناعة</th></tr></thead><tbody>' + c.seasons.slice(0, 14).map(function (x) { return '<tr><td class="dim">' + esc(x[0] || "") + '</td><td class="tm"><a href="' + L("t", x[1]) + '">' + U.crest({ id: x[1] }) + '<span class="n">' + esc(cfg.tn[x[1]] || x[2] || "") + "</span></a></td><td>" + (x[3] || 0) + "</td><td>" + (x[4] || 0) + "</td><td>" + (x[5] || 0) + "</td></tr>"; }).join("") + "</tbody></table></div>"); };
     var tro = ((d.prof && d.prof.trophies) || []).filter(function (x) { return (x[4] || []).length; });
-    var trophies = tro.length ? U.grp("ألقابه " + '<span class="num">' + tro.reduce(function (a, x) { return a + x[4].length; }, 0) + "</span>", tro.map(function (x) { return '<div class="row"><span class="rt"><b>' + esc(x[3] || "") + "</b><small>" + esc((cfg.tn[x[0]] || x[1] || "") + " · " + x[4].join("، ")) + '</small></span><span class="rv num" style="color:var(--label);font-weight:800">' + x[4].length + "</span></div>"; }).join("")) : "";
+    var trophies = tro.length ? U.grp("ألقابه " + '<span class="num">' + tro.reduce(function (a, x) { return a + x[4].length; }, 0) + "</span>", tro.map(function (x) { return '<div class="row"><span class="rt"><b>' + esc(P.trophyAr(x[3])) + "</b><small>" + esc((cfg.tn[x[0]] || x[1] || "") + " · " + x[4].join("، ")) + '</small></span><span class="rv num" style="color:var(--label);font-weight:800">' + x[4].length + "</span></div>"; }).join("")) : "";
     var mv = d.prof && d.prof.mv && d.prof.mv.length > 2 ? (function () { var V = d.prof.mv, W = 600, H = 130, t0 = Date.parse(V[0][0]), t1 = Date.parse(V[V.length - 1][0]), mx = Math.max.apply(null, V.map(function (x) { return x[1] || 0; })) || 1;
       var X = function (dt) { return (W - 10 - (Date.parse(dt) - t0) / Math.max(1, t1 - t0) * (W - 20)).toFixed(1); }, Y = function (v) { return (H - 10 - v / mx * (H - 24)).toFixed(1); }, top = V.reduce(function (a, x) { return x[1] > a[1] ? x : a; }, V[0]);
       return U.grp("قيمته السوقية", '<div style="padding:14px 12px 4px"><svg class="chart" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="قيمته السوقية عبر السنين"><path d="' + V.map(function (x, i) { return (i ? "L" : "M") + X(x[0]) + " " + Y(x[1] || 0); }).join("") + '" fill="none" stroke="var(--accent)" stroke-width="2.5"/></svg></div>', { foot: "أعلى قيمة " + U.eur(top[1]) + " في " + '<span class="num">' + esc(top[0].slice(0, 7)) + "</span>، والحين " + U.eur(V[V.length - 1][1]) + "." }); })() : "";

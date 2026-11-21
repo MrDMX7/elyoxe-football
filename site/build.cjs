@@ -448,6 +448,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // «الجوائز» (Tifo graph phase 2): v1/awards/* from graph/publish.py
   const AWD = require("./lib/awards.cjs"), AWI = (await get("awards/index.json")) || { awards:[] }, AWP = (await get("awards/players.json")) || {},
     AWK = Object.fromEntries((AWI.awards || []).map(a => [a.key, a]));
+  AWD.uniqueNames(AWI.awards || []);   // awards sharing one Arabic name get their qualifier (QA 2026-11-21: duplicate titles)
   // the old players FotMob does not know (graph phase 7): /p/k<Tifo id>/ from v1/people/index.json, their honours in AWP["k<id>"]
   const PPL = (await get("people/index.json", 2)) || {}, person = id => !!PPL["k" + id];
   const INTL = (await get("people/intl.json", 2)) || {}, PPG = require("./lib/people_pages.cjs");

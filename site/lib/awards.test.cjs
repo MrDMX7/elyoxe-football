@@ -49,3 +49,39 @@ test("a winner FotMob does not know links to his archive page", () => {
   assert.match(AW.awardBody(d, { hasPage: () => false, person: id => id === 7 }), /<a href="\/p\/k7\/">ستانلي ماثيوز<\/a>/);
   assert.doesNotMatch(AW.awardBody(d, { hasPage: () => false, person: () => false }), /\/p\/k7\//);
 });
+
+test("an award table with no team or value for any year has no empty columns (QA 2026-11-21: 759 of 820 award pages)", () => {
+  const d = { key: "fifa-fair-play-award", years: [{ season: "2025", podium: [{ rank: 1, name: "Andreas Harlass", name_ar: "أندرياس هارلاس", fotmob: null, team: null, value: null }] },
+    { season: "2024", podium: [{ rank: 1, name: "Thiago Maia", name_ar: "تياغو مايا", fotmob: null, team: null, value: null }] }], most: [] };
+  const h = AW.awardBody(d, {});
+  assert.doesNotMatch(h, /<td[^>]*>\s*<\/td>/);
+  assert.doesNotMatch(h, /<th>الفريق<\/th>/);
+  assert.doesNotMatch(h, /<th><\/th>/);
+  const b = AW.awardBody(BD, { hasPage: () => false });                       // the Ballon d'Or has teams and points
+  assert.match(b, /<th>الفريق<\/th>/);
+  assert.match(b, /باريس سان جيرمان/);
+  assert.doesNotMatch(b, /<td[^>]*>\s*<\/td>/);                                // a year without them shows «—»
+});
+
+test("awards sharing one Arabic name get the qualifier their English name carries, so no two pages share a title", () => {
+  const list = [
+    { key: "bulgarian-footballer-of-the-year-men", name: "Bulgarian Footballer of the Year — Men", name_ar: "جائزة لاعب كرة القدم البلغاري للسنة" },
+    { key: "bulgarian-footballer-of-the-year-women", name: "Bulgarian Footballer of the Year — Women", name_ar: "جائزة لاعب كرة القدم البلغاري للسنة" },
+    { key: "bulgarian-footballer-of-the-year-youth", name: "Bulgarian Footballer of the Year — Youth", name_ar: "جائزة لاعب كرة القدم البلغاري للسنة" },
+    { key: "don-balon-award-winners-best-spanish-player", name: "Don Balón Award — Winners — Best Spanish Player", name_ar: "جائزة دون بالون" },
+    { key: "don-balon-award-winners-best-foreign-player", name: "Don Balón Award — Winners — Best Foreign Player", name_ar: "جائزة دون بالون" },
+    { key: "fai-u21", name: "FAI International Football Awards — Under-21 International Player of the Year", name_ar: "لاعب العام" },
+    { key: "lma", name: "League Managers Association Awards — LMA Manager of the Year", name_ar: "مدرب العام" },
+    { key: "fa-w", name: "The FA Women's Football Awards — Manager of the Year", name_ar: "مدرب العام" },
+    { key: "ballon-dor", name: "Ballon d'Or", name_ar: "الكرة الذهبية" }];
+  AW.uniqueNames(list);
+  const n = k => list.find(a => a.key === k).name_ar;
+  assert.equal(n("bulgarian-footballer-of-the-year-women"), "جائزة لاعب كرة القدم البلغاري للسنة للسيدات");
+  assert.equal(n("bulgarian-footballer-of-the-year-youth"), "جائزة لاعب كرة القدم البلغاري للسنة للشباب");
+  assert.equal(n("bulgarian-footballer-of-the-year-men"), "جائزة لاعب كرة القدم البلغاري للسنة للرجال");
+  assert.equal(n("don-balon-award-winners-best-foreign-player"), "جائزة دون بالون للأجانب");
+  assert.equal(n("fa-w"), "مدرب العام للسيدات");                                  // «coach» is already in «مدرب العام»
+  assert.equal(n("lma"), "مدرب العام");
+  assert.equal(n("ballon-dor"), "الكرة الذهبية");                                 // a name of its own is left alone
+  assert.doesNotMatch(n("fai-u21"), /\(\d/);                                       // no made-up numbering
+});

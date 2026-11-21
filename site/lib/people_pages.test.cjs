@@ -35,3 +35,14 @@ test("the national team's record, from its article", () => {
 test("no World Cup, no World Cup in the title", () => {
   assert.equal(PP.title({ name: "Ismail Matar", name_ar: "إسماعيل مطر", wc: [] }), "إسماعيل مطر: ألقابه وجوائزه ومسيرته مع المنتخب | تيفو");
 });
+
+test("a player's trophies are named in Arabic where FotMob left them in English (QA 2026-11-21: «Presidents Cup» on 70 /p/ pages)", () => {
+  const P5 = require("../src/v5/pages.js");
+  assert.equal(P5.trophyAr("Presidents Cup"), "كأس رئيس الدولة");
+  assert.equal(P5.trophyAr("Qatar Super Shield"), "درع السوبر القطري");
+  assert.equal(P5.trophyAr("كأس السوبر الإماراتي"), "كأس السوبر الإماراتي");     // Arabic already: untouched
+  assert.equal(P5.trophyAr(undefined), "");
+  const h = P5.playerCareer({ prof: { career: {}, trophies: [[102117, "العين", 0, "Presidents Cup", ["2025/2026", "2017/2018"]]] } });
+  assert.match(h, /<b>كأس رئيس الدولة<\/b>/);
+  assert.doesNotMatch(h, /Presidents Cup/);
+});

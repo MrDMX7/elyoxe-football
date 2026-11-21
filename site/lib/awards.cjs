@@ -33,14 +33,19 @@ function indexBody(ix, o) {
 
 function awardBody(d, o) {
   o = o || {};
-  const rows = (d.years || []).map(y => {
-    const pod = y.podium || [], first = pod.filter(p => p.rank === 1), rest = pod.filter(p => p.rank > 1);
+  const ys = d.years || [], firsts = y => (y.podium || []).filter(p => p.rank === 1);
+  // the team and value columns only when some year has one: most Wikipedia tables give neither, and two empty
+  // columns on every row read as a broken table (QA 2026-11-21: 759 of 820 award pages)
+  const hasTeam = ys.some(y => firsts(y).some(p => p.team)), hasVal = ys.some(y => firsts(y).some(p => p.value));
+  const rows = ys.map(y => {
+    const pod = y.podium || [], first = firsts(y), rest = pod.filter(p => p.rank > 1);
     // not .tm: that column style stacks every link and span (the podium broke into one word a line)
     return `<tr><td class="dim num">${esc(y.season)}</td><td><b>${first.map(p => who(p, o)).join("، ") || "—"}</b>` +
-      (rest.length ? `<br><span class="muted small">${rest.map(p => `${RANK[p.rank] || num(p.rank)}: ${who(p, o)}`).join(" · ")}</span>` : "") +
-      `</td><td>${first.map(p => p.team ? nm(p.team, p.team) : "").filter(Boolean).join("، ")}</td><td class="num">${esc(first.map(p => p.value || "").filter(Boolean).join("، "))}</td></tr>`;
+      (rest.length ? `<br><span class="muted small">${rest.map(p => `${RANK[p.rank] || num(p.rank)}: ${who(p, o)}`).join(" · ")}</span>` : "") + "</td>" +
+      (hasTeam ? `<td>${first.map(p => p.team ? nm(p.team, p.team) : "").filter(Boolean).join("، ") || "—"}</td>` : "") +
+      (hasVal ? `<td class="num">${esc(first.map(p => p.value || "").filter(Boolean).join("، ")) || "—"}</td>` : "") + "</tr>";
   }).join("");
-  const table = `<div class="tblw"><table class="tbl"><thead><tr><th>السنة</th><th>الفائز</th><th>الفريق</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const table = `<div class="tblw"><table class="tbl"><thead><tr><th>السنة</th><th>الفائز</th>${hasTeam ? "<th>الفريق</th>" : ""}${hasVal ? "<th>الرقم</th>" : ""}</tr></thead><tbody>${rows}</tbody></table></div>`;
   const most = (d.most || []).filter(m => m[1] > 1);
   return U.grp(`كل الفائزين <span class="num">${(d.years || []).length}</span>`, table, { raw: 0 }) +
     (most.length ? U.grp("الأكثر فوزاً", U.rows(most.map(m => ({ href: m[2] && o.hasPage && o.hasPage(m[2]) ? `/p/${m[2]}/` : null, icon: "crown", c: "#FFCC00",
@@ -65,4 +70,29 @@ function playerBlock(list, o) {
   return rows.length ? U.grp("جوائزه وتكريماته", U.rows(rows)) : "";
 }
 
-module.exports = { indexBody, awardBody, playerBlock, indexable, awardName };
+// Two awards with one Arabic name (graph/publish.py translates «Bulgarian Footballer of the Year — Women» and «— Youth» both to
+// «جائزة لاعب كرة القدم البلغاري للسنة»: 68 names shared by 2-60 awards on 2026-11-21) give two pages one <title> and one <h1>.
+// Each name shared by several awards gets the qualifiers its English name carries (women, youth, under-21, foreign, coach…),
+// a qualifier the Arabic name already says is skipped. No made-up numbering: what stays shared is the graph's translation to fix.
+// Sets a.name_ar in place; returns how many it changed.
+const QUAL = [[/\bunder[- ]?(\d+)/i, m => `تحت ${m[1]} سنة`, /تحت/], [/women|female|girls|vrouwen/i, "للسيدات", /سيدات|نساء|نسائ/], [/\b(men|male)\b|\bmen's/i, "للرجال", /رجال/],
+  [/youth|young|junior|talent|breakthrough|revela/i, "للشباب", /شاب|شباب|ناشئ/], [/foreign/i, "للأجانب", /أجنب/], [/goalkeeper/i, "لحراسة المرمى", /حارس|حراسة/],
+  [/manager|coach/i, "للمدربين", /مدرب/], [/referee/i, "للحكام", /حكم|حكام/], [/fans'?|supporters/i, "باختيار الجماهير", /جماهير|مشجع/],
+  [/players'? player/i, "باختيار اللاعبين", /اختيار اللاعبين/], [/\bmedia\b/i, "باختيار الإعلام", /إعلام/], [/east germany/i, "لألمانيا الشرقية", /الشرقية/],
+  [/amateur|ameteur/i, "للهواة", /هواة/], [/schools?|colleges?|universit/i, "للمدارس والجامعات", /مدارس|جامع/], [/disabilit/i, "لذوي الإعاقة", /إعاقة/]];
+function uniqueNames(awards) {
+  const by = {};
+  (awards || []).forEach(a => { const n = a.name_ar && AR.test(a.name_ar) ? a.name_ar : null; if (n) (by[n] = by[n] || []).push(a); });
+  let changed = 0;
+  Object.entries(by).filter(([, l]) => l.length > 1).forEach(([n, l]) => {
+    const tail = a => String(a.name || "");   // the whole English name: «The FA Women's Football Awards — Manager of the Year»
+    l.forEach(a => {
+      const q = [];
+      QUAL.forEach(([re, ar, has]) => { const m = tail(a).match(re); if (!m || has.test(n)) return; const t = typeof ar === "function" ? ar(m) : ar; if (!q.includes(t)) q.push(t); });
+      if (q.length) { a.name_ar = n + " " + q.join(" "); changed++; }
+    });
+  });
+  return changed;
+}
+
+module.exports = { indexBody, awardBody, playerBlock, indexable, awardName, uniqueNames };
