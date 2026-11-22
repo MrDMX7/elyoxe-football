@@ -27,9 +27,11 @@ honours:
   - {comp: 536, season: "1993/1994", kind: top_scorer, value: "15", players: [{wikidata: Q3326228}], source: "Wikipedia 1993-94 Saudi Premier League: Moussa N'Daw 15, the first foreign top scorer"}
   - {comp: 536, season: "1995/1996", kind: top_scorer, value: "14", players: [{wikidata: Q3109733}], source: "Wikipedia 1995-96 Saudi Premier League and ar list: Ohene Kennedy 14"}
   - {comp: 535, season: "2013/2014", kind: runner_up, teams: [282308], source: "Wikipedia 2013-14 Qatar Stars League: Lekhwiya champions, El Jaish (the club of 2011-17) second"}
+  - {comp: 538, season: "1979/1980", kind: runner_up, teams: [102124], source: "Wikipedia 1979-80 UAE Football League table: Al Ahli 25, Sharjah 23 (+5, 22 scored), Al Shaab 23 (+5, 17 scored)"}
 
 # the value shown was right: the disagreement is closed
 keep:
+  - {comp: 538, season: "1973/1974", kind: champion, source: "Wikipedia 1973-74 UAE Football League: Al Orouba (Sharjah FC's name until 1974, one club) won the final group"}
   - {comp: 538, season: "1995/1996", kind: top_scorer, source: "Jassim Al Dokhi, one man two spellings (RSSSF)"}
   - {comp: 538, season: "1996/1997", kind: top_scorer, source: "Bader Jassim (Wikipedia, UAE Pro League); Park Tae-ha never played here"}
   - {comp: 538, season: "2002/2003", kind: top_scorer, source: "Cristián Montecinos 19 (Gulf News via Wikipedia)"}
