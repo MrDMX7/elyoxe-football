@@ -107,10 +107,15 @@ def load(G, reg, S, codes=None):
             cid = reg.get("competition", "rsssf", code) or reg.mint("competition", "rsssf", code)
             G.put("competition", {"cid": cid, "name": f"{code} top league (RSSSF)", "kind": "league"}, "rsssf")
             G.xref("competition", cid, "rsssf", code, "rsssf-native")
+        own = [r[0] for r in G.c.execute("SELECT e.season FROM edition e WHERE e.cid=? AND EXISTS(SELECT 1 FROM match m WHERE m.eid=e.eid)", (cid,))]
+        is_split = bool(own) and sum("/" in x for x in own) >= 0.8 * len(own)
         for s in d.get("seasons") or []:
             season = s.get("season")
             if not season:
                 continue
+            days = [m[0] for m in s.get("league_matches") or [] if m and m[0]]
+            if is_split and season.isdigit() and season not in own and all(x < f"{season}-07-01" for x in days):
+                season = f"{int(season) - 1}/{season}"      # Kuwait «2001» (March to June 2001) is 2000/2001
             hit = G.c.execute("SELECT eid FROM edition WHERE cid=? AND season=?", (cid, season)).fetchone()
             if hit:
                 eid = hit[0]

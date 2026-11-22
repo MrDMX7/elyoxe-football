@@ -137,3 +137,20 @@ def test_an_edition_with_a_champion_keeps_it_and_a_different_one_is_a_conflict(t
     assert G.c.execute("select tid, src from honour where eid=? and kind='champion'", (have,)).fetchall() == [(other, "s365")]
     assert G.c.execute("select kept, kept_src, other, other_src from conflict where tifo_id=? and field='champion'", (have,)).fetchall() == \
         [("shabab al ahli", "s365", "al ain", "rsssf")]
+
+
+def test_a_years_season_in_a_league_of_split_seasons_is_the_one_ending_that_year(tmp_path):
+    # RSSSF's Kuwait «2001» (March to June 2001) made an edition beside 2000/2001
+    S, G, reg = mk(tmp_path), Graph(str(tmp_path / "t.db")), Registry()
+    m = tmp_path / "mirror" / "history" / "arab"
+    (m / "uae.json").write_text(json.dumps({"country": "uae", "league": 538, "seasons": [
+        {"season": "2001", "table": [[1, "Al-Ain", 102117, 2, 1, 1, 0, 3, 1, 4]],
+         "league_matches": [["2001-03-11", "Al-Ain", 102117, "Al-Wahda", None, 2, 1, []]]}]}), encoding="utf-8")
+    lg = reg.mint("competition", "fotmob", 538)
+    G.put("competition", {"cid": lg, "name": "Pro League"}, "fotmob")
+    for i, s in enumerate(("1999/2000", "2000/2001", "2001/2002")):
+        e = reg.mint("edition", "fotmob", f"538|{s}")
+        G.put("edition", {"eid": e, "cid": lg, "season": s}, "fotmob")
+        G.put("match", {"mid": reg.mint("match", "fotmob", 80 + i), "eid": e, "date": f"{s[5:]}-02-01", "home": 1, "away": 2, "hs": 1, "as_": 0}, "fotmob")
+    rsssf.load(G, reg, S, codes=["uae"])
+    assert [r[0] for r in G.c.execute("select season from edition where cid=? order by season", (lg,))] == ["1999/2000", "2000/2001", "2001/2002"]
