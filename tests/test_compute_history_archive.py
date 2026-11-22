@@ -18,3 +18,9 @@ def test_the_facts_say_since_the_first_season_held():
     m = {"home": {"id": 8650, "name": "Liverpool"}, "away": {"id": 10260, "name": "Man Utd"}, "kickoff_utc": "2026-11-22T16:30:00Z"}
     txt = " ".join(f["text_ar"] for f in FA.match_facts(rows, m, {}, "1888/1889"))
     assert "منذ 1888/1889" in txt and "FotMob" not in txt
+
+
+def test_two_games_of_one_kickoff_with_an_old_club_by_its_archive_key_still_sort():
+    # 22 Nov 2026: eight leagues failed «'<' not supported between 'str' and 'int'» — a FotMob id against k<Tifo id>
+    rows = HI.with_archive([], {"seasons": {"1990/1991": [["1990-10-12T12:00:00Z", 8650, 10260, 1, 0], ["1990-10-12T12:00:00Z", 8650, "k77", 1, 0]]}})
+    assert [g[4] for g in FA.team_games(rows, 8650)] == [10260, "k77"]

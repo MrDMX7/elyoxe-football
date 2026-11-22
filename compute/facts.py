@@ -33,7 +33,7 @@ def team_games(rows, tid, venue=None):
             continue
         f, a = (r["hs"], r["as"]) if home else (r["as"], r["hs"])
         out.append((r["ko"] or "", f, a, home, r["a"] if home else r["h"], r["season"]))
-    return sorted(out)
+    return sorted(out, key=lambda g: g[0])          # by kickoff only: an opponent is a FotMob id or an archive key «k77»
 
 
 def runs(games, test):
