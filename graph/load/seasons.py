@@ -253,7 +253,6 @@ class Pass:
             core = cand[main]
         else:
             return
-        core |= {t for (t,) in q("SELECT tid FROM standing WHERE eid=?", (eid,))}
         pairs = Counter((r[2], r[3]) for r in by[main])
         once = all(n == 1 for n in pairs.values())
         mine = {(r[2], r[3]): r for r in by[main]}

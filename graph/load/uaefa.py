@@ -111,16 +111,22 @@ def load(G, reg, S):
             n["clubs_own"] += 1
     # 2. the games: the graph's own copy of each, else the FA's
     idx = MatchIndex(G)
-    game, theirs = {}, {}
+    ours = {e for (e,) in q("SELECT eid FROM edition WHERE cid=?", (cid,))}     # a copy in another competition is another game
+    eid_of = dict(q("SELECT m.mid, m.eid FROM match m JOIN edition e ON e.eid=m.eid WHERE e.cid=?", (cid,)))
+    game, theirs, claimed = {}, {}, set()          # claimed: a copy is one FA game's, never the next day's too
     for r in rows:
         (h, hs), (a, as_) = side(r, "team1"), side(r, "team2")
         th, ta, d = club[h.get("id")], club[a.get("id")], day(r)
         hit = None
         for mid, swapped in idx.candidates(d, th, ta):
+            if eid_of.get(mid) not in ours or mid in claimed:
+                continue
             row = q("SELECT hs, as_, src FROM match WHERE mid=?", (mid,))[0]
             if (row[0], row[1]) == ((as_, hs) if swapped else (hs, as_)) and not swapped:
                 hit = (mid, row[2])
                 break
+        if hit:
+            claimed.add(hit[0])
         game[r["fa"]] = hit[0] if hit else None
         theirs[r["fa"]] = hit[1] if hit else None
     # 3. men: FotMob's man who wore the same shirt in a game both hold
@@ -217,8 +223,9 @@ def load(G, reg, S):
             n["games_own"] += 1
         else:
             G.xref("match", mid, "uaefa", str(r["fa"]), "date+teams")
-            if src != "fotmob":                                         # RSSSF's or schochastics' copy: the FA's rank and detail
-                G.c.execute("UPDATE match SET src='uaefa', date=? WHERE mid=?", (when, mid))      # with its kick-off
+            if src != "fotmob":                    # RSSSF's or schochastics' copy: the FA's rank, detail, kick-off and season
+                G.c.execute("UPDATE match SET src='uaefa', date=?, eid=? WHERE mid=?",
+                            (when, edition_for(G, reg, "uaefa", f"{LEAGUE}|{season}", cid, season), mid))
                 G.c.execute("DELETE FROM event WHERE mid=? AND src IN ('rsssf', 'sch')", (mid,))
                 G.c.execute("DELETE FROM appearance WHERE mid=? AND src IN ('rsssf', 'sch')", (mid,))
             for k, v in row.items():                                    # what the copy lacks (FotMob's date and clubs stay)

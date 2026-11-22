@@ -279,3 +279,20 @@ def test_a_few_fotmob_games_do_not_decide_a_season_another_source_holds_whole(tm
     game(G, 90, e, "2011-06-01T15:00:00Z", 1, 2, 2, 2, src="fotmob")
     seasons.load(G, reg, None)
     assert G.c.execute("SELECT count(*) FROM match WHERE eid=?", (e,)).fetchone()[0] == 31
+
+
+def test_a_clubs_second_record_in_the_old_table_does_not_keep_its_copies(tmp_path):
+    # UAE 2006/07: RSSSF's table and games named its own «Al-Shabab» record; the FA's full season has FotMob's: RSSSF's
+    # 34 games of that record stayed beside the FA's own
+    G, reg, cid = world(tmp_path, fid=538)
+    e = ed(G, reg, cid, "2006/2007", "s365", fid=538, champion=1)
+    mid = 0
+    for h in (1, 2, 3, 4):
+        for a in (1, 2, 3, 4):
+            if h != a:
+                mid += 1
+                game(G, mid, e, f"2006-{9 + mid % 3:02d}-{1 + mid:02d}", h, a, src="uaefa")
+    G.c.execute("insert into standing values(?, '', 1, 7, 6, 3, 2, 1, 9, 5, 11, 'rsssf')", (e,))        # 7: RSSSF's record of 4
+    game(G, 40, e, "2006-10-20", 7, 1, 3, 0, src="rsssf")
+    seasons.load(G, reg, None)
+    assert G.c.execute("SELECT eid FROM match WHERE mid=40").fetchone() != (e,)

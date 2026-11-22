@@ -111,3 +111,20 @@ def test_goals_that_do_not_add_up_to_the_score_are_left_out(tmp_path):
     out = uaefa.load(G, reg, S)
     assert G.c.execute("SELECT count(*) FROM event WHERE type='goal'").fetchone() == (0,)
     assert out["goals_not_adding_up"] == 3
+
+
+def test_a_copy_in_another_competition_is_another_game(tmp_path):
+    # the same two clubs the same day in the President's Cup is not the league game
+    rows = [rec(900 + d, "2006/2007", f"2007-02-0{d}", 1, 0, [man(11, "A B", "أ ب")], [man(21, "C D", "ج د")], []) for d in (1, 2, 3)]
+    G, reg, cid, teams, S = world(tmp_path, rows)
+    e = ed(G, reg, cid, "2006/2007", "sch")
+    cup = reg.mint("competition", "fotmob", 9943)
+    G.put("competition", {"cid": cup, "name": "Cup", "kind": "cup"}, "fotmob")
+    ce = reg.mint("edition", "s365", "9943|2006/2007")
+    G.put("edition", {"eid": ce, "cid": cup, "season": "2006/2007"}, "s365")
+    for d in (1, 2):
+        G.put("match", {"mid": 950 + d, "eid": e, "date": f"2007-02-0{d}", "home": teams[102117], "away": teams[102109], "hs": 1, "as_": 0}, "sch")
+    G.put("match", {"mid": 953, "eid": ce, "date": "2007-02-03", "home": teams[102117], "away": teams[102109], "hs": 1, "as_": 0}, "sch")
+    out = uaefa.load(G, reg, S)
+    assert out["games_joined"] == 2 and out["games_own"] == 1
+    assert G.c.execute("SELECT src FROM match WHERE mid=953").fetchone() == ("sch",)
