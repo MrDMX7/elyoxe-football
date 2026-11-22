@@ -29,14 +29,19 @@ const seasonRich = s => !!(s && ((s.champion || s.note) && ((s.table || []).leng
 
 function seasonsBody(ed, comp, o) {
   o = o || {};
+  // one row a season, its champion on the line, the runner-up and the top scorer under it: a phone reads it upright (22 Nov 2026:
+  // the four-column table put the scorer off the screen)
   const rows = (ed.seasons || []).map(s => {
     const top = (s.top_scorers || []).filter(p => p.rank === 1);
     const season = (o.page || seasonRich)(s) ? `<a href="/c/${comp.key}/s/${slug(s.season)}/">${num(s.season)}</a>` : num(s.season);   // o.page: a season with its page
-    const who = s.note && !s.champion ? `<td colspan="2" class="muted">${esc(s.note)}</td>` : `<td>${teamL(s.champion, o)}</td><td>${teamL(s.runner_up, o)}</td>`;
-    return `<tr><td>${season}</td>${who}<td>${top.map(p => `${playerL(p, o)} ${p.value ? `<span class="muted small">(${num(p.value)})</span>` : ""}`).join("، ")}</td></tr>`;
+    const end = /\//.test(s.season) ? `${String(s.season).slice(5, 9)}-06-30` : `${String(s.season).slice(0, 4)}-12-31`;
+    const inPlay = !s.champion && !s.note && end >= new Date().toISOString().slice(0, 10);      // the season still being played
+    const main = s.note && !s.champion ? `<span class="muted">${esc(s.note)}</span>` : (s.champion ? `<b>${teamL(s.champion, o)}</b>` : inPlay ? '<span class="muted">الموسم الجاري</span>' : '<span class="muted">—</span>');
+    const sub = [s.runner_up && `الوصيف ${teamL(s.runner_up, o)}`,
+      top.length && `${inPlay ? "يتصدر الهدافين" : "الهداف"} ${top.map(p => `${playerL(p, o)}${p.value ? ` <span class="num">(${esc(p.value)})</span>` : ""}`).join(" و")}`].filter(Boolean).join(" · ");
+    return U.row({ t: `${season} · ${main}`, sub, cls: "ssn" });
   }).join("");
-  return U.grp(`كل المواسم <span class="num">${(ed.seasons || []).length}</span>`,
-    `<div class="tblw"><table class="tbl"><thead><tr><th>الموسم</th><th>البطل</th><th>الوصيف</th><th>الهداف</th></tr></thead><tbody>${rows}</tbody></table></div>`) +
+  return U.grp(`كل المواسم <span class="num">${(ed.seasons || []).length}</span>`, rows) +
     '<p class="src">من قاعدة تيفو: الأبطال من 365Scores وRSSSF وويكيبيديا، والهدافين من عدّنا للأهداف وقوائم FotMob وTransfermarkt.</p>';
 }
 

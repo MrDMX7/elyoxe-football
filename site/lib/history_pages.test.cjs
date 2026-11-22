@@ -71,7 +71,7 @@ test("a cancelled season says so in the champion's place", () => {
   const ed = { seasons: [{ season: "1990/1991", matches: 0, champion: null, runner_up: null, note: "ما انلعب بسبب حرب الخليج", table: [], top_scorers: [] },
     { season: "2019/2020", matches: 133, champion: null, runner_up: null, note: "انلغى بسبب كورونا بدون بطل", table: [[1, 102119, "شباب الأهلي", 19, 13, 4, 2, 41, 13, 43]], top_scorers: [] }] };
   const h = H.seasonsBody(ed, COMP, o);
-  assert.match(h, /<td colspan="2" class="muted">ما انلعب بسبب حرب الخليج<\/td>/);
+  assert.match(h, /1990\/1991<\/span> · <span class="muted">ما انلعب بسبب حرب الخليج<\/span>/);   // the champion's place, muted
   assert.equal(H.seasonRich(ed.seasons[0]), false);
   assert.equal(H.seasonRich(ed.seasons[1]), true);                 // its table up to the stop is worth a page
   const p = H.seasonBody(ed.seasons[1], COMP, o);
@@ -95,4 +95,19 @@ test("a club's name in that season (the archive's Arabic) beats today's", () => 
 test("an organiser's man of the match FotMob never had links to his archive page", () => {
   const h = H.seasonBody({ ...S16, motm: [[170716, "علي مبخوت", 7], [null, "ريفالدو", 2, 4411]] }, COMP, { ...o, person: id => id === 4411 });
   assert.match(h, /<a href="\/p\/k4411\/">ريفالدو<\/a>/);
+});
+
+test("the seasons index fits a phone: one row a season, no wide table (22 Nov 2026: the scorer column was off the screen)", () => {
+  const h = H.seasonsBody(ED, COMP, o);
+  assert.doesNotMatch(h, /<table/);
+  assert.match(h, /class="row[^"]*"[^>]*>[\s\S]*?2016\/2017[\s\S]*?الجزيرة/);
+  assert.match(h, /الوصيف[\s\S]*?العين/);
+  assert.match(h, /الهداف[\s\S]*?علي مبخوت/);
+});
+
+test("the season in play says so, its scorer leads (no «—» champion)", () => {
+  const y = new Date().getUTCFullYear(), cur = `${y}/${y + 1}`;
+  const h = H.seasonsBody({ seasons: [{ season: cur, matches: 40, champion: null, runner_up: null, table: [], top_scorers: [{ rank: 1, fotmob: 1, name: "رافينيا", value: "15" }] }] }, COMP, o);
+  assert.match(h, /الموسم الجاري/);
+  assert.match(h, /يتصدر الهدافين[\s\S]*?رافينيا/);
 });
