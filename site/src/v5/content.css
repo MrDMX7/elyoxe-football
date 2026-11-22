@@ -1258,6 +1258,7 @@ body[data-page="poster"]{background:#fff}
 :is(.lc .wc,.wc .lc) h4{margin:.6rem 0 .2rem;font-size:.9rem;color:var(--stone)}
 .lc .wl{line-height:2;margin:0}
 .lc .tscroll{overflow-x:auto}
+.lc code{overflow-wrap:anywhere}
 .lt-x .pph{margin:0;inline-size:clamp(6.5rem,28vw,11rem)}
 .lt-x .pph img{display:block;inline-size:100%;block-size:auto;aspect-ratio:4/5;object-fit:cover}
 .lt-x .pph figcaption{font-size:.6rem;line-height:1.3;opacity:.55;max-inline-size:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;direction:ltr;text-align:end}

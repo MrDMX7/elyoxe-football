@@ -30,7 +30,10 @@ const STRAY = [/\bundefined\b/, /\bnull\b/, /\bNaN\b/, /\[object /, /، اللق
 async function sitemapPaths() {
   const out = new Set(), get = async u => { try { const r = await fetch(u); return r.ok ? await r.text() : ""; } catch (e) { return ""; } };
   const idx = await get(BASE + "/robots.txt"), maps = [...idx.matchAll(/Sitemap:\s*(\S+)/g)].map(m => m[1]);
-  for (const m of maps) for (const x of (await get(m)).matchAll(/<loc>([^<]+)<\/loc>/g)) out.add(x[1].replace(BASE, ""));
+  for (let i = 0; i < maps.length; i++) {               // a sitemap index (sitemap-archive.xml) lists sitemaps, not pages
+    const body = await get(maps[i]), locs = [...body.matchAll(/<loc>([^<]+)<\/loc>/g)].map(x => x[1]);
+    if (/<sitemapindex/.test(body)) maps.push(...locs); else locs.forEach(u => out.add(u.replace(BASE, "")));
+  }
   return [...out];
 }
 
