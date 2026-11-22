@@ -22,7 +22,7 @@ function kind(path) {
   return p[0];
 }
 
-const STRAY = [/\bundefined\b/, /\bnull\b/, /\bNaN\b/, /\[object /, /اللقب (الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|[^\s]+ و[^\s]+ون)/,
+const STRAY = [/\bundefined\b/, /\bnull\b/, /\bNaN\b/, /\[object /, /، اللقب (الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|[^\s]+ و[^\s]+ون)/,
   /\{\{|\}\}/, /&amp;[a-z]+;/, /\b\d+(st|nd|rd|th) title\b/i];
 
 async function sitemapPaths() {
