@@ -443,3 +443,18 @@ def test_a_years_award_in_a_league_of_split_seasons_is_the_season_ending_that_ye
     awards.load(G, reg, S)
     got = G.c.execute("select e.season, p.name from honour h join edition e on e.eid=h.eid join player p on p.pid=h.pid where e.cid=? and h.kind='best_player' order by 1", (lg,)).fetchall()
     assert got == [("2014/2015", "Hassan Al-Haydos"), ("2015/2016", "Rodrigo Tabata"), ("2016/2017", "Nam Tae-hee")]
+
+
+def test_a_title_count_a_number_or_a_team_is_no_man():
+    # LaLiga's seasons list showed «بالتازار (35)، اللقب الرابع والعشرون»: Wikipedia's «24th title» read as a second top scorer
+    for n in ("24th title", "23rd title", "1st title", "20", "7893", "The U18s youth team", "Real Madrid's 33rd title"):
+        assert awards.not_a_person(n), n
+    for n in ("Baltazar", "Lotta Schelin", "Titus Bramble", "Hugo Sánchez"):
+        assert not awards.not_a_person(n), n
+
+
+def test_a_mans_name_loses_its_win_count_club_or_disambiguation():
+    # «Lotta Schelin (2)» … «(5)» were five players, «Kevin Miller (footballer)» one more
+    for raw, clean in (("Lotta Schelin (2)", "Lotta Schelin"), ("Kevin Miller (footballer)", "Kevin Miller"),
+                       ("Lucie Martínková (Örebro)", "Lucie Martínková"), ("Baltazar", "Baltazar"), ("علي (الأسطورة)", "علي (الأسطورة)")):
+        assert awards.clean_name(raw) == clean, raw

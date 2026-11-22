@@ -56,8 +56,22 @@ COMPETITION_WORD = re.compile(r"\b(leagues?|cups?|division|liga|championships?|t
 PLACEHOLDER = re.compile(r"^\W*(various( players)?|tbd|tba|n/?a|not awarded|none|unknown|vacant)?\W*$", re.I)     # a cell with no man in it
 
 
+NOT_A_MAN = re.compile(r"\b\d+(st|nd|rd|th)\s+title\b|^\W*[\d\s.,]+\W*$|\b(youth|reserve|u\d{2}s?)\s+team\b", re.I)   # «24th title», «7893»
+
+
 def not_a_person(name):
-    return bool(name and (COMPETITION_WORD.search(name) or PLACEHOLDER.match(name)))
+    return bool(name and (COMPETITION_WORD.search(name) or PLACEHOLDER.match(name) or NOT_A_MAN.search(name)))
+
+
+AR_LETTER = re.compile(r"[؀-ۿ]")
+
+
+def clean_name(name):
+    """a man's name without Wikipedia's trailing count, club or disambiguation («Lotta Schelin (2)», «Kevin Miller (footballer)»):
+    one man, not one a win; an Arabic name keeps its brackets"""
+    if not name or AR_LETTER.search(name):
+        return name
+    return re.sub(r"\s*\([^()]*\)\s*$", "", name).strip() or name
 
 
 NOISE = re.compile(r"\b(club|fc|sc|cf|ac|cd|sd|afc|the|\d+)\b")
@@ -121,13 +135,14 @@ def load(G, reg, S):
                     reg.link("player", "tm", str(f["tm_player"]), pid)
             if ("p", pid) not in done:
                 done.add(("p", pid))
-                t = (title or "").replace("_", " ")
+                t = clean_name((title or "").replace("_", " "))
                 t_ar = t[3:] if t.startswith("ar:") else None            # an Arabic article's title is his Arabic name, not «ar:…»
                 G.put("player", {"pid": pid, "name": f.get("en") or t_ar or t, "name_ar": f.get("ar") or t_ar, "born": f.get("born")}, "wikidata")
                 G.xref("player", pid, "wikidata", f["qid"], "wiki-link")
             return pid, f.get("born")
         if title and f.get("qid"):
             return None, None                  # a link to something that is not a person
+        name = clean_name(name)
         if not_a_person(name) or (title and not_a_person(title.replace("_", " "))):      # not by competition name: «Mineiro» is both
             n["not_a_person"] += 1             # a competition's own name, never a player page nor a winner
             return None, None
