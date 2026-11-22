@@ -142,16 +142,22 @@ def job_site(log):
     if rc:
         return False, f"build failed ({rc}): {tail}"
     out = SITE / "out"
-    now = sum(1 for _ in out.rglob("index.html"))
+    now = own_pages(out)
     lastf = CACHE / "last_pages"
     last = int(lastf.read_text().strip() or 0) if lastf.exists() else 0
     # 2026-10-23: the count also lives in S3 (state/runner/site-pages.json), so a run that starts from a cold or stale cache
     # (GitHub's runners keep nothing) still holds the build against the last published count; the larger of the two wins
+    rebase = False
     try:
-        last = max(last, int((STORE.get_state("runner/site-pages.json") or {}).get("pages") or 0))
+        st = STORE.get_state("runner/site-pages.json") or {}
+        if st.get("count") == "site-own":
+            last = max(last, int(st.get("pages") or 0))
+        else:                                       # (2026-11-22) a count of every page, the archive's too: this build sets the
+            rebase, last = True, 0                  # baseline of the site's own pages
+            log.w(f"page count now leaves out the archive's pages: {now} sets the baseline")
     except Exception as e:
         log.w(f"site-pages state unreadable ({e}); the local count only")
-    if not last and os.environ.get("TIFO_FIRST_PUBLISH") != "1":
+    if not last and not rebase and os.environ.get("TIFO_FIRST_PUBLISH") != "1":
         return False, f"{now} pages built and no published count to hold them against; not publishing (TIFO_FIRST_PUBLISH=1 overrides)"
     if last and now < last * 95 // 100:             # a flaky fetch (or a missing input) can yield a partial build, and
         return False, f"partial build: {now} pages vs {last} last time; not publishing"   # `sync --delete` would wipe pages
@@ -193,7 +199,7 @@ def job_site(log):
         log.w(f"shells not saved: {e}")
     lastf.write_text(str(now))
     try:
-        STORE.put_state("runner/site-pages.json", {"pages": now, "host": HOST, "at": datetime.now(timezone.utc).isoformat(timespec="seconds")})
+        STORE.put_state("runner/site-pages.json", {"pages": now, "count": "site-own", "host": HOST, "at": datetime.now(timezone.utc).isoformat(timespec="seconds")})
     except Exception as e:
         log.w(f"site-pages state not written: {e}")
     run(log, [AWS, "cloudfront", "create-invalidation", "--distribution-id", dist, "--paths", "/sw.js", "/", "--query", "Invalidation.Id", "--output", "text"], timeout=120)
@@ -232,6 +238,13 @@ ARCHIVE_OWNED = ["c/*/s/*", "c/*/seasons/*", "m/k*", "sitemap-archive*"]
 
 def page_excludes():
     return PAGE_EXCLUDES + FAST_OWNED + ARCHIVE_OWNED
+
+
+def own_pages(out):
+    """the pages this build publishes (index.html under out/), the archive job's left out (its seasons and old matches)"""
+    import fnmatch
+    out = Path(out)
+    return sum(1 for p in out.rglob("index.html") if not any(fnmatch.fnmatchcase(p.relative_to(out).as_posix(), x) for x in ARCHIVE_OWNED))
 
 
 def publish_stage(log, bucket, name):

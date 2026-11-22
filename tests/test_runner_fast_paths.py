@@ -49,3 +49,13 @@ def test_the_listing_never_reads_the_archive_matches():
     got = [o["Key"] for o in s3push.listing(f, "b")]
     assert sorted(got) == ["c/x/index.html", "index.html", "m/1/index.html"]
     assert ("m/k", None) not in f.prefixes and ("m/", None) not in f.prefixes
+
+
+def test_the_page_count_guard_counts_the_sites_own_pages_only(tmp_path):
+    # 22 Nov 2026: the archive's season and old-match pages are the archive job's; the site's «partial build» guard counted
+    # them and refused two builds (127,609 vs 147,047) when the seasons merge left fewer of them
+    for k in ("index.html", "c/laliga/index.html", "c/laliga/s/1929/index.html", "c/laliga/seasons/index.html", "m/k5/index.html", "m/42/index.html"):
+        p = tmp_path / k
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("x")
+    assert runner.own_pages(tmp_path) == 3
