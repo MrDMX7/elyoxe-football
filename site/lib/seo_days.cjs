@@ -83,7 +83,9 @@ module.exports = async function(X){
     const p = TD.shift(d, -1), n = TD.shift(d, 1);
     return `<nav class="dnav" aria-label="الأيام">${p >= FIRST ? `<a href="/matches/${TD.iso(p)}/" rel="prev">${esc(TD.dayMonth(p))}</a>` : ""}<span aria-current="page">${esc(TD.dayMonth(d))}</span>${n <= tomorrow ? `<a href="/matches/${TD.iso(n)}/" rel="next">${esc(TD.dayMonth(n))}</a>` : ""}${L("/today/", "مباريات اليوم")}${L("/matches/", "كل الأيام")}</nav>`; };
   function dayPage(d, kind){
-    const doc = docs[d]; if (!doc) return false;
+    // today, tomorrow and yesterday are always pages (every footer links them): a build across the UAE's midnight found no file
+    // for the new tomorrow yet, skipped /tomorrow/, and the publish deleted it (22 Nov 2026); the browser fills the day live
+    const doc = docs[d] || (kind === "date" ? null : { leagues: [] }); if (!doc) return false;
     const ctx = ctxOf(d), c = TD.counts(doc), past = d < today, full = TD.fullDate(d);
     const W = { today:["مباريات اليوم", "اليوم"], tomorrow:["مباريات الغد", "بكرة"], yesterday:["نتائج مباريات أمس", "أمس"], date:["مباريات", d === today ? "اليوم" : d === tomorrow ? "بكرة" : d === yesterday ? "أمس" : ""] }[kind];
     const h1 = `${W[0]} ${full}`, p = kind === "date" ? `/matches/${TD.iso(d)}/` : `/${kind}/`;
