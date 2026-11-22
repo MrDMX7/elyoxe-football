@@ -126,7 +126,8 @@ def load(G, reg, S, codes=None):
             n["seasons"] += 1
             table = s.get("table") or []
             if table and not G.c.execute("SELECT 1 FROM standing WHERE eid=?", (eid,)).fetchone():
-                for pos, name, fid, p, w, dr, l, gf, ga, pts in table:
+                for i, (pos, name, fid, p, w, dr, l, gf, ga, pts) in enumerate(table):
+                    pos = max(pos or 0, i + 1)         # level clubs share RSSSF's rank (1, 1, 3): each keeps its row, in its order
                     G.c.execute("INSERT OR IGNORE INTO standing VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                                 (eid, "", pos, team(code, name, fid), p, w, dr, l, gf, ga, pts, "rsssf"))
                     n["standings"] += 1

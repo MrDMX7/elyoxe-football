@@ -154,3 +154,17 @@ def test_a_years_season_in_a_league_of_split_seasons_is_the_one_ending_that_year
         G.put("match", {"mid": reg.mint("match", "fotmob", 80 + i), "eid": e, "date": f"{s[5:]}-02-01", "home": 1, "away": 2, "hs": 1, "as_": 0}, "fotmob")
     rsssf.load(G, reg, S, codes=["uae"])
     assert [r[0] for r in G.c.execute("select season from edition where cid=? order by season", (lg,))] == ["1999/2000", "2000/2001", "2001/2002"]
+
+
+def test_two_clubs_level_at_the_top_both_keep_their_row(tmp_path):
+    # Kuwait 1980/81: RSSSF ranks Salmiya and Al-Arabi both 1 (a play-off decided it); one row a rank dropped Al-Arabi
+    S, G, reg = mk(tmp_path), Graph(str(tmp_path / "t.db")), Registry()
+    m = tmp_path / "mirror" / "history" / "arab"
+    (m / "uae.json").write_text(json.dumps({"country": "uae", "league": 538, "seasons": [
+        {"season": "1980/1981", "table": [[1, "Salmiya", 101716, 24, 14, 6, 4, 40, 20, 34], [1, "Al-Arabi", 101711, 24, 15, 4, 5, 41, 22, 34],
+                                         [3, "Kazma", 101718, 24, 12, 6, 6, 30, 25, 30]]}]}), encoding="utf-8")
+    lg = reg.mint("competition", "fotmob", 538)
+    G.put("competition", {"cid": lg, "name": "Pro League"}, "fotmob")
+    rsssf.load(G, reg, S, codes=["uae"])
+    e = G.c.execute("select eid from edition where cid=? and season='1980/1981'", (lg,)).fetchone()[0]
+    assert [r[0] for r in G.c.execute("select rank from standing where eid=? order by rank", (e,))] == [1, 2, 3]
