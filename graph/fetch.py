@@ -87,6 +87,18 @@ def _state_file(S, name, key):
         os.replace(p + ".tmp", p)
 
 
+def rsssf_tops(S, max_age_days=30):
+    """RSSSF's top-scorer lists read by graph/load/rsssf_tops.py: Argentina per tournament since 1891 (monthly)"""
+    p = os.path.join(S.db, "rsssf_tops", "arg.html")
+    if os.path.exists(p) and time.time() - os.path.getmtime(p) < max_age_days * 86400:
+        return
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    body = urllib.request.urlopen(urllib.request.Request("https://www.rsssf.org/tablesa/argtops.html", headers={"User-Agent": "Mozilla/5.0"}), timeout=60).read()
+    if len(body) > 5000:
+        open(p + ".tmp", "wb").write(body)
+        os.replace(p + ".tmp", p)
+
+
 def espn(S):
     """ESPN's records of 2001-2010 (graph/espn_fetch.py): db/.cache/espn.json.gz for graph/load/espn.py"""
     _state_file(S, "espn.json.gz", "graph/espn.json")

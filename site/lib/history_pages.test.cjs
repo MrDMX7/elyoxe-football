@@ -121,3 +121,13 @@ test("a season's tournaments show on its row and its page, in Arabic (Argentina'
   const p = H.seasonBody(ed.seasons[0], COMP, Object.assign({}, o, { team: () => true }));
   assert.match(p, /بطل الأبيرتورا/);
 });
+
+test("a season's tournaments carry their own top scorers (RSSSF's Argentine list)", () => {
+  const ed = { seasons: [{ season: "1991/1992", matches: 372, champion: null, runner_up: null, table: [], top_scorers: [],
+    parts: [{ name: "Apertura", champion: { fotmob: 10083, name: "ريفر بليت" }, runner_up: null, top: [{ rank: 1, fotmob: null, tifo: 7, name: "Ramón Díaz", value: "14" }] },
+      { name: "Clausura", champion: { fotmob: 10087, name: "نيولز" }, runner_up: null }] }] };
+  const h = H.seasonsBody(ed, COMP, Object.assign({}, o, { team: () => true, person: id => id === 7 }));
+  assert.match(h, /الهداف[\s\S]*?أبيرتورا[\s\S]*?Ramón Díaz[\s\S]*?14/);
+  const p = H.seasonBody(ed.seasons[0], COMP, Object.assign({}, o, { team: () => true, person: id => id === 7 }));
+  assert.match(p, /هداف الأبيرتورا/);
+});

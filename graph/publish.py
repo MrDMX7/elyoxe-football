@@ -273,7 +273,8 @@ def fold_parts(seasons):
     for s in seasons:
         m = PART.match(s["season"])
         if m and m.group(1) in rows and not s["matches"] and not s["table"]:
-            rows[m.group(1)].setdefault("parts", []).append({"name": m.group(2).strip(), "champion": s["champion"], "runner_up": s["runner_up"]})
+            rows[m.group(1)].setdefault("parts", []).append({"name": m.group(2).strip(), "champion": s["champion"], "runner_up": s["runner_up"],
+                                                             **({"top": [p for p in s["top_scorers"] if p.get("rank") == 1]} if s.get("top_scorers") else {})})
             continue
         out.append(s)
     for s in out:

@@ -50,7 +50,10 @@ function seasonsBody(ed, comp, o) {
     const main = s.note && !s.champion ? `<span class="muted">${esc(s.note)}</span>` : (s.champion ? `<b>${teamL(s.champion, o)}</b>` : parts ? parts :
       inPlay ? '<span class="muted">الموسم الجاري</span>' : '<span class="muted">—</span>');
     const sub = [s.champion && parts, s.runner_up && `الوصيف ${teamL(s.runner_up, o)}`,
-      top.length && `${inPlay ? "يتصدر الهدافين" : "الهداف"} ${top.map(p => `${playerL(p, o)}${p.value ? ` <span class="num">(${esc(p.value)})</span>` : ""}`).join(" و")}`].filter(Boolean).join(" · ");
+      top.length && `${inPlay ? "يتصدر الهدافين" : "الهداف"} ${top.map(p => `${playerL(p, o)}${p.value ? ` <span class="num">(${esc(p.value)})</span>` : ""}`).join(" و")}`,
+      // no scorer of its own: each tournament's (Argentina's Apertura and Clausura)
+      !top.length && (s.parts || []).some(p => (p.top || []).length) && `الهداف ${(s.parts || []).filter(p => (p.top || []).length).map(p =>
+        `${esc(partName(p.name))} ${p.top.map(t => `${playerL(t, o)}${t.value ? ` <span class="num">(${esc(t.value)})</span>` : ""}`).join(" و")}`).join(" · ")}`].filter(Boolean).join(" · ");
     return U.row({ t: `${season} · ${main}`, sub, cls: "ssn" });
   }).join("");
   return U.grp(`كل المواسم <span class="num">${(ed.seasons || []).length}</span>`, rows) +
@@ -61,6 +64,7 @@ function seasonBody(s, comp, o) {
   o = o || {};
   const facts = [s.champion ? ["البطل", teamL(s.champion, o)] : s.note && ["الموسم", esc(s.note)], s.runner_up && ["الوصيف", teamL(s.runner_up, o)],
     ...(s.parts || []).filter(p => p.champion).map(p => [`بطل ${esc(partName(p.name, 1))}`, teamL(p.champion, o) + (p.runner_up ? ` <span class="muted">(الوصيف ${teamL(p.runner_up, o)})</span>` : "")]),
+    ...(s.parts || []).filter(p => (p.top || []).length).map(p => [`هداف ${esc(partName(p.name, 1))}`, p.top.map(t => playerL(t, o) + (t.value ? ` <span class="muted small">${num(t.value)}</span>` : "")).join("، ")]),
     s.champion_coach && ["مدرب البطل", coachL(s.champion_coach, o)],
     s.matches && ["المباريات", num(s.matches)]].filter(Boolean);
   const people = (title, list) => (list || []).length ? U.grp(title, `<ol class="lc">${list.map(p => `<li>${playerL(p, o)}${p.value ? ` <span class="muted small">${num(p.value)}</span>` : ""}</li>`).join("")}</ol>`) : "";
