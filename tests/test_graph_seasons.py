@@ -264,3 +264,18 @@ def test_a_third_copy_of_a_game_on_its_own_day_is_one_game(tmp_path):
     game(G, 40, e, "2005-10-02", 1, 2, src="sch")                 # uaefa's mid 1 of that day
     out = seasons.load(G, reg, None)
     assert not G.c.execute("SELECT 1 FROM match WHERE mid=40").fetchone() and out["pair_twins"] == 1
+
+
+def test_a_few_fotmob_games_do_not_decide_a_season_another_source_holds_whole(tmp_path):
+    # Iraq 2010/11: FotMob held 2 games, schochastics the whole season: 513 league games went aside
+    G, reg, cid = world(tmp_path, fid=524)
+    e = ed(G, reg, cid, "2010/2011", "fotmob", fid=524, champion=1)
+    mid = 0
+    for h in (1, 2, 3, 4, 5, 6):
+        for a in (1, 2, 3, 4, 5, 6):
+            if h != a:
+                mid += 1
+                game(G, mid, e, f"2010-{9 + mid % 3:02d}-{1 + mid % 27:02d}", h, a, src="sch")
+    game(G, 90, e, "2011-06-01T15:00:00Z", 1, 2, 2, 2, src="fotmob")
+    seasons.load(G, reg, None)
+    assert G.c.execute("SELECT count(*) FROM match WHERE eid=?", (e,)).fetchone()[0] == 31

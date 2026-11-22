@@ -241,15 +241,18 @@ class Pass:
             b = {t: n for t, n in gp.items() if n >= 0.25 * top}
             ok = len(b) >= 4 and min(b.values()) >= 0.75 * top and sum(gp.values()) - sum(b.values()) <= 0.1 * sum(gp.values())
             return set(b) if ok else None
-        if "fotmob" in by:                                    # FotMob's games never go aside
+        cand = {s: body(by[s]) for s in by}
+        cand = {s: c for s, c in cand.items() if c}
+        most = max(len(v) for s, v in by.items() if s != "fotmob")
+        if "fotmob" in by and (len(by["fotmob"]) >= 0.5 * most or "fotmob" in cand):     # FotMob leads where it holds the season
             main, core = "fotmob", {t for r in by["fotmob"] for t in r[2:4]}
-        else:
-            cand = {s: body(by[s]) for s in by}
-            cand = {s: c for s, c in cand.items() if c}
-            if not cand:
+        elif cand:                     # a few FotMob games (Iraq 2010/11: 2 of 700) do not decide whose clubs the league's are
+            main = min((s for s in cand if s != "fotmob"), key=lambda s: (SRC_RANK.get(s, 9), -len(by[s])), default=None)
+            if main is None:
                 return
-            main = min(cand, key=lambda s: (SRC_RANK.get(s, 9), -len(by[s])))
             core = cand[main]
+        else:
+            return
         core |= {t for (t,) in q("SELECT tid FROM standing WHERE eid=?", (eid,))}
         pairs = Counter((r[2], r[3]) for r in by[main])
         once = all(n == 1 for n in pairs.values())
@@ -259,6 +262,8 @@ class Pass:
             if s == main:
                 continue
             for mid, src, h, a, hs, as_, d, rnd in rs:
+                if src == "fotmob":                               # FotMob's games never go aside
+                    continue
                 if rnd and (str(rnd).lower().startswith("play-off") or str(rnd).lower() == "test match"):
                     continue
                 if h not in core or a not in core:
