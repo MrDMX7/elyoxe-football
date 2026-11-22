@@ -55,7 +55,9 @@ function sample(paths) {
     let status = 0;
     try { const r = await page.goto(BASE + path, { waitUntil: "networkidle", timeout: 45000 }); status = r ? r.status() : 0; } catch (e) { errors.push("load: " + e.message.slice(0, 120)); }
     const m = await page.evaluate(() => {
-      const iw = innerWidth, wide = [...document.querySelectorAll("main *")].filter(e => { const r = e.getBoundingClientRect(); return r.width > iw + 2 && getComputedStyle(e).overflowX !== "auto" && !e.closest("[style*='overflow'],.tblw,.hs,.chips,.seg"); })
+      // wider than the phone and in no box that scrolls or clips it (a table in .tblwrap scrolls in place: fine)
+      const boxed = e => { for (let x = e; x && x !== document.body; x = x.parentElement) { const o = getComputedStyle(x).overflowX; if (o === "auto" || o === "scroll" || o === "hidden" || o === "clip") return true; } return false; };
+      const iw = innerWidth, wide = [...document.querySelectorAll("main *")].filter(e => { const r = e.getBoundingClientRect(); return (r.width > iw + 2 || r.left < -2 || r.right > iw + 2) && !boxed(e); })
         .slice(0, 4).map(e => e.tagName.toLowerCase() + "." + String(e.className).slice(0, 30) + " " + Math.round(e.getBoundingClientRect().width));
       const text = (document.querySelector("main") || document.body).innerText;
       const broken = [...document.images].filter(i => i.complete && i.naturalWidth === 0 && i.src && !i.src.startsWith("data:"));

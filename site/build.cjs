@@ -1714,7 +1714,14 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
     `## Pages\n\n- [اليوم](${SITE}/today/): مباريات اليوم\n- [البطولات](${SITE}/competitions/): كل البطولات ومواسمها\n- [دوري أدنوك للمحترفين](${SITE}/c/uae-pro-league/): الدوري الإماراتي من 1973/74\n- [الجوائز](${SITE}/awards/): الكرة الذهبية وجوائز المواسم\n\n` +
     `## Data\n\n- [JSON index](${SITE}/v1/index.json): competitions, current seasons and data files\n- [Sitemaps](${SITE}/sitemap.xml), [archive sitemaps](${SITE}/sitemap-archive.xml)\n`);
   // W4.6: the 404 offers search and today's matches instead of a dead end
-  write("404.html", page({ v5:{ nav:{ back:"/", backLabel:"اليوم", title:"" }, tab:"", data:{}, body:'<div class="lt"><h1>الصفحة مب موجودة</h1><p>يمكن الرابط تغيّر. دوّر عن اللي تباه، أو شوف مباريات اليوم.</p></div>' + U.grp("", U.rows([{ href:"/search/", icon:"search", c:"#0A84FF", t:"دوّر في تيفو" }, { href:"/", icon:"today", c:"#34C759", t:"مباريات اليوم" }, { href:"/competitions/", icon:"comps", c:"#FF9500", t:"كل البطولات" }])) + '<div id="day404"></div>' + U.foot() }, path:"/404", page:"none", title:"الصفحة مب موجودة | تيفو", desc:"" }));
+  write("404.html", page({ v5:{ nav:{ back:"/", backLabel:"اليوم", title:"" }, tab:"", data:{}, body:'<div class="lt"><h1>الصفحة مب موجودة</h1><p>يمكن الرابط تغيّر. دوّر عن اللي تباه، أو شوف مباريات اليوم.</p></div>' + U.grp("", U.rows([{ href:"/search/", icon:"search", c:"#0A84FF", t:"دوّر في تيفو" }, { href:"/", icon:"today", c:"#34C759", t:"مباريات اليوم" }, { href:"/competitions/", icon:"comps", c:"#FF9500", t:"كل البطولات" }])) + '<div id="day404"></div>' +
+    // a match, a man or a club with no page of its own (a link the browser drew: a squad, a fixture list, «منو يعلّق»): to its
+    // encyclopedia page, as the build's dead-link pass does for the links it sees (lib/world_squad.cjs relink)
+    '<script>(function(){var m=/^\\/(m|p|t)\\/(\\d+)\\/?$/.exec(location.pathname);if(!m)return;var id=m[2];' +
+    'if(m[1]==="m"){location.replace("/db/match/?id="+id);return;}' +
+    'var to=m[1]==="p"?"/db/player/"+id+"/":"/db/club/"+id+"/",alt=m[1]==="t"?"/db/club/?id="+id:null;' +
+    'fetch(to,{method:"HEAD"}).then(function(r){if(r.ok)location.replace(to);else if(alt)location.replace(alt);}).catch(function(){});})();</script>' +
+    U.foot() }, path:"/404", page:"none", title:"الصفحة مب موجودة | تيفو", desc:"" }));
   // 425: site/static/* is copied to the out/ root unchanged (Search Console's google<token>.html lives there), keeping its mtime
   { const SD = path.join(__dirname, "static"); try { for (const f of fs.readdirSync(SD)){ if (f === "README" || f.startsWith(".")) continue; const src = path.join(SD, f); if (fs.statSync(src).isFile()) cpKeep(src, path.join(OUT, f)); } } catch (e){} }
   // 459: the owner's numbers at an unlisted address (noindex, never in the sitemap, the search index or IndexNow), rebuilt
