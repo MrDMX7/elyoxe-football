@@ -249,3 +249,18 @@ def test_fotmobs_own_label_for_a_season_wins_in_either_form(tmp_path):
     seasons.load(G, reg, None)
     assert labels(G, cid) == ["1929", "1929/1930", "1930/1931"]
     assert G.c.execute("SELECT eid FROM match WHERE mid=1").fetchone() == (y29,)
+
+
+def test_a_third_copy_of_a_game_on_its_own_day_is_one_game(tmp_path):
+    # the twins pass leaves three records of one day alone: the FA's, schochastics' and RSSSF's of one UAE game
+    G, reg, cid = world(tmp_path, fid=538)
+    e = ed(G, reg, cid, "2005/2006", "s365", fid=538, champion=1)
+    mid = 0
+    for h in (1, 2, 3, 4):
+        for a in (1, 2, 3, 4):
+            if h != a:
+                mid += 1
+                game(G, mid, e, f"2005-{9 + mid % 3:02d}-{1 + mid:02d}", h, a, src="uaefa")
+    game(G, 40, e, "2005-10-02", 1, 2, src="sch")                 # uaefa's mid 1 of that day
+    out = seasons.load(G, reg, None)
+    assert not G.c.execute("SELECT 1 FROM match WHERE mid=40").fetchone() and out["pair_twins"] == 1

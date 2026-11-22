@@ -73,6 +73,21 @@ def shield_row(raw):
 SHIELD_LIST = "List of FA Community Shield matches"
 
 
+def uaefa(S):
+    """the UAE FA's record of the top flight 2003/04-2016/17 (graph/uaefa_fetch.py, fetched once on the laptop and kept in
+    the bucket's state/graph/uaefa.json): db/.cache/uaefa.json.gz for graph/load/uaefa.py"""
+    import gzip as _gz, json as _j
+    p = os.path.join(S.db, "uaefa.json.gz")
+    if os.path.exists(p):
+        return
+    d = S.store().get_state("graph/uaefa.json")
+    if d:
+        os.makedirs(S.db, exist_ok=True)
+        with _gz.open(p + ".tmp", "wt", encoding="utf-8") as z:
+            _j.dump(d, z, ensure_ascii=False)
+        os.replace(p + ".tmp", p)
+
+
 def community_shield(S, max_age_days=7):
     """{edition article: shield_row}: the Charity/Community Shield since 1908, the list's links read once each (only new
     editions on later runs), kept in db/.cache/shield.json; engsoccerdata has no Shield"""

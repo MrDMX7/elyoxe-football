@@ -265,7 +265,9 @@ class Pass:
                     aside.append(mid)
                     continue
                 k = mine.get((h, a))
-                if once and "rsssf" in (src, main) and k and (k[4], k[5]) == (hs, as_) and abs((Date.fromisoformat(k[6]) - Date.fromisoformat(d)).days) <= PAIR_DAYS:
+                if k and (k[4], k[5]) == (hs, as_) and k[6] == d:              # the same game, another copy (three on one day)
+                    twins.append((mid, k[0]))
+                elif once and "rsssf" in (src, main) and k and (k[4], k[5]) == (hs, as_) and abs((Date.fromisoformat(k[6]) - Date.fromisoformat(d)).days) <= PAIR_DAYS:
                     twins.append((mid, k[0]))
         if aside:
             to = self.aside_edition(cid, season)
