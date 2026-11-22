@@ -200,3 +200,15 @@ def test_fotmobs_score_its_own_goals_add_up_to_stands_against_a_summary_source(t
     out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
     assert [r[0] for r in G.c.execute("select tifo_id from conflict order by tifo_id")] == [2, 3]
     assert out["fotmob_goals"] == 1
+
+
+def test_a_finished_tables_runner_up_once_the_merges_made_its_first_the_champion(tmp_path):
+    # Qatar 1991/92: RSSSF's first «Al Ittihad» became Al-Gharafa (the champion) only in the team merges, after honours ran
+    G, reg = g(tmp_path)
+    G.put("edition", {"eid": 1, "cid": 1, "season": "1991/1992"}, "rsssf")
+    G.c.executemany("INSERT INTO standing(eid, grp, rank, tid, played, won, drawn, lost, gf, ga, pts, src) VALUES(1, '', ?, ?, 2, 0, 0, 0, 0, 0, 0, 'rsssf')",
+                    [(1, 10), (2, 20), (3, 30)])
+    G.c.execute("INSERT INTO honour(eid, kind, rank, tid, src) VALUES(1, 'champion', 1, 10, 's365')")
+    out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select tid, src from honour where eid=1 and kind='runner_up'").fetchall() == [(20, "table")]
+    assert out["runner_up_table"] == 1

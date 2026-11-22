@@ -33,6 +33,22 @@ def _put(G, eid, kind, rank, src, tid=None, pid=None, value=None):
                        (eid, kind, rank, tid, pid, value, src)).rowcount
 
 
+
+def runner_up_from_tables(G):
+    """The runner-up of an edition with none: its final table's second, when the table's first is the champion. A finished
+    table only: its leader has met every other side once (Qatar 2013/14: 365Scores' table two games in). Run again by
+    graph/load/settle.py once the team merges made a table's first the champion (RSSSF's «Al Ittihad», Al-Gharafa)."""
+    got = 0
+    for eid, champ, first, second, played, teams in G.c.execute("""SELECT h.eid, h.tid, s1.tid, s2.tid, s1.played,
+                                                    (SELECT count(*) FROM standing s WHERE s.eid=h.eid AND s.grp=s1.grp) FROM honour h
+                                                    JOIN standing s1 ON s1.eid=h.eid AND s1.rank=1 JOIN standing s2 ON s2.eid=h.eid AND s2.rank=2
+                                                    WHERE h.kind='champion' AND h.rank=1""").fetchall():
+        if played is not None and played < teams - 1:
+            continue
+        if champ == first and second and not _has(G, eid, "runner_up"):
+            got += _put(G, eid, "runner_up", 1, "table", tid=second)
+    return got
+
 def load(G, reg, S, arab_codes=None):
     n = defaultdict(int)
     # 1. top scorers we can count
@@ -80,15 +96,7 @@ def load(G, reg, S, arab_codes=None):
             n["champion_final"] += _put(G, eid, "champion", 1, "tifo", tid=win)
         if not _has(G, eid, "runner_up"):
             n["runner_up_final"] += _put(G, eid, "runner_up", 1, "tifo", tid=lose)
-    # a finished table only: its leader has met every other side once (Qatar 2013/14: 365Scores' table two games in)
-    for eid, champ, first, second, played, teams in G.c.execute("""SELECT h.eid, h.tid, s1.tid, s2.tid, s1.played,
-                                                    (SELECT count(*) FROM standing s WHERE s.eid=h.eid AND s.grp=s1.grp) FROM honour h
-                                                    JOIN standing s1 ON s1.eid=h.eid AND s1.rank=1 JOIN standing s2 ON s2.eid=h.eid AND s2.rank=2
-                                                    WHERE h.kind='champion' AND h.rank=1""").fetchall():
-        if played is not None and played < teams - 1:
-            continue
-        if champ == first and second and not _has(G, eid, "runner_up"):
-            n["runner_up_table"] += _put(G, eid, "runner_up", 1, "table", tid=second)
+    n["runner_up_table"] += runner_up_from_tables(G)
     # 3. the published scorers files of our competitions
     for cid, fid in G.c.execute("SELECT tifo_id, source_id FROM xref WHERE type='competition' AND source='fotmob' ORDER BY tifo_id").fetchall():
         d = S.published(f"history/scorers/{fid}.json") or {}

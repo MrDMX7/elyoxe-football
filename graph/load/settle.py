@@ -127,7 +127,7 @@ GROUP_ERAS = {"Ligue 2": "1993/1994"}
 
 
 def load(G, reg, S):
-    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0, "no_such_team": 0, "extra_goals": 0, "same_club": 0, "group_era": 0, "fotmob_goals": 0}
+    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0, "no_such_team": 0, "extra_goals": 0, "same_club": 0, "group_era": 0, "fotmob_goals": 0, "runner_up_table": 0}
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     groups = {}
     for rowid, mid, field, kept, ksrc, other, osrc in q("SELECT rowid, tifo_id, field, kept, kept_src, other, other_src FROM conflict "
@@ -226,4 +226,6 @@ def load(G, reg, S):
         if r and r[0][0] is not None and (r[0][0] or 0) + (r[0][1] or 0) > 0 and (r[0][2], r[0][3]) == (r[0][0], r[0][1]):
             G.c.execute("DELETE FROM conflict WHERE rowid=?", (rowid,))
             n["fotmob_goals"] += 1
+    from graph.load.honours import runner_up_from_tables      # the merges may have made a table's first the champion
+    n["runner_up_table"] += runner_up_from_tables(G)
     return n
