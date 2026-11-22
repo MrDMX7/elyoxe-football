@@ -9,9 +9,23 @@ from graph.db import SRC_RANK
 DETAIL = ("event", "appearance", "match_coach", "match_award")
 
 
+# a country and its successor, one side of a game (a national team never plays twice a day): martj42 files FR Yugoslavia's
+# games as Serbia's and the Soviet Union's as Russia's, Fjelstul and FotMob keep the old names
+SUCCESSORS = ({"yugoslavia", "serbia", "serbia and montenegro", "fr yugoslavia"}, {"soviet union", "russia", "ussr", "cis"},
+              {"west germany", "germany", "germany fr"})
+
+
 def load(G, reg, S):
     groups = defaultdict(list)
+    side = {}                                  # a national team -> the first team of its successor family
+    fam = {}
+    for tid, name in G.c.execute("SELECT tid, lower(name) FROM team WHERE kind='national' OR kind IS NULL ORDER BY tid"):
+        k = next((i for i, f in enumerate(SUCCESSORS) if name in f), None)
+        if k is not None:
+            side[tid] = fam.setdefault(k, tid)
+    one = lambda t: side.get(t, t)
     for mid, day, h, a, hs, as_, src in G.c.execute("SELECT mid, substr(date,1,10), home, away, hs, as_, src FROM match WHERE date IS NOT NULL AND hs IS NOT NULL"):
+        h, a = one(h), one(a)
         lo, hi = min(h, a), max(h, a)
         groups[(day, lo, hi)].append((mid, (hs, as_) if h == lo else (as_, hs), src))
     held = defaultdict(int)
@@ -28,7 +42,7 @@ def load(G, reg, S):
             continue
         keep, drop = sorted(ms, key=lambda m: (SRC_RANK.get(m[2], 9), -held.get(m[0], 0), m[0]))
         pairs.append((drop[0], keep[0]))
-        if home[drop[0]] != home[keep[0]]:
+        if one(home[drop[0]]) != one(home[keep[0]]):
             turned.append((drop[0],))
         if eid.get(drop[0]) in ours and eid.get(keep[0]) not in ours:     # Transfermarkt's «FIWC» kept: the World Cup's season wins
             moved.append((eid[drop[0]], keep[0]))

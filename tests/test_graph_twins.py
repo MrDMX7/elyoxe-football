@@ -91,3 +91,18 @@ def test_the_kept_record_takes_the_others_competition_when_only_the_other_is_one
     G.put("match", {"mid": 6, "eid": 2, "date": "2022-11-26", "home": 1, "away": 2, "hs": 2, "as_": 0}, "tm")
     twins.load(G, reg, None)
     assert G.c.execute("select mid, eid from match").fetchall() == [(6, 1)]
+
+
+def test_a_country_and_its_successor_are_one_side_of_a_game(tmp_path):
+    # World Cup 1998: martj42 filed FR Yugoslavia's games as Serbia's, Fjelstul as Yugoslavia's; Euro 1960: FotMob's «Soviet Union»
+    G, reg = world(tmp_path)
+    for tid, nm in ((20, "Yugoslavia"), (21, "Serbia"), (22, "Iran"), (23, "Soviet Union"), (24, "Russia"), (25, "Yugoslavia"), (26, "Croatia")):
+        G.put("team", {"tid": tid, "name": nm, "kind": "national"}, "fotmob")
+    G.put("match", {"mid": 30, "date": "1998-06-14", "home": 20, "away": 22, "hs": 1, "as_": 0}, "fjelstul")
+    G.put("match", {"mid": 31, "date": "1998-06-14", "home": 21, "away": 22, "hs": 1, "as_": 0}, "martj42")
+    G.put("match", {"mid": 32, "date": "1960-07-10", "home": 23, "away": 25, "hs": 2, "as_": 1}, "fotmob")
+    G.put("match", {"mid": 33, "date": "1960-07-10", "home": 24, "away": 25, "hs": 2, "as_": 1}, "martj42")
+    G.put("match", {"mid": 34, "date": "1999-03-01", "home": 21, "away": 26, "hs": 1, "as_": 1}, "martj42")      # a game of one record
+    out = twins.load(G, reg, None)
+    assert out["merged"] == 2
+    assert sorted(r[0] for r in G.c.execute("select mid from match")) == [30, 32, 34]
