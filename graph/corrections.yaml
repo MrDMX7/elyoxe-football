@@ -14,6 +14,12 @@ honours:
      source: "Pro League awards 2024-25 (Emarat Al Youm, 10 Aug 2025): Golden Ball Sardar Azmoun"}
   - {comp: 538, season: "2024/2025", kind: best_goalkeeper, players: [{fotmob: 1138507}],
      source: "Pro League awards 2024-25: Golden Glove Hamad Al Muqbali (FotMob: Hamad Abdullah)"}
+  # clubs by FotMob id (researched 2026-11-22 against Wikipedia's Egypt Cup finals table and season tables)
+  - {comp: 9941, season: "1931/1932", kind: runner_up, teams: [101745], source: "Wikipedia Egypt Cup finals: Zamalek 2-1 Al Ahly, 6 May 1932"}
+  - {comp: 9941, season: "1940/1941", kind: runner_up, teams: [139525], source: "Wikipedia Egypt Cup finals: Zamalek 5-0 Cairo Police (Ittihad El Shorta)"}
+  - {comp: 9941, season: "1942/1943", kind: champion, teams: [101745, 80591], source: "Wikipedia Egypt Cup: final not played, the title shared (Al Ahly, Zamalek)"}
+  - {comp: 9941, season: "2008/2009", kind: runner_up, teams: [101754], source: "Wikipedia Egypt Cup finals: Haras El Hodood 1-1 (4-1 p) ENPPI"}
+  - {comp: 530, season: "2002/2003", kind: runner_up, teams: [102049], source: "Wikipedia 2002-03 Botola: Hassania Agadir champions, Raja second"}
 
 # the value shown was right: the disagreement is closed
 keep:
@@ -23,6 +29,10 @@ keep:
   - {comp: 538, season: "2003/2004", kind: runner_up, source: "RSSSF uae04: final round Al Ain 15, Al Ahli 13, Al Shabab 7"}
   - {comp: 538, season: "2023/2024", kind: top_scorer, source: "Pro League Golden Boot: Omar Khribin 19 (Rahimi was player of the season)"}
   - {comp: 538, season: "2024/2025", kind: top_scorer, source: "Pro League Golden Boot: Kodjo Laba 20"}
+  - {comp: 536, season: "2006/2007", kind: champion, source: "Wikipedia 2006-07 Saudi Premier League: Al-Ittihad won the Golden Four final 2-1 (Al-Hilal led the table)"}
+  - {comp: 536, season: "2007/2008", kind: champion, source: "Wikipedia 2007-08 Saudi Premier League: Al-Hilal"}
+  - {comp: 9941, season: "2008/2009", kind: champion, source: "Wikipedia Egypt Cup finals: Haras El Hodood"}
+  - {comp: 530, season: "1958/1959", kind: champion, source: "Etoile de Casablanca is Étoile Jeunesse Sportive (one club, two names)"}
 
 matches:
   - {date: "2023-02-17", home: 102111, away: 102123, score: [2, 0], source: "uaeproleague.ae: Al Wasl 2-0 Al Nasr"}

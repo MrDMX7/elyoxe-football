@@ -66,3 +66,14 @@ def test_a_player_without_a_fotmob_id_is_named_by_his_wikidata_id(tmp_path):
     assert G.c.execute("select born from player where pid=?", (pepe,)).fetchone()[0] == "1983-02-26"
     assert G.c.execute("select count(*) from conflict where tifo_id=? and field='born'", (pepe,)).fetchone()[0] == 0
     assert out["players"] == 1
+
+
+def test_a_club_honour_is_replaced_by_its_fotmob_club(tmp_path):
+    # Botola 2002/03: Raja were second (Wikipedia's table), not the table source's CODM Meknès
+    G, reg, eds, *_ = world(tmp_path)
+    codm, raja = reg.mint("team", "rsssf", "codm"), reg.mint("team", "fotmob", 9925)
+    G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'runner_up', 1, ?, 'table')", (eds["2015/2016"], codm))
+    G.conflict("honour", eds["2015/2016"], "runner_up", "codm meknes", "table", "raja club athletic", "wiki")
+    corrections.load(G, reg, None, {"honours": [{"comp": 538, "season": "2015/2016", "kind": "runner_up", "teams": [9925], "source": "x"}]})
+    assert G.c.execute("select tid, src from honour where eid=? and kind='runner_up'", (eds["2015/2016"],)).fetchall() == [(raja, "correction")]
+    assert not G.c.execute("select 1 from conflict where tifo_id=? and field='runner_up'", (eds["2015/2016"],)).fetchall()

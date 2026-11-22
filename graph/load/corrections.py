@@ -37,10 +37,13 @@ def load(G, reg, S, conf=None):
         eid = _edition(G, reg, h["comp"], h["season"])
         if eid is None:
             continue
-        pids = [p for p in (_player(G, reg, x, eid, h["kind"]) for x in h["players"]) if p]
+        pids = [p for p in (_player(G, reg, x, eid, h["kind"]) for x in h.get("players") or []) if p]
+        tids = [t for t in (reg.get("team", "fotmob", int(x)) for x in h.get("teams") or []) if t]     # a club's honour: its FotMob id
+        if not pids and not tids:
+            continue
         G.c.execute("DELETE FROM honour WHERE eid=? AND kind=? AND rank=1", (eid, h["kind"]))
-        G.c.executemany("INSERT OR IGNORE INTO honour(eid, kind, rank, pid, value, src) VALUES(?, ?, 1, ?, ?, 'correction')",
-                        [(eid, h["kind"], p, h.get("value")) for p in pids])
+        G.c.executemany("INSERT OR IGNORE INTO honour(eid, kind, rank, pid, tid, value, src) VALUES(?, ?, 1, ?, ?, ?, 'correction')",
+                        [(eid, h["kind"], p, None, h.get("value")) for p in pids] + [(eid, h["kind"], None, t, h.get("value")) for t in tids])
         G.c.execute("DELETE FROM conflict WHERE type='honour' AND tifo_id=? AND field=?", (eid, h["kind"]))
         n["honours"] += 1
     for k in conf.get("keep") or []:
