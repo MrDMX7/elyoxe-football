@@ -121,3 +121,22 @@ def test_a_curated_tournaments_game_held_in_another_sources_competition_moves_to
     G.put("match", {"mid": 51, "eid": 2, "date": "2021-06-11", "home": tur, "away": ita, "hs": 0, "as_": 3}, "tm")   # Euro 2020, played in 2021
     martj42.load(G, reg, Sources(str(tmp_path), s3=False))
     assert G.c.execute("select mid, eid from match order by mid").fetchall() == [(50, 1), (51, 3)]
+
+
+def test_a_curated_tournaments_game_under_a_fotmob_stage_id_moves_to_the_tournament(tmp_path):
+    # Euro 2012's group games: FotMob filed Poland 1-1 Greece under its stage 825605 («FotMob 825605»), not the Euro (50)
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    (db / "martj42_results.csv").write_text("date,home_team,away_team,home_score,away_score,tournament,city,country,neutral\n"
+                                            "2012-06-08,Poland,Greece,1,1,UEFA Euro,Warsaw,Poland,FALSE\n", encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    eu, st = reg.mint("competition", "fotmob", 50), reg.mint("competition", "fotmob", 825605)
+    for cid, n, fid in ((eu, "EURO", 50), (st, "FotMob 825605", 825605)):
+        G.put("competition", {"cid": cid, "name": n}, "fotmob")
+        G.xref("competition", cid, "fotmob", fid, "fotmob-native")
+    G.put("edition", {"eid": 1, "cid": eu, "season": "2012"}, "fotmob")
+    G.put("edition", {"eid": 2, "cid": st, "season": "2012"}, "fotmob")
+    pol, gre = reg.mint("team", "martj42", "Poland"), reg.mint("team", "martj42", "Greece")
+    G.put("match", {"mid": 60, "eid": 2, "date": "2012-06-08", "home": pol, "away": gre, "hs": 1, "as_": 1}, "fotmob")
+    martj42.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select eid from match where mid=60").fetchone() == (1,)

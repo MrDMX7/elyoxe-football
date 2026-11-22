@@ -45,6 +45,9 @@ def load(G, reg, S):
     idx = MatchIndex(G)
     eid_of = {mid: eid for mid, eid in G.c.execute("SELECT mid, eid FROM match")}
     cid_of = {eid: cid for eid, cid in G.c.execute("SELECT eid, cid FROM edition")}
+    season_of = {eid: s for eid, s in G.c.execute("SELECT eid, season FROM edition")}
+    # FotMob's stage ids (FotMob gave Egypt's 2011/12 to 2013/14 games none: «FotMob None»): no vote, and their games move
+    stage = {c for (c,) in G.c.execute("SELECT cid FROM competition WHERE name LIKE 'FotMob %'")}
     # pass 1: twins, and the competitions/editions their twins vote for
     twins, cvotes, evotes = {}, defaultdict(Counter), defaultdict(Counter)
     for i, (d, hi, ai, gh, ga, comp, lvl, hn, an, cc) in enumerate(rows):
@@ -54,13 +57,13 @@ def load(G, reg, S):
             if mid:
                 twins[i] = mid
                 e = eid_of.get(mid)
-                if e:
+                if e and cid_of[e] not in stage:
                     cvotes[comp][cid_of[e]] += 1
                     evotes[f"{comp}|{_season(d)}"][e] += 1
     vote_alias(reg, "competition", cvotes, "sch", min_n=20, share=0.9)
     vote_alias(reg, "edition", evotes, "sch", min_n=5, share=0.9)
     # pass 2: rows
-    new = linked = 0
+    new = linked = moved = 0
     done, eids, seen = set(), {}, {}
     for i, (d, hi, ai, gh, ga, comp, lvl, hn, an, cc) in enumerate(rows):
         mk = fresh(seen, f"{d}|{hi}|{ai}", (gh, ga))
@@ -69,6 +72,11 @@ def load(G, reg, S):
             if got is not None:
                 G.xref("match", got, "sch", mk, "date+teams")
                 linked += 1
+                e, real = eid_of.get(got), reg.get("competition", "sch", comp)
+                if e and cid_of.get(e) in stage and real is not None and real not in stage:
+                    to = edition_for(G, reg, "sch-stage", f"{real}|{season_of[e]}", real, season_of[e])   # the league's own, FotMob's label
+                    G.c.execute("UPDATE match SET eid=? WHERE mid=?", (to, got))
+                    moved += 1
                 continue
         cid = reg.get("competition", "sch", comp) or reg.mint("competition", "sch", comp)
         if ("c", cid) not in done:
@@ -97,4 +105,4 @@ def load(G, reg, S):
         if new % 100000 == 0:
             print(f"schochastics: {new} new", flush=True)
             G.c.commit()
-    return {"rows": len(rows), "clubs_voted": len(voted), "linked": linked, "new": new, "comps_linked": sum(1 for k in cvotes if reg.get("competition", "sch", k))}
+    return {"rows": len(rows), "clubs_voted": len(voted), "linked": linked, "new": new, "stage_moved": moved, "comps_linked": sum(1 for k in cvotes if reg.get("competition", "sch", k))}

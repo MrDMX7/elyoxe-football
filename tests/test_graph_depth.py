@@ -165,3 +165,33 @@ def test_every_schochastics_row_is_its_own_match(tmp_path):
     out = schochastics.load(G, reg, Sources(str(tmp_path), s3=False))
     assert out["new"] == 4
     assert G.c.execute("SELECT count(*) FROM match").fetchone()[0] == 4
+
+
+def test_a_fotmob_match_under_a_stage_id_moves_to_the_league_its_schochastics_twins_vote_for(tmp_path):
+    # Egypt 2011/12 to 2013/14: FotMob gave 2,638 matches no competition («FotMob None»); schochastics' Egypt rows are those games
+    import duckdb, json
+    from graph.load import schochastics
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    (db / "crosswalk.json").write_text(json.dumps({"1": "ahly", "2": "zamalek"}))
+    days = [f"2010-{m:02d}-{d:02d}" for m in (9, 10, 11) for d in range(1, 9)]       # 24 of the league's games
+    late = ["2011-09-01", "2011-09-08"]                                                  # two of the stage's
+    vals = ",".join(f"(date '{d}', '{'ahly' if i % 2 else 'zamalek'}', '{'zamalek' if i % 2 else 'ahly'}', 1, 0, 'Egypt', 'national', 'A', 'Z', 'EGY')"
+                    for i, d in enumerate(days + late))
+    pq = str(db / "games.parquet").replace("\\", "/")
+    duckdb.sql(f"copy (select * from (values {vals}) t(date, home_ident, away_ident, gh, ga, competition, level, home, away, home_code)) to '{pq}' (format parquet)")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg, st = reg.mint("competition", "fotmob", 519), reg.mint("competition", "fotmob", "None")
+    G.put("competition", {"cid": lg, "name": "Premier League"}, "fotmob")
+    G.put("competition", {"cid": st, "name": "FotMob None"}, "fotmob")
+    e10, e11, es = reg.mint("edition", "fotmob", "519|2010/2011"), reg.mint("edition", "fotmob", "519|2011/2012"), reg.mint("edition", "fotmob", "None|2011/2012")
+    for e, c, s in ((e10, lg, "2010/2011"), (e11, lg, "2011/2012"), (es, st, "2011/2012")):
+        G.put("edition", {"eid": e, "cid": c, "season": s}, "fotmob")
+    t1, t2 = reg.mint("team", "fotmob", 1), reg.mint("team", "fotmob", 2)
+    for i, d in enumerate(days + late):
+        h, a = (t1, t2) if i % 2 else (t2, t1)
+        G.put("match", {"mid": reg.mint("match", "fotmob", 100 + i), "eid": e10 if d < "2011" else es, "date": d, "home": h, "away": a, "hs": 1, "as_": 0, "status": "finished"}, "fotmob")
+    schochastics.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("select count(*) from match where eid=?", (es,)).fetchone()[0] == 0
+    assert G.c.execute("select count(*) from match where eid=?", (e11,)).fetchone()[0] == 2
+    assert G.c.execute("select count(*) from edition where cid=? and season='2011/2012'", (lg,)).fetchone()[0] == 1

@@ -69,7 +69,9 @@ def load(G, reg, S):
     vote_alias(reg, "edition", evotes, "martj42", min_n=3, share=0.9)
     linked = new = 0
     ours = {e for (e,) in G.c.execute("""SELECT e.eid FROM edition e JOIN xref x ON x.type='competition' AND x.source='fotmob'
-                                          AND x.tifo_id=e.cid""")}               # the editions the site publishes
+                                          AND x.tifo_id=e.cid JOIN competition c ON c.cid=e.cid
+                                          WHERE c.name IS NULL OR c.name NOT LIKE 'FotMob %'""")}   # the editions the site publishes
+    # (not a FotMob stage id FotMob gave for its competition: Euro 2012's groups were «FotMob 825605» to «825608»)
 
     def curated(name, y):
         """The curated tournament's edition of that year (or the year before: Euro 2020 and the 2021 Africa Cup were played a
