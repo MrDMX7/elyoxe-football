@@ -188,6 +188,11 @@ def load(G, reg, S):
         entries = [e for e in entries if any(e[1:4])]
         if not entries:
             return
+        if kind in ("champion", "runner_up"):    # a season still in play has a leader, no champion (any Wikipedia table)
+            se = G.c.execute("SELECT season FROM edition WHERE eid=?", (eid,)).fetchone()
+            if se and not season_over(se[0], today):
+                n["season_in_play"] += 1
+                return
         cur = G.c.execute("SELECT rank, tid, pid, kid, src FROM honour WHERE eid=? AND kind=?", (eid, kind)).fetchall()
         if cur and kind == "top_scorer" and all(c[4] == "tifo" for c in cur) and not all_ours(eid):
             G.c.execute("DELETE FROM honour WHERE eid=? AND kind=?", (eid, kind))   # our count on part of the matches (ACL 2010: 13)

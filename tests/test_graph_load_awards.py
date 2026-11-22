@@ -408,3 +408,19 @@ def test_our_count_on_every_match_stands(tmp_path):
 def test_our_count_without_a_table_to_measure_it_gives_way(tmp_path):
     G, reg, e, _ = _own_count_vs_article(tmp_path, 0, 13)
     assert G.c.execute("select src from honour where eid=? and kind='top_scorer'", (e,)).fetchall() == [("wiki",)]
+
+
+def test_a_season_in_play_gets_no_champion_from_any_wikipedia_table(tmp_path):
+    # 22 Nov 2026: the Champions League's league phase and fifteen leagues' 2026/27 tables gave their leaders as champions
+    t = T('<tr><th>Season</th><th>Champion</th><th>Runner up</th></tr>'
+          f'<tr><td>2024–25</td><td>{L("Sharjah_FC")}</td><td>{L("Al-Ahli_Dubai")}</td></tr>'
+          f'<tr><td>2025–26</td><td>{L("Sharjah_FC")}</td><td>{L("Al-Ahli_Dubai")}</td></tr>'
+          f'<tr><td>2026–27</td><td>{L("Sharjah_FC")}</td><td>{L("Al-Ahli_Dubai")}</td></tr>', "List of champions")
+    items = {"Sharjah_FC": {"qid": "Q91", "en": "Sharjah FC", "ar": "الشارقة", "human": False, "born": None, "tm_player": None, "tm_club": None},
+             "Al-Ahli_Dubai": {"qid": "Q92", "en": "Al Ahli", "ar": "الأهلي", "human": False, "born": None, "tm_player": None, "tm_club": None}}
+    S = mk(tmp_path, {"UAE Pro League": t}, items, comps={"538": "UAE Pro League"})
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 538)
+    awards.load(G, reg, S)
+    got = G.c.execute("select e.season, h.kind from honour h join edition e on e.eid=h.eid where e.cid=? order by 1, 2", (lg,)).fetchall()
+    assert ("2025/2026", "champion") in got and not [g for g in got if g[0] == "2026/2027"]
