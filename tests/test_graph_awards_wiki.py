@@ -241,3 +241,12 @@ def test_an_under_23_award_is_the_young_players():
         assert _kind(t) == "best_young", t
     for t in ("Best Player", "Player of the Year", "Under-age"):
         assert _kind(t) is None, t
+
+
+def test_a_division_one_under_a_premier_league_is_the_tier_below():
+    # «2026–27 Kuwaiti Division One» filed under the Kuwait Premier League made Burgan its 2026/27 champions
+    from graph.awards_wiki import own_season
+    assert not own_season("2026–27_Kuwaiti_Division_One", "Kuwait Premier League")
+    assert not own_season("2019–20 Egyptian Second Division", "Egyptian Premier League")
+    assert own_season("2025–26 Kuwaiti Premier League", "Kuwait Premier League")
+    assert own_season("1985–86 Football League First Division", "Premier League")      # England's top flight before 1992 (OLD_NAMES)

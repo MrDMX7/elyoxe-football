@@ -311,6 +311,8 @@ def own_season(page, comp):
         return False
     if name in OLD_NAMES.get(own, ()):
         return True
+    if "premier" in own.split() and "premier" not in name.split() and re.search(r"(division one|first division|1st division)", name):
+        return False                           # a country's Premier League has its Division One below («2026–27 Kuwaiti Division One»)
     if any(w not in own.split() and not re.search(rf"\b{re.escape(w)}\b", own) for w in LOWER.findall(name)):
         return False
     if own in name or name in own:
