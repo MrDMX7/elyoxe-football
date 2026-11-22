@@ -17,11 +17,16 @@ def _edition(G, reg, comp, season):
     return r[0] if r else None
 
 
+def _team(G, reg, fid):
+    hit = G.c.execute("SELECT tifo_id FROM xref WHERE type='team' AND source='fotmob' AND source_id=?", (str(int(fid)),)).fetchone()
+    return hit[0] if hit else reg.get("team", "fotmob", int(fid))       # xref follows graph/load/teams.py's merges
+
+
 def _player(G, reg, p, eid, kind):
-    if p.get("fotmob"):
-        return reg.get("player", "fotmob", int(p["fotmob"]))
-    if p.get("wikidata"):                      # a name several men carry («Majed Abdullah»): his Wikidata item
-        return reg.get("player", "wikidata", p["wikidata"])
+    for src in ("fotmob", "wikidata"):         # a name several men carry («Majed Abdullah»): his Wikidata item
+        if p.get(src):
+            hit = G.c.execute("SELECT tifo_id FROM xref WHERE type='player' AND source=? AND source_id=?", (src, str(p[src]))).fetchone()
+            return hit[0] if hit else reg.get("player", src, int(p[src]) if src == "fotmob" else p[src])
     name = p["name"]
     hit = G.c.execute("""SELECT pid FROM player WHERE lower(name)=lower(?) ORDER BY
                          (pid IN (SELECT pid FROM honour WHERE eid=? AND kind=?)) DESC, pid LIMIT 1""", (name, eid, kind)).fetchone()
@@ -40,7 +45,7 @@ def load(G, reg, S, conf=None):
         if eid is None:
             continue
         pids = [p for p in (_player(G, reg, x, eid, h["kind"]) for x in h.get("players") or []) if p]
-        tids = [t for t in (reg.get("team", "fotmob", int(x)) for x in h.get("teams") or []) if t]     # a club's honour: its FotMob id
+        tids = [t for t in (_team(G, reg, x) for x in h.get("teams") or []) if t]     # a club's honour: its FotMob id
         if not pids and not tids:
             continue
         G.c.execute("DELETE FROM honour WHERE eid=? AND kind=? AND rank=1", (eid, h["kind"]))
@@ -62,7 +67,9 @@ def load(G, reg, S, conf=None):
             n["matches"] = n.get("matches", 0) + 1
     for p in conf.get("players") or []:
         # FotMob id, or the Wikidata QID for a player FotMob never had (old internationals)
-        pid = reg.get("player", "fotmob", int(p["fotmob"])) if "fotmob" in p else reg.get("player", "wikidata", p["wikidata"])
+        src, key = ("fotmob", str(int(p["fotmob"]))) if "fotmob" in p else ("wikidata", p["wikidata"])
+        hit = G.c.execute("SELECT tifo_id FROM xref WHERE type='player' AND source=? AND source_id=?", (src, key)).fetchone()
+        pid = hit[0] if hit else reg.get("player", src, int(key) if src == "fotmob" else key)   # xref follows the merges, the registry not
         if pid is None:
             continue
         if p.get("born"):

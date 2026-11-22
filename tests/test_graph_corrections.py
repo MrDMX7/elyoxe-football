@@ -88,3 +88,17 @@ def test_a_player_by_his_wikidata_item_when_his_name_is_several_mens(tmp_path):
     corrections.load(G, reg, None, {"honours": [{"comp": 538, "season": "2015/2016", "kind": "top_scorer", "value": "19",
                                                  "players": [{"wikidata": "Q446181"}], "source": "x"}]})
     assert G.c.execute("select pid from honour where eid=? and kind='top_scorer'", (eds["2015/2016"],)).fetchall() == [(legend,)]
+
+
+def test_a_birth_date_reaches_the_player_a_merge_kept(tmp_path):
+    # Damián Martínez (FotMob 268375): the people merge kept another record, the registry still names the old one
+    G, reg, eds, *_ = world(tmp_path)
+    old = reg.mint("player", "fotmob", 268375)
+    kept = reg.mint("player", "wikidata", "Q1")
+    G.put("player", {"pid": kept, "name": "Damian Martinez", "born": "1992-09-01"}, "wikidata")
+    G.xref("player", kept, "fotmob", 268375, "merge")
+    G.conflict("player", kept, "born", "1992-09-02", "fotmob", "1992-09-01", "wikidata")
+    corrections.load(G, reg, None, {"players": [{"fotmob": 268375, "born": "1992-09-02", "source": "x"}]})
+    assert G.c.execute("select born from player where pid=?", (kept,)).fetchone() == ("1992-09-02",)
+    assert not G.c.execute("select 1 from conflict where tifo_id=?", (kept,)).fetchall()
+    assert old != kept
