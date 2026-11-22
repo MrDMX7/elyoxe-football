@@ -18,3 +18,4 @@ tournaments:
   - {groups: "{y} FIFA Confederations Cup Group {g}", letters: AB, stages: ["{y} FIFA Confederations Cup knockout stage"], years: [2005, 2009, 2013, 2017]}
   - {stages: ["{y} FIFA Club World Cup"], years: [2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023]}
   - {groups: "{y} FIFA Club World Cup Group {g}", letters: ABCDEFGH, stages: ["{y} FIFA Club World Cup knockout stage"], years: [2025]}
+  - {groups: "{y} Arabian Gulf Cup Group {g}", letters: AB, stages: ["{y} Arabian Gulf Cup knockout stage"], years: [25th]}   # the editions before print none
