@@ -109,7 +109,7 @@ def _initials(words):
 def same_club(a, b):
     """One club under two names (a league table's and Wikipedia's): one is the other's initials («kacm»), or one name's own
     words are all in the other's («raja club athletic» in «raja casablanca»); «wydad casablanca» and «wydad fes» stay two."""
-    wa, wb = (a or "").lower().split(), (b or "").lower().split()
+    wa, wb = [_tr(w) for w in (a or "").lower().split()], [_tr(w) for w in (b or "").lower().split()]   # «istiqlol» is «istiklol»
     if not wa or not wb:
         return False
     for x, y in ((wa, wb), (wb, wa)):

@@ -170,3 +170,9 @@ def test_a_group_winner_against_the_overall_champion_in_a_league_once_played_in_
         G.conflict("honour", eid, "champion", "5", "s365", "6", "fotmob")
     out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
     assert [r[0] for r in G.c.execute("select tifo_id from conflict")] == [11] and out["group_era"] == 1
+
+
+def test_a_club_in_two_transliterations_is_one_club():
+    from graph.load.settle import same_club
+    assert same_club("fc istiklol", "istiqlol dushanbe")
+    assert not same_club("independiente j teran", "independiente del valle")
