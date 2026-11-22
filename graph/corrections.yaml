@@ -64,3 +64,106 @@ players:
   - {wikidata: Q5220953, born: "1983-10-08", source: "Danny Woodards: PFA Footballers' Who's Who 2008-09"}
   # https://en.wikipedia.org/wiki/Deon_Hotto cites his FIFA player profile (370377)
   - {fotmob: 454319, born: "1990-10-29", source: "Deon Hotto: FIFA player profile"}
+  # 2026-11-22: a third source for each birth date in dispute: the player's English Wikipedia infobox, kept only where it sides
+  # with FotMob or Transfermarkt against Wikidata (often copied from Wikipedia), or breaks a FotMob–Transfermarkt tie
+  - {fotmob: 1607333, born: "2007-03-04", source: "George Hemmings: Wikipedia infobox agrees with kept fotmob; the other gave 2007-04-03 (https://en.wikipedia.org/wiki/George_Hemmings)"}
+  - {fotmob: 1682298, born: "2005-11-03", source: "Unai Santos: Wikipedia infobox agrees with tm; the other gave 2005-11-02 (https://en.wikipedia.org/wiki/Unai_Santos)"}
+  - {fotmob: 1435439, born: "2003-06-26", source: "Javi Rodriguez: Wikipedia infobox agrees with kept fotmob; the other gave 2003-06-27 (https://en.wikipedia.org/wiki/Javi_Rodríguez_(footballer))"}
+  - {fotmob: 1640832, born: "2004-01-02", source: "Arsene Kouassi: Wikipedia infobox agrees with kept fotmob; the other gave 2004-09-11 (https://en.wikipedia.org/wiki/Arsène_Kouassi)"}
+  - {fotmob: 1761942, born: "2007-06-04", source: "Huguinho: Wikipedia infobox agrees with tm; the other gave 2007-04-06 (https://en.wikipedia.org/wiki/Huguinho_(footballer,_born_2007))"}
+  - {fotmob: 306529, born: "1992-04-08", source: "Ignacio Arce: Wikipedia infobox agrees with kept fotmob; the other gave 1992-02-08 (https://en.wikipedia.org/wiki/Ignacio_Arce)"}
+  - {fotmob: 1613512, born: "2003-05-15", source: "Kieran Sargeant: Wikipedia infobox agrees with tm; the other gave 2003-05-13 (https://en.wikipedia.org/wiki/Kieran_Sargeant)"}
+  - {fotmob: 629749, born: "1995-11-20", source: "Matias Vera: Wikipedia infobox agrees with kept fotmob; the other gave 1995-10-26 (https://en.wikipedia.org/wiki/Matías_Vera)"}
+  - {fotmob: 799497, born: "1999-07-19", source: "Samuele Birindelli: Wikipedia infobox agrees with tm; the other gave 1999-08-19 (https://en.wikipedia.org/wiki/Samuele_Birindelli)"}
+  - {fotmob: 846521, born: "1994-05-25", source: "Stefan Cleveland: Wikipedia infobox agrees with tm; the other gave 1994-05-24 (https://en.wikipedia.org/wiki/Stefan_Cleveland)"}
+  - {fotmob: 830664, born: "1995-08-25", source: "Jack Elliott: Wikipedia infobox agrees with tm; the other gave 1995-08-24 (https://en.wikipedia.org/wiki/Jack_Elliott_(footballer))"}
+  - {fotmob: 1323827, born: "2002-09-02", source: "Jon Gorrotxategi: Wikipedia infobox agrees with kept fotmob; the other gave 2002-02-02 (https://en.wikipedia.org/wiki/Jon_Gorrotxategi)"}
+  - {fotmob: 1240833, born: "2002-05-15", source: "Tyrick Bodak: Wikipedia infobox agrees with kept fotmob; the other gave 2002-02-15 (https://en.wikipedia.org/wiki/Tyrick_Bodak)"}
+  - {fotmob: 1170745, born: "2003-02-17", source: "Matthew Edwards: Wikipedia infobox agrees with tm; the other gave 2003-02-16 (https://en.wikipedia.org/wiki/Matthew_Edwards_(soccer))"}
+  - {fotmob: 1032785, born: "1997-06-04", source: "Edson Carioca: Wikipedia infobox agrees with tm; the other gave 1997-07-04 (https://en.wikipedia.org/wiki/Edson_Carioca)"}
+  - {fotmob: 1039683, born: "1998-09-29", source: "Martín Garnerone: Wikipedia infobox agrees with kept fotmob; the other gave 1998-09-28 (https://en.wikipedia.org/wiki/Martín_Garnerone)"}
+  - {fotmob: 1109119, born: "1997-12-17", source: "Kevin Serna: Wikipedia infobox agrees with kept fotmob; the other gave 1997-12-22 (https://en.wikipedia.org/wiki/Kevin_Serna)"}
+  - {fotmob: 1253827, born: "2003-08-13", source: "Daniel Jebbison: Wikipedia infobox agrees with kept fotmob; the other gave 2003-07-11 (https://en.wikipedia.org/wiki/Daniel_Jebbison)"}
+  - {fotmob: 1529380, born: "2007-03-27", source: "Snyder Brunell: Wikipedia infobox agrees with tm; the other gave 2007-03-23 (https://en.wikipedia.org/wiki/Snyder_Brunell)"}
+  - {wikidata: Q610234, born: "1968-10-21", source: "Alexis Alexandris: Wikipedia infobox agrees with tm, not Wikidata's 1968-09-21 (https://en.wikipedia.org/wiki/Alexis_Alexandris)"}
+  - {wikidata: Q464533, born: "1977-05-18", source: "Li Tie: Wikipedia infobox agrees with tm, not Wikidata's 1977-09-18 (https://en.wikipedia.org/wiki/Li_Tie)"}
+  - {wikidata: Q380269, born: "1970-05-09", source: "Hao Haidong: Wikipedia infobox agrees with tm, not Wikidata's 1970-08-25 (https://en.wikipedia.org/wiki/Hao_Haidong)"}
+  - {wikidata: Q360056, born: "1980-01-31", source: "Jurica Vranješ: Wikipedia infobox agrees with tm, not Wikidata's 1980-01-30 (https://en.wikipedia.org/wiki/Jurica_Vranješ)"}
+  - {wikidata: Q313159, born: "1982-08-17", source: "Karim Ziani: Wikipedia infobox agrees with tm, not Wikidata's 1982-04-17 (https://en.wikipedia.org/wiki/Karim_Ziani)"}
+  - {wikidata: Q577537, born: "1986-07-24", source: "Harrison Afful: Wikipedia infobox agrees with tm, not Wikidata's 1986-07-11 (https://en.wikipedia.org/wiki/Harrison_Afful)"}
+  - {fotmob: 1230848, born: "2000-03-23", source: "Bamba Dieng: Wikipedia infobox agrees with fotmob, not Wikidata's 2000-09-01 (https://en.wikipedia.org/wiki/Bamba_Dieng)"}
+  - {fotmob: 268375, born: "1992-09-02", source: "Damian Martinez: Wikipedia infobox agrees with fotmob, not Wikidata's 1992-09-01 (https://en.wikipedia.org/wiki/Emiliano_Martínez)"}
+  - {fotmob: 268375, born: "1992-09-02", source: "Damian Martinez: Wikipedia infobox agrees with fotmob, not Wikidata's 1992-09-01 (https://en.wikipedia.org/wiki/Emiliano_Martínez)"}
+  - {wikidata: Q57017726, born: "1998-06-07", source: "Cammy Devlin: Wikipedia infobox agrees with tm, not Wikidata's 1999-01-01 (https://en.wikipedia.org/wiki/Cammy_Devlin)"}
+  - {fotmob: 611224, born: "1995-05-04", source: "Christopher Ikonomidis: Wikipedia infobox agrees with fotmob, not Wikidata's 1995-05-05 (https://en.wikipedia.org/wiki/Chris_Ikonomidis)"}
+  - {wikidata: Q380269, born: "1970-05-09", source: "Hao Haidong: Wikipedia infobox agrees with tm, not Wikidata's 1970-08-25 (https://en.wikipedia.org/wiki/Hao_Haidong)"}
+  - {wikidata: Q1322907, born: "1986-12-24", source: "Subrata Pal: Wikipedia infobox agrees with tm, not Wikidata's 1986-11-24 (https://en.wikipedia.org/wiki/Subrata_Paul)"}
+  - {fotmob: 831502, born: "1997-06-08", source: "Lallianzuala Chhangte: Wikipedia infobox agrees with fotmob, not Wikidata's 1997-08-06 (https://en.wikipedia.org/wiki/Lallianzuala_Chhangte)"}
+  - {fotmob: 322997, born: "1990-09-30", source: "Amir Sayoud: Wikipedia infobox agrees with fotmob, not Wikidata's 1990-08-31 (https://en.wikipedia.org/wiki/Amir_Sayoud)"}
+  - {wikidata: Q464533, born: "1977-05-18", source: "Li Tie: Wikipedia infobox agrees with tm, not Wikidata's 1977-09-18 (https://en.wikipedia.org/wiki/Li_Tie)"}
+  - {fotmob: 899277, born: "1999-09-24", source: "Turki Al-Ammar: Wikipedia infobox agrees with fotmob, not Wikidata's 1999-09-23 (https://en.wikipedia.org/wiki/Turki_Al-Ammar)"}
+  - {fotmob: 823592, born: "1997-09-11", source: "Oladapo Afolayan: Wikipedia infobox agrees with fotmob, not Wikidata's 1998-02-12 (https://en.wikipedia.org/wiki/Dapo_Afolayan)"}
+  - {fotmob: 789566, born: "1999-12-07", source: "Sam Dalby: Wikipedia infobox agrees with fotmob, not Wikidata's 2000-01-17 (https://en.wikipedia.org/wiki/Sam_Dalby)"}
+  - {fotmob: 268375, born: "1992-09-02", source: "Damian Martinez: Wikipedia infobox agrees with fotmob, not Wikidata's 1992-09-01 (https://en.wikipedia.org/wiki/Emiliano_Martínez)"}
+  - {wikidata: Q360056, born: "1980-01-31", source: "Jurica Vranješ: Wikipedia infobox agrees with tm, not Wikidata's 1980-01-30 (https://en.wikipedia.org/wiki/Jurica_Vranješ)"}
+  - {wikidata: Q313159, born: "1982-08-17", source: "Karim Ziani: Wikipedia infobox agrees with tm, not Wikidata's 1982-04-17 (https://en.wikipedia.org/wiki/Karim_Ziani)"}
+  - {fotmob: 947898, born: "2001-11-12", source: "Sem Steijn: Wikipedia infobox agrees with fotmob, not Wikidata's 2001-11-17 (https://en.wikipedia.org/wiki/Sem_Steijn)"}
+  - {fotmob: 543387, born: "1995-12-02", source: "Youssif Ibrahim: Wikipedia infobox agrees with fotmob, not Wikidata's 1995-05-26 (https://en.wikipedia.org/wiki/Youssef_Obama)"}
+  - {fotmob: 1285125, born: "1996-02-22", source: "Ahmad Hazmi: Wikipedia infobox agrees with fotmob, not Wikidata's 1996-10-02 (https://en.wikipedia.org/wiki/Syihan_Hazmi)"}
+  - {fotmob: 1636609, born: "1998-12-05", source: "Leozinho: Wikipedia infobox agrees with fotmob, not Wikidata's 1997-12-05 (https://en.wikipedia.org/wiki/Leozinho_(footballer,_born_1998))"}
+  - {fotmob: 823030, born: "1998-03-15", source: "Sebastian Breza: Wikipedia infobox agrees with fotmob, not Wikidata's 1998-05-15 (https://en.wikipedia.org/wiki/Sebastian_Breza)"}
+  - {wikidata: Q577537, born: "1986-07-24", source: "Harrison Afful: Wikipedia infobox agrees with tm, not Wikidata's 1986-07-11 (https://en.wikipedia.org/wiki/Harrison_Afful)"}
+  - {wikidata: Q610234, born: "1968-10-21", source: "Alexis Alexandris: Wikipedia infobox agrees with tm, not Wikidata's 1968-09-21 (https://en.wikipedia.org/wiki/Alexis_Alexandris)"}
+  - {wikidata: Q768836, born: "1980-07-03", source: "Georgios Theodoridis: Wikipedia infobox agrees with tm, not Wikidata's 1981-07-03 (https://en.wikipedia.org/wiki/Giorgos_Theodoridis)"}
+  - {wikidata: Q7914776, born: "1988-12-01", source: "Vangelis Platellas: Wikipedia infobox agrees with tm, not Wikidata's 1988-04-14 (https://en.wikipedia.org/wiki/Vangelis_Platellas)"}
+  - {fotmob: 841022, born: "1999-05-06", source: "Denzel Jubitana: Wikipedia infobox agrees with fotmob, not Wikidata's 1999-11-30 (https://en.wikipedia.org/wiki/Denzel_Jubitana)"}
+  - {fotmob: 674468, born: "1996-01-15", source: "Chun Lok Tan: Wikipedia infobox agrees with fotmob, not Wikidata's 1996-01-05 (https://en.wikipedia.org/wiki/Tan_Chun_Lok)"}
+  - {fotmob: 899197, born: "1998-01-07", source: "Chin Lung Cheng: Wikipedia infobox agrees with fotmob, not Wikidata's 1998-01-08 (https://en.wikipedia.org/wiki/Cheng_Chin_Lung)"}
+  - {fotmob: 641936, born: "1993-10-23", source: "Peter Shalulile: Wikipedia infobox agrees with fotmob, not Wikidata's 1993-03-23 (https://en.wikipedia.org/wiki/Peter_Shalulile)"}
+  - {fotmob: 1332670, born: "2003-03-04", source: "Jordi Valadon: Wikipedia infobox agrees with fotmob, not Wikidata's 2002-01-01 (https://en.wikipedia.org/wiki/Jordi_Valadon)"}
+  - {wikidata: Q313143, born: "1980-05-16", source: "Juan Arango: Wikipedia infobox agrees with tm, not Wikidata's 1980-05-17 (https://en.wikipedia.org/wiki/Juan_Arango)"}
+  - {wikidata: Q104413071, born: "1999-12-23", source: "Danny Grant: Wikipedia infobox agrees with tm, not Wikidata's 2000-10-23 (https://en.wikipedia.org/wiki/Danny_Grant_(footballer))"}
+  - {wikidata: Q14616722, born: "1990-05-16", source: "Quique González: Wikipedia infobox agrees with tm, not Wikidata's 1990-05-19 (https://en.wikipedia.org/wiki/Quique_González_(footballer))"}
+  - {fotmob: 1344572, born: "2004-01-08", source: "Ollie Arblaster: Wikipedia infobox agrees with fotmob, not Wikidata's 2004-05-05 (https://en.wikipedia.org/wiki/Ollie_Arblaster)"}
+  - {fotmob: 528214, born: "1995-06-24", source: "Dominic Iorfa: Wikipedia infobox agrees with fotmob, not Wikidata's 1995-07-08 (https://en.wikipedia.org/wiki/Dominic_Iorfa_(footballer,_born_1995))"}
+  - {fotmob: 1230848, born: "2000-03-23", source: "Bamba Dieng: Wikipedia infobox agrees with fotmob, not Wikidata's 2000-09-01 (https://en.wikipedia.org/wiki/Bamba_Dieng)"}
+  - {wikidata: Q376323, born: "1984-05-22", source: "Didier Ya Konan: Wikipedia infobox agrees with tm, not Wikidata's 1984-02-25 (https://en.wikipedia.org/wiki/Didier_Ya_Konan)"}
+  - {fotmob: 544592, born: "1994-05-12", source: "Mostafa Fathi: Wikipedia infobox agrees with fotmob, not Wikidata's 1995-02-27 (https://en.wikipedia.org/wiki/Mostafa_Fathi)"}
+  - {fotmob: 511685, born: "1992-11-05", source: "Himid Mao Mkami: Wikipedia infobox agrees with fotmob, not Wikidata's 1992-11-15 (https://en.wikipedia.org/wiki/Himid_Mao)"}
+  - {wikidata: Q2359849, born: "1988-01-01", source: "Dodo Elgabas: Wikipedia infobox agrees with tm, not Wikidata's 1987-01-01 (https://en.wikipedia.org/wiki/Mohamed_El_Gabbas)"}
+  - {fotmob: 601145, born: "1995-06-18", source: "Habibou Mouhamadou Diallo: Wikipedia infobox agrees with fotmob, not Wikidata's 1995-06-15 (https://en.wikipedia.org/wiki/Habib_Diallo)"}
+  - {fotmob: 506026, born: "1990-07-02", source: "Cedric Amissi: Wikipedia infobox agrees with fotmob, not Wikidata's 1990-03-20 (https://en.wikipedia.org/wiki/Cédric_Amissi)"}
+  - {fotmob: 630674, born: "1996-04-01", source: "Zouheir El Moutaraji: Wikipedia infobox agrees with fotmob, not Wikidata's 1996-01-04 (https://en.wikipedia.org/wiki/Zouhair_El_Moutaraji)"}
+  - {fotmob: 589900, born: "1989-10-14", source: "Ramon Abila: Wikipedia infobox agrees with fotmob, not Wikidata's 1969-10-14 (https://en.wikipedia.org/wiki/Ramón_Ábila)"}
+  - {fotmob: 1524233, born: "2001-12-14", source: "Eid Al-Muwallad: Wikipedia infobox agrees with fotmob, not Wikidata's 2001-02-14 (https://en.wikipedia.org/wiki/Eid_Al-Muwallad)"}
+  - {fotmob: 425711, born: "1991-07-09", source: "Gabriel Avalos: Wikipedia infobox agrees with fotmob, not Wikidata's 1990-10-12 (https://en.wikipedia.org/wiki/Gabriel_Ávalos)"}
+  - {fotmob: 1232567, born: "2001-06-20", source: "Hossam Ashraf: Wikipedia infobox agrees with fotmob, not Wikidata's 2002-01-01 (https://en.wikipedia.org/wiki/Hossam_Ashraf)"}
+  - {fotmob: 623898, born: "1991-09-16", source: "Jonathan Herrera: Wikipedia infobox agrees with fotmob, not Wikidata's 1998-01-01 (https://en.wikipedia.org/wiki/Jonathan_Herrera_(footballer,_born_1991))"}
+  - {fotmob: 1248482, born: "2005-04-17", source: "Antonio Nusa: Wikipedia infobox agrees with fotmob, not Wikidata's 2003-04-17 (https://en.wikipedia.org/wiki/Antonio_Nusa)"}
+  - {fotmob: 852127, born: "1994-12-18", source: "Bordin Phala: Wikipedia infobox agrees with fotmob, not Wikidata's 1994-12-20 (https://en.wikipedia.org/wiki/Bordin_Phala)"}
+  - {fotmob: 860430, born: "1998-06-10", source: "Balsa Sekulic: Wikipedia infobox agrees with fotmob, not Wikidata's 1998-10-06 (https://en.wikipedia.org/wiki/Balša_Sekulić)"}
+  - {fotmob: 502490, born: "1994-06-04", source: "Zeiko Lewis: Wikipedia infobox agrees with fotmob, not Wikidata's 1994-04-06 (https://en.wikipedia.org/wiki/Zeiko_Lewis)"}
+  - {fotmob: 654101, born: "1996-10-01", source: "Djair Parfitt-Williams: Wikipedia infobox agrees with fotmob, not Wikidata's 1996-10-10 (https://en.wikipedia.org/wiki/Djair_Parfitt-Williams)"}
+  - {fotmob: 725704, born: "1993-01-15", source: "Nurikhwan Othman: Wikipedia infobox agrees with fotmob, not Wikidata's 1993-01-05 (https://en.wikipedia.org/wiki/Nur_Ikhwan_Othman)"}
+  - {fotmob: 1082065, born: "2003-02-08", source: "Hakeme Yazid: Wikipedia infobox agrees with fotmob, not Wikidata's 2003-01-08 (https://en.wikipedia.org/wiki/Hakeme_Yazid_Said)"}
+  - {wikidata: Q380269, born: "1970-05-09", source: "Hao Haidong: Wikipedia infobox agrees with tm, not Wikidata's 1970-08-25 (https://en.wikipedia.org/wiki/Hao_Haidong)"}
+  - {fotmob: 196406, born: "1989-05-09", source: "Linpeng Zhang: Wikipedia infobox agrees with fotmob, not Wikidata's 2000-05-09 (https://en.wikipedia.org/wiki/Zhang_Linpeng)"}
+  - {wikidata: Q464533, born: "1977-05-18", source: "Li Tie: Wikipedia infobox agrees with tm, not Wikidata's 1977-09-18 (https://en.wikipedia.org/wiki/Li_Tie)"}
+  - {wikidata: Q1318216, born: "1988-02-12", source: "Yang Xu: Wikipedia infobox agrees with tm, not Wikidata's 1987-02-12 (https://en.wikipedia.org/wiki/Yang_Xu)"}
+  - {wikidata: Q577537, born: "1986-07-24", source: "Harrison Afful: Wikipedia infobox agrees with tm, not Wikidata's 1986-07-11 (https://en.wikipedia.org/wiki/Harrison_Afful)"}
+  - {fotmob: 541933, born: "1995-11-06", source: "Mama Baldé: Wikipedia infobox agrees with fotmob, not Wikidata's 1997-11-06 (https://en.wikipedia.org/wiki/Mama_Baldé)"}
+  - {fotmob: 674468, born: "1996-01-15", source: "Chun Lok Tan: Wikipedia infobox agrees with fotmob, not Wikidata's 1996-01-05 (https://en.wikipedia.org/wiki/Tan_Chun_Lok)"}
+  - {fotmob: 641936, born: "1993-10-23", source: "Peter Shalulile: Wikipedia infobox agrees with fotmob, not Wikidata's 1993-03-23 (https://en.wikipedia.org/wiki/Peter_Shalulile)"}
+  - {fotmob: 622522, born: "1998-01-14", source: "Ananta Tamang: Wikipedia infobox agrees with fotmob, not Wikidata's 1998-01-17 (https://en.wikipedia.org/wiki/Ananta_Tamang)"}
+  - {wikidata: Q5515888, born: "1988-10-31", source: "Gabriel Torres: Wikipedia infobox agrees with tm, not Wikidata's 1977-10-31 (https://en.wikipedia.org/wiki/Gabriel_Torres)"}
+  - {fotmob: 547893, born: "1992-09-29", source: "Akhtam Nazarov: Wikipedia infobox agrees with fotmob, not Wikidata's 1988-02-08 (https://en.wikipedia.org/wiki/Akhtam_Nazarov)"}
+  - {fotmob: 511685, born: "1992-11-05", source: "Himid Mao Mkami: Wikipedia infobox agrees with fotmob, not Wikidata's 1992-11-15 (https://en.wikipedia.org/wiki/Himid_Mao)"}
+  - {fotmob: 511685, born: "1992-11-05", source: "Himid Mao Mkami: Wikipedia infobox agrees with fotmob, not Wikidata's 1992-11-15 (https://en.wikipedia.org/wiki/Himid_Mao)"}
+  - {wikidata: Q313143, born: "1980-05-16", source: "Juan Arango: Wikipedia infobox agrees with tm, not Wikidata's 1980-05-17 (https://en.wikipedia.org/wiki/Juan_Arango)"}
+  - {fotmob: 676514, born: "1996-05-06", source: "Mudathiri Yahya: Wikipedia infobox agrees with fotmob, not Wikidata's 1995-05-06 (https://en.wikipedia.org/wiki/Mudathir_Yahya)"}
+  - {fotmob: 268375, born: "1992-09-02", source: "Damian Martinez: Wikipedia infobox agrees with fotmob, not Wikidata's 1992-09-01 (https://en.wikipedia.org/wiki/Emiliano_Martínez)"}
+  - {fotmob: 322997, born: "1990-09-30", source: "Amir Sayoud: Wikipedia infobox agrees with fotmob, not Wikidata's 1990-08-31 (https://en.wikipedia.org/wiki/Amir_Sayoud)"}
+  - {fotmob: 1310270, born: "2003-02-18", source: "Kamory Doumbia: Wikipedia infobox agrees with fotmob, not Wikidata's 2003-01-01 (https://en.wikipedia.org/wiki/Kamory_Doumbia)"}
+  - {fotmob: 454319, born: "1990-10-29", source: "Deon Hotto: Wikipedia infobox agrees with fotmob, not Wikidata's 1991-10-29 (https://en.wikipedia.org/wiki/Deon_Hotto)"}
+  - {fotmob: 1324373, born: "2003-10-31", source: "Ibrahim Diakité: Wikipedia infobox agrees with fotmob, not Wikidata's 2003-08-31 (https://en.wikipedia.org/wiki/Ibrahim_Diakité)"}
+  - {fotmob: 268375, born: "1992-09-02", source: "Damian Martinez: Wikipedia infobox agrees with fotmob, not Wikidata's 1992-09-01 (https://en.wikipedia.org/wiki/Emiliano_Martínez)"}
