@@ -1701,7 +1701,18 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   // (/tn/<id>.json, the league table), then every page it has saved; the browser fills both (src/v5/app.js)
   write("offline/index.html", page({ v5:{ nav:{ brand:1, title:"ما في نت" }, tab:"", data:{}, body:'<div class="lt"><h1>ما في نت الحين</h1><p>هذا اللي محفوظ في تلفونك من آخر مرة فتحت تيفو.</p></div><section class="grp" id="offmine" hidden></section>' + U.grp("الصفحات المحفوظة", '<div id="offl"><div class="row"><span class="rt muted">نشوف المحفوظ…</span></div></div>') + U.foot() }, path:"/offline/", page:"offline", noindex:true, title:"ما في نت | تيفو", desc:"" }));   // W1.11: the service worker's kill switch
   fs.writeFileSync(path.join(OUT, "sw.js"), fs.readFileSync(path.join(__dirname, "src/sw.js"), "utf8").replace("__V__", ASSET_V));
-  fs.writeFileSync(path.join(OUT, "robots.txt"), PREVIEW ? "User-agent: *\nDisallow: /\n" : `User-agent: *\nDisallow: /next/\nAllow: /\nSitemap: ${SITE}/sitemap.xml\nSitemap: ${SITE}/sitemap-recent.xml\nSitemap: ${SITE}/sitemap-days.xml\nSitemap: ${SITE}/sitemap-players.xml\nSitemap: ${SITE}/sitemap-news.xml\n`);
+  // the search engines and the AI crawlers by name (the owner, 22 Nov 2026: «تتأرشف فقوقل و bing ولنماذج الذكاء الاصطناعي»): a named
+  // group drops the * group, so each repeats its rule; the archive job's sitemaps (tools/archive_job.py) are listed with the site's
+  const BOTS = ["Googlebot", "Bingbot", "GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-SearchBot", "PerplexityBot", "Google-Extended",
+    "Applebot", "Applebot-Extended", "CCBot", "DuckDuckBot", "YandexBot"];
+  fs.writeFileSync(path.join(OUT, "robots.txt"), PREVIEW ? "User-agent: *\nDisallow: /\n" : "User-agent: *\nDisallow: /next/\nAllow: /\n\n" +
+    BOTS.map(b => `User-agent: ${b}\nDisallow: /next/\nAllow: /\n`).join("\n") + "\n" +
+    ["sitemap.xml", "sitemap-recent.xml", "sitemap-days.xml", "sitemap-players.xml", "sitemap-news.xml", "sitemap-archive.xml"].map(n => `Sitemap: ${SITE}/${n}\n`).join(""));
+  // llms.txt (llmstxt.org): what Tifo is and where its data lives, for the language models that read sites
+  if (!PREVIEW) fs.writeFileSync(path.join(OUT, "llms.txt"), `# تيفو (Tifo)\n\n> موقع كورة عربي بدون مراهنات: مباريات اليوم، الدوريات العربية والعالمية، وأرشيف كرة القدم من 1872: كل موسم بالبطل والترتيب والهدافين، وكل مباراة بنتيجتها وأحداثها وتشكيلتها حيث تتوفر.\n\n` +
+    `Tifo is an Arabic football site with no betting: today's matches, and the football archive since 1872 (every season's champion, table and top scorers; every match's result, goals and line-ups where known).\n\n` +
+    `## Pages\n\n- [اليوم](${SITE}/today/): مباريات اليوم\n- [البطولات](${SITE}/competitions/): كل البطولات ومواسمها\n- [دوري أدنوك للمحترفين](${SITE}/c/uae-pro-league/): الدوري الإماراتي من 1973/74\n- [الجوائز](${SITE}/awards/): الكرة الذهبية وجوائز المواسم\n\n` +
+    `## Data\n\n- [JSON index](${SITE}/v1/index.json): competitions, current seasons and data files\n- [Sitemaps](${SITE}/sitemap.xml), [archive sitemaps](${SITE}/sitemap-archive.xml)\n`);
   // W4.6: the 404 offers search and today's matches instead of a dead end
   write("404.html", page({ v5:{ nav:{ back:"/", backLabel:"اليوم", title:"" }, tab:"", data:{}, body:'<div class="lt"><h1>الصفحة مب موجودة</h1><p>يمكن الرابط تغيّر. دوّر عن اللي تباه، أو شوف مباريات اليوم.</p></div>' + U.grp("", U.rows([{ href:"/search/", icon:"search", c:"#0A84FF", t:"دوّر في تيفو" }, { href:"/", icon:"today", c:"#34C759", t:"مباريات اليوم" }, { href:"/competitions/", icon:"comps", c:"#FF9500", t:"كل البطولات" }])) + '<div id="day404"></div>' + U.foot() }, path:"/404", page:"none", title:"الصفحة مب موجودة | تيفو", desc:"" }));
   // 425: site/static/* is copied to the out/ root unchanged (Search Console's google<token>.html lives there), keeping its mtime

@@ -18,6 +18,22 @@ TYPES = {".html": "text/html", ".json": "application/json", ".png": "image/png",
 MAX_DELETE = 0.10
 
 
+SPLIT = ("m/",)                      # the archive's millions of m/k<id>/ pages sit beside the site's m/<FotMob id>/
+
+
+def listing(s3, bucket):
+    """every object but the archive's own matches: the top level once, each top folder whole, and m/ first character by first
+    character, never «m/k» (2.5M archive pages listed every hour would cost more than the site's own PUTs)"""
+    pages, tops = s3.get_paginator("list_objects_v2"), []
+    for page in pages.paginate(Bucket=bucket, Delimiter="/"):
+        yield from page.get("Contents") or []
+        tops += [p["Prefix"] for p in page.get("CommonPrefixes") or []]
+    for t in tops:
+        for pre in ([t + c for c in "0123456789abcdefghijlmnopqrstuvwxyz_-."] if t in SPLIT else [t]):
+            for page in pages.paginate(Bucket=bucket, Prefix=pre):
+                yield from page.get("Contents") or []
+
+
 def push(src, bucket, region, excludes=(), cache_control=None, delete=True, workers=32, dry=False, say=print, manifest=None):
     """(ok, note). `manifest`: the build's out_manifest.json ({rel: [md5, mtime]}), so a candidate's MD5 is read, not computed:
     hashing 33k pages on this laptop took 7,023 s on 2026-10-17 (0.5 MB/s: a slow disk and the scanner on every open)."""
@@ -38,10 +54,9 @@ def push(src, bucket, region, excludes=(), cache_control=None, delete=True, work
     skip = lambda k: any(fnmatch.fnmatchcase(k, p) for p in excludes)
     t0 = time.time()
     remote = {}
-    for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket):
-        for o in page.get("Contents") or []:
-            if not skip(o["Key"]):
-                remote[o["Key"]] = (o["Size"], o["LastModified"], o.get("ETag", "").strip('"'))
+    for o in listing(s3, bucket):
+        if not skip(o["Key"]):
+            remote[o["Key"]] = (o["Size"], o["LastModified"], o.get("ETag", "").strip('"'))
     local, todo, identical = set(), [], 0
     for root, _, files in os.walk(src):
         for f in files:

@@ -11,7 +11,9 @@ const arg = (k, d) => { const i = process.argv.indexOf("--" + k); return i > 0 ?
 const BASE = arg("base", "https://tifo.elyoxe.com"), PER = +arg("per", 12), OUT = arg("out", "site_qa.json"), ONLY = arg("only", "");
 const CHROME = process.env.CHROME || ["C:/Program Files/Google/Chrome/Application/chrome.exe", "/opt/pw-browsers/chromium", "/usr/bin/google-chrome"].find(p => fs.existsSync(p));
 const ALWAYS = ["/", "/today/", "/competitions/", "/c/uae-pro-league/", "/c/uae-pro-league/seasons/", "/c/premier-league/seasons/", "/c/laliga/seasons/",
-  "/c/uae-pro-league/s/2024-2025/", "/c/premier-league/s/2015-2016/", "/c/laliga/s/1988-1989/", "/t/8650/", "/p/30981/", "/awards/", "/transfers/uae-pro-league/"];
+  "/c/uae-pro-league/s/2024-2025/", "/c/premier-league/s/2015-2016/", "/c/laliga/s/1988-1989/", "/t/8650/", "/p/30981/", "/awards/", "/transfers/uae-pro-league/",
+  "/c/bundesliga/seasons/", "/c/argentina-liga-profesional/seasons/", "/c/copa-libertadores/seasons/", "/c/copa-sudamericana/seasons/", "/c/serie-a/seasons/",
+  "/c/botola-pro/seasons/", "/c/caf-champions-league/seasons/", "/c/premier-league/s/1990-1991/", "/c/uae-pro-league/s/2005-2006/"];
 
 // a page's kind from its path: /c/<key>/s/<season>/ is «c/*/s», /m/k12/ is «m/k», /p/123/ is «p»
 function kind(path) {
@@ -61,17 +63,21 @@ function sample(paths) {
       const crestsMissing = broken.length - imgs.length;
       const empty = [...document.querySelectorAll("section.grp")].filter(s => !s.hidden && s.offsetHeight > 0 && ((s.querySelector("h2") && !s.innerText.replace((s.querySelector("h2") || {}).innerText || "", "").trim()) ||
         (s.querySelector(".card") && !s.querySelector(".card").innerText.trim() && !s.querySelector(".card img,.card svg,.card canvas")))).map(s => (s.querySelector("h2") || {}).innerText || s.id || "grp");
+      // a seasons list: one row a season (22 Nov 2026: «1914» beside «1913/1914», two «2025/2026»), and how many finished
+      // seasons show no champion
+      const ssn = [...document.querySelectorAll(".row.ssn .rt")].map(r => (r.innerText.match(/^\s*([0-9]{4}(?:\/[0-9]{4})?[^·]*?)\s*·/) || [])[1]).filter(Boolean);
+      const dupSeasons = ssn.filter((s, i) => ssn.indexOf(s) !== i).slice(0, 6);
       const links = [...new Set([...document.querySelectorAll("main a[href^='/']")].map(a => a.getAttribute("href").split("#")[0]).filter(h => h && !h.startsWith("/v1/")))];
-      return { sw: document.documentElement.scrollWidth, iw, wide, text, imgs, crestsMissing, empty, links, title: document.title };
+      return { sw: document.documentElement.scrollWidth, iw, wide, text, imgs, crestsMissing, empty, links, title: document.title, dupSeasons };
     }).catch(e => ({ err: e.message }));
     const stray = m.text ? STRAY.map(r => (m.text.match(r) || [])[0]).filter(Boolean) : [];
     const bad = [];
     for (const h of (m.links || []).slice(0, 60)) { const st = await checkLink(h); if (st >= 400 || st < 0) bad.push(`${h} ${st}`); }
     const r = { path, kind: kind(path), status, title: m.title, overflow: m.sw > m.iw + 2 ? m.sw - m.iw : 0, wide: m.wide || [], stray, imgs: m.imgs || [],
-      crestsMissing: m.crestsMissing || 0, empty: m.empty || [], errors, badLinks: bad.slice(0, 8) };
-    r.ok = status === 200 && !r.overflow && !r.wide.length && !stray.length && !r.imgs.length && !r.empty.length && !errors.length && !bad.length;
+      crestsMissing: m.crestsMissing || 0, empty: m.empty || [], errors, badLinks: bad.slice(0, 8), dupSeasons: m.dupSeasons || [] };
+    r.ok = status === 200 && !r.overflow && !r.wide.length && !stray.length && !r.imgs.length && !r.empty.length && !errors.length && !bad.length && !r.dupSeasons.length;
     results.push(r);
-    process.stdout.write(`${r.ok ? "ok " : "BAD"} ${path}${r.ok ? "" : " " + JSON.stringify({ o: r.overflow, w: r.wide, s: stray, i: r.imgs.length, e: r.empty, x: errors, l: bad })}\n`);
+    process.stdout.write(`${r.ok ? "ok " : "BAD"} ${path}${r.ok ? "" : " " + JSON.stringify({ o: r.overflow, w: r.wide, s: stray, i: r.imgs.length, e: r.empty, x: errors, l: bad, d: r.dupSeasons })}\n`);
     await page.close();
   }
   await browser.close();

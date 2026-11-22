@@ -1,0 +1,43 @@
+# «Tifo archive» (docs/superpowers/specs/2026-11-22-tifo-archive-static-design.md): every season of every competition, its
+# seasons list and every archive match as static pages, from the published graph database, in the site's own shell
+# (tools/archive_job.py -> graph/archive_export.py -> site/archive/build.cjs). After each «Tifo database» run (it does nothing
+# when the graph database has not changed) and on dispatch; the hourly site publish leaves these paths alone.
+name: Tifo archive
+on:
+  workflow_run:
+    workflows: ["Tifo database"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      comps:
+        description: FotMob competition ids (comma-separated), empty for all
+        default: ""
+      force:
+        description: run even when the graph database has not changed
+        type: boolean
+        default: false
+permissions:
+  id-token: write
+  contents: read
+concurrency:
+  group: tifo-archive
+  cancel-in-progress: false
+env:
+  PYTHONIOENCODING: utf-8
+jobs:
+  archive:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/tifo-setup
+        with:
+          session-seconds: "21600"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Free the runner's disk (the database, its export and the pages: ~10 GB)
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+      - name: Build and publish the archive
+        run: python -m tools.archive_job --work "$RUNNER_TEMP/archive" ${{ inputs.comps && format('--comps {0}', inputs.comps) || '' }} ${{ inputs.force && '--force' || '' }}

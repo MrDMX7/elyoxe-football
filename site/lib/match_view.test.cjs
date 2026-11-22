@@ -113,3 +113,11 @@ test("a side the archive holds no players for says so, no empty card (22 Nov QA:
   assert.doesNotMatch(h, /<div class="card"><\/div>/);
   assert.match(h, /ما عندنا تشكيلة/);
 });
+
+test("an old match with a result only says the archive holds no more, not «yet»", () => {
+  const U = require("../src/v5/ui.js"), P5 = require("../src/v5/pages.js");
+  const md = V.md({ id: "k1", date: "1990-09-01", comp: 47, h: [1, "أ"], a: [2, "ب"], s: [1, 0] });
+  const h = P5.match(md, { archive: 1, x: { lu: null, h2h: null, share: "" } }).body;
+  assert.match(h, /في الأرشيف/);
+  assert.doesNotMatch(h, /للحين/);
+});

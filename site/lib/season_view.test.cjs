@@ -96,3 +96,14 @@ test("a season the archive holds matches for but no honours still gets its page 
   assert.deepEqual(V.seasons(ed, msea, 50).map(s => s.season), ["1980", "1976", "1972"]);
   assert.deepEqual(V.seasons(null, msea, 50).map(s => s.season), ["1976"]);
 });
+
+test("a season's card leaders and, with no scorers list, its scorers from its matches' events", () => {
+  const ms = [{ id: "k1", h: [1, "أ"], a: [2, "ب"], s: [2, 0], ev: [[10, 0, "goal", "h", "سالم", "k5"], [20, 0, "goal", "h", "سالم", "k5"], [30, 0, "yellow", "a", "خالد", "k6"],
+    [80, 0, "second_yellow", "a", "خالد", "k6"], [85, 0, "own_goal", "h", "خالد", "k6"]] },
+    { id: "k2", h: [2, "ب"], a: [1, "أ"], s: [0, 0], ev: [[5, 0, "yellow", "h", "خالد", "k6"], [9, 0, "red", "a", "سالم", "k5"]] }];
+  const c = V.cards(ms);
+  assert.deepEqual(c.yellow.map(p => [p.player.name, p.value]), [["خالد", 2]]);
+  assert.deepEqual(c.red.map(p => [p.player.id, p.value]).sort(), [["k5", 1], ["k6", 1]]);
+  const st = V.stats({ top_scorers: [] }, ms);
+  assert.deepEqual(st.lists.goals.map(p => [p.player.name, p.value]), [["سالم", 2]]);    // an own goal is nobody's
+});

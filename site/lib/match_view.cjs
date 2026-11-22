@@ -10,7 +10,7 @@ const team = (id, name, k) => (id ? { id, name_ar: name } : { id: "n" + k + "-" 
 function md(m) {
   return { id: m.id, comp: m.comp, round: m.round != null && m.round !== "" ? String(m.round) : null, status: "finished",
     score: { home: m.s[0], away: m.s[1] }, penalties: m.pen ? { home: m.pen[0], away: m.pen[1] } : null, halftime_score: m.ht ? { home: m.ht[0], away: m.ht[1] } : null,
-    kickoff_utc: (m.date || "") + "T12:00:00Z", time_tbd: true, date_fmt: "dy", home: team(m.h[0], m.h[1], "h"), away: team(m.a[0], m.a[1], "a"),
+    kickoff_utc: (m.date || "") + "T12:00:00Z", time_tbd: true, date_fmt: "dy", archive: 1, home: team(m.h[0], m.h[1], "h"), away: team(m.a[0], m.a[1], "a"),
     events: (m.ev || []).map(e => ({ minute: e[0], added: e[1] || 0, type: e[2], team: e[3] === "a" ? "away" : "home", player: e[4] ? { id: e[5], name: e[4] } : null })),
     venue: m.venue ? { name_ar: m.venue } : null, referee: m.ref ? { name: m.ref } : null };
 }

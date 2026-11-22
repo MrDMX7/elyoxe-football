@@ -48,8 +48,27 @@ function fixtures(ms) {
 }
 
 // the top scorers: a man FotMob knows by his FotMob id, the others by k<Tifo id> (/p/k<id>/)
-function stats(s) {
-  const goals = (s.top_scorers || []).map(p => ({ rank: p.rank, player: { id: p.fotmob || (p.tifo ? "k" + p.tifo : null), name: p.name }, team: null, value: p.value }));
+// the leaders of one kind of event in the season's matches (ev: [minute, added, type, side, name, player key]), ranked, ties sharing
+function leaders(ms, types) {
+  const n = new Map();
+  for (const m of ms || []) for (const e of m.ev || []) {
+    if (!types.test(e[2]) || (!e[5] && e[6] == null)) continue;
+    const k = e[6] != null ? "t" + e[6] : String(e[5]), x = n.get(k) || { id: e[5] || null, name: e[4], v: 0 };   // e[6]: the Tifo id, a man with no page too
+    x.v++; n.set(k, x);
+  }
+  const rows = [...n.values()].sort((a, b) => b.v - a.v || String(a.name).localeCompare(String(b.name))).slice(0, 10);
+  return rows.map((x, i) => ({ rank: i && rows[i - 1].v === x.v ? null : i + 1, player: { id: x.id, name: x.name }, team: null, value: x.v }));
+}
+
+// a season's yellow and red cards, by man (a second yellow is a red)
+function cards(ms) {
+  return { yellow: leaders(ms, /^yellow$/), red: leaders(ms, /^(red|second_yellow)$/) };
+}
+
+// the season's scorers: its own list (v1/editions), else counted from its matches' goals (an own goal is nobody's)
+function stats(s, ms) {
+  let goals = (s.top_scorers || []).map(p => ({ rank: p.rank, player: { id: p.fotmob || (p.tifo ? "k" + p.tifo : null), name: p.name }, team: null, value: p.value }));
+  if (!goals.length && ms) goals = leaders(ms, /^(goal|penalty_goal)$/);
   return goals.length ? { lists: { goals } } : null;
 }
 
@@ -72,4 +91,4 @@ function seasons(ed, msea, cid) {
   return out.sort((a, b) => y(b) - y(a) || String(b.season).localeCompare(String(a.season)));
 }
 
-module.exports = { standings, fixtures, stats, around, seasons, MONTHS };
+module.exports = { standings, fixtures, stats, cards, leaders, around, seasons, MONTHS };

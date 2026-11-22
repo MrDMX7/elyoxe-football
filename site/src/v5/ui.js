@@ -263,7 +263,7 @@
   function evMin(e) { return e.minute + (e.added ? "+" + e.added : ""); }
   U.events = function (md, o) {
     o = o || {}; var ev = (md.events || []).filter(function (e) { return e.type !== "added_time" && !/^shootout/.test(e.type); });
-    if (!ev.length) return '<div class="card">' + U.empty(md.status === "scheduled" ? "المباراة ما بدت." : "ما في أحداث مسجّلة للحين.") + "</div>";
+    if (!ev.length) return '<div class="card">' + U.empty(md.status === "scheduled" ? "المباراة ما بدت." : md.archive ? "ما عندنا أهداف ولا أحداث هالمباراة في الأرشيف، النتيجة بس." : "ما في أحداث مسجّلة للحين.") + "</div>";
     var key = function (e) { return e.minute * 100 + (e.added || 0) + (e.type === "half" ? 50 : 0); };
     // item 11: goals numbered in the order the match file lists them, like the build's goal pages /m/<id>/g/<n>/ and v3's R.events
     // (id="g<n>" is the anchor of a goal's share link, src/goalshare.js)
@@ -357,7 +357,7 @@
   // lineups on one vertical pitch: away at the top, home at the bottom (xy: FotMob's 0-1 fractions from each side's own goal)
   function rclass(r) { r = +r; return r >= 8 ? "rt-hi" : r >= 7 ? "rt-md" : r >= 6 ? "rt-lo" : "rt-bad"; }
   U.lineups = function (md) {
-    var L0 = md.lineups; if (!L0 || !L0.home || !(L0.home.starters || []).length) return '<div class="card">' + U.empty(md.status === "scheduled" ? "التشكيلة تنزل قبل المباراة بساعة تقريباً." : "ما نزلت التشكيلة لهالمباراة.") + "</div>";
+    var L0 = md.lineups; if (!L0 || !L0.home || !(L0.home.starters || []).length) return '<div class="card">' + U.empty(md.status === "scheduled" ? "التشكيلة تنزل قبل المباراة بساعة تقريباً." : md.archive ? "ما عندنا تشكيلة هالمباراة في الأرشيف." : "ما نزلت التشكيلة لهالمباراة.") + "</div>";
     var c = U.pair(md.home.id, md.away.id), evs = md.events || [];
     var badges = function (p) { var b = ""; evs.forEach(function (e) { if (e.player && e.player.id === p.id) { if (/^(goal|penalty_goal)$/.test(e.type)) b += I("ball", "", 1.6); else if (e.type === "yellow") b += '<i class="cardic"></i>'; else if (e.type === "red" || e.type === "second_yellow") b += '<i class="cardic r"></i>'; } if (e.type === "sub" && e.player_out && e.player_out.id === p.id) b += I("sub", "", 2.2); }); return b ? '<span class="bdg">' + b + "</span>" : ""; };
     // one word on the pitch, as broadcasters print it: the family name («الحوسني»), two words when the last is short («عبد الله»)
