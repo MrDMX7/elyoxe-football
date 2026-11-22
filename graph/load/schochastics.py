@@ -63,11 +63,11 @@ def load(G, reg, S):
     new = linked = 0
     done, eids, seen = set(), {}, {}
     for i, (d, hi, ai, gh, ga, comp, lvl, hn, an, cc) in enumerate(rows):
-        key = fresh(seen, f"{d}|{hi}|{ai}", (gh, ga))
+        mk = fresh(seen, f"{d}|{hi}|{ai}", (gh, ga))
         if i in twins:
-            got = reg.link("match", "sch", key, twins[i])
+            got = reg.link("match", "sch", mk, twins[i])
             if got is not None:
-                G.xref("match", got, "sch", key, "date+teams")
+                G.xref("match", got, "sch", mk, "date+teams")
                 linked += 1
                 continue
         cid = reg.get("competition", "sch", comp) or reg.mint("competition", "sch", comp)
@@ -89,9 +89,9 @@ def load(G, reg, S):
                 G.put("team", {"tid": tid, "name": nm, "kind": "club"}, "sch")
                 if not G.c.execute("SELECT 1 FROM xref WHERE type='team' AND source='sch' AND source_id=?", (key,)).fetchone():
                     G.xref("team", tid, "sch", key, "sch-native")
-        mid = reg.mint("match", "sch", key)
+        mid = reg.mint("match", "sch", mk)
         G.put("match", {"mid": mid, "eid": eid, "date": str(d), "home": h, "away": a, "hs": gh, "as_": ga, "status": "finished"}, "sch")
-        G.xref("match", mid, "sch", key, "sch-native")
+        G.xref("match", mid, "sch", mk, "sch-native")
         idx.add(mid, str(d), h, a)
         new += 1
         if new % 100000 == 0:

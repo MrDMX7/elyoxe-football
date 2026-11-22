@@ -146,3 +146,22 @@ def test_one_placeholder_date_holding_two_meetings_of_one_fixture_is_two_matches
     assert fresh(seen, "1937-07-01|Lens|Cannes", (3, 1)) == "1937-07-01|Lens|Cannes#2"
     assert fresh(seen, "1937-07-01|Lens|Cannes", (2, 2)) == "1937-07-01|Lens|Cannes"          # the same row again: the same match
     assert fresh(seen, "1937-07-01|Lens|Cannes", (3, 1)) == "1937-07-01|Lens|Cannes#2"
+
+
+def test_every_schochastics_row_is_its_own_match(tmp_path):
+    # the 22 Nov builds lost 1.2M matches: the team loop's own `key` overwrote the match key, so matches were minted under club keys
+    import duckdb
+    from graph.load import schochastics
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    pq = str(db / "games.parquet").replace("\\", "/")
+    duckdb.sql(f"""copy (select * from (values
+        (date '1937-07-01', 'lens', 'cannes', 2, 2, 'France', 'national', 'Lens', 'Cannes', 'FRA'),
+        (date '1937-07-01', 'lens', 'cannes', 3, 1, 'France', 'national', 'Lens', 'Cannes', 'FRA'),
+        (date '1937-09-05', 'lens', 'sete', 1, 0, 'France', 'national', 'Lens', 'Sete', 'FRA'),
+        (date '1937-09-12', 'cannes', 'lens', 0, 0, 'France', 'national', 'Cannes', 'Lens', 'FRA'))
+        t(date, home_ident, away_ident, gh, ga, competition, level, home, away, home_code)) to '{pq}' (format parquet)""")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    out = schochastics.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert out["new"] == 4
+    assert G.c.execute("SELECT count(*) FROM match").fetchone()[0] == 4
