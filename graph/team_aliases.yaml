@@ -18,6 +18,7 @@ same:
   - ["Lekhwiya", "Al-Duhail SC"]
   - ["IR Tanger", "Ittihad Tanger"]
   - ["Espérance de Tunis", "Esperance"]
+  - ["Al Ittihad", "Al-Gharafa"]          # Qatar's Al-Ittihad took the name Al-Gharafa in 2004 (same country only)
   # {country, keys}: one old club kept twice by two weaker sources and by no FotMob record, so the name rule cannot join them.
   # keys are «source:source_id» as in xref; the lower Tifo id is kept. Never a FotMob key, never by the name rule.
   # The old Dubai CSC (until the 2017 merger into Shabab Al Ahli, which stays its own club): RSSSF's and schochastics' «Dubai».
