@@ -97,7 +97,7 @@ def load(G, reg, S):
     clubs = (S.read(os.path.join(S.db, "clubs.json")) or {}).get("clubs") or {}
     club_by_qid = {c.get("qid"): int(fid) for fid, c in clubs.items() if c.get("qid") and fid.isdigit()}
     n = {"pages": 0, "season_pages": 0, "tables": 0, "awards": 0, "honours": 0, "edition_honours": 0, "players_new": 0, "sanity_dropped": 0, "conflicts": 0,
-         "not_a_person": 0, "season_not_own": 0, "table_not_final": 0}
+         "not_a_person": 0, "own_count_replaced": 0, "season_not_own": 0, "table_not_final": 0}
     done = set()
 
     def it(title):
@@ -172,6 +172,12 @@ def load(G, reg, S):
         r = G.c.execute(f"SELECT name FROM {t} WHERE {k}=?", (pid or tid or kid,)).fetchone()
         return re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", (r[0] if r else "") or "").encode("ascii", "ignore").decode().lower()).strip()
 
+    def all_ours(eid):
+        """our matches are the whole season: as many as its final table played (a season with no table: never known)"""
+        played = G.c.execute("SELECT sum(played) FROM standing WHERE eid=?", (eid,)).fetchone()[0]
+        have = G.c.execute("SELECT count(*) FROM match WHERE eid=? AND status='finished'", (eid,)).fetchone()[0]
+        return bool(played) and have >= 0.95 * played / 2
+
     def edition_set(eid, kind, entries):
         """One source table's honours of one kind for one edition (entries: rank, tid, pid, kid, value): written when the edition
         has none of that kind yet; else the first source keeps them, and a disagreement is logged once, only when no first-place
@@ -180,6 +186,10 @@ def load(G, reg, S):
         if not entries:
             return
         cur = G.c.execute("SELECT rank, tid, pid, kid, src FROM honour WHERE eid=? AND kind=?", (eid, kind)).fetchall()
+        if cur and kind == "top_scorer" and all(c[4] == "tifo" for c in cur) and not all_ours(eid):
+            G.c.execute("DELETE FROM honour WHERE eid=? AND kind=?", (eid, kind))   # our count on part of the matches (ACL 2010: 13)
+            n["own_count_replaced"] += 1
+            cur = []
         if cur:
             top_m, top_t = min(e[0] for e in entries), min(c[0] for c in cur)
             mine = [label(e[1], e[2], e[3]) for e in entries if e[0] == top_m]

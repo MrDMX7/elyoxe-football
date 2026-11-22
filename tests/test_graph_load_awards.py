@@ -363,3 +363,48 @@ def test_an_arabic_article_without_an_english_label_names_its_man_without_the_li
     G, reg = Graph(str(tmp_path / "t.db")), Registry()
     awards.load(G, reg, S)
     assert G.c.execute("select name, name_ar from player where pid=?", (reg.get("player", "wikidata", "Q70"),)).fetchone() == ("محمد العبدلي", "محمد العبدلي")
+
+
+def _own_count_vs_article(tmp_path, table_played, matches):
+    """2016/17 with our own count's top scorer (Other Guy, 9) and the season article's (Ali Mabkhout, 25): a final table of
+    four clubs who each played `table_played`, and `matches` finished matches of ours"""
+    sc = T('<tr><th>Player</th><th>Club</th><th>Goals</th></tr>' f'<tr><td>{L("Ali_Mabkhout")}</td><td>x</td><td>25</td></tr>', "Top scorers")
+    items = {"Ali_Mabkhout": item("Q61", "Ali Mabkhout", "علي مبخوت", "1990-10-05")}
+    S = mk(tmp_path, {"2016–17_UAE_Pro_League": sc}, items)
+    art = tmp_path / "graph" / ".cache" / "awards" / "articles.json"
+    a = json.loads(art.read_text(encoding="utf-8"))
+    a["awards"], a["seasons"] = [], {"2016–17_UAE_Pro_League": "538"}
+    art.write_text(json.dumps(a), encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 538)
+    e = reg.mint("edition", "fotmob", "538|2016/2017")
+    G.put("edition", {"eid": e, "cid": lg, "season": "2016/2017"}, "fotmob")
+    if table_played:
+        G.c.executemany("INSERT INTO standing(eid, grp, rank, tid, played, won, drawn, lost, gf, ga, pts, src) VALUES(?, '', ?, ?, ?, 0, 0, 0, 0, 0, 0, 's365')",
+                        [(e, r, 100 + r, table_played) for r in range(1, 5)])
+    for i in range(matches):
+        G.put("match", {"mid": reg.mint("match", "fotmob", 9000 + i), "eid": e, "date": "2017-01-01", "home": 101, "away": 102, "hs": 1, "as_": 0, "status": "finished"}, "fotmob")
+    other = reg.mint("player", "fotmob", 1)
+    G.put("player", {"pid": other, "name": "Other Guy"}, "fotmob")
+    G.c.execute("insert into honour(eid, kind, rank, pid, value, src) values(?, 'top_scorer', 1, ?, '9', 'tifo')", (e, other))
+    awards.load(G, reg, S)
+    return G, reg, e, other
+
+
+def test_our_count_on_part_of_the_matches_gives_way_to_the_season_article(tmp_path):
+    # AFC Champions League 2010: 13 matches of ours made Juan Olivera its top scorer; José Mota was (Wikipedia)
+    G, reg, e, _ = _own_count_vs_article(tmp_path, 6, 5)                 # a table of 12 matches, 5 of ours
+    assert G.c.execute("select pid, src from honour where eid=? and kind='top_scorer'", (e,)).fetchall() == [(reg.get("player", "wikidata", "Q61"), "wiki")]
+    assert not G.c.execute("select 1 from conflict").fetchall()
+
+
+def test_our_count_on_every_match_stands(tmp_path):
+    # UAE 2023/24: every match ours, Khribin 19; the article's Rahimi was its player of the season
+    G, reg, e, other = _own_count_vs_article(tmp_path, 6, 12)
+    assert G.c.execute("select pid from honour where eid=? and kind='top_scorer'", (e,)).fetchall() == [(other,)]
+    assert G.c.execute("select count(*) from conflict").fetchone()[0] == 1
+
+
+def test_our_count_without_a_table_to_measure_it_gives_way(tmp_path):
+    G, reg, e, _ = _own_count_vs_article(tmp_path, 0, 13)
+    assert G.c.execute("select src from honour where eid=? and kind='top_scorer'", (e,)).fetchall() == [("wiki",)]
