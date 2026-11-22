@@ -350,6 +350,9 @@ def leagues_step(p):
         if p.due("league_analytics", 60, cid) and history_complete(p, (cid,)):
             try:
                 league(p, cid)
+                hk = f"league-analytics:{cid}"     # a failure lives on in the merged health file until a success says ok
+                if not ((p.prev_health.get("items") or {}).get(hk) or p.store.health.get(hk) or {"ok": True}).get("ok"):
+                    p.store.ok(hk)
             except ERRORS as e:
                 p.store.fail(f"league-analytics:{cid}", f"{type(e).__name__}: {e}")
                 p.mark("league_analytics", cid)
