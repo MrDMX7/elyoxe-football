@@ -5,6 +5,7 @@
 # `uaepl`: uaepl.ae club slug (the /clubs/<slug> link) -> FotMob team id, with the site's own names.
 
 teams:
+  8295: كارلسروه                # FotMob's Arabic map had «ريتشارد فوستر» (the 1909 champion's row, 22 Nov 2026)
   102101: الجزيرة
   102117: العين
   102119: شباب الأهلي
