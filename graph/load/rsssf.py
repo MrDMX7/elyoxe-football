@@ -8,6 +8,14 @@ import os
 from graph.link import MatchIndex, twin
 
 
+
+def _label(G, tid, name=None):
+    """a club's name as the disagreements list folds it («Espérance de Tunis» -> «esperance de tunis»): ours, else the table's"""
+    import re, unicodedata
+    r = G.c.execute("SELECT name FROM team WHERE tid=?", (tid,)).fetchone()
+    t = (r[0] if r else None) or name or ""
+    return re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode().lower()).strip()
+
 def load(G, reg, S, codes=None):
     if codes is None:
         try:
@@ -16,7 +24,7 @@ def load(G, reg, S, codes=None):
         except Exception as e:
             print(f"db.rsssf not importable: {e}", flush=True)
             codes = []
-    n = {"seasons": 0, "standings": 0, "champions": 0, "matches": 0, "matches_linked": 0, "league_matches": 0, "league_linked": 0, "league_bad": 0, "goals": 0}
+    n = {"seasons": 0, "standings": 0, "champions": 0, "champion_conflicts": 0, "matches": 0, "matches_linked": 0, "league_matches": 0, "league_linked": 0, "league_bad": 0, "goals": 0}
     written, idx = set(), MatchIndex(G)
     mine = {}            # the matches RSSSF's own league rows claimed in this build: {mid: (hs, as_) as the row gave it}
 
@@ -125,8 +133,14 @@ def load(G, reg, S, codes=None):
                     if n["league_bad"] <= 5:
                         print(f"rsssf {code} {season} {d} {hn}-{an}: {e}", flush=True)
             if table and table[0][0] == 1:     # db/rsssf.py keeps a table only when its first club is the champions page's
-                if G.c.execute("INSERT OR IGNORE INTO honour(eid, kind, rank, tid, src) VALUES(?,?,?,?,?)",
-                               (eid, "champion", 1, team(code, table[0][1], table[0][2]), "rsssf")).rowcount:
+                tid = team(code, table[0][1], table[0][2])
+                cur = G.c.execute("SELECT tid, src FROM honour WHERE eid=? AND kind='champion' AND rank=1", (eid,)).fetchall()
+                if cur:                        # the first source keeps the title; another club is a disagreement, never a second champion
+                    if tid not in [c[0] for c in cur]:
+                        G.conflict("honour", eid, "champion", _label(G, cur[0][0]), cur[0][1], _label(G, tid, table[0][1]), "rsssf")
+                        n["champion_conflicts"] += 1
+                elif G.c.execute("INSERT OR IGNORE INTO honour(eid, kind, rank, tid, src) VALUES(?,?,?,?,?)",
+                                 (eid, "champion", 1, tid, "rsssf")).rowcount:
                     n["champions"] += 1
     clubs = S.read(os.path.join(S.db, "rsssf_clubs.json")) or {}
     for fid in sorted(clubs, key=lambda x: int(x) if x.isdigit() else 0):

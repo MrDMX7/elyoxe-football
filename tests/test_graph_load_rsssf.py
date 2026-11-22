@@ -121,3 +121,19 @@ def test_a_stale_registry_collapse_is_split(tmp_path):
     rsssf.load(G, reg, S, codes=["uae"])
     mids = [r[0] for r in G.c.execute("select mid from match order by hs")]
     assert len(set(mids)) == 2 and first in mids
+
+
+def test_an_edition_with_a_champion_keeps_it_and_a_different_one_is_a_conflict(tmp_path):
+    # Qatar 2010/11 showed «Al-Duhail SC (365Scores) + Lekhwiya (RSSSF)», Tunisia 2022/23 «Etoile du Sahel + Espérance»: one champion
+    S, G, reg = mk(tmp_path), Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 538)
+    G.put("competition", {"cid": lg, "name": "Pro League"}, "fotmob")
+    have = reg.mint("edition", "fotmob", "538|2025/2026")
+    G.put("edition", {"eid": have, "cid": lg, "season": "2025/2026"}, "fotmob")
+    other = reg.mint("team", "fotmob", 102119)
+    G.put("team", {"tid": other, "name": "Shabab Al Ahli"}, "fotmob")
+    G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'champion', 1, ?, 's365')", (have, other))
+    rsssf.load(G, reg, S, codes=["uae"])
+    assert G.c.execute("select tid, src from honour where eid=? and kind='champion'", (have,)).fetchall() == [(other, "s365")]
+    assert G.c.execute("select kept, kept_src, other, other_src from conflict where tifo_id=? and field='champion'", (have,)).fetchall() == \
+        [("shabab al ahli", "s365", "al ain", "rsssf")]
