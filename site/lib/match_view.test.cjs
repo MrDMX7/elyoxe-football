@@ -66,3 +66,18 @@ test("the meetings of any two teams from the archive's own matches, when the eve
   const md = V.md({ id: "a2", date: "2002-06-30", comp: 77, h: [8570, "ألمانيا"], a: [8256, "البرازيل"], s: [0, 2] });
   assert.deepEqual(V.h2h(p, md).summary, { home_wins: 0, draws: 0, away_wins: 1 });
 });
+
+test("an old player's matches in the archive: those he played or scored in, his goals, the latest first", () => {
+  const lists = [[{ id: "k1", date: "2002-11-20", comp: 538, season: "2002/2003", h: [102119, "الأهلي"], a: [null, "الشباب"], s: [3, 2],
+                    ev: [[31, 0, "goal", "a", "علي دائي", "k238460"], [70, 0, "goal", "a", "علي دائي", "k238460"], [80, 0, "own_goal", "h", "علي دائي", "k238460"]],
+                    lu: { a: [["علي دائي", "k238460", "10", 1]] } },
+                  { id: "k2", date: "2003-01-05", comp: 538, season: "2002/2003", h: [null, "الشباب"], a: [102122, "الوحدة"], s: [1, 0],
+                    ev: [[12, 0, "goal", "h", "علي دائي", "k238460"]] }]];
+  const P = V.players(lists), d = P.get("k238460");
+  assert.deepEqual([d.matches.length, d.goals], [2, 3]);                   // an own goal is not his
+  assert.deepEqual(d.matches.map(m => m.id), ["k2", "k1"]);
+  const h = V.playerBlock(d);
+  assert.match(h, /مبارياته في أرشيف تيفو/);
+  assert.match(h, /href="\/m\/k2\/"/);
+  assert.equal(V.playerBlock(undefined), "");
+});

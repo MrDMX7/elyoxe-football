@@ -57,4 +57,25 @@ function pairs(lists, compName) {
   return out;
 }
 
-module.exports = { md, lineups, h2h, pairs };
+// every player's matches in the archive (in a lineup, or a scorer of a match with none), and his goals (own goals not his)
+function players(lists) {
+  const out = new Map(), seen = new Set();
+  const at = (k, m) => { if (!k) return null; if (!out.has(k)) out.set(k, { matches: [], goals: 0, ids: new Set() }); const p = out.get(k); if (!p.ids.has(m.id)) { p.ids.add(m.id); p.matches.push(m); } return p; };
+  for (const ms of lists) for (const m of ms) {
+    if (seen.has(m.id)) continue;
+    seen.add(m.id);
+    for (const side of Object.values(m.lu || {})) for (const p of side) at(p[1], m);
+    for (const e of m.ev || []) if (/^(goal|penalty_goal)$/.test(e[2]) && e[5]) at(e[5], m).goals++;
+  }
+  for (const p of out.values()) { p.matches.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)); delete p.ids; }
+  return out;
+}
+
+// the player page's block: how many matches and goals the archive holds for him, and the latest of them in the current rows
+function playerBlock(d, n) {
+  if (!d || !d.matches.length) return "";
+  const SV = require("./season_view.cjs"), rows = SV.fixtures(d.matches.slice(0, n || 15)).matches.map(m => U.mrow(m, { date: 1 })).join("");
+  return U.grp("مبارياته في أرشيف تيفو", '<p class="note">' + '<span class="num">' + d.matches.length + "</span> مباراة و" + '<span class="num">' + d.goals + "</span> هدف في الأرشيف.</p>" + rows);
+}
+
+module.exports = { md, lineups, h2h, pairs, players, playerBlock };

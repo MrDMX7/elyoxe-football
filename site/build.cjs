@@ -1351,9 +1351,10 @@ ${items}
         ld:bcLd([[c.name_ar, `/c/${c.key}/`], ["كل المواسم", arch], [s.season, sp]]) }));
       if (okS) urls.push(sp); } }
   { const PP = require("./lib/people_pages.cjs"), compK = c => (AWC[c] ? { name_ar:AWC[c].name_ar, href:`/c/${AWC[c].key}/` } : null);
+    const PMS = MV.players([...MSEA.values(), ...MTEAM.values()]);   // each old player's matches and goals in the archive
     for (const [k, p] of Object.entries(PPL)){ if (!k.startsWith("k") && !ARCH.has(k)) continue;   // a current player keeps his own page
       const hon = AWP[k] || [], pth = `/p/${k}/`, nmP = PP.nameOf(p), ok = PP.indexable(p, hon);
-      write(`p/${k}/index.html`, page({ v5:{ nav:{ back:"/awards/", backLabel:"الجوائز", title:esc(nmP), trail:"" }, body:`<div class="lt"><h1>${/[؀-ۿ]/.test(nmP) ? esc(nmP) : `<span class="lat">${esc(nmP)}</span>`}</h1></div>` + PP.personBody(p, hon, { award:x => AWK[x], comp:compK }, INTL[k]) + U.foot(), tab:"more", sheets:"", data:{} },
+      write(`p/${k}/index.html`, page({ v5:{ nav:{ back:"/awards/", backLabel:"الجوائز", title:esc(nmP), trail:"" }, body:`<div class="lt"><h1>${/[؀-ۿ]/.test(nmP) ? esc(nmP) : `<span class="lat">${esc(nmP)}</span>`}</h1></div>` + PP.personBody(p, hon, { award:x => AWK[x], comp:compK }, INTL[k]) + MV.playerBlock(PMS.get(k)) + U.foot(), tab:"more", sheets:"", data:{} },
         path:pth, page:"ref", noindex:!ok, title:PP.title(p), desc:`${nmP}: ألقابه وجوائزه${(p.wc || []).length ? " ومشاركاته في كأس العالم" : ""} من أرشيف تيفو.`, ld:bcLd([[nmP, pth]]) }));
       if (ok) urls.push(pth); } }
   refPage("/legends/", "أساطير الكورة الإماراتية | تيفو", "الطلياني وإسماعيل مطر وعمر عبدالرحمن وعلي مبخوت وغيرهم: مسيرتهم وأرقامهم، مع المصادر.", "أساطير الكورة الإماراتية", "مسيرة وأرقام أبرز لاعبين في تاريخ الكورة الإماراتية، وكل معلومة معها مصدرها.", S.legends(legRaw, hl, id => playerPages.has(String(id))) + '<p class="tools"><a class="btn" href="/memorable/">مباريات ما تنتسى</a></p>');   // W2.8: memorable matches sit under الأساطير
