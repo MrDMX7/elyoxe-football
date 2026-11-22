@@ -13,6 +13,7 @@ import gzip, json, os, re
 from collections import Counter, defaultdict
 from graph.link import MatchIndex, edition_for
 from graph.load.uaefa import agree
+from graph.load.teams import squash
 
 FILE = "espn.json.gz"
 LEAGUE = {"eng.1": 47, "esp.1": 87, "ita.1": 55, "ger.1": 54, "fra.1": 53, "uefa.champions": 42, "afc.champions": 525,
@@ -73,10 +74,21 @@ def load(G, reg, S):
             names[t.get("id")] = t.get("name")
     for k, c in votes.items():
         top = c.most_common(2)
-        if top and top[0][1] >= 3 and (len(top) == 1 or top[0][1] >= 3 * top[1][1]):
+        # three times the next, or FotMob's club ahead of another source's record (one club held twice: Porto 2001-09)
+        if top and top[0][1] >= 3 and (len(top) == 1 or top[0][1] >= 3 * top[1][1] or (top[0][0] in fm_team and top[1][0] not in fm_team)):
             team[k] = reg.link("team", "espn", str(k), top[0][0]) or top[0][0]
             G.xref("team", team[k], "espn", str(k), "date+score-votes")
             n["teams_voted"] += 1
+    # no copy to vote by (the Champions League before 2010/11 is ESPN's alone): FotMob's club of exactly that name, if one
+    fm_names = defaultdict(list)
+    for t, nm in q("SELECT t.tid, t.name FROM team t JOIN xref x ON x.type='team' AND x.source='fotmob' AND x.tifo_id=t.tid"):
+        fm_names[squash(nm)].append(t)
+    for k, nm in names.items():
+        hit = fm_names.get(squash(nm)) if k not in team and nm else None
+        if hit and len(set(hit)) == 1:
+            team[k] = reg.link("team", "espn", str(k), hit[0]) or hit[0]
+            G.xref("team", team[k], "espn", str(k), "name")
+            n["teams_named"] += 1
     for k, nm in names.items():
         if k not in team:
             team[k] = reg.get("team", "espn", str(k)) or reg.mint("team", "espn", str(k))

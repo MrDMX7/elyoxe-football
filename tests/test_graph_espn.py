@@ -93,3 +93,39 @@ def test_a_game_with_no_squads_is_not_a_game(tmp_path):
     G, reg, cid, teams, S = world(tmp_path, rows)
     out = espn.load(G, reg, S)
     assert G.c.execute("SELECT count(*) FROM match").fetchone() == (0,) and not out.get("games_own")
+
+
+def test_a_club_split_between_its_fotmob_record_and_another_is_fotmobs(tmp_path):
+    # FC Porto's Champions League games 2001-2009 sat under FotMob's Porto and schochastics' own «Porto»: votes 6 and 4
+    rows = [rec(500 + d, "2004/2005", f"2004-09-1{d}", 1, 0, [man(1, "A", 9)], [man(4, "B", 9)], league="uefa.champions") for d in range(6)]
+    G, reg, cid, teams, S = world(tmp_path, rows)
+    ucl = reg.mint("competition", "fotmob", 42)
+    G.put("competition", {"cid": ucl, "name": "Champions League", "kind": "cup"}, "fotmob")
+    e = reg.mint("edition", "sch", "42|2004/2005")
+    G.put("edition", {"eid": e, "cid": ucl, "season": "2004/2005"}, "sch")
+    other = reg.mint("team", "sch", "Arsenal (England)")
+    G.put("team", {"tid": other, "name": "Arsenal"}, "sch")
+    for d in range(6):                                  # votes: FotMob's 3 games x2 = 6, the other record's 3 x1 = 3
+        G.put("match", {"mid": 900 + d, "eid": e, "date": f"2004-09-1{d}", "home": teams[9825] if d < 3 else other, "away": teams[8668], "hs": 1, "as_": 0}, "sch")
+    espn.load(G, reg, S)
+    assert reg.get("team", "espn", "359") == teams[9825]
+
+
+def test_a_club_with_no_games_to_vote_by_is_fotmobs_of_the_same_name_when_only_one(tmp_path):
+    # the Champions League before 2010/11 is ESPN's alone: FC Porto has no copy to vote by
+    rows = [rec(600, "2003/2004", "2004-05-26", 3, 0, [man(1, "Deco", 10)], [man(4, "B", 9)], league="uefa.champions")]
+    rows[0]["teams"][0].update(id="437", name="FC Porto")
+    rows[0]["rosters"][0]["team"] = "437"
+    G, reg, cid, teams, S = world(tmp_path, rows)
+    porto = reg.mint("team", "fotmob", 9773)
+    G.put("team", {"tid": porto, "name": "FC Porto", "kind": "club"}, "fotmob")
+    G.xref("team", porto, "fotmob", "9773", "fotmob-native")
+    twin = reg.mint("team", "fotmob", 1)
+    G.put("team", {"tid": twin, "name": "Everton"}, "fotmob")                  # two FotMob «Everton»: neither
+    G.xref("team", twin, "fotmob", "1", "fotmob-native")
+    G.c.execute("UPDATE team SET name='Everton' WHERE tid=?", (teams[8668],))
+    ucl = reg.mint("competition", "fotmob", 42)
+    G.put("competition", {"cid": ucl, "name": "Champions League", "kind": "cup"}, "fotmob")
+    espn.load(G, reg, S)
+    assert G.c.execute("SELECT home FROM match").fetchone() == (porto,)
+    assert G.c.execute("SELECT away FROM match").fetchone() not in ((teams[8668],), (twin,))
