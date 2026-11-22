@@ -67,8 +67,21 @@ def md5(path):
         return hashlib.md5(f.read()).hexdigest()
 
 
-def upload(s3, bucket, out, old, dry=False):
-    """{key: md5} of every page under out; sends the new and changed ones (40 at a time)"""
+def tokens(shell):
+    """the shell's hashed names (/assets/app.fccd68cafc.css): renamed by every site deploy, so no change of a page's own"""
+    import re
+    return sorted(set(re.findall(r"(?<![0-9a-f])[0-9a-f]{10}(?![0-9a-f])", shell or "")))
+
+
+def content_md5(text, strip=()):
+    for t in strip:
+        text = text.replace(t, "")
+    return hashlib.md5(text.encode("utf-8")).hexdigest()
+
+
+def upload(s3, bucket, out, old, dry=False, strip=(), full=False):
+    """{key: content md5} of every page under out (the shell's hashed names left out); sends the new and changed ones, every
+    one when `full` (the weekly refresh that brings the site's current assets to every page), 40 at a time"""
     new, todo = {}, []
     for root, _, files in os.walk(out):
         for f in files:
@@ -76,8 +89,8 @@ def upload(s3, bucket, out, old, dry=False):
                 continue
             p = os.path.join(root, f)
             k = os.path.relpath(p, out).replace("\\", "/")
-            new[k] = md5(p)
-            if old.get(k) != new[k]:
+            new[k] = content_md5(open(p, encoding="utf-8").read(), strip) if strip else md5(p)
+            if full or old.get(k) != new[k]:
                 todo.append((k, p))
     say(f"upload: {len(new)} pages, {len(todo)} new or changed")
     if dry:
@@ -185,7 +198,10 @@ def main(argv=None):
     urls = json.load(open(os.path.join(out, "_archive_urls.json"), encoding="utf-8"))
     sitemaps(out, urls)
     old = state_get(s3, MANIFEST, {}) or {}
-    new, sent = upload(s3, bucket, out, old, a.dry)
+    # a page goes up when its own content changed; once a week (or when the manifest is md5s of whole pages) every page,
+    # so each carries the site's current assets
+    full = not last.get("content") or time.time() - float(last.get("full_ts") or 0) > 7 * 86400
+    new, sent = upload(s3, bucket, out, old, a.dry, strip=tokens(shells["archive"]), full=full)
     gone = sorted(set(old) - set(new))
     if a.comps:                                    # a partial run (some competitions) deletes nothing of the others
         gone = []
@@ -200,7 +216,8 @@ def main(argv=None):
             say(f"deleted {len(gone)} pages no longer in the archive")
     if not a.dry:
         state_put(s3, MANIFEST, new)
-        state_put(s3, LAST, {"etag": head["ETag"], "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "pages": len(new), "sent": sent})
+        state_put(s3, LAST, {"etag": head["ETag"], "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "pages": len(new), "sent": sent,
+                             "content": True, "full_ts": time.time() if full else last.get("full_ts")})
         fresh = [u for u in urls if u.lstrip("/") + "index.html" not in old]          # new to the search engines
         indexnow(fresh)
     say(f"done: {len(new)} pages, {sent} sent")

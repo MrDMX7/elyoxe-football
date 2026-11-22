@@ -37,3 +37,18 @@ def test_sitemaps_of_45000_urls_and_their_index(tmp_path):
     idx = (tmp_path / "sitemap-archive.xml").read_text(encoding="utf-8")
     assert idx.count("<loc>") == 3 and "https://tifo.elyoxe.com/sitemap-archive-3.xml" in idx
     assert (tmp_path / "sitemap-archive-3.xml").read_text(encoding="utf-8").count("<loc>") == 1
+
+
+def test_a_page_whose_only_change_is_the_sites_asset_names_is_not_sent_again(tmp_path):
+    # every site deploy renames its hashed assets (app.fccd68cafc.css): 353,513 pages re-sent a run
+    pages(tmp_path, {"m/k1/index.html": '<link href="/assets/app.aaaaaaaaaa.css"><main>2-1</main>',
+                     "m/k2/index.html": '<link href="/assets/app.aaaaaaaaaa.css"><main>3-0</main>'})
+    old_shell, new_shell = '<link href="/assets/app.bbbbbbbbbb.css">', '<link href="/assets/app.aaaaaaaaaa.css">'
+    old = {"m/k1/index.html": J.content_md5('<link href="/assets/app.bbbbbbbbbb.css"><main>2-1</main>', J.tokens(old_shell)),
+           "m/k2/index.html": J.content_md5('<link href="/assets/app.bbbbbbbbbb.css"><main>1-0</main>', J.tokens(old_shell))}
+    s3 = S3()
+    new, sent = J.upload(s3, "b", str(tmp_path), old, strip=J.tokens(new_shell))
+    assert [k for k, _ in s3.put] == ["m/k2/index.html"]                 # its score changed; k1 only the asset name
+    s3 = S3()
+    J.upload(s3, "b", str(tmp_path), old, strip=J.tokens(new_shell), full=True)
+    assert len(s3.put) == 2                                              # the weekly full refresh sends them all
