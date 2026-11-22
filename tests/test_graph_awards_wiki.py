@@ -232,3 +232,12 @@ def test_a_season_several_competitions_could_own_goes_to_the_one_named_exactly()
     from graph.awards_wiki import owner
     comps = {"42": "UEFA Champions League", "47": "Premier League", "519": "Egyptian Premier League", "529": "Kuwait Premier League"}
     assert owner("2011–12_Premier_League", "42", comps) == "47"        # «premier league» is in the Egyptian's and Kuwait's names too
+
+
+def test_an_under_23_award_is_the_young_players():
+    # the Qatar Stars League article's «Best Player U23» column (Homam Ahmed 2021, 2022) is no best player of the season
+    from graph.awards_wiki import _kind
+    for t in ("Best Player U23", "Best U-21 player", "U21 Player of the Year", "Best Young Player"):
+        assert _kind(t) == "best_young", t
+    for t in ("Best Player", "Player of the Year", "Under-age"):
+        assert _kind(t) is None, t

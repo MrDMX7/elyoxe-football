@@ -32,7 +32,7 @@ H_VALUE = re.compile(r"goals?\b|points?\b|votes?\b|^pts|%|أهداف", re.I)
 H_RANK = re.compile(r"^(rank|place|pos\.?|الترتيب|المركز)$", re.I)
 KINDS = [("top_scorer", re.compile(r"scorer|golden boot|goalscor|pichichi|capocannoniere|torj[aä]ger|golden shoe|top goal|هداف", re.I)),
          ("best_goalkeeper", re.compile(r"goalkeeper|golden glove|yashin|zamora|حارس", re.I)),
-         ("best_young", re.compile(r"young|golden boy|kopa|rookie|revelation|breakthrough", re.I)),
+         ("best_young", re.compile(r"young|golden boy|kopa|rookie|revelation|breakthrough|\bu-?(19|20|21|23)\b", re.I)),   # «Best Player U23»
          ("coach", re.compile(r"manager|coach|مدرب", re.I))]
 
 
