@@ -26,6 +26,7 @@ honours:
   - {comp: 536, season: "1991/1992", kind: top_scorer, value: "16", players: [{wikidata: Q381686}], source: "Wikipedia 1991-92 Saudi Premier League and ar list: Saeed Al-Owairan 16"}
   - {comp: 536, season: "1993/1994", kind: top_scorer, value: "15", players: [{wikidata: Q3326228}], source: "Wikipedia 1993-94 Saudi Premier League: Moussa N'Daw 15, the first foreign top scorer"}
   - {comp: 536, season: "1995/1996", kind: top_scorer, value: "14", players: [{wikidata: Q3109733}], source: "Wikipedia 1995-96 Saudi Premier League and ar list: Ohene Kennedy 14"}
+  - {comp: 535, season: "2013/2014", kind: runner_up, teams: [282308], source: "Wikipedia 2013-14 Qatar Stars League: Lekhwiya champions, El Jaish (the club of 2011-17) second"}
 
 # the value shown was right: the disagreement is closed
 keep:

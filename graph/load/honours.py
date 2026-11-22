@@ -80,9 +80,13 @@ def load(G, reg, S, arab_codes=None):
             n["champion_final"] += _put(G, eid, "champion", 1, "tifo", tid=win)
         if not _has(G, eid, "runner_up"):
             n["runner_up_final"] += _put(G, eid, "runner_up", 1, "tifo", tid=lose)
-    for eid, champ, first, second in G.c.execute("""SELECT h.eid, h.tid, s1.tid, s2.tid FROM honour h
+    # a finished table only: its leader has met every other side once (Qatar 2013/14: 365Scores' table two games in)
+    for eid, champ, first, second, played, teams in G.c.execute("""SELECT h.eid, h.tid, s1.tid, s2.tid, s1.played,
+                                                    (SELECT count(*) FROM standing s WHERE s.eid=h.eid AND s.grp=s1.grp) FROM honour h
                                                     JOIN standing s1 ON s1.eid=h.eid AND s1.rank=1 JOIN standing s2 ON s2.eid=h.eid AND s2.rank=2
                                                     WHERE h.kind='champion' AND h.rank=1""").fetchall():
+        if played is not None and played < teams - 1:
+            continue
         if champ == first and second and not _has(G, eid, "runner_up"):
             n["runner_up_table"] += _put(G, eid, "runner_up", 1, "table", tid=second)
     # 3. the published scorers files of our competitions

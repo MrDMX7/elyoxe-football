@@ -100,3 +100,24 @@ def test_no_own_top_scorer_when_most_goals_have_no_scorer(tmp_path):
     match(G, reg, eid, 3, 10, 30, 1, 0, goals=[("goal", None)])
     honours.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "m"), s3=False))
     assert G.c.execute("select count(*) from honour where eid=? and kind='top_scorer'", (eid,)).fetchone()[0] == 0
+
+
+def _table(G, eid, played):
+    G.c.executemany("INSERT INTO standing(eid, grp, rank, tid, played, won, drawn, lost, gf, ga, pts, src) VALUES(?, '', ?, ?, ?, 0, 0, 0, 0, 0, ?, 's365')",
+                    [(eid, r, t, played, 30 - r) for r, t in ((1, 10), (2, 20), (3, 30), (4, 40))])
+    G.c.execute("INSERT INTO honour(eid, kind, rank, tid, src) VALUES(?, 'champion', 1, 10, 's365')", (eid,))
+
+
+def test_a_finished_table_gives_the_runner_up(tmp_path):
+    G, reg, cid, eid = base(tmp_path)
+    _table(G, eid, 6)
+    honours.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("SELECT tid, src FROM honour WHERE eid=? AND kind='runner_up'", (eid,)).fetchall() == [(20, "table")]
+
+
+def test_a_table_two_games_in_gives_no_runner_up(tmp_path):
+    # Qatar 2013/14: 365Scores' table after two games (Al-Duhail 6, Al-Ahli 6) made Al-Ahli the runners-up; El Jaish were
+    G, reg, cid, eid = base(tmp_path)
+    _table(G, eid, 2)
+    honours.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("SELECT tid FROM honour WHERE eid=? AND kind='runner_up'", (eid,)).fetchall() == []
