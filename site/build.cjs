@@ -1343,7 +1343,8 @@ ${items}
       const nb = SV.around(ss, s.season), sLink = (x, t) => `<a class="chip" href="/c/${c.key}/s/${HP.slug(x)}/">${t} <span class="num">${esc(x)}</span></a>`;
       const v5s = P5.comp(Object.assign({}, c, { season:s.season, dormant:false }), { st:SV.standings(s, MSEA.get(`${c.id}|${HP.slug(s.season)}`) || []), fx:SV.fixtures(MSEA.get(`${c.id}|${HP.slug(s.season)}`) || []), stats:SV.stats(s), archive:1, x:{
         crumbs:`<a href="/c/${c.key}/">${esc(c.name_ar)}</a>، <a href="${arch}">كل المواسم</a>`,
-        chips:[nb.older && sLink(nb.older, "الموسم اللي قبله"), nb.newer && sLink(nb.newer, "اللي بعده"), `<a class="chip" href="${arch}">كل المواسم</a>`].filter(Boolean).join(""),
+        chips:[nb.older && sLink(nb.older, "الموسم اللي قبله"), nb.newer && (nb.newer === c.season ? `<a class="chip" href="/c/${c.key}/">الموسم الحالي</a>` : sLink(nb.newer, "اللي بعده")),   // the season in play: the competition's own page
+          `<a class="chip" href="${arch}">كل المواسم</a>`].filter(Boolean).join(""),
         note:s.note ? `<p class="note mt">${esc(s.note)}</p>` : "", table:"", fx:"", num:"", hist:HP.seasonBody(Object.assign({}, s, { table:[], top_scorers:[] }), c, hpo) } });
       v5s.nav = sNav(`موسم ${esc(s.season)}`, arch, "كل المواسم");
       write(sp.slice(1) + "index.html", page({ v5:v5s,
