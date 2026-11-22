@@ -213,3 +213,29 @@ def test_a_strict_round_robin_shows_its_table_with_no_champion_known():
     from graph.publish import strict_round_robin
     assert strict_round_robin([(h, a, 1, 0) for h, a, *_ in RESULTS])                       # each pair twice, each club four games
     assert not strict_round_robin([(h, a, 1, 0) for h, a, *_ in RESULTS] + [(8650, 10260, 1, 0)])   # a play-off on top
+
+
+def test_a_seasons_tournaments_are_parts_of_its_row_not_seasons_of_their_own(tmp_path):
+    # Argentina: 365Scores' «2009/2010 Apertura» and «2009/2010 Clausura» beside FotMob's «2009/2010» were three seasons in the list
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 112)
+    G.put("competition", {"cid": lg, "name": "Liga Profesional", "name_ar": "الدوري الأرجنتيني", "kind": "league"}, "fotmob")
+    G.xref("competition", lg, "fotmob", 112, "fotmob-native")
+    ids = {}
+    for f, ar in ((10077, "بانفيلد"), (10087, "أرجنتينوس جونيورز"), (10083, "ريفر بليت")):
+        t = ids[f] = reg.mint("team", "fotmob", f)
+        G.put("team", {"tid": t, "name": str(f), "name_ar": ar}, "fotmob")
+        G.xref("team", t, "fotmob", f, "fotmob-native")
+    eds = {}
+    for season, champ in (("2009/2010", 10087), ("2009/2010 Apertura", 10077), ("2009/2010 Clausura", 10087), ("1985 Metropolitano", 10083)):
+        e = eds[season] = reg.mint("edition", "s365", f"112|{season}")
+        G.put("edition", {"eid": e, "cid": lg, "season": season}, "s365")
+        G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'champion', 1, ?, 's365')", (e, ids[champ]))
+    G.put("match", {"mid": 1, "eid": eds["2009/2010"], "date": "2009-08-10", "home": ids[10077], "away": ids[10087], "hs": 1, "as_": 0}, "sch")
+    G.c.commit()
+    publish.editions(G, str(tmp_path / "o"))
+    d = json.load(open(tmp_path / "o" / "editions" / "112.json", encoding="utf-8"))
+    by = {s["season"]: s for s in d["seasons"]}
+    assert sorted(by) == ["1985 Metropolitano", "2009/2010"]          # a tournament with no season row of its own stays a row
+    assert by["2009/2010"]["parts"] == [{"name": "Apertura", "champion": {"fotmob": 10077, "name": "بانفيلد"}, "runner_up": None},
+                                        {"name": "Clausura", "champion": {"fotmob": 10087, "name": "أرجنتينوس جونيورز"}, "runner_up": None}]

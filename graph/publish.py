@@ -259,6 +259,29 @@ def table_from_matches(rows, three):
     out = [(k, p, w, d, l, gf, ga, w * win + d) for k, (p, w, d, l, gf, ga) in t.items()]
     return sorted(out, key=lambda r: (-r[7], -(r[5] - r[6]), -r[5]))
 
+PART = re.compile(r"^(\d{4}(?:/\d{4})?)[\s*-]+(.*[A-Za-z].*)$")
+
+
+FIRST_HALF = {"apertura": 0, "torneo inicial": 0, "metropolitano": 0, "clausura": 1, "torneo final": 1, "nacional": 1}
+
+
+def fold_parts(seasons):
+    """a season's tournaments (365Scores' «2009/2010 Apertura» and «Clausura», «1984 Nacional», «1987 (Yellow module)») are parts
+    of its row, champion and runner-up each, when the season has a row and the tournament no games or table of its own"""
+    rows = {s["season"]: s for s in seasons}
+    out = []
+    for s in seasons:
+        m = PART.match(s["season"])
+        if m and m.group(1) in rows and not s["matches"] and not s["table"]:
+            rows[m.group(1)].setdefault("parts", []).append({"name": m.group(2).strip(), "champion": s["champion"], "runner_up": s["runner_up"]})
+            continue
+        out.append(s)
+    for s in out:
+        if s.get("parts"):
+            s["parts"].sort(key=lambda p: (FIRST_HALF.get(p["name"].lower(), 2), p["name"]))
+    return out
+
+
 def editions(G, out_dir, eras=None):
     """editions/<FotMob competition>.json: every season of each of our competitions with its champion, runner-up, final table,
     top scorers, season awards (best player, young player, goalkeeper, coach, local player), the champion's coach, the man of
@@ -317,6 +340,7 @@ def editions(G, out_dir, eras=None):
                             "best_coach": [{"kid": k, "name": kn.get(k)} for r, t, p, k, v in hon.get("best_coach", []) if k][:1],
                             "champion_coach": {"kid": coach[0][0], "name": kn.get(coach[0][0])} if coach else None,
                             "motm": [[fm_p[p], pn.get(p), c] if fm_p.get(p) else [None, pn.get(p), c, p] for p, c in motm], **({"note": note} if note else {})})
+        seasons = fold_parts(seasons)
         if seasons:
             _dump(os.path.join(out_dir, "editions", f"{fid}.json"), {"fotmob": fid, "name": name, "name_ar": name_ar, "seasons": seasons})
             n += 1

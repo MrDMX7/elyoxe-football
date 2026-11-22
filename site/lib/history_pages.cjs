@@ -27,6 +27,16 @@ const pct = (w, m) => m ? Math.round((100 * w) / m) : 0;
 // season's match list alone (RSSSF's Arab leagues: the matches, no champion known); its index rule stays table or scorers
 const seasonRich = s => !!(s && ((s.champion || s.note) && ((s.table || []).length || (s.top_scorers || []).length) || (s.matches || 0) >= 10));
 
+// a season's tournament in Arabic (graph/publish.fold_parts: 365Scores' names); def: with the article («بطل الأبيرتورا»)
+const PARTS = { "apertura": "أبيرتورا", "clausura": "كلاوسورا", "torneo inicial": "البطولة الافتتاحية", "torneo final": "البطولة الختامية",
+  "metropolitano": "ميتروبوليتانو", "nacional": "ناسيونال", "league": "بطولة الدوري", "copa": "الكأس", "copa de honor": "كأس الشرف",
+  "copa de oro": "الكأس الذهبية", "copa campeonato": "كأس البطولة", "(yellow module)": "المجموعة الصفراء", "(green module)": "المجموعة الخضراء",
+  "cup shared": "الكأس مناصفة" };
+function partName(n, def) {
+  const k = String(n || "").trim().toLowerCase(), ar = PARTS[k] || String(n || "").replace(/\(Amateur\)/i, "(هواة)").trim();
+  return def && PARTS[k] && !/^ال/.test(ar) && !/ /.test(ar) ? "ال" + ar : ar;
+}
+
 function seasonsBody(ed, comp, o) {
   o = o || {};
   // one row a season, its champion on the line, the runner-up and the top scorer under it: a phone reads it upright (22 Nov 2026:
@@ -36,8 +46,10 @@ function seasonsBody(ed, comp, o) {
     const season = (o.page || seasonRich)(s) ? `<a href="/c/${comp.key}/s/${slug(s.season)}/">${num(s.season)}</a>` : num(s.season);   // o.page: a season with its page
     const end = /\//.test(s.season) ? `${String(s.season).slice(5, 9)}-06-30` : `${String(s.season).slice(0, 4)}-12-31`;
     const inPlay = !s.champion && !s.note && end >= new Date().toISOString().slice(0, 10);      // the season still being played
-    const main = s.note && !s.champion ? `<span class="muted">${esc(s.note)}</span>` : (s.champion ? `<b>${teamL(s.champion, o)}</b>` : inPlay ? '<span class="muted">الموسم الجاري</span>' : '<span class="muted">—</span>');
-    const sub = [s.runner_up && `الوصيف ${teamL(s.runner_up, o)}`,
+    const parts = (s.parts || []).filter(p => p.champion).map(p => `${esc(partName(p.name))} <b>${teamL(p.champion, o)}</b>`).join(" · ");
+    const main = s.note && !s.champion ? `<span class="muted">${esc(s.note)}</span>` : (s.champion ? `<b>${teamL(s.champion, o)}</b>` : parts ? parts :
+      inPlay ? '<span class="muted">الموسم الجاري</span>' : '<span class="muted">—</span>');
+    const sub = [s.champion && parts, s.runner_up && `الوصيف ${teamL(s.runner_up, o)}`,
       top.length && `${inPlay ? "يتصدر الهدافين" : "الهداف"} ${top.map(p => `${playerL(p, o)}${p.value ? ` <span class="num">(${esc(p.value)})</span>` : ""}`).join(" و")}`].filter(Boolean).join(" · ");
     return U.row({ t: `${season} · ${main}`, sub, cls: "ssn" });
   }).join("");
@@ -47,7 +59,9 @@ function seasonsBody(ed, comp, o) {
 
 function seasonBody(s, comp, o) {
   o = o || {};
-  const facts = [s.champion ? ["البطل", teamL(s.champion, o)] : s.note && ["الموسم", esc(s.note)], s.runner_up && ["الوصيف", teamL(s.runner_up, o)], s.champion_coach && ["مدرب البطل", coachL(s.champion_coach, o)],
+  const facts = [s.champion ? ["البطل", teamL(s.champion, o)] : s.note && ["الموسم", esc(s.note)], s.runner_up && ["الوصيف", teamL(s.runner_up, o)],
+    ...(s.parts || []).filter(p => p.champion).map(p => [`بطل ${esc(partName(p.name, 1))}`, teamL(p.champion, o) + (p.runner_up ? ` <span class="muted">(الوصيف ${teamL(p.runner_up, o)})</span>` : "")]),
+    s.champion_coach && ["مدرب البطل", coachL(s.champion_coach, o)],
     s.matches && ["المباريات", num(s.matches)]].filter(Boolean);
   const people = (title, list) => (list || []).length ? U.grp(title, `<ol class="lc">${list.map(p => `<li>${playerL(p, o)}${p.value ? ` <span class="muted small">${num(p.value)}</span>` : ""}</li>`).join("")}</ol>`) : "";
   const table = (s.table || []).length ? U.grp(s.note && !s.champion ? "الترتيب لحظة التوقف" : "الترتيب النهائي", `<div class="tblw"><table class="tbl"><thead><tr><th>#</th><th class="tm">الفريق</th><th>لعب</th><th>ف</th><th>ت</th><th>خ</th><th>له</th><th>عليه</th><th>نقاط</th></tr></thead><tbody>${

@@ -111,3 +111,13 @@ test("the season in play says so, its scorer leads (no «—» champion)", () =>
   assert.match(h, /الموسم الجاري/);
   assert.match(h, /يتصدر الهدافين[\s\S]*?رافينيا/);
 });
+
+test("a season's tournaments show on its row and its page, in Arabic (Argentina's Apertura and Clausura)", () => {
+  const ed = { seasons: [{ season: "2009/2010", matches: 389, champion: null, runner_up: null, table: [], top_scorers: [],
+    parts: [{ name: "Apertura", champion: { fotmob: 10077, name: "بانفيلد" }, runner_up: null }, { name: "Clausura", champion: { fotmob: 10087, name: "أرجنتينوس جونيورز" }, runner_up: null }] }] };
+  const h = H.seasonsBody(ed, COMP, Object.assign({}, o, { team: () => true }));
+  assert.match(h, /أبيرتورا[\s\S]*?بانفيلد[\s\S]*?كلاوسورا[\s\S]*?أرجنتينوس جونيورز/);
+  assert.doesNotMatch(h, /—/);
+  const p = H.seasonBody(ed.seasons[0], COMP, Object.assign({}, o, { team: () => true }));
+  assert.match(p, /بطل الأبيرتورا/);
+});
