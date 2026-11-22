@@ -28,6 +28,19 @@ def fjelstul(S, max_age_days=7):
             os.replace(p + ".tmp", p)
 
 
+ENGSOCCER = "https://raw.githubusercontent.com/jalapic/engsoccerdata/master/data-raw/"
+
+
+def engsoccer(S, max_age_days=7):
+    """England's four tiers since 1888, the play-offs and test matches, the FA Cup since 1871 (jalapic/engsoccerdata), weekly."""
+    for name in ("england", "englandplayoffs", "facup"):
+        p = os.path.join(S.db, f"engsoccer_{name}.csv")
+        if not os.path.exists(p) or time.time() - os.path.getmtime(p) > max_age_days * 86400:
+            data = urllib.request.urlopen(urllib.request.Request(ENGSOCCER + name + ".csv", headers={"User-Agent": "elyoxe-tifo/0.1"}), timeout=180).read()
+            open(p + ".tmp", "wb").write(data)
+            os.replace(p + ".tmp", p)
+
+
 def wikidata_ar(S, qids, http=None, max_age_days=30):
     """{qid: {"label", "aliases", "at"}}: each player's Arabic label and aliases on Wikidata (graph/aliases.py), 50 items a
     request, at most one a second, kept in db/.cache/wd_ar.json and asked again after a month."""

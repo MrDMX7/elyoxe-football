@@ -68,7 +68,7 @@ def vote_alias(reg, t, votes, src, min_n=20, share=0.9):
     return out
 
 
-def vote_teams(G, reg, src, games, min_n=5, lead=3, since=None):
+def vote_teams(G, reg, src, games, min_n=5, lead=3, since=None, any_src=False):
     """Link another source's team keys to the graph's FotMob teams by their games, never by name (db/history.py's rule):
     a game on the same date ±1 day with the same score as a FotMob match votes «home key = that match's home» and the same
     for away; a game with one side already linked only counts the FotMob matches of that team. A key and a team are linked
@@ -76,7 +76,10 @@ def vote_teams(G, reg, src, games, min_n=5, lead=3, since=None):
     hs, as_)]. Returns {key: tifo id} for the new links (written to the registry)."""
     from collections import Counter
     by = defaultdict(list)
-    for d, h, a, hs, as_ in G.c.execute("SELECT substr(date,1,10), home, away, hs, as_ FROM match WHERE src='fotmob' AND hs IS NOT NULL"):
+    # any_src: every other source's match votes too (engsoccerdata's clubs of 1888, long before FotMob, are schochastics')
+    sql = ("SELECT substr(date,1,10), home, away, hs, as_ FROM match WHERE src<>? AND hs IS NOT NULL" if any_src else
+           "SELECT substr(date,1,10), home, away, hs, as_ FROM match WHERE src='fotmob' AND hs IS NOT NULL AND ?<>''")
+    for d, h, a, hs, as_ in G.c.execute(sql, (src,)):
         by[(d, hs, as_)].append((h, a))
     votes = defaultdict(Counter)
     for d, hk, ak, hs, as_ in games:
