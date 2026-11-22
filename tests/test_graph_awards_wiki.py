@@ -270,3 +270,15 @@ def test_a_season_not_over_on_the_day_is_in_play():
     from graph.awards_wiki import season_over
     assert not season_over("2026/2027", "2026-11-22") and season_over("2025/2026", "2026-11-22")
     assert not season_over("2026", "2026-11-22") and season_over("2025", "2026-11-22")
+
+
+def test_two_men_in_one_cell_are_two_rows_a_tie():
+    # the Capocannoniere's 1898 read «Edoardo BosioNorman Victor Leaver», Kuwait's «محمد المسعودعلي حسين آرتي»: one man
+    from graph.awards_wiki import extract
+    rows = "".join(f'<tr><td>{y}</td><td>{p}</td><td>x</td><td>{g}</td></tr>' for y, p, g in (
+        ("1898", '<a rel="mw:WikiLink" href="./Edoardo_Bosio">Edoardo Bosio</a><br><a rel="mw:WikiLink" href="./Norman_Victor_Leaver">Norman Victor Leaver</a>', "2"),
+        ("1899", '<a rel="mw:WikiLink" href="./Albert_Weber">Albert Weber</a>', "2"), ("1900", '<a rel="mw:WikiLink" href="./Umberto_Malvano">Umberto Malvano</a>', "3")))
+    html = f'<html><body><section><h2>Top scorers</h2><table class="wikitable"><tr><th>Season</th><th>Player</th><th>Club</th><th>Goals</th></tr>{rows}</table></section></body></html>'
+    got = [(r["season"], r["name"], r["person"]) for t in extract(html, "Capocannoniere") for r in t["rows"]]
+    assert ("1898", "Edoardo Bosio", "Edoardo_Bosio") in got and ("1898", "Norman Victor Leaver", "Norman_Victor_Leaver") in got
+    assert not [g for g in got if "BosioNorman" in g[1] or "Bosio Norman" in g[1]]

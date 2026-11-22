@@ -58,6 +58,14 @@ comp_pages:
   536: [ar:قائمة هدافي دوري المحترفين السعودي]                     # Saudi Pro League top scorers since 1974-75
   529: [ar:الدوري الكويتي]                                         # Kuwait Premier League: «قائمة هدافي كل موسم»
   519: [ar:قائمة هدافي الدوري المصري الممتاز]                       # Egyptian Premier League top scorers since 1948-49
+# the big leagues' own top-scorer lists, every season since the first (22 Nov 2026: 1,345 seasons on the site had no top scorer)
+  47: [List of English football first tier top scorers]          # England's first tier since 1888/89 (the Premier League's id)
+  87: [Pichichi Trophy]                                          # LaLiga since 1929
+  55: [Capocannoniere]                                           # Serie A since 1898
+  53: [List of Ligue 1 top scorers]                              # Ligue 1 since 1932/33
+  54: [Torjägerkanone]                                           # Bundesliga since 1963/64
+  268: [List of Campeonato Brasileiro Série A top scorers]       # Brazil since 1959
+  45: [List of Copa Libertadores top scorers]                    # Libertadores since 1960
 # places: who gives an award, for an Arabic name shared by several awards (graph/award_names.py): words of the award page's
 # English name (matched case-insensitively, the longest first) -> what follows the Arabic name. Written by hand, never guessed.
 places:

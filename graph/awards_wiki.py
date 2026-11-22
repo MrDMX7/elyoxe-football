@@ -77,7 +77,7 @@ def _links(c):
 
 
 def grid(table):
-    """Rows of cells (text, links, is_th, redlinks) with rowspan/colspan unfolded."""
+    """Rows of cells (text, links, is_th, redlinks, lines) with rowspan/colspan unfolded; lines: the cell's text line by line"""
     rows = table.xpath("./tr|./thead/tr|./tbody/tr|./tfoot/tr")
     out, carry = [], {}
     for tr in rows:
@@ -99,7 +99,11 @@ def grid(table):
             except ValueError:
                 rs, cs = 1, 1
             links, red = _links(c)
-            val = (clean(c.text_content()), links, c.tag == "th", red)
+            for br in c.iter("br", "hr", "li", "p"):        # a break parts two names: «Edoardo Bosio<hr>Norman Victor Leaver»
+                br.tail = " " + (br.tail or "")
+            raw = c.text_content()
+            lines = [x for x in (clean(y) for y in raw.split(" ")) if x]
+            val = (clean(raw.replace(" ", " ")), links, c.tag == "th", red, lines)
             for _ in range(min(cs, 30)):
                 row.append(val)
                 if rs > 1:
@@ -228,6 +232,14 @@ def _rows(body, page, section, yi, pi, ti, vi, ki, kind, ci=None, ri=None):
             person = next((l for l in cell[1] if _same(l, m.group(1))), None)
             club = next((l for l in cell[1] if _same(l, m.group(2))), None) or next((l for l in cell[1] if l != person), None)
             rows.append({"season": season, "rank": rk or 1, "person": person, "name": m.group(1), "team": club, "value": m.group(3)})
+            continue
+        lines = cell[4] if len(cell) > 4 else []
+        if len(lines) > 1 and len(cell[1]) >= len(lines) and ti is not None:   # two men in one cell, a club column apart: a tie
+            vals = (r[vi][4] if vi is not None and len(r[vi]) > 4 else []) or []
+            for i, ln in enumerate(lines):
+                rows.append({"season": season, "rank": rk or 1, "person": next((l for l in cell[1] if _same(l, ln)), None), "name": ln,
+                             "team": (r[ti][1][i] if r[ti][1] and i < len(r[ti][1]) else (r[ti][1][0] if r[ti][1] else None)),
+                             "value": (vals[i] if len(vals) == len(lines) else ((r[vi][0] or None) if vi is not None else None))})
             continue
         rows.append({"season": season, "rank": rk or 1, "person": cell[1][0] if cell[1] else None,
                      "name": (cell[3][0] if cell[3] and not cell[1] else cell[0]),
