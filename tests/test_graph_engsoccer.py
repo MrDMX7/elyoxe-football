@@ -94,3 +94,33 @@ def test_a_club_named_otherwise_by_fotmob_is_found_by_its_schochastics_key(tmp_p
     W(db / "engsoccer_england.csv", ENG, [["1950-01-01", 1949, "Hull City", "Liverpool", "1-1", 1, 1, "2", 2, 2, 0, "D"]])
     engsoccer.load(G, reg, Sources(str(tmp_path), s3=False))
     assert reg.get("team", "eng", "Hull City") == hull
+
+
+def test_the_league_cup_too(tmp_path):
+    # Gemini's 218 Liverpool–Manchester United meetings count the League Cup (1983 and 2003 finals and three ties)
+    G, reg, liv, mu = world(tmp_path)
+    W(tmp_path / "db" / ".cache" / "engsoccer_leaguecup.csv", ["Date", "Season", "home", "visitor", "FT", "hgoal", "vgoal", "round", "tie", "leg", "aet", "pens", "Venue", "attendance", "northsouth"],
+      [["1983-03-26", 1982, "Liverpool", "Manchester United", "2-1", 2, 1, "final", "initial", 0, "yes", "NA", "Wembley", "NA", "NA"]])
+    engsoccer.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("""select x.source_id, m.round, m.hs, m.as_ from match m join edition e on e.eid=m.eid join xref x on x.type='competition'
+                          and x.tifo_id=e.cid and x.source='fotmob' where substr(m.date,1,10)='1983-03-26'""").fetchone() == ("133", "final", 2, 1)
+
+
+def test_the_charity_and_community_shield_from_each_editions_article(tmp_path):
+    # Gemini's 218 count the five Shields (1965, 1977, 1983, 1990, 2001): no CSV holds them, each edition's article does
+    from graph.fetch import shield_row
+    raw = ("{{Infobox football match\n| title = 1965 FA Charity Shield\n| team1 = [[Manchester United F.C.|Manchester United]]\n"
+           "| team1score = 2\n| team2 = [[Liverpool F.C.|Liverpool]]\n| team2score = 2\n| date = 14 August 1965\n}}")
+    assert shield_row(raw) == ["1965-08-14", "Manchester United", "Liverpool", 2, 2]
+    assert shield_row("|date=12 August 2001\n|team1=[[Liverpool F.C.|Liverpool]]\n|score=2–1\n|team2=[[Manchester United F.C.|Manchester United]]") == \
+        ["2001-08-12", "Liverpool", "Manchester United", 2, 1]
+    assert shield_row("| date = 5 August 2007\n| team1 = Chelsea\n| team2 = Manchester United\n| score = 1–1\n| penaltyscore = 0–3") == \
+        ["2007-08-05", "Chelsea", "Manchester United", 1, 1]
+    assert shield_row("| team1 = [[Liverpool F.C.|Liverpool]]\n| team1score = 1\n| team2 = Manchester City\n| team2score = 1\n"
+                      "| date = {{Start date|2019|8|4|df=y}}")[0] == "2019-08-04"
+    G, reg, liv, mu = world(tmp_path)
+    import json
+    (tmp_path / "db" / ".cache" / "shield.json").write_text(json.dumps({"1965 FA Charity Shield": ["1965-08-14", "Manchester United", "Liverpool", 2, 2]}))
+    engsoccer.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert G.c.execute("""select x.source_id, e.season, m.home from match m join edition e on e.eid=m.eid join xref x on x.type='competition'
+                          and x.tifo_id=e.cid and x.source='fotmob' where substr(m.date,1,10)='1965-08-14'""").fetchone() == ("247", "1965/1966", mu)

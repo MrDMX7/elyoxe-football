@@ -1,5 +1,5 @@
 """Every English league game of the four tiers since 1888, the test matches of 1893–98 and the FA Cup since 1871
-(jalapic/engsoccerdata, graph/fetch.engsoccer). A club is linked to ours by its games (the same date and score, any
+and the League Cup since 1960 (jalapic/engsoccerdata, graph/fetch.engsoccer). A club is linked to ours by its games (the same date and score, any
 source: the clubs of 1888 are schochastics'), a game we hold already (schochastics' top flight) is linked, never added
 twice. Liverpool–Manchester United held 182 league meetings for the record's 186: the Second Division of 1895/96 and
 1904/05 and the 1894 test match were in no source (22 Nov 2026)."""
@@ -7,10 +7,11 @@ import csv, os
 from graph.link import MatchIndex, edition_for, twin, vote_teams
 
 TIERS = {"1": 47, "2": 48, "3": 108, "4": 109}           # FotMob: Premier League, Championship, League One, League Two
-FA_CUP = 132
+FA_CUP, LEAGUE_CUP, SHIELD = 132, 133, 247
 COMPS = {47: ("Premier League", "الدوري الإنجليزي الممتاز", "league"), 48: ("Championship", "دوري البطولة الإنجليزية", "league"),
          108: ("League One", "دوري الدرجة الأولى الإنجليزي", "league"), 109: ("League Two", "دوري الدرجة الثانية الإنجليزي", "league"),
-         FA_CUP: ("FA Cup", "كأس الاتحاد الإنجليزي", "cup")}
+         FA_CUP: ("FA Cup", "كأس الاتحاد الإنجليزي", "cup"), LEAGUE_CUP: ("EFL Cup", "كأس الرابطة الإنجليزية", "cup"),
+         SHIELD: ("Community Shield", "الدرع الخيرية الإنجليزية", "cup")}
 
 
 def _rows(S):
@@ -42,6 +43,19 @@ def _rows(S):
         g = goals(r)
         if g and r.get("Date", "NA") != "NA" and r.get("nonmatch", "NA") in ("", "NA"):
             out.append((r["Date"][:10], int(r["Season"]), r["home"], r["visitor"], *g, FA_CUP, r.get("round") or None))
+    import json
+    try:                                           # the Charity/Community Shield (graph/fetch.community_shield): the season it opens
+        shield = json.load(open(os.path.join(S.db, "shield.json"), encoding="utf-8"))
+    except (OSError, ValueError):
+        shield = {}
+    for row in shield.values():
+        if row:
+            d, t1, t2, hs, as_ = row
+            out.append((d, int(d[:4]), t1, t2, hs, as_, SHIELD, "final"))
+    for r in read("leaguecup"):                    # since 1960/61
+        g = goals(r)
+        if g and r.get("Date", "NA") != "NA":
+            out.append((r["Date"][:10], int(r["Season"]), r["home"], r["visitor"], *g, LEAGUE_CUP, r.get("round") or None))
     return out
 
 

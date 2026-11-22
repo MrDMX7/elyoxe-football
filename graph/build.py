@@ -30,7 +30,7 @@ def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
     db_path = os.path.join(out_dir, "tifo.db")
     G = Graph(db_path)
     if fetch:
-        for f in (fetch_mod().martj42, fetch_mod().fjelstul, fetch_mod().engsoccer, fetch_mod().depth):
+        for f in (fetch_mod().martj42, fetch_mod().fjelstul, fetch_mod().engsoccer, fetch_mod().community_shield, fetch_mod().depth):
             try:
                 f(S)
             except Exception as e:

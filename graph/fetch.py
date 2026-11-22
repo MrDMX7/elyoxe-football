@@ -1,5 +1,6 @@
 """The graph's one network step, before the loaders: martj42's internationals (CC0), weekly."""
-import os, time, urllib.parse, urllib.request
+import os, re, time, urllib.parse, urllib.request
+from datetime import datetime
 
 MARTJ42 = "https://raw.githubusercontent.com/martj42/international_results/master/results.csv"
 
@@ -32,13 +33,74 @@ ENGSOCCER = "https://raw.githubusercontent.com/jalapic/engsoccerdata/master/data
 
 
 def engsoccer(S, max_age_days=7):
-    """England's four tiers since 1888, the play-offs and test matches, the FA Cup since 1871 (jalapic/engsoccerdata), weekly."""
-    for name in ("england", "englandplayoffs", "facup"):
+    """England's four tiers since 1888, the play-offs and test matches, the FA Cup since 1871, the League Cup since 1960 (jalapic/engsoccerdata), weekly."""
+    for name in ("england", "englandplayoffs", "facup", "leaguecup"):
         p = os.path.join(S.db, f"engsoccer_{name}.csv")
         if not os.path.exists(p) or time.time() - os.path.getmtime(p) > max_age_days * 86400:
             data = urllib.request.urlopen(urllib.request.Request(ENGSOCCER + name + ".csv", headers={"User-Agent": "elyoxe-tifo/0.1"}), timeout=180).read()
             open(p + ".tmp", "wb").write(data)
             os.replace(p + ".tmp", p)
+
+
+def _wiki_name(v):
+    """«[[Manchester United F.C.|Manchester United]]» -> «Manchester United»"""
+    m = re.search(r"\[\[(?:[^|\]]*\|)?([^\]]+)\]\]", v or "")
+    return (m.group(1) if m else re.sub(r"<[^>]+>|\{\{[^}]*\}\}", "", v or "")).strip()
+
+
+def shield_row(raw):
+    """[date, team1, team2, team1 goals, team2 goals] from a Charity/Community Shield edition's infobox (the shoot-out apart)"""
+    f = {}
+    for k, v in re.findall(r"^\s*\|\s*(team1|team2|team1score|team2score|score|date)\s*=\s*(.*?)\s*$", raw, re.M):
+        f.setdefault(k, v)
+    sd = re.search(r"\{\{\s*start date\s*\|\s*(\d{4})\s*\|\s*(\d{1,2})\s*\|\s*(\d{1,2})", f.get("date", ""), re.I)   # {{Start date|2019|8|4}}
+    try:
+        d = (f"{sd.group(1)}-{int(sd.group(2)):02d}-{int(sd.group(3)):02d}" if sd else
+             datetime.strptime(re.sub(r"<[^>]+>|\{\{[^}]*\}\}", "", f.get("date", "")).strip(), "%d %B %Y").date().isoformat())
+    except ValueError:
+        return None
+    if f.get("team1score", "").strip().isdigit() and f.get("team2score", "").strip().isdigit():
+        hs, as_ = int(f["team1score"]), int(f["team2score"])
+    else:
+        m = re.match(r"\s*(\d+)\s*[–\-]\s*(\d+)", f.get("score", ""))
+        if not m:
+            return None
+        hs, as_ = int(m.group(1)), int(m.group(2))
+    t1, t2 = _wiki_name(f.get("team1")), _wiki_name(f.get("team2"))
+    return [d, t1, t2, hs, as_] if t1 and t2 else None
+
+
+SHIELD_LIST = "List of FA Community Shield matches"
+
+
+def community_shield(S, max_age_days=7):
+    """{edition article: shield_row}: the Charity/Community Shield since 1908, the list's links read once each (only new
+    editions on later runs), kept in db/.cache/shield.json; engsoccerdata has no Shield"""
+    import json as _j
+    from graph.awards_fetch import HTTP
+    p = os.path.join(S.db, "shield.json")
+    try:
+        have = _j.load(open(p, encoding="utf-8"))
+    except (OSError, ValueError):
+        have = {}
+    if os.path.exists(p) and time.time() - os.path.getmtime(p) < max_age_days * 86400:
+        return have
+    http = HTTP()
+    raw = lambda t: http.get("https://en.wikipedia.org/w/index.php?" + urllib.parse.urlencode({"title": t, "action": "raw"}))
+    lst = raw(SHIELD_LIST)
+    lst = lst.decode("utf-8", "replace") if isinstance(lst, bytes) else lst
+    for t in sorted(set(re.findall(r"\[\[(\d{4} FA (?:Charity|Community) Shield)", lst))):
+        if t in have and have[t]:
+            continue
+        try:
+            body = raw(t)
+            have[t] = shield_row(body.decode("utf-8", "replace") if isinstance(body, bytes) else body)
+        except Exception as e:
+            print(f"shield {t}: {e}", flush=True)
+    with open(p + ".tmp", "w", encoding="utf-8", newline="\n") as f:
+        _j.dump(have, f, ensure_ascii=False)
+    os.replace(p + ".tmp", p)
+    return have
 
 
 def wikidata_ar(S, qids, http=None, max_age_days=30):
