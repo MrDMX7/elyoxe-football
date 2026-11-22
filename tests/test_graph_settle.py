@@ -176,3 +176,10 @@ def test_a_club_in_two_transliterations_is_one_club():
     from graph.load.settle import same_club
     assert same_club("fc istiklol", "istiqlol dushanbe")
     assert not same_club("independiente j teran", "independiente del valle")
+
+
+def test_one_man_with_his_words_turned_or_by_his_one_name():
+    # Kuwait 1999/2000 «john malek» and 2001/02 «malek john»; 2024/25 the scorers' «Vitor» is Wikipedia's «Vitor Vieira»
+    from graph.load.settle import _same_man
+    assert _same_man("malek john", "john malek") and _same_man("vitor", "vitor vieira") and _same_man("vitor", "vitor da silva vieira")
+    assert not _same_man("ali", "ali mabkhout") and not _same_man("vitor", "joao vieira") and not _same_man("ahmed ali", "ali hassan")

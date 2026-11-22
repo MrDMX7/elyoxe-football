@@ -272,7 +272,7 @@ def test_a_names_or_sponsorship_table_gives_no_people(tmp_path):
 def test_a_name_that_is_a_competition_is_not_a_person():
     for n in ("Premier League", "The FA Cup", "Fuchs Premier League", "First Division League", "World Cup volunteers",
               "The AXA sponsored FA Cup (1998–1999)The FA Cup sponsored by AXA (1999–2002)", "Liga MX", "Asian Cup Trophy",
-              "AFC Championship"):
+              "AFC Championship", "Various", "various players", "TBD", "N/A", "Not awarded", "—"):    # Egypt 2026/27 «Various»: not a man
         assert awards.not_a_person(n), n
     for n in ("Cupido", "Calixte Ligue", "Junior Ligue", "Leaguer Smith", "Cupper", "Hussein Saeed", "", None):
         assert not awards.not_a_person(n), n
@@ -353,3 +353,13 @@ def test_a_league_tables_first_that_is_the_champion_under_another_record_of_the_
     # Qatar 2015/16: the champion «Al-Rayyan» (365Scores' record), the table's «Al-Rayyan SC» (its Wikidata item's): one club
     got, kw, qd = _kuwait_named(tmp_path)
     assert got["runner_up"] == qd and got["champion"] != kw
+
+
+def test_an_arabic_article_without_an_english_label_names_its_man_without_the_link_prefix(tmp_path):
+    # Kuwait 1972/73 «علي الملا»: his item has no English label, and his name was «ar:علي الملا» (folded «ar»: a false conflict)
+    html = open(os.path.join(os.path.dirname(__file__), "fixtures", "awards_ar_saudi_scorers.html"), "rb").read()
+    items = {"ar:محمد_العبدلي": item("Q70", None, None, "1950-01-01")}
+    S = mk(tmp_path, {"ar:قائمة هدافي دوري المحترفين السعودي": html}, items)
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    awards.load(G, reg, S)
+    assert G.c.execute("select name, name_ar from player where pid=?", (reg.get("player", "wikidata", "Q70"),)).fetchone() == ("محمد العبدلي", "محمد العبدلي")

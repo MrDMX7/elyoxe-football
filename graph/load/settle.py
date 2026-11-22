@@ -43,13 +43,16 @@ def _tr(t):
 def _same_man(a, b):
     """One man's two spellings: the same words; or the same number of words one letter apart (6+ letters); or every word of
     the shorter name (2+ words) starting a different word of the longer («bienve maranon» in «bienvenido maranon morejon»);
-    the words compared in one transliteration («tareq al saeed», «tarek el said»)."""
+    the words compared in one transliteration («tareq al saeed», «tarek el said»); the same words turned; or his one name of 5+
+    letters, the first or the last of the other («vitor», «vitor vieira»)."""
     a, b = [_tr(t) for t in _toks(a)], [_tr(t) for t in _toks(b)]
     if not a or not b:
         return False
-    if a == b:
+    if a == b or (len(a) > 1 and sorted(a) == sorted(b)):     # «malek john», «john malek»
         return True
     s, l = sorted((a, b), key=len)
+    if len(s) == 1 and len(s[0]) >= 5 and s[0] in (l[0], l[-1]):  # his one name, 5+ letters: «vitor», «vitor vieira» («ali» says nothing)
+        return True
     if len(s) == len(l):
         x, y = "".join(s), "".join(l)
         return min(len(x), len(y)) >= 6 and _one_typo(x, y) and s[-1][0] == l[-1][0]

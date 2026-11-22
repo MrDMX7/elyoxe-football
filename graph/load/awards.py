@@ -53,8 +53,11 @@ NOT_A_CLUB = re.compile(r"(^|\s)(league|cup|championships?|super\s?cup|trophy)(\
 COMPETITION_WORD = re.compile(r"\b(leagues?|cups?|division|liga|championships?|trophy|volunteers|sponsored)\b", re.I)
 
 
+PLACEHOLDER = re.compile(r"^\W*(various( players)?|tbd|tba|n/?a|not awarded|none|unknown|vacant)?\W*$", re.I)     # a cell with no man in it
+
+
 def not_a_person(name):
-    return bool(name and COMPETITION_WORD.search(name))
+    return bool(name and (COMPETITION_WORD.search(name) or PLACEHOLDER.match(name)))
 
 
 NOISE = re.compile(r"\b(club|fc|sc|cf|ac|cd|sd|afc|the|\d+)\b")
@@ -115,7 +118,9 @@ def load(G, reg, S):
                     reg.link("player", "tm", str(f["tm_player"]), pid)
             if ("p", pid) not in done:
                 done.add(("p", pid))
-                G.put("player", {"pid": pid, "name": f.get("en") or (title or "").replace("_", " "), "name_ar": f.get("ar"), "born": f.get("born")}, "wikidata")
+                t = (title or "").replace("_", " ")
+                t_ar = t[3:] if t.startswith("ar:") else None            # an Arabic article's title is his Arabic name, not «ar:…»
+                G.put("player", {"pid": pid, "name": f.get("en") or t_ar or t, "name_ar": f.get("ar") or t_ar, "born": f.get("born")}, "wikidata")
                 G.xref("player", pid, "wikidata", f["qid"], "wiki-link")
             return pid, f.get("born")
         if title and f.get("qid"):
