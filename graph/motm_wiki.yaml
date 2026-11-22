@@ -4,9 +4,9 @@
 tournaments:
   - {groups: "{y} FIFA World Cup Group {g}", letters: ABCDEFGH, stages: ["{y} FIFA World Cup knockout stage"],
      years: [2002, 2006, 2010, 2014, 2018, 2022]}
-  - {groups: "UEFA Euro {y} Group {g}", letters: ABCD, stages: ["UEFA Euro {y} knockout stage"], years: [2008, 2012]}
+  - {groups: "UEFA Euro {y} Group {g}", letters: ABCD, stages: ["UEFA Euro {y} knockout stage"], years: [1996, 2000, 2004, 2008, 2012]}
   - {groups: "UEFA Euro {y} Group {g}", letters: ABCDEF, stages: ["UEFA Euro {y} knockout stage"], years: [2016, 2020, 2024]}
-  - {groups: "{y} AFC Asian Cup Group {g}", letters: ABCD, stages: ["{y} AFC Asian Cup knockout stage"], years: [2011, 2015]}
+  - {groups: "{y} AFC Asian Cup Group {g}", letters: ABCD, stages: ["{y} AFC Asian Cup knockout stage"], years: [2007, 2011, 2015]}
   - {groups: "{y} AFC Asian Cup Group {g}", letters: ABCDEF, stages: ["{y} AFC Asian Cup knockout stage"], years: [2019, 2023]}
   - {groups: "{y} Africa Cup of Nations Group {g}", letters: ABCD, stages: ["{y} Africa Cup of Nations knockout stage"], years: [2010, 2012, 2013, 2015, 2017]}
   - {groups: "{y} Africa Cup of Nations Group {g}", letters: ABCDEF, stages: ["{y} Africa Cup of Nations knockout stage"], years: [2019, 2021, 2023]}
