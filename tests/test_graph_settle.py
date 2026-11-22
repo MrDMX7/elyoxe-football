@@ -183,3 +183,20 @@ def test_one_man_with_his_words_turned_or_by_his_one_name():
     from graph.load.settle import _same_man
     assert _same_man("malek john", "john malek") and _same_man("vitor", "vitor vieira") and _same_man("vitor", "vitor da silva vieira")
     assert not _same_man("ali", "ali mabkhout") and not _same_man("vitor", "joao vieira") and not _same_man("ahmed ali", "ali hassan")
+
+
+def test_fotmobs_score_its_own_goals_add_up_to_stands_against_a_summary_source(tmp_path):
+    # Iraq 2022: Al-Qasim 3-1 Naft Al-Basra, FotMob's three and one goals; schochastics 3-2
+    G, reg = g(tmp_path)
+    G.put("match", {"mid": 1, "date": "2022-01-01", "home": 1, "away": 2, "hs": 3, "as_": 1}, "fotmob")
+    G.many("event", [{"mid": 1, "seq": i, "minute": 10 + i, "type": t, "side": s} for i, (t, s) in
+                     enumerate((("goal", "h"), ("penalty_goal", "h"), ("goal", "h"), ("goal", "a")))], "fotmob")
+    G.conflict("match", 1, "score", "3-1", "fotmob", "3-2", "sch")
+    G.put("match", {"mid": 2, "date": "2022-01-02", "home": 1, "away": 2, "hs": 2, "as_": 0}, "fotmob")     # one goal event of two
+    G.many("event", [{"mid": 2, "seq": 0, "minute": 5, "type": "goal", "side": "h"}], "fotmob")
+    G.conflict("match", 2, "score", "2-0", "fotmob", "3-0", "sch")
+    G.put("match", {"mid": 3, "date": "2022-01-03", "home": 1, "away": 2, "hs": 0, "as_": 0}, "fotmob")     # no events: no evidence
+    G.conflict("match", 3, "score", "0-0", "fotmob", "2-2", "sch")
+    out = settle.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert [r[0] for r in G.c.execute("select tifo_id from conflict order by tifo_id")] == [2, 3]
+    assert out["fotmob_goals"] == 1

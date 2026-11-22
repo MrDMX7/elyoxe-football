@@ -127,7 +127,7 @@ GROUP_ERAS = {"Ligue 2": "1993/1994"}
 
 
 def load(G, reg, S):
-    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0, "no_such_team": 0, "extra_goals": 0, "same_club": 0, "group_era": 0}
+    n = {"shootout": 0, "swapped": 0, "birth_year_only": 0, "same_names": 0, "no_such_team": 0, "extra_goals": 0, "same_club": 0, "group_era": 0, "fotmob_goals": 0}
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     groups = {}
     for rowid, mid, field, kept, ksrc, other, osrc in q("SELECT rowid, tifo_id, field, kept, kept_src, other, other_src FROM conflict "
@@ -217,4 +217,13 @@ def load(G, reg, S):
                                        SELECT min(rowid) FROM event WHERE type IN ('goal','penalty_goal','own_goal') AND pid IS NOT NULL
                                        GROUP BY mid, minute, side, pid)""").rowcount
     G.c.execute("DROP TABLE over_m")
+    # FotMob's score its own goal events add up to, side by side (an own goal is filed under the side it counts for), against a
+    # source with a score only (schochastics, Transfermarkt, RSSSF): FotMob's record holds together; a goalless one proves nothing
+    for rowid, mid in q("SELECT x.rowid, x.tifo_id FROM conflict x WHERE x.type='match' AND x.field='score' AND x.kept_src='fotmob'"):
+        r = q("""SELECT m.hs, m.as_, sum(e.type IN ('goal','penalty_goal','own_goal') AND e.side='h'),
+                        sum(e.type IN ('goal','penalty_goal','own_goal') AND e.side='a')
+                 FROM match m LEFT JOIN event e ON e.mid=m.mid WHERE m.mid=? GROUP BY m.mid""", (mid,))
+        if r and r[0][0] is not None and (r[0][0] or 0) + (r[0][1] or 0) > 0 and (r[0][2], r[0][3]) == (r[0][0], r[0][1]):
+            G.c.execute("DELETE FROM conflict WHERE rowid=?", (rowid,))
+            n["fotmob_goals"] += 1
     return n
