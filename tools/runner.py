@@ -187,7 +187,7 @@ def job_site(log):
     # the shells the fast «Article pages» step fills (news/articles/pages.py): this build's own page() for an article and for
     # /news/, so a page written between builds looks exactly like the build's
     try:
-        sh = {k: (out / "_shells" / f"{k}.html").read_text(encoding="utf-8") for k in ("article", "news")}
+        sh = {k: (out / "_shells" / f"{k}.html").read_text(encoding="utf-8") for k in ("article", "news", "archive")}
         STORE.put_state("site/shells.json", dict(sh, built=datetime.now(timezone.utc).isoformat(timespec="seconds")))
     except Exception as e:
         log.w(f"shells not saved: {e}")

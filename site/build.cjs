@@ -958,6 +958,10 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   const ART = await require("./lib/articles.cjs").render({ get, pool, write, page, esc, SITE, OUT, fs, path, names:require("./lib/articles.cjs").makeNames(S_TEAMS, PNAMES) });
   // the shell the fast «Article pages» step fills between builds (news/articles/pages.py, lib/render_news.cjs): this build's own
   // page() with markers, written through write() so it gets the same asset versions; never published (tools/runner.py FAST_OWNED)
+  // the archive job's shell (site/archive/build.cjs, docs/superpowers/specs/2026-11-22-tifo-archive-static-design.md): every season,
+  // archive match and person page wears this build's own head, nav, footer and hashed assets; never published (FAST_OWNED)
+  write("_shells/archive.html", page({ v5:{ nav:{ back:"__BACK__", backLabel:"__BACKL__", title:"__NAVT__", trail:"" }, body:"__BODY__", tab:"more", sheets:"", data:{} },
+    path:"/__PATH__/", page:"ref", title:"__TITLE__", desc:"__DESC__", ld:{ __LD__:1 } }));
   write("_shells/article.html", page({ path:"/news/__ID__/", page:"ref", title:"__TITLE__", desc:"__DESC__", ogUrl:"__OGURL__", ogW:1200, ogH:675,
     ld:{ __LD__:1 }, head:require("./lib/articles.cjs").HEAD, body:"__BODY__" }));
   urls.push(...ART.urls);
