@@ -474,6 +474,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   // the season archive and every coach (Tifo graph phase 7): v1/editions/<competition>.json and v1/coaches/{coaches,teams}.json from graph/publish.py
   const HP = require("./lib/history_pages.cjs"), GCO = (await get("coaches/coaches.json", 2)) || {}, GCT = (await get("coaches/teams.json", 2)) || {}, EDS = new Map();
   (await pool(comps, 8, c => get(`editions/${c.id}.json`, 1))).forEach((d, i) => { if (d && (d.seasons || []).length) EDS.set(+comps[i].id, d); });
+  for (const c of comps) if (!EDS.has(+c.id) && [...MSEA.keys()].some(k => k.startsWith(c.id + "|"))) EDS.set(+c.id, { seasons:[] });   // matches, no honours yet
   const coachAr2 = kid => { const c = GCO[kid]; return (c && c.fotmob && COACH_AR[c.fotmob] && COACH_AR[c.fotmob].ar) || null; };
   // a coach FotMob knows keeps /coach/<FotMob id>/, the rest get /coach/k<Tifo id>/; a page only with 30 matches or a bench at one of our clubs
   const GCP = new Map(Object.entries(GCO).filter(([, c]) => HP.coachPageable(c, { team:id => teamIds.has(+id) })).map(([k, c]) => [k, c.fotmob ? `/coach/${c.fotmob}/` : `/coach/k${k}/`]));
@@ -1327,15 +1328,16 @@ ${items}
       write(`t/${t}/h2h/index.html`, page({ v5:{ nav:{ back:`/t/${t}/`, backLabel:esc(tn), title:"ضد كل الفرق", trail:"" }, body:`<div class="lt"><h1>${esc(tn)} ضد كل الفرق</h1><p>مواجهات ${esc(tn)} مع كل فريق لعب معاه ثلاث مرات أو أكثر، في كل البطولات.</p></div>` + H2A.teamBody(t, rows, knm, { pair:pairHref }) + U.foot(), tab:"more", sheets:"", data:{} },
         path:pth, page:"ref", title:`${tn} ضد كل الفرق: سجل المواجهات في كل البطولات | تيفو`, desc:`سجل ${tn} ضد كل خصومه: المواجهات والفوز والتعادل والخسارة في الدوري والكؤوس وآسيا.`, ld:bcLd([[tn, `/t/${t}/`], ["ضد كل الفرق", pth]]) }));
       urls.push(pth); } }
-  for (const c of comps){ const ed = EDS.get(+c.id); if (!ed) continue;
+  for (const c of comps){ const ed0 = EDS.get(+c.id); if (!ed0) continue;
+    const ed = Object.assign({}, ed0, { seasons:SV.seasons(ed0, MSEA, c.id) }), msOf = s => MSEA.get(`${c.id}|${HP.slug(s.season)}`) || [];   // a season with matches only (Euro 1976) too
     const sNav = (title, back, label) => ({ back, backLabel:label, title, trail:"" }), ss = ed.seasons, arch = `/c/${c.key}/seasons/`, okA = ss.length >= 3;
-    write(arch.slice(1) + "index.html", page({ v5:{ nav:sNav("كل المواسم", `/c/${c.key}/`, esc(c.name_ar)), body:`<div class="lt"><h1>${esc(c.name_ar)}: كل المواسم</h1><p>البطل والوصيف والهداف في كل موسم، من <span class="num">${esc(ss[ss.length - 1].season)}</span> لين <span class="num">${esc(ss[0].season)}</span>.</p></div>` + HP.seasonsBody(ed, c, hpo) + U.foot(), tab:"more", sheets:"", data:{} },
+    write(arch.slice(1) + "index.html", page({ v5:{ nav:sNav("كل المواسم", `/c/${c.key}/`, esc(c.name_ar)), body:`<div class="lt"><h1>${esc(c.name_ar)}: كل المواسم</h1><p>البطل والوصيف والهداف في كل موسم، من <span class="num">${esc(ss[ss.length - 1].season)}</span> لين <span class="num">${esc(ss[0].season)}</span>.</p></div>` + HP.seasonsBody(ed, c, Object.assign({}, hpo, { page:s => HP.seasonRich(s) || msOf(s).length > 0 })) + U.foot(), tab:"more", sheets:"", data:{} },
       path:arch, page:"ref", noindex:!okA, title:`أبطال ${c.name_ar} عبر التاريخ: كل المواسم والهدافين | تيفو`, desc:`كل مواسم ${c.name_ar}: البطل والوصيف والهداف في ${ss.length} موسم، من ${ss[ss.length - 1].season} لين ${ss[0].season}.`,
       ld:bcLd([[c.name_ar, `/c/${c.key}/`], ["كل المواسم", arch]]) }));
     if (okA) urls.push(arch);
     const mNow = MOI && MOI.comps && MOI.comps[c.id];   // the season in play (a split season, since 1 July) takes the whistle-fresh man of the match list
     if (mNow && /\//.test(ss[0].season)) ss[0].motm = (mNow.season || []).slice(0, 5);
-    for (const s of ss.filter(HP.seasonRich)){ const sp = `/c/${c.key}/s/${HP.slug(s.season)}/`, okS = !!((s.table || []).length || (s.top_scorers || []).length), chN = s.champion && (hpo.teamName(s.champion.fotmob) || s.champion.name);
+    for (const s of ss.filter(s => HP.seasonRich(s) || msOf(s).length)){ const sp = `/c/${c.key}/s/${HP.slug(s.season)}/`, okS = !!((s.table || []).length || (s.top_scorers || []).length), chN = s.champion && (hpo.teamName(s.champion.fotmob) || s.champion.name);
       // the season in the current competition page's design (lib/season_view.cjs -> src/v5/pages.js P.comp, archive mode): its table,
       // its matches round by round (or month by month), its scorers, and its honours in «التاريخ»; the chips walk the seasons
       const nb = SV.around(ss, s.season), sLink = (x, t) => `<a class="chip" href="/c/${c.key}/s/${HP.slug(x)}/">${t} <span class="num">${esc(x)}</span></a>`;

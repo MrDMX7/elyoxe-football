@@ -89,3 +89,10 @@ test("a tournament's knockout rounds named as the current rounds: one chip each,
   const U = require("../src/v5/ui.js"), R = U.rounds(V.fixtures(ms));
   assert.deepEqual(R.order, ["Group A", "1/16", "1/8", "1/4", "1/2", "3rd place", "Final"]);
 });
+
+test("a season the archive holds matches for but no honours still gets its page and its row", () => {
+  const ed = { seasons: [{ season: "1980" }, { season: "1972" }] };
+  const msea = new Map([["50|1976", [{ id: "x", season: "1976", date: "1976-06-20", h: [1, "a"], a: [2, "b"], s: [2, 2] }]], ["50|1980", []], ["47|1976", [{ season: "1976" }]]]);
+  assert.deepEqual(V.seasons(ed, msea, 50).map(s => s.season), ["1980", "1976", "1972"]);
+  assert.deepEqual(V.seasons(null, msea, 50).map(s => s.season), ["1976"]);
+});

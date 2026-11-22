@@ -31,7 +31,7 @@ function seasonsBody(ed, comp, o) {
   o = o || {};
   const rows = (ed.seasons || []).map(s => {
     const top = (s.top_scorers || []).filter(p => p.rank === 1);
-    const season = seasonRich(s) ? `<a href="/c/${comp.key}/s/${slug(s.season)}/">${num(s.season)}</a>` : num(s.season);
+    const season = (o.page || seasonRich)(s) ? `<a href="/c/${comp.key}/s/${slug(s.season)}/">${num(s.season)}</a>` : num(s.season);   // o.page: a season with its page
     const who = s.note && !s.champion ? `<td colspan="2" class="muted">${esc(s.note)}</td>` : `<td>${teamL(s.champion, o)}</td><td>${teamL(s.runner_up, o)}</td>`;
     return `<tr><td>${season}</td>${who}<td>${top.map(p => `${playerL(p, o)} ${p.value ? `<span class="muted small">(${num(p.value)})</span>` : ""}`).join("، ")}</td></tr>`;
   }).join("");

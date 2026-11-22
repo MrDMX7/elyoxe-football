@@ -59,4 +59,17 @@ function around(seasons, season) {
   return { newer: i > 0 ? seasons[i - 1].season : null, older: i >= 0 && i < seasons.length - 1 ? seasons[i + 1].season : null };
 }
 
-module.exports = { standings, fixtures, stats, around, MONTHS };
+// a competition's seasons: the archive's honours (v1/editions) and every season its match files hold (Euro 1976 had matches
+// and no honours row), newest first; a season with matches only is {season, matches}
+function seasons(ed, msea, cid) {
+  const out = ((ed && ed.seasons) || []).slice(), have = new Set(out.map(s => s.season));
+  for (const [k, ms] of msea) {
+    if (!k.startsWith(cid + "|") || !(ms || []).length) continue;
+    const label = ms[0].season || k.slice(k.indexOf("|") + 1).replace(/-/g, "/");
+    if (!have.has(label)) { have.add(label); out.push({ season: label, matches: ms.length }); }
+  }
+  const y = s => +String(s.season).slice(0, 4) || 0;
+  return out.sort((a, b) => y(b) - y(a) || String(b.season).localeCompare(String(a.season)));
+}
+
+module.exports = { standings, fixtures, stats, around, seasons, MONTHS };
