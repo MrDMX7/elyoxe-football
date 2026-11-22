@@ -81,3 +81,28 @@ test("an old player's matches in the archive: those he played or scored in, his 
   assert.match(h, /href="\/m\/k2\/"/);
   assert.equal(V.playerBlock(undefined), "");
 });
+
+test("an upcoming match's meetings from its home side's every-opponent file (h2h-team): the record, the latest first", () => {
+  // Liverpool–Manchester United, 22 Nov 2026: «ما عندنا مواجهات سابقة»; the archive holds 186 meetings
+  const file = { team: 8650, name: "ليفربول", opp: { "10260": { name: "مانشستر يونايتد", n: 3, w: [1, 1, 1], goals: [4, 4], matches: [
+    ["2026-05-03", "الدوري الإنجليزي الممتاز", "2025/2026", "10260", 3, 2, "8650", "4813722"],
+    ["2025-10-19", "الدوري الإنجليزي الممتاز", "2025/2026", "8650", 1, 1, "10260", "4813449"],
+    ["1895-10-12", "الدوري الإنجليزي الممتاز", "1895/1896", "8650", 0, 0, "10260", "k77"]] } } };
+  const md = { id: 4900001, status: "scheduled", kickoff_utc: "2026-11-22T16:30:00Z", home: { id: 8650, name_ar: "ليفربول" }, away: { id: 10260, name_ar: "مانشستر يونايتد" } };
+  const h = V.fromTeamFile(file, md);
+  assert.deepEqual(h.summary, { home_wins: 1, draws: 1, away_wins: 1 });
+  assert.equal(h.total, 3);
+  assert.deepEqual(h.matches.map(m => [m.id, m.home.id, m.score.home]), [["4813722", 10260, 3], ["4813449", 8650, 1], ["k77", 8650, 0]]);
+  assert.equal(h.matches[2].href, "/m/k77/");
+  const away = Object.assign({}, md, { home: md.away, away: md.home });                 // the file read from the other side
+  assert.deepEqual(V.fromTeamFile(file, away, 8650).summary, { home_wins: 1, draws: 1, away_wins: 1 });
+  assert.equal(V.fromTeamFile({ team: 8650, opp: {} }, md), null);
+});
+
+test("the meetings list dates an old meeting with its year", () => {
+  const U = require("../src/v5/ui.js");
+  const md = { id: 1, status: "scheduled", kickoff_utc: "2026-11-22T16:30:00Z", home: { id: 8650, name_ar: "ليفربول" }, away: { id: 10260, name_ar: "مانشستر يونايتد" } };
+  md.h2h = V.fromTeamFile({ team: 8650, name: "ليفربول", opp: { "10260": { name: "مانشستر يونايتد", n: 1, w: [0, 1, 0], goals: [0, 0],
+    matches: [["1895-10-12", "x", "1895/1896", "8650", 0, 0, "10260", "k77"]] } } }, md);
+  assert.match(U.h2h(md), /1895/);
+});

@@ -301,9 +301,12 @@ def league(p, cid=LEAGUE):
                 and timedelta(0) < parse_utc(m["kickoff_utc"]) - now < timedelta(days=21)]
     facts, watch = {}, {}
     derbies = set(config.derbies()) | {tuple(sorted(d["teams"])) for d in config.arab_derbies()}
+    # the facts read every season the archive holds (v1/league-history, graph/publish.league_history): «since 1888/1889»
+    frows = HI.with_archive(lrows, p.store.get_json(f"league-history/{cid}.json")) if lrows else lrows
+    fwindow = min((r["season"] for r in frows if r["season"]), default=window)
     for m in upcoming:
-        if lrows:
-            facts[str(m["id"])] = FA.match_facts(lrows, m, names, window)
+        if frows:
+            facts[str(m["id"])] = FA.match_facts(frows, m, names, fwindow)
         pr = probs_for(p, m)
         if pr:
             form = []
@@ -314,7 +317,7 @@ def league(p, cid=LEAGUE):
                                                   tuple(sorted((m["home"]["id"], m["away"]["id"]))) in derbies,
                                                   (sim or {}).get("teams"), form)
     if facts:
-        p.store.put_json(f"comp/{cid}/facts.json", {"comp": cid, "generated": iso(now), "since": window,
+        p.store.put_json(f"comp/{cid}/facts.json", {"comp": cid, "generated": iso(now), "since": fwindow,
                                                     "matches": facts}, cache="static")
     if watch:
         p.store.put_json(f"comp/{cid}/watch.json", {"comp": cid, "generated": iso(now), "matches": watch,

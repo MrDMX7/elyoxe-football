@@ -170,8 +170,8 @@
   function caption(m, o) {
     if (isLive(m)) return '<span class="st live"><i class="dot"></i>' + U.minute(m) + "</span>";
     if (m.status === "finished") { var t = U.statusWord(m); if (m.penalties) t = "ترجيح " + '<span dir="rtl" class="num">' + m.penalties.home + " - " + m.penalties.away + "</span>";
-      if (o && o.team) { var w = winner(m), r = !w ? "D" : ((w === 1) === (m.home.id === o.team)) ? "W" : "L"; return '<span class="st">' + (o.date ? tm(m.kickoff_uae || m.kickoff_utc, "ds") + " · " : "") + '<i class="rsl ' + r + '">' + { W: "ف", D: "ت", L: "خ" }[r] + "</i></span>"; }
-      return '<span class="st">' + (o && o.date ? tm(m.kickoff_uae || m.kickoff_utc, "ds") + " · " : "") + t + "</span>"; }
+      if (o && o.team) { var w = winner(m), r = !w ? "D" : ((w === 1) === (m.home.id === o.team)) ? "W" : "L"; return '<span class="st">' + (o.date ? tm(m.kickoff_uae || m.kickoff_utc, m.date_fmt || "ds") + " · " : "") + '<i class="rsl ' + r + '">' + { W: "ف", D: "ت", L: "خ" }[r] + "</i></span>"; }
+      return '<span class="st">' + (o && o.date ? tm(m.kickoff_uae || m.kickoff_utc, m.date_fmt || "ds") + " · " : "") + t + "</span>"; }   // an old meeting: «dy», with its year
     var w2 = U.statusWord(m); if (w2) return '<span class="st">' + w2 + "</span>";
     if (o && o.date) return '<span class="st">' + (m.date_tbd ? "الموعد ما تحدد" : tm(m.kickoff_uae || m.kickoff_utc, "r")) + "</span>";
     if (m.time_tbd) return '<span class="st">الساعة ما تحددت</span>';

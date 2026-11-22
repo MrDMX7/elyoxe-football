@@ -26,3 +26,15 @@ def season_rows(fm, comp_id, season):
 def all_rows(hist: dict) -> list:
     """hist {comp: {season: [rows]}} -> flat list."""
     return [r for seasons in hist.values() for rows in seasons.values() for r in rows]
+
+
+def with_archive(rows, older):
+    """FotMob's finished rows plus every season of the league the archive holds and FotMob does not (v1/league-history/<id>.json,
+    graph/publish.league_history: [kickoff, home, away, home goals, away goals]), oldest first. The pre-match facts then read
+    «since 1888/1889», not «since 2010/2011» (22 Nov 2026)."""
+    if not older:
+        return rows
+    have = {r["season"] for r in rows}
+    old = [{"id": None, "ko": ko, "comp": older.get("comp"), "season": season, "round": None, "h": h, "a": a, "hs": hs, "as": as_,
+            "st": S.FINISHED} for season, ms in (older.get("seasons") or {}).items() if season not in have for ko, h, a, hs, as_ in ms]
+    return sorted(old, key=lambda r: r["ko"] or "") + rows

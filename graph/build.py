@@ -68,6 +68,9 @@ def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
         rec["people_files"] = P.people(G, out_dir)      # v1/people/index.json: the old players' pages (/p/k<id>/)
         rec["match_files"] = P.matches(G, out_dir)      # v1/matches/*: the old matches' pages (the Arab top leagues, the national team)
         rec["h2h_files"] = P.h2h(G, out_dir)            # v1/h2h-all/*: every meeting in every competition
+        rec["team_h2h_files"] = P.team_h2h(G, out_dir)  # v1/h2h-team/*: every FotMob team against each opponent (match pages)
+        import config                                    # v1/league-history/*: the pre-match facts' seasons before FotMob's
+        rec["league_history_files"] = P.league_history(G, out_dir, config.settings().get("analytics_leagues") or [538])
     except Exception as e:
         traceback.print_exc()
         rec["awards_files"] = f"{type(e).__name__}: {str(e)[:200]}"
@@ -156,11 +159,11 @@ def publish(S, out_dir, reg_path, rec, cov):
     st.b.s3.upload_file(gz, st.b.bucket, "graph/tifo.db.gz")      # private: outside v1/, not served
     st.put_json("graph/coverage.json", {"generated": rec["started"], "counts": cov["counts"], "linked": cov["linked"], "arabic": cov["arabic"],
                                         "editions": cov["editions"]}, cache="static")
-    sent = 0
-    for key, path in upload_files(out_dir, ("awards", "motm", "coaches", "editions", "people", "matches", "h2h-all")):
-        st.put_json(key, json.load(open(path, encoding="utf-8")), cache="static")
-        sent += 1
-    rec["awards_sent"] = sent
+    from concurrent.futures import ThreadPoolExecutor   # thousands of files (h2h-team): in parallel, never one by one
+    files = upload_files(out_dir, ("awards", "motm", "coaches", "editions", "people", "matches", "h2h-all", "h2h-team", "league-history"))
+    with ThreadPoolExecutor(32) as ex:
+        list(ex.map(lambda kp: st.put_json(kp[0], json.load(open(kp[1], encoding="utf-8")), cache="static"), files))
+    rec["awards_sent"] = len(files)
     ap = os.path.join(out_dir, "player_aliases_ar.json")
     if os.path.exists(ap):                               # docs/2026-11-19-player-aliases.md: news/media.py reads it
         st.put_state("graph/player_aliases_ar.json.gz", json.load(open(ap, encoding="utf-8")))

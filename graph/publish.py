@@ -467,3 +467,75 @@ def h2h(G, out_dir, league=538, nationals=(5789,), min_meetings=3):
     index["teams"] = {k: sorted(v, key=lambda r: (-r[1], r[0])) for k, v in sorted(index["teams"].items())}
     _dump(os.path.join(d_out, "index.json"), index)
     return {"pairs": len(index["pairs"])}
+
+
+def team_h2h(G, out_dir, last=10):
+    """h2h-team/<FotMob team>.json: a team's record against each opponent it met, in every competition and every season
+    the archive holds — meetings, wins/draws/losses and goals from its side, and the latest `last` meetings (as h2h-all's
+    rows). Any match page reads its home side's file for «المواجهات» (the pair files hold the UAE's teams only: Liverpool
+    and Manchester United read «no meetings» on 22 Nov 2026). One meeting a day (two sources, one match)."""
+    from collections import deque
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    fm = lambda t: {a: int(b) for a, b in q(f"SELECT tifo_id, source_id FROM xref WHERE type='{t}' AND source='fotmob'") if str(b).isdigit()}
+    fm_t, fm_m = fm("team"), fm("match")
+    tkey = lambda t: str(fm_t[t]) if t in fm_t else f"k{t}"
+    tn = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
+    cn = {c: (a or n) for c, n, a in q("SELECT cid, name, name_ar FROM competition")}
+    ed = {e: (c, s) for e, c, s in q("SELECT eid, cid, season FROM edition")}
+    rec, seen = defaultdict(dict), set()
+    for mid, eid, d, h, a, hs, as_ in q("SELECT mid, eid, substr(date,1,10), home, away, hs, as_ FROM match WHERE hs IS NOT NULL AND date IS NOT NULL "
+                                       "AND home IS NOT NULL AND away IS NOT NULL ORDER BY date, mid"):
+        if h == a or (h not in fm_t and a not in fm_t) or (d, min(h, a), max(h, a)) in seen:
+            continue
+        seen.add((d, min(h, a), max(h, a)))
+        cid, season = ed.get(eid, (None, None))
+        name = cn.get(cid) or ""
+        if not name or name.startswith("FotMob "):
+            name = "بطولة ثانية"
+        row = [d, name, season, tkey(h), hs, as_, tkey(a), str(fm_m[mid]) if mid in fm_m else f"k{mid}"]
+        for me, op, f, ag in ((h, a, hs, as_), (a, h, as_, hs)):
+            if me not in fm_t:
+                continue
+            o = rec[me].get(op)
+            if o is None:
+                o = rec[me][op] = {"n": 0, "w": [0, 0, 0], "goals": [0, 0], "matches": deque(maxlen=last)}
+            o["n"] += 1
+            o["w"][0 if f > ag else 1 if f == ag else 2] += 1
+            o["goals"][0] += f
+            o["goals"][1] += ag
+            o["matches"].append(row)
+    d_out = os.path.join(out_dir, "h2h-team")
+    for t, opp in rec.items():
+        _dump(os.path.join(d_out, f"{fm_t[t]}.json"), {"team": fm_t[t], "name": tn.get(t), "opp": {
+            tkey(op): {"name": tn.get(op), "n": o["n"], "w": o["w"], "goals": o["goals"], "matches": list(o["matches"])[::-1]}
+            for op, o in sorted(opp.items(), key=lambda x: -x[1]["n"])}})
+    return {"teams": len(rec)}
+
+
+def league_history(G, out_dir, comps):
+    """league-history/<FotMob competition>.json: every finished match of each season the archive holds, as
+    [kickoff, home, away, home goals, away goals] (a team its FotMob id, else k<Tifo id); the pre-match facts read it
+    for the seasons before FotMob's (analytics.py: «on a Sunday since 1888/1889», not since 2010/2011)."""
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    fm = lambda t: {a: int(b) for a, b in q(f"SELECT tifo_id, source_id FROM xref WHERE type='{t}' AND source='fotmob'") if str(b).isdigit()}
+    fm_c, fm_t = fm("competition"), fm("team")
+    rev_c = {v: k for k, v in fm_c.items()}
+    tkey = lambda t: fm_t[t] if t in fm_t else f"k{t}"
+    n = 0
+    for fid in comps:
+        cid = rev_c.get(int(fid))
+        if cid is None:
+            continue
+        seasons, seen = defaultdict(list), set()
+        for d, season, h, a, hs, as_ in q("""SELECT m.date, e.season, m.home, m.away, m.hs, m.as_ FROM match m JOIN edition e ON e.eid=m.eid
+                                             WHERE e.cid=? AND m.hs IS NOT NULL AND m.date IS NOT NULL AND m.home IS NOT NULL AND m.away IS NOT NULL
+                                             ORDER BY m.date, m.mid""", (cid,)):
+            k = (d[:10], min(h, a), max(h, a))
+            if h == a or k in seen:
+                continue
+            seen.add(k)
+            seasons[season].append([d if "T" in d else d[:10] + "T12:00:00Z", tkey(h), tkey(a), hs, as_])
+        if seasons:
+            _dump(os.path.join(out_dir, "league-history", f"{fid}.json"), {"comp": int(fid), "seasons": dict(sorted(seasons.items()))})
+            n += 1
+    return {"comps": n}

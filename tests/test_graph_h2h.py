@@ -70,3 +70,25 @@ def test_a_competition_fotmob_left_unnamed_reads_as_another_competition(tmp_path
     publish.h2h(G, str(tmp_path / "o"), league=538, nationals=(5789,), min_meetings=1)
     d = json.load(open(tmp_path / "o" / "h2h-all" / "102101-102117.json", encoding="utf-8"))
     assert [b[0] for b in d["by_comp"]] == ["دوري أدنوك للمحترفين", "بطولة ثانية"]
+
+
+def test_every_fotmob_teams_record_against_each_opponent(tmp_path):
+    # Liverpool–Manchester United on 22 Nov 2026 read «no meetings»: the pair files hold the UAE's teams only
+    G = world(tmp_path)
+    out = publish.team_h2h(G, str(tmp_path), last=2)
+    d = json.loads((tmp_path / "h2h-team" / "102101.json").read_text(encoding="utf-8"))
+    o = d["opp"]["102117"]
+    assert (o["n"], o["w"], o["goals"]) == (3, [1, 1, 1], [3, 6])                     # Al Jazira's side: one win, one draw, one loss
+    assert [m[0] for m in o["matches"]] == ["2018-01-10", "2017-03-01"]              # the latest first, `last` of them
+    assert o["matches"][0][1] == "كأس رئيس الدولة"
+    assert json.loads((tmp_path / "h2h-team" / "102117.json").read_text(encoding="utf-8"))["opp"]["102101"]["w"] == [1, 1, 1]
+    assert out["teams"] >= 4
+
+
+def test_a_leagues_every_season_for_the_pre_match_facts(tmp_path):
+    # the facts read FotMob's seasons since 2010/11 only: «Liverpool on a Sunday since 2010/2011»
+    G = world(tmp_path)
+    publish.league_history(G, str(tmp_path), comps=(538,))
+    d = json.loads((tmp_path / "league-history" / "538.json").read_text(encoding="utf-8"))
+    assert d["seasons"]["2016/2017"] == [["2016-10-01T15:00:00Z", 102101, 102117, 2, 1], ["2016-11-01T15:00:00Z", 102101, 102111, 3, 0],
+                                         ["2017-03-01T15:00:00Z", 102117, 102101, 4, 0]]

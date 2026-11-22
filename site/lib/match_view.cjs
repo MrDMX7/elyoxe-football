@@ -36,7 +36,7 @@ function h2h(pair, d) {
   const s = { home_wins: 0, draws: 0, away_wins: 0 };
   before.forEach(x => { const w = x[4] > x[5] ? x[3] : x[5] > x[4] ? x[6] : null; if (w == null) s.draws++; else if (String(w) === hi) s.home_wins++; else s.away_wins++; });
   const nm = id => pair.names[pair.teams.indexOf(String(id))] || "", side = id => (/^\d+$/.test(String(id)) ? { id: +id, name_ar: nm(id) } : { id: "n-" + id, name_ar: nm(id), nocrest: true });
-  return { summary: s, matches: before.slice().reverse().map(x => ({ id: x[7], href: "/m/" + x[7] + "/", kickoff_utc: x[0] + "T12:00:00Z", home: side(x[3]), away: side(x[6]), score: { home: x[4], away: x[5] } })) };
+  return { summary: s, matches: before.slice().reverse().map(x => ({ id: x[7], href: "/m/" + x[7] + "/", kickoff_utc: x[0] + "T12:00:00Z", date_fmt: "dy", home: side(x[3]), away: side(x[6]), score: { home: x[4], away: x[5] } })) };
 }
 
 // every two teams' meetings in the archive's own matches (v1/matches/*: the leagues' seasons and the tournaments), in the
@@ -78,4 +78,22 @@ function playerBlock(d, n) {
   return U.grp("مبارياته في أرشيف تيفو", '<p class="note">' + '<span class="num">' + d.matches.length + "</span> مباراة و" + '<span class="num">' + d.goals + "</span> هدف في الأرشيف.</p>" + rows);
 }
 
-module.exports = { md, lineups, h2h, pairs, players, playerBlock };
+// a match's meetings from one side's every-opponent file (v1/h2h-team/<FotMob id>.json, graph/publish.team_h2h): the record in
+// every competition and season the archive holds, and its latest meetings first; this match itself, when the file holds it,
+// counts for neither (Liverpool–Manchester United, 22 Nov 2026, read «no meetings»: the pair files hold the UAE's teams only)
+function fromTeamFile(file, d) {
+  const me = String(file && file.team), other = me === String(d.home.id) ? d.away : me === String(d.away.id) ? d.home : null;
+  const o = other && ((file.opp || {})[String(other.id)]);
+  if (!o || !o.n) return null;
+  const w = o.w.slice(), self = (o.matches || []).find(x => x[7] === String(d.id));
+  if (self) { const f = self[3] === me ? self[4] : self[5], a = self[3] === me ? self[5] : self[4]; w[f > a ? 0 : f === a ? 1 : 2]--; }
+  const total = w[0] + w[1] + w[2];
+  if (!total) return null;
+  const mine = me === String(d.home.id), nm = { [me]: file.name, [String(other.id)]: o.name };
+  const side = k => (/^\d+$/.test(k) ? { id: +k, name_ar: nm[k] || "" } : { id: "n-" + k, name_ar: nm[k] || "", nocrest: true });
+  return { total, summary: mine ? { home_wins: w[0], draws: w[1], away_wins: w[2] } : { home_wins: w[2], draws: w[1], away_wins: w[0] },
+    matches: (o.matches || []).filter(x => x !== self).map(x => ({ id: x[7], href: "/m/" + x[7] + "/", kickoff_utc: x[0] + "T12:00:00Z", date_fmt: "dy",
+      home: side(x[3]), away: side(x[6]), score: { home: x[4], away: x[5] } })) };
+}
+
+module.exports = { md, lineups, h2h, pairs, players, playerBlock, fromTeamFile };

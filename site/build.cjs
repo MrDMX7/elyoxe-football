@@ -964,6 +964,11 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   const SHARE = require("./lib/share_stage.cjs"), SHPUB = SHARE.published({ CACHE, fs, path }), SHJ = [], SHG = [], STUBS = [], CLIPS = {};
   { const mr = await get("media/recent.json", 1), withG = ((mr && mr.matches) || []).filter(m => m.goals > 0).map(m => m.id), mf = await pool(withG, 6, i => get(`media/${i}.json`, 1));
     withG.forEach((i, k) => { if (mf[k] && mf[k].goals) CLIPS[i] = new Set(Object.keys(mf[k].goals)); }); }
+  // every side's record against each opponent (v1/h2h-team/*, graph/publish.team_h2h): «المواجهات» of any match the pair
+  // files do not hold (they hold the UAE's teams; Liverpool–Manchester United read «no meetings»)
+  const TH2H = new Map();
+  { const ids = [...new Set(mids.flatMap(id => { const m = D.get(id) || matchSum.get(id) || {}; return [m.home && m.home.id, m.away && m.away.id]; }).filter(t => typeof t === "number"))];
+    (await pool(ids, 8, t => get(`h2h-team/${t}.json`, 2))).forEach((f, i) => { if (f) TH2H.set(ids[i], f); }); }
   for (const id of mids){
     { const mc = comps.find(cc => cc.id === (matchSum.get(id) || {}).comp); R.DUPCTX = (mc && mc.country && mc.country.name_ar) || ""; }   // 503: a league match drops its own country's tag
     const md0 = D.get(id) || matchSum.get(id), uaeMatchTop = R.UAE_COMPS.indexOf(md0.comp) >= 0 || md0.home.id === 5789 || md0.away.id === 5789;
@@ -977,6 +982,7 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
     // QA 2: an upcoming match has no detail file (so no h2h); the pair's h2h file fills «المواجهات»
     { const hk = md.home && md.away ? [md.home.id, md.away.id].sort((a, b) => a - b).join("-") : "", hf = H2H[hk]; if (hf && !(md.h2h && md.h2h.summary)){ const w = hf.wins || {};
       md.h2h = { summary:{ home_wins:w[md.home.id] || 0, draws:w.draws || 0, away_wins:w[md.away.id] || 0 }, matches:(hf.matches || []).filter(m => m.id !== md.id && m.score) }; } }
+    if (!(md.h2h && md.h2h.summary) && md.home && md.away){ const tf = (TH2H.has(md.home.id) && MV.fromTeamFile(TH2H.get(md.home.id), md)) || (TH2H.has(md.away.id) && MV.fromTeamFile(TH2H.get(md.away.id), md)); if (tf) md.h2h = tf; }
     const uaeMatch = R.UAE_COMPS.indexOf(md.comp) >= 0 || md.home.id === 5789 || md.away.id === 5789;
     const aiSum = APPROVED.summary && AIS[id] ? S.aiSummary(AIS[id]) : "", aiPre = APPROVED.preview && md.status === "scheduled" && AIP[id] ? S.sec("تحليل ما قبل المباراة", "", S.aiPreview(AIP[id])) : "";
     const press = md.status === "scheduled" && uaeMatch ? S.pressSheet(md, cdata.st, cdata.stats, factsByMatch[id], cx.fatigue, D.get(id)) : "";

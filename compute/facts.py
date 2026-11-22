@@ -57,7 +57,7 @@ def match_facts(rows, match, names_ar, window):
     items = []
     hid, aid = match["home"]["id"], match["away"]["id"]
     ko = parse_utc(match.get("kickoff_utc"))
-    since = f"منذ {window} (بيانات FotMob)"
+    since = f"منذ {window}"
     for tid, side in ((hid, "home"), (aid, "away")):
         name = names_ar.get(str(tid)) or (match[side].get("name_ar") or match[side]["name"])
         games = team_games(rows, tid)
