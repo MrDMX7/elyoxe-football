@@ -156,3 +156,19 @@ def test_the_soviet_union_and_west_germany_are_their_successors_fotmob_records()
     played = {16: 756, 6: 1042, 29398: 31, 29397: 62, 29399: 6, 27614: 522}
     assert national_pairs(teams, frozenset(), played, {}) == [(29397, 6), (29398, 16)]          # East Germany met West Germany: never
     assert national_pairs(teams, frozenset({(6, 29397)}), played, {}) == [(29398, 16)]
+
+
+def test_a_clubs_own_country_and_its_leagues_code_are_one_country(tmp_path):
+    # RSSSF's Qatari leagues say «QAT», FotMob's Al-Duhail says «Qatar»: Lekhwiya (RSSSF, Al-Duhail before 2017) never folded
+    from graph.db import Graph
+    from graph.load.teams import countries
+    G = Graph(str(tmp_path / "t.db"))
+    G.put("competition", {"cid": 1, "name": "Qatar Stars League", "kind": "league", "country": "QAT"}, "fotmob")
+    G.put("edition", {"eid": 1, "cid": 1, "season": "2015/2016"}, "fotmob")
+    G.put("team", {"tid": 10, "name": "Al-Duhail SC", "country": "Qatar"}, "fotmob")
+    G.put("team", {"tid": 11, "name": "Al Sadd", "country": "Qatar"}, "fotmob")
+    G.put("team", {"tid": 12, "name": "Lekhwiya"}, "rsssf")
+    G.put("match", {"mid": 1, "eid": 1, "date": "2016-01-01", "home": 10, "away": 11, "hs": 1, "as_": 0}, "fotmob")
+    G.c.execute("insert into honour(eid, kind, rank, tid, src) values(1, 'champion', 1, 12, 'rsssf')")
+    cc = countries(lambda s, p=(): G.c.execute(s, p).fetchall())
+    assert cc[10] == cc[12] == "QAT"

@@ -219,7 +219,13 @@ def countries(q):
                            JOIN edition e ON e.eid=x.eid JOIN competition c ON c.cid=e.cid
                            WHERE c.kind='league' AND c.country IS NOT NULL GROUP BY 1, 2"""):
         seen[tid][c] += n
-    return {tid: own.get(tid) or (seen[tid].most_common(1)[0][0] if seen.get(tid) else None) for tid in own}
+    # one country, one spelling: a FotMob club's own «Qatar» is the code its leagues carry («QAT», RSSSF's and FotMob's)
+    code = defaultdict(Counter)
+    for tid, c in own.items():
+        if c and seen.get(tid):
+            code[c].update(seen[tid])
+    as_code = {name: n.most_common(1)[0][0] for name, n in code.items()}
+    return {tid: as_code.get(own.get(tid), own.get(tid)) or (seen[tid].most_common(1)[0][0] if seen.get(tid) else None) for tid in own}
 
 
 def candidates(c, alias=None, guard=None, era=None):

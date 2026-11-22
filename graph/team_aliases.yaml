@@ -14,6 +14,10 @@ same:
   - ["Emirates", "Emirates Club"]
   - ["Al Emirates", "Emirates Club"]
   - ["Al-Emirates", "Emirates Club"]
+  # RSSSF's names that made a second champion beside 365Scores' (2026-11-22): Al-Duhail was Lekhwiya until 2017
+  - ["Lekhwiya", "Al-Duhail SC"]
+  - ["IR Tanger", "Ittihad Tanger"]
+  - ["Espérance de Tunis", "Esperance"]
   # {country, keys}: one old club kept twice by two weaker sources and by no FotMob record, so the name rule cannot join them.
   # keys are «source:source_id» as in xref; the lower Tifo id is kept. Never a FotMob key, never by the name rule.
   # The old Dubai CSC (until the 2017 merger into Shabab Al Ahli, which stays its own club): RSSSF's and schochastics' «Dubai».
@@ -35,3 +39,12 @@ same:
 apart:
   - ["Parahyba FC", "Parnahyba"]
   - ["Reggina", "Reggiana"]
+  # once countries compare as one (2026-11-22: RSSSF's leagues say «QAT», FotMob's clubs «Qatar»): kept two
+  - ["CM Constantine", "CS Constantine"]
+  - ["US Constantine", "CS Constantine"]
+  - ["CF Extremadura", "CD Extremadura"]
+  - ["Chiangmai United", "Chiangrai United"]
+  - ["Anyang", "FC Anyang"]
+  - ["Delhi FC", "SC Delhi"]
+  - ["Yokohama", "Yokohama FC"]
+  - ["Suwon", "Suwon FC"]
