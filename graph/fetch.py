@@ -73,6 +73,25 @@ def shield_row(raw):
 SHIELD_LIST = "List of FA Community Shield matches"
 
 
+def _state_file(S, name, key):
+    """a pack fetched once on the laptop and kept in the bucket's state (graph/<key>): db/.cache/<name> for its loader"""
+    import gzip as _gz, json as _j
+    p = os.path.join(S.db, name)
+    if os.path.exists(p):
+        return
+    d = S.store().get_state(key)
+    if d:
+        os.makedirs(S.db, exist_ok=True)
+        with _gz.open(p + ".tmp", "wt", encoding="utf-8") as z:
+            _j.dump(d, z, ensure_ascii=False)
+        os.replace(p + ".tmp", p)
+
+
+def espn(S):
+    """ESPN's records of 2001-2010 (graph/espn_fetch.py): db/.cache/espn.json.gz for graph/load/espn.py"""
+    _state_file(S, "espn.json.gz", "graph/espn.json")
+
+
 def uaefa(S):
     """the UAE FA's record of the top flight 2003/04-2016/17 (graph/uaefa_fetch.py, fetched once on the laptop and kept in
     the bucket's state/graph/uaefa.json): db/.cache/uaefa.json.gz for graph/load/uaefa.py"""

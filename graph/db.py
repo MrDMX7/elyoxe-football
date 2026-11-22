@@ -4,7 +4,7 @@ import json, os, sqlite3
 from collections import Counter
 
 SCHEMA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schema.sql")
-SRC_RANK = {"fotmob": 0, "names": 0, "s365": 1, "uaefa": 1, "tm": 2, "fjelstul": 3, "rsssf": 3, "sch": 4, "martj42": 5, "wikidata": 6}
+SRC_RANK = {"fotmob": 0, "names": 0, "s365": 1, "uaefa": 1, "espn": 2, "tm": 2, "fjelstul": 3, "rsssf": 3, "sch": 4, "martj42": 5, "wikidata": 6}
 KEYS = {"team": "tid", "player": "pid", "coach": "kid", "referee": "rid", "stadium": "sid", "competition": "cid", "edition": "eid", "match": "mid"}
 # where each entity's id is referenced (remap after a merge)
 REFS = {"team": [("match", "home"), ("match", "away"), ("appearance", "tid"), ("event", "tid"), ("standing", "tid"), ("honour", "tid"),
