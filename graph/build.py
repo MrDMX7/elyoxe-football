@@ -112,16 +112,22 @@ def registry_for_upload(st, reg_path):
     return bool(d)
 
 
-def publish_allowed(st, cov):
-    """95% of the last published build's matches, counted in total and from FotMob alone: an empty FotMob cache would
-    keep the total (every twin minted as a match of its own) and hide the loss."""
+def publish_refusal(st, cov):
+    """Why this build must not replace the published one, or None: 95% of the last published build's matches, counted in total
+    and from FotMob alone (an empty FotMob cache would keep the total, every twin minted as a match of its own, and hide the loss)."""
     prev = st.get_state("graph/last.json") or {}
     total, fm = cov["counts"]["match"], (cov.get("by_src", {}).get("match") or {}).get("fotmob", 0)
     for now, key in ((total, "matches"), (fm, "fotmob_matches")):
         if prev.get(key) and now < 0.95 * prev[key]:
-            print(f"not published: {key} {now} < 95% of the last build's {prev[key]}", flush=True)
-            return False
-    return True
+            return f"{key} {now} < 95% of the last build's {prev[key]}"
+    return None
+
+
+def publish_allowed(st, cov):
+    why = publish_refusal(st, cov)
+    if why:
+        print(f"not published: {why}", flush=True)
+    return why is None
 
 
 def upload_files(out_dir, subs):
@@ -140,7 +146,8 @@ def upload_files(out_dir, subs):
 def publish(S, out_dir, reg_path, rec, cov):
     st = S.store()
     if not publish_allowed(st, cov):
-        rec["published"] = False
+        rec["published"], rec["not_published"] = False, publish_refusal(st, cov)
+        st.put_state("graph/build_unpublished.json", rec)     # each loader's result, to see which one lost the matches
         return
     st.put_state(REG_STATE, json.loads(gzip.decompress(open(reg_path, "rb").read())))
     gz = os.path.join(out_dir, "tifo.db.gz")
@@ -179,7 +186,8 @@ def main(argv=None):
     day = rec["started"][:10]
     if a.out == OUT:
         shutil.copyfile(os.path.join(a.out, "coverage.md"), os.path.join(os.path.dirname(HERE), "docs", f"GRAPH-COVERAGE-{day}.md"))
-    print(json.dumps({k: v for k, v in rec.items() if k != "loaders"}, ensure_ascii=False))
+    head = {k: rec[k] for k in ("not_published",) if rec.get(k)}         # first: the runner keeps 200 characters of this line
+    print(json.dumps({**head, **{k: v for k, v in rec.items() if k not in ("loaders", "not_published")}}, ensure_ascii=False))
     return 0 if rec["ok"] and rec.get("published", True) else 1
 
 

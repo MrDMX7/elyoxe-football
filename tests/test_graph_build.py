@@ -110,3 +110,12 @@ def test_the_upload_takes_the_files_in_subfolders_too(tmp_path):
     (tmp_path / "awards" / "notes.txt").write_text("x")
     got = sorted(k for k, _ in build.upload_files(str(tmp_path), ("awards", "matches", "people")))
     assert got == ["awards/index.json", "matches/538/2016-2017.json", "matches/index.json"]
+
+
+def test_a_build_the_guard_refuses_says_why_and_keeps_its_record():
+    # the 22 Nov 01:05 build: rc=1 «ok» true, and the runner's tail (200 characters) never reached the reason
+    st = FakeStore({"graph/last.json": {"matches": 1000, "fotmob_matches": 1000}})
+    cov = {"counts": {"match": 900}, "by_src": {"match": {"fotmob": 1000}}}
+    why = build.publish_refusal(st, cov)
+    assert why == "matches 900 < 95% of the last build's 1000"
+    assert build.publish_refusal(st, {"counts": {"match": 1000}, "by_src": {"match": {"fotmob": 1000}}}) is None
