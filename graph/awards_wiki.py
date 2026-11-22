@@ -345,6 +345,13 @@ def season_links(html):
     return out
 
 
+def season_over(season, today):
+    """«2026/2027» ends on 30 June 2027, «2026» on 31 December: a season's table before then is a table in play"""
+    s = str(season or "")
+    end = f"{s[5:9]}-06-30" if "/" in s else f"{s[:4]}-12-31"
+    return end < today
+
+
 def extract_season(html, page):
     m = SEASON_TITLE.match(page.replace("_", " "))
     season = season_label(m.group(1)) if m else None
@@ -398,8 +405,10 @@ def extract_season(html, page):
             rows += [x for x in got if x["rank"] <= 10]
     if len(leagues) == 1:                                          # one league table (not a season of groups): first and second
         hdr, body = leagues[0]
-        ti = _col(hdr, re.compile(r"^(team|club)", re.I))
-        top = [r for r in body if len(r) > ti and r[ti][1]][:2]
+        ti, pi = _col(hdr, re.compile(r"^(team|club)", re.I)), _col(hdr, re.compile(r"^(pld|p|played|mp|gp)$", re.I))
+        sides = [r for r in body if len(r) > ti and r[ti][1]]
+        played = [_rank(r[pi][0]) or 0 for r in sides if pi is not None and len(r) > pi]
+        top = sides[:2] if not played or min(played) >= len(sides) - 1 else []   # finished: each side has met every other
         for kind, r in zip(("champion", "runner_up"), top):
             rows.append({"kind": kind, "rank": 1, "person": None, "name": r[ti][0], "team": r[ti][1][0], "value": None})
     return {"page": page, "season": season, "rows": rows}

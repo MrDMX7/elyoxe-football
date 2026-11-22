@@ -250,3 +250,23 @@ def test_a_division_one_under_a_premier_league_is_the_tier_below():
     assert not own_season("2019–20 Egyptian Second Division", "Egyptian Premier League")
     assert own_season("2025–26 Kuwaiti Premier League", "Kuwait Premier League")
     assert own_season("1985–86 Football League First Division", "Premier League")      # England's top flight before 1992 (OLD_NAMES)
+
+
+def _league(played):
+    return T('<tr><th>Pos</th><th>Team</th><th>Pld</th><th>Pts</th></tr>' + "".join(
+        f'<tr><td>{i}</td><td>{L(t)}</td><td>{p}</td><td>{30 - i}</td></tr>' for i, (t, p) in enumerate(zip(("Kuwait_SC", "Qadsia_SC", "Arabi_SC", "Kazma_SC"), played), 1)),
+        "League table")
+
+
+def test_a_league_table_gives_its_champion_only_when_every_side_has_met_every_other():
+    # «2026–27 Kuwaiti Premier League» in November: Kuwait SC first after a few rounds, no champion yet
+    from graph.awards_wiki import extract_season
+    done = extract_season(_league((6, 6, 6, 6)), "2016–17 Kuwaiti Premier League")["rows"]
+    assert [(r["kind"], r["team"]) for r in done] == [("champion", "Kuwait_SC"), ("runner_up", "Qadsia_SC")]
+    assert extract_season(_league((2, 2, 2, 1)), "2026–27 Kuwaiti Premier League")["rows"] == []
+
+
+def test_a_season_not_over_on_the_day_is_in_play():
+    from graph.awards_wiki import season_over
+    assert not season_over("2026/2027", "2026-11-22") and season_over("2025/2026", "2026-11-22")
+    assert not season_over("2026", "2026-11-22") and season_over("2025", "2026-11-22")

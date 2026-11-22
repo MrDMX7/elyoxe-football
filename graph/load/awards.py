@@ -97,8 +97,11 @@ def load(G, reg, S):
     clubs = (S.read(os.path.join(S.db, "clubs.json")) or {}).get("clubs") or {}
     club_by_qid = {c.get("qid"): int(fid) for fid, c in clubs.items() if c.get("qid") and fid.isdigit()}
     n = {"pages": 0, "season_pages": 0, "tables": 0, "awards": 0, "honours": 0, "edition_honours": 0, "players_new": 0, "sanity_dropped": 0, "conflicts": 0,
-         "not_a_person": 0, "own_count_replaced": 0, "season_not_own": 0, "table_not_final": 0}
+         "not_a_person": 0, "own_count_replaced": 0, "season_not_own": 0, "table_not_final": 0, "season_in_play": 0}
     done = set()
+    import datetime
+    from graph.awards_wiki import season_over
+    today = datetime.date.today().isoformat()
 
     def it(title):
         return items.get(title) or items.get((title or "").replace(" ", "_")) or {}
@@ -334,7 +337,9 @@ def load(G, reg, S):
                 n["sanity_dropped"] += 1
                 continue
             per.setdefault(r["kind"], []).append((r["rank"], None, pid, None, r["value"]))
-        if table.get("champion"):                  # its first must be the season's champion, else it is not the final standing
+        if table.get("champion") and not season_over(got["season"], today):
+            n["season_in_play"] += 1               # a table of a season still in play: its leader, no champion yet
+        elif table.get("champion"):                # its first must be the season's champion, else it is not the final standing
             cur = {t for (t,) in G.c.execute("SELECT tid FROM honour WHERE eid=? AND kind='champion'", (eid,))}
             from graph.load.teams import alike as club_alike     # strict: «Al-Qadsia SC» is not «Kuwait SC» (awards.alike: same last word)
             names = [nm for (nm,) in G.c.execute("SELECT t.name FROM honour h JOIN team t ON t.tid=h.tid WHERE h.eid=? AND h.kind='champion'", (eid,))]
