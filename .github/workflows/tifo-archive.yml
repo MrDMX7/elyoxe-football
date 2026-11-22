@@ -37,7 +37,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - name: Free the runner's disk (the database, its export and the pages: ~10 GB)
+      - name: "Free the runner's disk (the database, its export and the pages, ~10 GB)"
         run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
       - name: Build and publish the archive
         run: python -m tools.archive_job --work "$RUNNER_TEMP/archive" ${{ inputs.comps && format('--comps {0}', inputs.comps) || '' }} ${{ inputs.force && '--force' || '' }}
