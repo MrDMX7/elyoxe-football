@@ -20,6 +20,12 @@ honours:
   - {comp: 9941, season: "1942/1943", kind: champion, teams: [101745, 80591], source: "Wikipedia Egypt Cup: final not played, the title shared (Al Ahly, Zamalek)"}
   - {comp: 9941, season: "2008/2009", kind: runner_up, teams: [101754], source: "Wikipedia Egypt Cup finals: Haras El Hodood 1-1 (4-1 p) ENPPI"}
   - {comp: 530, season: "2002/2003", kind: runner_up, teams: [102049], source: "Wikipedia 2002-03 Botola: Hassania Agadir champions, Raja second"}
+  # Saudi Pro League top scorers where RSSSF stands alone: Arabic Wikipedia's sourced list and the English season articles agree
+  - {comp: 536, season: "1988/1989", kind: top_scorer, value: "19", players: [{wikidata: Q446181}], source: "Wikipedia 1988-89 Saudi Premier League and ar list: Majed Abdullah 19"}
+  - {comp: 536, season: "1989/1990", kind: top_scorer, value: "16", players: [{wikidata: Q299555}], source: "Wikipedia 1989-90 Saudi Premier League and ar list: Sami Al-Jaber 16"}
+  - {comp: 536, season: "1991/1992", kind: top_scorer, value: "16", players: [{wikidata: Q381686}], source: "Wikipedia 1991-92 Saudi Premier League and ar list: Saeed Al-Owairan 16"}
+  - {comp: 536, season: "1993/1994", kind: top_scorer, value: "15", players: [{wikidata: Q3326228}], source: "Wikipedia 1993-94 Saudi Premier League: Moussa N'Daw 15, the first foreign top scorer"}
+  - {comp: 536, season: "1995/1996", kind: top_scorer, value: "14", players: [{wikidata: Q3109733}], source: "Wikipedia 1995-96 Saudi Premier League and ar list: Ohene Kennedy 14"}
 
 # the value shown was right: the disagreement is closed
 keep:

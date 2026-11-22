@@ -20,6 +20,8 @@ def _edition(G, reg, comp, season):
 def _player(G, reg, p, eid, kind):
     if p.get("fotmob"):
         return reg.get("player", "fotmob", int(p["fotmob"]))
+    if p.get("wikidata"):                      # a name several men carry («Majed Abdullah»): his Wikidata item
+        return reg.get("player", "wikidata", p["wikidata"])
     name = p["name"]
     hit = G.c.execute("""SELECT pid FROM player WHERE lower(name)=lower(?) ORDER BY
                          (pid IN (SELECT pid FROM honour WHERE eid=? AND kind=?)) DESC, pid LIMIT 1""", (name, eid, kind)).fetchone()

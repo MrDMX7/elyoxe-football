@@ -77,3 +77,14 @@ def test_a_club_honour_is_replaced_by_its_fotmob_club(tmp_path):
     corrections.load(G, reg, None, {"honours": [{"comp": 538, "season": "2015/2016", "kind": "runner_up", "teams": [9925], "source": "x"}]})
     assert G.c.execute("select tid, src from honour where eid=? and kind='runner_up'", (eds["2015/2016"],)).fetchall() == [(raja, "correction")]
     assert not G.c.execute("select 1 from conflict where tifo_id=? and field='runner_up'", (eds["2015/2016"],)).fetchall()
+
+
+def test_a_player_by_his_wikidata_item_when_his_name_is_several_mens(tmp_path):
+    # Saudi 1988/89: «Majed Abdullah» is three players; the 1959 striker is Q446181
+    G, reg, eds, *_ = world(tmp_path)
+    young, legend = reg.mint("player", "fotmob", 1668959), reg.mint("player", "wikidata", "Q446181")
+    G.put("player", {"pid": young, "name": "Majed Abdullah"}, "fotmob")
+    G.put("player", {"pid": legend, "name": "Majed Abdullah"}, "wikidata")
+    corrections.load(G, reg, None, {"honours": [{"comp": 538, "season": "2015/2016", "kind": "top_scorer", "value": "19",
+                                                 "players": [{"wikidata": "Q446181"}], "source": "x"}]})
+    assert G.c.execute("select pid from honour where eid=? and kind='top_scorer'", (eds["2015/2016"],)).fetchall() == [(legend,)]
