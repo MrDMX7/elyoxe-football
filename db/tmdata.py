@@ -27,8 +27,10 @@ CACHE = os.path.join(HERE, ".cache", "tm")
 RAW = "https://raw.githubusercontent.com/salimt/football-datasets/main/datalake/transfermarkt/"
 MEDIA = "https://media.githubusercontent.com/media/salimt/football-datasets/main/datalake/transfermarkt/"
 FILES = {"player_profiles": "player_profiles/player_profiles.csv", "player_performances": "player_performances/player_performances.csv",
-         "player_injuries": "player_injuries/player_injuries.csv", "player_latest_market_value": "player_latest_market_value/player_latest_market_value.csv"}
-BIG = {"player_performances"}
+         "player_injuries": "player_injuries/player_injuries.csv", "player_latest_market_value": "player_latest_market_value/player_latest_market_value.csv",
+         # (2026-11-22) every move since the 1980s, 1.1M (graph/load/transfers.py); an LFS file, so from media.githubusercontent.com
+         "transfer_history": "transfer_history/transfer_history.csv"}
+BIG = {"player_performances", "transfer_history"}
 csv.field_size_limit(1 << 24)
 
 

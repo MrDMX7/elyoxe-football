@@ -33,7 +33,7 @@ def test_transfers(tmp_path):
     reg.alias("player", "tm", "5", pid)
     reg.mint("team", "fotmob", 10)
     out = transfers.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "mirror"), s3=False))
-    assert out == {"tm": 1, "fotmob": 1}
+    assert out == {"tm": 1, "fotmob": 1, "tm_history": 0}             # no transfer_history.csv in this world
     assert G.c.execute("select fee, season from transfer where src='tm'").fetchone() == (5000000, "2019/2020")
 
 
