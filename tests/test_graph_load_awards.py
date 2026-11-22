@@ -424,3 +424,22 @@ def test_a_season_in_play_gets_no_champion_from_any_wikipedia_table(tmp_path):
     awards.load(G, reg, S)
     got = G.c.execute("select e.season, h.kind from honour h join edition e on e.eid=h.eid where e.cid=? order by 1, 2", (lg,)).fetchall()
     assert ("2025/2026", "champion") in got and not [g for g in got if g[0] == "2026/2027"]
+
+
+def test_a_years_award_in_a_league_of_split_seasons_is_the_season_ending_that_year(tmp_path):
+    # the Qatar Stars League's «Post-season awards» by year: «2016» made an edition of its own beside 2015/2016
+    t = T('<tr><th>Year</th><th>Best Player</th></tr>' + "".join(f'<tr><td>{y}</td><td>{L(p)}</td></tr>' for y, p in
+                                                              ((2015, "Hassan_Al-Haydos"), (2016, "Rodrigo_Tabata"), (2017, "Tae-hee_Nam"))), "Post-season awards")
+    items = {"Hassan_Al-Haydos": item("Q71", "Hassan Al-Haydos", born="1990-12-11"), "Rodrigo_Tabata": item("Q72", "Rodrigo Tabata", born="1980-11-19"),
+             "Tae-hee_Nam": item("Q73", "Nam Tae-hee", born="1991-07-03")}
+    S = mk(tmp_path, {"Qatar Stars League": t}, items, comps={"535": "Qatar Stars League"})
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 535)
+    G.put("competition", {"cid": lg, "name": "Qatar Stars League"}, "fotmob")
+    for i, s in enumerate(("2014/2015", "2015/2016", "2016/2017")):
+        e = reg.mint("edition", "fotmob", f"535|{s}")
+        G.put("edition", {"eid": e, "cid": lg, "season": s}, "fotmob")
+        G.put("match", {"mid": reg.mint("match", "fotmob", 70 + i), "eid": e, "date": f"{s[5:]}-03-01", "home": 1, "away": 2, "hs": 1, "as_": 0}, "fotmob")
+    awards.load(G, reg, S)
+    got = G.c.execute("select e.season, p.name from honour h join edition e on e.eid=h.eid join player p on p.pid=h.pid where e.cid=? and h.kind='best_player' order by 1", (lg,)).fetchall()
+    assert got == [("2014/2015", "Hassan Al-Haydos"), ("2015/2016", "Rodrigo Tabata"), ("2016/2017", "Nam Tae-hee")]

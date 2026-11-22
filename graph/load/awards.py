@@ -175,6 +175,19 @@ def load(G, reg, S):
         r = G.c.execute(f"SELECT name FROM {t} WHERE {k}=?", (pid or tid or kid,)).fetchone()
         return re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", (r[0] if r else "") or "").encode("ascii", "ignore").decode().lower()).strip()
 
+    split = {}
+
+    def own_label(cid, season):
+        """a year's honour in a league of split seasons is the season that ended in it («2016» -> «2015/2016»): its seasons
+        with matches are mostly «Y/Y+1» and it has no «2016» of its own"""
+        if not re.fullmatch(r"\d{4}", str(season or "")):
+            return season
+        if cid not in split:
+            rows = G.c.execute("SELECT e.season FROM edition e WHERE e.cid=? AND EXISTS(SELECT 1 FROM match m WHERE m.eid=e.eid)", (cid,)).fetchall()
+            split[cid] = (sum("/" in r[0] for r in rows) >= 0.8 * len(rows) if rows else False, {r[0] for r in rows})
+        is_split, own = split[cid]
+        return f"{int(season) - 1}/{season}" if is_split and season not in own else season
+
     def all_ours(eid):
         """our matches are the whole season: as many as its final table played (a season with no table: never known)"""
         played = G.c.execute("SELECT sum(played) FROM standing WHERE eid=?", (eid,)).fetchone()[0]
@@ -253,6 +266,7 @@ def load(G, reg, S):
                 cid = reg.mint("competition", "fotmob", int(fid))
                 per = {}
                 for r in t["rows"]:
+                    r = dict(r, season=own_label(cid, r["season"]))
                     eid = edition_for(G, reg, "wiki", f"{fid}|{r['season']}", cid, r["season"])
                     if t["kind"] in ("champion_table", "champion"):
                         per.setdefault((eid, "champion"), []).append((1, team(r["team"], r["name"]), None, None, None))
