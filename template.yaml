@@ -164,7 +164,9 @@ Resources:
       FunctionName: elyoxe-football-analytics
       CodeUri: build/lambda/
       Handler: poller.analytics_handler
-      MemorySize: 512                    # CPU for the simulations; ~0.3 vCPU
+      MemorySize: 1024                   # 512 ran out from mid-Nov 2026 (a run peaks ~560 MB: every run OOM or 300 s timeout, no step
+                                         # marked, so the same heavy step again and again; facts.json last written 15 Nov); 1024 also
+                                         # doubles the CPU, so a run's GB-seconds stay about what the failing ones burned
       Timeout: 300
       ReservedConcurrentExecutions: 1
       Environment:
