@@ -38,18 +38,35 @@ def world(tmp_path):
     return G, m2, old
 
 
+
+def plain(f):
+    """a match file without the Tifo ids the archive job reads (k, the clubs' third field, the men's last)"""
+    out = []
+    for m in f["matches"]:
+        m = {k: v for k, v in m.items() if k != "k"}
+        m["h"], m["a"] = m["h"][:2], m["a"][:2]
+        if "ev" in m:
+            m["ev"] = [e[:6] for e in m["ev"]]
+        if "lu" in m:
+            m["lu"] = {k: [p[:4] for p in v] for k, v in m["lu"].items()}
+        out.append(m)
+    return dict(f, matches=out)
+
 def test_season_files_and_the_national_teams_file(tmp_path):
     G, m2, old = world(tmp_path)
     out = publish.matches(G, str(tmp_path / "o"), comps=(538,), teams=(5789,))
     d = tmp_path / "o" / "matches"
     s = json.load(open(d / "538" / "2016-2017.json", encoding="utf-8"))
+    m0 = s["matches"][0]
+    assert isinstance(m0["k"], int) and isinstance(m0["h"][2], int) and isinstance(m0["ev"][0][6], int) and isinstance(m0["lu"]["h"][0][4], int)
+    s = plain(s)                                   # the archive's Tifo ids apart (graph/archive_export, the site's own reading unchanged)
     assert s == {"comp": 538, "season": "2016/2017", "matches": [{
         "id": "2600001", "date": "2016-10-01", "comp": 538, "season": "2016/2017", "round": "5",
         "h": [102101, "الجزيرة"], "a": [102117, "العين"], "s": [2, 1],
         "ev": [[23, 0, "goal", "h", "علي مبخوت", "170716"], [70, 0, "yellow", "a", None, None]],
         "lu": {"h": [["علي مبخوت", "170716", "7", 1]]}, "co": {"h": "Henk ten Cate"}}]}
     t = json.load(open(d / "team-5789.json", encoding="utf-8"))
-    assert t["matches"][0]["id"] == f"k{m2}" and t["matches"][0]["ev"] == [[40, 0, "goal", "a", "عدنان الطلياني", f"k{old}"]]
+    assert t["matches"][0]["id"] == f"k{m2}" and plain(t)["matches"][0]["ev"] == [[40, 0, "goal", "a", "عدنان الطلياني", f"k{old}"]]
     ix = json.load(open(d / "index.json", encoding="utf-8"))
     assert ix == {"comps": {"538": ["2016-2017"]}, "teams": {"5789": 1}}
     assert out == {"matches": 2}
@@ -75,7 +92,7 @@ def test_a_match_before_a_clubs_merger_uses_the_name_it_had(tmp_path):
     G, m2, old = world(tmp_path)
     publish.matches(G, str(tmp_path / "o"), comps=(538,), teams=(), eras={102101: [["2017-07-01", "الجزيرة القديمة"]]})
     s = json.load(open(tmp_path / "o" / "matches" / "538" / "2016-2017.json", encoding="utf-8"))
-    assert s["matches"][0]["h"] == [102101, "الجزيرة القديمة"]
+    assert s["matches"][0]["h"][:2] == [102101, "الجزيرة القديمة"]
 
 
 def test_by_default_every_arab_top_league_in_the_archive_is_published(tmp_path):
