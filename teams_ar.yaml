@@ -164,3 +164,6 @@ rename:
 # Al Shabab and Dubai; FotMob keeps Al Ahli's id, so Al Ahli's seasons before it read «الأهلي»
 era_names:
   102119: [["2017-07-01", "الأهلي"]]
+  # the Soviet Union's and West Germany's games, kept under their successors (graph/load/teams.SUCCESSOR)
+  8713: [["1992-01-01", "الاتحاد السوفيتي"]]
+  8570: [["1949-01-01", "ألمانيا"], ["1990-10-03", "ألمانيا الغربية"]]

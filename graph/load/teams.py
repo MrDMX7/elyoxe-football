@@ -157,6 +157,11 @@ COUNTRY = [{"united states", "usa"}, {"czech republic", "czechia"}, {"turkey", "
            {"bosnia and herzegovina", "bosnia herzegovina"}]
 
 
+# a country's old name whose games the sources keep under its successor (martj42's «Russia» of 1970, FotMob's Germany); its
+# name on those days is teams_ar.yaml era_names'
+SUCCESSOR = {"soviet union": "russia", "ussr": "russia", "west germany": "germany", "germany fr": "germany"}
+
+
 def _country(name):
     f = " ".join(fold(name).replace("-", " ").split())
     return next((min(g) for g in COUNTRY if f in g), f)
@@ -172,6 +177,12 @@ def national_pairs(teams, met, played, share, min_share=0.5):
             nat[_country(name)].append(tid)
     out = []
     for tid, name, _, kind, fm in teams:
+        succ = SUCCESSOR.get(_country(name or "")) if not fm else None
+        if succ:                               # Fjelstul's «Soviet Union»: martj42 and FotMob hold its games as Russia's
+            fits = [k for k in nat.get(succ, ()) if played.get(k, 0) > 0]
+            if len(fits) == 1 and (min(tid, fits[0]), max(tid, fits[0])) not in met:
+                out.append((tid, fits[0]))
+            continue
         if fm or kind in ("national", "club") or not name or share.get(tid, 0) < min_share:
             continue
         fits = [k for k in nat.get(_country(name), ()) if played.get(k, 0) > 0]

@@ -145,3 +145,14 @@ def test_one_old_club_from_rsssf_and_schochastics_is_one_club():
     src = {100: {"rsssf-name"}, 200: {"sch"}, 101: {"rsssf-name"}, 201: {"sch"}, 102: {"rsssf-name"}, 202: {"sch"},
            103: {"rsssf-name"}, 104: {"rsssf-name"}, 203: {"sch"}}
     assert source_twins(teams, src, frozenset({(101, 201)})) == [(200, 100)]
+
+
+def test_the_soviet_union_and_west_germany_are_their_successors_fotmob_records():
+    # World Cup 1970 held each Soviet and West German game twice: Fjelstul's «Soviet Union» and martj42's (FotMob) Russia
+    from graph.load.teams import national_pairs
+    teams = [(16, "Russia", None, "national", True), (6, "Germany", None, "national", True),
+             (29398, "Soviet Union", None, "national", False), (29397, "West Germany", None, "national", False),
+             (29399, "East Germany", None, "national", False), (27614, "Czechoslovakia", None, "national", False)]
+    played = {16: 756, 6: 1042, 29398: 31, 29397: 62, 29399: 6, 27614: 522}
+    assert national_pairs(teams, frozenset(), played, {}) == [(29397, 6), (29398, 16)]          # East Germany met West Germany: never
+    assert national_pairs(teams, frozenset({(6, 29397)}), played, {}) == [(29398, 16)]
