@@ -37,7 +37,9 @@ def load(G, reg, S):
     f = os.path.join(S.db, FILE)
     if not os.path.exists(f):
         return {"skipped": "no espn.json.gz"}
-    rows = [r for r in json.load(gzip.open(f, "rt", encoding="utf-8"))["matches"] if r.get("teams") and len(r["teams"]) == 2]
+    # a game with its squads only: the scoreboards also list squad-less games with made-up scores (2009/10: «Wolves 7-1 West Ham»)
+    rows = [r for r in json.load(gzip.open(f, "rt", encoding="utf-8"))["matches"] if r.get("teams") and len(r["teams"]) == 2
+            and any(ro.get("men") for ro in r.get("rosters") or [])]
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     n = Counter()
     fm_team = {t for (t,) in q("SELECT tifo_id FROM xref WHERE type='team' AND source='fotmob'")}

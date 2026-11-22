@@ -8,7 +8,7 @@ starters, substitutions, goals with minute, cards, the referee, the ground, the 
   python -m graph.espn_fetch --cache DIR pack OUT    # one gz file for the graph build (graph/load/espn.py)
 
 Run where ESPN answers (the laptop, 22 Nov 2026), four requests at a time."""
-import argparse, glob, gzip, json, os, sys, time, urllib.error, urllib.request
+import argparse, glob, gzip, http.client, json, os, sys, time, urllib.error, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 SITE = "https://site.api.espn.com/apis/site/v2/sports/soccer/"
@@ -35,7 +35,7 @@ def get(url, tries=4):
                 return None
             if i == tries - 1:
                 raise
-        except (urllib.error.URLError, TimeoutError, ConnectionError, json.JSONDecodeError):
+        except (urllib.error.URLError, TimeoutError, ConnectionError, json.JSONDecodeError, http.client.IncompleteRead, OSError):
             if i == tries - 1:
                 raise
         time.sleep(4 * (i + 1))

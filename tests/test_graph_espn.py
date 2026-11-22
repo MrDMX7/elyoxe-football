@@ -85,3 +85,11 @@ def test_a_game_no_source_held_is_espns_own_in_its_season(tmp_path):
     out = espn.load(G, reg, S)
     assert out["games_own"] == 1
     assert G.c.execute("SELECT e.season, m.home, m.src FROM match m JOIN edition e ON e.eid=m.eid WHERE m.date LIKE '2004-12-26%'").fetchone() == ("2004/2005", teams[9825], "espn")
+
+
+def test_a_game_with_no_squads_is_not_a_game(tmp_path):
+    # ESPN's eng.1 scoreboard of 2009/10 also lists squad-less games with made-up scores (Wolves 7-1 West Ham, 15 Aug 2009)
+    rows = [rec(400, "2009/2010", "2009-08-15", 7, 1, [], [])]
+    G, reg, cid, teams, S = world(tmp_path, rows)
+    out = espn.load(G, reg, S)
+    assert G.c.execute("SELECT count(*) FROM match").fetchone() == (0,) and not out.get("games_own")
