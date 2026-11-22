@@ -159,3 +159,57 @@ def test_a_club_keeps_the_name_it_had_in_that_season(tmp_path):
     d = json.load(open(tmp_path / "o" / "editions" / "538.json", encoding="utf-8"))
     assert {s["season"]: s["champion"]["name"] for s in d["seasons"]} == {"2022/2023": "شباب الأهلي", "2015/2016": "الأهلي"}
     assert publish.era_names()[102119] == [["2017-07-01", "الأهلي"]]
+
+
+def _league(tmp_path, season, results, champion, country="ENG"):
+    """a league season of three clubs, its matches only (no standings), and its champion"""
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    lg = reg.mint("competition", "fotmob", 47)
+    G.put("competition", {"cid": lg, "name": "Premier League", "name_ar": "الدوري الإنجليزي الممتاز", "kind": "league", "country": country}, "fotmob")
+    G.xref("competition", lg, "fotmob", 47, "fotmob-native")
+    t = {}
+    for f, ar in ((8650, "ليفربول"), (10260, "مانشستر يونايتد"), (8668, "إيفرتون")):
+        t[f] = reg.mint("team", "fotmob", f)
+        G.put("team", {"tid": t[f], "name": str(f), "name_ar": ar}, "fotmob")
+        G.xref("team", t[f], "fotmob", f, "fotmob-native")
+    e = reg.mint("edition", "fotmob", f"47|{season}")
+    G.put("edition", {"eid": e, "cid": lg, "season": season}, "fotmob")
+    for i, (h, a, hs, as_) in enumerate(results):
+        G.put("match", {"mid": reg.mint("match", "sch", f"m{i}"), "eid": e, "date": f"{season[:4]}-10-{i + 1:02d}", "home": t[h], "away": t[a], "hs": hs, "as_": as_, "status": "finished"}, "sch")
+    G.c.execute("insert into honour(eid, kind, rank, tid, src) values(?, 'champion', 1, ?, 's365')", (e, t[champion]))
+    G.c.commit()
+    publish.editions(G, str(tmp_path / "o"))
+    return json.load(open(tmp_path / "o" / "editions" / "47.json", encoding="utf-8"))["seasons"][0]
+
+
+RESULTS = [(8650, 10260, 2, 0), (10260, 8650, 1, 1), (8650, 8668, 3, 1), (8668, 8650, 0, 0), (10260, 8668, 2, 1), (8668, 10260, 2, 2)]
+
+
+def test_a_league_season_with_no_standings_gets_its_table_from_its_matches(tmp_path):
+    # the Premier League's 2015/16 and every season before showed no table: the DB holds the matches, not the standings
+    s = _league(tmp_path, "2015/2016", RESULTS, 8650)
+    assert s["table"][0] == [1, 8650, "ليفربول", 4, 2, 2, 0, 6, 2, 8]          # three points a win
+    assert [r[1] for r in s["table"]] == [8650, 10260, 8668] and s["table_from_matches"] is True
+
+
+def test_two_points_a_win_before_the_three_point_rule(tmp_path):
+    s = _league(tmp_path, "1975/1976", RESULTS, 8650)
+    assert s["table"][0][9] == 6                                                # England: three points from 1981/82
+
+
+def test_a_computed_table_whose_first_is_not_the_champion_is_not_shown(tmp_path):
+    # a season decided by play-offs, groups or a split: the matches' table is not the final standing
+    s = _league(tmp_path, "2015/2016", RESULTS, 10260)
+    assert not s.get("table")
+
+
+def test_a_season_that_plays_as_a_league_gets_its_table_whatever_its_competitions_kind():
+    from graph.publish import looks_like_league
+    assert looks_like_league([(h, a, 1, 0) for h, a, *_ in RESULTS])                       # each plays each, home and away
+    assert not looks_like_league([(1, 2, 1, 0), (3, 4, 2, 0), (1, 3, 0, 0)])                 # a cup: unequal games, pairs missing
+
+
+def test_a_strict_round_robin_shows_its_table_with_no_champion_known():
+    from graph.publish import strict_round_robin
+    assert strict_round_robin([(h, a, 1, 0) for h, a, *_ in RESULTS])                       # each pair twice, each club four games
+    assert not strict_round_robin([(h, a, 1, 0) for h, a, *_ in RESULTS] + [(8650, 10260, 1, 0)])   # a play-off on top

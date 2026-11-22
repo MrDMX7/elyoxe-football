@@ -1351,7 +1351,7 @@ ${items}
         crumbs:`<a href="/c/${c.key}/">${esc(c.name_ar)}</a>، <a href="${arch}">كل المواسم</a>`,
         chips:[nb.older && sLink(nb.older, "الموسم اللي قبله"), nb.newer && (nb.newer === c.season ? `<a class="chip" href="/c/${c.key}/">الموسم الحالي</a>` : sLink(nb.newer, "اللي بعده")),   // the season in play: the competition's own page
           `<a class="chip" href="${arch}">كل المواسم</a>`].filter(Boolean).join(""),
-        note:s.note ? `<p class="note mt">${esc(s.note)}</p>` : "", table:"", fx:"", num:"", hist:HP.seasonBody(Object.assign({}, s, { table:[], top_scorers:[] }), c, hpo) } });
+        note:(s.note ? `<p class="note mt">${esc(s.note)}</p>` : "") + (s.table_from_matches ? '<p class="note mt">الترتيب محسوب من نتايج مباريات الموسم، بنظام النقاط في زمانه.</p>' : ""), table:"", fx:"", num:"", hist:HP.seasonBody(Object.assign({}, s, { table:[], top_scorers:[] }), c, hpo) } });
       v5s.nav = sNav(`موسم ${esc(s.season)}`, arch, "كل المواسم");
       write(sp.slice(1) + "index.html", page({ v5:v5s,
         path:sp, page:"ref", noindex:!okS, title:`${c.name_ar} ${s.season}: البطل والترتيب والهدافين | تيفو`, desc:`موسم ${s.season} من ${c.name_ar}${chN ? `: البطل ${chN}` : ""}، والترتيب النهائي والهدافين وأفضل اللاعبين.`,

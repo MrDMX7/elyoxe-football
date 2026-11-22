@@ -214,6 +214,51 @@ def _season_start(season):
     return f"{s[:4]}-08-01" if "/" in s else f"{s[:4]}-01-01"
 
 
+
+def three_points_from(country):
+    """the season a league first gave three points for a win: England 1981/82, nearly everyone else 1994/95"""
+    return 1981 if country in ("ENG", "England") else 1994
+
+
+def looks_like_league(rows):
+    """a season played as a league whatever its competition's kind (222 of FotMob's competitions carry none): every club about
+    as many games as the others, and nearly every pair met"""
+    games, pairs = defaultdict(int), set()
+    for h, a, *_ in rows:
+        games[h] += 1
+        games[a] += 1
+        pairs.add(frozenset((h, a)))
+    n = len(games)
+    return n >= 3 and max(games.values()) - min(games.values()) <= 2 and len(pairs) >= 0.95 * n * (n - 1) / 2
+
+
+def strict_round_robin(rows):
+    """every pair met the same number of times and every club played as often: the matches' table is the final one
+    (deductions apart), champion known or not"""
+    games, pairs = defaultdict(int), defaultdict(int)
+    for h, a, *_ in rows:
+        games[h] += 1
+        games[a] += 1
+        pairs[frozenset((h, a))] += 1
+    n = len(games)
+    return n >= 3 and len(set(games.values())) == 1 and len(pairs) == n * (n - 1) // 2 and len(set(pairs.values())) == 1
+
+
+def table_from_matches(rows, three):
+    """[(team, played, won, drawn, lost, for, against, points)] ordered by points, goal difference, goals scored: a league season's
+    final standing from its matches, when no source kept one (the Premier League before 2016, every European season)"""
+    t = defaultdict(lambda: [0, 0, 0, 0, 0, 0])
+    for h, a, hs, as_ in rows:
+        for me, f, g in ((h, hs, as_), (a, as_, hs)):
+            r = t[me]
+            r[0] += 1
+            r[1 if f > g else 2 if f == g else 3] += 1
+            r[4] += f
+            r[5] += g
+    win = 3 if three else 2
+    out = [(k, p, w, d, l, gf, ga, w * win + d) for k, (p, w, d, l, gf, ga) in t.items()]
+    return sorted(out, key=lambda r: (-r[7], -(r[5] - r[6]), -r[5]))
+
 def editions(G, out_dir, eras=None):
     """editions/<FotMob competition>.json: every season of each of our competitions with its champion, runner-up, final table,
     top scorers, season awards (best player, young player, goalkeeper, coach, local player), the champion's coach, the man of
@@ -221,6 +266,7 @@ def editions(G, out_dir, eras=None):
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     fm = lambda t: {a: int(b) for a, b in q(f"SELECT tifo_id, source_id FROM xref WHERE type='{t}' AND source='fotmob'") if str(b).isdigit()}
     fm_c, fm_t, fm_p = fm("competition"), fm("team"), fm("player")
+    kind_of, country_of = {}, {}
     tn = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
     pn = {p: (a or n) for p, n, a in q("SELECT pid, name, name_ar FROM player")}
     kn = {k: (a or n) for k, n, a in q("SELECT kid, name, name_ar FROM coach")}
@@ -233,6 +279,7 @@ def editions(G, out_dir, eras=None):
     n = 0
     for cid, fid in sorted(fm_c.items(), key=lambda x: x[1]):
         name, name_ar = q("SELECT name, name_ar FROM competition WHERE cid=?", (cid,))[0]
+        kind_of[cid], country_of[cid] = q("SELECT kind, country FROM competition WHERE cid=?", (cid,))[0]
         seasons = []
         for eid, season, note in q("SELECT eid, season, note FROM edition WHERE cid=? ORDER BY season DESC", (cid,)):
             hon = defaultdict(list)
@@ -245,6 +292,17 @@ def editions(G, out_dir, eras=None):
             if not hon and not table and not matches and not note:
                 continue
             champ = (hon.get("champion") or [(None, None)])[0][1]
+            computed = False
+            if not table and matches and kind_of.get(cid) in ("league", None):
+                rows = q("""SELECT home, away, hs, as_ FROM match WHERE eid=? AND hs IS NOT NULL AND as_ IS NOT NULL AND (round IS NULL OR
+                            (round NOT LIKE 'play-off%' AND round <> 'test match'))""", (eid,))   # the league's own games, not its play-offs
+                strict = strict_round_robin(rows)
+                table = table_from_matches(rows, three_points_from(country_of.get(cid)) <= int(season[:4])) if                     (champ and (kind_of.get(cid) == "league" or looks_like_league(rows))) or strict else []
+                if table and (table[0][0] == champ or (not champ and strict)):   # else a play-off, groups or a split decided it
+                    table = [[i, fm_t.get(t), at(t, _season_start(season)), p, w, d, l, gf, ga, pts] for i, (t, p, w, d, l, gf, ga, pts) in enumerate(table, 1)]
+                    computed = True
+                else:
+                    table = []
             coach = q("""SELECT x.kid, count(*) n FROM match_coach x JOIN match m ON m.mid=x.mid WHERE m.eid=? AND
                          ((x.side='h' AND m.home=?) OR (x.side='a' AND m.away=?)) GROUP BY x.kid ORDER BY n DESC LIMIT 1""", (eid, champ, champ)) if champ else []
             motm = q("""SELECT w.pid, count(*) n FROM match_award w JOIN match m ON m.mid=w.mid WHERE m.eid=? AND w.kind='motm'
@@ -254,7 +312,7 @@ def editions(G, out_dir, eras=None):
             when = _season_start(season)
             team = lambda t: {"fotmob": fm_t.get(t), "name": at(t, when)} if t else None
             seasons.append({"season": season, "matches": matches, "champion": team(champ), "runner_up": team((hon.get("runner_up") or [(None, None)])[0][1]),
-                            "table": table, "top_scorers": people("top_scorer")[:10],
+                            "table": table, **({"table_from_matches": True} if computed else {}), "top_scorers": people("top_scorer")[:10],
                             **{k: people(k)[:3] for k in ("best_player", "best_young", "best_goalkeeper", "best_local", "top_assist")},
                             "best_coach": [{"kid": k, "name": kn.get(k)} for r, t, p, k, v in hon.get("best_coach", []) if k][:1],
                             "champion_coach": {"kid": coach[0][0], "name": kn.get(coach[0][0])} if coach else None,
