@@ -53,7 +53,7 @@ rm -rf build/lambda && mkdir -p build/lambda
 cp -r sources compute build/lambda/
 cp poller.py analytics.py arabs.py more.py report.py extra2.py push.py pushplayer.py store.py config.py timeutil.py competitions.yaml stadiums.yaml teams_ar.yaml countries.yaml derbies.yaml alltime.yaml fifa_history.json coefficients.json build/lambda/
 for B in broadcast_by_country.json arab_clubs.json suspension_rules.json; do   # another agent's research (read only)
-  [ -f "/root/workspace/research/tifo-2026-09-27/$B" ] && cp "/root/workspace/research/tifo-2026-09-27/$B" build/lambda/
+  [ -f "$HOME/workspace/research/tifo-2026-09-27/$B" ] && cp "$HOME/workspace/research/tifo-2026-09-27/$B" build/lambda/
 done
 if [ -f names/players_ar.json ]; then mkdir -p build/lambda/names && cp names/players_ar.json build/lambda/names/; fi   # another agent's Arabic names (read only)
 find build/lambda -name "__pycache__" -type d -prune -exec rm -rf {} +
@@ -66,12 +66,17 @@ find build/lambda -name "__pycache__" -type d -prune -exec rm -rf {} +
   --platform manylinux2014_aarch64 --platform manylinux_2_28_aarch64 --implementation cp --python-version 3.13 \
   --only-binary=:all: -r requirements-push-binary.txt
 "$PY" -m pip install -q --disable-pip-version-check --target build/lambda --no-deps -r requirements-push-pure.txt
+find build/lambda -name "*.pyd" -delete   # on Windows the «pure» step takes charset-normalizer's win_amd64 build: its .py stand in
+# the bundle's import check loads its aarch64 wheels: only an aarch64 Linux host can (the Fold); elsewhere (the Windows
+# laptop) the tests above and the live checks after the deploy stand for it
+if [ "$(uname -s)-$(uname -m)" = "Linux-aarch64" ]; then
 "$PY" - <<'EOF'
 import sys; sys.path.insert(0, "build/lambda")
 import poller, yaml, bs4, tzdata, push  # noqa: F401  (import check of the bundle itself)
 import pywebpush, http_ece, py_vapid, requests  # noqa: F401
 print("bundle imports ok")
 EOF
+else echo "bundle import check skipped on $(uname -s)-$(uname -m): its wheels are aarch64"; fi
 
 # 3. stack
 # the alert address live on the poller (the owner paused alerts on 2026-10-02 by pointing it at the SES simulator):
