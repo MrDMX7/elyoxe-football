@@ -106,3 +106,10 @@ test("the meetings list dates an old meeting with its year", () => {
     matches: [["1895-10-12", "x", "1895/1896", "8650", 0, 0, "10260", "k77"]] } } }, md);
   assert.match(U.h2h(md), /1895/);
 });
+
+test("a side the archive holds no players for says so, no empty card (22 Nov QA: /m/k1481515/)", () => {
+  const m = Object.assign({}, M, { lu: { h: [["ربيع العفوي", "k500", "9", 1]], a: [] } });
+  const h = V.lineups(m, V.md(m));
+  assert.doesNotMatch(h, /<div class="card"><\/div>/);
+  assert.match(h, /ما عندنا تشكيلة/);
+});

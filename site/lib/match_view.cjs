@@ -22,6 +22,8 @@ function lineups(m, d) {
   if (!(L.h || []).length && !(L.a || []).length) return null;
   const row = p => U.row({ href: p[1] ? "/p/" + p[1] + "/" : null, t: (p[2] ? '<span class="num muted">' + esc(p[2]) + "</span> " : "") + U.pname({ id: p[1], name: p[0] }) });
   const side = k => { const l = L[k] || [], co = (m.co || {})[k], st = l.filter(p => p[3] !== 0), sb = l.filter(p => p[3] === 0), marked = l.some(p => p[3] === 1);
+    if (!l.length) return (co ? U.grp("المدرب", '<div class="row"><span class="rt">' + U.pname({ name: co }) + "</span></div>") : "") +
+      '<div class="card">' + U.empty("ما عندنا تشكيلة هالفريق في هالمباراة.") + "</div>";      // never an empty card
     return (co ? U.grp("المدرب", '<div class="row"><span class="rt">' + U.pname({ name: co }) + "</span></div>") : "") +
       (marked ? U.grp("الأساسيين", st.map(row).join("")) + (sb.length ? U.grp("البدلاء", sb.map(row).join("")) : "") : U.grp("شاركوا في المباراة", l.map(row).join(""))); };
   return '<div class="mt2">' + U.seg("lu", [["home", U.tname(d.home)], ["away", U.tname(d.away)]], "home", { sm: 1 }) + "</div>" + U.pane("lu", "home", side("h"), true) + U.pane("lu", "away", side("a"));

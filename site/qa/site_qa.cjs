@@ -56,19 +56,22 @@ function sample(paths) {
       const iw = innerWidth, wide = [...document.querySelectorAll("main *")].filter(e => { const r = e.getBoundingClientRect(); return r.width > iw + 2 && getComputedStyle(e).overflowX !== "auto" && !e.closest("[style*='overflow'],.tblw,.hs,.chips,.seg"); })
         .slice(0, 4).map(e => e.tagName.toLowerCase() + "." + String(e.className).slice(0, 30) + " " + Math.round(e.getBoundingClientRect().width));
       const text = (document.querySelector("main") || document.body).innerText;
-      const imgs = [...document.images].filter(i => i.complete && i.naturalWidth === 0 && i.src && !i.src.startsWith("data:")).map(i => i.src).slice(0, 4);
-      const empty = [...document.querySelectorAll("section.grp")].filter(s => !s.innerText.replace(/\s+/g, "").length || (s.querySelector(".card") && !s.querySelector(".card").innerText.trim())).length;
+      const broken = [...document.images].filter(i => i.complete && i.naturalWidth === 0 && i.src && !i.src.startsWith("data:"));
+      const imgs = broken.filter(i => getComputedStyle(i).visibility !== "hidden").map(i => i.src).slice(0, 4);   // a crest that hides itself is no hole
+      const crestsMissing = broken.length - imgs.length;
+      const empty = [...document.querySelectorAll("section.grp")].filter(s => !s.hidden && s.offsetHeight > 0 && ((s.querySelector("h2") && !s.innerText.replace((s.querySelector("h2") || {}).innerText || "", "").trim()) ||
+        (s.querySelector(".card") && !s.querySelector(".card").innerText.trim() && !s.querySelector(".card img,.card svg,.card canvas")))).map(s => (s.querySelector("h2") || {}).innerText || s.id || "grp");
       const links = [...new Set([...document.querySelectorAll("main a[href^='/']")].map(a => a.getAttribute("href").split("#")[0]).filter(h => h && !h.startsWith("/v1/")))];
-      return { sw: document.documentElement.scrollWidth, iw, wide, text, imgs, empty, links, title: document.title };
+      return { sw: document.documentElement.scrollWidth, iw, wide, text, imgs, crestsMissing, empty, links, title: document.title };
     }).catch(e => ({ err: e.message }));
     const stray = m.text ? STRAY.map(r => (m.text.match(r) || [])[0]).filter(Boolean) : [];
     const bad = [];
     for (const h of (m.links || []).slice(0, 60)) { const st = await checkLink(h); if (st >= 400 || st < 0) bad.push(`${h} ${st}`); }
     const r = { path, kind: kind(path), status, title: m.title, overflow: m.sw > m.iw + 2 ? m.sw - m.iw : 0, wide: m.wide || [], stray, imgs: m.imgs || [],
-      empty: m.empty || 0, errors, badLinks: bad.slice(0, 8) };
-    r.ok = status === 200 && !r.overflow && !r.wide.length && !stray.length && !r.imgs.length && !r.empty && !errors.length && !bad.length;
+      crestsMissing: m.crestsMissing || 0, empty: m.empty || [], errors, badLinks: bad.slice(0, 8) };
+    r.ok = status === 200 && !r.overflow && !r.wide.length && !stray.length && !r.imgs.length && !r.empty.length && !errors.length && !bad.length;
     results.push(r);
-    process.stdout.write(`${r.ok ? "ok " : "BAD"} ${path}${r.ok ? "" : " " + JSON.stringify({ o: r.overflow, w: r.wide, s: stray, i: r.imgs.length, e: r.empty, x: errors.length, l: bad.length })}\n`);
+    process.stdout.write(`${r.ok ? "ok " : "BAD"} ${path}${r.ok ? "" : " " + JSON.stringify({ o: r.overflow, w: r.wide, s: stray, i: r.imgs.length, e: r.empty, x: errors, l: bad })}\n`);
     await page.close();
   }
   await browser.close();

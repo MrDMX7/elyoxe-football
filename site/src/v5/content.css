@@ -308,9 +308,9 @@
 .lc .spoil{margin-inline-start:.5rem;background:none;border:1px solid var(--label2);color:var(--label2);font-size:.75rem;padding:.15rem .45rem;cursor:pointer;white-space:nowrap}
 .lc .spoil[aria-pressed="true"]{background:var(--dune);border-color:var(--dune);color:var(--on-accent)}
 :is(.lc .nospoil,.nospoil .lc) .chip:not(.up):not(.shown),:is(.lc .nospoil,.nospoil .lc) .board .sc .dg:not(.shown),:is(.lc .nospoil,.nospoil .lc) ul.ev,:is(.lc .nospoil,.nospoil .lc) .catchup,:is(.lc .nospoil,.nospoil .lc) .timeline,:is(.lc .nospoil,.nospoil .lc) .gs{filter:blur(7px);cursor:pointer}
-.lc .cd{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:var(--sunken);color:var(--chalk);padding:.7rem 1rem;margin-block:1rem;border-inline-start:.5rem solid var(--chalk)}
+.lc .cd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem 1rem;background:var(--sunken);color:var(--chalk);padding:.7rem 1rem;margin-block:1rem;border-inline-start:.5rem solid var(--chalk)}
 :is(.lc .cd,.cd .lc) b{font-family:var(--kufi);font-weight:800}
-:is(.lc .cd,.cd .lc) .dg{font-size:1.6rem}
+:is(.lc .cd,.cd .lc) .dg{font-size:clamp(1.05rem,4.6vw,1.6rem)}
 :is(.lc .cd,.cd .lc) a{color:var(--chalk)}
 body[data-page="tv"]{background:var(--sunken);color:var(--chalk)}
 .lc .tvbar{display:flex;align-items:center;gap:1rem;margin-block:1rem}
@@ -1125,7 +1125,7 @@ body[data-page="poster"]{background:#fff}
 :is(.lc .mnow,.mnow .lc) h3{margin:0 0 .2rem;font-size:.95rem}
 :is(.lc .mnow,.mnow .lc) p{margin:.1rem 0;font-size:.9rem}
 .lc .mbday{background:var(--mg);color:var(--label);padding:.6rem .9rem;margin:.5rem 0}
-.lc .museum{display:grid;gap:1.5rem;margin-block-start:1.5rem}
+.lc .museum{display:grid;grid-template-columns:minmax(0,1fr);gap:1.5rem;margin-block-start:1.5rem}
 @media (min-width:980px){.lc .museum{grid-template-columns:15rem minmax(0,1fr)}
 .lc .mrooms{position:sticky;inset-block-start:calc(var(--topH,4rem) + 1rem);align-self:start;max-block-size:calc(100svh - 6rem);overflow:auto}}
 :is(.lc .mrooms,.mrooms .lc) ol{list-style:none;margin:0;padding:0;font-size:.85rem;line-height:1.5}
