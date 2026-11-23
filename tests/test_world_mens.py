@@ -16,3 +16,8 @@ def test_a_club_whose_own_name_says_womens_side_is_left_out_with_a_league_mostly
             4: {"details": {"name": "Arsenal"}}, 5: {"details": {"name": "Chelsea (W)"}}, 6: {"details": {"name": "Spurs"}}, 7: {"details": {"name": "Leeds"}}}
     league = {1: 10, 2: 10, 3: 10, 4: 20, 5: 20, 6: 20, 7: 20}
     assert W.mens_clubs(raws, league) == {4, 6, 7}
+
+
+def test_the_players_of_the_clubs_left_out_are_listed_as_removed_on_purpose():
+    raws = {1: {"squad": {"squad": [{"members": [{"id": 11}, {"id": 12}]}]}}, 2: {"squad": {"squad": [{"members": [{"id": 12}, {"id": 21}]}]}}}
+    assert W.removed_players(raws, keep={2}) == [11]                 # 12 plays for a club kept too

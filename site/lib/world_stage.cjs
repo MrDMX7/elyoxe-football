@@ -36,6 +36,12 @@ function forwardPage(to, name){
 }
 // the encyclopedia page's card as rows of label and value, as the profiles' (23 Nov 2026: a bare <dl> piled up on today's pages)
 const bioRows = rows => rows.map(r => `<div class="row"><span class="rt">${r[0]}</span><span class="rv">${r[1]}</span></div>`).join("");
+// the pages leaving the scope: {del, keep}. The men taken out on purpose always go; the others go unless they are over 5 % of
+// the pages (a data glitch, not a decision), then they are kept this run
+function leaving(gone, removed, total) {
+  const meant = gone.filter(id => removed.has(String(id))), rest = gone.filter(id => !removed.has(String(id)));
+  return rest.length > Math.max(50, total * .05) ? { del: meant, keep: rest } : { del: gone, keep: [] };
+}
 module.exports = async function(X){
   const { get, page, esc, SITE, CACHE, fs, path, bcLd, finalize, written, NAMES_AR, FMN, WP, PH, phHtml, colors, teamPages, playerPages, S_TEAMS, ASSET_V } = X;
   const pmates = X.pmates || {}, pname = X.pname || (() => null);   // owner item 11: his club's players that have a /p/ page (build.cjs)
@@ -45,6 +51,7 @@ module.exports = async function(X){
   fs.mkdirSync(DIR, { recursive:true }); fs.rmSync(DELTA, { recursive:true, force:true }); fs.mkdirSync(DELTA, { recursive:true });
   const W = await get("world/players.json"), WI = (await get("world/index.json", 2)) || {};
   const FM2P = (await get("archive/fm2p.json")) || {};
+  const REMOVED = new Set((((await get("world/removed.json")) || {}).players || []).map(String));
   if (!W || !(W.players || []).length){   // the published pages stay as they are: same manifest, nothing to upload or delete
     const m0 = rj("manifest.json", {}); fs.writeFileSync(path.join(DIR, "manifest.next.json"), JSON.stringify(m0)); fs.writeFileSync(path.join(DIR, "delete.txt"), "");
     Object.keys(m0).forEach(id => written(`/db/player/${id}`)); console.error("world stage: no world/players.json; kept the published pages");
@@ -133,9 +140,10 @@ module.exports = async function(X){
   }
   // pages that left the scope: deleted from S3 by the runner, unless that is more than 5 % of them (a data glitch, not a decision)
   const gone2 = Object.keys(man).filter(id => !next[id]);   // a page already published is never held back by the NEW budget, so these left the scope
-  const guard = gone2.length > Math.max(50, Object.keys(man).length * .05);
-  if (guard){ console.error(`world stage: ${gone2.length} pages would leave the scope (more than 5 %); kept this run`); gone2.forEach(id => { next[id] = man[id]; urls.push({ u:`/db/player/${id}/`, lm:man[id][3] }); written(`/db/player/${id}`); }); }
-  fs.writeFileSync(path.join(DIR, "delete.txt"), guard ? "" : gone2.map(id => `db/player/${id}/index.html`).join("\n"));
+  // (23 Nov 2026) the men taken out on purpose (world/removed.json: the women's sides' players) go whatever the guard says
+  const LV = leaving(gone2, REMOVED, Object.keys(man).length), guard = LV.keep.length > 0;
+  if (guard){ console.error(`world stage: ${LV.keep.length} pages would leave the scope (more than 5 %); kept this run`); LV.keep.forEach(id => { next[id] = man[id]; urls.push({ u:`/db/player/${id}/`, lm:man[id][3] }); written(`/db/player/${id}`); }); }
+  fs.writeFileSync(path.join(DIR, "delete.txt"), LV.del.map(id => `db/player/${id}/index.html`).join("\n"));
   fs.writeFileSync(path.join(DIR, "profiles.json"), JSON.stringify(prof)); fs.writeFileSync(path.join(DIR, "meta.json"), JSON.stringify(Object.assign(meta, { gen, at:new Date().toISOString() })));
   fs.writeFileSync(path.join(DIR, "manifest.next.json"), JSON.stringify(next));
   const st = { forwarded:nFwd, candidates:cand.length, fetched, failed, waiting:cand.filter(p => meta.done[p[0]] !== gen).length, scope:inScope.length, pages:Object.keys(next).length, new:nNew, changed:nChg, shell:nShell, kept:nKeep, deleted:guard ? 0 : gone2.length, linkP:withP.size, mb:+(bytes / 1e6).toFixed(1), s:+((Date.now() - t0) / 1000).toFixed(1) };
@@ -147,3 +155,4 @@ module.exports = async function(X){
 };
 module.exports.forwardPage = forwardPage;
 module.exports.bioRows = bioRows;
+module.exports.leaving = leaving;

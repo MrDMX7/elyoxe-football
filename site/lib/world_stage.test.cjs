@@ -15,3 +15,12 @@ test("the encyclopedia page's card is rows of label and value, as the profiles' 
   assert.equal(h, '<div class="row"><span class="rt">المركز</span><span class="rv">وسط</span></div>' +
     '<div class="row"><span class="rt">الطول</span><span class="rv"><span class="num">174</span> سم</span></div>');
 });
+
+test("pages of men taken out on purpose (world/removed.json: the women's sides) go whatever the 5 % guard says", () => {
+  const man = Object.fromEntries(Array.from({ length: 1000 }, (_, i) => [String(i), 1]));
+  const gone = Array.from({ length: 120 }, (_, i) => String(i));               // 12 % leave: the guard holds them…
+  const r = W.leaving(gone, new Set(Array.from({ length: 100 }, (_, i) => String(i))), Object.keys(man).length);
+  assert.deepEqual([r.del.length, r.keep.length], [120, 0]);                    // …but 100 were taken out on purpose: 20 left, under the guard
+  const r2 = W.leaving(gone, new Set(["0"]), 1000);
+  assert.deepEqual([r2.del.length, r2.keep.length], [1, 119]);                 // 119 unexplained: a data glitch, kept
+});

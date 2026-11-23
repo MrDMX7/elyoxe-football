@@ -40,6 +40,14 @@ def mens_clubs(raws, league_of):
     return {c for c, r in raws.items() if r and c not in w and league_of[c] not in womens}
 
 
+def removed_players(raws, keep):
+    """the players of the clubs left out (the women's sides) who play for no club kept: world/removed.json, so the site's
+    world stage takes their pages down whatever its 5 % guard says (23 Nov 2026)"""
+    ids = lambda r: {m["id"] for g in ((r or {}).get("squad") or {}).get("squad") or [] for m in g.get("members") or [] if m.get("id")}
+    kept = set().union(*(ids(raws[c]) for c in keep if c in raws)) if keep else set()
+    return sorted(set().union(*(ids(r) for c, r in raws.items() if c not in keep)) - kept) if raws else []
+
+
 def mens(teams):
     """a league's teams with FotMob's women's sides («(W)») left out, and none of a league that is mostly theirs (23 Nov 2026:
     214 women's clubs from leagues whose names never say so: Toppserien, the Northern Super League)"""
@@ -149,6 +157,7 @@ def main(argv=None):
         with ThreadPoolExecutor(8) as ex:
             list(ex.map(lambda c: store.put_json(f"world/club/{c['id']}.json", c, cache="warm"), cards.values()))
         store.put_json("world/leagues.json", {"generated": date.today().isoformat(), "leagues": lg_out}, cache="warm")
+        store.put_json("world/removed.json", {"generated": date.today().isoformat(), "players": removed_players(raws, keep)}, cache="warm")
         store.put_json("world/index.json", idx, cache="warm")
         if plist:
             store.put_json("world/players.json", {"generated": date.today().isoformat(), "players": plist}, cache="warm")
