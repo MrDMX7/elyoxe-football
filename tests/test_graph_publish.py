@@ -239,3 +239,16 @@ def test_a_seasons_tournaments_are_parts_of_its_row_not_seasons_of_their_own(tmp
     assert sorted(by) == ["1985 Metropolitano", "2009/2010"]          # a tournament with no season row of its own stays a row
     assert by["2009/2010"]["parts"] == [{"name": "Apertura", "champion": {"fotmob": 10077, "name": "بانفيلد"}, "runner_up": None},
                                         {"name": "Clausura", "champion": {"fotmob": 10087, "name": "أرجنتينوس جونيورز"}, "runner_up": None}]
+
+
+def test_every_man_with_a_wikidata_item_is_listed_for_the_photo_stage(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    p = reg.mint("player", "wikidata", "Q193464")
+    G.put("player", {"pid": p, "name": "Alan Smith", "born": "1962-11-21"}, "wikidata")
+    G.xref("player", p, "wikidata", "Q193464", "wikidata-native")
+    q = reg.mint("player", "rsssf", "x")
+    G.put("player", {"pid": q, "name": "No Item"}, "rsssf")
+    G.c.commit()
+    out = publish.person_qids(G, str(tmp_path / "o"))
+    d = json.load(open(tmp_path / "o" / "people" / "qids.json", encoding="utf-8"))
+    assert d == {f"k{p}": ["Q193464", "1962-11-21", "Alan Smith"]} and out["qids"] == 1

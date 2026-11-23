@@ -66,6 +66,7 @@ def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
         rec["coach_files"] = P.coaches(G, out_dir)      # v1/coaches/* (phase 5)
         rec["edition_files"] = P.editions(G, out_dir)   # v1/editions/* (phase 7: the season pages)
         rec["people_files"] = P.people(G, out_dir)      # v1/people/index.json: the old players' pages (/p/k<id>/)
+        rec["person_qids"] = P.person_qids(G, out_dir)  # v1/people/qids.json: the photo stage's archive run
         rec["match_files"] = P.matches(G, out_dir)      # v1/matches/*: the old matches' pages (the Arab top leagues, the national team)
         rec["h2h_files"] = P.h2h(G, out_dir)            # v1/h2h-all/*: every meeting in every competition
         rec["team_h2h_files"] = P.team_h2h(G, out_dir)  # v1/h2h-team/*: every FotMob team against each opponent (match pages)

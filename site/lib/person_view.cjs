@@ -87,8 +87,11 @@ function caps(p) {
 
 function body(p, o) {
   o = o || {};
-  const nm = nameOf(p);
-  return `<div class="lt"><h1>${txt(nm)}</h1>${p.ar && p.n && p.ar !== p.n ? `<p class="muted"><span class="lat">${esc(p.n)}</span></p>` : ""}</div>` +
+  const nm = nameOf(p), ph = o.photo;
+  // a free photo (photos.build --archive: Wikidata/Commons, face-cropped, grey) beside the name, with its author and licence
+  const fig = ph ? `<div class="lt-x"><figure class="pph" style="--pc:#1B4A3F"><img src="${esc(ph.src)}" alt="" width="400" height="500"><figcaption><a href="${esc(ph.page || "")}" rel="noopener">${
+    esc(((ph.artist || "").replace(/\s+/g, " ").trim().slice(0, 40)) + (ph.license ? " · " + ph.license : ""))}</a></figcaption></figure></div>` : "";
+  return `<div class="lt${fig ? " lt-row" : ""}"><div><h1>${txt(nm)}</h1>${p.ar && p.n && p.ar !== p.n ? `<p class="muted"><span class="lat">${esc(p.n)}</span></p>` : ""}</div>${fig}</div>` +
     facts(p) + honours(p, o) + career(p, o) + archive(p, o) + moves(p, o) + injuries(p) + caps(p);
 }
 

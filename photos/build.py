@@ -185,8 +185,12 @@ def main(argv=None):
                     help="check who every Wikidata person is (about 28 queries, no image downloads): state/photos.json gets "
                          "identity «ok» or the reason for every player (db/wiki_ar.py reads it), and a photo of someone else "
                          "leaves ph/index.json")
+    ap.add_argument("--archive", action="store_true",
+                    help="the archive's men (v1/people/qids.json from the graph build): v1/ph/k<Tifo id>.webp for /p/k<id>/")
     a = ap.parse_args(argv)
     store = Store(S3Backend(BUCKET))
+    if a.archive:
+        return archive_run(store, a)
     names = json.load(open(os.path.join(HERE, "names", "players_ar.json"), encoding="utf-8"))
     dobs = birth_dates(store)
     st = store.get_state("photos.json", {}) or {}
@@ -265,6 +269,65 @@ def main(argv=None):
     if not a.dry:
         store.put_json("ph/index.json", index, cache="warm")
         store.put_state("photos.json", st)
+    return 0
+
+
+def portraits(store, cand, st, index, dry):
+    """Commons licences, then a face-cropped grey portrait per candidate (key -> Commons file): v1/ph/<key>.webp + its credit"""
+    lic = commons(sorted(set(cand.values())))
+    made = 0
+    for key, f in cand.items():
+        L = lic.get(f)
+        if not L or not L.get("thumb"):
+            st[key]["status"] = "no Commons record"; continue
+        st[key]["license"] = L["short"] or L["license"]
+        try:
+            pic = portrait(http(L["thumb"], timeout=60))
+        except Exception as e:
+            st[key]["status"] = f"download failed: {str(e)[:60]}"; continue
+        if not pic:
+            st[key]["status"] = "no clear face"; index["players"].pop(key, None); continue
+        st[key]["status"] = "ok"; made += 1
+        index["players"][key] = {"artist": L["artist"], "license": L["short"] or L["license"], "page": L["page"]}
+        if not dry:
+            store.b.put(f"v1/ph/{key}.webp", pic, "image/webp", "public, max-age=2592000")
+    return made
+
+
+def archive_run(store, a):
+    """(2026-11-23) the archive's men: every man the graph ties to Wikidata (v1/people/qids.json {k<id>: [qid, born, name]}),
+    the same identity rule (a footballer, our birth date equals Wikidata's, else the surname in the file name), keyed k<id>"""
+    qids = store.get_json("people/qids.json") or {}
+    st = store.get_state("photos_archive.json", {}) or {}
+    now = datetime.now(timezone.utc); cut = (now - timedelta(days=RECHECK_DAYS)).isoformat()
+    by_q = {}
+    for k, v in qids.items():
+        by_q.setdefault(v[0], []).append(k)
+    shared = {q: ks for q, ks in by_q.items() if len(ks) > 1}
+    todo = [k for k in qids if (st.get(k, {}).get("checked") or "") < cut]
+    if a.limit:
+        todo = todo[:a.limit]
+    print(f"{len(todo)} archive men to check")
+    wd = wikidata(sorted({qids[k][0] for k in todo}))
+    dobs = {k: qids[k][1] for k in todo if qids[k][1]}
+    cand = {}
+    for k in todo:
+        v = {"qid": qids[k][0], "latin": qids[k][2]}
+        w = wd.get(v["qid"])
+        why = identity(k, v, w, dobs, shared)
+        rec = {"qid": v["qid"], "checked": now.isoformat()[:19] + "Z", "identity": why or "ok"}
+        rec["status"] = "no image" if not w else why
+        if w and not why:
+            rec.pop("status"); cand[k] = w["img"]
+        st[k] = dict(st.get(k, {}), **rec)
+    print(f"{len(cand)} identity-checked photos; licences next")
+    index = store.get_json("ph/index.json") or {"players": {}}
+    made = portraits(store, cand, st, index, a.dry)
+    index["generated"] = now.isoformat()[:19] + "Z"
+    print(f"{made} portraits made; {sum(1 for k in index['players'] if k.startswith('k'))} archive men in the index")
+    if not a.dry:
+        store.put_json("ph/index.json", index, cache="warm")
+        store.put_state("photos_archive.json", st)
     return 0
 
 

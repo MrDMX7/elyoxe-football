@@ -186,7 +186,14 @@ def main(argv=None):
     say("export", archive_export.export(db, data, comps))
     open(os.path.join(a.work, "shell.html"), "w", encoding="utf-8").write(shells["archive"])
     json.dump(index, open(os.path.join(a.work, "index.json"), "w", encoding="utf-8"), ensure_ascii=False)
-    json.dump(known_pages(s3, bucket), open(os.path.join(a.work, "known.json"), "w"))
+    known = known_pages(s3, bucket)
+    try:                                           # the archive men's portraits (photos.build --archive)
+        raw = s3.get_object(Bucket=DATA_BUCKET, Key="v1/ph/index.json")["Body"].read()
+        ph = json.loads(gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw).get("players") or {}
+        known["ph"] = {k: v for k, v in ph.items() if k.startswith("k")}
+    except Exception as e:
+        say(f"no photo index ({e})")
+    json.dump(known, open(os.path.join(a.work, "known.json"), "w"))
     say("render")
     r = subprocess.run(["node", os.path.join(ROOT, "site", "archive", "build.cjs"), "--data", data, "--shell", os.path.join(a.work, "shell.html"),
                         "--index", os.path.join(a.work, "index.json"), "--known", os.path.join(a.work, "known.json"), "--out", out,

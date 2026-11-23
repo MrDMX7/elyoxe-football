@@ -36,3 +36,9 @@ test("the page's title and its Person data", () => {
   assert.equal(ld.birthDate, "1978-09-22");
   assert.equal(ld.alternateName, "Harry Kewell");
 });
+
+test("a man with a free photo shows it with its credit", () => {
+  const h = V.body(P, Object.assign({}, o, { photo: { src: "/v1/ph/k1.webp", page: "https://commons.wikimedia.org/wiki/File:K.jpg", artist: "A. B", license: "CC BY-SA 4.0" } }));
+  assert.match(h, /<figure class="pph"[^>]*><img src="\/v1\/ph\/k1\.webp"/);
+  assert.match(h, /CC BY-SA 4\.0/);
+});

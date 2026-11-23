@@ -39,6 +39,7 @@ function shellPage(shell, o) {
 function build(o) {
   const index = readJ(o.index) || { competitions: [] }, known = readJ(o.known) || {}, shell = fs.readFileSync(o.shell, "utf8");
   const KM = new Set((known.m || []).map(String)), KP = new Set((known.p || []).map(String)), KT = new Set((known.t || []).map(String));
+  const PH = known.ph || {};                     // the archive men's photos (v1/ph/index.json, k<id> keys)
   const comps = index.competitions.filter(c => !o.comps || o.comps.includes(+c.id));
   U.cfg.base = ""; U.cfg.pre = null; U.cfg.cn = {}; index.competitions.forEach((c, i) => { U.cfg.cn[c.id] = [c.key, c.name_ar, (c.country && c.country.iso2) || "", i]; });
   const written = new Set(), urls = [];        // urls: the indexable pages (the sitemaps)
@@ -115,7 +116,7 @@ function build(o) {
     if (!PERS.has(pid)) continue;
     const pth = `/p/k${pid}/`, nm = PV.nameOf(p), ok = PV.indexable(p);
     write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: PV.title(p), desc: PV.desc(p),
-      body: PV.body(p, { team: id => KT.has(String(id)), comp: compOf }) + U.foot(),
+      body: PV.body(p, { team: id => KT.has(String(id)), comp: compOf, photo: PH[`k${pid}`] ? Object.assign({ src: `/v1/ph/k${pid}.webp` }, PH[`k${pid}`]) : null }) + U.foot(),
       ld: { "@context": "https://schema.org", "@graph": [Object.assign(PV.ld(p, pth), { "@context": undefined }), Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
     if (ok) urls.push(pth);
     nPersons++;
