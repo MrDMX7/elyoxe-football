@@ -932,9 +932,15 @@ def main():
 
     def save():
         tmp = OUT.with_suffix(".tmp")
-        tmp.write_text(json.dumps(dict(sorted(out.items(), key=lambda kv: idkey(kv[0]))),
-                                  ensure_ascii=False, indent=1))
-        tmp.replace(OUT)
+        for t in range(6):                 # (23 Nov 2026) Windows can refuse a write mid-run (a scanner on the big file): retry
+            try:
+                tmp.write_text(json.dumps(dict(sorted(out.items(), key=lambda kv: idkey(kv[0]))),
+                                          ensure_ascii=False, indent=1))
+                tmp.replace(OUT)
+                return
+            except OSError:
+                time.sleep(2 * (t + 1))
+        raise OSError(f"could not write {OUT}")
 
     todo = [pid for pid in pool if pid not in out
             or (a.retry_generated and out[pid]["source"] == "generated"
