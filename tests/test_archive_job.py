@@ -98,3 +98,11 @@ def test_the_archives_own_pages_no_run_wrote_are_swept_and_the_sites_are_not():
 
 def test_the_photo_index_hands_the_renderer_the_men_and_the_coaches():
     assert J.archive_photos({"k1": 1, "c2": 2, "30981": 3}) == {"k1": 1, "c2": 2}
+
+
+def test_the_fotmob_to_archive_map_goes_out_whole_for_the_site_and_in_100_shards_for_the_browser():
+    files = J.fm2k_files({"4000001": 1, "4000101": 2, "4000002": 3})
+    assert files["v1/archive/fm2k.json"] == {"4000001": 1, "4000101": 2, "4000002": 3}
+    assert files["v1/archive/fm2k/1.json"] == {"4000001": 1, "4000101": 2}
+    assert files["v1/archive/fm2k/2.json"] == {"4000002": 3}
+    assert len([k for k in files if k.startswith("v1/archive/fm2k/")]) == 100      # every shard, empty ones too: no 404 in the browser

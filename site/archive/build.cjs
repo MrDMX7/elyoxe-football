@@ -54,6 +54,7 @@ function build(o) {
   const comps = index.competitions.filter(c => !o.comps || o.comps.includes(+c.id));
   U.cfg.base = ""; U.cfg.pre = null; U.cfg.cn = {}; index.competitions.forEach((c, i) => { U.cfg.cn[c.id] = [c.key, c.name_ar, (c.country && c.country.iso2) || "", i]; });
   const written = new Set(), urls = [];        // urls: the indexable pages (the sitemaps)
+  const FM2K = {};                               // FotMob id -> Tifo id of a match the site has no page for: its page is /m/k<id>/
   // every man with a record beyond a name gets /p/k<Tifo id>/ (graph/archive_export.persons), unless the site has his page
   const pdir = path.join(o.data, "people"), PERS = new Set();
   const shards = fs.existsSync(pdir) ? fs.readdirSync(pdir).filter(f => /^\d+\.json$/.test(f)) : [];
@@ -64,7 +65,7 @@ function build(o) {
   const relink = ms => ms.map(m => {
     const side = s => [s[0] && KT.has(String(s[0])) ? s[0] : s[2] != null && CLUBS[String(s[2])] ? `k${s[2]}` : null, s[1], s[2]];
     const man = (id, pid) => (id && KP.has(String(id)) ? id : pid != null && PERS.has(String(pid)) ? `k${pid}` : null);
-    return Object.assign({}, m, { id: KM.has(String(m.id)) ? m.id : `k${m.k}`, h: side(m.h), a: side(m.a), rh: m.rk != null && REFS[String(m.rk)] ? `/r/k${m.rk}/` : null,
+    return Object.assign({}, m, { id: KM.has(String(m.id)) ? m.id : `k${m.k}`, fm: /^\d+$/.test(String(m.id)) ? String(m.id) : null, h: side(m.h), a: side(m.a), rh: m.rk != null && REFS[String(m.rk)] ? `/r/k${m.rk}/` : null,
       chref: m.ck ? { h: coachHref(m.ck.h), a: coachHref(m.ck.a) } : null,
       ev: (m.ev || []).map(e => [e[0], e[1], e[2], e[3], e[4], man(e[5], e[6]), e[6]]),          // e[6]: the man's Tifo id (the season's leaders)
       lu: m.lu ? Object.fromEntries(Object.entries(m.lu).map(([k, v]) => [k, v.map(p => [p[0], man(p[1], p[4]), p[2], p[3]])])) : null });
@@ -117,6 +118,7 @@ function build(o) {
           ld: { "@context": "https://schema.org", "@graph": [Object.assign(bcLd([[c.name_ar, `/c/${c.key}/`], [s.season, sp], [`${m.h[1]} - ${m.a[1]}`, pth]]), { "@context": undefined }),
             eventLd(m, c, pth)] } }));
         if (okM) urls.push(pth);
+        if (m.fm) FM2K[m.fm] = m.k;                              // the site sends its links to this FotMob match here
         nMatches++;
       }
     }
@@ -180,6 +182,7 @@ function build(o) {
     if (h2 !== h) fs.writeFileSync(f, h2);
   }
   fs.writeFileSync(path.join(o.out, "_archive_urls.json"), JSON.stringify(urls));
+  fs.writeFileSync(path.join(o.out, "_fm2k.json"), JSON.stringify(FM2K));
   return { seasons: nSeasons, matches: nMatches, persons: nPersons, coaches: nCoaches, pages: written.size, dead };
 }
 

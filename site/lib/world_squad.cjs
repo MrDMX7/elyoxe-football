@@ -40,8 +40,9 @@ function relink(href, has) {
   if (m) return has.written.has(`/db/player/${m[1]}`) ? `/db/player/${m[1]}/` : null;
   m = /^\/t\/(\d+)\/$/.exec(href);
   if (m) return has.written.has(`/db/club/${m[1]}/`) || has.written.has(`/db/club/${m[1]}`) ? `/db/club/${m[1]}/` : has.clubs.has(+m[1]) ? `/db/club/?id=${m[1]}` : null;   // its static page first
-  m = /^\/m\/(\d+)\/$/.exec(href);   // a match: its card (39 of 40 sampled have matchx/<id>.json; the card says so when not)
-  if (m) return `/db/match/?id=${m[1]}`;
+  m = /^\/m\/(\d+)\/$/.exec(href);   // a match: its archive page (the same match page as today's; 23 Nov 2026, the owner: old
+  // matches «نفس المباريات اليديدة بالظبط»), else its card (39 of 40 sampled have matchx/<id>.json; the card says so when not)
+  if (m) return has.fm2k && has.fm2k[m[1]] != null ? `/m/k${has.fm2k[m[1]]}/` : `/db/match/?id=${m[1]}`;
   return null;
 }
 

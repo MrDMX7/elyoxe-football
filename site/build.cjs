@@ -1677,7 +1677,7 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   // W1.9: internal links to pages this build did not write become plain text (reported, never fatal)
   // (2026-10-09: ~125,000 a run) unless the encyclopedia has the player's page, the club's or the match's card (lib/world_squad.cjs relink)
   if (!ONLY) { const SKIP = /^\/(v1|assets|logo|lg|og|audio|api|embed|next)\/|^\/(sw\.js|favicon\.svg|robots\.txt|sitemap\.xml)$|^\/cast\/(feed\.xml|cover\.jpg)$/; let dead = 0, moved = 0; const seen = {};
-    const RL = { written:WRITTEN, clubs:new Set((((await get("world/index.json")) || {}).clubs || []).map(c => +c[0])) };
+    const RL = { written:WRITTEN, clubs:new Set((((await get("world/index.json")) || {}).clubs || []).map(c => +c[0])), fm2k:(await get("archive/fm2k.json")) || {} };
     for (const f of ALLP){ const h = fs.readFileSync(f, "utf8");
       const h2 = h.replace(/(<script\b[\s\S]*?<\/script>|<template\b[^>]*>)|<a\b([^>]*?)\shref="(\/[^"#?]*)(?:[?#][^"]*)?"([^>]*)>([\s\S]*?)<\/a>/g, (m, sc, pre, href, post, inner) => { if (sc) return m; if (SKIP.test(href) || WRITTEN.has(href) || WRITTEN.has(href.replace(/\/$/, ""))) return m;
         /* an Arabic path (/commentators/<slug>/) is linked percent-encoded */ const dh = (() => { try { return decodeURIComponent(href); } catch (e){ return href; } })(); if (dh !== href && (WRITTEN.has(dh) || WRITTEN.has(dh.replace(/\/$/, "")))) return m;

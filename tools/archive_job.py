@@ -89,6 +89,17 @@ def orphans(up, new):
     return sorted(k for k in up if k not in new and any(fnmatch.fnmatchcase(k, p) for p in ARCHIVE_OWNED))
 
 
+def fm2k_files(fm2k):
+    """{key: object}: the FotMob id -> archive page map (site/archive/build.cjs _fm2k.json), whole for the site build's link
+    check and in 100 shards (by id % 100) for the browser: /db/match/?id= and the 404 page send a FotMob match there"""
+    out = {"v1/archive/fm2k.json": dict(fm2k)}
+    for n in range(100):
+        out[f"v1/archive/fm2k/{n}.json"] = {}
+    for fm, k in fm2k.items():
+        out[f"v1/archive/fm2k/{int(fm) % 100}.json"][fm] = k
+    return out
+
+
 def archive_photos(ph):
     """the photo index's archive entries: the men (k<id>, /p/k<id>/) and the coaches (c<id>, /coach/k<id>/)"""
     return {k: v for k, v in ph.items() if k[:1] in ("k", "c")}
@@ -235,6 +246,12 @@ def main(argv=None):
         return 1
     say("render", r.stdout.strip()[-400:])
     urls = json.load(open(os.path.join(out, "_archive_urls.json"), encoding="utf-8"))
+    fm2k = json.load(open(os.path.join(out, "_fm2k.json"), encoding="utf-8")) if os.path.exists(os.path.join(out, "_fm2k.json")) else {}
+    if fm2k and not a.dry and not a.comps:          # a partial run knows some competitions' matches only
+        for key, obj in fm2k_files(fm2k).items():
+            s3.put_object(Bucket=DATA_BUCKET, Key=key, Body=gzip.compress(json.dumps(obj, separators=(",", ":")).encode()), ContentEncoding="gzip",
+                          ContentType="application/json; charset=utf-8", CacheControl="public, max-age=300, stale-while-revalidate=60")
+        say(f"fm2k: {len(fm2k)} FotMob matches have their archive page")
     sitemaps(out, urls)
     old = state_get(s3, MANIFEST, {}) or {}
     up = listed(s3, bucket) if not a.dry else set()

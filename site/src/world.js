@@ -211,6 +211,10 @@
 
   // ---------------------------------------------------------------- a match (any match since 2010: v1/matchx/<id>.json, db/matches.py)
   if (kind === "match"){
+    // (23 Nov 2026) an old match the archive has opens its archive page, the same match page as today's (the owner: «نفس
+    // المباريات اليديدة بالظبط»): v1/archive/fm2k/<id % 100>.json, FotMob id -> Tifo id (tools/archive_job.py)
+    get("archive/fm2k/" + (+id % 100) + ".json").catch(function(){ return {}; }).then(function(A){
+    if (A && A[id] != null){ location.replace("/m/k" + A[id] + "/"); return; }
     has("/m/" + id + "/").then(function(live){ if (live){ location.replace("/m/" + id + "/"); return; }
       get("matchx/" + id + ".json").then(function(m){
         var N = m.names || {}, hn = N.home || m.home[1], an = N.away || m.away[1];
@@ -241,6 +245,7 @@
         html += '<p class="src">من FotMob. <a href="/db/">الموسوعة</a></p>';
         box.innerHTML = html;
       }).catch(function(){ box.innerHTML = '<p class="empty">ما لقينا تفاصيل هالمباراة. <a href="/db/">الموسوعة</a></p>'; });
+    });
     });
     return;
   }

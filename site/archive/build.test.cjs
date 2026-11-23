@@ -153,3 +153,15 @@ test("a coach's page shows his own photo, else the one of his playing days", () 
   assert.match(fs.readFileSync(path.join(o.out, "coach/k11/index.html"), "utf8"), /<img src="\/v1\/ph\/k5\.webp"/);
   assert.match(fs.readFileSync(path.join(o.out, "coach/k13/index.html"), "utf8"), /<img src="\/v1\/ph\/c13\.webp"/);
 });
+
+test("a FotMob match the site has no page for is the archive's, and the build says where (_fm2k.json) for the site's links", () => {
+  const { o } = world();
+  const f = path.join(o.data, "matches", "47", "1990-1991.json"), s = JSON.parse(fs.readFileSync(f, "utf8"));
+  s.matches[0].id = "4000001";                         // FotMob knows it, the site has no /m/4000001/
+  s.matches[1].id = "4000002";
+  fs.writeFileSync(f, JSON.stringify(s));
+  fs.writeFileSync(o.known, JSON.stringify({ m: ["4000002"], p: [], t: [9825, 8650] }));
+  A.build(o);
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(o.out, "_fm2k.json"), "utf8")), { "4000001": 1 });
+  assert.ok(fs.existsSync(path.join(o.out, "m/k1/index.html")) && !fs.existsSync(path.join(o.out, "m/k2/index.html")));
+});
