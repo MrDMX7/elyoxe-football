@@ -21,3 +21,9 @@ test("a name spelled with a hyphen, an accent or another case is the same name",
   assert.equal(L.arabize('<span class="lat">youssef en nesyri</span>', d).html, "يوسف النصيري");
   assert.equal(L.arabize('<span class="lat">Sámi al jaber</span>', d).html, "سامي الجابر");
 });
+
+test("the names read off the live pages (names/site_latin_ar.json) win over an ambiguous or missing spelling", () => {
+  const d = L.dictionary([["Ahmed Hassan", "أحمد حسن"], ["Ahmed Hassan", "أحمد حسان"], ["Al Ain", "العين"]]);
+  L.extend(d, [["Ahmed Hassan", "أحمد حسن"], ["Mustapha Ghorbal", "مصطفى غربال"], ["Kooora", ""], ["X", "Y"]]);
+  assert.deepEqual(d, { "al ain": "العين", "ahmed hassan": "أحمد حسن", "mustapha ghorbal": "مصطفى غربال" });
+});

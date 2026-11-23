@@ -28,6 +28,13 @@ function dictionary(pairs) {
   return out;
 }
 
+// the names read off the live pages themselves (names/site_latin.py: each Latin string the pages still showed, named once):
+// they win, a name the sources spelled two ways included, since the page's string is the one being replaced
+function extend(d, pairs) {
+  for (const [la, ar] of pairs) if (la && ar && AR.test(ar) && !AR.test(la)) d[key(la)] = String(ar).trim();
+  return d;
+}
+
 function arabize(html, d) {
   let n = 0;
   const out = html.replace(/(<p class="muted">)?<span class="lat">([^<]{2,80})<\/span>/g, (m, sub, la) => {
@@ -40,4 +47,4 @@ function arabize(html, d) {
   return { html: out, n };
 }
 
-module.exports = { dictionary, arabize, key };
+module.exports = { dictionary, extend, arabize, key };

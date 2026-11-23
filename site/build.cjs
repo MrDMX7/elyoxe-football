@@ -1691,6 +1691,7 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
       ...Object.values(((() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, "../news/nations.json"), "utf8")).names; } catch (e){ return {}; } })()) || {})
         .flatMap(ns => { const ar = (ns || []).find(x => /[؀-ۿ]/.test(x)); return ar ? ns.filter(x => !/[؀-ۿ]/.test(x)).map(x => [x, ar]) : []; }),
       ...(comps || []).map(c => [c.name, c.name_ar])]);
+    LA.extend(LAD, Object.values(rjn("site_latin_ar.json")).map(v => [v && v.latin, v && v.ar]));   // the names the live pages still showed in Latin
     for (const f of ALLP){ const h0 = fs.readFileSync(f, "utf8");
       // (23 Nov 2026) one page per man and per match: the encyclopedia's link to one the archive has goes to the archive's page
       const h1 = h0.replace(/href="(\/db\/(?:player\/\d+\/|match\/\?id=\d+))"/g, (m0, href) => { const to = WSQ.canonical(href, RL); if (!to) return m0; canon++; return `href="${to}"`; });
