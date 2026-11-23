@@ -1680,10 +1680,21 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
     const RL = { written:WRITTEN, clubs:new Set((((await get("world/index.json")) || {}).clubs || []).map(c => +c[0])), fm2k:(await get("archive/fm2k.json")) || {}, fm2p:(await get("archive/fm2p.json")) || {} };
     // the archive's pages the maps name exist (the archive job publishes them): the check keeps links to them
     Object.values(RL.fm2p).forEach(k => WRITTEN.add(`/p/k${k}/`)); Object.values(RL.fm2k).forEach(k => WRITTEN.add(`/m/k${k}/`));
-    let canon = 0;
+    let canon = 0, arab = 0;
+    // (23 Nov 2026) a name left in Latin letters reads in Arabic where one spelling is known (lib/latin_ar.cjs): the site's clubs,
+    // FotMob's and the archive's men, the clubs named in names/, the countries, the competitions
+    const LA = require("./lib/latin_ar.cjs"), rjn = f => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, "../names", f), "utf8")); } catch (e){ return {}; } };
+    const LAD = LA.dictionary([
+      ...Object.values(S_TEAMS || {}).map(t => [t && t.name, t && t.name_ar]),
+      ...Object.values(NAMES_AR || {}).map(v => [v && v.latin, v && v.ar]),
+      ...["people_ar.json", "clubs_tm_ar.json", "clubs_k_ar.json"].flatMap(f => Object.values(rjn(f)).map(v => [v && v.latin, v && v.ar])),
+      ...Object.values(((() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, "../news/nations.json"), "utf8")).names; } catch (e){ return {}; } })()) || {})
+        .flatMap(ns => { const ar = (ns || []).find(x => /[؀-ۿ]/.test(x)); return ar ? ns.filter(x => !/[؀-ۿ]/.test(x)).map(x => [x, ar]) : []; }),
+      ...(comps || []).map(c => [c.name, c.name_ar])]);
     for (const f of ALLP){ const h0 = fs.readFileSync(f, "utf8");
       // (23 Nov 2026) one page per man and per match: the encyclopedia's link to one the archive has goes to the archive's page
-      const h = h0.replace(/href="(\/db\/(?:player\/\d+\/|match\/\?id=\d+))"/g, (m0, href) => { const to = WSQ.canonical(href, RL); if (!to) return m0; canon++; return `href="${to}"`; });
+      const h1 = h0.replace(/href="(\/db\/(?:player\/\d+\/|match\/\?id=\d+))"/g, (m0, href) => { const to = WSQ.canonical(href, RL); if (!to) return m0; canon++; return `href="${to}"`; });
+      const ar = LA.arabize(h1, LAD), h = ar.html; arab += ar.n;
       const h2 = h.replace(/(<script\b[\s\S]*?<\/script>|<template\b[^>]*>)|<a\b([^>]*?)\shref="(\/[^"#?]*)(?:[?#][^"]*)?"([^>]*)>([\s\S]*?)<\/a>/g, (m, sc, pre, href, post, inner) => { if (sc) return m; if (SKIP.test(href) || WRITTEN.has(href) || WRITTEN.has(href.replace(/\/$/, ""))) return m;
         /* an Arabic path (/commentators/<slug>/) is linked percent-encoded */ const dh = (() => { try { return decodeURIComponent(href); } catch (e){ return href; } })(); if (dh !== href && (WRITTEN.has(dh) || WRITTEN.has(dh.replace(/\/$/, "")))) return m;
         const to = WSQ.relink(href, RL); if (to){ moved++; return `<a${pre} href="${to}"${post}>${inner}</a>`; }
@@ -1691,6 +1702,7 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
       if (h2 !== h0) fs.writeFileSync(f, h2); }
     if (moved) console.log(`links to the encyclopedia instead of a missing page: ${moved}`);
     if (canon) console.log(`links to the encyclopedia's page of a man or a match the archive has, sent to the archive's: ${canon}`);
+    if (arab) console.log(`names left in Latin letters, now in Arabic: ${arab}`);
     if (dead) console.error(`warn: ${dead} links to pages that don't exist were unlinked (${Object.entries(seen).map(([k, n]) => "/" + k + "/ " + n).join(", ")})`);
     if (LEAKS) console.error(`warn: ${LEAKS} text nodes with null/undefined/raw keys were cleaned`);
     if (GRPS) console.error(`warn: ${GRPS} text nodes with «المجموعة A» / «Grp» were rewritten to ordinals (fix the source)`); }
