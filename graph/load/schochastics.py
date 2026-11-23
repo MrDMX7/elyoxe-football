@@ -22,6 +22,20 @@ def fresh(seen, key, score):
     return k
 
 
+SOVIET = {"RU", "UA", "GE", "BY", "AM", "AZ", "KZ", "UZ", "LT", "LV", "EE", "MD", "TJ", "TM", "KG"}
+SOUTH_AMERICA = {"AR", "BR", "UY", "PY", "CL", "CO", "PE", "EC", "BO", "VE"}
+
+
+def league_of(comp, lvl, cc, other_cc):
+    """the dataset files the defunct countries' leagues under one «ddr» (23 Nov 2026: the Soviet, Yugoslav and East German
+    leagues with the Cup Winners' Cup and the old Intercontinental Cup, one competition): each its own, by the clubs' countries"""
+    if comp != "ddr":
+        return comp
+    if lvl == "international":
+        return "intercontinental-cup-old" if cc in SOUTH_AMERICA or other_cc in SOUTH_AMERICA else "cup-winners-cup"
+    return "yugoslavia" if cc == "YUG" else "east-germany" if cc == "DE" else "soviet-union" if cc in SOVIET else f"ddr-{cc}"
+
+
 def load(G, reg, S):
     import duckdb
     from db.history import BLANK
@@ -38,6 +52,10 @@ def load(G, reg, S):
           and home_ident not in {BLANK} and away_ident not in {BLANK}
         qualify row_number() over (partition by date, home_ident, away_ident, gh, ga, competition order by level) = 1
         order by date, competition, home_ident, away_ident""").fetchall()
+    code = {}
+    for r in rows:
+        code.setdefault(r[1], r[9])
+    rows = [(*r[:5], league_of(r[5], r[6], r[9], code.get(r[2])), *r[6:]) for r in rows]
     # clubs the crosswalk lacks: the same date+score votes, on the seasons FotMob covers (since 2010/11)
     voted = vote_teams(G, reg, "sch", [(str(r[0]), r[1], r[2], r[3], r[4]) for r in rows], since="2010-07-01")
     for k, tid in voted.items():

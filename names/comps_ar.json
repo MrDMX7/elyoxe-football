@@ -1,0 +1,5761 @@
+{
+"A1": {
+"ar": "الدوري النمساوي الممتاز",
+"source": "generated",
+"clubs": [
+"LASK",
+"Rapid Wien",
+"Austria Wien"
+],
+"years": "2024-2026"
+},
+"ABCS Tournament": {
+"ar": "بطولة إيه بي سي إس",
+"source": "generated",
+"clubs": [
+"Curacao",
+"Suriname",
+"Aruba"
+],
+"years": "2010-2015"
+},
+"AFAC": {
+"ar": "بطولة اتحاد غرب آسيا لكرة القدم",
+"source": "generated",
+"clubs": [
+"Tajikistan",
+"Saudi Arabia",
+"Iran"
+],
+"years": "2024-2024"
+},
+"AFC Challenge Cup": {
+"ar": "كأس التحدي الآسيوي",
+"source": "generated",
+"clubs": [
+"Tajikistan",
+"Sri Lanka",
+"North Korea"
+],
+"years": "2006-2014"
+},
+"AFC Challenge Cup qualification": {
+"ar": "تصفيات كأس التحدي الآسيوي",
+"source": "generated",
+"clubs": [
+"Nepal",
+"Philippines",
+"Myanmar"
+],
+"years": "2008-2013"
+},
+"AFC Pres. Cup": {
+"ar": "كأس رئيس الاتحاد الآسيوي",
+"source": "generated",
+"clubs": [
+"FC Dordoi Dynamo",
+"Regar-TadAZ",
+"Phnom Penh Crown FC"
+],
+"years": "2005-2025"
+},
+"AFC Solidarity Cup": {
+"ar": "كأس التضامن الآسيوي",
+"source": "generated",
+"clubs": [
+"Nepal",
+"Macau",
+"Laos"
+],
+"years": "2016-2016"
+},
+"AFCN": {
+"ar": "كأس أمم أفريقيا",
+"source": "generated",
+"clubs": [
+"Mali"
+],
+"years": "2026-2026"
+},
+"AFF Championship": {
+"ar": "بطولة آسيان لكرة القدم",
+"source": "generated",
+"clubs": [
+"Thailand",
+"Vietnam",
+"Indonesia"
+],
+"years": "1996-2023"
+},
+"AFF Championship qualification": {
+"ar": "تصفيات بطولة آسيان",
+"source": "generated",
+"clubs": [
+"Cambodia",
+"Laos",
+"Brunei"
+],
+"years": "1998-2022"
+},
+"ARG1": {
+"ar": "الدوري الأرجنتيني الممتاز",
+"source": "generated",
+"clubs": [
+"CD Godoy Cruz Antonio Tomba",
+"Barracas Central",
+"Sarmiento"
+],
+"years": "2025-2025"
+},
+"ASEAN Championship": {
+"ar": "بطولة آسيان لكرة القدم",
+"source": "generated",
+"clubs": [
+"Thailand",
+"Vietnam",
+"Singapore"
+],
+"years": "2024-2026"
+},
+"ASEAN Championship qualification": {
+"ar": "تصفيات بطولة آسيان",
+"source": "generated",
+"clubs": [
+"Brunei",
+"Timor-Leste"
+],
+"years": "2024-2024"
+},
+"AUS1": {
+"ar": "الدوري الأسترالي الممتاز",
+"source": "generated",
+"clubs": [
+"Auckland FC",
+"Western Sydney Wanderers",
+"Melbourne Victory"
+],
+"years": "2024-2026"
+},
+"Afghanistan Republic Day Festival Cup": {
+"ar": "كأس مهرجان يوم جمهورية أفغانستان",
+"source": "generated",
+"clubs": [
+"Afghanistan",
+"India"
+],
+"years": "1976-1977"
+},
+"African Friendship Games": {
+"ar": "ألعاب الصداقة الأفريقية",
+"source": "generated",
+"clubs": [
+"Ivory Coast",
+"Senegal",
+"Madagascar"
+],
+"years": "1960-1963"
+},
+"Afro-Asian Games": {
+"ar": "دورة الألعاب الأفرو آسيوية",
+"source": "generated",
+"clubs": [
+"India",
+"Rwanda",
+"Burkina Faso"
+],
+"years": "2003-2003"
+},
+"Al Ain International Cup": {
+"ar": "بطولة العين الدولية",
+"source": "generated",
+"clubs": [
+"Iran",
+"Cape Verde",
+"Uzbekistan"
+],
+"years": "2025-2025"
+},
+"All-African Games": {
+"ar": "ألعاب عموم أفريقيا",
+"source": "generated",
+"clubs": [
+"Nigeria",
+"Algeria",
+"Ivory Coast"
+],
+"years": "1965-1987"
+},
+"Amílcar Cabral Cup": {
+"ar": "كأس أميلكار كابرال",
+"source": "generated",
+"clubs": [
+"Mali",
+"Guinea",
+"Gambia"
+],
+"years": "1979-2007"
+},
+"Arab Cup qualification": {
+"ar": "تصفيات كأس العرب",
+"source": "generated",
+"clubs": [
+"Lebanon",
+"Algeria",
+"Sudan"
+],
+"years": "1987-2021"
+},
+"Atlantic Cup": {
+"ar": "كأس الأطلسي",
+"source": "generated",
+"clubs": [
+"Uruguay",
+"Argentina",
+"Paraguay"
+],
+"years": "1956-1976"
+},
+"Atlantic Heritage Cup": {
+"ar": "كأس التراث الأطلسي",
+"source": "generated",
+"clubs": [
+"Parishes of Jersey",
+"Yorkshire"
+],
+"years": "2019-2019"
+},
+"Australia Bicentenary Gold Cup": {
+"ar": "كأس استراليا المئوية الذهبية",
+"source": "generated",
+"clubs": [
+"Australia",
+"Argentina",
+"Brazil"
+],
+"years": "1988-1988"
+},
+"BE1": {
+"ar": "الدوري البلجيكي الممتاز",
+"source": "generated",
+"clubs": [
+"Standard Liege",
+"Club Brugge",
+"Anderlecht"
+],
+"years": "1900-2026"
+},
+"BESC": {
+"ar": "الدوري البلجيكي للمحترفين",
+"source": "generated",
+"clubs": [
+"Club Brugge",
+"Anderlecht",
+"Union St.Gilloise"
+],
+"years": "2012-2025"
+},
+"BPO4": {
+"ar": "دوري الدرجة الثانية البلجيكي",
+"source": "generated",
+"clubs": [
+"RAAL La Louvière",
+"FCV Dender EH",
+"Cercle Brugge"
+],
+"years": "2026-2026"
+},
+"BRA1": {
+"ar": "الدوري البرازيلي الدرجة الأولى",
+"source": "generated",
+"clubs": [
+"Mirassol"
+],
+"years": "2025-2025"
+},
+"Balkan Cup": {
+"ar": "كأس البلقان",
+"source": "generated",
+"clubs": [
+"Bulgaria",
+"Romania",
+"Greece"
+],
+"years": "1929-1980"
+},
+"Baltic Cup": {
+"ar": "كأس البلطيق",
+"source": "generated",
+"clubs": [
+"Estonia",
+"Latvia",
+"Lithuania"
+],
+"years": "1928-2024"
+},
+"Bangabandhu Cup": {
+"ar": "كأس بانغاباندو",
+"source": "generated",
+"clubs": [
+"Bangladesh",
+"Palestine",
+"Tajikistan"
+],
+"years": "2015-2020"
+},
+"Bangladesh President's Gold Cup": {
+"ar": "كأس بنغلاديش الذهبية للرئيس",
+"source": "generated",
+"clubs": [
+"Thailand"
+],
+"years": "1983-1983"
+},
+"Beijing International Friendship Tournament": {
+"ar": "بطولة بكين الدولية الودية",
+"source": "generated",
+"clubs": [
+"China",
+"Iran",
+"Hong Kong"
+],
+"years": "1977-1982"
+},
+"Benedikt Fontana Cup": {
+"ar": "كأس بينيديكت فونتانا",
+"source": "generated",
+"clubs": [
+"Raetia"
+],
+"years": "2015-2015"
+},
+"Bolivarian Games": {
+"ar": "دورة الألعاب البوليفارية",
+"source": "generated",
+"clubs": [
+"Colombia",
+"Bolivia",
+"Ecuador"
+],
+"years": "1938-1947"
+},
+"Brazil Independence Cup": {
+"ar": "كأس استقلال البرازيل",
+"source": "generated",
+"clubs": [
+"Argentina",
+"Chile",
+"Brazil"
+],
+"years": "1972-1972"
+},
+"British Home Championship": {
+"ar": "بطولة البيت البريطاني",
+"source": "generated",
+"clubs": [
+"England",
+"Scotland",
+"Wales"
+],
+"years": "1884-1984"
+},
+"C1": {
+"ar": "الدوري السويسري الممتاز",
+"source": "generated",
+"clubs": [
+"Lugano",
+"FC Luzern",
+"Grasshopper Club Zurich"
+],
+"years": "2024-2026"
+},
+"CAF SC": {
+"ar": "كأس السوبر الأفريقي",
+"source": "generated",
+"clubs": [
+"Al Ahly",
+"Esperance",
+"TP Mazembe"
+],
+"years": "1993-2024"
+},
+"CAFA Nations Cup": {
+"ar": "بطولة اتحاد وسط آسيا لكرة القدم",
+"source": "generated",
+"clubs": [
+"Uzbekistan",
+"Kyrgyzstan",
+"Tajikistan"
+],
+"years": "2023-2023"
+},
+"CCCF Championship": {
+"ar": "بطولة اتحاد أمريكا الوسطى والكاريبي",
+"source": "generated",
+"clubs": [
+"Costa Rica",
+"El Salvador",
+"Guatemala"
+],
+"years": "1941-1961"
+},
+"CDR": {
+"ar": "كأس ملك إسبانيا",
+"source": "generated",
+"clubs": [
+"Barcelona",
+"Athletic Club",
+"Atletico Madrid"
+],
+"years": "2012-2026"
+},
+"CECAFA Cup": {
+"ar": "كأس سيكافا",
+"source": "generated",
+"clubs": [
+"Kenya",
+"Uganda",
+"Tanzania"
+],
+"years": "1973-2017"
+},
+"CFU CC": {
+"ar": "بطولة الأندية الكاريبية",
+"source": "generated",
+"clubs": [
+"W Connection",
+"Portmore United FC",
+"Harbour View"
+],
+"years": "1997-2025"
+},
+"CFU Caribbean Cup": {
+"ar": "كأس الكاريبي",
+"source": "generated",
+"clubs": [
+"Trinidad and Tobago",
+"Jamaica",
+"Martinique"
+],
+"years": "1978-2017"
+},
+"CFU Caribbean Cup qualification": {
+"ar": "تصفيات كأس الكاريبي",
+"source": "generated",
+"clubs": [
+"Guadeloupe",
+"St. Kitts and Nevis",
+"Martinique"
+],
+"years": "1978-2017"
+},
+"CGB": {
+"ar": "كأس ويلز",
+"source": "generated",
+"clubs": [
+"Swansea",
+"Chelsea",
+"Cardiff City"
+],
+"years": "2023-2026"
+},
+"CIT": {
+"ar": "كأس إيطاليا",
+"source": "generated",
+"clubs": [
+"Juventus",
+"Milan",
+"Fiorentina"
+],
+"years": "2012-2026"
+},
+"CL": {
+"ar": "دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"Basaksehir FK",
+"FC Nordsjaelland",
+"FC Rostov"
+],
+"years": "2012-2020"
+},
+"CLQ": {
+"ar": "تصفيات دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"Ludogorets Razgrad",
+"Qarabag FK",
+"Dinamo Zagreb"
+],
+"years": "2012-2025"
+},
+"COL1": {
+"ar": "الدوري الكولومبي الممتاز",
+"source": "generated",
+"clubs": [
+"Boyacá Chicó FC",
+"AD Union Magdalena",
+"Llaneros FC"
+],
+"years": "2025-2025"
+},
+"CONCACAF Championship": {
+"ar": "بطولة الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Costa Rica",
+"Guatemala",
+"Honduras"
+],
+"years": "1963-1989"
+},
+"CONCACAF Championship qualification": {
+"ar": "تصفيات بطولة الكونكاكاف",
+"source": "generated",
+"clubs": [
+"El Salvador",
+"Guatemala",
+"Jamaica"
+],
+"years": "1965-1988"
+},
+"CONCACAF L": {
+"ar": "دوري كونكاكاف",
+"source": "generated",
+"clubs": [
+"CD Motagua",
+"Ld Alajuelense",
+"CSd Comunicaciones"
+],
+"years": "2018-2022"
+},
+"CONCACAF Nations League qualification": {
+"ar": "تصفيات دوري أمم الكونكاكاف",
+"source": "generated",
+"clubs": [
+"United States Virgin Islands",
+"French Guiana",
+"Guadeloupe"
+],
+"years": "2018-2019"
+},
+"CONIFA Africa Football Cup": {
+"ar": "كأس أفريقيا للمنتخبات غير الأعضاء في فيفا",
+"source": "generated",
+"clubs": [
+"Biafra",
+"Yoruba Nation"
+],
+"years": "2022-2022"
+},
+"CONIFA Asia Cup": {
+"ar": "كأس كونيفا آسيا",
+"source": "generated",
+"clubs": [
+"Tamil Eelam",
+"Tibet",
+"Hmong"
+],
+"years": "2023-2025"
+},
+"CONIFA European Football Cup": {
+"ar": "كأس أوروبا لكرة القدم للمستقلين",
+"source": "generated",
+"clubs": [
+"Padania",
+"Székely Land",
+"South Ossetia"
+],
+"years": "2015-2026"
+},
+"CONIFA South America Football Cup": {
+"ar": "كأس كونيفا لأمريكا الجنوبية",
+"source": "generated",
+"clubs": [
+"Mapuche",
+"Aymara"
+],
+"years": "2022-2022"
+},
+"CONIFA World Cup qualification": {
+"ar": "تصفيات كأس العالم للاتحادات غير الأعضاء في فيفا",
+"source": "generated",
+"clubs": [
+"Tamil Eelam"
+],
+"years": "2019-2019"
+},
+"CONIFA World Football Cup": {
+"ar": "كأس العالم لكرة القدم للمستقلين",
+"source": "generated",
+"clubs": [
+"Abkhazia",
+"Padania",
+"United Koreans in Japan"
+],
+"years": "2014-2018"
+},
+"CONIFA World Football Cup qualification": {
+"ar": "تصفيات كأس العالم للمنتخبات غير الأعضاء في فيفا",
+"source": "generated",
+"clubs": [
+"Székely Land",
+"Canton Ticino",
+"Chameria"
+],
+"years": "2023-2023"
+},
+"CONMEBOL–UEFA Cup of Champions": {
+"ar": "كأس الأبطال كونميبول-يويفا",
+"source": "generated",
+"clubs": [
+"Argentina",
+"France",
+"Italy"
+],
+"years": "1985-2022"
+},
+"COPA": {
+"ar": "كوبا أمريكا",
+"source": "generated",
+"clubs": [
+"Venezuela"
+],
+"years": "2024-2024"
+},
+"COSAFA Cup": {
+"ar": "كأس كوسافا",
+"source": "generated",
+"clubs": [
+"South Africa",
+"Zambia",
+"Namibia"
+],
+"years": "1997-2023"
+},
+"COSAFA Cup qualification": {
+"ar": "تصفيات كأس كوسافا",
+"source": "generated",
+"clubs": [
+"Lesotho",
+"Malawi",
+"Botswana"
+],
+"years": "1997-2008"
+},
+"CTFA International Tournament": {
+"ar": "بطولة اتحاد تايبيه الصينية الدولية",
+"source": "generated",
+"clubs": [
+"Chinese Taipei",
+"Laos",
+"Timor-Leste"
+],
+"years": "2017-2017"
+},
+"Canadian Shield": {
+"ar": "بطولة الدرع الكندي الدولية",
+"source": "generated",
+"clubs": [
+"Canada",
+"New Zealand",
+"Ivory Coast"
+],
+"years": "2025-2025"
+},
+"Central American and Caribbean Games": {
+"ar": "ألعاب أمريكا الوسطى والكاريبي",
+"source": "generated",
+"clubs": [
+"Costa Rica",
+"Panama",
+"El Salvador"
+],
+"years": "1930-1946"
+},
+"Central European International Cup": {
+"ar": "كأس أوروبا الوسطى الدولية",
+"source": "generated",
+"clubs": [
+"Czechoslovakia",
+"Switzerland",
+"Hungary"
+],
+"years": "1927-1960"
+},
+"China Cup": {
+"ar": "كأس الصين",
+"source": "generated",
+"clubs": [
+"China",
+"Thailand",
+"Uzbekistan"
+],
+"years": "2017-2019"
+},
+"Columbus Cup": {
+"ar": "كأس كولومبوس",
+"source": "generated",
+"clubs": [
+"USA",
+"El Salvador",
+"Mexico"
+],
+"years": "1984-1984"
+},
+"ConIFA Challenger Cup": {
+"ar": "كأس التحدي للاتحادات غير الأعضاء في فيفا",
+"source": "generated",
+"clubs": [
+"Tamil Eelam"
+],
+"years": "2016-2016"
+},
+"Copa América qualification": {
+"ar": "تصفيات كوبا امريكا",
+"source": "generated",
+"clubs": [
+"Canada",
+"Chile",
+"Ecuador"
+],
+"years": "1966-2024"
+},
+"Copa Artigas": {
+"ar": "كأس أرتيغاس",
+"source": "generated",
+"clubs": [
+"Paraguay",
+"Uruguay"
+],
+"years": "1965-1985"
+},
+"Copa Bernardo O'Higgins": {
+"ar": "كأس برناردو أوهيغينز",
+"source": "generated",
+"clubs": [
+"Chile",
+"Brazil"
+],
+"years": "1955-1966"
+},
+"Copa Carlos Dittborn": {
+"ar": "كأس كارلوس ديتورن",
+"source": "generated",
+"clubs": [
+"Chile",
+"Argentina"
+],
+"years": "1962-1976"
+},
+"Copa Chevallier Boutell": {
+"ar": "كأس شيفالييه بوتيل",
+"source": "generated",
+"clubs": [
+"Argentina",
+"Paraguay"
+],
+"years": "1923-1971"
+},
+"Copa Confraternidad": {
+"ar": "كأس الأخوة",
+"source": "generated",
+"clubs": [
+"Uruguay"
+],
+"years": "2011-2011"
+},
+"Copa Félix Bogado": {
+"ar": "كأس فيليكس بوجادو",
+"source": "generated",
+"clubs": [
+"Paraguay",
+"Argentina"
+],
+"years": "1976-1983"
+},
+"Copa Juan Pinto Durán": {
+"ar": "كأس خوان بينتو دوران",
+"source": "generated",
+"clubs": [
+"Chile",
+"Uruguay"
+],
+"years": "1963-1988"
+},
+"Copa Lipton": {
+"ar": "كأس ليبتون",
+"source": "generated",
+"clubs": [
+"Argentina",
+"Uruguay"
+],
+"years": "1905-1992"
+},
+"Copa Newton": {
+"ar": "كأس نيوتن",
+"source": "generated",
+"clubs": [
+"Uruguay",
+"Argentina"
+],
+"years": "1906-1976"
+},
+"Copa Oswaldo Cruz": {
+"ar": "كأس أوزوالدو كروز",
+"source": "generated",
+"clubs": [
+"Brazil",
+"Paraguay"
+],
+"years": "1950-1976"
+},
+"Copa Paz del Chaco": {
+"ar": "كأس سلام تشاكو",
+"source": "generated",
+"clubs": [
+"Bolivia",
+"Paraguay"
+],
+"years": "1957-2011"
+},
+"Copa Premio Honor Argentino": {
+"ar": "كأس بريميو أونور الأرجنتيني",
+"source": "generated",
+"clubs": [
+"Argentina"
+],
+"years": "1908-1920"
+},
+"Copa Premio Honor Uruguayo": {
+"ar": "كأس بريميو أونور الأوروغواياني",
+"source": "generated",
+"clubs": [
+"Uruguay"
+],
+"years": "1911-1923"
+},
+"Copa Ramón Castilla": {
+"ar": "كأس رامون كاستيا",
+"source": "generated",
+"clubs": [
+"Peru",
+"Argentina"
+],
+"years": "1972-1978"
+},
+"Copa Rio Branco": {
+"ar": "كأس ريو برانكو",
+"source": "generated",
+"clubs": [
+"Uruguay",
+"Brazil"
+],
+"years": "1931-1976"
+},
+"Copa Roca": {
+"ar": "كأس روكا",
+"source": "generated",
+"clubs": [
+"Brazil",
+"Argentina"
+],
+"years": "1914-1976"
+},
+"Copa del Pacífico": {
+"ar": "كأس المحيط الهادئ",
+"source": "generated",
+"clubs": [
+"Peru",
+"Chile"
+],
+"years": "1953-2012"
+},
+"Corsica Cup": {
+"ar": "كأس كورسيكا",
+"source": "generated",
+"clubs": [
+"Corsica",
+"Brittany",
+"Gabon"
+],
+"years": "2010-2010"
+},
+"Coupe de l'Outre-Mer": {
+"ar": "كأس ما وراء البحار",
+"source": "generated",
+"clubs": [
+"Guadeloupe",
+"French Guiana",
+"New Caledonia"
+],
+"years": "2008-2012"
+},
+"Cup of Ancient Civilizations": {
+"ar": "كأس الحضارات القديمة",
+"source": "generated",
+"clubs": [
+"China",
+"Iran"
+],
+"years": "2001-2001"
+},
+"Cyprus International Tournament": {
+"ar": "بطولة قبرص الدولية",
+"source": "generated",
+"clubs": [
+"Cyprus",
+"Romania",
+"Latvia"
+],
+"years": "1997-2011"
+},
+"DFB": {
+"ar": "كأس ألمانيا",
+"source": "generated",
+"clubs": [
+"Bayern München",
+"Arminia Bielefeld",
+"RB Leipzig"
+],
+"years": "2012-2026"
+},
+"DFL": {
+"ar": "الدوري الألماني",
+"source": "generated",
+"clubs": [
+"Borussia Dortmund",
+"Bayern München",
+"RB Leipzig"
+],
+"years": "2012-2025"
+},
+"DK1": {
+"ar": "الدوري الدنماركي الممتاز",
+"source": "generated",
+"clubs": [
+"FC Nordsjaelland",
+"Midtjylland",
+"FC København"
+],
+"years": "2012-2026"
+},
+"DKP": {
+"ar": "كأس الدنمارك",
+"source": "generated",
+"clubs": [
+"FC København",
+"FC Fredericia",
+"Hvidovre IF"
+],
+"years": "2012-2026"
+},
+"Dakar Tournament": {
+"ar": "بطولة داكار الدولية",
+"source": "generated",
+"clubs": [
+"Senegal",
+"Ivory Coast",
+"Cameroon"
+],
+"years": "1991-1991"
+},
+"Dragon Cup": {
+"ar": "كأس التنين",
+"source": "generated",
+"clubs": [
+"Chinese Taipei",
+"Philippines",
+"Hong Kong"
+],
+"years": "2010-2011"
+},
+"Dunhill Cup": {
+"ar": "كأس دنهيل",
+"source": "generated",
+"clubs": [
+"Bosnia and Herzegovina",
+"Malaysia",
+"China"
+],
+"years": "1997-1997"
+},
+"Dynasty Cup": {
+"ar": "كأس دينستي",
+"source": "generated",
+"clubs": [
+"China",
+"Japan",
+"Hong Kong"
+],
+"years": "1990-1998"
+},
+"EAFF Championship": {
+"ar": "بطولة شرق آسيا لكرة القدم",
+"source": "generated",
+"clubs": [
+"Hong Kong",
+"Guam",
+"Japan"
+],
+"years": "2003-2022"
+},
+"EAFF Championship qualification": {
+"ar": "تصفيات كأس شرق آسيا",
+"source": "generated",
+"clubs": [
+"Hong Kong",
+"Macau",
+"Chinese Taipei"
+],
+"years": "2024-2024"
+},
+"ECLQ": {
+"ar": "تصفيات دوري المؤتمر الأوروبي",
+"source": "generated",
+"clubs": [
+"Riga FC",
+"Spartak Trnava",
+"Hapoel Beer Sheva"
+],
+"years": "2021-2025"
+},
+"EJPL": {
+"ar": "الدوري البلجيكي للمحترفين",
+"source": "generated",
+"clubs": [
+"Sint-Truidense VV",
+"KV Mechelen",
+"Union St.Gilloise"
+],
+"years": "2026-2026"
+},
+"EL": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Rubin Kazan",
+"Panathinaikos",
+"Zorya Lugansk"
+],
+"years": "2012-2026"
+},
+"ELF Cup": {
+"ar": "كأس إلف",
+"source": "generated",
+"clubs": [
+"Northern Cyprus",
+"Găgăuzia",
+"Kyrgyzstan"
+],
+"years": "2006-2006"
+},
+"ELQ": {
+"ar": "دوري المؤتمر الأوروبي",
+"source": "generated",
+"clubs": [
+"Dinamo Minsk",
+"AEK Larnaca",
+"HNK Hajduk Split"
+],
+"years": "2012-2025"
+},
+"EURO": {
+"ar": "كأس أمم أوروبا",
+"source": "generated",
+"clubs": [
+"Portugal"
+],
+"years": "2024-2024"
+},
+"East Asian Games": {
+"ar": "دورة ألعاب شرق آسيا",
+"source": "generated",
+"clubs": [
+"China",
+"North Korea",
+"Guam"
+],
+"years": "1993-2009"
+},
+"FAC": {
+"ar": "كأس الاتحاد الإنجليزي",
+"source": "generated",
+"clubs": [
+"Chelsea",
+"Manchester City",
+"Manchester United"
+],
+"years": "2012-2026"
+},
+"FAS Tri-Nations Series": {
+"ar": "سلسلة فاس للأمم الثلاث",
+"source": "generated",
+"clubs": [
+"Singapore",
+"Malaysia"
+],
+"years": "2022-2022"
+},
+"FIFA 75th Anniversary Cup": {
+"ar": "كأس الذكرى الخامسة والسبعين لتأسيس فيفا",
+"source": "generated",
+"clubs": [
+"Argentina"
+],
+"years": "1979-1979"
+},
+"FIFA ASEAN Challenge Cup": {
+"ar": "كأس تحدي آسيان",
+"source": "generated",
+"clubs": [
+"Hong Kong",
+"Laos",
+"Timor-Leste"
+],
+"years": "2026-2026"
+},
+"FIFA ASEAN Cup": {
+"ar": "كأس آسيان لكرة القدم",
+"source": "generated",
+"clubs": [
+"Indonesia",
+"Thailand",
+"Vietnam"
+],
+"years": "2026-2026"
+},
+"FIFI Wild Cup": {
+"ar": "كأس فيفي وايلد",
+"source": "generated",
+"clubs": [
+"Republic of St. Pauli",
+"Northern Cyprus",
+"Greenland"
+],
+"years": "2006-2006"
+},
+"FIWC": {
+"ar": "بطولة فيفا التفاعلية",
+"source": "generated",
+"clubs": [
+"Ivory Coast",
+"Japan",
+"Argentina"
+],
+"years": "2006-2026"
+},
+"FR1": {
+"ar": "الدوري الفرنسي الدرجة الأولى",
+"source": "generated",
+"clubs": [
+"Nantes",
+"Bastia"
+],
+"years": "2013-2017"
+},
+"FRCH": {
+"ar": "الدوري الفرنسي الدرجة الأولى",
+"source": "generated",
+"clubs": [
+"Paris Saint-Germain",
+"Lille",
+"Montpellier"
+],
+"years": "2012-2026"
+},
+"Far Eastern Championship Games": {
+"ar": "ألعاب بطولة الشرق الأقصى",
+"source": "generated",
+"clubs": [
+"China",
+"Philippines",
+"Japan"
+],
+"years": "1913-1934"
+},
+"FotMob 10000001": {
+"ar": "الدوري الأمريكي لكرة القدم",
+"source": "generated",
+"clubs": [
+"Montreal Impact",
+"Chicago Fire FC",
+"Sporting Kansas City"
+],
+"years": "2013-2015"
+},
+"FotMob 10000002": {
+"ar": "الدوري الأمريكي لكرة القدم",
+"source": "generated",
+"clubs": [
+"FC Dallas",
+"Seattle Sounders FC",
+"LA Galaxy"
+],
+"years": "2013-2015"
+},
+"FotMob 822548": {
+"ar": "الدوري الأمريكي لكرة القدم",
+"source": "generated",
+"clubs": [
+"Vancouver Whitecaps",
+"FC Dallas",
+"Portland Timbers"
+],
+"years": "2011-2011"
+},
+"FotMob 824151": {
+"ar": "دوري أبطال أفريقيا",
+"source": "generated",
+"clubs": [
+"Cotonsport",
+"Al Hilal Omdurman",
+"Enyimba"
+],
+"years": "2011-2011"
+},
+"FotMob 824852": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Morelia",
+"LD Alajuelense",
+"FC Motagua"
+],
+"years": "2011-2011"
+},
+"FotMob 824853": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Isidro Metapan",
+"Real Espana",
+"Colorado Rapids"
+],
+"years": "2011-2011"
+},
+"FotMob 824854": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"FC Dallas",
+"Tauro FC",
+"Toronto FC"
+],
+"years": "2011-2011"
+},
+"FotMob 824855": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Club Sport Herediano",
+"Comunicaciones FC",
+"Monterrey"
+],
+"years": "2011-2011"
+},
+"FotMob 824956": {
+"ar": "دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"Trabzonspor",
+"CSKA Moscow",
+"Inter"
+],
+"years": "2011-2011"
+},
+"FotMob 824961": {
+"ar": "دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"BATE Borisov",
+"Viktoria Plzen",
+"Milan"
+],
+"years": "2011-2011"
+},
+"FotMob 824962": {
+"ar": "دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"APOEL Nicosia",
+"FC Porto",
+"Zenit St. Petersburg"
+],
+"years": "2011-2011"
+},
+"FotMob 824964": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Shamrock",
+"Rubin Kazan",
+"PAOK Thessaloniki FC"
+],
+"years": "2011-2011"
+},
+"FotMob 824965": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Vorskla",
+"Standard Liege",
+"Hannover 96"
+],
+"years": "2011-2011"
+},
+"FotMob 824966": {
+"ar": "الدوري الاوروبي",
+"source": "generated",
+"clubs": [
+"Rapid Bucuresti",
+"PSV Eindhoven",
+"Legia"
+],
+"years": "2011-2011"
+},
+"FotMob 824967": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"AEK Larnaca",
+"Maccabi Haifa",
+"FC FCSB"
+],
+"years": "2011-2011"
+},
+"FotMob 824968": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"FC Vaslui",
+"FC Zurich",
+"Sporting CP"
+],
+"years": "2011-2011"
+},
+"FotMob 824970": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Maccabi Tel Aviv",
+"Beşiktaş",
+"Dynamo Kyiv"
+],
+"years": "2011-2011"
+},
+"FotMob 824971": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Slovan Bratislava",
+"Salzburg",
+"Athletic Club"
+],
+"years": "2011-2011"
+},
+"FotMob 824972": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"FC Twente",
+"Fulham",
+"Wisla Krakow"
+],
+"years": "2011-2011"
+},
+"FotMob 824973": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Anderlecht",
+"Lokomotiv Moscow",
+"AEK Athens"
+],
+"years": "2011-2011"
+},
+"FotMob 824974": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Austria Wien",
+"Malmo FF",
+"Metalist Kharkiv"
+],
+"years": "2011-2011"
+},
+"FotMob 824975": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Maribor",
+"Club Brugge",
+"Braga"
+],
+"years": "2011-2011"
+},
+"FotMob 825705": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Kashiwa Reysol",
+"Buriram United",
+"Guangzhou FC"
+],
+"years": "2012-2012"
+},
+"FotMob 825707": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Central Coast Mariners",
+"Tianjin Teda",
+"Nagoya Grampus"
+],
+"years": "2012-2012"
+},
+"FotMob 825708": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Gamba Osaka",
+"Adelaide United",
+"Bunyodkor Tashkent"
+],
+"years": "2012-2012"
+},
+"FotMob 825709": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"FC Tokyo",
+"Brisbane Roar FC",
+"Beijing Guoan"
+],
+"years": "2012-2012"
+},
+"FotMob 825944": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Guadalajara",
+"Velez Sarsfield",
+"Defensor Sporting"
+],
+"years": "2012-2012"
+},
+"FotMob 825946": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Nacional",
+"Cruz Azul",
+"Corinthians"
+],
+"years": "2012-2012"
+},
+"FotMob 825955": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Zamora FC",
+"Boca Juniors",
+"Arsenal Sarandi"
+],
+"years": "2012-2012"
+},
+"FotMob 825958": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Union Espanola",
+"Bolivar",
+"Atletico Junior"
+],
+"years": "2012-2012"
+},
+"FotMob 825961": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Juan Aurich",
+"The Strongest",
+"Santos FC"
+],
+"years": "2012-2012"
+},
+"FotMob 826250": {
+"ar": "الدوري الأمريكي لكرة القدم",
+"source": "generated",
+"clubs": [
+"FC Dallas",
+"Vancouver Whitecaps",
+"LA Galaxy"
+],
+"years": "2012-2012"
+},
+"FotMob 827385": {
+"ar": "دوري أبطال أفريقيا",
+"source": "generated",
+"clubs": [
+"Sunshine Stars",
+"ASO Chlef",
+"Esperance"
+],
+"years": "2012-2012"
+},
+"FotMob 827386": {
+"ar": "دوري أبطال أفريقيا",
+"source": "generated",
+"clubs": [
+"Berekum Chelsea",
+"Zamalek SC",
+"Al Ahly"
+],
+"years": "2012-2012"
+},
+"FotMob 827741": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Club Sport Herediano",
+"Tauro FC"
+],
+"years": "2012-2012"
+},
+"FotMob 827742": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"CD Olimpia",
+"CD FAS",
+"Houston Dynamo FC"
+],
+"years": "2012-2012"
+},
+"FotMob 827743": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Caledonia",
+"CD Marathon",
+"Seattle Sounders FC"
+],
+"years": "2012-2012"
+},
+"FotMob 827744": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Isidro Metapan",
+"Puerto Rico Islanders",
+"LA Galaxy"
+],
+"years": "2012-2012"
+},
+"FotMob 827745": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Real Estelí FC",
+"Tigres",
+"LD Alajuelense"
+],
+"years": "2012-2012"
+},
+"FotMob 827746": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Chorrillo FC",
+"CSD Municipal",
+"Monterrey"
+],
+"years": "2012-2012"
+},
+"FotMob 827747": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"W Connection FC",
+"Guadalajara"
+],
+"years": "2012-2012"
+},
+"FotMob 828590": {
+"ar": "دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"FC Nordsjælland",
+"Shakhtar Donetsk",
+"Chelsea"
+],
+"years": "2012-2012"
+},
+"FotMob 828591": {
+"ar": "دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"BATE Borisov",
+"Bayern München",
+"Lille"
+],
+"years": "2012-2012"
+},
+"FotMob 828592": {
+"ar": "دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"Spartak Moscow",
+"Benfica",
+"Barcelona"
+],
+"years": "2012-2012"
+},
+"FotMob 828593": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"CFR Cluj",
+"Galatasaray",
+"Braga"
+],
+"years": "2012-2012"
+},
+"FotMob 828594": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Anzhi Makhachkala",
+"Young Boys",
+"Udinese"
+],
+"years": "2012-2012"
+},
+"FotMob 828596": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"AEL Limassol",
+"Marseille"
+],
+"years": "2012-2012"
+},
+"FotMob 828597": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Maritimo",
+"Club Brugge",
+"Newcastle United"
+],
+"years": "2012-2012"
+},
+"FotMob 828601": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"FK Neftchi",
+"Partizan Beograd",
+"Rubin Kazan"
+],
+"years": "2012-2012"
+},
+"FotMob 828602": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Athletic Club"
+],
+"years": "2012-2012"
+},
+"FotMob 828603": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Maribor",
+"Panathinaikos",
+"Lazio"
+],
+"years": "2012-2012"
+},
+"FotMob 828604": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Rosenborg",
+"Rapid Wien",
+"Metalist Kharkiv"
+],
+"years": "2012-2012"
+},
+"FotMob 828605": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Helsingborg",
+"FC Twente",
+"Levante"
+],
+"years": "2012-2012"
+},
+"FotMob 830122": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Vegalta Sendai",
+"Jiangsu Sainty",
+"Buriram United"
+],
+"years": "2013-2013"
+},
+"FotMob 830123": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Muang Thong United",
+"Urawa Red Diamonds",
+"Guangzhou FC"
+],
+"years": "2013-2013"
+},
+"FotMob 830124": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Sanfrecce Hiroshima",
+"Beijing Guoan",
+"Bunyodkor Tashkent"
+],
+"years": "2013-2013"
+},
+"FotMob 830130": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Beijing Renhe",
+"Central Coast Mariners",
+"Kashiwa Reysol"
+],
+"years": "2013-2013"
+},
+"FotMob 830275": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Toluca",
+"Nacional",
+"Boca Juniors"
+],
+"years": "2013-2013"
+},
+"FotMob 830280": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Tijuana",
+"Millonarios",
+"San Jose"
+],
+"years": "2013-2013"
+},
+"FotMob 830282": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Real Garcilaso",
+"Tolima",
+"Cerro Porteno"
+],
+"years": "2013-2013"
+},
+"FotMob 830283": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Deportivo Lara",
+"Universidad de Chile",
+"Newell's Old Boys"
+],
+"years": "2013-2013"
+},
+"FotMob 830284": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Huachipato",
+"Caracas",
+"Fluminense"
+],
+"years": "2013-2013"
+},
+"FotMob 831704": {
+"ar": "دوري أبطال أفريقيا",
+"source": "generated",
+"clubs": [
+"AC Léopard de Dolisie",
+"Orlando Pirates",
+"Zamalek SC"
+],
+"years": "2013-2013"
+},
+"FotMob 831705": {
+"ar": "دوري أبطال أفريقيا",
+"source": "generated",
+"clubs": [
+"Recreativo do Libolo",
+"Sewe Sport",
+"Cotonsport"
+],
+"years": "2013-2013"
+},
+"FotMob 832208": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"W Connection FC",
+"CD Arabe Unido",
+"Houston Dynamo FC"
+],
+"years": "2013-2013"
+},
+"FotMob 832209": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Real Estelí FC",
+"CD Olimpia",
+"Sporting Kansas City"
+],
+"years": "2013-2013"
+},
+"FotMob 832210": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Valencia de Leogane",
+"Club Sport Herediano",
+"Cruz Azul"
+],
+"years": "2013-2013"
+},
+"FotMob 832211": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"CF America",
+"Sporting San Miguelito",
+"LD Alajuelense"
+],
+"years": "2013-2013"
+},
+"FotMob 832212": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Deportivo Heredia",
+"Montreal Impact",
+"San Jose Earthquakes"
+],
+"years": "2013-2013"
+},
+"FotMob 832213": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Caledonia",
+"Comunicaciones FC"
+],
+"years": "2013-2013"
+},
+"FotMob 832214": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"CD Victoria",
+"Tijuana",
+"Firpo"
+],
+"years": "2013-2013"
+},
+"FotMob 832215": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"C.S. Cartaginés",
+"Isidro Metapan",
+"LA Galaxy"
+],
+"years": "2013-2013"
+},
+"FotMob 833041": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Kuban Krasnodar",
+"Swansea",
+"St. Gallen"
+],
+"years": "2013-2013"
+},
+"FotMob 833042": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Ludogorets Razgrad",
+"Chernomorets Odessa"
+],
+"years": "2013-2013"
+},
+"FotMob 833043": {
+"ar": "الدوري الاوروبي",
+"source": "generated",
+"clubs": [
+"Esbjerg fB",
+"Standard Liege",
+"Salzburg"
+],
+"years": "2013-2013"
+},
+"FotMob 833044": {
+"ar": "الدوري الاوروبي",
+"source": "generated",
+"clubs": [
+"Zulte Waregem",
+"Maribor",
+"Rubin Kazan"
+],
+"years": "2013-2013"
+},
+"FotMob 833045": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Pandurii",
+"Dnipro"
+],
+"years": "2013-2013"
+},
+"FotMob 833046": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"APOEL Nicosia",
+"Eintracht Frankfurt",
+"Bordeaux"
+],
+"years": "2013-2013"
+},
+"FotMob 833047": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Thun",
+"Genk",
+"Dynamo Kyiv"
+],
+"years": "2013-2013"
+},
+"FotMob 833048": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Liberec",
+"Sevilla",
+"SC Freiburg"
+],
+"years": "2013-2013"
+},
+"FotMob 833049": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Rijeka",
+"Vitoria de Guimaraes",
+"Betis"
+],
+"years": "2013-2013"
+},
+"FotMob 833050": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Shakhter Karagandy",
+"AZ Alkmaar",
+"PAOK Thessaloniki FC"
+],
+"years": "2013-2013"
+},
+"FotMob 833051": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Tottenham Hotspur",
+"Anzhi Makhachkala"
+],
+"years": "2013-2013"
+},
+"FotMob 833052": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Apollon Limassol",
+"Legia",
+"Trabzonspor"
+],
+"years": "2013-2013"
+},
+"FotMob 833982": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Cerezo Osaka",
+"Shandong Luneng",
+"Buriram United"
+],
+"years": "2014-2014"
+},
+"FotMob 833983": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Sanfrecce Hiroshima",
+"Beijing Guoan",
+"Central Coast Mariners"
+],
+"years": "2014-2014"
+},
+"FotMob 833985": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Beijing Renhe",
+"Kawasaki Frontale",
+"Ulsan Hyundai"
+],
+"years": "2014-2014"
+},
+"FotMob 833997": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Universitario Peru",
+"The Strongest",
+"Athletico Paranaense"
+],
+"years": "2014-2014"
+},
+"FotMob 833999": {
+"ar": "كأس سود أمريكانا",
+"source": "generated",
+"clubs": [
+"Deportivo Cali",
+"Lanus"
+],
+"years": "2014-2014"
+},
+"FotMob 834000": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Zamora FC",
+"Santa Fe",
+"Atletico MG"
+],
+"years": "2014-2014"
+},
+"FotMob 834001": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Real Garcilaso",
+"Cruzeiro",
+"Universidad de Chile"
+],
+"years": "2014-2014"
+},
+"FotMob 834003": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Leon",
+"Bolivar",
+"Emelec"
+],
+"years": "2014-2014"
+},
+"FotMob 834004": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Deportivo Anzoategui",
+"Club Atletico Penarol",
+"Arsenal Sarandi"
+],
+"years": "2014-2014"
+},
+"FotMob 834016": {
+"ar": "الدوري المصري الممتاز",
+"source": "generated",
+"clubs": [
+"El Raja Marsa Matruh",
+"El Dakhleya",
+"Al Mokawloon Al Arab"
+],
+"years": "2013-2014"
+},
+"FotMob 834599": {
+"ar": "دوري أبطال افريقيا",
+"source": "generated",
+"clubs": [
+"Al Ahli B",
+"CS Sfaxien",
+"Esperance"
+],
+"years": "2014-2014"
+},
+"FotMob 836870": {
+"ar": "دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"Malmo FF",
+"Olympiakos"
+],
+"years": "2014-2014"
+},
+"FotMob 836876": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Chelsea"
+],
+"years": "2014-2014"
+},
+"FotMob 836878": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Apollon Limassol",
+"FC Zurich",
+"Villarreal"
+],
+"years": "2014-2014"
+},
+"FotMob 836879": {
+"ar": "الدوري الاوروبي",
+"source": "generated",
+"clubs": [
+"HJK",
+"Torino",
+"Club Brugge"
+],
+"years": "2014-2014"
+},
+"FotMob 836880": {
+"ar": "الدوري الاوروبي",
+"source": "generated",
+"clubs": [
+"Asteras Tripolis",
+"Beşiktaş",
+"Partizan Beograd"
+],
+"years": "2014-2014"
+},
+"FotMob 836884": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Rijeka",
+"Feyenoord",
+"Standard Liege"
+],
+"years": "2014-2014"
+},
+"FotMob 836886": {
+"ar": "الدوري الاوروبي",
+"source": "generated",
+"clubs": [
+"Slovan Bratislava",
+"Young Boys",
+"Sparta Prague"
+],
+"years": "2014-2014"
+},
+"FotMob 836887": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Rio Ave",
+"Aalborg BK"
+],
+"years": "2014-2014"
+},
+"FotMob 836889": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Trabzonspor",
+"Metalist Kharkiv"
+],
+"years": "2014-2014"
+},
+"FotMob 837682": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"CF America",
+"Montreal Impact",
+"LD Alajuelense"
+],
+"years": "2015-2015"
+},
+"FotMob 838131": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Atlas",
+"Colo Colo",
+"Santa Fe"
+],
+"years": "2015-2015"
+},
+"FotMob 838132": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Danubio",
+"San Lorenzo",
+"Corinthians"
+],
+"years": "2015-2015"
+},
+"FotMob 838133": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Mineros De Guayana",
+"Universitario",
+"Huracan"
+],
+"years": "2015-2015"
+},
+"FotMob 838135": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Montevideo Wanderers",
+"Palestino",
+"Zamora FC"
+],
+"years": "2015-2015"
+},
+"FotMob 838136": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"San Jose"
+],
+"years": "2015-2015"
+},
+"FotMob 838289": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Naft Tehran",
+"Al-Ain",
+"Al Shabab"
+],
+"years": "2015-2015"
+},
+"FotMob 838292": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Binh Duong",
+"Shandong Luneng",
+"Kashiwa Reysol"
+],
+"years": "2015-2015"
+},
+"FotMob 838293": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Buriram United",
+"Gamba Osaka",
+"Seongnam FC"
+],
+"years": "2015-2015"
+},
+"FotMob 838294": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Brisbane Roar FC",
+"Beijing Guoan"
+],
+"years": "2015-2015"
+},
+"FotMob 839947": {
+"ar": "كأس ليبرتادوريس",
+"source": "generated",
+"clubs": [
+"Tigres",
+"Montevideo Wanderers",
+"Emelec"
+],
+"years": "2015-2015"
+},
+"FotMob 840025": {
+"ar": "دوري أبطال آسيا",
+"source": "generated",
+"clubs": [
+"Gamba Osaka",
+"Guangzhou FC",
+"Naft Tehran"
+],
+"years": "2015-2015"
+},
+"FotMob 840435": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"W Connection FC",
+"Deportivo Saprissa"
+],
+"years": "2015-2015"
+},
+"FotMob 840436": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Tigres",
+"Club Sport Herediano",
+"Isidro Metapan"
+],
+"years": "2015-2015"
+},
+"FotMob 840437": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"San Francisco FC",
+"Queretaro FC"
+],
+"years": "2015-2015"
+},
+"FotMob 840438": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Central FC",
+"Comunicaciones FC",
+"LA Galaxy"
+],
+"years": "2015-2015"
+},
+"FotMob 840439": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Deportivo Walter Ferreti",
+"CF America"
+],
+"years": "2015-2015"
+},
+"FotMob 840440": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"CD Olimpia",
+"Seattle Sounders FC"
+],
+"years": "2015-2015"
+},
+"FotMob 840441": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Santa Tecla FC",
+"CSD Municipal",
+"Real Salt Lake"
+],
+"years": "2015-2015"
+},
+"FotMob 840442": {
+"ar": "دوري أبطال الكونكاكاف",
+"source": "generated",
+"clubs": [
+"Montego Bay United FC",
+"CD Arabe Unido"
+],
+"years": "2015-2015"
+},
+"FotMob 841440": {
+"ar": "دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"Malmo FF",
+"Shakhtar Donetsk"
+],
+"years": "2015-2015"
+},
+"FotMob 841442": {
+"ar": "دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"FC Astana",
+"Benfica"
+],
+"years": "2015-2015"
+},
+"FotMob 841453": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Rubin Kazan"
+],
+"years": "2015-2015"
+},
+"FotMob 841455": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Dinamo Minsk",
+"Villarreal"
+],
+"years": "2015-2015"
+},
+"FotMob 841456": {
+"ar": "الدوري الاوروبي",
+"source": "generated",
+"clubs": [
+"FC Groningen",
+"Liberec",
+"Braga"
+],
+"years": "2015-2015"
+},
+"FotMob 841457": {
+"ar": "الدوري الاوروبي",
+"source": "generated",
+"clubs": [
+"Skenderbeu",
+"Lokomotiv Moscow",
+"Sporting CP"
+],
+"years": "2015-2015"
+},
+"FotMob 841458": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Rosenborg",
+"Saint-Etienne"
+],
+"years": "2015-2015"
+},
+"FotMob 841459": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"FK Qabala",
+"FC Krasnodar",
+"Borussia Dortmund"
+],
+"years": "2015-2015"
+},
+"FotMob 841461": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Partizan Beograd"
+],
+"years": "2015-2015"
+},
+"FotMob 841462": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Basel"
+],
+"years": "2015-2015"
+},
+"FotMob 841463": {
+"ar": "الدوري الأوروبي",
+"source": "generated",
+"clubs": [
+"Asteras Tripolis",
+"APOEL Nicosia",
+"Sparta Prague"
+],
+"years": "2015-2015"
+},
+"FotMob None": {
+"ar": "بطولة ودية",
+"source": "generated",
+"clubs": [
+"La Equidad",
+"Kashiwa Reysol",
+"Cobreloa"
+],
+"years": "2011-2014"
+},
+"Four Nations Tournament": {
+"ar": "بطولة الأمم الأربعة",
+"source": "generated",
+"clubs": [
+"China",
+"Zambia",
+"Kuwait"
+],
+"years": "1988-2018"
+},
+"Four Nations' Cup": {
+"ar": "كأس الأمم الأربع",
+"source": "generated",
+"clubs": [
+"New Zealand",
+"Thailand"
+],
+"years": "1999-1999"
+},
+"Fuchs International Tournament": {
+"ar": "بطولة فوكس الدولية",
+"source": "generated",
+"clubs": [
+"Jordan",
+"Iraq",
+"Kuwait"
+],
+"years": "2011-2011"
+},
+"GBCS": {
+"ar": "الدوري الإنجليزي الممتاز",
+"source": "generated",
+"clubs": [
+"Arsenal",
+"Leicester City",
+"Manchester United"
+],
+"years": "2012-2025"
+},
+"GR1": {
+"ar": "الدوري اليوناني الممتاز",
+"source": "generated",
+"clubs": [
+"PAOK Thessaloniki FC",
+"Panathinaikos",
+"Olympiakos"
+],
+"years": "1987-2026"
+},
+"GRP": {
+"ar": "كأس اليونان",
+"source": "generated",
+"clubs": [
+"PAOK Thessaloniki FC",
+"Olympiakos",
+"AEK Athens"
+],
+"years": "2012-2026"
+},
+"GaNEFo": {
+"ar": "ألعاب القوى الناشئة",
+"source": "generated",
+"clubs": [
+"China",
+"Cambodia",
+"Palestine"
+],
+"years": "1966-1966"
+},
+"Gold Cup qualification": {
+"ar": "تصفيات الكأس الذهبية",
+"source": "generated",
+"clubs": [
+"Trinidad and Tobago",
+"Martinique",
+"Guadeloupe"
+],
+"years": "1997-2025"
+},
+"Great Wall Cup": {
+"ar": "كأس سور الصين العظيم",
+"source": "generated",
+"clubs": [
+"China",
+"Hong Kong"
+],
+"years": "1983-1986"
+},
+"Guangzhou International Friendship Tournament": {
+"ar": "بطولة قوانغتشو الدولية للصداقة",
+"source": "generated",
+"clubs": [
+"China",
+"Hong Kong"
+],
+"years": "1980-1980"
+},
+"Hungary Heritage Cup": {
+"ar": "كأس التراث المجري",
+"source": "generated",
+"clubs": [
+"Délvidék",
+"Felvidék"
+],
+"years": "2016-2016"
+},
+"IT1": {
+"ar": "دوري الدرجة الثانية الإيطالي",
+"source": "generated",
+"clubs": [
+"Sassuolo",
+"Hellas Verona",
+"Cagliari"
+],
+"years": "2012-2020"
+},
+"Indian Ocean Island Games": {
+"ar": "ألعاب جزر المحيط الهندي",
+"source": "generated",
+"clubs": [
+"Réunion",
+"Mauritius",
+"Seychelles"
+],
+"years": "1979-2023"
+},
+"Indonesian Independence Cup": {
+"ar": "كأس استقلال إندونيسيا",
+"source": "generated",
+"clubs": [
+"Indonesia",
+"Myanmar",
+"Australia"
+],
+"years": "1985-2008"
+},
+"Inter Games": {
+"ar": "الألعاب الدولية",
+"source": "generated",
+"clubs": [
+"Ynys Môn",
+"Isle of Man",
+"Jersey"
+],
+"years": "2019-2019"
+},
+"Inter-Allied Games": {
+"ar": "الألعاب العسكرية المشتركة",
+"source": "generated",
+"clubs": [
+"France",
+"Czechoslovakia",
+"Belgium"
+],
+"years": "1919-1919"
+},
+"Intercontinental Cup": {
+"ar": "كأس القارات الدولية",
+"source": "generated",
+"clubs": [
+"India",
+"Syria",
+"Tajikistan"
+],
+"years": "2018-2024"
+},
+"International Friendship Championship": {
+"ar": "بطولة الصداقة الدولية",
+"source": "generated",
+"clubs": [
+"Iraq",
+"Jordan",
+"Qatar"
+],
+"years": "2018-2019"
+},
+"International Tournament of Peoples, Cultures and Tribes": {
+"ar": "بطولة الشعوب والثقافات والقبائل الدولية",
+"source": "generated",
+"clubs": [
+"Provence",
+"Quebec",
+"Western Sahara"
+],
+"years": "2013-2013"
+},
+"Iran International Tournament": {
+"ar": "بطولة إيران الدولية",
+"source": "generated",
+"clubs": [
+"Egypt"
+],
+"years": "1975-1975"
+},
+"Island Games": {
+"ar": "ألعاب الجزر",
+"source": "generated",
+"clubs": [
+"Jersey",
+"Åland Islands",
+"Guernsey"
+],
+"years": "1989-2025"
+},
+"JAP1": {
+"ar": "الدوري الياباني الممتاز",
+"source": "generated",
+"clubs": [
+"Shimizu S-Pulse",
+"Kashiwa Reysol",
+"Gamba Osaka"
+],
+"years": "2025-2025"
+},
+"Jakarta Anniversary Tournament": {
+"ar": "بطولة جاكرتا السنوية",
+"source": "generated",
+"clubs": [
+"Indonesia",
+"Myanmar",
+"Malaysia"
+],
+"years": "1970-1981"
+},
+"Joe Robbie Cup": {
+"ar": "كأس جو روبي",
+"source": "generated",
+"clubs": [
+"USA",
+"Colombia",
+"Bolivia"
+],
+"years": "1994-1994"
+},
+"Jordan International Tournament": {
+"ar": "بطولة الأردن الدولية",
+"source": "generated",
+"clubs": [
+"Jordan",
+"Iraq",
+"Congo"
+],
+"years": "1992-2023"
+},
+"KLUB": {
+"ar": "كأس العالم للأندية",
+"source": "generated",
+"clubs": [
+"Sanfrecce Hiroshima",
+"Kashima Antlers",
+"Ulsan HD FC"
+],
+"years": "2012-2025"
+},
+"KR1": {
+"ar": "الدوري الكرواتي الممتاز",
+"source": "generated",
+"clubs": [
+"NK Osijek",
+"Slaven Belupo Koprivnica",
+"NK Varazdin"
+],
+"years": "2024-2026"
+},
+"KTFF 50th Anniversary Cup": {
+"ar": "كأس الذكرى الخمسين لاتحاد قبرص الشمالية",
+"source": "generated",
+"clubs": [
+"Northern Cyprus",
+"Sápmi"
+],
+"years": "2005-2005"
+},
+"King Hassan II Tournament": {
+"ar": "دورة الملك الحسن الثاني الدولية",
+"source": "generated",
+"clubs": [
+"Morocco",
+"Belgium",
+"Jamaica"
+],
+"years": "1996-2000"
+},
+"Kirin Challenge Cup": {
+"ar": "كأس كيرين للتحدي",
+"source": "generated",
+"clubs": [
+"Japan",
+"Ecuador"
+],
+"years": "2013-2022"
+},
+"Korea Cup": {
+"ar": "كأس كوريا الجنوبية الدولية",
+"source": "generated",
+"clubs": [
+"South Korea",
+"Myanmar",
+"Indonesia"
+],
+"years": "1971-1999"
+},
+"Kuneitra Cup": {
+"ar": "كأس القنيطرة",
+"source": "generated",
+"clubs": [
+"Algeria",
+"Libya",
+"Syria"
+],
+"years": "1974-1974"
+},
+"L1": {
+"ar": "الدوري الألماني",
+"source": "generated",
+"clubs": [
+"Union Berlin"
+],
+"years": "2024-2024"
+},
+"LG Cup": {
+"ar": "كأس إل جي",
+"source": "generated",
+"clubs": [
+"Iran",
+"Libya",
+"Egypt"
+],
+"years": "1997-2011"
+},
+"Los Angeles Nations Cup": {
+"ar": "كأس لوس أنجلوس للأمم",
+"source": "generated",
+"clubs": [
+"El Salvador",
+"Guatemala",
+"Mexico"
+],
+"years": "1983-1985"
+},
+"Lunar New Year Cup": {
+"ar": "كأس السنة القمرية الجديدة",
+"source": "generated",
+"clubs": [
+"South Korea",
+"Hong Kong",
+"Japan"
+],
+"years": "1986-2006"
+},
+"MEX1": {
+"ar": "الدوري المكسيكي الممتاز",
+"source": "generated",
+"clubs": [
+"Querétaro FC",
+"Atlas Guadalajara",
+"Club Tijuana"
+],
+"years": "2025-2026"
+},
+"MSG Prime Minister's Cup": {
+"ar": "كأس رئيس وزراء مجموعة ميلانيزيا",
+"source": "generated",
+"clubs": [
+"Papua New Guinea",
+"Fiji",
+"Solomon Islands"
+],
+"years": "2022-2025"
+},
+"Mahinda Rajapaksa Cup": {
+"ar": "كأس ماهيندا راجاباكسا",
+"source": "generated",
+"clubs": [
+"Sri Lanka",
+"Bangladesh",
+"Maldives"
+],
+"years": "2021-2021"
+},
+"Malta International Tournament": {
+"ar": "بطولة مالطا الدولية",
+"source": "generated",
+"clubs": [
+"Malta",
+"Albania",
+"Georgia"
+],
+"years": "1988-2008"
+},
+"Mapinduzi Cup": {
+"ar": "كأس مابيندوزي",
+"source": "generated",
+"clubs": [
+"Zanzibar",
+"Tanzania",
+"Burkina Faso"
+],
+"years": "2025-2025"
+},
+"Maple Cup": {
+"ar": "كأس القيقب",
+"source": "generated",
+"clubs": [
+"Canada",
+"Ecuador",
+"Guatemala"
+],
+"years": "1995-1999"
+},
+"Marianas Cup": {
+"ar": "كأس جزر ماريانا",
+"source": "generated",
+"clubs": [
+"Northern Mariana Islands"
+],
+"years": "2024-2024"
+},
+"Marlboro Cup": {
+"ar": "كأس مارلبورو",
+"source": "generated",
+"clubs": [
+"USA",
+"Costa Rica",
+"Colombia"
+],
+"years": "1988-1990"
+},
+"Matthews Cup": {
+"ar": "كأس ماثيوز",
+"source": "generated",
+"clubs": [
+"Canada",
+"Chile"
+],
+"years": "1988-1988"
+},
+"Mauritius Four Nations Cup": {
+"ar": "بطولة موريشيوس الدولية الودية",
+"source": "generated",
+"clubs": [
+"Mauritius",
+"Djibouti",
+"Pakistan"
+],
+"years": "2023-2023"
+},
+"Mediterranean Cup": {
+"ar": "كأس البحر المتوسط",
+"source": "generated",
+"clubs": [
+"Egypt",
+"Greece",
+"Turkiye"
+],
+"years": "1949-1957"
+},
+"Melanesia Cup": {
+"ar": "كأس ميلانيزيا",
+"source": "generated",
+"clubs": [
+"Fiji",
+"Solomon Islands",
+"New Caledonia"
+],
+"years": "1988-2000"
+},
+"Merlion Cup": {
+"ar": "كأس ميرليون",
+"source": "generated",
+"clubs": [
+"Singapore",
+"Australia",
+"China"
+],
+"years": "1982-1992"
+},
+"Miami Cup": {
+"ar": "كأس ميامي",
+"source": "generated",
+"clubs": [
+"Colombia",
+"USA",
+"El Salvador"
+],
+"years": "1986-1994"
+},
+"Millennium Cup": {
+"ar": "كأس الألفية",
+"source": "generated",
+"clubs": [
+"Bosnia and Herzegovina",
+"Serbia",
+"Chile"
+],
+"years": "2001-2001"
+},
+"Mundialito": {
+"ar": "موندياليتو",
+"source": "generated",
+"clubs": [
+"Uruguay",
+"Argentina",
+"Brazil"
+],
+"years": "1980-1981"
+},
+"Muratti Vase": {
+"ar": "كأس موراتي",
+"source": "generated",
+"clubs": [
+"Guernsey",
+"Jersey",
+"Alderney"
+],
+"years": "1905-2022"
+},
+"NAFC Championship": {
+"ar": "بطولة اتحاد أمريكا الشمالية لكرة القدم",
+"source": "generated",
+"clubs": [
+"Cuba",
+"Mexico"
+],
+"years": "1947-1949"
+},
+"NAFU Championship": {
+"ar": "بطولة اتحاد أمريكا الشمالية",
+"source": "generated",
+"clubs": [
+"Canada",
+"USA"
+],
+"years": "1990-1991"
+},
+"NL1": {
+"ar": "الدوري الهولندي الممتاز",
+"source": "generated",
+"clubs": [
+"PSV Eindhoven",
+"Ajax",
+"Feyenoord"
+],
+"years": "1956-2026"
+},
+"NLP": {
+"ar": "كأس هولندا",
+"source": "generated",
+"clubs": [
+"AZ Alkmaar",
+"Feyenoord",
+"PSV Eindhoven"
+],
+"years": "2012-2026"
+},
+"NLSC": {
+"ar": "الدوري الهولندي الممتاز",
+"source": "generated",
+"clubs": [
+"PSV Eindhoven",
+"Feyenoord",
+"Ajax"
+],
+"years": "2012-2025"
+},
+"NO1": {
+"ar": "الدوري النرويجي الممتاز",
+"source": "generated",
+"clubs": [
+"Tromsø IL",
+"Vålerenga Fotball Elite",
+"KFUM-Kameratene Oslo"
+],
+"years": "2025-2026"
+},
+"Nations Cup": {
+"ar": "كأس الأمم",
+"source": "generated",
+"clubs": [
+"Ireland",
+"Wales",
+"Scotland"
+],
+"years": "2011-2011"
+},
+"Navruz Cup": {
+"ar": "كأس نوروز الدولية",
+"source": "generated",
+"clubs": [
+"Tajikistan",
+"Uzbekistan"
+],
+"years": "2022-2022"
+},
+"Niamh Challenge Cup": {
+"ar": "كأس نيام للتحدي",
+"source": "generated",
+"clubs": [
+"Ellan Vannin",
+"Alderney"
+],
+"years": "2015-2015"
+},
+"Nile Basin Tournament": {
+"ar": "بطولة حوض النيل",
+"source": "generated",
+"clubs": [
+"Egypt",
+"DR Congo",
+"Uganda"
+],
+"years": "2011-2011"
+},
+"Nordic Championship": {
+"ar": "بطولة دول الشمال",
+"source": "generated",
+"clubs": [
+"Denmark",
+"Norway",
+"Sweden"
+],
+"years": "1924-2001"
+},
+"OFC CC": {
+"ar": "دوري أبطال أوقيانوسيا",
+"source": "generated",
+"clubs": [
+"Lupe Ole Soaga",
+"Auckland City",
+"Kiwi FC"
+],
+"years": "1987-2025"
+},
+"Oceania Nations Cup": {
+"ar": "كأس أمم أوقيانوسيا",
+"source": "generated",
+"clubs": [
+"New Zealand",
+"Fiji",
+"Australia"
+],
+"years": "1973-2024"
+},
+"Oceania Nations Cup qualification": {
+"ar": "تصفيات كأس أمم أوقيانوسيا",
+"source": "generated",
+"clubs": [
+"Samoa",
+"Tahiti",
+"Tonga"
+],
+"years": "1994-2024"
+},
+"Open International Championship": {
+"ar": "البطولة الدولية المفتوحة",
+"source": "generated",
+"clubs": [
+"China"
+],
+"years": "1921-1921"
+},
+"Outrigger Challenge Cup": {
+"ar": "كأس تحدي أوتريدجر",
+"source": "generated",
+"clubs": [
+"Marshall Islands",
+"United States Virgin Islands",
+"Turks and Caicos Islands"
+],
+"years": "2025-2025"
+},
+"PL1": {
+"ar": "الدوري البولندي الممتاز",
+"source": "generated",
+"clubs": [
+"Radomiak Radom",
+"GKS Katowice",
+"Lechia Gdansk"
+],
+"years": "2024-2026"
+},
+"PO1": {
+"ar": "الدوري البرتغالي الممتاز",
+"source": "generated",
+"clubs": [
+"Sporting CP",
+"FC Porto",
+"Benfica"
+],
+"years": "1935-2026"
+},
+"POBE": {
+"ar": "الدوري البلجيكي للمحترفين",
+"source": "generated",
+"clubs": [
+"KVC Westerlo",
+"Royal Charleroi SC",
+"Oud-Heverlee Leuven"
+],
+"years": "2026-2026"
+},
+"POCP": {
+"ar": "كأس الدوري البرتغالي",
+"source": "generated",
+"clubs": [
+"Sporting CP",
+"Braga",
+"Benfica"
+],
+"years": "2012-2026"
+},
+"POSU": {
+"ar": "الدوري البرتغالي الممتاز",
+"source": "generated",
+"clubs": [
+"Benfica",
+"FC Porto",
+"Sporting CP"
+],
+"years": "2012-2025"
+},
+"Pacific Games": {
+"ar": "ألعاب المحيط الهادئ",
+"source": "generated",
+"clubs": [
+"New Caledonia",
+"Solomon Islands",
+"Tahiti"
+],
+"years": "2011-2023"
+},
+"Pacific Mini Games": {
+"ar": "دورة ألعاب المحيط الهادئ المصغرة",
+"source": "generated",
+"clubs": [
+"Vanuatu",
+"Fiji",
+"Tuvalu"
+],
+"years": "2017-2017"
+},
+"Palestine International Championship": {
+"ar": "بطولة فلسطين الدولية",
+"source": "generated",
+"clubs": [
+"Palestine",
+"Indonesia",
+"Kurdistan"
+],
+"years": "2012-2014"
+},
+"Pan American Championship": {
+"ar": "بطولة عموم أمريكا لكرة القدم",
+"source": "generated",
+"clubs": [
+"Brazil",
+"Argentina",
+"Mexico"
+],
+"years": "1952-1960"
+},
+"Peace Cup": {
+"ar": "كأس السلام",
+"source": "generated",
+"clubs": [
+"Guernsey"
+],
+"years": "1921-1925"
+},
+"Philippine Peace Cup": {
+"ar": "كأس السلام الفلبيني",
+"source": "generated",
+"clubs": [
+"Philippines",
+"Chinese Taipei",
+"Macau"
+],
+"years": "2012-2014"
+},
+"Phillip Seaga Cup": {
+"ar": "كأس فيليب سيغا",
+"source": "generated",
+"clubs": [
+"Jamaica",
+"Haiti"
+],
+"years": "1963-1963"
+},
+"President's Gold Cup International Tournament": {
+"ar": "كأس الرئيس الذهبية الدولية",
+"source": "generated",
+"clubs": [
+"Pakistan"
+],
+"years": "1986-1986"
+},
+"Prime Minister's Cup": {
+"ar": "كأس رئيس الوزراء",
+"source": "generated",
+"clubs": [
+"Bahrain",
+"China",
+"Finland"
+],
+"years": "2002-2004"
+},
+"Quaid-e-Azam International Tournament": {
+"ar": "بطولة قائد أعظم الدولية",
+"source": "generated",
+"clubs": [
+"Pakistan",
+"Iran",
+"China"
+],
+"years": "1976-1986"
+},
+"RO1": {
+"ar": "الدوري الروماني الممتاز",
+"source": "generated",
+"clubs": [
+"FC Hermannstadt",
+"Otelul Galati",
+"FC Botosani"
+],
+"years": "2024-2026"
+},
+"RSK1": {
+"ar": "الدوري الكوري الجنوبي الممتاز",
+"source": "generated",
+"clubs": [
+"Pohang Steelers",
+"Gwangju FC",
+"Daejeon Citizen"
+],
+"years": "2025-2026"
+},
+"RU1": {
+"ar": "الدوري الروسي الممتاز",
+"source": "generated",
+"clubs": [
+"CSKA Moscow",
+"FC Rostov",
+"Zenit St. Petersburg"
+],
+"years": "1992-2026"
+},
+"RUP": {
+"ar": "كأس روسيا",
+"source": "generated",
+"clubs": [
+"CSKA Moscow",
+"Zenit St. Petersburg",
+"Spartak Moscow"
+],
+"years": "2012-2026"
+},
+"RUSS": {
+"ar": "الدوري الروسي الممتاز",
+"source": "generated",
+"clubs": [
+"Zenit St. Petersburg",
+"Lokomotiv Moscow",
+"CSKA Moscow"
+],
+"years": "2012-2025"
+},
+"Real Madrid 75th Anniversary Cup": {
+"ar": "كأس الذكرى الخامسة والسبعين لتأسيس ريال مدريد",
+"source": "generated",
+"clubs": [
+"Argentina"
+],
+"years": "1977-1977"
+},
+"Recopa": {
+"ar": "كأس ريكوبا سودأمريكانا",
+"source": "generated",
+"clubs": [
+"River Plate",
+"Boca Juniors",
+"Sao Paulo"
+],
+"years": "1989-2025"
+},
+"Rous Cup": {
+"ar": "كأس روس",
+"source": "generated",
+"clubs": [
+"Scotland",
+"England"
+],
+"years": "1985-1989"
+},
+"SA1": {
+"ar": "دوري المحترفين السعودي",
+"source": "generated",
+"clubs": [
+"Al-Orobah FC"
+],
+"years": "2025-2025"
+},
+"SAFF Cup": {
+"ar": "بطولة اتحاد جنوب آسيا لكرة القدم",
+"source": "generated",
+"clubs": [
+"India",
+"Bangladesh",
+"Maldives"
+],
+"years": "1995-2026"
+},
+"SC1": {
+"ar": "الدوري الاسكتلندي الممتاز",
+"source": "generated",
+"clubs": [
+"Celtic",
+"Rangers",
+"Hearts"
+],
+"years": "1890-2026"
+},
+"SCI": {
+"ar": "كأس السوبر الإيطالي",
+"source": "generated",
+"clubs": [
+"Juventus",
+"Napoli",
+"Inter"
+],
+"years": "2012-2025"
+},
+"SE1": {
+"ar": "الدوري السويدي الممتاز",
+"source": "generated",
+"clubs": [
+"Degerfors IF",
+"Elfsborg",
+"Hammarby IF"
+],
+"years": "2025-2026"
+},
+"SER1": {
+"ar": "الدوري الصربي الممتاز",
+"source": "generated",
+"clubs": [
+"FK Spartak Subotica",
+"FK TSC Backa Topola",
+"FK IMT Belgrad"
+],
+"years": "2024-2026"
+},
+"SFA": {
+"ar": "كأس اسكتلندا",
+"source": "generated",
+"clubs": [
+"Rangers",
+"Celtic",
+"Hibernian"
+],
+"years": "2012-2026"
+},
+"SKN Football Festival": {
+"ar": "مهرجان سانت كيتس ونيفيس لكرة القدم",
+"source": "generated",
+"clubs": [
+"St. Kitts and Nevis",
+"Barbados",
+"Haiti"
+],
+"years": "1998-2003"
+},
+"SUC": {
+"ar": "كأس السوبر الإسباني",
+"source": "generated",
+"clubs": [
+"Barcelona",
+"Real Madrid",
+"Atletico Madrid"
+],
+"years": "2012-2026"
+},
+"Scania 100 Tournament": {
+"ar": "بطولة سكانيا المئوية",
+"source": "generated",
+"clubs": [
+"Sweden",
+"Italy",
+"Denmark"
+],
+"years": "1991-1991"
+},
+"Simba Tournament": {
+"ar": "بطولة سيمبا الدولية",
+"source": "generated",
+"clubs": [
+"South Africa",
+"Ghana",
+"Cameroon"
+],
+"years": "1994-1996"
+},
+"Soccer Ashes": {
+"ar": "كأس أشييز لكرة القدم",
+"source": "generated",
+"clubs": [
+"Australia",
+"New Zealand"
+],
+"years": "1922-2025"
+},
+"South Asian Games": {
+"ar": "ألعاب جنوب آسيا",
+"source": "generated",
+"clubs": [
+"India",
+"Bangladesh",
+"Nepal"
+],
+"years": "1984-1999"
+},
+"South Asian Super Cup": {
+"ar": "كأس جنوب آسيا الممتاز",
+"source": "generated",
+"clubs": [
+"Sri Lanka"
+],
+"years": "2025-2025"
+},
+"South Pacific Games": {
+"ar": "ألعاب جنوب المحيط الهادئ",
+"source": "generated",
+"clubs": [
+"Fiji",
+"New Caledonia",
+"Tahiti"
+],
+"years": "1963-2007"
+},
+"South Pacific Mini Games": {
+"ar": "ألعاب جنوب المحيط الهادئ المصغرة",
+"source": "generated",
+"clubs": [
+"Tahiti",
+"Vanuatu",
+"Solomon Islands"
+],
+"years": "1981-1993"
+},
+"Southeast Asian Games": {
+"ar": "ألعاب جنوب شرق آسيا",
+"source": "generated",
+"clubs": [
+"Indonesia",
+"Thailand",
+"Singapore"
+],
+"years": "1977-1999"
+},
+"Southeast Asian Peninsular Games": {
+"ar": "ألعاب جنوب شرق آسيا",
+"source": "generated",
+"clubs": [
+"Myanmar",
+"Thailand",
+"Malaysia"
+],
+"years": "1959-1975"
+},
+"Superclásico de las Américas": {
+"ar": "سوبر كلاسيكو الأبطال",
+"source": "generated",
+"clubs": [
+"Argentina",
+"Brazil"
+],
+"years": "2011-2019"
+},
+"TIFOCO Tournament": {
+"ar": "بطولة تيفوكو",
+"source": "generated",
+"clubs": [
+"Benin"
+],
+"years": "2003-2003"
+},
+"TR1": {
+"ar": "الدوري التركي الممتاز",
+"source": "generated",
+"clubs": [
+"Fenerbahce",
+"Galatasaray",
+"Beşiktaş"
+],
+"years": "1959-2026"
+},
+"TS1": {
+"ar": "الدوري التشيكي الممتاز",
+"source": "generated",
+"clubs": [
+"Slavia Prague",
+"Viktoria Plzen",
+"Jablonec"
+],
+"years": "2024-2026"
+},
+"Taça das Nações": {
+"ar": "كأس الأمم",
+"source": "generated",
+"clubs": [
+"Brazil",
+"Argentina",
+"England"
+],
+"years": "1964-1964"
+},
+"The Other Final": {
+"ar": "النهائي الآخر",
+"source": "generated",
+"clubs": [
+"Bhutan"
+],
+"years": "2002-2002"
+},
+"Three Nations Cup": {
+"ar": "كأس الأمم الثلاث",
+"source": "generated",
+"clubs": [
+"Kyrgyzstan",
+"Bangladesh"
+],
+"years": "2021-2021"
+},
+"Tournament Burkina Faso": {
+"ar": "بطولة بوركينا فاسو الدولية",
+"source": "generated",
+"clubs": [
+"Burkina Faso",
+"Benin",
+"Ghana"
+],
+"years": "1988-1988"
+},
+"Tournoi de France": {
+"ar": "دورة فرنسا الدولية",
+"source": "generated",
+"clubs": [
+"France",
+"Austria",
+"England"
+],
+"years": "1988-1997"
+},
+"Trans-Tasman Cup": {
+"ar": "كأس ترانس تاسمان",
+"source": "generated",
+"clubs": [
+"New Zealand",
+"Australia"
+],
+"years": "1983-1995"
+},
+"Tri Nation Tournament": {
+"ar": "بطولة ثلاثية ودية",
+"source": "generated",
+"clubs": [
+"Nepal",
+"Bhutan"
+],
+"years": "2023-2023"
+},
+"Tri-Nation Series": {
+"ar": "سلسلة الثلاث دول",
+"source": "generated",
+"clubs": [
+"India",
+"Mauritius",
+"Myanmar"
+],
+"years": "2017-2023"
+},
+"Tri-Nations Series": {
+"ar": "سلسلة الأمم الثلاث",
+"source": "generated",
+"clubs": [
+"Fiji",
+"Hong Kong"
+],
+"years": "2024-2024"
+},
+"Tynwald Hill Tournament": {
+"ar": "بطولة تينوالد هيل",
+"source": "generated",
+"clubs": [
+"Sealand",
+"Raetia",
+"Tamil Eelam"
+],
+"years": "2013-2013"
+},
+"U.S.A. Bicentennial Cup Tournament": {
+"ar": "بطولة كأس المئوية الأمريكية",
+"source": "generated",
+"clubs": [
+"Brazil",
+"England"
+],
+"years": "1976-1976"
+},
+"UCOL": {
+"ar": "دوري المؤتمر الأوروبي",
+"source": "generated",
+"clubs": [
+"Basaksehir FK",
+"Fiorentina",
+"Zorya Lugansk"
+],
+"years": "2021-2026"
+},
+"UDEAC Cup": {
+"ar": "كأس اتحاد وسط أفريقيا",
+"source": "generated",
+"clubs": [
+"Chad",
+"Central African Republic",
+"Congo"
+],
+"years": "1984-1990"
+},
+"UEFA CL": {
+"ar": "دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"Real Madrid",
+"Bayern München",
+"FC Porto"
+],
+"years": "1955-2025"
+},
+"UEFA ITC": {
+"ar": "كأس إنترتوتو",
+"source": "generated",
+"clubs": [
+"Slaven Koprivnica",
+"Gloria Bistrita",
+"SC Heerenveen"
+],
+"years": "1995-2008"
+},
+"UEFA SC": {
+"ar": "كأس السوبر الأوروبي",
+"source": "generated",
+"clubs": [
+"Barcelona",
+"Milan",
+"Ajax"
+],
+"years": "1973-2011"
+},
+"UKR1": {
+"ar": "الدوري الأوكراني الممتاز",
+"source": "generated",
+"clubs": [
+"Shakhtar Donetsk",
+"Dynamo Kyiv",
+"Dnipro"
+],
+"years": "1992-2026"
+},
+"UKRP": {
+"ar": "كأس أوكرانيا",
+"source": "generated",
+"clubs": [
+"Shakhtar Donetsk",
+"Dynamo Kyiv",
+"MFC Mykolaiv"
+],
+"years": "2012-2026"
+},
+"UKRS": {
+"ar": "الدوري الأوكراني الممتاز",
+"source": "generated",
+"clubs": [
+"Shakhtar Donetsk",
+"Metalurg Donetsk (- 2015)",
+"Chornomorets Odesa"
+],
+"years": "2012-2021"
+},
+"UNCAF Cup": {
+"ar": "كأس أمم أمريكا الوسطى",
+"source": "generated",
+"clubs": [
+"Costa Rica",
+"Honduras",
+"El Salvador"
+],
+"years": "1991-2017"
+},
+"UNIFFAC Cup": {
+"ar": "كأس اتحاد وسط أفريقيا لكرة القدم",
+"source": "generated",
+"clubs": [
+"Gabon",
+"Central African Republic",
+"Congo"
+],
+"years": "1999-1999"
+},
+"USA Cup": {
+"ar": "كأس الولايات المتحدة",
+"source": "generated",
+"clubs": [
+"USA",
+"Mexico",
+"Ireland"
+],
+"years": "1992-2000"
+},
+"USC": {
+"ar": "دوري أبطال أوروبا",
+"source": "generated",
+"clubs": [
+"Real Madrid",
+"Bayern München",
+"Chelsea"
+],
+"years": "2012-2025"
+},
+"Umbro Cup": {
+"ar": "كأس أمبرو",
+"source": "generated",
+"clubs": [
+"England",
+"Brazil",
+"Sweden"
+],
+"years": "1995-1995"
+},
+"Unity Cup": {
+"ar": "كأس الوحدة",
+"source": "generated",
+"clubs": [
+"Jamaica",
+"Nigeria",
+"Ireland"
+],
+"years": "2002-2025"
+},
+"VFF Cup": {
+"ar": "كأس فيتنام لكرة القدم",
+"source": "generated",
+"clubs": [
+"Vietnam",
+"Thailand",
+"India"
+],
+"years": "2008-2024"
+},
+"Vietnam Independence Cup": {
+"ar": "كأس استقلال فيتنام",
+"source": "generated",
+"clubs": [
+"Vietnam Republic",
+"Malaysia",
+"Indonesia"
+],
+"years": "1961-1974"
+},
+"Viva World Cup": {
+"ar": "كأس فيفا المستقلة",
+"source": "generated",
+"clubs": [
+"Sápmi",
+"Occitania",
+"Iraqi Kurdistan"
+],
+"years": "2006-2012"
+},
+"West African Cup": {
+"ar": "كأس غرب أفريقيا",
+"source": "generated",
+"clubs": [
+"Ghana",
+"Ivory Coast",
+"Burkina Faso"
+],
+"years": "1982-1987"
+},
+"Windward Islands Tournament": {
+"ar": "بطولة جزر ويندوارد",
+"source": "generated",
+"clubs": [
+"Dominica",
+"Saint Lucia",
+"Grenada"
+],
+"years": "1961-2017"
+},
+"World Unity Cup": {
+"ar": "كأس الوحدة العالمية",
+"source": "generated",
+"clubs": [
+"Barawa",
+"Chagos Islands"
+],
+"years": "2016-2016"
+},
+"Zambian Independence Tournament": {
+"ar": "بطولة استقلال زامبيا",
+"source": "generated",
+"clubs": [
+"Zambia",
+"Uganda"
+],
+"years": "1964-1964"
+},
+"afghanistan": {
+"ar": "الدوري الأفغاني الممتاز",
+"source": "generated",
+"clubs": [
+"Shaheen Asmayee FC",
+"Toofaan Harirod FC",
+"Simorgh Alborz FC"
+],
+"years": "2012-2020"
+},
+"albania": {
+"ar": "الدوري الألباني الممتاز",
+"source": "generated",
+"clubs": [
+"Teuta Durrës",
+"Vllaznia Shkodër",
+"Tirana"
+],
+"years": "1997-2025"
+},
+"american-samoa": {
+"ar": "الدوري الأمريكي الساموي",
+"source": "generated",
+"clubs": [
+"Pago Youth A",
+"Utulei Youth",
+"Lion Heart"
+],
+"years": "2008-2025"
+},
+"andorra": {
+"ar": "الدوري الأندوري الممتاز",
+"source": "generated",
+"clubs": [
+"FC Santa Coloma",
+"Ue Sant Julia",
+"Inter Club d'Escaldes"
+],
+"years": "1999-2025"
+},
+"angola": {
+"ar": "الدوري الأنغولي الممتاز",
+"source": "generated",
+"clubs": [
+"Interclube",
+"Petro de Luanda",
+"1º de Agosto"
+],
+"years": "2000-2025"
+},
+"antigua-and-barbuda": {
+"ar": "الدوري الأنتيغوي",
+"source": "generated",
+"clubs": [
+"Hoppers Green Bay",
+"Parham",
+"Sap Bolans"
+],
+"years": "2002-2025"
+},
+"armenia": {
+"ar": "الدوري الأرميني الممتاز",
+"source": "generated",
+"clubs": [
+"Urartu",
+"Pyunik",
+"FC Ararat"
+],
+"years": "2000-2025"
+},
+"aruba": {
+"ar": "الدوري الأروبي",
+"source": "generated",
+"clubs": [
+"SV Racing Club Aruba",
+"SV Britannia",
+"SV Deportivo Nacional"
+],
+"years": "2004-2025"
+},
+"australia": {
+"ar": "الدوري الأسترالي",
+"source": "generated",
+"clubs": [
+"Adelaide United",
+"Melbourne Victory",
+"Sydney FC"
+],
+"years": "2005-2025"
+},
+"austria": {
+"ar": "الدوري النمساوي الممتاز",
+"source": "generated",
+"clubs": [
+"Austria Wien",
+"Rapid Wien",
+"Sturm Graz"
+],
+"years": "1945-2025"
+},
+"azerbaijan": {
+"ar": "الدوري الأذربيجاني الممتاز",
+"source": "generated",
+"clubs": [
+"Neftçi",
+"Qarabag FK",
+"Şamaxı"
+],
+"years": "2000-2025"
+},
+"bahamas": {
+"ar": "الدوري البهامي",
+"source": "generated",
+"clubs": [
+"Bears FC",
+"Dynamos FC",
+"Cavalier FC"
+],
+"years": "2007-2025"
+},
+"bahrain": {
+"ar": "الدوري البحريني الممتاز",
+"source": "generated",
+"clubs": [
+"Muharraq",
+"East Riffa",
+"Al Ahli"
+],
+"years": "2003-2025"
+},
+"bangladesh": {
+"ar": "الدوري البنغلاديشي",
+"source": "generated",
+"clubs": [
+"Abahani Dhaka",
+"Mohammedan Dhaka",
+"Sheikh Russel Kc"
+],
+"years": "2007-2025"
+},
+"barbados": {
+"ar": "الدوري البربادوسي",
+"source": "generated",
+"clubs": [
+"Claytons Kola Tonic Notre Dame",
+"Caribsurf Paradise",
+"First Call Brittons Hill"
+],
+"years": "2003-2025"
+},
+"belarus": {
+"ar": "الدوري البيلاروسي الممتاز",
+"source": "generated",
+"clubs": [
+"Dinamo Minsk",
+"Neman Grodno",
+"Dinamo Brest"
+],
+"years": "1992-2025"
+},
+"belize": {
+"ar": "الدوري البليزي",
+"source": "generated",
+"clubs": [
+"Hankook Verdes",
+"Belmopan Bandits Football Sporting Club",
+"Belize Defence Force"
+],
+"years": "2003-2025"
+},
+"benin": {
+"ar": "الدوري البنيني الممتاز",
+"source": "generated",
+"clubs": [
+"ASPAC",
+"Dragons",
+"Buffles"
+],
+"years": "2008-2025"
+},
+"bermuda": {
+"ar": "الدوري البرمودي",
+"source": "generated",
+"clubs": [
+"Dandy Town",
+"Devonshire Cougars",
+"North Village Community Club"
+],
+"years": "2000-2025"
+},
+"bhutan": {
+"ar": "الدوري البوتاني",
+"source": "generated",
+"clubs": [
+"Tensung",
+"High Quality United",
+"Druk Star FC"
+],
+"years": "2016-2025"
+},
+"bolivia": {
+"ar": "الدوري البوليفي الممتاز",
+"source": "generated",
+"clubs": [
+"Bolivar",
+"The Strongest",
+"Oriente Petrolero"
+],
+"years": "1995-2025"
+},
+"bonaire": {
+"ar": "دوري بونير",
+"source": "generated",
+"clubs": [
+"Bonaire Real Rincon",
+"Bonaire SV Uruguay",
+"Juventus"
+],
+"years": "2013-2016"
+},
+"bosnia-herzegovina": {
+"ar": "الدوري البوسني الممتاز",
+"source": "generated",
+"clubs": [
+"Zrinjski",
+"Sarajevo",
+"Široki Brijeg"
+],
+"years": "2000-2025"
+},
+"botswana": {
+"ar": "الدوري البوتسواني الممتاز",
+"source": "generated",
+"clubs": [
+"BDF XI",
+"Township Rollers",
+"Gaborone United FC"
+],
+"years": "2004-2025"
+},
+"british-virgin-islands": {
+"ar": "الدوري الجزر العذراء البريطانية",
+"source": "generated",
+"clubs": [
+"Sugar Boyz",
+"Wolues FC",
+"Islanders FC"
+],
+"years": "2010-2025"
+},
+"brunei-darussalam": {
+"ar": "الدوري البروني",
+"source": "generated",
+"clubs": [
+"Wijaya FC",
+"MS ABDB",
+"Indera FC"
+],
+"years": "2003-2025"
+},
+"bulgaria": {
+"ar": "الدوري البلغاري الممتاز",
+"source": "generated",
+"clubs": [
+"Levski Sofia",
+"Slavia Sofia",
+"CSKA-Sofia"
+],
+"years": "1948-2025"
+},
+"burkina-faso": {
+"ar": "الدوري البوركيني الممتاز",
+"source": "generated",
+"clubs": [
+"US Forces Armees",
+"Asfa Yennega",
+"Racing Club De Bobo"
+],
+"years": "2000-2025"
+},
+"burundi": {
+"ar": "الدوري البوروندي",
+"source": "generated",
+"clubs": [
+"Vital'O",
+"Le Messager Ngozi",
+"Atheletico Olympic FC"
+],
+"years": "2010-2025"
+},
+"cambodia": {
+"ar": "الدوري الكمبودي",
+"source": "generated",
+"clubs": [
+"Phnom Penh Crown FC",
+"Royal Sword FC",
+"NagaWorld FC"
+],
+"years": "2008-2025"
+},
+"cameroon": {
+"ar": "الدوري الكاميروني",
+"source": "generated",
+"clubs": [
+"Union Sportive De Douala",
+"Cotonsport De Garoua",
+"Canon"
+],
+"years": "2000-2025"
+},
+"canada": {
+"ar": "الدوري الكندي",
+"source": "generated",
+"clubs": [
+"Serbian White Eagles",
+"London City FC",
+"Toronto Croatia"
+],
+"years": "2004-2025"
+},
+"cape-verde-islands": {
+"ar": "الدوري الرأس أخضري",
+"source": "generated",
+"clubs": [
+"Sporting Clube Da Praia",
+"CS Mindelense",
+"FC Ultramarina"
+],
+"years": "2000-2025"
+},
+"cayman-islands": {
+"ar": "الدوري الكايماني",
+"source": "generated",
+"clubs": [
+"Scholars International FC",
+"Elite FC",
+"Bodden Town FC"
+],
+"years": "2008-2025"
+},
+"chad": {
+"ar": "الدوري التشادي",
+"source": "generated",
+"clubs": [
+"As Fan",
+"Asgnn",
+"Association Sportive Des Douanes De Niamey"
+],
+"years": "2011-2025"
+},
+"chile": {
+"ar": "الدوري التشيلي الممتاز",
+"source": "generated",
+"clubs": [
+"Universidad de Chile",
+"Colo Colo",
+"Union Espanola"
+],
+"years": "2000-2025"
+},
+"china-pr": {
+"ar": "الدوري الصيني الممتاز",
+"source": "generated",
+"clubs": [
+"Shandong Luneng",
+"Beijing Guoan",
+"Shanghai Shenhua"
+],
+"years": "1994-2025"
+},
+"chinese-taipei": {
+"ar": "الدوري التايواني",
+"source": "generated",
+"clubs": [
+"Taiwan Power Company",
+"Tainan City",
+"Ming Chuan University"
+],
+"years": "2009-2025"
+},
+"colombia": {
+"ar": "الدوري الكولومبي الممتاز",
+"source": "generated",
+"clubs": [
+"Atletico Nacional",
+"Deportes Tolima",
+"Deportivo Cali"
+],
+"years": "1995-2025"
+},
+"congo": {
+"ar": "الدوري الكونغولي",
+"source": "generated",
+"clubs": [
+"Diables Noirs",
+"As Inter Club De Brazzaville",
+"Etoile Du Congo"
+],
+"years": "2011-2025"
+},
+"congo-dr": {
+"ar": "الدوري الكونغولي الديمقراطي",
+"source": "generated",
+"clubs": [
+"TP Mazembe",
+"FC Saint Eloi Lupopo",
+"V.Club"
+],
+"years": "2010-2025"
+},
+"cook-islands": {
+"ar": "الدوري الكوك أيلاندي",
+"source": "generated",
+"clubs": [
+"Nikao Sokattak",
+"Avatiu FC",
+"Tupapa Maraerenga"
+],
+"years": "2008-2025"
+},
+"costa-rica": {
+"ar": "الدوري الكوستاريكي",
+"source": "generated",
+"clubs": [
+"CS Herediano",
+"Deportivo Saprissa",
+"Ld Alajuelense"
+],
+"years": "2000-2025"
+},
+"cote-divoire": {
+"ar": "الدوري الإيفواري الممتاز",
+"source": "generated",
+"clubs": [
+"ASEC Mimosas",
+"Africa Sports",
+"SOA"
+],
+"years": "2000-2025"
+},
+"croatia": {
+"ar": "الدوري الكرواتي الممتاز",
+"source": "generated",
+"clubs": [
+"Rijeka",
+"Hajduk Split",
+"Dinamo Zagreb"
+],
+"years": "1992-2025"
+},
+"cuba": {
+"ar": "الدوري الكوبي",
+"source": "generated",
+"clubs": [
+"Villa Clara",
+"Cienfuegos",
+"Camaguey"
+],
+"years": "2000-2025"
+},
+"cup-winners-cup": {
+"ar": "كأس الكؤوس الأوروبية",
+"source": "manual"
+},
+"curacao": {
+"ar": "الدوري الكوراساوي",
+"source": "generated",
+"clubs": [
+"Crksv Jong Holland",
+"Rksv Centro Dominguito",
+"SV Centro Social Deportivo Barber"
+],
+"years": "2007-2024"
+},
+"cyprus": {
+"ar": "الدوري القبرصي الدرجة الأولى",
+"source": "generated",
+"clubs": [
+"Apollon",
+"Omonia Nicosia",
+"APOEL"
+],
+"years": "1996-2025"
+},
+"czech-republic": {
+"ar": "الدوري التشيكي الممتاز",
+"source": "generated",
+"clubs": [
+"Slavia Prague",
+"Sparta Prague",
+"Slovan Liberec"
+],
+"years": "1993-2025"
+},
+"denmark": {
+"ar": "الدوري الدنماركي الممتاز",
+"source": "generated",
+"clubs": [
+"AGF",
+"Odense",
+"AaB"
+],
+"years": "1912-2025"
+},
+"djibouti": {
+"ar": "الدوري الجيبوتي",
+"source": "generated",
+"clubs": [
+"ASAS",
+"Guelleh Batal  Garde Republicaine",
+"As Du Chemin De Fer Djibouto Ethiopien  Colas"
+],
+"years": "2010-2025"
+},
+"dominica": {
+"ar": "الدوري الدومينيكي",
+"source": "generated",
+"clubs": [
+"Grand Bazaar Dublanc",
+"Sagicor South East United",
+"Centre Bath Estate"
+],
+"years": "2012-2025"
+},
+"dominican-republic": {
+"ar": "الدوري الدومينيكاني",
+"source": "generated",
+"clubs": [
+"Deportivo Pantoja",
+"Moca",
+"Universidad Organizacion Y Metodos"
+],
+"years": "2007-2025"
+},
+"east-germany": {
+"ar": "الدوري الألماني الشرقي",
+"source": "manual"
+},
+"ecuador": {
+"ar": "الدوري الإكوادوري الممتاز",
+"source": "generated",
+"clubs": [
+"LDU de Quito",
+"Barcelona SC",
+"Emelec"
+],
+"years": "1995-2025"
+},
+"el-salvador": {
+"ar": "الدوري السلفادوري",
+"source": "generated",
+"clubs": [
+"Alianza FC",
+"FAS",
+"Águila"
+],
+"years": "1999-2025"
+},
+"estonia": {
+"ar": "الدوري الإستوني الممتاز",
+"source": "generated",
+"clubs": [
+"Trans",
+"Flora",
+"FCI Levadia"
+],
+"years": "1998-2025"
+},
+"ethiopia": {
+"ar": "الدوري الإثيوبي الممتاز",
+"source": "generated",
+"clubs": [
+"Kedus Giorgis",
+"Ethiopian Coffee",
+"Awassa Kenema"
+],
+"years": "2000-2025"
+},
+"faroe-islands": {
+"ar": "دوري جزر فارو الممتاز",
+"source": "generated",
+"clubs": [
+"HB",
+"B36",
+"NSÍ"
+],
+"years": "1998-2025"
+},
+"fiji": {
+"ar": "الدوري الفيجي",
+"source": "generated",
+"clubs": [
+"Ba",
+"Suva",
+"Lautoka"
+],
+"years": "2007-2025"
+},
+"finland": {
+"ar": "الدوري الفنلندي الممتاز",
+"source": "generated",
+"clubs": [
+"HJK",
+"Inter Turku",
+"VPS"
+],
+"years": "1994-2025"
+},
+"french-guyana": {
+"ar": "دوري غويانا الفرنسية",
+"source": "generated",
+"clubs": [
+"US Matoury",
+"ASC Le Geldar De Kourou",
+"CSC De Cayenne"
+],
+"years": "2002-2025"
+},
+"gabon": {
+"ar": "الدوري الغابوني",
+"source": "generated",
+"clubs": [
+"Bitam",
+"Mangasport",
+"Cercle Mbéri"
+],
+"years": "2001-2025"
+},
+"gambia": {
+"ar": "الدوري الغامبي",
+"source": "generated",
+"clubs": [
+"Real de Banjul",
+"Armed Forces",
+"Hawks"
+],
+"years": "2003-2025"
+},
+"georgia": {
+"ar": "الدوري الجورجي الممتاز",
+"source": "generated",
+"clubs": [
+"Dinamo Tbilisi",
+"Torpedo Kutaisi",
+"Dila"
+],
+"years": "1990-2025"
+},
+"ghana": {
+"ar": "الدوري الغاني الممتاز",
+"source": "generated",
+"clubs": [
+"Asante Kotoko",
+"Hearts of Oak",
+"Wa All Stars"
+],
+"years": "2004-2025"
+},
+"gibraltar": {
+"ar": "الدوري الجبل طارقي",
+"source": "generated",
+"clubs": [
+"Lincoln Red Imps",
+"St Joseph's",
+"Glacis United"
+],
+"years": "2000-2025"
+},
+"grenada": {
+"ar": "الدوري الغرينادي",
+"source": "generated",
+"clubs": [
+"Asoms Paradise",
+"Queens Park Rangers",
+"Carib Hurricane"
+],
+"years": "2007-2025"
+},
+"guadeloupe": {
+"ar": "الدوري الغوادلوبي",
+"source": "generated",
+"clubs": [
+"Club Sportif Moulien",
+"Etoile Morne A L Eau",
+"Siroco Les Abymes"
+],
+"years": "2001-2025"
+},
+"guam": {
+"ar": "الدوري الغوامي",
+"source": "generated",
+"clubs": [
+"Quality",
+"Guam Shipyard",
+"Paintco Strykers"
+],
+"years": "2006-2025"
+},
+"guatemala": {
+"ar": "الدوري الغواتيمالي",
+"source": "generated",
+"clubs": [
+"CSd Comunicaciones",
+"Municipal",
+"Xelaju MC"
+],
+"years": "2000-2025"
+},
+"guinea": {
+"ar": "الدوري الغيني",
+"source": "generated",
+"clubs": [
+"Horoya AC",
+"Hafia FC",
+"As Ashanti Golden Boys"
+],
+"years": "2009-2025"
+},
+"guyana": {
+"ar": "الدوري الغياني",
+"source": "generated",
+"clubs": [
+"Buxton United",
+"Guyana Defence Force",
+"Den Amstel FC"
+],
+"years": "2009-2025"
+},
+"haiti": {
+"ar": "الدوري الهايتي",
+"source": "generated",
+"clubs": [
+"Tempete FC",
+"Baltimore SC",
+"Cavaly"
+],
+"years": "2007-2025"
+},
+"honduras": {
+"ar": "الدوري الهندوراسي",
+"source": "generated",
+"clubs": [
+"CD Olimpia",
+"CD Motagua",
+"Real CD Espana"
+],
+"years": "1996-2025"
+},
+"hong-kong": {
+"ar": "الدوري الهونغ كونغي",
+"source": "generated",
+"clubs": [
+"Kitchee",
+"BC Rangers",
+"Wofoo Tai Po"
+],
+"years": "2003-2025"
+},
+"hungary": {
+"ar": "الدوري المجري",
+"source": "generated",
+"clubs": [
+"Újpest",
+"Ferencváros",
+"Budapest Honved"
+],
+"years": "1919-2025"
+},
+"iceland": {
+"ar": "الدوري الأيسلندي الممتاز",
+"source": "generated",
+"clubs": [
+"KR",
+"Valur Reykjavik",
+"ÍA"
+],
+"years": "1955-2025"
+},
+"india": {
+"ar": "الدوري الهندي الممتاز",
+"source": "generated",
+"clubs": [
+"East Bengal FC",
+"Churchill Brothers",
+"Mohun Bagan Ac"
+],
+"years": "1999-2025"
+},
+"indonesia": {
+"ar": "الدوري الإندونيسي",
+"source": "generated",
+"clubs": [
+"Persib Bandung",
+"Madura United",
+"Bali United"
+],
+"years": "2008-2025"
+},
+"intercontinental-cup-old": {
+"ar": "كأس الإنتركونتيننتال",
+"source": "manual"
+},
+"iran": {
+"ar": "الدوري الإيراني الممتاز",
+"source": "generated",
+"clubs": [
+"Perspolis",
+"Esteghlal",
+"Zob Ahan"
+],
+"years": "2001-2025"
+},
+"ireland-republic": {
+"ar": "الدوري الأيرلندي",
+"source": "generated",
+"clubs": [
+"St Patrick's Athletic",
+"Bohemians",
+"Shamrock Rovers"
+],
+"years": "1981-2025"
+},
+"israel": {
+"ar": "الدوري الإسرائيلي الممتاز",
+"source": "generated",
+"clubs": [
+"Maccabi Haifa",
+"Maccabi Tel Aviv",
+"Beitar Jerusalem"
+],
+"years": "1995-2025"
+},
+"jamaica": {
+"ar": "الدوري الجامايكي الممتاز",
+"source": "generated",
+"clubs": [
+"Arnett Gardens FC",
+"Harbour View",
+"Waterhouse FC"
+],
+"years": "2000-2025"
+},
+"japan": {
+"ar": "الدوري الياباني الممتاز",
+"source": "generated",
+"clubs": [
+"Yokohama F.Marinos",
+"Kashima Antlers",
+"Gamba Osaka"
+],
+"years": "1993-2025"
+},
+"jord top league (RSSSF)": {
+"ar": "الدوري الأردني",
+"source": "generated",
+"clubs": [
+"Al-Faysali",
+"Al-Hussein",
+"Al-Wahdat"
+],
+"years": "1998-2009"
+},
+"jordan": {
+"ar": "الدوري الأردني للمحترفين",
+"source": "generated",
+"clubs": [
+"Al Faisaly",
+"Al-Wehdat",
+"Shabab Al Ordon"
+],
+"years": "2000-2025"
+},
+"kazakhstan": {
+"ar": "الدوري الكازاخستاني الممتاز",
+"source": "generated",
+"clubs": [
+"Tobyl Kostanay",
+"FK Kairat",
+"FC Shakhter Karagandy"
+],
+"years": "1999-2025"
+},
+"kenya": {
+"ar": "الدوري الكيني الممتاز",
+"source": "generated",
+"clubs": [
+"Gor Mahia",
+"Tusker",
+"Mathare United"
+],
+"years": "2001-2025"
+},
+"korea-republic": {
+"ar": "الدوري الكوري الجنوبي الممتاز",
+"source": "generated",
+"clubs": [
+"Ulsan Hyundai",
+"Pohang Steelers",
+"Jeju FC"
+],
+"years": "1991-2025"
+},
+"kosovo": {
+"ar": "الدوري الكوسوفي",
+"source": "generated",
+"clubs": [
+"Prishtina",
+"Drita",
+"Feronikeli"
+],
+"years": "2013-2025"
+},
+"kyrgyzstan": {
+"ar": "الدوري القيرغيزستاني",
+"source": "generated",
+"clubs": [
+"FK Abdish Ata Kant",
+"Alga",
+"FC Dordoi Dynamo"
+],
+"years": "2010-2025"
+},
+"laos": {
+"ar": "الدوري اللاوسي",
+"source": "generated",
+"clubs": [
+"Champasak FC",
+"Young Elephants FC",
+"Ezra FC"
+],
+"years": "2013-2025"
+},
+"latvia": {
+"ar": "الدوري اللاتفي",
+"source": "generated",
+"clubs": [
+"FK Ventspils",
+"Skonto FC",
+"FK Liepajas Metalurgs"
+],
+"years": "1996-2025"
+},
+"lebanon": {
+"ar": "الدوري اللبناني الممتاز",
+"source": "generated",
+"clubs": [
+"Al Ansar",
+"Al Nejmeh",
+"Safa"
+],
+"years": "2001-2025"
+},
+"lesotho": {
+"ar": "الدوري الليسوتي",
+"source": "generated",
+"clubs": [
+"Lioli FC",
+"Lesotho Defence Force",
+"Linare FC"
+],
+"years": "2007-2025"
+},
+"liberia": {
+"ar": "الدوري الليبيري",
+"source": "generated",
+"clubs": [
+"LISCR",
+"Watanga",
+"LPRC Oilers"
+],
+"years": "2013-2025"
+},
+"libya": {
+"ar": "الدوري الليبي الممتاز",
+"source": "generated",
+"clubs": [
+"Al Ahli Tripoli",
+"Al-Madina",
+"Al-Akhdar"
+],
+"years": "2001-2025"
+},
+"liechtenstein": {
+"ar": "كأس ليختنشتاين",
+"source": "generated",
+"clubs": [
+"Ruggell II",
+"FC Schaan",
+"Eschen Mauren  Iii"
+],
+"years": "2006-2025"
+},
+"lithuania": {
+"ar": "الدوري الليتواني الممتاز",
+"source": "generated",
+"clubs": [
+"Žalgiris",
+"FK Atlantas",
+"Sūduva"
+],
+"years": "1991-2025"
+},
+"luxembourg": {
+"ar": "الدوري اللوكسمبورغي الوطني",
+"source": "generated",
+"clubs": [
+"F91 Dudelange",
+"Jeunesse Esch",
+"Progres Niedercorn"
+],
+"years": "2000-2025"
+},
+"macao": {
+"ar": "الدوري المكاوي",
+"source": "generated",
+"clubs": [
+"Monte Carlo",
+"Policia De Seguranca Publica",
+"Windsor Arch Ka I"
+],
+"years": "2005-2025"
+},
+"macedonia-fyr": {
+"ar": "الدوري المقدوني الأول",
+"source": "generated",
+"clubs": [
+"FK Rabotnicki",
+"Vardar Skopje",
+"Sileks"
+],
+"years": "1997-2025"
+},
+"madagascar": {
+"ar": "الدوري الملغاشي",
+"source": "generated",
+"clubs": [
+"Cnaps Sport",
+"Fosa Juniors",
+"Elgeco Plus"
+],
+"years": "2010-2025"
+},
+"malawi": {
+"ar": "الدوري الملاوي",
+"source": "generated",
+"clubs": [
+"Mtl Wanderers",
+"Big Bullets FC",
+"Moyale Barracks FC"
+],
+"years": "2006-2025"
+},
+"malaysia": {
+"ar": "الدوري الماليزي",
+"source": "generated",
+"clubs": [
+"Sri Pahang",
+"Perak",
+"Selangor"
+],
+"years": "2000-2025"
+},
+"maldives": {
+"ar": "الدوري المالديفي",
+"source": "generated",
+"clubs": [
+"Maziya",
+"New Radiant SC",
+"Club Eagles"
+],
+"years": "2008-2023"
+},
+"mali": {
+"ar": "الدوري المالي الممتاز",
+"source": "generated",
+"clubs": [
+"Stade Malien De Bamako",
+"Réal Bamako",
+"Djoliba Ac Bamako"
+],
+"years": "2002-2025"
+},
+"malta": {
+"ar": "الدوري المالطي الممتاز",
+"source": "generated",
+"clubs": [
+"Birkirkara FC",
+"Floriana",
+"Hibernians"
+],
+"years": "1995-2025"
+},
+"martinique": {
+"ar": "الدوري المارتينيكي",
+"source": "generated",
+"clubs": [
+"Club Franciscain",
+"Golden Star",
+"RC Riviere Pilote"
+],
+"years": "2001-2025"
+},
+"mauritania": {
+"ar": "الدوري الموريتاني الممتاز",
+"source": "generated",
+"clubs": [
+"SNIM",
+"Acs KSar",
+"Tevragh-Zeïne"
+],
+"years": "2006-2025"
+},
+"mauritius": {
+"ar": "الدوري الموريشيوسي",
+"source": "generated",
+"clubs": [
+"Pamplemousses",
+"ASPL 2000",
+"Petite Rivière Noire"
+],
+"years": "2002-2025"
+},
+"mexico": {
+"ar": "الدوري المكسيكي الممتاز",
+"source": "generated",
+"clubs": [
+"Guadalajara",
+"Tigres UANL",
+"Monterrey"
+],
+"years": "1986-2025"
+},
+"moldova": {
+"ar": "الدوري المولدافي الوطني",
+"source": "generated",
+"clubs": [
+"Zimbru",
+"Sheriff",
+"FC Zaria"
+],
+"years": "1992-2025"
+},
+"mongolia": {
+"ar": "الدوري المنغولي",
+"source": "generated",
+"clubs": [
+"Khangarid",
+"Khaan Khuns / Erchim",
+"Falcons"
+],
+"years": "2007-2025"
+},
+"montenegro": {
+"ar": "الدوري المونتينيغري",
+"source": "generated",
+"clubs": [
+"Budućnost",
+"Sutjeska",
+"Petrovac"
+],
+"years": "2006-2025"
+},
+"mozambique": {
+"ar": "الدوري الموزمبيقي",
+"source": "generated",
+"clubs": [
+"Ferroviário Beira",
+"Ferroviário Maputo",
+"Ferroviário Nampula"
+],
+"years": "2000-2025"
+},
+"myanmar": {
+"ar": "الدوري الميانماري",
+"source": "generated",
+"clubs": [
+"Yadanarbon FC",
+"Kan Baw Za",
+"Yangon United"
+],
+"years": "2010-2025"
+},
+"namibia": {
+"ar": "الدوري الناميبي",
+"source": "generated",
+"clubs": [
+"African Stars",
+"Orlando Pirates",
+"Eleven Arrows"
+],
+"years": "2004-2025"
+},
+"nepal": {
+"ar": "الدوري النيبالي",
+"source": "generated",
+"clubs": [
+"Manang Marshyangdi Club",
+"Mahendra Police Club",
+"Three Star Club"
+],
+"years": "2010-2023"
+},
+"new-caledonia": {
+"ar": "الدوري الكاليدوني",
+"source": "generated",
+"clubs": [
+"AS Mont-Dore",
+"Magenta",
+"Lössi"
+],
+"years": "2002-2025"
+},
+"new-zealand": {
+"ar": "الدوري النيوزيلندي",
+"source": "generated",
+"clubs": [
+"Canterbury United",
+"Auckland City",
+"Waitakere United"
+],
+"years": "2001-2021"
+},
+"nicaragua": {
+"ar": "الدوري النيكاراغوي",
+"source": "generated",
+"clubs": [
+"Real Esteli",
+"Caciques Del Diriangen",
+"Walter Ferreti"
+],
+"years": "2000-2025"
+},
+"niger": {
+"ar": "الدوري النيجري",
+"source": "generated",
+"clubs": [
+"Jangorzo FC",
+"Akokana FC Darlit",
+"Urana FC Darlit"
+],
+"years": "2010-2012"
+},
+"nigeria": {
+"ar": "الدوري النيجيري الممتاز",
+"source": "generated",
+"clubs": [
+"Enugu Rangers",
+"Lobi Stars",
+"Enyimba"
+],
+"years": "2000-2025"
+},
+"northern-ireland": {
+"ar": "الدوري الأيرلندي الشمالي الممتاز",
+"source": "generated",
+"clubs": [
+"Cliftonville",
+"Glentoran",
+"Linfield"
+],
+"years": "1994-2025"
+},
+"norway": {
+"ar": "الدوري النرويجي الممتاز",
+"source": "generated",
+"clubs": [
+"Viking",
+"Brann",
+"Rosenborg"
+],
+"years": "1948-2025"
+},
+"oman": {
+"ar": "الدوري العماني",
+"source": "generated",
+"clubs": [
+"Dhofar Scsc",
+"Al Nasr",
+"Al Nahda"
+],
+"years": "2002-2025"
+},
+"oman top league (RSSSF)": {
+"ar": "الدوري العماني",
+"source": "generated",
+"clubs": [
+"Sur",
+"Seeb",
+"Al-Nasr"
+],
+"years": "1987-2009"
+},
+"pakistan": {
+"ar": "الدوري الباكستاني",
+"source": "generated",
+"clubs": [
+"Pakistan Army",
+"Afghan FC",
+"Khan Research Laboratories"
+],
+"years": "2004-2021"
+},
+"palestine": {
+"ar": "الدوري الفلسطيني للمحترفين",
+"source": "generated",
+"clubs": [
+"Hilal Al Quds",
+"Markz Balata",
+"Shabab Al Khaleel"
+],
+"years": "2010-2023"
+},
+"panama": {
+"ar": "الدوري البنمي",
+"source": "generated",
+"clubs": [
+"Tauro FC",
+"Deportivo Arabe Unido",
+"San Francisco FC"
+],
+"years": "2007-2025"
+},
+"papua-new-guinea": {
+"ar": "الدوري البابوي",
+"source": "generated",
+"clubs": [
+"Hekari United",
+"Besta",
+"Lae City Dwellers"
+],
+"years": "2006-2025"
+},
+"paraguay": {
+"ar": "الدوري الباراغواياني الممتاز",
+"source": "generated",
+"clubs": [
+"Libertad",
+"Cerro Porteno",
+"Guarani"
+],
+"years": "2001-2025"
+},
+"peru": {
+"ar": "الدوري البيروفي الممتاز",
+"source": "generated",
+"clubs": [
+"Sporting Cristal",
+"Universitario De Deportes",
+"FBC Melgar"
+],
+"years": "1995-2025"
+},
+"philippines": {
+"ar": "الدوري الفلبيني",
+"source": "generated",
+"clubs": [
+"Kaya FC",
+"Stallion",
+"Ceres-La Salle FC"
+],
+"years": "2017-2025"
+},
+"poland": {
+"ar": "الدوري البولندي الممتاز",
+"source": "generated",
+"clubs": [
+"Legia Warszawa",
+"Górnik Zabrze",
+"Lech Poznań"
+],
+"years": "1970-2025"
+},
+"puerto-rico": {
+"ar": "الدوري البورتوريكي",
+"source": "generated",
+"clubs": [
+"Academia Quintana",
+"Bayamon FC",
+"Metropolitan"
+],
+"years": "2004-2025"
+},
+"reunion": {
+"ar": "دوري ريونيون الممتاز",
+"source": "generated",
+"clubs": [
+"Excelsior St Joseph",
+"JS Saint Pierroise",
+"Ss La Jeanne Darc"
+],
+"years": "2001-2025"
+},
+"romania": {
+"ar": "الدوري الروماني الممتاز",
+"source": "generated",
+"clubs": [
+"FC FCSB",
+"Dinamo București",
+"Universitatea Craiova"
+],
+"years": "1944-2025"
+},
+"rwanda": {
+"ar": "الدوري الرواندي",
+"source": "generated",
+"clubs": [
+"APR",
+"Police FC",
+"Kiyovu Sports"
+],
+"years": "2004-2025"
+},
+"samoa": {
+"ar": "دوري ساموا الوطني",
+"source": "generated",
+"clubs": [
+"Vaivase Tai",
+"Apia Youth",
+"Kiwi FC"
+],
+"years": "2010-2011"
+},
+"san-marino": {
+"ar": "الدوري السان ماريني",
+"source": "generated",
+"clubs": [
+"Tre Penne",
+"Tre Fiori",
+"La Fiorita"
+],
+"years": "1999-2025"
+},
+"sao-tome-e-principe": {
+"ar": "الدوري الساو تومي",
+"source": "generated",
+"clubs": [
+"Vitoria FC Do Riboque",
+"SC Da Praia Cruz",
+"Uniao Desportiva Rei Amador"
+],
+"years": "2011-2025"
+},
+"senegal": {
+"ar": "الدوري السنغالي الممتاز",
+"source": "generated",
+"clubs": [
+"Casa Sport",
+"AS Douanes",
+"Gorée"
+],
+"years": "2000-2025"
+},
+"serbia": {
+"ar": "الدوري الصربي الممتاز",
+"source": "generated",
+"clubs": [
+"Partizan",
+"Crvena zvezda",
+"Vojvodina"
+],
+"years": "2006-2025"
+},
+"serbia-and-montenegro": {
+"ar": "دوري صربيا والجبل الأسود",
+"source": "generated",
+"clubs": [
+"Vojvodina",
+"FK Zemun",
+"Partizan"
+],
+"years": "1996-2006"
+},
+"seychelles": {
+"ar": "الدوري السيشيلي",
+"source": "generated",
+"clubs": [
+"St Michel United",
+"La Passe FC",
+"Saint Louis Suns United"
+],
+"years": "2002-2016"
+},
+"sierra-leone": {
+"ar": "الدوري السيراليوني",
+"source": "generated",
+"clubs": [
+"Diamond Stars FC Of Kono",
+"Bo Rangers FC",
+"FC Kallon"
+],
+"years": "2011-2025"
+},
+"singapore": {
+"ar": "الدوري السنغافوري",
+"source": "generated",
+"clubs": [
+"Albirex Niigata S",
+"Balestier Khalsa",
+"Geylang International"
+],
+"years": "2000-2025"
+},
+"slovakia": {
+"ar": "الدوري السلوفاكي الممتاز",
+"source": "generated",
+"clubs": [
+"Žilina",
+"Ružomberok",
+"Spartak Trnava"
+],
+"years": "1999-2025"
+},
+"slovenia": {
+"ar": "الدوري السلوفيني الممتاز",
+"source": "generated",
+"clubs": [
+"Maribor",
+"Celje",
+"Olimpija"
+],
+"years": "1991-2025"
+},
+"solomon-islands": {
+"ar": "دوري جزر سليمان",
+"source": "manual"
+},
+"somalia": {
+"ar": "الدوري الصومالي",
+"source": "generated",
+"clubs": [
+"Horseed",
+"Elman",
+"Heegan"
+],
+"years": "2011-2025"
+},
+"south-africa": {
+"ar": "الدوري الجنوب أفريقي الممتاز",
+"source": "generated",
+"clubs": [
+"Kaizer Chiefs",
+"SuperSport United",
+"Mamelodi Sundowns FC"
+],
+"years": "2000-2025"
+},
+"soviet-union": {
+"ar": "الدوري السوفيتي",
+"source": "manual"
+},
+"sri-lanka": {
+"ar": "الدوري السريلانكي",
+"source": "generated",
+"clubs": [
+"Sri Lanka Air Force SC",
+"Renown SC",
+"Sri Lanka Army SC"
+],
+"years": "2004-2022"
+},
+"st-kitts-and-nevis": {
+"ar": "الدوري السانت كيتسي",
+"source": "generated",
+"clubs": [
+"St Pauls United",
+"Village Superstars",
+"Conaree United"
+],
+"years": "2005-2025"
+},
+"sudan": {
+"ar": "الدوري السوداني الممتاز",
+"source": "generated",
+"clubs": [
+"Al Hilal Omdurman",
+"Alamal Atbara",
+"Al Marreekh Omdurman"
+],
+"years": "2004-2025"
+},
+"surinam": {
+"ar": "الدوري السورينامي",
+"source": "generated",
+"clubs": [
+"Leo Victor",
+"Inter Moengotapoe",
+"Transvaal"
+],
+"years": "2003-2025"
+},
+"swaziland": {
+"ar": "الدوري الإسواتيني",
+"source": "generated",
+"clubs": [
+"Mbabane Swallows",
+"Young Buffaloes",
+"Green Mamba FC"
+],
+"years": "2004-2025"
+},
+"sweden": {
+"ar": "الدوري السويدي الممتاز",
+"source": "generated",
+"clubs": [
+"AIK",
+"IFK Göteborg",
+"Malmö FF"
+],
+"years": "1924-2025"
+},
+"switzerland": {
+"ar": "الدوري السويسري الممتاز",
+"source": "generated",
+"clubs": [
+"Grasshopper",
+"Young Boys",
+"Basel"
+],
+"years": "1920-2025"
+},
+"syria": {
+"ar": "الدوري السوري الممتاز",
+"source": "generated",
+"clubs": [
+"Al Wahda",
+"Al Jaish",
+"Tishreen"
+],
+"years": "2004-2025"
+},
+"tahiti": {
+"ar": "الدوري التاهيتي",
+"source": "generated",
+"clubs": [
+"As Tefana",
+"Dragon",
+"Pirae"
+],
+"years": "2005-2025"
+},
+"tajikistan": {
+"ar": "الدوري الطاجيكي",
+"source": "generated",
+"clubs": [
+"Khujand",
+"Vakhsh Bokhtar",
+"CSKA Pamir"
+],
+"years": "2007-2025"
+},
+"tanzania": {
+"ar": "الدوري التنزاني",
+"source": "generated",
+"clubs": [
+"Kagera Sugar",
+"Simba",
+"Young Africans"
+],
+"years": "2007-2025"
+},
+"thailand": {
+"ar": "الدوري التايلاندي الممتاز",
+"source": "generated",
+"clubs": [
+"Port FC",
+"Bec Tero Sasana",
+"Buriram United"
+],
+"years": "2000-2025"
+},
+"togo": {
+"ar": "الدوري التوغولي",
+"source": "generated",
+"clubs": [
+"ASKO de Kara",
+"Gomido",
+"Dynamic Togolais"
+],
+"years": "2001-2025"
+},
+"trinidad-and-tobago": {
+"ar": "الدوري الترينيدادي",
+"source": "generated",
+"clubs": [
+"W Connection",
+"San Juan Jabloteh",
+"Defence Force FC"
+],
+"years": "2002-2025"
+},
+"turkmenistan": {
+"ar": "الدوري التركماني",
+"source": "generated",
+"clubs": [
+"Merw",
+"Şagadam",
+"Aşgabat"
+],
+"years": "2010-2025"
+},
+"turks-and-caicos-islands": {
+"ar": "دوري جزر تركس وكايكوس",
+"source": "generated",
+"clubs": [
+"Swa Sharks FC",
+"Afc Academy",
+"Beaches"
+],
+"years": "2008-2025"
+},
+"tuvalu": {
+"ar": "دوري توفالو لكرة القدم",
+"source": "generated",
+"clubs": [
+"FC Tofaga",
+"Nauti FC",
+"FC Manu Laeva"
+],
+"years": "2012-2014"
+},
+"uae:cup": {
+"ar": "كأس رئيس الدولة الإماراتي",
+"source": "generated",
+"clubs": [
+"Al-Wasl",
+"Sharjah Cultural Club",
+"Al-Ain"
+],
+"years": "1995-1997"
+},
+"uganda": {
+"ar": "الدوري الأوغندي",
+"source": "generated",
+"clubs": [
+"URA",
+"BUL",
+"KCCA"
+],
+"years": "2012-2025"
+},
+"uruguay": {
+"ar": "الدوري الأوروغواياني الممتاز",
+"source": "generated",
+"clubs": [
+"Nacional",
+"Club Atletico Penarol",
+"Defensor Sporting"
+],
+"years": "1932-2025"
+},
+"uzbekistan": {
+"ar": "الدوري الأوزبكي الممتاز",
+"source": "generated",
+"clubs": [
+"Pakhtakor Tashkent",
+"Navbahor",
+"Neftchi Fargona"
+],
+"years": "1992-2025"
+},
+"vanuatu": {
+"ar": "الدوري الفانواتي",
+"source": "generated",
+"clubs": [
+"Ifira Black Bird",
+"Tafea FC",
+"Tupuji Imere FC"
+],
+"years": "2010-2025"
+},
+"venezuela": {
+"ar": "الدوري الفنزويلي الممتاز",
+"source": "generated",
+"clubs": [
+"Caracas",
+"Estudiantes De Merida",
+"Deportivo Tachira"
+],
+"years": "1996-2025"
+},
+"vietnam": {
+"ar": "الدوري الفيتنامي",
+"source": "generated",
+"clubs": [
+"Song Lam Nghe An",
+"Hoàng Anh Gia Lai",
+"Binh Duong"
+],
+"years": "2005-2025"
+},
+"wales": {
+"ar": "الدوري الويلزي الممتاز",
+"source": "generated",
+"clubs": [
+"Aberystwyth Town",
+"Newtown",
+"Connah's Quay"
+],
+"years": "1998-2025"
+},
+"yemen": {
+"ar": "الدوري اليمني",
+"source": "generated",
+"clubs": [
+"Al Ahli Sanaa",
+"Shaab Ibb",
+"Al Helal Al Sahely Hudayda"
+],
+"years": "2005-2024"
+},
+"yugoslavia": {
+"ar": "الدوري اليوغوسلافي",
+"source": "manual"
+},
+"zambia": {
+"ar": "الدوري الزامبي الممتاز",
+"source": "generated",
+"clubs": [
+"ZESCO United",
+"Zanaco",
+"Red Arrows"
+],
+"years": "2006-2025"
+},
+"zimbabwe": {
+"ar": "الدوري الزيمبابوي الممتاز",
+"source": "generated",
+"clubs": [
+"Dynamos",
+"Highlanders",
+"CAPS United"
+],
+"years": "2006-2025"
+},
+"Évence Coppée Trophy": {
+"ar": "كأس إيفينس كوبي",
+"source": "generated",
+"clubs": [
+"Belgium"
+],
+"years": "1904-1904"
+}
+}
