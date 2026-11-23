@@ -65,3 +65,10 @@ test("a coach's page carries his free photo with its credit", () => {
   assert.match(h, /<figure class="pph"[^>]*><img src="\/v1\/ph\/c11\.webp"/);
   assert.match(h, /CC BY 2\.0/);
 });
+
+test("a coach's facts are rows of their card too", () => {
+  const h = V.coach(K, Object.assign({}, o, { person: pid => pid === 77 }));
+  assert.match(h, /<span class="rt">الجنسية<\/span><span class="rv"><span class="lat">Netherlands<\/span><\/span>/);
+  assert.match(h, /<a class="row" href="\/p\/k77\/"><span class="rt">مسيرته لاعباً<\/span>/);
+  assert.doesNotMatch(h, /<ul class="lc">/);
+});

@@ -42,3 +42,9 @@ test("a man with a free photo shows it with its credit", () => {
   assert.match(h, /<figure class="pph"[^>]*><img src="\/v1\/ph\/k1\.webp"/);
   assert.match(h, /CC BY-SA 4\.0/);
 });
+
+test("the facts are rows of their card, a label and its value (a bare list spilled out of the card, 23 Nov)", () => {
+  const h = V.body(P, o);
+  assert.match(h, /<div class="row"><span class="rt">تاريخ الميلاد<\/span><span class="rv">22 سبتمبر 1978<\/span><\/div>/);
+  assert.doesNotMatch(h, /<ul class="lc">/);
+});

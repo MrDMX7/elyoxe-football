@@ -33,7 +33,7 @@ function facts(p) {
   const f = [p.b && ["تاريخ الميلاد", U.dateAr(p.b)], p.d && ["توفي", U.dateAr(p.d)], p.bp && ["مكان الميلاد", txt(p.bp)],
     p.nat && ["الجنسية", txt(p.nat)], p.pos && ["المركز", POS[p.pos] ? esc(POS[p.pos]) : txt(p.pos)], p.h && ["الطول", `${num(p.h)} سم`],
     p.ft && ["القدم", esc(FOOT[p.ft] || p.ft)]].filter(Boolean);
-  return f.length ? U.grp("", `<ul class="lc">${f.map(x => `<li><span class="muted">${x[0]}:</span> ${x[1]}</li>`).join("")}</ul>`) : "";
+  return f.length ? U.grp("", f.map(x => U.row({ t: x[0], v: x[1] })).join("")) : "";      // rows: a bare list spilled out of its card
 }
 
 function honours(p, o) {

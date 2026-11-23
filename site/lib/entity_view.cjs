@@ -45,15 +45,15 @@ const coachGames = c => (c.sp || []).reduce((a, s) => a + s[4], 0);
 function coach(c, o) {
   o = o || {};
   const sp = c.sp || [], t = sp.reduce((a, s) => a.map((v, i) => v + s[4 + i]), [0, 0, 0, 0]);
-  const facts = [c.b && ["تاريخ الميلاد", U.dateAr(c.b)], c.nat && ["الجنسية", txt(c.nat)],
-    c.pid != null && o.person && o.person(c.pid) && ["لاعباً", `<a href="/p/k${c.pid}/">مسيرته لاعباً</a>`]].filter(Boolean);
+  const facts = [c.b && U.row({ t: "تاريخ الميلاد", v: U.dateAr(c.b) }), c.nat && U.row({ t: "الجنسية", v: txt(c.nat) }),
+    c.pid != null && o.person && o.person(c.pid) && U.row({ href: `/p/k${c.pid}/`, t: "مسيرته لاعباً" })].filter(Boolean);
   const pct = (w, m) => (m ? Math.round((100 * w) / m) : 0);
   const td = v => `<td>${num(v)}</td>`;
   const table = sp.length ? U.grp("مسيرته التدريبية", `<div class="tblw"><table class="tbl"><thead><tr><th>الفريق</th><th>الفترة</th><th>م</th><th>ف</th><th>ت</th><th>خ</th><th>الفوز</th></tr></thead><tbody>${
     sp.map(s => `<tr><td>${team(s[0], s[1], o)}</td><td>${num(yearOf(s[2]) === yearOf(s[3]) ? yearOf(s[2]) : `${yearOf(s[2])}–${yearOf(s[3])}`)}</td>${s.slice(4, 8).map(td).join("")}<td>${num(pct(s[5], s[4]))}%</td></tr>`).join("")}</tbody></table></div>`) : "";
   const hon = (c.hon || []).filter(h => h[1] === 1);
   const awards = hon.length ? U.grp("جوائزه", hon.map(h => U.row({ t: txt(h[2]), sub: num(h[4]), href: h[3] && o.comp && o.comp(h[3]) ? `/c/${o.comp(h[3]).key}/` : null })).join("")) : "";
-  return (o.photo ? require("./person_view.cjs").header(c, o.photo) : head(c)) + (facts.length ? U.grp("", `<ul class="lc">${facts.map(x => `<li><span class="muted">${x[0]}:</span> ${x[1]}</li>`).join("")}</ul>`) : "") +
+  return (o.photo ? require("./person_view.cjs").header(c, o.photo) : head(c)) + (facts.length ? U.grp("", facts.join("")) : "") +
     (t[0] ? U.grp("", `<p class="note">${num(t[0])} مباراة على الدكة في أرشيف تيفو: ${num(t[1])} فوز و${num(t[2])} تعادل و${num(t[3])} خسارة (${num(pct(t[1], t[0]))}% فوز).</p>`) : "") +
     awards + table + lastGames(c, "آخر مبارياته");
 }
