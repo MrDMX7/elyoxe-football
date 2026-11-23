@@ -166,6 +166,16 @@ def graph_clubs(ed, cid):
     return out
 
 
+def transfer_players(moves):
+    """{FotMob id: pool entry} of the transfers' players named in Latin letters: [date, id, name, from id, from, to id, to, fee,
+    kind, value, country, position]"""
+    out = {}
+    for m in moves:
+        if len(m) > 10 and m[1] and m[2] and not ARABIC.search(str(m[2])):
+            out.setdefault(str(m[1]), {"name": m[2], "teams": [m[5]] if m[5] else [], "country": m[10], "ages": [], "comps": [], "uae": False})
+    return out
+
+
 def collect(cache: Path, match_days: int):
     """Returns {pid: {name, teams:set, country, birth_years:set, comps:set}}."""
     pool = {}
@@ -264,6 +274,12 @@ def collect(cache: Path, match_days: int):
                 pool[pid] = p
                 old += 1
     log(f"collect: {old} more from the old matches (v1/matches)")
+    old = 0                               # (23 Nov 2026) the transfers pages' players: new signings and young men no squad lists yet
+    for pid, p in transfer_players(((get_json(f"{FEED}/transfers/all.json") or {}).get("moves")) or []).items():
+        if pid not in pool:
+            pool[pid] = p
+            old += 1
+    log(f"collect: {old} more from the transfers (v1/transfers/all.json)")
     log(f"collect: pool = {len(pool)} players")
     (cache / "pool.json").write_text(json.dumps(pool, ensure_ascii=False))
     (cache / "teams.json").write_text(json.dumps(teams, ensure_ascii=False))

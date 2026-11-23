@@ -55,3 +55,12 @@ def test_tifo_ids_sort_with_the_fotmob_ones():
 
 def test_an_old_player_whose_name_is_arabic_already_is_left_out():
     assert B.people_pool({"k1": {"name": "إيفان ديماس", "name_ar": None}}, []) == {}
+
+
+def test_the_transfers_players_join_the_pool():
+    # 23 Nov 2026: the transfers pages read 91 % in Latin letters: their players were in no pool (young players, new signings)
+    from names import build_names as B
+    moves = [["2026-11-16", 1687522, "Mohamed Amine Katiba", 2, "Free agent", 102043, "المغربي الفاسي", None, "free", 704925, "MAR", "DM"],
+             ["2026-11-16", 1392383, "كارلو سينتيش", 1581, "x", 2, "Free agent", None, "free", 295763, "CRO", "GK"]]
+    got = B.transfer_players(moves)
+    assert list(got) == ["1687522"] and got["1687522"]["name"] == "Mohamed Amine Katiba" and got["1687522"]["country"] == "MAR"
