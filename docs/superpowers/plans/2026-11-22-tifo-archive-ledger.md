@@ -113,3 +113,14 @@ with the commit or the evidence. A new session reads this first and continues at
   * Graph.merges -> meta «merged»; the archive job writes a forward page where a folded record had a page.
   * old matches: the «الأرقام» tab from the men's numbers (graph/publish.team_stats, 46,301 matches since 2016).
   Ruling: the per-man stats table stays off — today's match page has none, and the owner asked for the same page.
+  * 21:38 graph (people rules live): unlinked top-scorer rows 1,146 -> 622 (the rest: matches with no scorers in the archive,
+    partial scorer files; Osvaldo's two names share one word); RSSSF month scorers 0; merged meta player 20,069, team 854,
+    match 14,423. Henry came back as an empty record: official_motm minted his Wikidata item after the people rules (registry
+    keeps the folded id) -> Graph.put/many/xref name the kept record (not for matches: a twin's late rows stay apart).
+  * Clubs: 497 clubs had two pages (Transfermarkt's record and FotMob's never had one country: «TR», «TUR», «Turkiye»).
+    graph/countries.canon (ISO alpha-2), the encyclopedia's country for a FotMob club with no game: 693 folds on the
+    finished graph. Every club of 30 games gets its history (738 FotMob clubs had none); a club with the encyclopedia's
+    /db/club page shows its history there (v1/archive/club_history.json) and gets no /t/k page; a folded club's old page
+    forwards to /t/<id>/ or /db/club/<id>/.
+  * Next: Transfermarkt's league codes (SC1, BE1, TR1, PO1, NL1…: 200k games) are competitions apart from 365Scores'/FotMob's
+    same leagues — the archive has no season pages for them. Archive match pages leave a /db/club club unlinked.
