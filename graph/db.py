@@ -8,12 +8,19 @@ SRC_RANK = {"fotmob": 0, "names": 0, "s365": 1, "uaefa": 1, "espn": 2, "tm": 2, 
 KEYS = {"team": "tid", "player": "pid", "coach": "kid", "referee": "rid", "stadium": "sid", "competition": "cid", "edition": "eid", "match": "mid"}
 # where each entity's id is referenced (remap after a merge)
 REFS = {"team": [("match", "home"), ("match", "away"), ("appearance", "tid"), ("event", "tid"), ("standing", "tid"), ("honour", "tid"),
-                 ("transfer", "from_tid"), ("transfer", "to_tid"), ("spell", "tid"), ("player_season", "tid")],
+                 ("transfer", "from_tid"), ("transfer", "to_tid"), ("spell", "tid"), ("player_season", "tid"), ("match_award", "tid")],
         "player": [("appearance", "pid"), ("event", "pid"), ("event", "pid2"), ("honour", "pid"), ("transfer", "pid"), ("spell", "pid"),
-                   ("player_season", "pid"), ("injury", "pid"), ("coach", "pid"), ("intl_record", "pid")],
+                   ("player_season", "pid"), ("injury", "pid"), ("coach", "pid"), ("intl_record", "pid"), ("match_award", "pid")],
         "coach": [("match_coach", "kid"), ("honour", "kid")], "referee": [("match", "rid")], "stadium": [("match", "sid"), ("team", "sid")],
         "competition": [("edition", "cid"), ("player_season", "cid")], "edition": [("match", "eid"), ("standing", "eid"), ("honour", "eid")],
         "match": [("appearance", "mid"), ("event", "mid"), ("match_coach", "mid"), ("match_award", "mid")]}
+# table -> [(column, entity type)]: the columns of a row written after a merge that may name a folded record
+COLS_OF = {}
+for _t, _refs in REFS.items():
+    for _table, _col in _refs:
+        COLS_OF.setdefault(_table, []).append((_col, _t))
+for _t, _k in KEYS.items():
+    COLS_OF.setdefault(_t, []).append((_k, _t))
 CHECK = {"match": ("hs", "as_"), "player": ("born",), "team": (), "edition": ("cid", "season")}
 
 
@@ -36,8 +43,30 @@ class Graph:
         self.stats = Counter()
         self.merged = {}                          # {type: {drop: keep}}: every remap, for the pages that forward
 
+    def _last(self, t, x):
+        m = self.merged.get(t)
+        n = 0
+        while m and x in m and n < 50:
+            x, n = m[x], n + 1
+        return x
+
+    def _kept(self, table, row):
+        """a row written after a merge names the kept record, never the folded one (24 Nov 2026: official_motm put back a
+        second, empty Thierry Henry from his Wikidata item, which the registry still gives his folded id)"""
+        if not self.merged:
+            return row
+        out = None
+        for col, t in COLS_OF.get(table, ()):
+            v = row.get(col)
+            # a match folded into its twin keeps its late rows apart: the kept one has its own goals, never a second copy
+            if v is not None and t != "match" and t in self.merged and v in self.merged[t]:
+                out = dict(row) if out is None else out
+                out[col] = self._last(t, v)
+        return out or row
+
     def put(self, table, row, src):
         k = KEYS[table]
+        row = self._kept(table, row)
         i = row[k]
         cur = self.c.execute(f"SELECT * FROM {table} WHERE {k}=?", (i,)).fetchone()
         if cur is None:
@@ -74,12 +103,15 @@ class Graph:
     def many(self, table, rows, src):
         if not rows:
             return
+        if self.merged:
+            rows = [self._kept(table, r) for r in rows]
         cols = [c for c in self.cols[table] if c != "src"]
         self.c.executemany(f"INSERT OR IGNORE INTO {table}({','.join(cols + ['src'])}) VALUES({','.join('?' * (len(cols) + 1))})",
                            [[r.get(c) for c in cols] + [src] for r in rows])
         self.stats[f"{table}:{src}"] += len(rows)
 
     def xref(self, t, tifo_id, source, source_id, method, conf=1.0):
+        tifo_id = self._last(t, tifo_id) if self.merged else tifo_id
         self.c.execute("INSERT OR REPLACE INTO xref VALUES(?,?,?,?,?,?)", (t, tifo_id, source, str(source_id), method, conf))
 
     def conflict(self, t, tifo_id, field, kept, kept_src, other, other_src):

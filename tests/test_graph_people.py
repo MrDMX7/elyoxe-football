@@ -194,3 +194,42 @@ def test_the_graph_keeps_each_merge_to_its_last_record(tmp_path):
     G.remap("player", 3, 2)
     G.remap_many("player", [(2, 1), (4, 1)])
     assert G.merges() == {"player": {3: 1, 2: 1, 4: 1}}             # 3 went to 2, then 2 to 1: 3's page forwards to 1
+
+
+def test_a_write_after_a_merge_goes_to_the_kept_record(tmp_path):
+    """24 Nov 2026: official_motm (after the people rules) minted Henry's Wikidata item again — the registry still names his
+    folded record — and put back a second, empty Thierry Henry"""
+    G = Graph(str(tmp_path / "t.db"))
+    for i in (1, 2):
+        G.put("player", {"pid": i, "name": "Thierry Henry", "born": "1977-08-17" if i == 2 else None}, "fotmob")
+    G.put("team", {"tid": 5, "name": "Arsenal"}, "fotmob")
+    G.put("team", {"tid": 6, "name": "Arsenal FC"}, "tm")
+    G.remap_many("player", [(2, 1)])
+    G.remap_many("team", [(6, 5)])
+    G.put("player", {"pid": 2, "name": "Thierry Henry", "name_ar": "تييري هنري"}, "wikidata")
+    G.xref("player", 2, "wikidata", "Q45901", "wiki-link")
+    G.many("appearance", [{"mid": 9, "pid": 2, "tid": 6, "played": 1}], "fotmob")
+    G.many("match_award", [{"mid": 9, "kind": "motm", "pid": 2, "tid": 6}], "official")
+    assert G.c.execute("select pid, name_ar from player").fetchall() == [(1, "تييري هنري")]
+    assert G.c.execute("select tifo_id from xref where source='wikidata'").fetchall() == [(1,)]
+    assert G.c.execute("select pid, tid from appearance").fetchall() == [(1, 5)]
+    assert G.c.execute("select pid, tid from match_award").fetchall() == [(1, 5)]
+
+
+def test_a_merge_moves_the_man_of_the_match_awards_too(tmp_path):
+    G = Graph(str(tmp_path / "t.db"))
+    for i in (1, 2):
+        G.put("player", {"pid": i, "name": "X"}, "fotmob")
+    G.many("match_award", [{"mid": 9, "kind": "motm", "pid": 2, "tid": None}], "official")
+    G.remap("player", 2, 1)
+    assert G.c.execute("select pid from match_award").fetchall() == [(1,)]
+
+
+def test_a_late_row_of_a_folded_match_is_not_added_to_its_twin(tmp_path):
+    G = Graph(str(tmp_path / "t.db"))
+    for m in (1, 2):
+        G.put("match", {"mid": m, "date": "2020-01-01", "home": 5, "away": 6, "hs": 1, "as_": 0}, "fotmob")
+    G.many("event", [{"mid": 1, "seq": 0, "type": "goal", "pid": 7}], "fotmob")
+    G.remap_many("match", [(2, 1)])
+    G.many("event", [{"mid": 2, "seq": 0, "type": "goal", "pid": 8}], "sofa")
+    assert G.c.execute("select mid, pid from event order by mid").fetchall() == [(1, 7), (2, 8)]     # never two goals on match 1
