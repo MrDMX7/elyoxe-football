@@ -1,5 +1,5 @@
 import os
-from graph.awards_wiki import extract, season_label, grid
+from graph.awards_wiki import extract, season_label, grid, extract_season
 from lxml import html as LH
 
 def T(body, head="Winners"):
@@ -282,3 +282,16 @@ def test_two_men_in_one_cell_are_two_rows_a_tie():
     got = [(r["season"], r["name"], r["person"]) for t in extract(html, "Capocannoniere") for r in t["rows"]]
     assert ("1898", "Edoardo Bosio", "Edoardo_Bosio") in got and ("1898", "Norman Victor Leaver", "Norman_Victor_Leaver") in got
     assert not [g for g in got if "BosioNorman" in g[1] or "Bosio Norman" in g[1]]
+
+
+def test_a_tournaments_goalscorers_as_lists_give_its_top_scorers():
+    # 23 Nov 2026: the Euros before 2008 had no top scorer: their pages list the scorers by goals, not in a table
+    li = lambda t, n: (f'<li><span class="flagicon"><a rel="mw:WikiLink" href="./France" title="France"><img/></a></span> '
+                       f'<a rel="mw:WikiLink" href="./{t}" title="{n}">{n}</a></li>')
+    html = ('<html><body><section><h2 id="Goalscorers">Goalscorers</h2><p>There were 17 goals scored in 4 matches.</p>'
+            '<p><b>2 goals</b></p><div class="div-col"><ul>' + li("François_Heutte", "François Heutte") + li("Milan_Galić", "Milan Galić") + '</ul></div>'
+            '<p><b>1 goal</b></p><div class="div-col"><ul>' + li("Lev_Yashin", "Lev Yashin") + '</ul></div></section></body></html>')
+    got = extract_season(html, "1960 European Nations' Cup")["rows"]
+    assert [(r["kind"], r["rank"], r["person"], r["name"], r["value"]) for r in got] == [
+        ("top_scorer", 1, "François_Heutte", "François Heutte", "2"), ("top_scorer", 1, "Milan_Galić", "Milan Galić", "2"),
+        ("top_scorer", 3, "Lev_Yashin", "Lev Yashin", "1")]

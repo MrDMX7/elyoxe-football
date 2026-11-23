@@ -364,6 +364,45 @@ def season_over(season, today):
     return end < today
 
 
+GOALS_LABEL = re.compile(r"^\s*(\d+)\s+goals?\b", re.I)
+
+
+def _scorer_lists(doc, top=10):
+    """a tournament's goalscorers as lists (23 Nov 2026: the Euros before 2008 had no top scorer; their pages give «2 goals»
+    then a list of the men who scored them): a «Goalscorers» section's labels and lists, ranked by goals, ties sharing a rank"""
+    got = []
+    for sec in doc.xpath("//section"):
+        h = sec.find("./h2") if sec.find("./h2") is not None else sec.find("./h3")
+        if h is None or not re.search(r"^(top )?(goal)?scorers$|^goalscorers$", clean(h.text_content()), re.I):
+            continue
+        goals = None
+        for el in sec.iter("p", "dt", "li"):
+            if el.tag in ("p", "dt"):
+                t = clean(el.text_content())
+                m = GOALS_LABEL.match(t)
+                if m:
+                    goals = int(m.group(1))
+                elif re.search(r"own goals?|^\s*\d+\s+(assists?|penalt)", t, re.I):
+                    goals = None                                   # «1 own goal»: not his goals
+                continue
+            if goals is None:
+                continue
+            links = [a for a in el.xpath(".//a[@rel='mw:WikiLink']") if clean(a.text_content())]
+            if not links:
+                continue
+            a = links[-1]
+            got.append({"kind": "top_scorer", "rank": None, "person": a.get("href", "").lstrip("./") or None, "name": clean(a.text_content()),
+                        "team": None, "value": str(goals)})
+        if got:
+            break
+    got.sort(key=lambda x: -int(x["value"]))
+    prev = None
+    for i, x in enumerate(got):
+        x["rank"] = prev[1] if prev and prev[0] == x["value"] else i + 1
+        prev = (x["value"], x["rank"])
+    return [x for x in got if x["rank"] <= top]
+
+
 def extract_season(html, page):
     m = SEASON_TITLE.match(page.replace("_", " "))
     season = season_label(m.group(1)) if m else None
@@ -415,6 +454,8 @@ def extract_season(html, page):
                     x["rank"] = prev[1] if prev and prev[0] == g else i + 1
                     prev = (g, x["rank"])
             rows += [x for x in got if x["rank"] <= 10]
+    if not any(r["kind"] == "top_scorer" for r in rows):
+        rows += _scorer_lists(doc)
     if len(leagues) == 1:                                          # one league table (not a season of groups): first and second
         hdr, body = leagues[0]
         ti, pi = _col(hdr, re.compile(r"^(team|club)", re.I)), _col(hdr, re.compile(r"^(pld|p|played|mp|gp)$", re.I))
