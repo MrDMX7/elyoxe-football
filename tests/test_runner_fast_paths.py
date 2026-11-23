@@ -20,9 +20,9 @@ def test_the_hourly_publish_leaves_the_archive_jobs_pages_alone():
     # list and every archive match; the site's --delete must never take them
     ex = runner.page_excludes()
     hit = lambda k: any(fnmatch.fnmatchcase(k, p) for p in ex)
-    for k in ("c/premier-league/s/1990-1991/index.html", "c/laliga/seasons/index.html", "m/k123456/index.html"):
+    for k in ("c/premier-league/s/1990-1991/index.html", "c/laliga/seasons/index.html", "m/k123456/index.html", "p/k55/index.html"):
         assert hit(k), k
-    for k in ("c/premier-league/index.html", "m/4813470/index.html", "p/k55/index.html", "t/8650/index.html"):
+    for k in ("c/premier-league/index.html", "m/4813470/index.html", "p/30981/index.html", "t/8650/index.html"):
         assert not hit(k), k
 
 
@@ -54,7 +54,8 @@ def test_the_listing_never_reads_the_archive_matches():
 def test_the_page_count_guard_counts_the_sites_own_pages_only(tmp_path):
     # 22 Nov 2026: the archive's season and old-match pages are the archive job's; the site's «partial build» guard counted
     # them and refused two builds (127,609 vs 147,047) when the seasons merge left fewer of them
-    for k in ("index.html", "c/laliga/index.html", "c/laliga/s/1929/index.html", "c/laliga/seasons/index.html", "m/k5/index.html", "m/42/index.html"):
+    for k in ("index.html", "c/laliga/index.html", "c/laliga/s/1929/index.html", "c/laliga/seasons/index.html", "m/k5/index.html", "m/42/index.html",
+              "p/k9/index.html"):
         p = tmp_path / k
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text("x")

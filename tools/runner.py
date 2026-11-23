@@ -233,7 +233,7 @@ PAGE_EXCLUDES = ["assets/*", "logo/*", "next/*", "google*.html", "db/player/[0-9
 FAST_OWNED = ["news/index.html", "news/[a-z]-*", "news/a.*.css", "sitemap-news.xml", "_shells/*"]
 # (2026-11-22) what the archive job owns (site/archive/build.cjs, .github/workflows/tifo-archive.yml): every season page, every
 # season list, every archive match, and its sitemaps
-ARCHIVE_OWNED = ["c/*/s/*", "c/*/seasons/*", "m/k*", "sitemap-archive*"]
+ARCHIVE_OWNED = ["c/*/s/*", "c/*/seasons/*", "m/k*", "p/k*", "sitemap-archive*"]        # p/k*: every man's profile (23 Nov 2026)
 
 
 def page_excludes():

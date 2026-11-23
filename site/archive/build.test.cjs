@@ -69,3 +69,22 @@ test("an old match shows the two clubs' earlier meetings in the competition", ()
   assert.doesNotMatch(h, /ما عندنا مواجهات سابقة/);
   assert.match(h, /href="\/m\/k9\/"/);
 });
+
+test("every man with a record gets his profile, and the matches link to it; a man with the site's page keeps the site's", () => {
+  const { o } = world();
+  fs.mkdirSync(path.join(o.data, "people"), { recursive: true });
+  fs.writeFileSync(path.join(o.data, "people", "5.json"), JSON.stringify({ "5": { n: "Alan Smith", ar: "آلان سميث", b: "1962-11-21",
+    car: [["1990/1991", "Premier League", "أرسنال", 9825, 37, 22, 0, null, 0, 0]], ms: [["1990/1991", 47, "الدوري الإنجليزي", 1, 1]] },
+    "6": { n: "Ian Wright", fm: 77, car: [["1993/1994", "Premier League", "أرسنال", 9825, 39, 23, 0, null, 0, 0]] } }));
+  fs.writeFileSync(o.known, JSON.stringify({ m: [], p: ["77"], t: [9825, 8650] }));
+  const mf = path.join(o.data, "matches", "47", "1990-1991.json"), md = JSON.parse(fs.readFileSync(mf, "utf8"));
+  md.matches[0].lu = { h: [["آلان سميث", null, "9", 1, 5]] };                 // [name, page key, shirt, started, Tifo id]
+  fs.writeFileSync(mf, JSON.stringify(md));
+  const r = A.build(o);
+  const h = fs.readFileSync(path.join(o.out, "p/k5/index.html"), "utf8");
+  assert.match(h, /آلان سميث/);
+  assert.match(h, /"@type":"Person"/);
+  assert.ok(!fs.existsSync(path.join(o.out, "p/k6/index.html")));            // FotMob's 77 has the site's page
+  assert.match(fs.readFileSync(path.join(o.out, "m/k1/index.html"), "utf8"), /href="\/p\/k5\/"/);   // his line-up row
+  assert.equal(r.persons, 1);
+});

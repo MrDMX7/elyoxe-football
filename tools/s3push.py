@@ -18,7 +18,7 @@ TYPES = {".html": "text/html", ".json": "application/json", ".png": "image/png",
 MAX_DELETE = 0.10
 
 
-SPLIT = ("m/",)                      # the archive's millions of m/k<id>/ pages sit beside the site's m/<FotMob id>/
+SPLIT = ("m/", "p/")                 # the archive's m/k<id>/ and p/k<id>/ pages sit beside the site's m/ and p/<FotMob id>/
 
 
 def listing(s3, bucket):

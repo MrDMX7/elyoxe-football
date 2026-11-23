@@ -10,7 +10,7 @@
 "use strict";
 const fs = require("fs"), path = require("path");
 const U = require("../src/v5/ui.js"), P5 = require("../src/v5/pages.js"), SV = require("../lib/season_view.cjs"), MV = require("../lib/match_view.cjs"),
-  HP = require("../lib/history_pages.cjs"), MA = require("../lib/match_archive.cjs");
+  HP = require("../lib/history_pages.cjs"), MA = require("../lib/match_archive.cjs"), PV = require("../lib/person_view.cjs");
 
 const arg = (k, d) => { const i = process.argv.indexOf("--" + k); return i > 0 ? process.argv[i + 1] : d; };
 const SITE = "https://tifo.elyoxe.com";
@@ -42,12 +42,16 @@ function build(o) {
   const comps = index.competitions.filter(c => !o.comps || o.comps.includes(+c.id));
   U.cfg.base = ""; U.cfg.pre = null; U.cfg.cn = {}; index.competitions.forEach((c, i) => { U.cfg.cn[c.id] = [c.key, c.name_ar, (c.country && c.country.iso2) || "", i]; });
   const written = new Set(), urls = [];        // urls: the indexable pages (the sitemaps)
+  // every man with a record beyond a name gets /p/k<Tifo id>/ (graph/archive_export.persons), unless the site has his page
+  const pdir = path.join(o.data, "people"), PERS = new Set();
+  const shards = fs.existsSync(pdir) ? fs.readdirSync(pdir).filter(f => /^\d+\.json$/.test(f)) : [];
+  for (const f of shards) for (const [pid, p] of Object.entries(readJ(path.join(pdir, f)) || {})) if (!(p.fm && KP.has(String(p.fm)))) PERS.add(pid);
   const write = (p, html) => { const f = path.join(o.out, p.replace(/^\//, ""), "index.html"); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, html); written.add(p); };
   // a match links to the site's page when it has one, else to this archive's; a man or a club to the site's, else nothing yet
   const mHref = m => (KM.has(String(m.id)) ? `/m/${m.id}/` : `/m/k${m.k}/`);
   const relink = ms => ms.map(m => {
     const side = s => [s[0] && KT.has(String(s[0])) ? s[0] : null, s[1], s[2]];
-    const man = (id, pid) => (id && KP.has(String(id)) ? id : null);
+    const man = (id, pid) => (id && KP.has(String(id)) ? id : pid != null && PERS.has(String(pid)) ? `k${pid}` : null);
     return Object.assign({}, m, { id: KM.has(String(m.id)) ? m.id : `k${m.k}`, h: side(m.h), a: side(m.a),
       ev: (m.ev || []).map(e => [e[0], e[1], e[2], e[3], e[4], man(e[5], e[6]), e[6]]),          // e[6]: the man's Tifo id (the season's leaders)
       lu: m.lu ? Object.fromEntries(Object.entries(m.lu).map(([k, v]) => [k, v.map(p => [p[0], man(p[1], p[4]), p[2], p[3]])])) : null });
@@ -104,6 +108,18 @@ function build(o) {
       }
     }
   }
+  // the men's profiles
+  let nPersons = 0;
+  const compOf = fid => { const c = comps.find(x => +x.id === +fid) || index.competitions.find(x => +x.id === +fid); return c ? { key: c.key } : null; };
+  for (const f of shards) for (const [pid, p] of Object.entries(readJ(path.join(pdir, f)) || {})) {
+    if (!PERS.has(pid)) continue;
+    const pth = `/p/k${pid}/`, nm = PV.nameOf(p), ok = PV.indexable(p);
+    write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: PV.title(p), desc: PV.desc(p),
+      body: PV.body(p, { team: id => KT.has(String(id)), comp: compOf }) + U.foot(),
+      ld: { "@context": "https://schema.org", "@graph": [Object.assign(PV.ld(p, pth), { "@context": undefined }), Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
+    if (ok) urls.push(pth);
+    nPersons++;
+  }
   // links to pages neither the site nor this run has become plain text (the site build's own rule)
   const OWN = /^\/(m|p|t|c|coach|r|s)\//, SKIP = /^\/(v1|assets|logo|lg|og|api|embed|next)\//;
   let dead = 0;
@@ -117,7 +133,7 @@ function build(o) {
     if (h2 !== h) fs.writeFileSync(f, h2);
   }
   fs.writeFileSync(path.join(o.out, "_archive_urls.json"), JSON.stringify(urls));
-  return { seasons: nSeasons, matches: nMatches, pages: written.size, dead };
+  return { seasons: nSeasons, matches: nMatches, persons: nPersons, pages: written.size, dead };
 }
 
 if (require.main === module) {
