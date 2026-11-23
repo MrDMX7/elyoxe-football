@@ -229,9 +229,23 @@ NOT_SCORERS = re.compile(r"\b(aet|pen|awd|abd|annulled|walkover|w/o)\b", re.I)
 
 def _minutes(s):
     out = []
-    for m in re.finditer(r"(\d{1,3})\s*'?\s*(og|pen|p)?", s):
-        out.append((int(m.group(1)), "own_goal" if (m.group(2) or "").lower() == "og" else "goal"))
+    for m in re.finditer(r"(\d{1,3})\s*'?\s*(own goal|og|pen|p)?", s, re.I):
+        out.append((int(m.group(1)), "own_goal" if (m.group(2) or "").lower() in ("og", "own goal") else "goal"))
     return out
+
+
+# a bracket that is a date (Algeria 2006/07: «[Mar 15]» under a match, the replay's day): 496 goals were «Mar»'s and «Dec»'s
+DATE = re.compile(r"^\s*(jan(uary)?|feb(ruary)?|mar(ch)?|apr(il)?|may|june?|july?|aug(ust)?|sept?(ember)?|oct(ober)?|nov(ember)?|dec(ember)?)\.?\s+\d", re.I)
+
+
+def _who(name, kind):
+    """«?» is a goal whose scorer RSSSF did not know, «own goal» one by the other side: both a goal with no man"""
+    n = (name or "").strip()
+    if n in ("", "?"):
+        return None, kind
+    if n.lower() in ("own goal", "og"):
+        return None, "own_goal"
+    return name, kind
 
 
 def _side(s, side):
@@ -240,7 +254,7 @@ def _side(s, side):
     if "(" in s:
         for m in re.finditer(r"([^(),]+?)\s*\(([^)]*)\)", s):
             name = re.sub(r"\s+", " ", m.group(1)).strip(" ,")
-            goals += [[side, name, mi, kind] for mi, kind in _minutes(m.group(2))]
+            goals += [[side, _who(name, kind)[0], mi, _who(name, kind)[1]] for mi, kind in _minutes(m.group(2))]
         return goals
     name = None
     for part in s.split(","):
@@ -250,14 +264,14 @@ def _side(s, side):
         if m.group(1).strip():
             name = re.sub(r"\s+", " ", m.group(1)).strip()
         if name:
-            goals += [[side, name, mi, kind] for mi, kind in _minutes(m.group(2))]
+            goals += [[side, _who(name, kind)[0], mi, _who(name, kind)[1]] for mi, kind in _minutes(m.group(2))]
     return goals
 
 
 def _scorers(text, hs, as_):
     """[[side, name, minute, goal|own_goal]] when they add up to the score, else [] (a scorer list RSSSF left short)"""
     body = text.strip().lstrip("[").rstrip("]")
-    if not body or NOT_SCORERS.search(body) and not re.search(r"\d+\s*'", body) and ";" not in body:
+    if not body or DATE.match(body) or NOT_SCORERS.search(body) and not re.search(r"\d+\s*'", body) and ";" not in body:
         return []
     if "(" in body:
         depth, cut = 0, None

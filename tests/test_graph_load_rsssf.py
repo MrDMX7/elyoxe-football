@@ -168,3 +168,12 @@ def test_two_clubs_level_at_the_top_both_keep_their_row(tmp_path):
     rsssf.load(G, reg, S, codes=["uae"])
     e = G.c.execute("select eid from edition where cid=? and season='1980/1981'", (lg,)).fetchone()[0]
     assert [r[0] for r in G.c.execute("select rank from standing where eid=? order by rank", (e,))] == [1, 2, 3]
+
+
+def test_scorer_lists_already_published_are_cleaned():
+    """the files published before the parser knew a date from a scorer: a match «scored» by a month has no scorers, «?» and
+    «own goal» are goals with no man, a note after the minutes is cut"""
+    assert rsssf.clean_goals([["h", "Mar", 15, "goal"]]) == []
+    assert rsssf.clean_goals([["h", "Ali", 5, "goal"], ["a", "?", 30, "goal"], ["h", "own goal", 37, "goal"]]) == [
+        ["h", "Ali", 5, "goal"], ["a", None, 30, "goal"], ["h", None, 37, "own_goal"]]
+    assert rsssf.clean_goals([["a", "Ali Saad 11; 400 spectators", 200, "goal"]]) == [["a", "Ali Saad", 11, "goal"]]

@@ -4,8 +4,31 @@ country's FotMob league, the champion as an honour, the league round by round wi
 the match, its scorers added when it has none), and the dated cup games of db/.cache/rsssf_clubs.json as matches. A
 season whose table the graph already has (365Scores) keeps it; a club RSSSF could not link is a team of its own
 (`rsssf-name`, «<code>|<name>»)."""
-import os
+import os, re
 from graph.link import MatchIndex, twin
+
+# the files published before db/rsssf.py knew a date from a scorer (23 Nov 2026: Algeria's «[Mar 15]» under a match made
+# «Mar» a man with 71 goals; Iraq's «?» and «own goal» were men too)
+MONTH = re.compile(r"^(jan(uary)?|feb(ruary)?|mar(ch)?|apr(il)?|may|june?|july?|aug(ust)?|sept?(ember)?|oct(ober)?|nov(ember)?|dec(ember)?)\.?$", re.I)
+
+
+def clean_goals(goals):
+    """a match «scored» by a month has no scorers; «?» and «own goal» are goals with no man; a note after the minutes is cut"""
+    if any(name and MONTH.match(name.strip()) for _, name, _, _ in goals):
+        return []
+    out = []
+    for side, name, minute, kind in goals:
+        n = (name or "").strip()
+        if n in ("", "?"):
+            name = None
+        elif n.lower() in ("own goal", "og"):
+            name, kind = None, "own_goal"
+        elif re.search(r"\d", n):
+            m = re.match(r"([^\d;]+?)\s*(\d{1,3})\b", n)
+            if m:
+                name, minute = m.group(1).strip(), int(m.group(2))
+        out.append([side, name, minute, kind])
+    return out
 
 
 
@@ -73,11 +96,13 @@ def load(G, reg, S, codes=None):
         side_t = {"h": a if flip else h, "a": h if flip else a}
         other = {"h": "a", "a": "h"}
         events, apps = [], {}
-        for seq, (side, name, minute, kind) in enumerate(sorted(goals, key=lambda g: (g[2] if g[2] is not None else 999))):
-            pid = scorer(code, name)
+        for seq, (side, name, minute, kind) in enumerate(sorted(clean_goals(goals), key=lambda g: (g[2] if g[2] is not None else 999))):
+            pid = scorer(code, name) if name else None
             sd = other[side] if flip else side                 # the side as the match row has it
             events.append({"mid": mid, "seq": seq, "minute": minute, "added": 0, "type": kind, "side": sd, "tid": side_t[side], "pid": pid})
             own_team = side_t[other[side]] if kind == "own_goal" else side_t[side]
+            if pid is None:
+                continue
             ap = apps.setdefault(pid, {"mid": mid, "pid": pid, "tid": own_team, "played": 1, "goals": 0})
             ap["goals"] += kind != "own_goal"
         G.many("event", events, "rsssf")

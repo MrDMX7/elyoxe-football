@@ -97,3 +97,21 @@ def test_one_name_in_two_tables_spelled_two_ways_is_one_row():
 def test_a_date_that_does_not_exist_is_not_kept():
     page = "X 2001/02\n\nRound 1 [Feb 30]\nAin   1-0 Nasr\nRound 2 [Mar 3]\nWasl   2-0 Ahli\n"
     assert [m[0] for m in R.league_rounds(page, "X 2001/02")] == ["2002-03-03"]
+
+
+def test_a_date_under_a_match_is_no_scorer_list():
+    """Algeria 2006/07: «OM Ruisseau 1-0 JS Kabylie» then «[Mar 15]», the replay's date: 496 goals by «Mar», «Dec», «Feb»"""
+    assert R._scorers("[Mar 15]", 1, 0) == []
+    assert R._scorers("[Feb 24, 25?]", 2, 0) == []
+    assert R._scorers("[Marcos 15]", 1, 0) == [["h", "Marcos", 15, "goal"]]
+
+
+def test_an_unknown_scorer_and_an_own_goal_are_goals_with_no_name():
+    """Iraq 2004/05: «[Khalid Mushir 17, Jassim M. Sulaiman 58; ? 30]», «[..., own goal 37; Amir Mushrif 27]»"""
+    assert R._scorers("[Khalid Mushir 17, Jassim M. Sulaiman 58; ? 30]", 2, 1)[-1] == ["a", None, 30, "goal"]
+    assert R._scorers("[Khalid Mushir 10pen, own goal 37; Amir Mushrif 27]", 2, 1)[1] == ["h", None, 37, "own_goal"]
+
+
+def test_an_own_goal_written_out_in_the_minutes():
+    """«[Fahad Massoud (10' own goal) - Bouri Lah (48')]»: an own goal, not Fahad Massoud's goal"""
+    assert R._scorers("[Fahad Massoud (10' own goal) - Bouri Lah (48')]", 1, 1) == [["h", "Fahad Massoud", 10, "own_goal"], ["a", "Bouri Lah", 48, "goal"]]
