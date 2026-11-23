@@ -20,7 +20,7 @@ function kind(path) {
   const p = path.replace(/^\/|\/$/g, "").split("/");
   if (!p[0]) return "home";
   if (p[0] === "c" && p.length > 2) return "c/*/" + p[2];
-  if (["m", "p", "t"].includes(p[0]) && p.length > 1) return p[0] + (p[1].startsWith("k") ? "/k" : "") + (p.length > 2 ? "/" + p[2] : "");
+  if (["m", "p", "t", "r"].includes(p[0]) && p.length > 1) return p[0] + (p[1].startsWith("k") ? "/k" : "") + (p.length > 2 ? "/" + p[2] : "");
   return p[0];
 }
 

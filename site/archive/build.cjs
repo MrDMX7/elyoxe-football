@@ -27,13 +27,16 @@ function eventLd(m, c, pth) {
     m.venue ? { location: { "@type": "Place", name: m.venue } } : {});
 }
 
+// the shell carries the site's footer; a view's own (the site's page bodies end with one) would be a second (23 Nov 2026)
+const noFoot = body => String(body).replace(/<footer class="foot">[\s\S]*?<\/footer>/g, "");
+
 function shellPage(shell, o) {
   // the site's own page() output with placeholders (site/build.cjs writes _shells/archive.html): head, nav, footer, assets
   // a thin page (a result and no more) is for the visitor, not the search engines: noindex, and out of the sitemaps
   const s = o.noindex ? shell.replace("<head>", '<head><meta name="robots" content="noindex,follow">') : shell;
   return s.split("/__PATH__/").join(o.path).split("__TITLE__").join(esc(o.title)).split("__DESC__").join(esc(o.desc))
     .split("__BACKL__").join(o.nav.backLabel).split("__BACK__").join(o.nav.back).split("__NAVT__").join(o.nav.title)
-    .split('{"__LD__":1}').join(JSON.stringify(o.ld || {}).replace(/</g, "\\u003c")).split("__BODY__").join(o.body);
+    .split('{"__LD__":1}').join(JSON.stringify(o.ld || {}).replace(/</g, "\\u003c")).split("__BODY__").join(noFoot(o.body));
 }
 
 function build(o) {
@@ -77,7 +80,7 @@ function build(o) {
     const sNav = (title, back, label) => ({ back, backLabel: label, title });
     write(arch, shellPage(shell, { path: arch, nav: sNav("كل المواسم", `/c/${c.key}/`, esc(c.name_ar)),
       title: `أبطال ${c.name_ar} عبر التاريخ: كل المواسم والهدافين | تيفو`, desc: `كل مواسم ${c.name_ar}: البطل والوصيف والهداف في ${ss.length} موسم.`,
-      body: `<div class="lt"><h1>${esc(c.name_ar)}: كل المواسم</h1>${ss.length ? `<p>البطل والوصيف والهداف في كل موسم، من <span class="num">${esc(ss[ss.length - 1].season)}</span> لين <span class="num">${esc(ss[0].season)}</span>.</p>` : ""}</div>` + HP.seasonsBody(ed, c, Object.assign({ page: s => HP.seasonRich(s) || msOf(s).length }, hpo)) + U.foot(),
+      body: `<div class="lt"><h1>${esc(c.name_ar)}: كل المواسم</h1>${ss.length ? `<p>البطل والوصيف والهداف في كل موسم، من <span class="num">${esc(ss[ss.length - 1].season)}</span> لين <span class="num">${esc(ss[0].season)}</span>.</p>` : ""}</div>` + HP.seasonsBody(ed, c, Object.assign({ page: s => HP.seasonRich(s) || msOf(s).length }, hpo)),
       ld: bcLd([[c.name_ar, `/c/${c.key}/`], ["كل المواسم", arch]]) }));
     urls.push(arch);
     for (const s of ss.filter(s => HP.seasonRich(s) || msOf(s).length)) {
@@ -120,7 +123,7 @@ function build(o) {
     if (!PERS.has(pid)) continue;
     const pth = `/p/k${pid}/`, nm = PV.nameOf(p), ok = PV.indexable(p);
     write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: PV.title(p), desc: PV.desc(p),
-      body: PV.body(p, { team: id => KT.has(String(id)), comp: compOf, photo: PH[`k${pid}`] ? Object.assign({ src: `/v1/ph/k${pid}.webp` }, PH[`k${pid}`]) : null }) + U.foot(),
+      body: PV.body(p, { team: id => KT.has(String(id)), comp: compOf, photo: PH[`k${pid}`] ? Object.assign({ src: `/v1/ph/k${pid}.webp` }, PH[`k${pid}`]) : null }),
       ld: { "@context": "https://schema.org", "@graph": [Object.assign(PV.ld(p, pth), { "@context": undefined }), Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
     if (ok) urls.push(pth);
     nPersons++;
@@ -130,13 +133,13 @@ function build(o) {
   for (const [rid, r] of Object.entries(REFS)) {
     const pth = `/r/k${rid}/`, nm = EV.nameOf(r), ok = EV.refIndexable(r);
     write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: `الحكم ${nm}: مبارياته وكروته | تيفو`,
-      desc: `الحكم ${nm}: كل مبارياته في أرشيف تيفو موسم بموسم، والإنذارات والطرد.`, body: EV.referee(r, eo) + U.foot(), ld: bcLd([[nm, pth]]) }));
+      desc: `الحكم ${nm}: كل مبارياته في أرشيف تيفو موسم بموسم، والإنذارات والطرد.`, body: EV.referee(r, eo), ld: bcLd([[nm, pth]]) }));
     if (ok) urls.push(pth);
   }
   for (const [tid, c] of Object.entries(CLUBS)) {
     const pth = `/t/k${tid}/`, nm = EV.nameOf(c), ok = EV.clubIndexable(c);
     write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: `${nm}: تاريخه ونتايجه موسم بموسم | تيفو`,
-      desc: `${nm}: كل مواسمه في أرشيف تيفو، ألقابه ونتايجه ومبارياته.`, body: EV.club(c, eo) + U.foot(),
+      desc: `${nm}: كل مواسمه في أرشيف تيفو، ألقابه ونتايجه ومبارياته.`, body: EV.club(c, eo),
       ld: { "@context": "https://schema.org", "@graph": [{ "@type": "SportsTeam", name: nm, sport: "Soccer", url: SITE + pth }, Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
     if (ok) urls.push(pth);
   }

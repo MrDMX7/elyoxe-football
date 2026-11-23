@@ -22,11 +22,19 @@ test("a club's page: every season's record, its titles, its last games", () => {
   assert.match(h, /ويمبلدون/);
   assert.match(h, /بطل[\s\S]*?كأس الاتحاد الإنجليزي[\s\S]*?1987\/1988/);
   assert.match(h, /<td><span class="num">14<\/span><\/td>/);
-  assert.match(h, /<a href="\/t\/8650\/">ليفربول<\/a>/);
+  assert.match(h, /<a class="row" href="\/m\/k1\/">[\s\S]*?ليفربول/);
 });
 
 test("the search engines get the big records only", () => {
   assert.equal(V.refIndexable(R), true);
   assert.equal(V.refIndexable({ n: "X", ms: [["2003", 1, "x", 5, 0, 0]] }), false);
   assert.equal(V.clubIndexable(C), true);
+});
+
+test("a last-games row is one link to the match, with no club link inside it (a link in a link breaks the row)", () => {
+  for (const h of [V.referee(R, o), V.club(C, o)]) {
+    const rows = h.match(/<a [^>]*href="\/m\/k[^"]*"[\s\S]*?<\/a>/g) || [];
+    assert.ok(rows.length > 0);
+    for (const r of rows) assert.doesNotMatch(r.slice(2), /<a /, r);
+  }
 });

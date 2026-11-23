@@ -103,3 +103,14 @@ test("an old club and a referee get their pages, and the match links both", () =
   assert.match(m, /href="\/r\/k9\/"/);
   assert.ok(fs.existsSync(path.join(o.out, "t/k2/index.html")) && fs.existsSync(path.join(o.out, "r/k9/index.html")));
 });
+
+test("a page carries the shell's footer only, not a second one of its own", () => {
+  const { o } = world();
+  fs.writeFileSync(o.shell, SHELL.replace("__BODY__", '__BODY__<footer class="foot"><p>SITE</p></footer>'));
+  A.build(o);
+  for (const p of ["m/k1", "c/premier-league/s/1990-1991", "c/premier-league/seasons"]) {
+    const h = fs.readFileSync(path.join(o.out, p, "index.html"), "utf8");
+    assert.equal((h.match(/<footer class="foot"/g) || []).length, 1, p);
+    assert.match(h, /<p>SITE<\/p><\/footer>/, p);
+  }
+});
