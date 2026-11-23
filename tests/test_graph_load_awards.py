@@ -486,3 +486,18 @@ def test_a_section_award_with_no_arabic_page_name_keeps_no_bare_arabic_term(tmp_
     awards.load(G, reg, S)
     got = dict(G.c.execute("select name, name_ar from competition where kind='award'").fetchall())
     assert got == {"Brentford F.C. Player of the Year — Player of the Year": None, "Brentford F.C. Player of the Year — Young Player of the Year": None}
+
+
+def test_a_coach_of_the_year_keeps_his_wikidata_item_and_his_playing_days(tmp_path):
+    # 23 Nov 2026: the graph held no coach's Wikidata item (photos: «كلهم بصورهم») and no coach was tied to his player record
+    page = T('<tr><th>Year</th><th>Coach</th></tr>' + ''.join(f'<tr><td>{y}</td><td>{L("George_Graham")}</td></tr>' for y in (1989, 1991, 1993)),
+             "Manager of the Year")
+    items = dict(ITEMS, George_Graham=item("Q55", "George Graham", "جورج غراهام", "1944-11-30"))
+    S = mk(tmp_path, {"Manager of the Year": page, "Ballon d'Or": BALLON}, items)
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    pl = reg.mint("player", "wikidata", "Q55")                       # he played too: one of the graph's men
+    G.put("player", {"pid": pl, "name": "George Graham"}, "wikidata")
+    awards.load(G, reg, S)
+    kid = reg.get("coach", "wikidata", "Q55")
+    assert G.c.execute("select source_id from xref where type='coach' and tifo_id=? and source='wikidata'", (kid,)).fetchone() == ("Q55",)
+    assert G.c.execute("select pid from coach where kid=?", (kid,)).fetchone() == (pl,)

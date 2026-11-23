@@ -114,7 +114,7 @@ def load(G, reg, S):
     award_pages = set(arts.get("awards") or []) - set(comp_of)
     clubs = (S.read(os.path.join(S.db, "clubs.json")) or {}).get("clubs") or {}
     club_by_qid = {c.get("qid"): int(fid) for fid, c in clubs.items() if c.get("qid") and fid.isdigit()}
-    n = {"pages": 0, "not_ours": 0, "season_pages": 0, "tables": 0, "awards": 0, "honours": 0, "edition_honours": 0, "players_new": 0, "sanity_dropped": 0, "conflicts": 0,
+    n = {"pages": 0, "not_ours": 0, "coach_players": 0, "season_pages": 0, "tables": 0, "awards": 0, "honours": 0, "edition_honours": 0, "players_new": 0, "sanity_dropped": 0, "conflicts": 0,
          "not_a_person": 0, "own_count_replaced": 0, "season_not_own": 0, "table_not_final": 0, "season_in_play": 0}
     done = set()
     import datetime
@@ -164,6 +164,8 @@ def load(G, reg, S):
         if ("k", kid) not in done:
             done.add(("k", kid))
             G.put("coach", {"kid": kid, "name": f.get("en") or name, "name_ar": f.get("ar"), "born": f.get("born")}, "wikidata")
+            if f.get("qid"):                   # (23 Nov) his item: his photo, and his playing days (below)
+                G.xref("coach", kid, "wikidata", f["qid"], "wiki-link")
         return kid
 
     not_clubs = {(t or "").replace("_", " ") for t in list(comp_of) + list(award_pages)}
@@ -394,4 +396,9 @@ def load(G, reg, S):
                     per["runner_up"] = [(1, table["runner_up"], None, None, None)]
         for kind, entries in per.items():
             edition_set(eid, kind, entries)
+    # a coach whose Wikidata item is one of our players' is that man: his /coach/k<id>/ links his profile (23 Nov 2026)
+    for kid, qid in G.c.execute("SELECT tifo_id, source_id FROM xref WHERE type='coach' AND source='wikidata'").fetchall():
+        pid = reg.get("player", "wikidata", qid)
+        if pid is not None:
+            n["coach_players"] += G.c.execute("UPDATE coach SET pid=? WHERE kid=? AND pid IS NULL", (pid, kid)).rowcount
     return n
