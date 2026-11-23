@@ -99,6 +99,30 @@ def rsssf_tops(S, max_age_days=30):
         os.replace(p + ".tmp", p)
 
 
+def football_data(S, first=1995, last=2009):
+    """football-data.co.uk's results files of the big five, 1995/96-2009/10 (graph/load/fdata.py): half-time scores, the Premier
+    League's referees, attendances. Finished seasons, so each file is fetched once and kept (db/.cache/fdata/). The UAE's ISP
+    blocks the site as «gambling» (22 Nov 2026), so this runs on GitHub Actions only."""
+    d = os.path.join(S.db, "fdata")
+    os.makedirs(d, exist_ok=True)
+    for div in ("E0", "SP1", "I1", "D1", "F1"):
+        for y in range(first, last + 1):
+            p = os.path.join(d, f"{div}-{y}.csv")
+            if os.path.exists(p):
+                continue
+            code = f"{y % 100:02d}{(y + 1) % 100:02d}"
+            try:
+                body = urllib.request.urlopen(urllib.request.Request(f"https://www.football-data.co.uk/mmz4281/{code}/{div}.csv",
+                                                                     headers={"User-Agent": "Mozilla/5.0"}), timeout=60).read()
+            except Exception as e:
+                print(f"football-data {div} {code}: {e}", flush=True)
+                continue
+            if body.lstrip(b"\xef\xbb\xbf")[:3] == b"Div":
+                open(p + ".tmp", "wb").write(body)
+                os.replace(p + ".tmp", p)
+            time.sleep(1)
+
+
 def espn(S):
     """ESPN's records of 2001-2010 (graph/espn_fetch.py): db/.cache/espn.json.gz for graph/load/espn.py"""
     _state_file(S, "espn.json.gz", "graph/espn.json")
