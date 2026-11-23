@@ -142,3 +142,12 @@ def test_the_merges_are_read_from_the_graph(tmp_path):
     c.commit(); c.close()
     assert J.merged_of(str(db)) == {"player": {107585: 124}}
     assert J.merged_of(str(tmp_path / "none.db")) == {}
+
+
+def test_a_folded_page_whose_kept_record_has_the_sites_page_forwards_there(tmp_path):
+    """Transfermarkt's «Sydney FC» (/t/k8800/) folds into FotMob's, whose page is the site's /t/4174/"""
+    pages(tmp_path, {})
+    old = {"t/k8800/index.html": "a", "t/k8801/index.html": "b"}
+    merged = {"team": {8800: 30, 8801: 31}}
+    site = lambda kind, keep: {("t", 30): "/t/4174/"}.get((kind, keep))
+    assert J.forwards(tmp_path, old, merged, site) == {"t/k8800/index.html": "/t/4174/"}     # 31: no page anywhere, no forward

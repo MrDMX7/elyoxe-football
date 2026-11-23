@@ -49,6 +49,7 @@ function build(o) {
   // every referee of 5 games and every club FotMob has no page for (graph/archive_export referees, clubs): /r/k<id>/, /t/k<id>/
   const REFS = readJ(path.join(o.data, "referees.json")) || {}, CLUBS = readJ(path.join(o.data, "clubs.json")) || {};
   for (const [rid, r] of Object.entries(REFS)) if (r.fm && KR.has(String(r.fm))) delete REFS[rid];
+  for (const [tid, c] of Object.entries(CLUBS)) if (c.fm && KT.has(String(c.fm))) delete CLUBS[tid];      // the site's /t/<FotMob id>/ is its page
   // every coach with a bench or an award (graph/archive_export.coaches): /coach/k<id>/, unless the site has his /coach/<FotMob id>/
   const COACHES = readJ(path.join(o.data, "coaches.json")) || {}, KC = new Set((known.coach || []).map(String));
   for (const c of Object.values(COACHES)) if (c.fm && KC.has(String(c.fm))) c.site = `/coach/${c.fm}/`;

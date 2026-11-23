@@ -182,8 +182,9 @@ def referees(G, out, min_matches=5, last=10, nat=lambda v: v):
 
 def clubs(G, out, min_matches=30, last=10, nat=lambda v: v):
     """clubs.json {tid: {n, ar, c, ss: [season, competition FotMob id, competition, p, w, d, l, gf, ga], hon: [kind, competition,
-    competition FotMob id, season], last: [...]}}: every club FotMob has no page for with 30 games or more in the archive
-    (the Wimbledon of 1990, Dubai CSC, Al Khaleej), for /t/k<Tifo id>/"""
+    competition FotMob id, season], last: [...], fm: FotMob id}}: every club with 30 games or more in the archive (the
+    Wimbledon of 1990, Dubai CSC, Al Khaleej), for /t/k<Tifo id>/; FotMob's too since 24 Nov 2026 (Transfermarkt's Djurgården,
+    1,862 games, folds into FotMob's, whose club the site has no page for), the renderer leaving out those the site has"""
     from collections import defaultdict
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     fm = lambda t: {a: int(b) for a, b in q(f"SELECT tifo_id, source_id FROM xref WHERE type='{t}' AND source='fotmob'") if str(b).isdigit()}
@@ -195,7 +196,7 @@ def clubs(G, out, min_matches=30, last=10, nat=lambda v: v):
     n = defaultdict(int)
     for mid, d, h, a, *_ in rows:
         n[h] += 1; n[a] += 1
-    want = {t for t, k in n.items() if k >= min_matches and t not in fm_t}
+    want = {t for t, k in n.items() if k >= min_matches}
     C = defaultdict(lambda: defaultdict(list))
     agg = defaultdict(lambda: [0, 0, 0, 0, 0, 0])
     for mid, d, h, a, hs, as_, season, cid in rows:
@@ -216,7 +217,8 @@ def clubs(G, out, min_matches=30, last=10, nat=lambda v: v):
         if tid in want:
             c = C[tid]
             out_d[str(tid)] = {k: v for k, v in {"n": name, "ar": ar, "c": nat(country), "ss": sorted(c["ss"], key=lambda x: str(x[0]), reverse=True),
-                                                 "hon": sorted(c["hon"], key=lambda x: str(x[3]), reverse=True), "last": c["last"]}.items() if v not in (None, [], "")}
+                                                 "hon": sorted(c["hon"], key=lambda x: str(x[3]), reverse=True), "last": c["last"],
+                                                 "fm": fm_t.get(tid)}.items() if v not in (None, [], "")}
     with open(os.path.join(out, "clubs.json"), "w", encoding="utf-8") as f:
         json.dump(out_d, f, ensure_ascii=False, separators=(",", ":"))
     return {"clubs": len(out_d)}

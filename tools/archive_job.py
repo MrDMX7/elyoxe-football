@@ -106,15 +106,38 @@ def merged_of(db):
     return {t: {int(d): int(k) for d, k in m.items()} for t, m in (json.loads(row[0]) if row else {}).items()}
 
 
+def fotmob_ids(db):
+    """{type: {Tifo id: FotMob id}} from the graph's crosswalk"""
+    import sqlite3
+    if not os.path.exists(db):
+        return {}
+    c = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+    out = {}
+    for t, i, s in c.execute("SELECT type, tifo_id, source_id FROM xref WHERE source='fotmob' AND type IN ('player', 'match', 'team', 'coach')"):
+        out.setdefault(t, {})[i] = str(s)
+    c.close()
+    return out
+
+
+def site_page(known, fm):
+    """site(kind, kept Tifo id) -> the site's page of its FotMob id, when the site has it (known_pages)"""
+    have = {k: set(map(str, v)) for k, v in known.items() if isinstance(v, list)}
+    def page(kind, keep):
+        f = (fm.get(PAGE_TYPE[kind]) or {}).get(keep)
+        return f"/{kind}/{f}/" if f and f in have.get(kind, ()) else None
+    return page
+
+
 def forward_page(to):
     return ('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="robots" content="noindex,follow">'
             f'<link rel="canonical" href="https://tifo.elyoxe.com{to}"><meta http-equiv="refresh" content="0;url={to}"><title>تيفو</title>'
             f'</head><body><a href="{to}">{to}</a></body></html>')
 
 
-def forwards(out, old, merged):
+def forwards(out, old, merged, site=None):
     """the pages of the last run whose man, match, team or coach this build folded into another: a forward page to the kept
-    one's page (written under out, so it goes up and stays in the manifest), where that one has a page this run"""
+    one's page (written under out, so it goes up and stays in the manifest): its archive page this run, else the site's page
+    of its FotMob id (site(kind, kept id) -> path or None: Transfermarkt's «Sydney FC» into FotMob's /t/4174/)"""
     got = {}
     for k in old:
         parts = k.split("/")
@@ -123,9 +146,11 @@ def forwards(out, old, merged):
         if os.path.exists(os.path.join(out, k)):
             continue
         keep = (merged.get(PAGE_TYPE[parts[0]]) or {}).get(int(parts[1][1:]))
-        if keep is None or not os.path.exists(os.path.join(out, parts[0], f"k{keep}", "index.html")):
+        if keep is None:
             continue
-        to = f"/{parts[0]}/k{keep}/"
+        to = f"/{parts[0]}/k{keep}/" if os.path.exists(os.path.join(out, parts[0], f"k{keep}", "index.html")) else site and site(parts[0], keep)
+        if not to:
+            continue
         os.makedirs(os.path.join(out, parts[0], parts[1]), exist_ok=True)
         with open(os.path.join(out, k), "w", encoding="utf-8", newline="\n") as f:
             f.write(forward_page(to))
@@ -346,7 +371,7 @@ def main(argv=None):
     sitemaps(out, urls)
     old = state_get(s3, MANIFEST, {}) or {}
     if not a.comps:
-        fw = forwards(out, old, merged_of(db))
+        fw = forwards(out, old, merged_of(db), site_page(known, fotmob_ids(db)))
         if fw:
             say(f"{len(fw)} pages of folded men and matches forward to the kept one, e.g. {next(iter(fw.items()))}")
     up = listed(s3, bucket) if not a.dry else set()

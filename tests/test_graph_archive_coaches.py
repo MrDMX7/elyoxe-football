@@ -43,3 +43,16 @@ def test_the_fotmob_clubs_arabic_names_go_out_for_the_profiles(tmp_path):
     archive_export.fm_teams(G, str(out))
     t = json.load(open(out / "fm_teams.json", encoding="utf-8"))
     assert t["102101"] == "الجزيرة" and t["5789"] == "الإمارات"
+
+
+def test_a_fotmob_club_with_enough_games_gets_its_history_too(tmp_path):
+    """24 Nov 2026: Transfermarkt's Djurgården (1,862 games) folds into FotMob's, whose club has no page on the site: the
+    archive's club page goes to every club of 30 games, FotMob's too (with its FotMob id; the renderer leaves out the ones
+    the site has a page for)"""
+    G, m2, old = world(tmp_path)
+    out = tmp_path / "d"
+    out.mkdir()
+    archive_export.clubs(G, str(out), min_matches=1)
+    cl = json.load(open(out / "clubs.json", encoding="utf-8"))
+    fm = {c.get("fm") for c in cl.values()}
+    assert {102117, 102101} <= fm                                  # al Ain and al Jazira: FotMob's clubs, now written with their id

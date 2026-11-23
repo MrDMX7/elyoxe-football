@@ -205,3 +205,13 @@ test("a season's top scorer links his profile", () => {
   assert.match(fs.readFileSync(path.join(o.out, "c/premier-league/s/1990-1991/index.html"), "utf8"), /href="\/p\/k5\/"[^>]*>[\s\S]{0,80}آلان سميث/);
   assert.match(fs.readFileSync(path.join(o.out, "c/premier-league/seasons/index.html"), "utf8"), /href="\/p\/k5\/"[^>]*>[\s\S]{0,80}آلان سميث/);   // the seasons list too
 });
+
+test("a FotMob club the site has a page for gets no second page in the archive", () => {
+  const { o } = world();
+  fs.writeFileSync(path.join(o.data, "clubs.json"), JSON.stringify({ "7": { n: "Al Ain", fm: 102117, ss: [["1990/1991", 538, "الدوري", 30, 20, 5, 5, 60, 30]] },
+    "8": { n: "Alanyaspor", fm: 4678, ss: [["2020/2021", 71, "الدوري التركي", 34, 15, 9, 10, 50, 40]] } }));
+  fs.writeFileSync(o.known, JSON.stringify({ m: [], p: [], t: ["102117", 9825, 8650] }));
+  A.build(o);
+  assert.equal(fs.existsSync(path.join(o.out, "t", "k7", "index.html")), false);
+  assert.equal(fs.existsSync(path.join(o.out, "t", "k8", "index.html")), true);
+});
