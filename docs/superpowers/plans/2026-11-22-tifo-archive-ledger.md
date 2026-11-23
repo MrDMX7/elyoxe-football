@@ -34,7 +34,11 @@ with the commit or the evidence. A new session reads this first and continues at
 - Ruling: the archive owns season pages, season lists and archive matches only (p/k, t/k, coach, r stay with the site until phase 2/3) — the site still writes p/k pages hourly, so listing them must stay — cost if wrong: none, ownership moves later.
 - [x] Renderer site/archive/build.cjs + export graph/archive_export.py: Premier League locally = 128 seasons, 51,778 match pages (51,907 pages), shell from the site build.
 - [x] Seasons + matches live for all 61 competitions (run 45045946013, 22 Nov 16:49–18:01 UTC): 354,179 pages (2,354 seasons, 351,761 matches), 301,725 sent, IndexNow 10,000. QA of 31 seasons pages: 0 defects; no duplicate seasons in Bundesliga/Libertadores/Argentina/Sudamericana/LaLiga.
-- [ ] Players (223k), clubs, coaches, referees, stadiums.
+- [x] Players: a profile for every man with a record, 121k (ceb3c6d): facts, honours, every season (Transfermarkt), archive games, transfers, injuries, caps; Person JSON-LD; thin = noindex; the site's page wins where it has one.
+- [x] Referees of 5+ games (1,256) and old clubs of 30+ games (6,964) (118ef80); matches link both.
+- [x] Photos for the archive men (a173607, e283f9c): v1/people/qids.json (26k) → photos.build --archive (Wikidata/Commons, QLever fallback) → v1/ph/k<id>.webp; weekly stage photos_archive.
+- [x] UAE copies in complete round robins (0e6e685): 2006/07–2010/11 exactly 132.
+- [ ] Coaches beyond the site's 2.2k (thin ones: skip), stadium pages.
 
 ## Indexing
 - [ ] Sitemap index (50k per file) incl. the archive; robots.txt lists it.
