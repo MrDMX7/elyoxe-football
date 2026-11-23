@@ -73,6 +73,7 @@ comp_pages:
   54: [Torjägerkanone]                                           # Bundesliga since 1963/64
   268: [List of Campeonato Brasileiro Série A top scorers]       # Brazil since 1959
   45: [List of Copa Libertadores top scorers]                    # Libertadores since 1960
+  329: [Arabian Gulf Cup]                                      # the Gulf Cup's top scorers, every edition since 1970 (23 Nov 2026: 8 of 56 seasons had one)
 # places: who gives an award, for an Arabic name shared by several awards (graph/award_names.py): words of the award page's
 # English name (matched case-insensitively, the longest first) -> what follows the Arabic name. Written by hand, never guessed.
 places:
