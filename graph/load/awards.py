@@ -20,6 +20,10 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GENERIC = re.compile(r"^(winners?|list of (winners|recipients|award winners)|recipients|award winners|results|by year|history|"
                      r"(list of )?(winners|champions) by (year|season)|)$", re.I)
 YEAR_PAGE = re.compile(r"^(\d{4}(?:[–-]\d{2,4})?)\s+(.+)$")
+# an award page or table of another sport gives nobody (23 Nov 2026: profiles carried «Gatorade Player of the Year — Track and
+# field», US high-school awards). Women's football and futsal are football: their awards stay
+NOT_OURS = re.compile(r"(?i)\b(gatorade|basketball|track and field|baseball|softball|volleyball|hockey|rugby|cricket|lacrosse|swimming|"
+                      r"tennis|golf|wrestling|cross country|athletics|american football|handball|netball)\b")
 HONOUR = {"top_scorer": "top_scorer", "best_goalkeeper": "best_goalkeeper", "best_young": "best_young", "coach": "best_coach", "winner": "best_player"}
 
 
@@ -110,7 +114,7 @@ def load(G, reg, S):
     award_pages = set(arts.get("awards") or []) - set(comp_of)
     clubs = (S.read(os.path.join(S.db, "clubs.json")) or {}).get("clubs") or {}
     club_by_qid = {c.get("qid"): int(fid) for fid, c in clubs.items() if c.get("qid") and fid.isdigit()}
-    n = {"pages": 0, "season_pages": 0, "tables": 0, "awards": 0, "honours": 0, "edition_honours": 0, "players_new": 0, "sanity_dropped": 0, "conflicts": 0,
+    n = {"pages": 0, "not_ours": 0, "season_pages": 0, "tables": 0, "awards": 0, "honours": 0, "edition_honours": 0, "players_new": 0, "sanity_dropped": 0, "conflicts": 0,
          "not_a_person": 0, "own_count_replaced": 0, "season_not_own": 0, "table_not_final": 0, "season_in_play": 0}
     done = set()
     import datetime
@@ -270,8 +274,11 @@ def load(G, reg, S):
         page, html = by_canon[canon]
         if page not in comp_of:
             page = canon
+        if page not in comp_of and NOT_OURS.search(page):
+            n["not_ours"] += 1
+            continue
         n["pages"] += 1
-        tables = [t for t in extract(html, page) if f"{page}|{t['section']}" not in skip]
+        tables = [t for t in extract(html, page) if f"{page}|{t['section']}" not in skip and not NOT_OURS.search(t["section"])]
         m = YEAR_PAGE.match(page)
         base = m.group(2) if m and m.group(2) in award_pages else page
         fid = comp_of.get(page)
@@ -310,7 +317,8 @@ def load(G, reg, S):
             ar_page = names.get(base) or it(base).get("ar")
             name = base if generic else f"{base} — {t['section']}"
             term = None if generic else _ar_term(t["section"], terms)
-            name_ar = ar_page if generic else (f"{ar_page} — {term}" if ar_page and term else (term or ar_page))
+            # a section's term alone («لاعب العام») loses whose award it is: with no Arabic page name the English name stands
+            name_ar = ar_page if generic else (f"{ar_page} — {term}" if ar_page and term else ar_page)
             cid = reg.get("competition", "wiki", key)
             if cid is None:
                 cid = reg.mint("competition", "wiki", key)

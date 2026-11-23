@@ -14,6 +14,7 @@ terms:
   best goalkeeper: أفضل حارس
   goalkeeper: أفضل حارس
   young player: أفضل لاعب شاب
+  young player of the year: أفضل لاعب شاب
   best young player: أفضل لاعب شاب
   fair play: اللعب النظيف
   top scorers: الهدافين
@@ -30,8 +31,14 @@ terms:
   coach: أفضل مدرب
   manager: أفضل مدرب
   goal of the season: هدف الموسم
+  goal of the year: هدف العام
+  goalscorer of the year: هداف العام
+  best player: أفضل لاعب
+  best referee: أفضل حكم
+  top assists: الأكثر صناعة للأهداف
 names:
   Ballon d'Or: الكرة الذهبية
+  La Liga Player of the Month: لاعب الشهر في الدوري الإسباني      # Wikidata's label said «بطل الدوري الإسباني» (the champion)
   European Golden Shoe: الحذاء الذهبي الأوروبي
   FIFA World Cup awards: جوائز كأس العالم
   The Best FIFA Men's Player: جائزة الأفضل من فيفا
@@ -46,7 +53,7 @@ names:
   African Footballer of the Year: أفضل لاعب في أفريقيا
   Pichichi Trophy: جائزة بيتشيتشي
   Premier League Player of the Season: لاعب الموسم في الدوري الإنجليزي
-skip: []
+skip: [Rosenborg BK]      # a club's article: its player-of-the-year table read as an award named «نادي روسنبورغ»
 # comp_pages: a league's own list articles (FotMob competition id -> enwiki titles), read like its article: champion,
 # runner-up and top scorer a season, for the leagues whose main article does not carry them all
 comp_pages:

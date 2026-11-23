@@ -458,3 +458,31 @@ def test_a_mans_name_loses_its_win_count_club_or_disambiguation():
     for raw, clean in (("Lotta Schelin (2)", "Lotta Schelin"), ("Kevin Miller (footballer)", "Kevin Miller"),
                        ("Lucie Martínková (Örebro)", "Lucie Martínková"), ("Baltazar", "Baltazar"), ("علي (الأسطورة)", "علي (الأسطورة)")):
         assert awards.clean_name(raw) == clean, raw
+
+
+def _rows(*people):
+    return '<tr><th>Year</th><th>Player</th></tr>' + ''.join(f'<tr><td>{1990 + i}</td><td>{L(p)}</td></tr>' for i, p in enumerate(people))
+
+
+def test_awards_of_other_sports_give_nobody_and_womens_football_stays(tmp_path):
+    # 23 Nov 2026: profiles carried «Gatorade Player of the Year — Track and field», a US high-school award
+    pages = {"Gatorade Player of the Year awards": T(_rows("A_B", "C_D", "I_J"), "Basketball"),
+             "The Best FIFA Women's Player": T(_rows("E_F", "G_H", "K_L")),
+             "Ballon d'Or": BALLON}
+    items = dict(ITEMS, **{p: item(f"Q{50 + i}", p.replace("_", " "), born="1970-01-01") for i, p in enumerate(("A_B", "C_D", "E_F", "G_H", "I_J", "K_L"))})
+    S = mk(tmp_path, pages, items)
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    awards.load(G, reg, S)
+    assert sorted(n for (n,) in G.c.execute("select name from competition where kind='award'")) == ["Ballon d'Or", "The Best FIFA Women's Player"]
+    assert all(reg.get("player", "wikidata", f"Q{50 + i}") is None for i in (0, 1, 4))
+
+
+def test_a_section_award_with_no_arabic_page_name_keeps_no_bare_arabic_term(tmp_path):
+    # «Brentford F.C. Player of the Year — Player» showed as a bare «لاعب العام», the club lost; the English name says more
+    page = (b'<html><body>' + T(_rows("A_B", "C_D", "E_F"), "Player of the Year")[12:-14] + T(_rows("G_H", "I_J", "K_L"), "Young Player of the Year")[12:-14] + b'</body></html>')
+    items = dict(ITEMS, **{p: item(f"Q{60 + i}", p.replace("_", " "), born="1970-01-01") for i, p in enumerate(("A_B", "C_D", "E_F", "G_H", "I_J", "K_L"))})
+    S = mk(tmp_path, {"Brentford F.C. Player of the Year": page}, items)
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    awards.load(G, reg, S)
+    got = dict(G.c.execute("select name, name_ar from competition where kind='award'").fetchall())
+    assert got == {"Brentford F.C. Player of the Year — Player of the Year": None, "Brentford F.C. Player of the Year — Young Player of the Year": None}
