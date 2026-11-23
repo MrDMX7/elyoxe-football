@@ -27,6 +27,13 @@ const FOOT = { left:"اليسرى", right:"اليمنى", both:"الثنتين" 
 const sha = s => crypto.createHash("sha1").update(s).digest("hex").slice(0, 16);
 const dayOf = ms => new Date(ms + 4 * 36e5).toISOString().slice(0, 10);
 
+// (23 Nov 2026) one page per man: an encyclopedia man the archive has a profile for (v1/archive/fm2p.json) gets a page that sends
+// him there, out of the encyclopedia's sitemap (10,196 men had two pages, in two designs)
+const escF = v => String(v == null ? "" : v).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+function forwardPage(to, name){
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="robots" content="noindex,follow"><link rel="canonical" href="https://tifo.elyoxe.com${to}">` +
+    `<meta http-equiv="refresh" content="0;url=${to}"><title>${escF(name)} | تيفو</title></head><body><a href="${to}">${escF(name)}</a></body></html>`;
+}
 module.exports = async function(X){
   const { get, page, esc, SITE, CACHE, fs, path, bcLd, finalize, written, NAMES_AR, FMN, WP, PH, phHtml, colors, teamPages, playerPages, S_TEAMS, ASSET_V } = X;
   const pmates = X.pmates || {}, pname = X.pname || (() => null);   // owner item 11: his club's players that have a /p/ page (build.cjs)
@@ -35,6 +42,7 @@ module.exports = async function(X){
   const t0 = Date.now(), DIR = path.join(CACHE, "world"), DELTA = path.join(DIR, "delta"), rj = (f, d) => { try { return JSON.parse(fs.readFileSync(path.join(DIR, f), "utf8")); } catch (e){ return d; } };
   fs.mkdirSync(DIR, { recursive:true }); fs.rmSync(DELTA, { recursive:true, force:true }); fs.mkdirSync(DELTA, { recursive:true });
   const W = await get("world/players.json"), WI = (await get("world/index.json", 2)) || {};
+  const FM2P = (await get("archive/fm2p.json")) || {};
   if (!W || !(W.players || []).length){   // the published pages stay as they are: same manifest, nothing to upload or delete
     const m0 = rj("manifest.json", {}); fs.writeFileSync(path.join(DIR, "manifest.next.json"), JSON.stringify(m0)); fs.writeFileSync(path.join(DIR, "delete.txt"), "");
     Object.keys(m0).forEach(id => written(`/db/player/${id}`)); console.error("world stage: no world/players.json; kept the published pages");
@@ -102,7 +110,14 @@ module.exports = async function(X){
   // longest ago: a page held back by a budget is the first one written next run
   const apps = id => prof[id].s.filter(s => RECENT.test(String(s[0]))).reduce((a, s) => a + (+s[3] || 0), 0) + (WP[id] ? 1e4 : 0);
   const order = inScope.slice().sort((a, b) => (man[a] ? man[a][2] : 0) - (man[b] ? man[b][2] : 0) || (man[a] || man[b] ? 0 : apps(b) - apps(a)));
+  let nFwd = 0;
   for (const id of order){
+    if (FM2P[id] != null){              // the archive's profile is his page
+      const to = `/p/k${FM2P[id]}/`, html = forwardPage(to, nameOf(id) || latin(id)), h = sha(html), m = man[id];
+      if (!m || m[0] !== h){ const f = path.join(DELTA, "db/player", id, "index.html"); fs.mkdirSync(path.dirname(f), { recursive:true }); fs.writeFileSync(f, html); bytes += html.length; }
+      next[id] = [h, ASSET_V, now, m ? m[3] : dayOf(now)]; nFwd++; written(`/db/player/${id}`);
+      continue;
+    }
     const P = body(id), h = sha(P.title + P.desc + P.html + JSON.stringify(P.ld)), m = man[id];
     const isNew = !m, changed = m && m[0] !== h, shell = m && !changed && shellOK.has(id);
     if (isNew && nNew >= NEW) continue;   // the first run spreads the backlog over a few hours; out of scope until written
@@ -121,10 +136,11 @@ module.exports = async function(X){
   fs.writeFileSync(path.join(DIR, "delete.txt"), guard ? "" : gone2.map(id => `db/player/${id}/index.html`).join("\n"));
   fs.writeFileSync(path.join(DIR, "profiles.json"), JSON.stringify(prof)); fs.writeFileSync(path.join(DIR, "meta.json"), JSON.stringify(Object.assign(meta, { gen, at:new Date().toISOString() })));
   fs.writeFileSync(path.join(DIR, "manifest.next.json"), JSON.stringify(next));
-  const st = { candidates:cand.length, fetched, failed, waiting:cand.filter(p => meta.done[p[0]] !== gen).length, scope:inScope.length, pages:Object.keys(next).length, new:nNew, changed:nChg, shell:nShell, kept:nKeep, deleted:guard ? 0 : gone2.length, linkP:withP.size, mb:+(bytes / 1e6).toFixed(1), s:+((Date.now() - t0) / 1000).toFixed(1) };
+  const st = { forwarded:nFwd, candidates:cand.length, fetched, failed, waiting:cand.filter(p => meta.done[p[0]] !== gen).length, scope:inScope.length, pages:Object.keys(next).length, new:nNew, changed:nChg, shell:nShell, kept:nKeep, deleted:guard ? 0 : gone2.length, linkP:withP.size, mb:+(bytes / 1e6).toFixed(1), s:+((Date.now() - t0) / 1000).toFixed(1) };
   console.log("world stage:", JSON.stringify(st));
   // the nationality hubs build.cjs writes into out/ (/db/players/<cc>/): every published page, by country, then club
   const hubs = {}; Object.keys(next).forEach(id => { const t = prof[id]; if (!t) return; const cc = (t.bio || {}).cc || "XXX", club = clubOf(id);
     (hubs[cc] = hubs[cc] || []).push([id, nameOf(id) || latin(id), club, tname(club), posAr((t.bio || {}).pos)]); });
   return { urls, fresh, stats:st, hubs };
 };
+module.exports.forwardPage = forwardPage;

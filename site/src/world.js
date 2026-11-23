@@ -252,6 +252,9 @@
 
   // ---------------------------------------------------------------- a player
   if (kind === "player"){
+    // (23 Nov 2026) one page per man: the archive's profile when it has him (v1/archive/fm2p/<id % 100>.json)
+    get("archive/fm2p/" + (+id % 100) + ".json").catch(function(){ return {}; }).then(function(A){
+    if (A && A[id] != null){ location.replace("/p/k" + A[id] + "/"); return; }
     has("/p/" + id + "/").then(function(live){ if (live){ location.replace("/p/" + id + "/"); return; }
       get("player/" + id + "/profile.json").then(function(d){
         var b = d.bio || {}, nm = b.name || ""; title(nm);
@@ -270,6 +273,7 @@
         get("player/" + id + "/tm.json").then(function(t){ var h = R.tmSections(t); if (h){ var src = box.querySelector(".src"); if (src) src.insertAdjacentHTML("beforebegin", h); else box.insertAdjacentHTML("beforeend", h); } }).catch(function(){});
         get("ea/s/" + (+id % 100) + ".json").then(function(e){ var c = (e.cards || {})[id]; if (c){ var dl = box.querySelector(".pbio"); if (dl) dl.insertAdjacentHTML("afterend", R.eaCard(c)); else box.insertAdjacentHTML("afterbegin", R.eaCard(c)); } }).catch(function(){});
       }).catch(function(){ box.innerHTML = '<p class="empty">ما لقينا هاللاعب في الموسوعة. <a href="/db/">دوّر من جديد</a></p>'; });
+    });
     });
   }
 })();
