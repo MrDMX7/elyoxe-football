@@ -38,7 +38,16 @@ with the commit or the evidence. A new session reads this first and continues at
 - [x] Referees of 5+ games (1,256) and old clubs of 30+ games (6,964) (118ef80); matches link both.
 - [x] Photos for the archive men (a173607, e283f9c): v1/people/qids.json (26k) → photos.build --archive (Wikidata/Commons, QLever fallback) → v1/ph/k<id>.webp; weekly stage photos_archive.
 - [x] UAE copies in complete round robins (0e6e685): 2006/07–2010/11 exactly 132.
-- [ ] Coaches beyond the site's 2.2k (thin ones: skip), stadium pages.
+- [x] Coaches (b63ad90): /coach/k<id>/ for every coach with a bench or an award the site has no /coach/<FotMob id>/ for (≈7k), indexed at 30 games or an award; old matches name both coaches in their info, linked; season pages link them. Ruling: thin coach pages are written (noindex) rather than skipped — a match links its coach — cost if wrong: ~5k thin pages.
+- [ ] Stadium pages.
+
+## 23 Nov incidents and fixes
+- 35,296 profiles lost: the 01:25 site publish (0e6e685, before p/k* was the archive's) listed the bucket while the archive was uploading them; s3push held its deletes (over 10 %), returned ok=False, and the CLI fallback (`sync --delete`, no guard) deleted them. Fixes (ed286d4): held deletes return ok, the fallback only uploads, the archive re-sends pages its manifest holds but the bucket lost (still_up). Forced archive run 45107983786 restores them.
+- The site's own count fell 77,035 → 67,098 when p/k* became the archive's; the 95 % guard refused builds 02:25–04:00 (875c4bd: a change of ARCHIVE_OWNED resets the baseline).
+- QA round 4 (120 profile/referee/club pages): 8 lost profiles (404); referee and club last-games rows nested club links in the row link; every archive page had two footers (f0de893).
+- Awards (5d1f8f6): no other sports (Gatorade high-school awards), a section award with no Arabic page name keeps its English name, La Liga Player of the Month's Arabic. Ruling: women's football and futsal awards stay (117 award pages on /awards/) — the owner decides scope — cost if wrong: profiles of women say «مسيرته».
+- Site sitemap leaves out the archive's paths (fec0b9c): it listed 11,801 old matches, 1,946 seasons, 3,957 profiles.
+- photos --archive checkpoints every 250 and resumes «pending» men (0c397a5).
 
 ## Indexing
 - [ ] Sitemap index (50k per file) incl. the archive; robots.txt lists it.
