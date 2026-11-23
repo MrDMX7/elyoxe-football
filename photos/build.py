@@ -128,7 +128,7 @@ def commons(files):
         chunk = files[i:i + 50]
         qs = urllib.parse.urlencode({"action": "query", "format": "json", "prop": "imageinfo", "iiprop": "extmetadata|url",
                                      "iiurlwidth": 800, "titles": "|".join("File:" + f for f in chunk)})
-        r = json.loads(http("https://commons.wikimedia.org/w/api.php?" + qs))
+        r = json.loads(http("https://commons.wikimedia.org/w/api.php", qs.encode()))     # POST: 50 long file names overran a URL (414)
         norm = {n["to"]: n["from"] for n in r.get("query", {}).get("normalized", [])}
         for pg in r.get("query", {}).get("pages", {}).values():
             ii = (pg.get("imageinfo") or [{}])[0]
