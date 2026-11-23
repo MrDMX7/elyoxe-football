@@ -10,12 +10,16 @@ const AR = /[؀-ۿ]/;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const unesc = s => String(s).replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">");
 
-// pairs [latin, arabic] -> {latin: arabic}, only where the Latin name has one Arabic spelling
+// a Latin name's key: no accents, no case, a hyphen or a dot is a space («Sami Al-Jaber» = «Sami Al Jaber»)
+const MARKS = new RegExp("[" + String.fromCharCode(0x300) + "-" + String.fromCharCode(0x36f) + "]", "g");   // combining accents
+const key = la => String(la).normalize("NFKD").replace(MARKS, "").toLowerCase().replace(/[-.'’]/g, " ").replace(/\s+/g, " ").trim();
+
+// pairs [latin, arabic] -> {key: arabic}, only where the Latin name has one Arabic spelling
 function dictionary(pairs) {
   const seen = new Map();
   for (const [la, ar] of pairs) {
     if (!la || !ar || !AR.test(ar) || AR.test(la)) continue;
-    const k = String(la).trim();
+    const k = key(la);
     if (!seen.has(k)) seen.set(k, new Set());
     seen.get(k).add(String(ar).trim());
   }
@@ -28,7 +32,7 @@ function arabize(html, d) {
   let n = 0;
   const out = html.replace(/(<p class="muted">)?<span class="lat">([^<]{2,80})<\/span>/g, (m, sub, la) => {
     if (sub) return m;                                   // the Latin original under an Arabic name
-    const ar = d[unesc(la).trim()];
+    const ar = d[key(unesc(la))];
     if (!ar) return m;
     n++;
     return esc(ar);
@@ -36,4 +40,4 @@ function arabize(html, d) {
   return { html: out, n };
 }
 
-module.exports = { dictionary, arabize };
+module.exports = { dictionary, arabize, key };
