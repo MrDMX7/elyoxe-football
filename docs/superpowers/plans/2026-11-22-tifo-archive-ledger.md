@@ -87,3 +87,10 @@ with the commit or the evidence. A new session reads this first and continues at
   awards stage); seasons lists link scorers (fcef8fe).
 - Ruling: the encyclopedia's club pages (/db/club, FotMob clubs outside the site's competitions) stay: they duplicate nothing
   (the archive's /t/k are clubs FotMob has no id for) — cost if wrong: two designs for club pages.
+- Later: Arabic names for 10,934 old-league clubs (names/clubs_k.py), 119,091 archive men (people_bulk, done in three
+  sittings: the 2 h limit and a Windows write lock), the transfers' players in the weekly pool, the career table's last
+  2,429 competitions and 348 injuries (names/career_terms.py). The publish guard counts the aside drop as intended (a12f03f).
+- Site link pass: encyclopedia links to men and matches the archive has go to its pages (7,170 rewritten); names left in
+  Latin read in Arabic where one spelling is known, matched without accents/case/hyphens (9,357+).
+- Integrity, morning -> afternoon (Latin share): old clubs 0.69 -> 0.07, h2h 0.42 -> 0.0, scorers 0.32 -> 0.01, season pages
+  0.13 -> 0.03, profiles 0.50 -> 0.24 (before the career terms), coaches 0.34 -> 0.15, awards 0.38 -> 0.16; 0 broken links.
