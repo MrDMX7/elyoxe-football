@@ -229,13 +229,24 @@ def nation_ar(G):
         (tid, k), total = c.most_common(1)[0], sum(c.values())
         if k >= 3 and k >= 0.6 * total:
             by_code[code] = senior[tid][1]
-    return lambda v: by_code.get(v) or by_name.get(NATION_ALIAS.get(v, v)) or NATION_GONE.get(v) or v
+    low = {n.lower(): a for n, a in by_name.items()}                     # «gibraltar», «libya»: some sources write them in lower case
+    alias = {k.lower(): v for k, v in NATION_ALIAS.items()}
+    gone = {k.lower(): v for k, v in NATION_GONE.items()}
+
+    def ar(v):
+        if not v:
+            return v
+        k = str(v).strip().lower()
+        return by_code.get(v) or low.get(alias.get(k, k).lower()) or gone.get(k) or v
+    return ar
 
 
 # the English forms the coaches' and referees' sources use for a national team named otherwise, and the states gone since
 NATION_ALIAS = {"United States": "USA", "Czech Republic": "Czechia", "Republic of Ireland": "Ireland", "Turkey": "Turkiye", "Türkiye": "Turkiye",
                 "United Arab Emirates": "UAE", "Korea Republic": "South Korea", "IR Iran": "Iran", "China PR": "China",
-                "Côte d'Ivoire": "Ivory Coast", "Bosnia-Herzegovina": "Bosnia and Herzegovina", "Macedonia": "North Macedonia"}
+                "Côte d'Ivoire": "Ivory Coast", "Bosnia-Herzegovina": "Bosnia and Herzegovina", "Macedonia": "North Macedonia",
+                "Surinam": "Suriname", "Holland": "Netherlands", "Korea, South": "South Korea", "Cape Verde Islands": "Cape Verde",
+                "Chinese Taipei": "Taiwan", "DR Congo": "Congo DR", "Bosnia & Herzegovina": "Bosnia and Herzegovina", "The Phillipines": "Philippines"}
 NATION_GONE = {"Soviet Union": "الاتحاد السوفيتي", "West Germany": "ألمانيا الغربية", "East Germany": "ألمانيا الشرقية",
                "Yugoslavia": "يوغوسلافيا", "Czechoslovakia": "تشيكوسلوفاكيا", "United Arab Republic": "الجمهورية العربية المتحدة",
                "Zaire": "زائير", "Dutch East Indies": "جزر الهند الشرقية الهولندية", "Serbia and Montenegro": "صربيا والجبل الأسود"}

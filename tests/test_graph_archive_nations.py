@@ -32,3 +32,13 @@ def test_other_english_forms_and_states_that_no_longer_exist(tmp_path):
     ar = archive_export.nation_ar(G)
     assert ar("United States") == "أمريكا"
     assert ar("West Germany") == "ألمانيا الغربية" and ar("Soviet Union") == "الاتحاد السوفيتي"
+
+
+def test_a_country_named_in_lower_case_reads_in_arabic_too(tmp_path):
+    # «gibraltar», «libya»: old clubs' countries from a source that writes them in lower case (23 Nov 2026)
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    for k, (n, a) in enumerate((("Netherlands", "هولندا"), ("Suriname", "سورينام"))):
+        G.put("team", {"tid": reg.mint("team", "x", k), "name": n, "name_ar": a, "kind": "national"}, "fotmob")
+    G.c.commit()
+    ar = archive_export.nation_ar(G)
+    assert ar("netherlands") == "هولندا" and ar("surinam") == "سورينام"

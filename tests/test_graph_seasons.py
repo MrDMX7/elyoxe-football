@@ -96,7 +96,7 @@ def test_games_from_before_the_competition_existed_leave_it(tmp_path):
     game(G, 2, old, "1983-01-05", 4, 3)
     out = seasons.load(G, reg, None)
     assert labels(G, cid) == ["2002"]
-    assert G.c.execute("SELECT count(*) FROM match").fetchone()[0] == 2          # kept, under another competition
+    assert G.c.execute("SELECT count(*) FROM match").fetchone()[0] == 0          # not this competition's: counted, then dropped
     assert out["detached"] == 2                     # its two years (1982, 1983) once split
 
 
@@ -132,7 +132,7 @@ def test_a_league_seasons_second_source_brings_its_missing_games_not_another_div
     left = {m for (m,) in G.c.execute("SELECT mid FROM match WHERE eid=?", (e,))}
     assert 50 in left and 51 not in left and 52 not in left and 53 not in left
     assert len(left) == 12
-    assert G.c.execute("SELECT count(*) FROM match").fetchone()[0] == 14          # the strays kept, under another competition
+    assert G.c.execute("SELECT count(*) FROM match").fetchone()[0] == 14 - out["aside_dropped"]      # the strays counted, then dropped
     assert out["strays"] == 2 and out["pair_twins"] == 1
 
 
@@ -352,3 +352,17 @@ def test_national_teams_games_all_year_round_are_no_tournament(tmp_path):
     seasons.load(G, reg, None)
     assert labels(G, cid) == ["2003", "2004"]
     assert G.c.execute("SELECT count(*) FROM match m JOIN edition e ON e.eid=m.eid WHERE e.season='2004'").fetchone()[0] == 3
+
+
+def test_what_goes_aside_leaves_the_graph_so_nothing_publishes_it(tmp_path):
+    # 23 Nov 2026: 67 «Pro League (aside)» rows on the head-to-head pages, the copies a club's second record holds
+    G, reg, cid = world(tmp_path, fid=299, kind="cup")
+    ed(G, reg, cid, "2002", "fotmob-trophy", fid=299, champion=1)
+    old = ed(G, reg, cid, "1982/1983", "sch", fid=299)
+    game(G, 1, old, "1982-07-04", 3, 4)
+    G.c.execute("INSERT INTO event(mid, seq, minute, type, side, src) VALUES(1, 0, 10, 'goal', 'h', 'sch')")
+    out = seasons.load(G, reg, None)
+    assert G.c.execute("SELECT count(*) FROM match").fetchone()[0] == 0
+    assert G.c.execute("SELECT count(*) FROM event").fetchone()[0] == 0
+    assert G.c.execute("SELECT count(*) FROM competition WHERE name LIKE '%(aside)'").fetchone()[0] == 0
+    assert out["aside_dropped"] == 1

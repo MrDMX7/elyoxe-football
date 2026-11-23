@@ -16,7 +16,7 @@ The last pass of the build, after every loader that makes editions:
    same ground, the same score, within a month) is one; other sources' dates are the game's own, so a game on another day
    is another game (Argentina's Copa de la Liga and its league).
 
-What leaves a competition stays in the graph under «<name> (aside)», unpublished."""
+What leaves a competition is counted under «<name> (aside)», then dropped (23 Nov 2026: it leaked into the head-to-head pages)."""
 import re
 from collections import Counter, defaultdict
 from datetime import date as Date
@@ -348,4 +348,16 @@ def load(G, reg, S):
     for cid, fid, kind in G.c.execute("""SELECT c.cid, x.source_id, c.kind FROM competition c JOIN xref x ON x.type='competition'
                                           AND x.source='fotmob' AND x.tifo_id=c.cid ORDER BY c.cid""").fetchall():
         p.competition(cid, fid, kind)
+    # what went aside leaves: copies of a real game, another division's, a predecessor's (23 Nov 2026: 67 «Pro League
+    # (aside)» rows on the head-to-head pages; the profiles, coaches and clubs read every game too)
+    for a in p.aside.values():
+        for (eid,) in G.c.execute("SELECT eid FROM edition WHERE cid=?", (a,)).fetchall():
+            for t in ("event", "appearance", "match_coach", "match_award"):
+                G.c.execute(f"DELETE FROM {t} WHERE mid IN (SELECT mid FROM match WHERE eid=?)", (eid,))
+            p.n["aside_dropped"] += G.c.execute("DELETE FROM match WHERE eid=?", (eid,)).rowcount
+            G.c.execute("DELETE FROM standing WHERE eid=?", (eid,))
+            G.c.execute("DELETE FROM honour WHERE eid=?", (eid,))
+            p.drop_edition(eid)
+        G.c.execute("DELETE FROM xref WHERE type='competition' AND tifo_id=?", (a,))
+        G.c.execute("DELETE FROM competition WHERE cid=?", (a,))
     return dict(p.n)
