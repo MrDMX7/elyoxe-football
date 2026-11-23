@@ -89,6 +89,50 @@ def orphans(up, new):
     return sorted(k for k in up if k not in new and any(fnmatch.fnmatchcase(k, p) for p in ARCHIVE_OWNED))
 
 
+PAGE_TYPE = {"p": "player", "m": "match", "t": "team", "coach": "coach"}
+
+
+def merged_of(db):
+    """{type: {drop: keep}} the graph build folded (graph.db Graph.merges, meta «merged»)"""
+    import sqlite3
+    if not os.path.exists(db):
+        return {}
+    c = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+    try:
+        row = c.execute("SELECT v FROM meta WHERE k='merged'").fetchone()
+    except sqlite3.Error:
+        row = None
+    c.close()
+    return {t: {int(d): int(k) for d, k in m.items()} for t, m in (json.loads(row[0]) if row else {}).items()}
+
+
+def forward_page(to):
+    return ('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="robots" content="noindex,follow">'
+            f'<link rel="canonical" href="https://tifo.elyoxe.com{to}"><meta http-equiv="refresh" content="0;url={to}"><title>تيفو</title>'
+            f'</head><body><a href="{to}">{to}</a></body></html>')
+
+
+def forwards(out, old, merged):
+    """the pages of the last run whose man, match, team or coach this build folded into another: a forward page to the kept
+    one's page (written under out, so it goes up and stays in the manifest), where that one has a page this run"""
+    got = {}
+    for k in old:
+        parts = k.split("/")
+        if len(parts) != 3 or parts[2] != "index.html" or parts[0] not in PAGE_TYPE or not parts[1][1:].isdigit() or parts[1][0] != "k":
+            continue
+        if os.path.exists(os.path.join(out, k)):
+            continue
+        keep = (merged.get(PAGE_TYPE[parts[0]]) or {}).get(int(parts[1][1:]))
+        if keep is None or not os.path.exists(os.path.join(out, parts[0], f"k{keep}", "index.html")):
+            continue
+        to = f"/{parts[0]}/k{keep}/"
+        os.makedirs(os.path.join(out, parts[0], parts[1]), exist_ok=True)
+        with open(os.path.join(out, k), "w", encoding="utf-8", newline="\n") as f:
+            f.write(forward_page(to))
+        got[k] = to
+    return got
+
+
 def map_files(name, m):
     """{key: object}: a FotMob id -> archive page map (site/archive/build.cjs _fm2k.json matches, _fm2p.json men), whole for
     the site build's link check and in 100 shards (by id % 100) for the browser: the encyclopedia's card and the 404 page"""
@@ -301,6 +345,10 @@ def main(argv=None):
             say(f"{name}: {len(m)} FotMob {what} have their archive page")
     sitemaps(out, urls)
     old = state_get(s3, MANIFEST, {}) or {}
+    if not a.comps:
+        fw = forwards(out, old, merged_of(db))
+        if fw:
+            say(f"{len(fw)} pages of folded men and matches forward to the kept one, e.g. {next(iter(fw.items()))}")
     up = listed(s3, bucket) if not a.dry else set()
     if old and not a.dry:
         kept = still_up(s3, bucket, old, up)

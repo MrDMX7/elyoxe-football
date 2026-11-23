@@ -34,6 +34,7 @@ class Graph:
         self.cols = {t: [r[1] for r in self.c.execute(f"PRAGMA table_info({t})")]
                      for (t,) in self.c.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
         self.stats = Counter()
+        self.merged = {}                          # {type: {drop: keep}}: every remap, for the pages that forward
 
     def put(self, table, row, src):
         k = KEYS[table]
@@ -104,6 +105,19 @@ class Graph:
             self.c.execute(f"DELETE FROM {table} WHERE {col}=?", (drop,))
         self.c.execute("UPDATE OR IGNORE xref SET tifo_id=? WHERE type=? AND tifo_id=?", (keep, t, drop))
         self.c.execute("DELETE FROM xref WHERE type=? AND tifo_id=?", (t, drop))
+        self.merged.setdefault(t, {})[drop] = keep
+
+    def merges(self):
+        """{type: {drop: the record it ended in}}: a record folded into one later folded again forwards to the last
+        (tools/archive_job.py writes a forward page where a folded record had one)"""
+        out = {}
+        for t, m in self.merged.items():
+            def last(x, seen=0):
+                while x in m and seen < 50:
+                    x, seen = m[x], seen + 1
+                return x
+            out[t] = {d: last(k) for d, k in m.items()}
+        return out
 
     def remap_many(self, t, pairs):
         """remap for many (drop, keep) pairs at once: each referencing table is read once for all of them (a loop of remap
@@ -128,6 +142,7 @@ class Graph:
             self.c.execute(f"DELETE FROM {table} WHERE {col} IN (SELECT d FROM remap_m)")
         self.c.execute("UPDATE OR IGNORE xref SET tifo_id=(SELECT k FROM remap_m WHERE d=xref.tifo_id) WHERE type=? AND tifo_id IN (SELECT d FROM remap_m)", (t,))
         self.c.execute("DELETE FROM xref WHERE type=? AND tifo_id IN (SELECT d FROM remap_m)", (t,))
+        self.merged.setdefault(t, {}).update(pairs)
         self.c.execute("DROP TABLE remap_m")
 
     def close(self):

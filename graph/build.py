@@ -92,6 +92,7 @@ def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
         traceback.print_exc()
         rec["aliases"] = f"{type(e).__name__}: {str(e)[:200]}"
     G.meta("build", {k: v for k, v in rec.items() if k != "loaders"})
+    G.meta("merged", {t: {str(d): k for d, k in m.items()} for t, m in G.merges().items()})     # the archive's forward pages
     G.close()
     rec["secs"] = round(time.time() - t0)
     day = rec["started"][:10]

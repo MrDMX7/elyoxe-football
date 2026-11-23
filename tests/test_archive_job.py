@@ -120,3 +120,25 @@ def test_a_fotmob_profile_is_cut_to_what_the_archive_profile_shows():
     assert J.fm_profile(raw) == {"bio": {"h": 174, "shirt": 16, "mv": 139630, "contract": "2027-06-30", "pos": "وسط", "team": 1585},
                                  "s0": ["2025/2026", 8005, 32, 2, 0, 6.05]}
     assert J.fm_profile({}) is None
+
+
+def test_a_page_whose_man_or_match_was_folded_into_another_forwards_to_the_kept_one(tmp_path):
+    """23 Nov 2026: Thierry Henry's three records became one; the two pages that go would be 404s for whoever kept the link"""
+    pages(tmp_path, {"p/k124/index.html": "henry", "m/k9/index.html": "match"})
+    old = {"p/k124/index.html": "a", "p/k107585/index.html": "b", "p/k5/index.html": "c", "m/k8/index.html": "d", "m/k7/index.html": "e"}
+    merged = {"player": {107585: 124, 5: 6}, "match": {8: 9}}
+    got = J.forwards(tmp_path, old, merged)
+    assert got == {"p/k107585/index.html": "/p/k124/", "m/k8/index.html": "/m/k9/"}      # k5's kept man has no page; k7 not folded
+    h = (tmp_path / "p/k107585/index.html").read_text(encoding="utf-8")
+    assert 'rel="canonical" href="https://tifo.elyoxe.com/p/k124/"' in h and 'content="0;url=/p/k124/"' in h and "noindex" in h
+
+
+def test_the_merges_are_read_from_the_graph(tmp_path):
+    import json, sqlite3
+    db = tmp_path / "t.db"
+    c = sqlite3.connect(db)
+    c.execute("CREATE TABLE meta(k TEXT PRIMARY KEY, v TEXT)")
+    c.execute("INSERT INTO meta VALUES('merged', ?)", (json.dumps({"player": {"107585": 124}}),))
+    c.commit(); c.close()
+    assert J.merged_of(str(db)) == {"player": {107585: 124}}
+    assert J.merged_of(str(tmp_path / "none.db")) == {}

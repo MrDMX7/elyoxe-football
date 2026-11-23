@@ -185,3 +185,12 @@ def test_a_bench_place_is_no_title_a_namesake_in_the_same_cup_stays_apart(tmp_pa
     G.many("appearance", [{"mid": 50, "pid": 1, "tid": 60, "played": 1}, {"mid": 51, "pid": 2, "tid": 71, "played": 0}], "fotmob")
     people.load(G, reg, Sources(str(tmp_path), s3=False))
     assert [p for (p,) in G.c.execute("select pid from player order by pid")] == [1, 2]
+
+
+def test_the_graph_keeps_each_merge_to_its_last_record(tmp_path):
+    G = Graph(str(tmp_path / "t.db"))
+    for i in (1, 2, 3, 4):
+        G.put("player", {"pid": i, "name": f"P{i}"}, "fotmob")
+    G.remap("player", 3, 2)
+    G.remap_many("player", [(2, 1), (4, 1)])
+    assert G.merges() == {"player": {3: 1, 2: 1, 4: 1}}             # 3 went to 2, then 2 to 1: 3's page forwards to 1
