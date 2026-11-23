@@ -1678,13 +1678,19 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
   // (2026-10-09: ~125,000 a run) unless the encyclopedia has the player's page, the club's or the match's card (lib/world_squad.cjs relink)
   if (!ONLY) { const SKIP = /^\/(v1|assets|logo|lg|og|audio|api|embed|next)\/|^\/(sw\.js|favicon\.svg|robots\.txt|sitemap\.xml)$|^\/cast\/(feed\.xml|cover\.jpg)$/; let dead = 0, moved = 0; const seen = {};
     const RL = { written:WRITTEN, clubs:new Set((((await get("world/index.json")) || {}).clubs || []).map(c => +c[0])), fm2k:(await get("archive/fm2k.json")) || {}, fm2p:(await get("archive/fm2p.json")) || {} };
-    for (const f of ALLP){ const h = fs.readFileSync(f, "utf8");
+    // the archive's pages the maps name exist (the archive job publishes them): the check keeps links to them
+    Object.values(RL.fm2p).forEach(k => WRITTEN.add(`/p/k${k}/`)); Object.values(RL.fm2k).forEach(k => WRITTEN.add(`/m/k${k}/`));
+    let canon = 0;
+    for (const f of ALLP){ const h0 = fs.readFileSync(f, "utf8");
+      // (23 Nov 2026) one page per man and per match: the encyclopedia's link to one the archive has goes to the archive's page
+      const h = h0.replace(/href="(\/db\/(?:player\/\d+\/|match\/\?id=\d+))"/g, (m0, href) => { const to = WSQ.canonical(href, RL); if (!to) return m0; canon++; return `href="${to}"`; });
       const h2 = h.replace(/(<script\b[\s\S]*?<\/script>|<template\b[^>]*>)|<a\b([^>]*?)\shref="(\/[^"#?]*)(?:[?#][^"]*)?"([^>]*)>([\s\S]*?)<\/a>/g, (m, sc, pre, href, post, inner) => { if (sc) return m; if (SKIP.test(href) || WRITTEN.has(href) || WRITTEN.has(href.replace(/\/$/, ""))) return m;
         /* an Arabic path (/commentators/<slug>/) is linked percent-encoded */ const dh = (() => { try { return decodeURIComponent(href); } catch (e){ return href; } })(); if (dh !== href && (WRITTEN.has(dh) || WRITTEN.has(dh.replace(/\/$/, "")))) return m;
         const to = WSQ.relink(href, RL); if (to){ moved++; return `<a${pre} href="${to}"${post}>${inner}</a>`; }
         dead++; seen[href.split("/")[1]] = (seen[href.split("/")[1]] || 0) + 1; return `<span${pre}${post}>${inner}</span>`; });
-      if (h2 !== h) fs.writeFileSync(f, h2); }
+      if (h2 !== h0) fs.writeFileSync(f, h2); }
     if (moved) console.log(`links to the encyclopedia instead of a missing page: ${moved}`);
+    if (canon) console.log(`links to the encyclopedia's page of a man or a match the archive has, sent to the archive's: ${canon}`);
     if (dead) console.error(`warn: ${dead} links to pages that don't exist were unlinked (${Object.entries(seen).map(([k, n]) => "/" + k + "/ " + n).join(", ")})`);
     if (LEAKS) console.error(`warn: ${LEAKS} text nodes with null/undefined/raw keys were cleaned`);
     if (GRPS) console.error(`warn: ${GRPS} text nodes with «المجموعة A» / «Grp» were rewritten to ordinals (fix the source)`); }

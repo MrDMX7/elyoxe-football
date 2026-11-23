@@ -14,3 +14,11 @@ test("a FotMob man the archive has goes to his profile before the encyclopedia's
   assert.equal(W.relink("/p/1526227/", has), "/p/k5/");
   assert.equal(W.relink("/p/1526227/", { written: new Set(["/db/player/1526227"]), clubs: new Set() }), "/db/player/1526227/");
 });
+
+test("a link to the encyclopedia's page of a man or a match the archive has becomes a link to the one page", () => {
+  const has = { written: new Set(), clubs: new Set(), fm2p: { 214353: 68213 }, fm2k: { 4813470: 86169 } };
+  assert.equal(W.canonical("/db/player/214353/", has), "/p/k68213/");
+  assert.equal(W.canonical("/db/match/?id=4813470", has), "/m/k86169/");
+  assert.equal(W.canonical("/db/player/1/", has), null);
+  assert.equal(W.canonical("/t/8650/", has), null);
+});

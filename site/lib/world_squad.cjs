@@ -46,4 +46,14 @@ function relink(href, has) {
   return null;
 }
 
-module.exports = { squadFromWorld, squadFromFm, headFromWorld, relink };
+// (23 Nov 2026) one page per man and per match: a link to the encyclopedia's page of one the archive has (v1/archive/fm2p,
+// fm2k) becomes a link to the archive's page, wherever it sits (squads, teammates, the nationality lists)
+function canonical(href, has) {
+  let m = /^\/db\/player\/(\d+)\/$/.exec(href);
+  if (m && has.fm2p && has.fm2p[m[1]] != null) return `/p/k${has.fm2p[m[1]]}/`;
+  m = /^\/db\/match\/\?id=(\d+)$/.exec(href);
+  if (m && has.fm2k && has.fm2k[m[1]] != null) return `/m/k${has.fm2k[m[1]]}/`;
+  return null;
+}
+
+module.exports = { squadFromWorld, squadFromFm, headFromWorld, relink, canonical };
