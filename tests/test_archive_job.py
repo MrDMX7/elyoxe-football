@@ -52,3 +52,21 @@ def test_a_page_whose_only_change_is_the_sites_asset_names_is_not_sent_again(tmp
     s3 = S3()
     J.upload(s3, "b", str(tmp_path), old, strip=J.tokens(new_shell), full=True)
     assert len(s3.put) == 2                                              # the weekly full refresh sends them all
+
+
+def test_a_page_the_manifest_holds_but_the_bucket_lost_is_sent_again(tmp_path):
+    # 23 Nov 2026: an old site publish deleted 35,296 profiles the manifest said were up; the run never sent them again
+    pages(tmp_path, {"p/k1/index.html": "a", "p/k2/index.html": "b", "m/k3/index.html": "c"})
+    old = {k: J.md5(tmp_path / k) for k in ("p/k1/index.html", "p/k2/index.html", "m/k3/index.html")}
+
+    class Listed(S3):
+        def get_paginator(self, _):
+            class P:
+                def paginate(self, Bucket, Prefix=""):
+                    yield {"Contents": [{"Key": k} for k in ("p/k1/index.html", "m/k3/index.html", "c/x/index.html") if k.startswith(Prefix)]}
+            return P()
+    s3 = Listed()
+    kept = J.still_up(s3, "b", old)
+    assert sorted(kept) == ["m/k3/index.html", "p/k1/index.html"]
+    J.upload(s3, "b", str(tmp_path), kept)
+    assert [k for k, _ in s3.put] == ["p/k2/index.html"]

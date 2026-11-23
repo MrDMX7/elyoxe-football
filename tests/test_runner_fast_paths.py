@@ -60,3 +60,43 @@ def test_the_page_count_guard_counts_the_sites_own_pages_only(tmp_path):
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text("x")
     assert runner.own_pages(tmp_path) == 3
+
+
+def test_held_deletes_are_not_handed_to_a_sync_that_deletes(tmp_path, monkeypatch):
+    # 23 Nov 2026: s3push held 14,801 deletes (over 10 %) and returned ok=False, so the runner fell back to `s3fast sync
+    # --delete`, which has no guard, and took 35,296 archive profiles (an old build without the p/k* exclude, listing the
+    # bucket while the archive job was uploading them). The guard holds the deletes for every path: the uploads went up, the
+    # publish is ok, nothing is deleted.
+    import boto3
+    from tools import s3push
+    (tmp_path / "index.html").write_text("x")
+    deleted = []
+
+    class Fake:
+        def get_paginator(self, _):
+            class P:
+                def paginate(self, Bucket, Prefix="", Delimiter=None):
+                    keys = ["index.html"] + [f"p/{i}/index.html" for i in range(50)]
+                    yield {"Contents": [{"Key": k, "Size": 1, "LastModified": __import__("datetime").datetime(2026, 1, 1, tzinfo=__import__("datetime").timezone.utc),
+                                         "ETag": '"x"'} for k in keys if k.startswith(Prefix) and (not Delimiter or "/" not in k[len(Prefix):])],
+                           "CommonPrefixes": [{"Prefix": "p/"}] if Delimiter else []}
+            return P()
+
+        def put_object(self, **kw):
+            pass
+
+        def delete_objects(self, **kw):
+            deleted.append(kw)
+            return {}
+    monkeypatch.setattr(boto3, "client", lambda *a, **k: Fake())
+    ok, note = s3push.push(str(tmp_path), "b", "r", say=lambda *_: None)
+    assert deleted == []
+    assert ok, note
+    assert "held" in note
+
+
+def test_the_fallback_sync_uploads_and_never_deletes():
+    # the fallback runs when s3push failed (uploads, listing); its `--delete` has no 10 % guard, so it only uploads and the
+    # next hour's s3push does the deletes
+    args = ["s3", "sync", "out", "s3://b", "--delete", "--exclude", "p/k*"]
+    assert runner.fallback_args(args) == ["s3", "sync", "out", "s3://b", "--exclude", "p/k*"]

@@ -62,6 +62,19 @@ def known_pages(s3, bucket):
     return {k: sorted(v) for k, v in out.items()}
 
 
+ARCHIVE_PREFIXES = ("c/", "m/k", "p/k", "r/k", "t/k", "sitemap-archive")
+
+
+def still_up(s3, bucket, old):
+    """the manifest's pages that are really in the bucket: one the bucket lost goes up again (2026-11-23: an old site publish
+    deleted 35,296 profiles the manifest held, and the next runs, seeing no change, never sent them). ~470 listings, a cent"""
+    def keys(pre):
+        return {o["Key"] for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=pre) for o in page.get("Contents") or []}
+    with ThreadPoolExecutor(len(ARCHIVE_PREFIXES)) as ex:
+        up = set().union(*ex.map(keys, ARCHIVE_PREFIXES))
+    return {k: v for k, v in old.items() if k in up}
+
+
 def md5(path):
     with open(path, "rb") as f:
         return hashlib.md5(f.read()).hexdigest()
@@ -205,6 +218,11 @@ def main(argv=None):
     urls = json.load(open(os.path.join(out, "_archive_urls.json"), encoding="utf-8"))
     sitemaps(out, urls)
     old = state_get(s3, MANIFEST, {}) or {}
+    if old and not a.dry:
+        kept = still_up(s3, bucket, old)
+        if len(kept) < len(old):
+            say(f"{len(old) - len(kept)} pages the manifest holds are not in the bucket: sending them again")
+        old = kept
     # a page goes up when its own content changed; once a week (or when the manifest is md5s of whole pages) every page,
     # so each carries the site's current assets
     full = not last.get("content") or time.time() - float(last.get("full_ts") or 0) > 7 * 86400

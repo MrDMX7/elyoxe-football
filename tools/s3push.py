@@ -4,7 +4,8 @@ The CLI's sync sent the laptop's pages at about 1 file a second (a 1,000-file bu
 while the line takes 3-4 MB/s. Same rules as the sync it replaces, plus one: a file goes up when its key is missing, its size
 differs, or the local file is newer than the object AND its MD5 differs from the object's ETag (2026-10-17); a key under no local file is deleted; the excludes apply to both.
 Content-Type per extension is what the CLI gave the live objects. Deletes stop at 10 % of what is up (the runner's
-partial-build guard is the first line; this is the second). Any failure returns ok=False and the runner falls back to the CLI.
+partial-build guard is the first line; this is the second), and held deletes return ok=True so no fallback deletes them
+(2026-11-23). Any failure returns ok=False and the runner falls back to the CLI.
 
     python -m tools.s3push <dir> <bucket> [--dry]
 """
@@ -119,7 +120,9 @@ def push(src, bucket, region, excludes=(), cache_control=None, delete=True, work
         return False, f"{len(failed)} uploads failed, e.g. {failed[0]}"
     if delete and gone:
         if len(gone) > MAX_DELETE * max(len(remote), 1):
-            return False, f"{len(gone)} deletes of {len(remote)} objects is over {MAX_DELETE:.0%}; nothing deleted"
+            # 2026-11-23: ok, so the runner's fallback (`sync --delete`, no guard) never deletes what this held: it once took
+            # 35,296 archive profiles this way. The uploads are up; the deletes wait for a person
+            return True, f"{len(todo)} sent; {len(gone)} deletes of {len(remote)} objects is over {MAX_DELETE:.0%}: held, nothing deleted"
         for i in range(0, len(gone), 1000):
             r = s3.delete_objects(Bucket=bucket, Delete={"Objects": [{"Key": k} for k in gone[i:i + 1000]], "Quiet": True})
             if r.get("Errors"):

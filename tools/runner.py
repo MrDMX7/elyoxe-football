@@ -183,9 +183,10 @@ def job_site(log):
                                 cache_control="public,max-age=60", say=log.w, manifest=str(SITE / "cache" / "out_manifest.json"))
             except Exception as e:
                 ok, note = False, f"{type(e).__name__}: {e}"
-            log.w(f"s3push: {note} [{time.time() - t0:.0f} s, {'ok' if ok else 'falling back to the CLI sync'}]")
+            log.w(f"s3push: {note} [{time.time() - t0:.0f} s, {'ok' if ok else 'falling back to the CLI sync, uploads only'}]")
             if ok:
                 continue
+            args = fallback_args(args)
         rc, tail = s3(log, args)
         if rc:
             return False, f"{what} sync failed: {tail}"
@@ -234,6 +235,12 @@ FAST_OWNED = ["news/index.html", "news/[a-z]-*", "news/a.*.css", "sitemap-news.x
 # (2026-11-22) what the archive job owns (site/archive/build.cjs, .github/workflows/tifo-archive.yml): every season page, every
 # season list, every archive match, and its sitemaps
 ARCHIVE_OWNED = ["c/*/s/*", "c/*/seasons/*", "m/k*", "p/k*", "r/k*", "t/k*", "sitemap-archive*"]   # p/r/t k*: men, referees, old clubs (23 Nov)
+
+
+def fallback_args(args):
+    """the CLI sync that stands in for a failed s3push: uploads only. Its `--delete` has no 10 % guard, and on 2026-11-23 it took
+    35,296 archive profiles after s3push had held the deletes; the next hour's s3push deletes what is really gone"""
+    return [a for a in args if a != "--delete"]
 
 
 def page_excludes():
