@@ -44,6 +44,9 @@ def fold(s):
     return re.sub(r"[^a-z0-9]+", " ", s).strip()
 
 
+MIRROR = [False]                               # Freiburg's QLever mirror of Wikidata once the query service has failed
+
+
 def wikidata(qids, need_img=True):
     """qid -> {"img": Commons file name or None, "dob": "YYYY-MM-DD" or None, "fb": is a footballer}; with need_img only
     the qids that have an image (the photo run), else every qid (the identity check: a lead needs it too)."""
@@ -53,9 +56,13 @@ def wikidata(qids, need_img=True):
         chunk = qids[i:i + 250]
         q = ("SELECT ?p ?img ?dob ?fb WHERE { VALUES ?p { %s } %s OPTIONAL { ?p wdt:P569 ?dob } "
              "BIND(EXISTS { ?p wdt:P106 wd:%s } AS ?fb) }") % (" ".join("wd:" + x for x in chunk), img, FOOTBALLER)
-        try:
-            r = json.loads(http("https://query.wikidata.org/sparql", urllib.parse.urlencode({"query": q, "format": "json"}).encode()))
-        except urllib.error.HTTPError:          # (2026-11-23) the query service gave 502s for hours: Freiburg's QLever mirror of Wikidata
+        r = None
+        if not MIRROR[0]:
+            try:
+                r = json.loads(http("https://query.wikidata.org/sparql", urllib.parse.urlencode({"query": q, "format": "json"}).encode()))
+            except urllib.error.HTTPError:      # (2026-11-23) the query service gave 502s for hours: the mirror for the rest of the run
+                MIRROR[0] = True
+        if r is None:
             pre = "PREFIX wd: <http://www.wikidata.org/entity/> PREFIX wdt: <http://www.wikidata.org/prop/direct/> "
             r = json.loads(http("https://qlever.cs.uni-freiburg.de/api/wikidata?" + urllib.parse.urlencode({"query": pre + q})))
         for b in r["results"]["bindings"]:
