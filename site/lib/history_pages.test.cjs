@@ -131,3 +131,13 @@ test("a season's tournaments carry their own top scorers (RSSSF's Argentine list
   const p = H.seasonBody(ed.seasons[0], COMP, Object.assign({}, o, { team: () => true, person: id => id === 7 }));
   assert.match(p, /هداف الأبيرتورا/);
 });
+
+test("every coach links: the site's page where it has one, else the archive's /coach/k<id>/", () => {
+  const GCO = { 1: { fotmob: 500 }, 2: {}, 3: { fotmob: 600 } }, GCP = new Map([["1", "/coach/500/"]]);
+  const L = H.coachLinks(GCO, GCP);
+  assert.equal(L.href(1), "/coach/500/");
+  assert.equal(L.href(2), "/coach/k2/");
+  assert.equal(L.href(3), "/coach/k3/");          // FotMob knows him but the site has no page: the archive's
+  assert.equal(L.href(9), null);
+  assert.deepEqual(L.archive, ["/coach/k2/", "/coach/k3/"]);
+});

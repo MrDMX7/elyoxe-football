@@ -101,4 +101,11 @@ function clubCoaches(spells, o) {
   return `<ul class="lc">${spells.slice(0, 40).map(s => `<li>${coachL(s, o)} <span class="muted small num">${esc(year(s.start))}–${esc(year(s.end))}</span> · ${num(s.m)} م · ${num(s.w)} ف · ${num(s.d)} ت · ${num(s.l)} خ</li>`).join("")}</ul>`;
 }
 
-module.exports = { slug, seasonRich, seasonsBody, seasonBody, coachBody, coachIndexable, coachPageable, clubCoaches, coachTotals };
+// every coach of v1/coaches/coaches.json links: the site's page where it writes one (GCP: kid -> href), else the archive's
+// /coach/k<Tifo id>/ (site/archive, 23 Nov 2026: a page for every coach); `archive` are those hrefs, for the site's link check
+function coachLinks(GCO, GCP) {
+  const archive = Object.keys(GCO).filter(k => !GCP.has(k)).map(k => `/coach/k${k}/`);
+  return { href: kid => GCP.get(String(kid)) || (GCO[String(kid)] ? `/coach/k${kid}/` : null), archive };
+}
+
+module.exports = { slug, seasonRich, seasonsBody, seasonBody, coachBody, coachIndexable, coachPageable, clubCoaches, coachTotals, coachLinks };

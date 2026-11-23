@@ -478,7 +478,8 @@ const vpane = (group, key, html, first) => `<section class="pane" data-g="${grou
   const coachAr2 = kid => { const c = GCO[kid]; return (c && c.fotmob && COACH_AR[c.fotmob] && COACH_AR[c.fotmob].ar) || null; };
   // a coach FotMob knows keeps /coach/<FotMob id>/, the rest get /coach/k<Tifo id>/; a page only with 30 matches or a bench at one of our clubs
   const GCP = new Map(Object.entries(GCO).filter(([, c]) => HP.coachPageable(c, { team:id => teamIds.has(+id) })).map(([k, c]) => [k, c.fotmob ? `/coach/${c.fotmob}/` : `/coach/k${k}/`]));
-  const GFM = new Map(Object.entries(GCO).filter(([, c]) => c.fotmob).map(([k, c]) => [String(c.fotmob), k])), coachHref = kid => GCP.get(String(kid)) || null;
+  const GFM = new Map(Object.entries(GCO).filter(([, c]) => c.fotmob).map(([k, c]) => [String(c.fotmob), k])), GCL = HP.coachLinks(GCO, GCP), coachHref = GCL.href;
+  GCL.archive.forEach(h => WRITTEN.add(h));      // the archive job publishes these (/coach/k<id>/): the link check keeps them
   const TRT = require("./lib/transfers.cjs"), TRW = await get("transfers/all.json"), TRS = TRW ? TRT.season(TRW.moves, TRW.since) : [];
   const TRL = TRW ? `موسم ${TRW.since.slice(0, 4)}/${+TRW.since.slice(2, 4) + 1}` : "";
   const TRR = ((await get("transfers/rumours.json")) || {}).rumours || [];   // phase 3: the rumour ledger

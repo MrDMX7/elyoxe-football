@@ -154,8 +154,12 @@ function build(o) {
     : c.pid != null && PH[`k${c.pid}`] ? Object.assign({ src: `/v1/ph/k${c.pid}.webp` }, PH[`k${c.pid}`]) : null);
   let nCoaches = 0;
   for (const [kid, c] of Object.entries(COACHES)) {
-    if (c.site) continue;
     const pth = `/coach/k${kid}/`, nm = EV.nameOf(c), ok = EV.coachIndexable(c);
+    if (c.site) {      // the site has his page: this path points there (the site's own pages link every coach by /coach/k<id>/)
+      write(pth, `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="robots" content="noindex,follow"><link rel="canonical" href="${SITE}${c.site}">` +
+        `<meta http-equiv="refresh" content="0;url=${c.site}"><title>${esc(nm)}</title></head><body><a href="${c.site}">${esc(nm)}</a></body></html>`);
+      continue;
+    }
     write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: `المدرب ${nm}: مسيرته التدريبية | تيفو`,
       desc: `المدرب ${nm}: كل فرقه في أرشيف تيفو وسجله معها، وجوائزه وآخر مبارياته.`, body: EV.coach(c, Object.assign({}, eo, { person: pid => PERS.has(String(pid)), photo: coachPhoto(kid, c) })),
       ld: { "@context": "https://schema.org", "@graph": [Object.assign({ "@type": "Person", name: nm, jobTitle: "Football coach", url: SITE + pth }, c.b ? { birthDate: c.b } : {}),

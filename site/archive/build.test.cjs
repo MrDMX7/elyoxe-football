@@ -131,7 +131,10 @@ test("every coach without a site page gets /coach/k<id>/, and an old match links
   const g = fs.readFileSync(path.join(o.out, "coach/k11/index.html"), "utf8");
   assert.match(g, /George Graham/);
   assert.match(g, /<a href="\/t\/9825\/">أرسنال<\/a>/);
-  assert.ok(!fs.existsSync(path.join(o.out, "coach/k12/index.html")));          // the site has Dalglish's /coach/500/
+  const k12 = fs.readFileSync(path.join(o.out, "coach/k12/index.html"), "utf8");   // the site has Dalglish's /coach/500/: a pointer there
+  assert.match(k12, /<meta http-equiv="refresh" content="0;url=\/coach\/500\/">/);
+  assert.match(k12, /<link rel="canonical" href="https:\/\/tifo.elyoxe.com\/coach\/500\/">/);
+  assert.match(k12, /noindex/);
   const m = fs.readFileSync(path.join(o.out, "m/k1/index.html"), "utf8");
   assert.match(m, /href="\/coach\/k11\/"/);
   assert.match(m, /href="\/coach\/500\/"/);
