@@ -138,7 +138,8 @@ function build(o) {
   for (const [rid, r] of Object.entries(REFS)) {
     const pth = `/r/k${rid}/`, nm = EV.nameOf(r), ok = EV.refIndexable(r);
     write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: `الحكم ${nm}: مبارياته وكروته | تيفو`,
-      desc: `الحكم ${nm}: كل مبارياته في أرشيف تيفو موسم بموسم، والإنذارات والطرد.`, body: EV.referee(r, eo), ld: bcLd([[nm, pth]]) }));
+      desc: `الحكم ${nm}: كل مبارياته في أرشيف تيفو موسم بموسم، والإنذارات والطرد.`, body: EV.referee(r, eo),
+      ld: { "@context": "https://schema.org", "@graph": [{ "@type": "Person", name: nm, jobTitle: "Football referee", url: SITE + pth }, Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
     if (ok) urls.push(pth);
   }
   for (const [tid, c] of Object.entries(CLUBS)) {

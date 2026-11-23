@@ -102,6 +102,8 @@ test("an old club and a referee get their pages, and the match links both", () =
   assert.match(m, /href="\/t\/k2\/"/);
   assert.match(m, /href="\/r\/k9\/"/);
   assert.ok(fs.existsSync(path.join(o.out, "t/k2/index.html")) && fs.existsSync(path.join(o.out, "r/k9/index.html")));
+  const r = fs.readFileSync(path.join(o.out, "r/k9/index.html"), "utf8");
+  assert.match(r, /"@type":"Person","name":"M Halsey","jobTitle":"Football referee"/);      // a referee is a Person to the search engines
 });
 
 test("a page carries the shell's footer only, not a second one of its own", () => {
