@@ -48,6 +48,13 @@ with the commit or the evidence. A new session reads this first and continues at
 - Awards (5d1f8f6): no other sports (Gatorade high-school awards), a section award with no Arabic page name keeps its English name, La Liga Player of the Month's Arabic. Ruling: women's football and futsal awards stay (117 award pages on /awards/) — the owner decides scope — cost if wrong: profiles of women say «مسيرته».
 - Site sitemap leaves out the archive's paths (fec0b9c): it listed 11,801 old matches, 1,946 seasons, 3,957 profiles.
 - photos --archive checkpoints every 250 and resumes «pending» men (0c397a5).
+- Archive sweep (3331ba1): after its upload the job deletes keys under ARCHIVE_OWNED its manifest does not hold (20,270 stale old-match copies from the site's 22 Nov publish), held over 10 %.
+- Coach photos (1309683): people/qids.json lists coaches as c<id>, the photo stage accepts «association football manager» for them, a coach page shows v1/ph/c<id>.webp or his player photo. The graph had no coach Wikidata ties at all: the awards loader now records them and sets coach.pid by the same item (5d1d539) — live after the next graph build.
+- Nationalities in Arabic (bae99eb): a FotMob code reads as the senior national team its men played for (99.9 % of 68,774 players), English names via the national teams plus aliases and gone states.
+- Career competitions in Arabic (99c5926): 61 % of 1.29M lines (code-named competitions «FAC» gave way to the line's name; graph/tm_comps_ar.yaml for 135 common unambiguous names). Ruling: names several countries use («Premier League», «Super League») stay in English — cost if wrong: ~40 % of lines English.
+- Facts are card rows on profiles and coach pages (3ec4294): the bare list spilled out of its card. Referee pages carry a Person (ec36382).
+- Gulf Cup top scorers (1c9ce61): its English article added to comp_pages (27 editions; it had 8 of 56 seasons). Arab Cup and old Euros still lack per-edition scorers (no table: Euro pages list scorers as bullets).
+- Held (not pushed): the site links every coach (history_pages.coachLinks) — push once the archive has published /coach/k<id>/.
 
 ## Indexing
 - [ ] Sitemap index (50k per file) incl. the archive; robots.txt lists it.
