@@ -64,3 +64,11 @@ def test_the_transfers_players_join_the_pool():
              ["2026-11-16", 1392383, "كارلو سينتيش", 1581, "x", 2, "Free agent", None, "free", 295763, "CRO", "GK"]]
     got = B.transfer_players(moves)
     assert list(got) == ["1687522"] and got["1687522"]["name"] == "Mohamed Amine Katiba" and got["1687522"]["country"] == "MAR"
+
+
+def test_the_encyclopedias_players_with_no_arabic_join_the_pool():
+    # 23 Nov 2026: the encyclopedia's club pages read 37 % in Latin letters: the world players were in no pool
+    from names import build_names as B
+    rows = [[2855, "خوان مونيز غاليغو", "Juan Muñiz", 8008], [6762, "John Dodds", "John Dodds", 773653]]
+    got = B.world_players(rows)
+    assert list(got) == ["6762"] and got["6762"]["name"] == "John Dodds" and got["6762"]["teams"] == [773653]

@@ -166,6 +166,15 @@ def graph_clubs(ed, cid):
     return out
 
 
+def world_players(rows):
+    """{FotMob id: pool entry} of the encyclopedia's players whose name has no Arabic: [id, shown name, Latin name, club id]"""
+    out = {}
+    for r in rows:
+        if len(r) > 2 and r[0] and r[2] and not ARABIC.search(str(r[1] or "")):
+            out.setdefault(str(r[0]), {"name": r[2], "teams": [r[3]] if len(r) > 3 and r[3] else [], "country": None, "ages": [], "comps": [], "uae": False})
+    return out
+
+
 def transfer_players(moves):
     """{FotMob id: pool entry} of the transfers' players named in Latin letters: [date, id, name, from id, from, to id, to, fee,
     kind, value, country, position]"""
@@ -280,6 +289,12 @@ def collect(cache: Path, match_days: int):
             pool[pid] = p
             old += 1
     log(f"collect: {old} more from the transfers (v1/transfers/all.json)")
+    old = 0                               # (23 Nov 2026) the encyclopedia's world players with no Arabic name (42k): its club pages
+    for pid, p in world_players(((get_json(f"{FEED}/world/players.json") or {}).get("players")) or []).items():
+        if pid not in pool:
+            pool[pid] = p
+            old += 1
+    log(f"collect: {old} more from the encyclopedia (v1/world/players.json)")
     log(f"collect: pool = {len(pool)} players")
     (cache / "pool.json").write_text(json.dumps(pool, ensure_ascii=False))
     (cache / "teams.json").write_text(json.dumps(teams, ensure_ascii=False))
