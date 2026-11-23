@@ -315,3 +315,40 @@ def test_in_a_complete_round_robin_a_second_sources_game_of_a_pair_already_playe
     assert not G.c.execute("SELECT 1 FROM match WHERE mid=40").fetchone()
     assert G.c.execute("SELECT eid FROM match WHERE mid=41").fetchone() != (e,)
     assert G.c.execute("SELECT count(*) FROM match WHERE eid=?", (e,)).fetchone() == (12,)
+
+
+def test_a_national_teams_tournament_is_one_edition_however_its_sources_name_it(tmp_path):
+    # 23 Nov 2026, the Gulf Cup: 365Scores' «خليجي 2» held the champion, the games sat in calendar years (the 16th, Dec 2003-
+    # Jan 2004, in «2003» and «2004» with the 17th of Dec 2004) and Wikipedia's scorer under «2003/2004»: 56 seasons for 27
+    G, reg, cid = world(tmp_path, fid=329, kind="cup")
+    G.c.execute("UPDATE team SET kind='national'")
+    y70, y03, y04 = (ed(G, reg, cid, s, "martj42", fid=329) for s in ("1970", "2003", "2004"))
+    for mid, (e, d) in enumerate(((y70, "1970-03-27"), (y70, "1970-04-03"), (y03, "2003-12-26"), (y03, "2003-12-30"),
+                                  (y04, "2004-01-05"), (y04, "2004-01-10"), (y04, "2004-12-11"), (y04, "2004-12-24")), 1):
+        game(G, mid, e, d, 1 + mid % 4, 5 + mid % 4, src="martj42")
+    ed(G, reg, cid, "خليجي 1", "s365", fid=329, champion=1)
+    ed(G, reg, cid, "خليجي 2", "s365", fid=329, champion=2)
+    ed(G, reg, cid, "خليجي 3", "s365", fid=329, champion=3)
+    ed(G, reg, cid, "2003/2004", "wiki", fid=329, scorer=100)
+    seasons.load(G, reg, None)
+    assert labels(G, cid) == ["1970", "2003", "2004"]
+    eid = lambda s: G.c.execute("SELECT eid FROM edition WHERE cid=? AND season=?", (cid, s)).fetchone()[0]
+    games = lambda s: [d for (d,) in G.c.execute("SELECT substr(date,1,10) FROM match WHERE eid=? ORDER BY date", (eid(s),))]
+    assert games("2003") == ["2003-12-26", "2003-12-30", "2004-01-05", "2004-01-10"]
+    assert games("2004") == ["2004-12-11", "2004-12-24"]
+    hon = lambda s: sorted(G.c.execute("SELECT kind, coalesce(tid, pid) FROM honour WHERE eid=?", (eid(s),)).fetchall())
+    assert hon("1970") == [("champion", 1)]
+    assert hon("2003") == [("champion", 2), ("top_scorer", 100)]
+    assert hon("2004") == [("champion", 3)]
+
+
+def test_national_teams_games_all_year_round_are_no_tournament(tmp_path):
+    # friendlies, qualifiers: a run longer than a tournament keeps its seasons as they are
+    G, reg, cid = world(tmp_path, fid=114, kind="cup")
+    G.c.execute("UPDATE team SET kind='national'")
+    y1, y2 = (ed(G, reg, cid, s, "martj42", fid=114) for s in ("2003", "2004"))
+    for mid, d in enumerate(("2003-09-01", "2003-10-15", "2003-11-20", "2003-12-30", "2004-02-10", "2004-03-25", "2004-05-01"), 1):
+        game(G, mid, y1 if d < "2004" else y2, d, 1 + mid % 4, 5 + mid % 4, src="martj42")
+    seasons.load(G, reg, None)
+    assert labels(G, cid) == ["2003", "2004"]
+    assert G.c.execute("SELECT count(*) FROM match m JOIN edition e ON e.eid=m.eid WHERE e.season='2004'").fetchone()[0] == 3

@@ -29,6 +29,9 @@ LEAD = re.compile(r"\s*(\d{4})(?:/(\d{4}))?")
 PLAIN_SPLIT = re.compile(r"(\d{4})/(\d{4})")
 DETAIL = ("event", "appearance", "match_coach", "match_award")
 PAIR_DAYS = 31
+TOURNAMENT_GAP = 90            # days between two games of one national teams' tournament, at most
+TOURNAMENT_DAYS = 60           # a tournament's first game to its last, at most (a World Cup: 32 days)
+ORDINAL = re.compile(r"(\d{1,2})\s*$")   # «خليجي 9»: the 9th
 
 
 def key(label):
@@ -143,8 +146,58 @@ class Pass:
         self.drop_edition(drop)
         self.n["merged"] += 1
 
+    def tournaments(self, cid, fid):
+        """0. a national teams' tournament is one edition however its sources name it (23 Nov 2026, the Gulf Cup: 365Scores'
+        «خليجي 2» held the champion, the games sat in calendar years — the 16th, Dec 2003-Jan 2004, in «2003» and «2004» with
+        the 17th of Dec 2004 — and Wikipedia's scorers under «2003/2004»: 56 seasons for 27). Games less than TOURNAMENT_GAP
+        days apart are one tournament, named as FotMob names it, else by the year it began; «<name> N» is the Nth tournament
+        when every one has games; «YYYY/YYYY» with no games is the one that ran over those two years."""
+        q = self.q
+        nat, n = q("""SELECT sum(th.kind='national' AND ta.kind='national'), count(*) FROM match m JOIN edition e ON e.eid=m.eid
+                      JOIN team th ON th.tid=m.home JOIN team ta ON ta.tid=m.away WHERE e.cid=?""", (cid,))[0]
+        if not n or (nat or 0) < 0.8 * n:
+            return
+        season = dict(q("SELECT eid, season FROM edition WHERE cid=?", (cid,)))
+        runs = []
+        for mid, d, eid in q("""SELECT m.mid, substr(m.date,1,10), m.eid FROM match m JOIN edition e ON e.eid=m.eid
+                                WHERE e.cid=? AND m.date IS NOT NULL ORDER BY m.date, m.mid""", (cid,)):
+            if runs and (Date.fromisoformat(d) - Date.fromisoformat(runs[-1][-1][1])).days <= TOURNAMENT_GAP:
+                runs[-1].append((mid, d, eid))
+            else:
+                runs.append([(mid, d, eid)])
+        # a run longer than a tournament (friendlies, qualifiers all year round) is none: the competition keeps its seasons
+        if any((Date.fromisoformat(run[-1][1]) - Date.fromisoformat(run[0][1])).days > TOURNAMENT_DAYS for run in runs):
+            return
+        names = []
+        for run in runs:
+            fm = Counter(season[e] for _, _, e in run if self.x(e, FM))
+            name = fm.most_common(1)[0][0] if fm else run[0][1][:4]
+            names.append(name)
+            to = None
+            for mid, d, e in run:
+                if season[e] != name and not self.x(e, FM):
+                    to = to or self.edition(cid, fid, name)
+                    self.G.c.execute("UPDATE match SET eid=? WHERE mid=?", (to, mid))
+                    self.n["tournament_moved"] += 1
+        for e in season:
+            if q("SELECT 1 FROM edition WHERE eid=?", (e,)) and self.empty(e):
+                self.drop_edition(e)
+        gameless = [(e, s) for e, s in season.items() if q("SELECT 1 FROM edition WHERE eid=?", (e,)) and not q("SELECT 1 FROM match WHERE eid=? LIMIT 1", (e,))]
+        nth = {e: int(m.group(1)) for e, s in gameless if not LEAD.match(s) and (m := ORDINAL.search(s))}
+        if nth and max(nth.values()) == len(runs):
+            for e, k in nth.items():
+                self.G.c.execute("UPDATE edition SET season=? WHERE eid=?", (names[k - 1], e))
+                self.n["tournament_ordinal"] += 1
+        for e, s in gameless:
+            m = PLAIN_SPLIT.fullmatch(s)
+            hit = [nm for run, nm in zip(runs, names) if m and run[0][1][:4] == m.group(1) and run[-1][1][:4] == m.group(2)]
+            if len(hit) == 1:
+                self.G.c.execute("UPDATE edition SET season=? WHERE eid=?", (hit[0], e))
+                self.n["tournament_span"] += 1
+
     def competition(self, cid, fid, kind):
         q = self.q
+        self.tournaments(cid, fid)
         eds = q("SELECT eid, season FROM edition WHERE cid=? ORDER BY eid", (cid,))
         fm = [s for e, s in eds if self.x(e, FM)]
         auth = [s for e, s in eds if self.x(e, AUTH)]
