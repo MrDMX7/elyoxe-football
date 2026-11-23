@@ -68,3 +68,22 @@ with the commit or the evidence. A new session reads this first and continues at
 
 ## Costs (estimate given to the owner 22 Nov)
 ~$12 once (2.5M PUTs), then ~$3–8/month (storage gz, nightly changes); CloudFront free tier covers crawling; Actions free.
+
+## 23 Nov (afternoon): «نحل جميع مشاكل عدم التكامل + التخبيص»
+- tools/integrity.py: every page kind sampled from the sitemaps, every internal link followed; broken / old (encyclopedia
+  where a page exists) / twin / Latin share with the strings that come back most. First run: 222,168 pages, 720 sampled,
+  0 broken links; «Pro League (aside)» ×67 on h2h pages; countries as «gibraltar»; transfers 91 % Latin, old clubs 69 %, profiles 50 %.
+- Men's football only (6182ccb, graph/load/mens.py): 174 competitions, 2,120 honours, 722 players out.
+- Honours only in our competitions (acfed8f): Transfermarkt-code «CL» crowned Messi; «بطل FAC» beside the FA Cup.
+- One page per match (1fe7a09, 19e6fbd): FotMob matches the site has no page for -> /m/k<id>/ (v1/archive/fm2k + shards; site
+  link check, the card, the 404); attendance and FotMob ratings on old match pages.
+- One page per man (dd21ecc, 66eadd7, 7c87d0c): v1/archive/fm2p; the profile carries the encyclopedia's club, position, shirt,
+  value, contract and this season; /db/player/<id>/ points to /p/k<id>/ (noindex, canonical); the card's bio as rows (bff69e8).
+- Aside games dropped after counting (c8ded57); countries case-insensitive.
+- Arabic names: 10,190 Transfermarkt clubs (names/tm_clubs.py, 3997f35); 592 code-named competitions (names/comps.py, e85f226);
+  the archive's men in bulk (names/people_bulk.py, running: 104,776); «ddr» split into the Soviet, Yugoslav, East German leagues,
+  the Cup Winners' Cup and the old Intercontinental (league_of).
+- Scorers: tournament goalscorer lists read (efe7044: Euro 1960, 1964); Arab Cup and Gulf Cup articles by hand (c69e081, next
+  awards stage); seasons lists link scorers (fcef8fe).
+- Ruling: the encyclopedia's club pages (/db/club, FotMob clubs outside the site's competitions) stay: they duplicate nothing
+  (the archive's /t/k are clubs FotMob has no id for) — cost if wrong: two designs for club pages.
