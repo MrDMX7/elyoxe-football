@@ -66,14 +66,27 @@ def known_pages(s3, bucket):
 ARCHIVE_PREFIXES = ("c/", "m/k", "p/k", "r/k", "t/k", "coach/k", "sitemap-archive")
 
 
-def still_up(s3, bucket, old):
-    """the manifest's pages that are really in the bucket: one the bucket lost goes up again (2026-11-23: an old site publish
-    deleted 35,296 profiles the manifest held, and the next runs, seeing no change, never sent them). ~470 listings, a cent"""
+def listed(s3, bucket):
+    """every key under the archive's prefixes (~470 listings, a cent)"""
     def keys(pre):
         return {o["Key"] for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=pre) for o in page.get("Contents") or []}
     with ThreadPoolExecutor(len(ARCHIVE_PREFIXES)) as ex:
-        up = set().union(*ex.map(keys, ARCHIVE_PREFIXES))
+        return set().union(*ex.map(keys, ARCHIVE_PREFIXES))
+
+
+def still_up(s3, bucket, old, up=None):
+    """the manifest's pages that are really in the bucket: one the bucket lost goes up again (2026-11-23: an old site publish
+    deleted 35,296 profiles the manifest held, and the next runs, seeing no change, never sent them)"""
+    up = listed(s3, bucket) if up is None else up
     return {k: v for k, v in old.items() if k in up}
+
+
+def orphans(up, new):
+    """the keys under what the archive owns (tools/runner.py ARCHIVE_OWNED) that this run did not write: 2026-11-23, 20,270
+    old-match pages the site build had published on 22 Nov (copies since merged into their twin), linked from nowhere"""
+    import fnmatch
+    from tools.runner import ARCHIVE_OWNED
+    return sorted(k for k in up if k not in new and any(fnmatch.fnmatchcase(k, p) for p in ARCHIVE_OWNED))
 
 
 def md5(path):
@@ -219,8 +232,9 @@ def main(argv=None):
     urls = json.load(open(os.path.join(out, "_archive_urls.json"), encoding="utf-8"))
     sitemaps(out, urls)
     old = state_get(s3, MANIFEST, {}) or {}
+    up = listed(s3, bucket) if not a.dry else set()
     if old and not a.dry:
-        kept = still_up(s3, bucket, old)
+        kept = still_up(s3, bucket, old, up)
         if len(kept) < len(old):
             say(f"{len(old) - len(kept)} pages the manifest holds are not in the bucket: sending them again")
         old = kept
@@ -240,6 +254,14 @@ def main(argv=None):
             for i in range(0, len(gone), 1000):
                 s3.delete_objects(Bucket=bucket, Delete={"Objects": [{"Key": k} for k in gone[i:i + 1000]], "Quiet": True})
             say(f"deleted {len(gone)} pages no longer in the archive")
+    stray = orphans(up, new) if not a.comps and not a.dry else []
+    if stray:
+        if len(stray) > MAX_DELETE * max(len(new), 1):
+            say(f"{len(stray)} pages under the archive's paths that no run wrote: too many to sweep (a broken build?)")
+        else:
+            for i in range(0, len(stray), 1000):
+                s3.delete_objects(Bucket=bucket, Delete={"Objects": [{"Key": k} for k in stray[i:i + 1000]], "Quiet": True})
+            say(f"swept {len(stray)} pages under the archive's paths that no run wrote, e.g. {stray[0]}")
     if not a.dry:
         state_put(s3, MANIFEST, new)
         state_put(s3, LAST, {"etag": head["ETag"], "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "pages": len(new), "sent": sent,

@@ -86,3 +86,11 @@ def test_the_site_coach_pages_are_known_so_the_archive_links_them_and_writes_no_
 
 def test_the_lost_page_check_lists_the_coach_pages_too():
     assert "coach/k" in J.ARCHIVE_PREFIXES
+
+
+def test_the_archives_own_pages_no_run_wrote_are_swept_and_the_sites_are_not():
+    # 23 Nov 2026: 20,270 old-match pages the site build published on 22 Nov (copies the seasons pass has since merged into
+    # their twin) sat in the bucket, linked from nowhere, duplicating real match pages
+    up = {"m/k1/index.html", "m/k9/index.html", "c/x/index.html", "c/x/s/1990/index.html", "c/x/s/1880/index.html", "p/30981/index.html", "coach/500/index.html"}
+    new = {"m/k1/index.html": "a", "c/x/s/1990/index.html": "b"}
+    assert J.orphans(up, new) == ["c/x/s/1880/index.html", "m/k9/index.html"]
