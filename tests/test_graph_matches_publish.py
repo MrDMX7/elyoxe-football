@@ -142,3 +142,22 @@ def test_a_match_carries_its_coaches_tifo_ids_for_the_archives_coach_pages(tmp_p
     m0 = json.load(open(tmp_path / "o" / "matches" / "538" / "2016-2017.json", encoding="utf-8"))["matches"][0]
     kid = G.c.execute("select kid from coach").fetchone()[0]
     assert m0["co"] == {"h": "Henk ten Cate"} and m0["ck"] == {"h": kid}
+
+
+def test_a_match_carries_its_attendance(tmp_path):
+    # the encyclopedia card showed «49,531 متفرج», the archive's page (today's match page) did not
+    G, m2, old = world(tmp_path)
+    G.c.execute("update match set attendance=49531 where hs=2 and as_=1")
+    G.c.commit()
+    publish.matches(G, str(tmp_path / "o"), comps=(538,), teams=(5789,))
+    m0 = json.load(open(tmp_path / "o" / "matches" / "538" / "2016-2017.json", encoding="utf-8"))["matches"][0]
+    assert m0["att"] == 49531
+
+
+def test_a_lineup_carries_each_mans_rating(tmp_path):
+    G, m2, old = world(tmp_path)
+    G.c.execute("update appearance set rating=7.4")
+    G.c.commit()
+    publish.matches(G, str(tmp_path / "o"), comps=(538,), teams=(5789,))
+    m0 = json.load(open(tmp_path / "o" / "matches" / "538" / "2016-2017.json", encoding="utf-8"))["matches"][0]
+    assert m0["lu"]["h"][0][5] == 7.4

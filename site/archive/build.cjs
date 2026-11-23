@@ -68,7 +68,7 @@ function build(o) {
     return Object.assign({}, m, { id: KM.has(String(m.id)) ? m.id : `k${m.k}`, fm: /^\d+$/.test(String(m.id)) ? String(m.id) : null, h: side(m.h), a: side(m.a), rh: m.rk != null && REFS[String(m.rk)] ? `/r/k${m.rk}/` : null,
       chref: m.ck ? { h: coachHref(m.ck.h), a: coachHref(m.ck.a) } : null,
       ev: (m.ev || []).map(e => [e[0], e[1], e[2], e[3], e[4], man(e[5], e[6]), e[6]]),          // e[6]: the man's Tifo id (the season's leaders)
-      lu: m.lu ? Object.fromEntries(Object.entries(m.lu).map(([k, v]) => [k, v.map(p => [p[0], man(p[1], p[4]), p[2], p[3]])])) : null });
+      lu: m.lu ? Object.fromEntries(Object.entries(m.lu).map(([k, v]) => [k, v.map(p => [p[0], man(p[1], p[4]), p[2], p[3]].concat(p[5] != null ? [p[5]] : []))])) : null });
   });
   const hpo = { team: id => KT.has(String(id)), player: id => KP.has(String(id)), person: () => false, coach: kid => coachHref(kid), coachName: () => null,
     teamName: () => null, playerName: () => null };

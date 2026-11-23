@@ -13,7 +13,7 @@ function md(m) {
     score: { home: m.s[0], away: m.s[1] }, penalties: m.pen ? { home: m.pen[0], away: m.pen[1] } : null, halftime_score: m.ht ? { home: m.ht[0], away: m.ht[1] } : null,
     kickoff_utc: (m.date || "") + "T12:00:00Z", time_tbd: true, date_fmt: "dy", archive: 1, home: team(m.h[0], m.h[1], "h"), away: team(m.a[0], m.a[1], "a"),
     events: (m.ev || []).map(e => ({ minute: e[0], added: e[1] || 0, type: e[2], team: e[3] === "a" ? "away" : "home", player: e[4] ? { id: e[5], name: e[4] } : null })),
-    venue: m.venue ? { name_ar: m.venue } : null, referee: m.ref ? Object.assign({ name: m.ref }, m.rh ? { href: m.rh } : {}) : null,
+    venue: m.venue ? { name_ar: m.venue } : null, referee: m.ref ? Object.assign({ name: m.ref }, m.rh ? { href: m.rh } : {}) : null, attendance: m.att || null,
     // the two coaches in the match's info, each to his page (site/archive/build.cjs sets chref): the lineups tab carries them
     // too, but most old matches have no lineups
     coaches: m.co ? ["h", "a"].map(k => (m.co[k] ? Object.assign({ name: m.co[k], team: (k === "h" ? m.h : m.a)[1] }, m.chref && m.chref[k] ? { href: m.chref[k] } : {}) : null)) : null };
@@ -24,7 +24,9 @@ function md(m) {
 function lineups(m, d) {
   const L = m.lu || {};
   if (!(L.h || []).length && !(L.a || []).length) return null;
-  const row = p => U.row({ href: p[1] ? "/p/" + p[1] + "/" : null, t: (p[2] ? '<span class="num muted">' + esc(p[2]) + "</span> " : "") + U.pname({ id: p[1], name: p[0] }) });
+  // p[4]: FotMob's rating, drawn as today's match page draws it
+  const row = p => U.row({ href: p[1] ? "/p/" + p[1] + "/" : null, t: (p[2] ? '<span class="num muted">' + esc(p[2]) + "</span> " : "") + U.pname({ id: p[1], name: p[0] }),
+    v: p[4] != null ? '<span class="chip num ' + U.rclass(p[4]) + '" style="color:#fff">' + Number(p[4]).toFixed(1) + "</span>" : null });
   const side = k => { const l = L[k] || [], co = (m.co || {})[k], st = l.filter(p => p[3] !== 0), sb = l.filter(p => p[3] === 0), marked = l.some(p => p[3] === 1);
     if (!l.length) return (co ? U.grp("المدرب", '<div class="row"><span class="rt">' + U.pname({ name: co }) + "</span></div>") : "") +
       '<div class="card">' + U.empty("ما عندنا تشكيلة هالفريق في هالمباراة.") + "</div>";      // never an empty card

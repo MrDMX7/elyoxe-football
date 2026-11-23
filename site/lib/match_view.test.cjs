@@ -131,3 +131,15 @@ test("an old match names both coaches in its info, each linked to his page (most
   assert.match(v.body, /<a class="row[^"]*" href="\/coach\/k7\/">[\s\S]*?مدرب الأهلي[\s\S]*?Coach A/);
   assert.match(v.body, /مدرب الشباب[\s\S]*?Coach B/);
 });
+
+test("an old match shows its attendance in its info", () => {
+  const P = require("../src/v5/pages.js"), md = V.md(Object.assign({}, M, { att: 49531 }));
+  assert.equal(md.attendance, 49531);
+  assert.match(P.match(md, { archive: 1, x: {} }).body, /الحضور[\s\S]*?49,531/);
+});
+
+test("a lineup row carries the man's rating, as today's match page draws it", () => {
+  const m = Object.assign({}, M, { lu: { h: [["ربيع العفوي", "k500", "9", 1, 7.4]], a: [] } });
+  const h = V.lineups(m, V.md(m));
+  assert.match(h, /ربيع العفوي[\s\S]*?<span class="chip num rt-md" style="color:#fff">7\.4<\/span>/);
+});

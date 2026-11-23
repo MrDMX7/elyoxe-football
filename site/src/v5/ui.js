@@ -356,6 +356,7 @@
   };
   // lineups on one vertical pitch: away at the top, home at the bottom (xy: FotMob's 0-1 fractions from each side's own goal)
   function rclass(r) { r = +r; return r >= 8 ? "rt-hi" : r >= 7 ? "rt-md" : r >= 6 ? "rt-lo" : "rt-bad"; }
+  U.rclass = rclass;
   U.lineups = function (md) {
     var L0 = md.lineups; if (!L0 || !L0.home || !(L0.home.starters || []).length) return '<div class="card">' + U.empty(md.status === "scheduled" ? "التشكيلة تنزل قبل المباراة بساعة تقريباً." : md.archive ? "ما عندنا تشكيلة هالمباراة في الأرشيف." : "ما نزلت التشكيلة لهالمباراة.") + "</div>";
     var c = U.pair(md.home.id, md.away.id), evs = md.events || [];
