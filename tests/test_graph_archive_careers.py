@@ -37,3 +37,34 @@ def test_a_competition_named_by_its_transfermarkt_code_gives_way_to_the_lines_ow
     archive_export.persons(G, str(out))
     p = json.load(open(out / "people" / f"{pid % 500}.json", encoding="utf-8"))[str(pid)]
     assert [c[1] for c in p["car"]] == ["كأس الاتحاد الإنجليزي", "EFL Cup"]
+
+
+def test_a_competition_left_in_latin_takes_the_generated_name_for_its_clubs_country(tmp_path, monkeypatch):
+    # 23 Nov 2026: 507k career lines («FA Cup», «Italy Cup», «Super League» of several countries) still in Latin letters
+    G, m2, old = world(tmp_path)
+    pid = G.c.execute("select pid from player where name='Ali Mabkhout'").fetchone()[0]
+    jaz = G.c.execute("select tid from team where name_ar='الجزيرة'").fetchone()[0]
+    G.c.execute("update team set country='Greece' where tid=?", (jaz,))
+    for season, comp in (("2016/2017", "Super League"), ("2015/2016", "FA Cup")):
+        G.c.execute("insert into player_season(pid, season, comp, tid, apps, src) values(?, ?, ?, ?, 10, 'tm')", (pid, season, comp, jaz))
+    G.c.commit()
+    monkeypatch.setattr(archive_export, "GENERATED_TERMS", lambda: {"comps": {"Super League|Greece": "الدوري اليوناني الممتاز", "FA Cup|": "كأس الاتحاد الإنجليزي"},
+                                                                    "injuries": {}})
+    out = tmp_path / "d"
+    out.mkdir()
+    archive_export.persons(G, str(out))
+    p = json.load(open(out / "people" / f"{pid % 500}.json", encoding="utf-8"))[str(pid)]
+    assert [c[1] for c in p["car"]] == ["الدوري اليوناني الممتاز", "كأس الاتحاد الإنجليزي"]
+
+
+def test_an_injury_reads_in_arabic(tmp_path, monkeypatch):
+    G, m2, old = world(tmp_path)
+    pid = G.c.execute("select pid from player where name='Ali Mabkhout'").fetchone()[0]
+    G.c.execute("insert into injury(pid, season, kind, days, src) values(?, '2016/2017', 'Muscle injury', 20, 'tm')", (pid,))
+    G.c.commit()
+    monkeypatch.setattr(archive_export, "GENERATED_TERMS", lambda: {"comps": {}, "injuries": {"Muscle injury": "إصابة عضلية"}})
+    out = tmp_path / "d"
+    out.mkdir()
+    archive_export.persons(G, str(out))
+    p = json.load(open(out / "people" / f"{pid % 500}.json", encoding="utf-8"))[str(pid)]
+    assert p["inj"][0][1] == "إصابة عضلية"

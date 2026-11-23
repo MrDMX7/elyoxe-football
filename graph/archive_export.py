@@ -40,6 +40,16 @@ TM_CODES = {"GB1": "Premier League", "GB2": "Championship", "GB3": "League One",
 ARABIC, CODE = re.compile("[%s-%s]" % (chr(0x600), chr(0x6FF))), re.compile(r"[A-Z0-9]{1,5}")
 
 
+def GENERATED_TERMS():
+    """names/career_terms_ar.json {comps: {"<name>|<club's country>": Arabic}, injuries: {kind: Arabic}} (names/career_terms.py,
+    23 Nov 2026: 507k career lines and 149k injuries still in Latin letters)"""
+    try:
+        d = json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "names", "career_terms_ar.json"), encoding="utf-8"))
+    except (OSError, ValueError):
+        d = {}
+    return {"comps": d.get("comps") or {}, "injuries": d.get("injuries") or {}}
+
+
 def career_names(G, cn):
     """(Transfermarkt's competition name, club) -> its name in Arabic, or None: one of our competitions of that name (the
     club's own where several share it), else graph/tm_comps_ar.yaml (23 Nov 2026: 850k of 1.29M career lines read in English)"""
@@ -88,17 +98,20 @@ def persons(G, out, min_apps=3, last=10, nat=lambda v: v):
     for pid in [p for p, n in apps.items() if n < min_apps]:
         del P[pid]["ms"]
     comp_ar = career_names(G, cn)
+    gen = GENERATED_TERMS()                        # names/career_terms_ar.json (names/career_terms.py): the rest, by the clubs' country
+    country_of = {t: c for t, c in q("SELECT tid, country FROM team")}
+    gen_ar = lambda comp, tid: gen["comps"].get(f"{comp}|{country_of.get(tid) or ''}") or gen["comps"].get(f"{comp}|")
     for pid, season, comp, cid, tid, a, mi, g, asst, y, r in q("""SELECT pid, season, comp, cid, tid, apps, minutes, goals, assists, yellow, red FROM player_season
                                                                   ORDER BY pid, season DESC"""):
         # Arabic first (ours, else by name), then a real name before a code: competitions made from Transfermarkt codes are
         # named by the code («FAC»), the line itself says «FA Cup»
         own = cn.get(cid)
-        name = next((x for x in (own, comp_ar(comp, tid)) if x and ARABIC.search(x)), None) or             next((x for x in (comp, own) if x and not CODE.fullmatch(x)), None) or TM_CODES.get(comp) or comp
+        name = next((x for x in (own, comp_ar(comp, tid), gen_ar(comp, tid)) if x and ARABIC.search(x)), None) or             next((x for x in (comp, own) if x and not CODE.fullmatch(x)), None) or TM_CODES.get(comp) or comp
         P[pid]["car"].append([season, name, tn.get(tid), fm_t.get(tid), a, g, asst, mi, y, r])
     for pid, d, f, t, fee, typ in q("SELECT pid, date, from_tid, to_tid, fee, type FROM transfer ORDER BY pid, date DESC"):
         P[pid]["tr"].append([d, tn.get(f), fm_t.get(f), tn.get(t), fm_t.get(t), fee, typ])
     for pid, season, kind, s, e, days, games in q("SELECT pid, season, kind, start, end, days, games FROM injury ORDER BY pid, start DESC"):
-        P[pid]["inj"].append([season, kind, s, e, days, games])
+        P[pid]["inj"].append([season, gen["injuries"].get(kind, kind), s, e, days, games])
     for pid, kind, rank, cid, season, value in q("""SELECT h.pid, h.kind, h.rank, e.cid, e.season, h.value FROM honour h JOIN edition e ON e.eid=h.eid
                                                   WHERE h.pid IS NOT NULL ORDER BY h.pid, e.season DESC"""):
         P[pid]["hon"].append([kind, rank, cn.get(cid), fm_c.get(cid), season, value])
