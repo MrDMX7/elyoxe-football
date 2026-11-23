@@ -143,3 +143,20 @@ test("a lineup row carries the man's rating, as today's match page draws it", ()
   const h = V.lineups(m, V.md(m));
   assert.match(h, /ربيع العفوي[\s\S]*?<span class="chip num rt-md" style="color:#fff">7\.4<\/span>/);
 });
+
+test("an old match's sides' totals as today's «الأرقام» tab draws them, and the tab is there", () => {
+  const ts = { h: { sh: 14, sot: 6, pas: [420, 500], fc: 12, tk: 18, int: 9, clr: 20, dw: 50, aw: [12, 25] }, a: { sh: 7, sot: 2, pas: [300, 390], fc: 15, tk: 15, int: 11, clr: 31, dw: 44, aw: [13, 25] } };
+  const md = V.md(Object.assign({}, M, { ts }));
+  const items = Object.fromEntries(md.stats.flatMap(g => g.items.map(i => [i.key, [i.home, i.away]])));
+  assert.deepEqual(items.total_shots, [14, 7]);
+  assert.deepEqual(items.ShotsOnTarget, [6, 2]);
+  assert.deepEqual(items.accurate_passes, ["420 (84%)", "300 (77%)"]);
+  assert.deepEqual(items.aerials_won, [12, 13]);
+  assert.equal(items.keeper_saves, undefined);                       // not in the totals: not drawn
+  assert.deepEqual(V.md(M).stats, []);
+  const P5 = require("../src/v5/pages.js");
+  const page = P5.match(md, { archive: 1, x: { lu: "", h2h: null, share: "" } }).body;
+  assert.match(page, /data-pane="st"|الأرقام/);
+  assert.match(page, /التسديدات/);
+  assert.doesNotMatch(P5.match(V.md(M), { archive: 1, x: { lu: "", h2h: null, share: "" } }).body, /التسديدات/);
+});

@@ -421,6 +421,34 @@ ARAB_LEAGUES = (538, 536, 535, 519, 530, 516, 544, 524, 529)
 TOURNAMENTS = (77, 50, 290, 289, 44, 78, 10242, 329)
 
 
+# the numbers summed into a side's totals (FotMob's per-man keys: shots, on target, passes [accurate, all], fouls, tackles,
+# interceptions, clearances, blocks, duels won, aerials, ground duels and dribbles [won, tried], crosses [accurate, all])
+SUM_KEYS = ("sh", "sot", "pas", "fc", "tk", "int", "clr", "blk", "dw", "aw", "gdw", "dr", "cr")
+
+
+def team_stats(rows, share=0.8, least=7):
+    """[(side, a man's numbers)] -> {h: {key: total}, a: {...}} for the old match's «الأرقام» tab (owner 23 Nov 2026: the
+    archive's matches exactly as today's), or None when a side has fewer than `least` men with numbers. A number fewer than
+    `share` of a side's men carry is left out (half a team's tackles is a wrong total), and so is one only one side has."""
+    by = {"h": [], "a": []}
+    for side, st in rows:
+        if side in by and st and (st.get("min") or 0) > 0:
+            by[side].append(st)
+    if min(len(by["h"]), len(by["a"])) < least:
+        return None
+    out = {}
+    for side, ss in by.items():
+        t = {}
+        for k in SUM_KEYS:
+            have = [x[k] for x in ss if k in x]
+            if not have or len(have) < share * len(ss):
+                continue
+            t[k] = [sum(v[0] for v in have), sum(v[1] for v in have)] if isinstance(have[0], list) else sum(have)
+        out[side] = t
+    both = set(out["h"]) & set(out["a"])
+    return {side: {k: v for k, v in t.items() if k in both} for side, t in out.items()} if both else None
+
+
 def matches(G, out_dir, comps=ARAB_LEAGUES + TOURNAMENTS, teams=(5789,), eras=None):
     """matches/<competition>/<season>.json and matches/team-<FotMob team>.json (graph phase 7, the old matches): every match
     of these competitions and national teams in the archive, with its score, scorers and cards, lineups and coaches where the
@@ -463,6 +491,13 @@ def matches(G, out_dir, comps=ARAB_LEAGUES + TOURNAMENTS, teams=(5789,), eras=No
             co[mid][side] = kn.get(kid)
             ck[mid][side] = kid                                                     # Tifo's, for the archive's /coach/k<id>/
         mo = {mid: [pn.get(pid), pkey(pid)] for mid, pid in q("SELECT w.mid, w.pid FROM pub_m CROSS JOIN match_award w ON w.mid=pub_m.mid WHERE w.kind='motm'")}
+        nums = defaultdict(list)                                                    # the men's numbers, for the sides' totals
+        for mid, tid, home, st in q("""SELECT a.mid, a.tid, m.home, a.stats FROM pub_m CROSS JOIN appearance a ON a.mid=pub_m.mid
+                                       JOIN match m ON m.mid=a.mid WHERE a.stats IS NOT NULL AND a.played=1"""):
+            try:
+                nums[mid].append(("h" if tid == home else "a", json.loads(st)))
+            except ValueError:
+                pass
         out = []
         for mid, eid, rnd, d, h, a, hs, as_, hth, hta, ph, pa, sid, rid, att in q(
                 """SELECT m.mid, m.eid, m.round, substr(m.date,1,10), m.home, m.away, m.hs, m.as_, m.ht_h, m.ht_a, m.pen_h, m.pen_a, m.sid, m.rid, m.attendance
@@ -471,7 +506,8 @@ def matches(G, out_dir, comps=ARAB_LEAGUES + TOURNAMENTS, teams=(5789,), eras=No
             r = {"id": str(fm_m[mid]) if mid in fm_m else f"k{mid}", "k": mid, "date": d, "comp": comp, "season": season, "round": rnd,
                  "h": [fm_t.get(h), at(h, d), h], "a": [fm_t.get(a), at(a, d), a], "s": [hs, as_],
                  "ht": [hth, hta] if hth is not None else None, "pen": [ph, pa] if ph is not None else None,
-                 "venue": sn.get(sid), "ref": rn.get(rid), "rk": rid, "ev": ev.get(mid), "lu": dict(lu[mid]) if mid in lu else None, "co": co.get(mid), "ck": ck.get(mid), "motm": mo.get(mid), "att": att or None}
+                 "venue": sn.get(sid), "ref": rn.get(rid), "rk": rid, "ev": ev.get(mid), "lu": dict(lu[mid]) if mid in lu else None, "co": co.get(mid), "ck": ck.get(mid), "motm": mo.get(mid), "att": att or None,
+                 "ts": team_stats(nums[mid]) if mid in nums else None}
             out.append({k: v for k, v in r.items() if v not in (None, [], {})})
         G.c.execute("DROP TABLE pub_m")
         return out

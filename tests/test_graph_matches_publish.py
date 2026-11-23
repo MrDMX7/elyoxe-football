@@ -161,3 +161,27 @@ def test_a_lineup_carries_each_mans_rating(tmp_path):
     publish.matches(G, str(tmp_path / "o"), comps=(538,), teams=(5789,))
     m0 = json.load(open(tmp_path / "o" / "matches" / "538" / "2016-2017.json", encoding="utf-8"))["matches"][0]
     assert m0["lu"]["h"][0][5] == 7.4
+
+
+def test_a_side_is_summed_from_its_mens_numbers_where_most_of_them_have_each():
+    """the old match's «الأرقام» tab (owner 23 Nov 2026: the archive's matches exactly as today's): the sides' totals from FotMob's
+    per-man numbers; a number fewer than 80 % of a side's men carry is left out (a total of half the team is a wrong total)"""
+    man = lambda **k: dict({"min": 90, "pas": [20, 25], "tk": 1, "fc": 1}, **k)
+    rows = [("h", man(sh=2, sot=1)) for _ in range(10)] + [("h", man())] + [("a", man(sh=1, sot=0, sv=3)) for _ in range(11)]
+    ts = publish.team_stats(rows)
+    assert ts["h"]["pas"] == [220, 275] and ts["a"]["tk"] == 11 and ts["h"]["fc"] == 11
+    assert ts["h"]["sh"] == 20 and ts["a"]["sh"] == 11              # 10 of 11 home men have shots: 91 %, kept
+    assert "sv" not in ts["a"] and "sv" not in ts["h"]                 # one keeper's saves: on one man of each side at most
+    assert publish.team_stats([("h", man())] * 3 + [("a", man())] * 11) is None     # three men of a side: no totals
+
+
+def test_a_match_carries_its_sides_totals(tmp_path):
+    G, m2, old = world(tmp_path)
+    G.c.execute("""update appearance set stats='{"min": 90, "sh": 3, "sot": 2, "pas": [30, 40], "tk": 2}'""")
+    G.c.commit()
+    import graph.publish as P
+    rows = [("h", {"min": 90, "sh": 3, "sot": 2, "pas": [30, 40], "tk": 2})] * 11 + [("a", {"min": 90, "sh": 1, "pas": [10, 20], "tk": 1})] * 11
+    assert P.team_stats(rows)["a"]["pas"] == [110, 220]
+    publish.matches(G, str(tmp_path / "o"), comps=(538,), teams=(5789,))
+    m0 = json.load(open(tmp_path / "o" / "matches" / "538" / "2016-2017.json", encoding="utf-8"))["matches"][0]
+    assert "ts" not in m0                                              # one man on the sheet: no totals

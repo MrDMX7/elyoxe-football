@@ -8,11 +8,24 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&am
 const team = (id, name, k) => (id ? Object.assign({ id, name_ar: name }, /^k/.test(String(id)) ? { nocrest: true } : {})
   : { id: "n" + k + "-" + String(name || "").replace(/\s+/g, "-"), name_ar: name, nocrest: true });
 
+// the sides' totals (graph/publish.team_stats) as today's «الأرقام» tab takes them (src/v5/ui.js U.stats, FotMob's keys)
+const pct = v => v[0] + " (" + Math.round(100 * v[0] / (v[1] || 1)) + "%)";
+const STATS = [["top_stats", [["total_shots", "sh"], ["ShotsOnTarget", "sot"], ["accurate_passes", "pas", pct], ["fouls", "fc"]]],
+  ["passes", [["passes", "pas", v => v[1]], ["accurate_crosses", "cr", v => v[0]]]],
+  ["defence", [["matchstats.headers.tackles", "tk"], ["interceptions", "int"], ["clearances", "clr"], ["blocked_shots", "blk"]]],
+  ["duels", [["duel_won", "dw"], ["aerials_won", "aw", v => v[0]], ["ground_duels_won", "gdw", v => v[0]], ["dribbles_succeeded", "dr", v => v[0]]]]];
+function statGroups(ts) {
+  if (!ts || !ts.h || !ts.a) return [];
+  return STATS.map(([key, items]) => ({ key, items: items.filter(i => ts.h[i[1]] != null && ts.a[i[1]] != null)
+    .map(([sk, k, f]) => ({ key: sk, home: f ? f(ts.h[k]) : ts.h[k], away: f ? f(ts.a[k]) : ts.a[k] })) })).filter(g => g.items.length);
+}
+
 function md(m) {
   return { id: m.id, comp: m.comp, round: m.round != null && m.round !== "" ? String(m.round) : null, status: "finished",
     score: { home: m.s[0], away: m.s[1] }, penalties: m.pen ? { home: m.pen[0], away: m.pen[1] } : null, halftime_score: m.ht ? { home: m.ht[0], away: m.ht[1] } : null,
     kickoff_utc: (m.date || "") + "T12:00:00Z", time_tbd: true, date_fmt: "dy", archive: 1, home: team(m.h[0], m.h[1], "h"), away: team(m.a[0], m.a[1], "a"),
     events: (m.ev || []).map(e => ({ minute: e[0], added: e[1] || 0, type: e[2], team: e[3] === "a" ? "away" : "home", player: e[4] ? { id: e[5], name: e[4] } : null })),
+    stats: statGroups(m.ts),
     venue: m.venue ? { name_ar: m.venue } : null, referee: m.ref ? Object.assign({ name: m.ref }, m.rh ? { href: m.rh } : {}) : null, attendance: m.att || null,
     // the two coaches in the match's info, each to his page (site/archive/build.cjs sets chref): the lineups tab carries them
     // too, but most old matches have no lineups
