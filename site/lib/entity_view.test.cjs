@@ -72,3 +72,12 @@ test("a coach's facts are rows of their card too", () => {
   assert.match(h, /<a class="row" href="\/p\/k77\/"><span class="rt">مسيرته لاعباً<\/span>/);
   assert.doesNotMatch(h, /<ul class="lc">/);
 });
+
+test("a club's history on its own, for the encyclopedia's club page: the record, the titles, season by season", () => {
+  const c = { n: "Alanyaspor", ar: "ألانيا سبور", ss: [["2020/2021", 71, "الدوري التركي", 34, 15, 9, 10, 50, 40]], hon: [["runner_up", "كأس تركيا", 151, "2019/2020"]] };
+  const h = V.clubHistory(c, { comp: fid => (fid === 71 ? { key: "super-lig" } : null) });
+  assert.match(h, /34<\/span> مباراة في أرشيف تيفو/);
+  assert.match(h, /href="\/c\/super-lig\/s\/2020-2021\/"/);
+  assert.match(h, /وصيف/);
+  assert.doesNotMatch(h, /<h1>/);                                        // the page has its own heading
+});

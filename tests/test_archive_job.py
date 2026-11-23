@@ -151,3 +151,9 @@ def test_a_folded_page_whose_kept_record_has_the_sites_page_forwards_there(tmp_p
     merged = {"team": {8800: 30, 8801: 31}}
     site = lambda kind, keep: {("t", 30): "/t/4174/"}.get((kind, keep))
     assert J.forwards(tmp_path, old, merged, site) == {"t/k8800/index.html": "/t/4174/"}     # 31: no page anywhere, no forward
+
+
+def test_a_folded_club_forwards_to_the_encyclopedias_club_page_when_the_site_has_no_team_page():
+    fm = {"team": {2196: "4678", 30: "4174"}, "player": {7: "99"}}
+    page = J.site_page({"t": ["4174"], "dbclub": ["4678"], "p": ["99"], "ph": {"k1": {}}}, fm)
+    assert page("t", 30) == "/t/4174/" and page("t", 2196) == "/db/club/4678/" and page("p", 7) == "/p/99/" and page("t", 5) is None

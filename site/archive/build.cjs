@@ -50,12 +50,18 @@ function build(o) {
   const REFS = readJ(path.join(o.data, "referees.json")) || {}, CLUBS = readJ(path.join(o.data, "clubs.json")) || {};
   for (const [rid, r] of Object.entries(REFS)) if (r.fm && KR.has(String(r.fm))) delete REFS[rid];
   for (const [tid, c] of Object.entries(CLUBS)) if (c.fm && KT.has(String(c.fm))) delete CLUBS[tid];      // the site's /t/<FotMob id>/ is its page
+  // one page per club (24 Nov 2026): a club with the encyclopedia's /db/club/<FotMob id>/ is shown there, its history with it
+  // (_club_history.json -> v1/archive/club_history.json, read by the site build's lib/club_pages.cjs); no /t/k page of its own
+  const KDB = new Set((known.dbclub || []).map(String)), HIST = {};
+  for (const [tid, c] of Object.entries(CLUBS)) if (c.fm && KDB.has(String(c.fm))) { HIST[String(c.fm)] = c; delete CLUBS[tid]; }
   // every coach with a bench or an award (graph/archive_export.coaches): /coach/k<id>/, unless the site has his /coach/<FotMob id>/
   const COACHES = readJ(path.join(o.data, "coaches.json")) || {}, KC = new Set((known.coach || []).map(String));
   for (const c of Object.values(COACHES)) if (c.fm && KC.has(String(c.fm))) c.site = `/coach/${c.fm}/`;
   const coachHref = kid => { const c = kid != null && COACHES[String(kid)]; return c ? c.site || `/coach/k${kid}/` : null; };
   const comps = index.competitions.filter(c => !o.comps || o.comps.includes(+c.id));
   U.cfg.base = ""; U.cfg.pre = null; U.cfg.cn = {}; index.competitions.forEach((c, i) => { U.cfg.cn[c.id] = [c.key, c.name_ar, (c.country && c.country.iso2) || "", i]; });
+  fs.mkdirSync(o.out, { recursive: true });
+  fs.writeFileSync(path.join(o.out, "_club_history.json"), JSON.stringify(HIST));
   const written = new Set(), urls = [];        // urls: the indexable pages (the sitemaps)
   const FM2K = {}, FM2P = {};                               // FotMob id -> Tifo id of a match the site has no page for: its page is /m/k<id>/
   // every man with a record beyond a name gets /p/k<Tifo id>/ (graph/archive_export.persons), unless the site has his page

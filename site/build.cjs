@@ -1610,7 +1610,9 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
     const leaguePath = id => keyOf[id] && WRITTEN.has(`/transfers/${keyOf[id]}/`) ? `/transfers/${keyOf[id]}/` : WRITTEN.has(`/transfers/l/${id}/`) ? `/transfers/l/${id}/` : null;
     const cname = k => (teamsJson.teams[k] || {}).name_ar || TAR[k];
     let nClub = 0;
-    cards.forEach(c => { const P = c && CP.clubPage(c, { TRT, moves:TRS, rumours:TRR, season:TRL, site:SITE, leaguePath, pname:nameOf, cname }); if (!P) return;
+    const HIST = (await get("archive/club_history.json")) || {}, EVW = require("./lib/entity_view.cjs"), compBy = {}; comps.forEach(c => { compBy[+c.id] = c; });
+    const historyHtml = h => EVW.clubHistory(h, { comp:fid => compBy[+fid] && compBy[+fid].key ? compBy[+fid] : null });
+    cards.forEach(c => { const P = c && CP.clubPage(c, { TRT, moves:TRS, rumours:TRR, season:TRL, site:SITE, leaguePath, pname:nameOf, cname, history:id => HIST[String(id)], historyHtml }); if (!P) return;
       write(`db/club/${c.id}/index.html`, page({ path:`/db/club/${c.id}/`, page:"ref", title:P.title, desc:P.desc, ld:P.ld, body:P.html })); urls.push(`/db/club/${c.id}/`); nClub++; });
     console.log("club pages:", nClub, "of", ids.length); }
   // their crawl path: /db/players/ (every nationality) and /db/players/<cc>/ (its players by club), small and in out/

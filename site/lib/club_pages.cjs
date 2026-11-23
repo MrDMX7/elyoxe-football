@@ -15,7 +15,9 @@ function clubPage(c, ctx) {
   const T = ctx.TRT, name = c.name_ar, sq = (c.squad || []).filter(m => Array.isArray(m) && m[0] && m[1]);
   const win = T.forClub(ctx.moves || [], c.id), rum = T.rumoursOf(ctx.rumours || [], { club: c.id, open: 1 }).slice(0, 10);
   const tro = (c.trophies || []).filter(t => t && t.won > 0);
-  if (!sq.length && !win.in.length && !win.out.length && !tro.length) return null;
+  // its history from the archive (tools/archive_job.py v1/archive/club_history.json: one page per club, 24 Nov 2026)
+  const hist = ctx.history && ctx.history(c.id), past = hist ? ctx.historyHtml(hist) : "";
+  if (!sq.length && !win.in.length && !win.out.length && !tro.length && !past) return null;
   const lp = c.league && ctx.leaguePath && ctx.leaguePath(+c.league);
   const league = c.league_ar ? (lp ? `<a href="${lp}">${esc(c.league_ar)}</a>` : esc(c.league_ar)) : "";
   const v = c.venue && c.venue.name ? c.venue : null;
@@ -27,7 +29,7 @@ function clubPage(c, ctx) {
   const html = `<p class="crumbs"><a href="/db/">الموسوعة</a>${c.league_ar ? "، " + league : ""}</p><h1>${esc(name)}</h1>` +
     `<p class="season">${[c.country_ar && esc(c.country_ar), c.name && `<span class="lat">${esc(c.name)}</span>`].filter(Boolean).join(" · ")}</p><div class="sx">${intro}` +
     squad + (window ? `<section class="blk"><h2>انتقالات ${esc(ctx.season || "هالموسم")}</h2>${window}</section>` : "") +
-    (rum.length ? `<section class="blk"><h2>إشاعات حوله</h2>${T.rumourList(rum, { pname, cname: ctx.cname })}</section>` : "") + titles +
+    (rum.length ? `<section class="blk"><h2>إشاعات حوله</h2>${T.rumourList(rum, { pname, cname: ctx.cname })}</section>` : "") + titles + past +
     `<p class="src">اللاعبين والبطولات من FotMob، والانتقالات من سجل تيفو.</p></div>`;
   const ld = Object.assign({ "@context": "https://schema.org", "@type": "SportsTeam", name, sport: "Soccer", url: `${ctx.site}/db/club/${c.id}/` },
     c.name && c.name !== name ? { alternateName: c.name } : {}, v ? { location: { "@type": "Place", name: v.name } } : {});

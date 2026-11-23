@@ -24,7 +24,8 @@ function referee(r, o) {
       href: seasonHref(o, s[1], s[0]) })).join("")) + lastGames(r, "آخر مبارياته");
 }
 
-function club_(c, o) {
+// the history part of a club page, for the encyclopedia's /db/club/<FotMob id>/ too (one page per club, 24 Nov 2026)
+function clubHistory(c, o) {
   o = o || {};
   const ss = c.ss || [], hon = c.hon || [];
   const tot = ss.reduce((a, s) => a.map((v, i) => v + (s[3 + i] || 0)), [0, 0, 0, 0, 0, 0]);
@@ -32,8 +33,12 @@ function club_(c, o) {
   const td = v => `<td>${num(v)}</td>`;
   const table = ss.length ? U.grp("موسم بموسم", `<div class="tblw"><table class="tbl"><thead><tr><th>الموسم</th><th>البطولة</th><th>لعب</th><th>ف</th><th>ت</th><th>خ</th><th>له</th><th>عليه</th></tr></thead><tbody>${
     ss.map(s => { const h = seasonHref(o, s[1], s[0]); return `<tr><td>${h ? `<a href="${h}">${num(s[0])}</a>` : num(s[0])}</td><td>${txt(s[2])}</td>${s.slice(3, 9).map(td).join("")}</tr>`; }).join("")}</tbody></table></div>`) : "";
-  return head(c) + U.grp("", `<p class="note">${num(tot[0])} مباراة في أرشيف تيفو: ${num(tot[1])} فوز و${num(tot[2])} تعادل و${num(tot[3])} خسارة، ${num(tot[4])} هدف له و${num(tot[5])} عليه.</p>`) +
+  return U.grp("", `<p class="note">${num(tot[0])} مباراة في أرشيف تيفو: ${num(tot[1])} فوز و${num(tot[2])} تعادل و${num(tot[3])} خسارة، ${num(tot[4])} هدف له و${num(tot[5])} عليه.</p>`) +
     titles + table + lastGames(c, "آخر مبارياته في الأرشيف");
+}
+
+function club_(c, o) {
+  return head(c) + clubHistory(c, o);
 }
 
 // a coach (graph/archive_export.coaches): his record, every bench club by club, his awards, his last games, and his playing
@@ -62,4 +67,4 @@ const coachIndexable = c => coachGames(c) >= 30 || (c.hon || []).some(h => h[1] 
 const refIndexable = r => (r.ms || []).reduce((a, s) => a + s[3], 0) >= 20;
 const clubIndexable = c => (c.hon || []).length > 0 || (c.ss || []).reduce((a, s) => a + s[3], 0) >= 100;
 
-module.exports = { referee, club: club_, coach, refIndexable, clubIndexable, coachIndexable, nameOf };
+module.exports = { referee, club: club_, clubHistory, coach, refIndexable, clubIndexable, coachIndexable, nameOf };

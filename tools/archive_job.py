@@ -50,14 +50,16 @@ def state_put(s3, name, obj):
 
 def known_pages(s3, bucket):
     """the site's own pages: a match, a man or a club with one links there (site/archive/build.cjs --known)"""
-    out = {"m": set(), "p": set(), "t": set(), "r": set(), "coach": set()}
+    out = {"m": set(), "p": set(), "t": set(), "r": set(), "coach": set(), "dbclub": set()}
     pages = s3.get_paginator("list_objects_v2")
     # coach: the site's /coach/<FotMob id>/ (its /coach/k<id>/ are this job's now)
-    for kind, pres in (("m", [f"m/{d}" for d in "123456789"]), ("p", ["p/"]), ("t", ["t/"]), ("r", ["r/"]), ("coach", [f"coach/{d}" for d in "123456789"])):
+    # dbclub: the encyclopedia's /db/club/<FotMob id>/, a club's one page when it has it (24 Nov 2026)
+    for kind, pres in (("m", [f"m/{d}" for d in "123456789"]), ("p", ["p/"]), ("t", ["t/"]), ("r", ["r/"]), ("coach", [f"coach/{d}" for d in "123456789"]),
+                       ("dbclub", ["db/club/"])):
         for pre in pres:
             for page in pages.paginate(Bucket=bucket, Prefix=pre):
                 for o in page.get("Contents") or []:
-                    parts = o["Key"].split("/")
+                    parts = o["Key"].split("/")[1:] if kind == "dbclub" else o["Key"].split("/")
                     if len(parts) == 3 and parts[2] == "index.html":
                         out[kind].add(parts[1])
     return {k: sorted(v) for k, v in out.items()}
@@ -124,7 +126,9 @@ def site_page(known, fm):
     have = {k: set(map(str, v)) for k, v in known.items() if isinstance(v, list)}
     def page(kind, keep):
         f = (fm.get(PAGE_TYPE[kind]) or {}).get(keep)
-        return f"/{kind}/{f}/" if f and f in have.get(kind, ()) else None
+        if f and f in have.get(kind, ()):
+            return f"/{kind}/{f}/"
+        return f"/db/club/{f}/" if kind == "t" and f and f in have.get("dbclub", ()) else None
     return page
 
 
@@ -360,6 +364,12 @@ def main(argv=None):
         return 1
     say("render", r.stdout.strip()[-400:])
     urls = json.load(open(os.path.join(out, "_archive_urls.json"), encoding="utf-8"))
+    hist = os.path.join(out, "_club_history.json")
+    if os.path.exists(hist) and not a.dry and not a.comps:      # the clubs' history for the encyclopedia's club pages (site build)
+        h = json.load(open(hist, encoding="utf-8"))
+        s3.put_object(Bucket=DATA_BUCKET, Key="v1/archive/club_history.json", Body=gzip.compress(json.dumps(h, ensure_ascii=False, separators=(",", ":")).encode()),
+                      ContentEncoding="gzip", ContentType="application/json; charset=utf-8", CacheControl="public, max-age=300")
+        say(f"club history: {len(h)} clubs shown on the encyclopedia's club page")
     for name, what in (("fm2k", "matches"), ("fm2p", "men")):
         f = os.path.join(out, f"_{name}.json")
         m = json.load(open(f, encoding="utf-8")) if os.path.exists(f) else {}

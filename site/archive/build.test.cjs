@@ -215,3 +215,16 @@ test("a FotMob club the site has a page for gets no second page in the archive",
   assert.equal(fs.existsSync(path.join(o.out, "t", "k7", "index.html")), false);
   assert.equal(fs.existsSync(path.join(o.out, "t", "k8", "index.html")), true);
 });
+
+test("a club with the encyclopedia's page is shown there: its history goes out for that page and it gets no /t/k page", () => {
+  const { o } = world();
+  fs.writeFileSync(path.join(o.data, "clubs.json"), JSON.stringify({ "8": { n: "Alanyaspor", fm: 4678, ss: [["2020/2021", 71, "الدوري التركي", 34, 15, 9, 10, 50, 40]] },
+    "9": { n: "Old Club", ss: [["1990/1991", 47, "الدوري", 30, 10, 10, 10, 40, 40]] } }));
+  fs.writeFileSync(o.known, JSON.stringify({ m: [], p: [], t: [9825, 8650], dbclub: ["4678"] }));
+  A.build(o);
+  assert.equal(fs.existsSync(path.join(o.out, "t", "k8", "index.html")), false);
+  assert.equal(fs.existsSync(path.join(o.out, "t", "k9", "index.html")), true);
+  const h = JSON.parse(fs.readFileSync(path.join(o.out, "_club_history.json"), "utf8"));
+  assert.deepEqual(Object.keys(h), ["4678"]);
+  assert.equal(h["4678"].n, "Alanyaspor");
+});
