@@ -34,7 +34,7 @@ def http(url, data=None, timeout=60):
         try:
             return urllib.request.urlopen(req, timeout=timeout).read()
         except urllib.error.HTTPError as e:
-            if e.code in (429, 503) and i < 3:
+            if e.code in (429, 502, 503, 504) and i < 3:
                 time.sleep(10 * (i + 1)); continue
             raise
 
@@ -53,7 +53,11 @@ def wikidata(qids, need_img=True):
         chunk = qids[i:i + 250]
         q = ("SELECT ?p ?img ?dob ?fb WHERE { VALUES ?p { %s } %s OPTIONAL { ?p wdt:P569 ?dob } "
              "BIND(EXISTS { ?p wdt:P106 wd:%s } AS ?fb) }") % (" ".join("wd:" + x for x in chunk), img, FOOTBALLER)
-        r = json.loads(http("https://query.wikidata.org/sparql", urllib.parse.urlencode({"query": q, "format": "json"}).encode()))
+        try:
+            r = json.loads(http("https://query.wikidata.org/sparql", urllib.parse.urlencode({"query": q, "format": "json"}).encode()))
+        except urllib.error.HTTPError:          # (2026-11-23) the query service gave 502s for hours: Freiburg's QLever mirror of Wikidata
+            pre = "PREFIX wd: <http://www.wikidata.org/entity/> PREFIX wdt: <http://www.wikidata.org/prop/direct/> "
+            r = json.loads(http("https://qlever.cs.uni-freiburg.de/api/wikidata?" + urllib.parse.urlencode({"query": pre + q})))
         for b in r["results"]["bindings"]:
             qid = b["p"]["value"].rsplit("/", 1)[1]
             if qid in out:
