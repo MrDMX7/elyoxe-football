@@ -96,6 +96,86 @@ def persons(G, out, min_apps=3, last=10):
     return {"persons": len(keep), "shards": len(shards)}
 
 
+def referees(G, out, min_matches=5, last=10):
+    """referees.json {rid: {n, ar, c, fm, ms: [season, competition FotMob id, competition, matches, yellow, red], last: [...]}}:
+    every referee of 5 games or more (the owner: «كل الحكام»), for /r/k<Tifo id>/"""
+    from collections import defaultdict
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    fm = lambda t: {a: int(b) for a, b in q(f"SELECT tifo_id, source_id FROM xref WHERE type='{t}' AND source='fotmob'") if str(b).isdigit()}
+    fm_r, fm_t, fm_c, fm_m = fm("referee"), fm("team"), fm("competition"), fm("match")
+    tn = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
+    cn = {c: (a or n) for c, n, a in q("SELECT cid, name, name_ar FROM competition")}
+    R = defaultdict(lambda: defaultdict(list))
+    cards = {m: (y, r) for m, y, r in q("""SELECT mid, sum(type='yellow'), sum(type IN ('red','second_yellow')) FROM event WHERE type IN ('yellow','red','second_yellow')
+                                          GROUP BY mid""")}
+    rows = q("""SELECT m.rid, m.mid, substr(m.date,1,10), m.home, m.away, m.hs, m.as_, e.season, e.cid FROM match m JOIN edition e ON e.eid=m.eid
+                WHERE m.rid IS NOT NULL AND m.hs IS NOT NULL ORDER BY m.date DESC""")
+    n = defaultdict(int)
+    for rid, *_ in rows:
+        n[rid] += 1
+    agg = defaultdict(lambda: [0, 0, 0])
+    for rid, mid, d, h, a, hs, as_, season, cid in rows:
+        if n[rid] < min_matches:
+            continue
+        y, r = cards.get(mid, (0, 0))
+        k = agg[(rid, season, cid)]
+        k[0] += 1; k[1] += y or 0; k[2] += r or 0
+        if len(R[rid]["last"]) < last:
+            R[rid]["last"].append([str(fm_m[mid]) if mid in fm_m else f"k{mid}", d, tn.get(h), fm_t.get(h), tn.get(a), fm_t.get(a), hs, as_, fm_c.get(cid)])
+    for (rid, season, cid), (m, y, r) in agg.items():
+        R[rid]["ms"].append([season, fm_c.get(cid), cn.get(cid), m, y, r])
+    out_d = {}
+    for rid, name, ar, country in q("SELECT rid, name, name_ar, country FROM referee"):
+        if rid in R:
+            out_d[str(rid)] = {k: v for k, v in {"n": name, "ar": ar, "c": country, "fm": fm_r.get(rid), "ms": sorted(R[rid]["ms"], key=lambda x: str(x[0]), reverse=True),
+                                                 "last": R[rid]["last"]}.items() if v not in (None, [], "")}
+    with open(os.path.join(out, "referees.json"), "w", encoding="utf-8") as f:
+        json.dump(out_d, f, ensure_ascii=False, separators=(",", ":"))
+    return {"referees": len(out_d)}
+
+
+def clubs(G, out, min_matches=30, last=10):
+    """clubs.json {tid: {n, ar, c, ss: [season, competition FotMob id, competition, p, w, d, l, gf, ga], hon: [kind, competition,
+    competition FotMob id, season], last: [...]}}: every club FotMob has no page for with 30 games or more in the archive
+    (the Wimbledon of 1990, Dubai CSC, Al Khaleej), for /t/k<Tifo id>/"""
+    from collections import defaultdict
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    fm = lambda t: {a: int(b) for a, b in q(f"SELECT tifo_id, source_id FROM xref WHERE type='{t}' AND source='fotmob'") if str(b).isdigit()}
+    fm_t, fm_c, fm_m = fm("team"), fm("competition"), fm("match")
+    tn = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
+    cn = {c: (a or n) for c, n, a in q("SELECT cid, name, name_ar FROM competition")}
+    rows = q("""SELECT m.mid, substr(m.date,1,10), m.home, m.away, m.hs, m.as_, e.season, e.cid FROM match m JOIN edition e ON e.eid=m.eid
+                WHERE m.hs IS NOT NULL ORDER BY m.date DESC""")
+    n = defaultdict(int)
+    for mid, d, h, a, *_ in rows:
+        n[h] += 1; n[a] += 1
+    want = {t for t, k in n.items() if k >= min_matches and t not in fm_t}
+    C = defaultdict(lambda: defaultdict(list))
+    agg = defaultdict(lambda: [0, 0, 0, 0, 0, 0])
+    for mid, d, h, a, hs, as_, season, cid in rows:
+        for t, gf, ga in ((h, hs, as_), (a, as_, hs)):
+            if t not in want:
+                continue
+            k = agg[(t, season, cid)]
+            k[0] += 1; k[1] += gf > ga; k[2] += gf == ga; k[3] += gf < ga; k[4] += gf; k[5] += ga
+            if len(C[t]["last"]) < last:
+                C[t]["last"].append([str(fm_m[mid]) if mid in fm_m else f"k{mid}", d, tn.get(h), fm_t.get(h), tn.get(a), fm_t.get(a), hs, as_, fm_c.get(cid)])
+    for (t, season, cid), v in agg.items():
+        C[t]["ss"].append([season, fm_c.get(cid), cn.get(cid), *v])
+    for t, kind, cid, season in q("SELECT h.tid, h.kind, e.cid, e.season FROM honour h JOIN edition e ON e.eid=h.eid WHERE h.kind IN ('champion','runner_up') AND h.tid IS NOT NULL"):
+        if t in want:
+            C[t]["hon"].append([kind, cn.get(cid), fm_c.get(cid), season])
+    out_d = {}
+    for tid, name, ar, country in q("SELECT tid, name, name_ar, country FROM team"):
+        if tid in want:
+            c = C[tid]
+            out_d[str(tid)] = {k: v for k, v in {"n": name, "ar": ar, "c": country, "ss": sorted(c["ss"], key=lambda x: str(x[0]), reverse=True),
+                                                 "hon": sorted(c["hon"], key=lambda x: str(x[3]), reverse=True), "last": c["last"]}.items() if v not in (None, [], "")}
+    with open(os.path.join(out, "clubs.json"), "w", encoding="utf-8") as f:
+        json.dump(out_d, f, ensure_ascii=False, separators=(",", ":"))
+    return {"clubs": len(out_d)}
+
+
 def export(db, out, comps=None):
     G = open_graph(db)
     os.makedirs(out, exist_ok=True)
@@ -105,6 +185,8 @@ def export(db, out, comps=None):
     rec["matches"] = P.matches(G, out, comps=tuple(fids), teams=())
     rec["people"] = P.people(G, out)
     rec["persons"] = persons(G, out)            # people/<shard>.json: every man's profile (/p/k<id>/)
+    rec["referees"] = referees(G, out)          # referees.json: every referee of 5 games (/r/k<id>/)
+    rec["clubs"] = clubs(G, out)                # clubs.json: every club FotMob has no page for, 30 games (/t/k<id>/)
     rec["secs"] = round(time.time() - t)
     rec["competitions"] = len(fids)
     return rec

@@ -458,7 +458,7 @@ def matches(G, out_dir, comps=ARAB_LEAGUES + TOURNAMENTS, teams=(5789,), eras=No
             r = {"id": str(fm_m[mid]) if mid in fm_m else f"k{mid}", "k": mid, "date": d, "comp": comp, "season": season, "round": rnd,
                  "h": [fm_t.get(h), at(h, d), h], "a": [fm_t.get(a), at(a, d), a], "s": [hs, as_],
                  "ht": [hth, hta] if hth is not None else None, "pen": [ph, pa] if ph is not None else None,
-                 "venue": sn.get(sid), "ref": rn.get(rid), "ev": ev.get(mid), "lu": dict(lu[mid]) if mid in lu else None, "co": co.get(mid), "motm": mo.get(mid)}
+                 "venue": sn.get(sid), "ref": rn.get(rid), "rk": rid, "ev": ev.get(mid), "lu": dict(lu[mid]) if mid in lu else None, "co": co.get(mid), "motm": mo.get(mid)}
             out.append({k: v for k, v in r.items() if v not in (None, [], {})})
         G.c.execute("DROP TABLE pub_m")
         return out

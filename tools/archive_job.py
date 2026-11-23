@@ -50,9 +50,9 @@ def state_put(s3, name, obj):
 
 def known_pages(s3, bucket):
     """the site's own pages: a match, a man or a club with one links there (site/archive/build.cjs --known)"""
-    out = {"m": set(), "p": set(), "t": set()}
+    out = {"m": set(), "p": set(), "t": set(), "r": set()}
     pages = s3.get_paginator("list_objects_v2")
-    for kind, pres in (("m", [f"m/{d}" for d in "123456789"]), ("p", ["p/"]), ("t", ["t/"])):
+    for kind, pres in (("m", [f"m/{d}" for d in "123456789"]), ("p", ["p/"]), ("t", ["t/"]), ("r", ["r/"])):
         for pre in pres:
             for page in pages.paginate(Bucket=bucket, Prefix=pre):
                 for o in page.get("Contents") or []:

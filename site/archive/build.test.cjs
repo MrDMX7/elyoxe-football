@@ -88,3 +88,18 @@ test("every man with a record gets his profile, and the matches link to it; a ma
   assert.match(fs.readFileSync(path.join(o.out, "m/k1/index.html"), "utf8"), /href="\/p\/k5\/"/);   // his line-up row
   assert.equal(r.persons, 1);
 });
+
+test("an old club and a referee get their pages, and the match links both", () => {
+  const { o } = world();
+  fs.writeFileSync(path.join(o.data, "clubs.json"), JSON.stringify({ "2": { n: "Liverpool FC (old)", ss: [["1990/1991", 47, "الدوري الإنجليزي", 38, 23, 7, 8, 77, 40]] } }));
+  fs.writeFileSync(path.join(o.data, "referees.json"), JSON.stringify({ "9": { n: "M Halsey", ms: [["1990/1991", 47, "الدوري", 25, 70, 2]] } }));
+  fs.writeFileSync(o.known, JSON.stringify({ m: [], p: [], t: [9825] }));              // 8650 has no site page: the archive's k2
+  const mf = path.join(o.data, "matches", "47", "1990-1991.json"), md = JSON.parse(fs.readFileSync(mf, "utf8"));
+  md.matches[0].ref = "M Halsey"; md.matches[0].rk = 9;
+  fs.writeFileSync(mf, JSON.stringify(md));
+  A.build(o);
+  const m = fs.readFileSync(path.join(o.out, "m/k1/index.html"), "utf8");
+  assert.match(m, /href="\/t\/k2\/"/);
+  assert.match(m, /href="\/r\/k9\/"/);
+  assert.ok(fs.existsSync(path.join(o.out, "t/k2/index.html")) && fs.existsSync(path.join(o.out, "r/k9/index.html")));
+});

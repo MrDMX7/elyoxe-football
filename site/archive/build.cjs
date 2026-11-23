@@ -10,7 +10,7 @@
 "use strict";
 const fs = require("fs"), path = require("path");
 const U = require("../src/v5/ui.js"), P5 = require("../src/v5/pages.js"), SV = require("../lib/season_view.cjs"), MV = require("../lib/match_view.cjs"),
-  HP = require("../lib/history_pages.cjs"), MA = require("../lib/match_archive.cjs"), PV = require("../lib/person_view.cjs");
+  HP = require("../lib/history_pages.cjs"), MA = require("../lib/match_archive.cjs"), PV = require("../lib/person_view.cjs"), EV = require("../lib/entity_view.cjs");
 
 const arg = (k, d) => { const i = process.argv.indexOf("--" + k); return i > 0 ? process.argv[i + 1] : d; };
 const SITE = "https://tifo.elyoxe.com";
@@ -40,6 +40,10 @@ function build(o) {
   const index = readJ(o.index) || { competitions: [] }, known = readJ(o.known) || {}, shell = fs.readFileSync(o.shell, "utf8");
   const KM = new Set((known.m || []).map(String)), KP = new Set((known.p || []).map(String)), KT = new Set((known.t || []).map(String));
   const PH = known.ph || {};                     // the archive men's photos (v1/ph/index.json, k<id> keys)
+  const KR = new Set((known.r || []).map(String));
+  // every referee of 5 games and every club FotMob has no page for (graph/archive_export referees, clubs): /r/k<id>/, /t/k<id>/
+  const REFS = readJ(path.join(o.data, "referees.json")) || {}, CLUBS = readJ(path.join(o.data, "clubs.json")) || {};
+  for (const [rid, r] of Object.entries(REFS)) if (r.fm && KR.has(String(r.fm))) delete REFS[rid];
   const comps = index.competitions.filter(c => !o.comps || o.comps.includes(+c.id));
   U.cfg.base = ""; U.cfg.pre = null; U.cfg.cn = {}; index.competitions.forEach((c, i) => { U.cfg.cn[c.id] = [c.key, c.name_ar, (c.country && c.country.iso2) || "", i]; });
   const written = new Set(), urls = [];        // urls: the indexable pages (the sitemaps)
@@ -51,9 +55,9 @@ function build(o) {
   // a match links to the site's page when it has one, else to this archive's; a man or a club to the site's, else nothing yet
   const mHref = m => (KM.has(String(m.id)) ? `/m/${m.id}/` : `/m/k${m.k}/`);
   const relink = ms => ms.map(m => {
-    const side = s => [s[0] && KT.has(String(s[0])) ? s[0] : null, s[1], s[2]];
+    const side = s => [s[0] && KT.has(String(s[0])) ? s[0] : s[2] != null && CLUBS[String(s[2])] ? `k${s[2]}` : null, s[1], s[2]];
     const man = (id, pid) => (id && KP.has(String(id)) ? id : pid != null && PERS.has(String(pid)) ? `k${pid}` : null);
-    return Object.assign({}, m, { id: KM.has(String(m.id)) ? m.id : `k${m.k}`, h: side(m.h), a: side(m.a),
+    return Object.assign({}, m, { id: KM.has(String(m.id)) ? m.id : `k${m.k}`, h: side(m.h), a: side(m.a), rh: m.rk != null && REFS[String(m.rk)] ? `/r/k${m.rk}/` : null,
       ev: (m.ev || []).map(e => [e[0], e[1], e[2], e[3], e[4], man(e[5], e[6]), e[6]]),          // e[6]: the man's Tifo id (the season's leaders)
       lu: m.lu ? Object.fromEntries(Object.entries(m.lu).map(([k, v]) => [k, v.map(p => [p[0], man(p[1], p[4]), p[2], p[3]])])) : null });
   });
@@ -121,6 +125,21 @@ function build(o) {
     if (ok) urls.push(pth);
     nPersons++;
   }
+  // the referees' and the old clubs' pages
+  const eo = { team: id => KT.has(String(id)), comp: compOf };
+  for (const [rid, r] of Object.entries(REFS)) {
+    const pth = `/r/k${rid}/`, nm = EV.nameOf(r), ok = EV.refIndexable(r);
+    write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: `الحكم ${nm}: مبارياته وكروته | تيفو`,
+      desc: `الحكم ${nm}: كل مبارياته في أرشيف تيفو موسم بموسم، والإنذارات والطرد.`, body: EV.referee(r, eo) + U.foot(), ld: bcLd([[nm, pth]]) }));
+    if (ok) urls.push(pth);
+  }
+  for (const [tid, c] of Object.entries(CLUBS)) {
+    const pth = `/t/k${tid}/`, nm = EV.nameOf(c), ok = EV.clubIndexable(c);
+    write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: `${nm}: تاريخه ونتايجه موسم بموسم | تيفو`,
+      desc: `${nm}: كل مواسمه في أرشيف تيفو، ألقابه ونتايجه ومبارياته.`, body: EV.club(c, eo) + U.foot(),
+      ld: { "@context": "https://schema.org", "@graph": [{ "@type": "SportsTeam", name: nm, sport: "Soccer", url: SITE + pth }, Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
+    if (ok) urls.push(pth);
+  }
   // links to pages neither the site nor this run has become plain text (the site build's own rule)
   const OWN = /^\/(m|p|t|c|coach|r|s)\//, SKIP = /^\/(v1|assets|logo|lg|og|api|embed|next)\//;
   let dead = 0;
@@ -129,7 +148,7 @@ function build(o) {
     const h2 = h.replace(/(<script\b[\s\S]*?<\/script>)|<a\b([^>]*?)\shref="(\/[^"#?]*)(?:[?#][^"]*)?"([^>]*)>([\s\S]*?)<\/a>/g, (m0, sc, pre, href, post, inner) => {
       if (sc || SKIP.test(href) || !OWN.test(href) || written.has(href)) return m0;
       const seg = href.split("/"), kind = seg[1], id = seg[2] || "";
-      if ((kind === "m" && KM.has(id)) || (kind === "p" && KP.has(id)) || (kind === "t" && KT.has(id)) || (kind === "c" && seg.length <= 4) || kind === "coach" || kind === "r" || kind === "s") return m0;
+      if ((kind === "m" && KM.has(id)) || (kind === "p" && KP.has(id)) || (kind === "t" && KT.has(id)) || (kind === "c" && seg.length <= 4) || kind === "coach" || (kind === "r" && !/^k/.test(id)) || kind === "s") return m0;
       dead++; return `<span${pre}${post}>${inner}</span>`; });
     if (h2 !== h) fs.writeFileSync(f, h2);
   }
