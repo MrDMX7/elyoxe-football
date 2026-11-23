@@ -9,3 +9,9 @@ test("an encyclopedia man who has the archive's profile gets a page that sends h
   assert.match(h, /noindex/);
   assert.match(h, /يوجين فريمبونغ/);
 });
+
+test("the encyclopedia page's card is rows of label and value, as the profiles' (a bare dl piled up on today's pages)", () => {
+  const h = W.bioRows([["المركز", "وسط"], ["الطول", '<span class="num">174</span> سم']]);
+  assert.equal(h, '<div class="row"><span class="rt">المركز</span><span class="rv">وسط</span></div>' +
+    '<div class="row"><span class="rt">الطول</span><span class="rv"><span class="num">174</span> سم</span></div>');
+});

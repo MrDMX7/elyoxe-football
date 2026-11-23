@@ -34,6 +34,8 @@ function forwardPage(to, name){
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="robots" content="noindex,follow"><link rel="canonical" href="https://tifo.elyoxe.com${to}">` +
     `<meta http-equiv="refresh" content="0;url=${to}"><title>${escF(name)} | تيفو</title></head><body><a href="${to}">${escF(name)}</a></body></html>`;
 }
+// the encyclopedia page's card as rows of label and value, as the profiles' (23 Nov 2026: a bare <dl> piled up on today's pages)
+const bioRows = rows => rows.map(r => `<div class="row"><span class="rt">${r[0]}</span><span class="rv">${r[1]}</span></div>`).join("");
 module.exports = async function(X){
   const { get, page, esc, SITE, CACHE, fs, path, bcLd, finalize, written, NAMES_AR, FMN, WP, PH, phHtml, colors, teamPages, playerPages, S_TEAMS, ASSET_V } = X;
   const pmates = X.pmates || {}, pname = X.pname || (() => null);   // owner item 11: his club's players that have a /p/ page (build.cjs)
@@ -97,7 +99,7 @@ module.exports = async function(X){
     const n = (k, w) => k === 1 ? w[0] + (w[3] ? " " + w[3] : "") : k === 2 ? w[1] : `${k} ${k >= 3 && k <= 10 ? w[2] : w[0]}`;   // 1 · 2 · 3-10 · 11+
     const sum = seasons.length ? `<p class="intro">${esc(title)} ${pos ? esc(pos) + " " : ""}${club ? "في " + esc(tname(club)) : ""}${cn ? "، من " + esc(cn) : ""}${age != null ? "، عمره " + age + " سنة" : ""}. لعب ${n(tot[0], ["مباراة", "مباراتين", "مباريات", "وحدة"])}${tot[1] ? ` وسجّل ${n(tot[1], ["هدف", "هدفين", "أهداف", "واحد"])}` : ""} في ${n(seasons.length, ["موسم", "موسمين", "مواسم", "واحد"])}.</p>` : "";
     const html = `<p class="crumbs"><a href="/db/">الموسوعة</a>${club ? "، " + tlink(club) : ""}</p>${nm ? `<h1>${esc(nm)}</h1>` : `<h1 class="lat">${esc(la)}</h1>`}<p class="season">${[pos && esc(pos), club && esc(tname(club)), cn && `<a href="/db/players/${esc(String(b.cc).toLowerCase())}/">${esc(cn)}</a>`, nm && la && `<span class="lat">${esc(la)}</span>`].filter(Boolean).join(" · ")}</p>` +
-      `<div class="sx">${sum}${lead}${bio.length ? `<section class="grp"><div class="gh"><h2>بطاقته</h2></div><div class="card"><dl class="bio">${bio.map(r => `<div><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`).join("")}</dl></div></section>` : ""}` +
+      `<div class="sx">${sum}${lead}${bio.length ? `<section class="grp"><div class="gh"><h2>بطاقته</h2></div><div class="card">${bioRows(bio)}</div></section>` : ""}` +
       tbl(seasons, "مسيرته موسم بموسم") + moves(t.m) + tbl(t.n.filter(s => s[1] || s[2]), "مع المنتخب") + tro + mateHtml + pmHtml + `<p class="src">المسيرة والبطاقة من FotMob${lead ? "، والنبذة من ويكيبيديا" : ""}. <a href="/db/player/?id=${id}">مبارياته وانتقالاته في الموسوعة</a></p></div>`;
     const person = Object.assign({ "@context":"https://schema.org", "@type":"Person", name:title, url:`${SITE}/db/player/${id}/`, jobTitle:"لاعب كرة قدم" }, nm && la ? { alternateName:la } : {}, b.born && b.born >= "1900" ? { birthDate:b.born } : {},
       b.h ? { height:{ "@type":"QuantitativeValue", value:b.h, unitCode:"CMT" } } : {}, cn ? { nationality:{ "@type":"Country", name:cn } } : {}, club ? { affiliation:{ "@type":"SportsTeam", name:tname(club) } } : {}, PH[id] ? { image:`${SITE}/v1/ph/${id}.webp` } : {});
@@ -144,3 +146,4 @@ module.exports = async function(X){
   return { urls, fresh, stats:st, hubs };
 };
 module.exports.forwardPage = forwardPage;
+module.exports.bioRows = bioRows;
