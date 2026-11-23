@@ -85,3 +85,18 @@ def test_plausible():
     assert names.plausible("Amer Khalil", None, "Amer Deeb", None) is False
     assert names.plausible("Vinicius Junior", None, "Vinícius Júnior", None) is True
     assert names.plausible("Ali", "1990-01-01", None, None) is True                       # nothing to compare: allowed
+
+
+def test_a_transfermarkt_club_takes_its_arabic_name_from_clubs_tm_ar(tmp_path):
+    # 23 Nov 2026: 9,758 Transfermarkt clubs (Port Vale FC, Juventus Primavera…) had no Arabic name: 45 % of career lines
+    (tmp_path / "names").mkdir()
+    (tmp_path / "names" / "clubs_tm_ar.json").write_text(json.dumps({
+        "305": {"latin": "Port Vale FC", "ar": "بورت فايل", "source": "wikidata"},
+        "506": {"latin": "Juventus Primavera", "ar": "يوفنتوس تحت 19", "source": "generated"}}, ensure_ascii=False), encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    pv, ju = reg.mint("team", "tm", "305"), reg.mint("team", "tm", "506")
+    G.put("team", {"tid": pv, "name": "Port Vale FC"}, "tm")
+    G.put("team", {"tid": ju, "name": "Juventus Primavera", "name_ar": "يوفنتوس بريمافيرا"}, "tm")       # a name it has stays
+    names.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "m"), s3=False))
+    assert G.c.execute("select name_ar from team where tid=?", (pv,)).fetchone() == ("بورت فايل",)
+    assert G.c.execute("select name_ar from team where tid=?", (ju,)).fetchone() == ("يوفنتوس بريمافيرا",)

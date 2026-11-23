@@ -46,7 +46,7 @@ def _items_by_qid(S):
 
 
 def load(G, reg, S):
-    n = {"team": 0, "player": 0, "coach": 0, "referee": 0, "wikidata": 0, "wikidata_refused": 0}
+    n = {"team": 0, "team_tm": 0, "player": 0, "coach": 0, "referee": 0, "wikidata": 0, "wikidata_refused": 0}
     wd = _items_by_qid(S)
     born = dict(G.c.execute("SELECT pid, born FROM player WHERE born IS NOT NULL").fetchall())
     teams = {}
@@ -69,6 +69,13 @@ def load(G, reg, S):
         if tid:
             G.put("team", {"tid": tid, "name_ar": ar}, "names")
             n["team"] += 1
+    # (23 Nov 2026) the Transfermarkt clubs FotMob never names (Port Vale FC, Juventus Primavera: 45 % of career lines read in
+    # Latin letters): names/clubs_tm_ar.json (names/tm_clubs.py: Wikidata by Transfermarkt id, then generated)
+    for k, v in (S.read(os.path.join(S.names, "clubs_tm_ar.json")) or {}).items():
+        tid = reg.get("team", "tm", str(k))
+        if tid and v.get("ar") and not (G.c.execute("SELECT name_ar FROM team WHERE tid=?", (tid,)).fetchone() or [None])[0]:
+            G.put("team", {"tid": tid, "name_ar": v["ar"]}, "names")
+            n["team_tm"] += 1
     for t, f in (("player", "players_ar.json"), ("coach", "coaches_ar.json")):
         for k, v in sorted((S.read(os.path.join(S.names, f)) or {}).items()):
             i = reg.get(t, "fotmob", int(k)) if k.isdigit() else None
