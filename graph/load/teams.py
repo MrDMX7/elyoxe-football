@@ -26,6 +26,8 @@ from difflib import SequenceMatcher
 
 import yaml
 
+from graph.countries import canon
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ALIASES = os.path.join(ROOT, "graph", "team_aliases.yaml")
 FOLD = str.maketrans({"æ": "ae", "Æ": "ae", "ø": "o", "Ø": "o", "ß": "ss", "đ": "d", "ł": "l", "ı": "i", "œ": "oe"})
@@ -210,33 +212,32 @@ def source_twins(teams, src_of, met=frozenset()):
     return sorted(out)
 
 
-def countries(q):
-    """{tid: country}: the team's own, else the league country it played or won in most."""
-    own = {tid: c for tid, c in q("SELECT tid, country FROM team")}
+def countries(q, extra=None):
+    """{tid: country} in one spelling (graph/countries.canon): the team's own, else the league country it played or won in
+    most, else `extra`'s (the encyclopedia's country of a FotMob club with no game in the graph)"""
+    own = {tid: canon(c) for tid, c in q("SELECT tid, country FROM team")}
+    extra = extra or {}
     seen = defaultdict(Counter)
     for tid, c, n in q("""SELECT t, c.country, count(*) FROM (SELECT home t, eid FROM match UNION ALL SELECT away, eid FROM match
                            UNION ALL SELECT tid, eid FROM honour WHERE tid IS NOT NULL UNION ALL SELECT tid, eid FROM standing) x
                            JOIN edition e ON e.eid=x.eid JOIN competition c ON c.cid=e.cid
                            WHERE c.kind='league' AND c.country IS NOT NULL GROUP BY 1, 2"""):
-        seen[tid][c] += n
-    # one country, one spelling: a FotMob club's own «Qatar» is the code its leagues carry («QAT», RSSSF's and FotMob's)
-    code = defaultdict(Counter)
-    for tid, c in own.items():
-        if c and seen.get(tid):
-            code[c].update(seen[tid])
-    as_code = {name: n.most_common(1)[0][0] for name, n in code.items()}
-    return {tid: as_code.get(own.get(tid), own.get(tid)) or (seen[tid].most_common(1)[0][0] if seen.get(tid) else None) for tid in own}
+        if canon(c):
+            seen[tid][canon(c)] += n
+    return {tid: own.get(tid) or (seen[tid].most_common(1)[0][0] if seen.get(tid) else None) or extra.get(tid) for tid in own}
 
 
-def candidates(c, alias=None, guard=None, era=None):
-    """The (drop, keep) pairs for one graph's connection (read-only: nothing is changed)."""
+def candidates(c, alias=None, guard=None, era=None, world=None):
+    """The (drop, keep) pairs for one graph's connection (read-only: nothing is changed). world: {FotMob id: country} of the
+    encyclopedia's clubs (v1/world/index.json)."""
     q = lambda s, p=(): c.execute(s, p).fetchall()
     if guard is None or era is None:
         g, e = guarded()
         guard = g if guard is None else guard
         era = e if era is None else era
     fm = {t for (t,) in q("SELECT DISTINCT tifo_id FROM xref WHERE type='team' AND source='fotmob'")}
-    cc = countries(q)
+    fm_ids = {int(i): t for t, i in q("SELECT tifo_id, source_id FROM xref WHERE type='team' AND source='fotmob'") if str(i).isdigit()}
+    cc = countries(q, {fm_ids[f]: canon(code) for f, code in (world or {}).items() if f in fm_ids})
     teams = [(tid, name, cc.get(tid), kind, tid in fm) for tid, name, kind in q("SELECT tid, name, kind FROM team")]
     met = {(min(h, a), max(h, a)) for h, a in q("SELECT DISTINCT home, away FROM match WHERE home IS NOT NULL AND away IS NOT NULL")}
     keyed = {f"{s}:{i}": t for t, s, i in q("SELECT tifo_id, source, source_id FROM xref WHERE type='team'")}
@@ -272,7 +273,16 @@ def settle_conflicts(G, merged):
     return n
 
 
-def load(G, reg, S):
-    merged = candidates(G.c)
+def world_countries(S):
+    """{FotMob id: country code} of the encyclopedia's clubs (db/world.py: v1/world/index.json [id, ar, name, code, league])"""
+    try:
+        d = (S.published("world/index.json") if S else None) or {}
+    except Exception:
+        d = {}
+    return {int(c[0]): c[3] for c in d.get("clubs") or [] if len(c) > 3 and c[3] and str(c[0]).isdigit()}
+
+
+def load(G, reg, S, world=None):
+    merged = candidates(G.c, world=world_countries(S) if world is None else world)
     G.remap_many("team", merged)
     return {"merged": len(merged), "conflicts_settled": settle_conflicts(G, merged)}

@@ -171,4 +171,35 @@ def test_a_clubs_own_country_and_its_leagues_code_are_one_country(tmp_path):
     G.put("match", {"mid": 1, "eid": 1, "date": "2016-01-01", "home": 10, "away": 11, "hs": 1, "as_": 0}, "fotmob")
     G.c.execute("insert into honour(eid, kind, rank, tid, src) values(1, 'champion', 1, 12, 'rsssf')")
     cc = countries(lambda s, p=(): G.c.execute(s, p).fetchall())
-    assert cc[10] == cc[12] == "QAT"
+    assert cc[10] == cc[12] == "QA"                    # one spelling: graph/countries.canon
+
+
+def test_one_country_however_a_source_writes_it():
+    """Transfermarkt's leagues say «TR», FotMob's «TUR», a club's own «Turkiye»: 497 clubs had two pages (Hearts, Aalborg,
+    Alanyaspor) because their two records never had one country (23 Nov 2026)"""
+    from graph.countries import canon
+    assert canon("TR") == canon("TUR") == canon("Turkiye") == canon("Türkiye") == canon("Turkey") == "TR"
+    assert canon("SCO") == canon("Scotland") == "GB-SCT" and canon("ENG") == canon("England") == "GB-ENG"
+    assert canon("KSA") == canon("Saudi Arabia") == "SA" and canon("POR") == "PT" and canon("CPR") == "CN"
+    assert canon("Asia") is None and canon("") is None and canon(None) is None
+
+
+def test_a_fotmob_club_with_no_games_here_takes_its_country_from_the_encyclopedia(tmp_path):
+    """FotMob's Alanyaspor (no game of his league in the graph, no country) and Transfermarkt's (359 games, «TR»): one club,
+    once v1/world/index.json says FotMob's is Turkish; Jordan's Al Faisaly stays apart from FotMob's Saudi one"""
+    G = Graph(str(tmp_path / "t.db"))
+    G.put("competition", {"cid": 1, "name": "Süper Lig", "kind": "league", "country": "TR"}, "tm")
+    G.put("competition", {"cid": 2, "name": "Jordan League", "kind": "league", "country": "Jordan"}, "rsssf")
+    G.put("edition", {"eid": 1, "cid": 1, "season": "2020/2021"}, "tm")
+    G.put("edition", {"eid": 2, "cid": 2, "season": "2020/2021"}, "rsssf")
+    for tid, name, src in ((10, "Alanyaspor", "fotmob"), (11, "Alanyaspor", "tm"), (12, "Rizespor", "tm"), (20, "Al-Faisaly", "fotmob"),
+                           (21, "Al Faisaly", "rsssf"), (22, "Al Wehdat", "rsssf")):
+        G.put("team", {"tid": tid, "name": name}, src)
+    G.xref("team", 10, "fotmob", "4678", "native")
+    G.xref("team", 20, "fotmob", "205687", "native")
+    G.put("match", {"mid": 1, "eid": 1, "date": "2021-01-01", "home": 11, "away": 12, "hs": 1, "as_": 0}, "tm")
+    G.put("match", {"mid": 2, "eid": 2, "date": "2021-01-01", "home": 21, "away": 22, "hs": 1, "as_": 0}, "rsssf")
+    world = {4678: "TUR", 205687: "KSA"}
+    out = T.load(G, None, None, world=world)
+    assert out["merged"] == 1
+    assert [t for (t,) in G.c.execute("SELECT tid FROM team ORDER BY tid")] == [10, 12, 20, 21, 22]
