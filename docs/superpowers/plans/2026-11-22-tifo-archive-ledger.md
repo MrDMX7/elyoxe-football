@@ -100,3 +100,16 @@ with the commit or the evidence. A new session reads this first and continues at
   encyclopedia clubs 0.10, transfers 0.44, h2h 0.0. Still Latin: /arabs/ (0.88: referees and coaches abroad), /memorable/
   (0.75), /messi/ (0.73), /worldcup-arabs/ (0.66). Pending: Arab Cup scorers (next awards stage), old Euros' scorers (season
   pages as the fetch reaches them), the per-player stats table on old matches.
+- 24 Nov (UAE night): the integration pass.
+  * names/site_latin.py: every editorial page and a sample of the big kinds read live, the <span class="lat"> the dictionary
+    left named with the sections as the hint: 2,026 named, 60 media brands kept in Latin; site/build.cjs reads
+    names/site_latin_ar.json over the other names files (latin_ar.extend).
+  * RSSSF: a date under a match («[Mar 15]») is no scorer list (496 goals by «Mar», «Dec»…); «?» and «own goal» are goals with
+    no man; «(10' own goal)» an own goal. db/rsssf.py for new pages, graph/load/rsssf.clean_goals for the published files.
+  * people: 1,146 top-scorer rows sat on a record with no goal in that season. Three rules: a bridge record joins the
+    records it fits when their clubs never overlap (Henry was three), the listed top scorer is the one namesake who scored in
+    that edition (scorer_pairs), the rules again after teams (people_again); a bench place is no title. On the 23 Nov graph:
+    1,028 records folded (366 by the scorer rule), 50 checked by hand, all one man.
+  * Graph.merges -> meta «merged»; the archive job writes a forward page where a folded record had a page.
+  * old matches: the «الأرقام» tab from the men's numbers (graph/publish.team_stats, 46,301 matches since 2016).
+  Ruling: the per-man stats table stays off — today's match page has none, and the owner asked for the same page.
