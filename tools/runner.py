@@ -149,12 +149,9 @@ def job_site(log):
     # (GitHub's runners keep nothing) still holds the build against the last published count; the larger of the two wins
     rebase = False
     try:
-        st = STORE.get_state("runner/site-pages.json") or {}
-        if st.get("count") == "site-own":
-            last = max(last, int(st.get("pages") or 0))
-        else:                                       # (2026-11-22) a count of every page, the archive's too: this build sets the
-            rebase, last = True, 0                  # baseline of the site's own pages
-            log.w(f"page count now leaves out the archive's pages: {now} sets the baseline")
+        last, rebase = page_baseline(STORE.get_state("runner/site-pages.json") or {}, last)
+        if rebase:
+            log.w(f"what the archive owns changed since the last count: {now} sets the baseline")
     except Exception as e:
         log.w(f"site-pages state unreadable ({e}); the local count only")
     if not last and not rebase and os.environ.get("TIFO_FIRST_PUBLISH") != "1":
@@ -200,7 +197,8 @@ def job_site(log):
         log.w(f"shells not saved: {e}")
     lastf.write_text(str(now))
     try:
-        STORE.put_state("runner/site-pages.json", {"pages": now, "count": "site-own", "host": HOST, "at": datetime.now(timezone.utc).isoformat(timespec="seconds")})
+        STORE.put_state("runner/site-pages.json", {"pages": now, "count": "site-own", "owned": owned_sig(), "host": HOST,
+                                                   "at": datetime.now(timezone.utc).isoformat(timespec="seconds")})
     except Exception as e:
         log.w(f"site-pages state not written: {e}")
     run(log, [AWS, "cloudfront", "create-invalidation", "--distribution-id", dist, "--paths", "/sw.js", "/", "--query", "Invalidation.Id", "--output", "text"], timeout=120)
@@ -245,6 +243,19 @@ def fallback_args(args):
 
 def page_excludes():
     return PAGE_EXCLUDES + FAST_OWNED + ARCHIVE_OWNED
+
+
+def owned_sig():
+    return ",".join(ARCHIVE_OWNED)
+
+
+def page_baseline(st, local_last):
+    """(last, rebase): the published count a build is held against, the larger of the local and S3 ones. A count taken
+    under another ARCHIVE_OWNED (2026-11-22: of every page; 23 Nov: before p/k*, when 9,941 legend pages fell out of the
+    site's count and the guard refused builds for three hours) is no baseline: this build sets it"""
+    if st.get("count") == "site-own" and st.get("owned") == owned_sig():
+        return max(local_last, int(st.get("pages") or 0)), False
+    return 0, True
 
 
 def own_pages(out):

@@ -101,3 +101,14 @@ def test_the_fallback_sync_uploads_and_never_deletes():
     # next hour's s3push does the deletes
     args = ["s3", "sync", "out", "s3://b", "--delete", "--exclude", "p/k*"]
     assert runner.fallback_args(args) == ["s3", "sync", "out", "s3://b", "--exclude", "p/k*"]
+
+
+def test_a_change_to_what_the_archive_owns_resets_the_page_count_baseline():
+    # 23 Nov 2026: p/k* joined the archive's paths, the site's own count fell 77,035 -> 67,098 (its 9,941 legend pages), and
+    # the partial-build guard refused every build for three hours
+    sig = runner.owned_sig()
+    assert runner.page_baseline({"pages": 77035, "count": "site-own", "owned": sig}, 0) == (77035, False)
+    assert runner.page_baseline({"pages": 77035, "count": "site-own"}, 77035) == (0, True)               # written before the signature
+    assert runner.page_baseline({"pages": 77035, "count": "site-own", "owned": "old"}, 77035) == (0, True)
+    assert runner.page_baseline({"pages": 10, "count": "site-own", "owned": sig}, 20) == (20, False)     # the larger of the two
+    assert runner.page_baseline({"pages": 99, "count": "all"}, 0) == (0, True)
