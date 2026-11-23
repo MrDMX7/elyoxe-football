@@ -1755,7 +1755,8 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
       if (p && p[0] === h){ try { const t = new Date(p[1]); fs.utimesSync(f, t, t); next[rel] = p; kept++; } catch (x){ next[rel] = [h, Date.now()]; fresh++; } } else { next[rel] = [h, fs.statSync(f).mtimeMs]; fresh++; } } })(OUT);
     try { fs.writeFileSync(MF, JSON.stringify(next)); } catch (e){} console.log(`out: ${fresh} new or changed files, ${kept} unchanged (they keep their old mtime for s3 sync)`);
     // 446: lastmod is when the page's bytes last changed (the manifest above), never the build time
-    const uniq = [...new Set(urls)], relOf = u => (decodeURI(u).replace(/^\//, "") + (u.endsWith("/") ? "index.html" : "")), lm = u => { const e = next[relOf(u)]; return e ? new Date(e[1]).toISOString().slice(0, 10) : ""; };
+    // the archive job's pages go in its own sitemaps, under its noindex rule (lib/archive_owned.cjs)
+    const uniq = [...new Set(urls)].filter(u => !require("./lib/archive_owned.cjs").owned(u)), relOf = u => (decodeURI(u).replace(/^\//, "") + (u.endsWith("/") ? "index.html" : "")), lm = u => { const e = next[relOf(u)]; return e ? new Date(e[1]).toISOString().slice(0, 10) : ""; };
     const sm = list => `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` + list.map(u => `<url><loc>${esc(SITE + encodeURI(decodeURI(u)))}</loc>${lm(u) ? `<lastmod>${lm(u)}</lastmod>` : ""}</url>`)   /* QA 99: encoded, no duplicates */.join("\n") + "\n</urlset>\n";
     fs.writeFileSync(path.join(OUT, "sitemap.xml"), sm(uniq));
     // 446: the pages Google should look at first: matches from 3 days back to 7 ahead, their competitions, today/tomorrow
