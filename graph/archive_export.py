@@ -37,6 +37,35 @@ TM_CODES = {"GB1": "Premier League", "GB2": "Championship", "GB3": "League One",
             "FRC": "Coupe de France"}
 
 
+ARABIC, CODE = re.compile("[%s-%s]" % (chr(0x600), chr(0x6FF))), re.compile(r"[A-Z0-9]{1,5}")
+
+
+def career_names(G, cn):
+    """(Transfermarkt's competition name, club) -> its name in Arabic, or None: one of our competitions of that name (the
+    club's own where several share it), else graph/tm_comps_ar.yaml (23 Nov 2026: 850k of 1.29M career lines read in English)"""
+    import yaml
+    from collections import defaultdict
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    norm = lambda s: re.sub(r"[^a-z0-9]+", " ", str(s or "").lower()).strip()
+    by_name = defaultdict(set)
+    for cid, name in q("SELECT cid, name FROM competition WHERE kind IS NULL OR kind <> 'award'"):
+        by_name[norm(name)].add(cid)
+    club = defaultdict(set)
+    for tid, cid in q("""SELECT m.home, e.cid FROM match m JOIN edition e ON e.eid=m.eid GROUP BY 1, 2
+                         UNION SELECT m.away, e.cid FROM match m JOIN edition e ON e.eid=m.eid GROUP BY 1, 2"""):
+        club[tid].add(cid)
+    try:
+        cur = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tm_comps_ar.yaml"), encoding="utf-8")) or {}
+    except OSError:
+        cur = {}
+
+    def name(comp, tid):
+        cand = by_name.get(norm(comp), set())
+        mine = cand if len(cand) == 1 else cand & club.get(tid, set())
+        return (cn.get(next(iter(mine))) if len(mine) == 1 else None) or cur.get(comp)
+    return name
+
+
 def persons(G, out, min_apps=3, last=10, nat=lambda v: v):
     """people/<pid % 500>.json: every man the graph holds a record of beyond a name (3 games in the archive, a career line, an
     honour, caps, a move or an injury), for the archive's /p/k<Tifo id>/ pages (phase 2: «بروفايلات لكل اللاعبين»):
@@ -58,9 +87,13 @@ def persons(G, out, min_apps=3, last=10, nat=lambda v: v):
     apps = {p: sum(r[3] for r in d["ms"]) for p, d in P.items()}
     for pid in [p for p, n in apps.items() if n < min_apps]:
         del P[pid]["ms"]
+    comp_ar = career_names(G, cn)
     for pid, season, comp, cid, tid, a, mi, g, asst, y, r in q("""SELECT pid, season, comp, cid, tid, apps, minutes, goals, assists, yellow, red FROM player_season
                                                                   ORDER BY pid, season DESC"""):
-        name = cn.get(cid) or (TM_CODES.get(comp) if re.fullmatch(r"[A-Z0-9]{1,5}", str(comp or "")) else comp)
+        # Arabic first (ours, else by name), then a real name before a code: competitions made from Transfermarkt codes are
+        # named by the code («FAC»), the line itself says «FA Cup»
+        own = cn.get(cid)
+        name = next((x for x in (own, comp_ar(comp, tid)) if x and ARABIC.search(x)), None) or             next((x for x in (comp, own) if x and not CODE.fullmatch(x)), None) or TM_CODES.get(comp) or comp
         P[pid]["car"].append([season, name, tn.get(tid), fm_t.get(tid), a, g, asst, mi, y, r])
     for pid, d, f, t, fee, typ in q("SELECT pid, date, from_tid, to_tid, fee, type FROM transfer ORDER BY pid, date DESC"):
         P[pid]["tr"].append([d, tn.get(f), fm_t.get(f), tn.get(t), fm_t.get(t), fee, typ])
