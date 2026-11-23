@@ -119,3 +119,11 @@ def test_a_build_the_guard_refuses_says_why_and_keeps_its_record():
     why = build.publish_refusal(st, cov)
     assert why == "matches 900 < 95% of the last build's 1000"
     assert build.publish_refusal(st, {"counts": {"match": 1000}, "by_src": {"match": {"fotmob": 1000}}}) is None
+
+
+def test_games_dropped_on_purpose_are_no_loss():
+    # 23 Nov 2026: the seasons pass dropped its 85,245 aside games (copies, another division's) and the build was refused
+    st = FakeStore({"graph/last.json": {"matches": 1000, "fotmob_matches": 1000}})
+    cov = {"counts": {"match": 900}, "by_src": {"match": {"fotmob": 1000}}}
+    assert build.publish_refusal(st, cov, dropped=100) is None
+    assert build.publish_refusal(st, cov, dropped=40) == "matches 900 < 95% of the last build's 1000 (40 dropped on purpose)"

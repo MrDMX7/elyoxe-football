@@ -116,19 +116,24 @@ def registry_for_upload(st, reg_path):
     return bool(d)
 
 
-def publish_refusal(st, cov):
+def publish_refusal(st, cov, dropped=0):
     """Why this build must not replace the published one, or None: 95% of the last published build's matches, counted in total
-    and from FotMob alone (an empty FotMob cache would keep the total, every twin minted as a match of its own, and hide the loss)."""
+    and from FotMob alone (an empty FotMob cache would keep the total, every twin minted as a match of its own, and hide the loss).
+    `dropped`: games the build drops on purpose (the seasons pass's aside games), no loss (23 Nov 2026: 85,245 refused a build)."""
     prev = st.get_state("graph/last.json") or {}
     total, fm = cov["counts"]["match"], (cov.get("by_src", {}).get("match") or {}).get("fotmob", 0)
-    for now, key in ((total, "matches"), (fm, "fotmob_matches")):
-        if prev.get(key) and now < 0.95 * prev[key]:
-            return f"{key} {now} < 95% of the last build's {prev[key]}"
+    for now, key, extra in ((total, "matches", dropped), (fm, "fotmob_matches", 0)):
+        if prev.get(key) and now + extra < 0.95 * prev[key]:
+            return f"{key} {now} < 95% of the last build's {prev[key]}" + (f" ({extra} dropped on purpose)" if extra else "")
     return None
 
 
-def publish_allowed(st, cov):
-    why = publish_refusal(st, cov)
+def dropped_on_purpose(rec):
+    return ((rec.get("loaders") or {}).get("seasons") or {}).get("out", {}).get("aside_dropped", 0) if isinstance(rec, dict) else 0
+
+
+def publish_allowed(st, cov, dropped=0):
+    why = publish_refusal(st, cov, dropped)
     if why:
         print(f"not published: {why}", flush=True)
     return why is None
@@ -149,8 +154,8 @@ def upload_files(out_dir, subs):
 
 def publish(S, out_dir, reg_path, rec, cov):
     st = S.store()
-    if not publish_allowed(st, cov):
-        rec["published"], rec["not_published"] = False, publish_refusal(st, cov)
+    if not publish_allowed(st, cov, dropped_on_purpose(rec)):
+        rec["published"], rec["not_published"] = False, publish_refusal(st, cov, dropped_on_purpose(rec))
         st.put_state("graph/build_unpublished.json", rec)     # each loader's result, to see which one lost the matches
         return
     st.put_state(REG_STATE, json.loads(gzip.decompress(open(reg_path, "rb").read())))

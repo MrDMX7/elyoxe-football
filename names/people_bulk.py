@@ -88,7 +88,19 @@ def main(argv=None):
     sys.path.insert(0, os.path.dirname(HERE))
     from names import build_names as B
     out = json.load(open(OUT, encoding="utf-8")) if os.path.exists(OUT) else {}
-    save = lambda: json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
+    def save():
+        """to a temporary file, then over the old one: Windows refused an open() mid-run (a scanner on the big file), which
+        killed the 23 Nov run after 12,000 names"""
+        tmp = OUT + ".tmp"
+        for t in range(6):
+            try:
+                with open(tmp, "w", encoding="utf-8") as f:
+                    json.dump(out, f, ensure_ascii=False, indent=0)
+                os.replace(tmp, OUT)
+                return
+            except OSError:
+                time.sleep(2 * (t + 1))
+        raise OSError(f"could not write {OUT}")
     today = date.today().isoformat()
     P = pool_of(a.db, out)
     todo = order(P)
