@@ -29,11 +29,28 @@ const comp = c => (c ? (COMP[c] ? esc(COMP[c]) : txt(c)) : "");
 const club = (name, fm, o) => (!name ? '<span class="muted">—</span>' : fm && o.team && o.team(fm) ? `<a href="/t/${fm}/">${txt(name)}</a>` : txt(name));
 const fee = v => (v == null ? "" : v >= 1e6 ? `${(v / 1e6).toFixed(v % 1e6 ? 1 : 0)} مليون €` : v >= 1e3 ? `${Math.round(v / 1e3)} ألف €` : `${v} €`);
 
-function facts(p) {
-  const f = [p.b && ["تاريخ الميلاد", U.dateAr(p.b)], p.d && ["توفي", U.dateAr(p.d)], p.bp && ["مكان الميلاد", txt(p.bp)],
-    p.nat && ["الجنسية", txt(p.nat)], p.pos && ["المركز", POS[p.pos] ? esc(POS[p.pos]) : txt(p.pos)], p.h && ["الطول", `${num(p.h)} سم`],
-    p.ft && ["القدم", esc(FOOT[p.ft] || p.ft)]].filter(Boolean);
+// a market value as the encyclopedia wrote it: «€140 ألف», «€2.5 مليون»
+const mvAr = v => (v >= 1e6 ? `${num("€" + +(v / 1e6).toFixed(1))} مليون` : `${num("€" + Math.round(v / 1e3))} ألف`);
+
+function facts(p, o) {
+  o = o || {};
+  // (23 Nov 2026) a FotMob man's profile carries what his encyclopedia page showed: his club, position, shirt, value, contract
+  const b = (o.fm || {}).bio || {}, tn = id => (o.teamName && o.teamName(id)) || "";
+  const f = [b.team && tn(b.team) && ["النادي", club(tn(b.team), b.team, o)], p.b && ["تاريخ الميلاد", U.dateAr(p.b)], p.d && ["توفي", U.dateAr(p.d)],
+    p.bp && ["مكان الميلاد", txt(p.bp)], p.nat && ["الجنسية", txt(p.nat)],
+    (p.pos || b.pos) && ["المركز", p.pos ? (POS[p.pos] ? esc(POS[p.pos]) : txt(p.pos)) : txt(b.pos)], b.shirt && ["الرقم", num(b.shirt)],
+    (p.h || b.h) && ["الطول", `${num(p.h || b.h)} سم`], p.ft && ["القدم", esc(FOOT[p.ft] || p.ft)], b.mv && ["القيمة السوقية", mvAr(b.mv)],
+    b.contract && ["نهاية العقد", U.dateAr(b.contract)]].filter(Boolean);
   return f.length ? U.grp("", f.map(x => U.row({ t: x[0], v: x[1] })).join("")) : "";      // rows: a bare list spilled out of its card
+}
+
+// this season from FotMob: [season, club FotMob id, apps, goals, assists, rating]
+function season(o) {
+  const r = (o.fm || {}).s0, tn = id => (o.teamName && o.teamName(id)) || "";
+  if (!r || !r[2]) return "";
+  return U.grp("هذا الموسم", U.row({ t: `${num(r[0])} · ${club(tn(r[1]) || "", r[1], o)}`,
+    sub: `${num(r[2])} مباراة · ${num(r[3] || 0)} هدف · ${num(r[4] || 0)} صناعة`,
+    v: r[5] ? '<span class="chip num ' + U.rclass(r[5]) + '" style="color:#fff">' + Number(r[5]).toFixed(2) + "</span>" : null }));      // a season's average, as FotMob gives it
 }
 
 function honours(p, o) {
@@ -94,7 +111,7 @@ const header = (p, ph) => { const fig = figure(ph);
 
 function body(p, o) {
   o = o || {};
-  return header(p, o.photo) + facts(p) + honours(p, o) + career(p, o) + archive(p, o) + moves(p, o) + injuries(p) + caps(p);
+  return header(p, o.photo) + facts(p, o) + season(o) + honours(p, o) + career(p, o) + archive(p, o) + moves(p, o) + injuries(p) + caps(p);
 }
 
 // worth the search engines: a career of three seasons, twenty games in the archive, a title or award, or ten caps
@@ -105,4 +122,4 @@ const ld = (p, pth) => Object.assign({ "@context": "https://schema.org", "@type"
   p.n && p.n !== nameOf(p) ? { alternateName: p.n } : {}, p.b ? { birthDate: p.b } : {}, p.d ? { deathDate: p.d } : {}, p.bp ? { birthPlace: p.bp } : {},
   p.nat ? { nationality: p.nat } : {}, p.h ? { height: `${p.h} cm` } : {}, { jobTitle: "لاعب كرة قدم" });
 
-module.exports = { body, header, indexable, title, desc, ld, nameOf };
+module.exports = { body, header, indexable, title, desc, ld, nameOf, mvAr };

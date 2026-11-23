@@ -177,3 +177,16 @@ test("a FotMob man the site has no page for is the archive's, and the build says
   A.build(o);
   assert.deepEqual(JSON.parse(fs.readFileSync(path.join(o.out, "_fm2p.json"), "utf8")), { 1526227: 5 });
 });
+
+test("a FotMob man's profile carries his encyclopedia facts (data/fmp.json) with his club's Arabic name (fm_teams.json)", () => {
+  const { o } = world();
+  fs.mkdirSync(path.join(o.data, "people"), { recursive: true });
+  fs.writeFileSync(path.join(o.data, "people", "5.json"), JSON.stringify({ "5": { n: "Eugene Frimpong", fm: 1526227, car: [["2025/2026", "LaLiga2", "x", null, 32, 2, 0, null, 0, 0]] } }));
+  fs.writeFileSync(path.join(o.data, "fmp.json"), JSON.stringify({ 1526227: { bio: { team: 1585, mv: 139630, shirt: 16 }, s0: ["2025/2026", 8005, 32, 2, 0, 6.05] } }));
+  fs.writeFileSync(path.join(o.data, "fm_teams.json"), JSON.stringify({ 1585: "كالاماتا", 8005: "بونفيرادينا" }));
+  A.build(o);
+  const h = fs.readFileSync(path.join(o.out, "p/k5/index.html"), "utf8");
+  assert.match(h, /النادي<\/span><span class="rv">كالاماتا/);
+  assert.match(h, /القيمة السوقية/);
+  assert.match(h, /هذا الموسم[\s\S]*?بونفيرادينا/);
+});

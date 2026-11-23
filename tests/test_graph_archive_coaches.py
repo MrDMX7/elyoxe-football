@@ -34,3 +34,12 @@ def test_a_coachs_nationality_reads_in_arabic(tmp_path):
     out.mkdir()
     archive_export.coaches(G, str(out), nat=lambda v: {"Netherlands": "هولندا"}.get(v, v))
     assert json.load(open(out / "coaches.json", encoding="utf-8"))[str(kid)]["nat"] == "هولندا"
+
+
+def test_the_fotmob_clubs_arabic_names_go_out_for_the_profiles(tmp_path):
+    G, m2, old = world(tmp_path)
+    out = tmp_path / "d"
+    out.mkdir()
+    archive_export.fm_teams(G, str(out))
+    t = json.load(open(out / "fm_teams.json", encoding="utf-8"))
+    assert t["102101"] == "الجزيرة" and t["5789"] == "الإمارات"

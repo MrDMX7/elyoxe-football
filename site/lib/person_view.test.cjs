@@ -48,3 +48,20 @@ test("the facts are rows of their card, a label and its value (a bare list spill
   assert.match(h, /<div class="row"><span class="rt">تاريخ الميلاد<\/span><span class="rv">22 سبتمبر 1978<\/span><\/div>/);
   assert.doesNotMatch(h, /<ul class="lc">/);
 });
+
+test("a FotMob man's profile carries what the encyclopedia showed: his club, shirt, value, contract and this season", () => {
+  const fm = { bio: { team: 1585, shirt: 16, mv: 139630, contract: "2027-06-30", pos: "وسط" },
+    s0: ["2025/2026", 8005, 32, 2, 0, 6.05] };
+  const h = V.body(Object.assign({}, P, { pos: null }), Object.assign({}, o, { fm, teamName: id => ({ 1585: "كالاماتا", 8005: "بونفيرادينا" })[id] }));
+  assert.match(h, /<span class="rt">النادي<\/span><span class="rv">كالاماتا<\/span>/);
+  assert.match(h, /<span class="rt">المركز<\/span><span class="rv">وسط<\/span>/);
+  assert.match(h, /<span class="rt">الرقم<\/span><span class="rv"><span class="num">16<\/span><\/span>/);
+  assert.match(h, /<span class="rt">القيمة السوقية<\/span><span class="rv"><span class="num">€140<\/span> ألف<\/span>/);
+  assert.match(h, /<span class="rt">نهاية العقد<\/span><span class="rv">30 يونيو 2027<\/span>/);
+  assert.match(h, /هذا الموسم[\s\S]*?بونفيرادينا[\s\S]*?<span class="num">32<\/span> مباراة[\s\S]*?6\.05/);
+});
+
+test("a market value in millions", () => {
+  assert.equal(V.mvAr(2500000), '<span class="num">€2.5</span> مليون');
+  assert.equal(V.mvAr(80000000), '<span class="num">€80</span> مليون');
+});

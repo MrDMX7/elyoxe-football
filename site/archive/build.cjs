@@ -43,6 +43,8 @@ function build(o) {
   const index = readJ(o.index) || { competitions: [] }, known = readJ(o.known) || {}, shell = fs.readFileSync(o.shell, "utf8");
   const KM = new Set((known.m || []).map(String)), KP = new Set((known.p || []).map(String)), KT = new Set((known.t || []).map(String));
   const PH = known.ph || {};                     // the archive men's photos (v1/ph/index.json, k<id> keys)
+  // one page per man (23 Nov 2026): a FotMob man's encyclopedia facts (tools/archive_job.py fm_profiles) and FotMob's clubs' names
+  const FMP = readJ(path.join(o.data, "fmp.json")) || {}, FMT = readJ(path.join(o.data, "fm_teams.json")) || {};
   const KR = new Set((known.r || []).map(String));
   // every referee of 5 games and every club FotMob has no page for (graph/archive_export referees, clubs): /r/k<id>/, /t/k<id>/
   const REFS = readJ(path.join(o.data, "referees.json")) || {}, CLUBS = readJ(path.join(o.data, "clubs.json")) || {};
@@ -130,7 +132,8 @@ function build(o) {
     if (!PERS.has(pid)) continue;
     const pth = `/p/k${pid}/`, nm = PV.nameOf(p), ok = PV.indexable(p);
     write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: PV.title(p), desc: PV.desc(p),
-      body: PV.body(p, { team: id => KT.has(String(id)), comp: compOf, photo: PH[`k${pid}`] ? Object.assign({ src: `/v1/ph/k${pid}.webp` }, PH[`k${pid}`]) : null }),
+      body: PV.body(p, { team: id => KT.has(String(id)), comp: compOf, photo: PH[`k${pid}`] ? Object.assign({ src: `/v1/ph/k${pid}.webp` }, PH[`k${pid}`]) : null,
+        fm: p.fm ? FMP[p.fm] : null, teamName: id => FMT[id] }),
       ld: { "@context": "https://schema.org", "@graph": [Object.assign(PV.ld(p, pth), { "@context": undefined }), Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
     if (ok) urls.push(pth);
     if (p.fm) FM2P[p.fm] = +pid;                       // the site sends its links to this FotMob man here, and the encyclopedia's page

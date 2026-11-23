@@ -283,6 +283,16 @@ def coaches(G, out, last=10, nat=lambda v: v):
     return {"coaches": len(out_d)}
 
 
+def fm_teams(G, out):
+    """fm_teams.json {FotMob team id: its Arabic name, else its name}: a FotMob man's club on his profile (23 Nov 2026)"""
+    rows = G.c.execute("""SELECT x.source_id, t.name_ar, t.name FROM xref x JOIN team t ON t.tid=x.tifo_id
+                          WHERE x.type='team' AND x.source='fotmob'""").fetchall()
+    d = {str(k): (a or n) for k, a, n in rows if str(k).isdigit() and (a or n)}
+    with open(os.path.join(out, "fm_teams.json"), "w", encoding="utf-8") as f:
+        json.dump(d, f, ensure_ascii=False, separators=(",", ":"))
+    return {"fm_teams": len(d)}
+
+
 def export(db, out, comps=None):
     G = open_graph(db)
     os.makedirs(out, exist_ok=True)
@@ -295,7 +305,8 @@ def export(db, out, comps=None):
     rec["persons"] = persons(G, out, nat=ar)            # people/<shard>.json: every man's profile (/p/k<id>/)
     rec["referees"] = referees(G, out, nat=ar)          # referees.json: every referee of 5 games (/r/k<id>/)
     rec["clubs"] = clubs(G, out, nat=ar)                # clubs.json: every club FotMob has no page for, 30 games (/t/k<id>/)
-    rec["coaches"] = coaches(G, out, nat=ar)            # coaches.json: every coach with a bench or an award (/coach/k<id>/)
+    rec["coaches"] = coaches(G, out, nat=ar)
+    rec["fm_teams"] = fm_teams(G, out)          # fm_teams.json: a FotMob man's club on his profile            # coaches.json: every coach with a bench or an award (/coach/k<id>/)
     rec["secs"] = round(time.time() - t)
     rec["competitions"] = len(fids)
     return rec

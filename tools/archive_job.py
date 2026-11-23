@@ -104,6 +104,44 @@ def fm2k_files(fm2k):
     return map_files("fm2k", fm2k)
 
 
+def fm_profile(raw):
+    """a FotMob profile (v1/player/<id>/profile.json) cut to what the archive's profile shows (23 Nov 2026, one page per man:
+    the encyclopedia's club, shirt, value, contract and this season): {bio, s0: [season, club, apps, goals, assists, rating]}"""
+    b = (raw or {}).get("bio") or {}
+    if not b:
+        return None
+    num = lambda v: None if v in (None, "", "None", "undefined") else (float(v) if "." in str(v) else int(v))
+    ss = (((raw.get("career") or {}).get("senior") or {}).get("seasons")) or []
+    s0 = ss[0] if ss else None
+    out = {"bio": {k: b[k] for k in ("h", "shirt", "mv", "contract", "pos", "team") if b.get(k) not in (None, "")}}
+    if s0:
+        out["s0"] = [s0[0], s0[1], num(s0[3]), num(s0[4]), num(s0[5]), num(s0[6])]
+    return out
+
+
+GZ = bytes((0x1F, 0x8B))
+
+
+def fm_profiles(s3, data):
+    """{FotMob id: fm_profile} for every FotMob man the archive writes a profile for (data/people/*.json, the site's men left
+    out by the build itself), 40 at a time"""
+    ids = set()
+    for f in os.listdir(os.path.join(data, "people")) if os.path.isdir(os.path.join(data, "people")) else []:
+        if f.endswith(".json") and f[:-5].isdigit():
+            for p in json.load(open(os.path.join(data, "people", f), encoding="utf-8")).values():
+                if p.get("fm"):
+                    ids.add(str(p["fm"]))
+
+    def one(i):
+        try:
+            raw = s3.get_object(Bucket=DATA_BUCKET, Key=f"v1/player/{i}/profile.json")["Body"].read()
+            return i, fm_profile(json.loads(gzip.decompress(raw) if raw[:2] == GZ else raw))
+        except Exception:
+            return i, None
+    with ThreadPoolExecutor(40) as ex:
+        return {i: p for i, p in ex.map(one, sorted(ids)) if p}
+
+
 def archive_photos(ph):
     """the photo index's archive entries: the men (k<id>, /p/k<id>/) and the coaches (c<id>, /coach/k<id>/)"""
     return {k: v for k, v in ph.items() if k[:1] in ("k", "c")}
@@ -240,6 +278,9 @@ def main(argv=None):
         known["ph"] = archive_photos(ph)
     except Exception as e:
         say(f"no photo index ({e})")
+    fmp = fm_profiles(s3, data)                    # one page per man: the encyclopedia's facts on his profile
+    json.dump(fmp, open(os.path.join(data, "fmp.json"), "w", encoding="utf-8"), ensure_ascii=False)
+    say(f"fmp: {len(fmp)} FotMob profiles for the archive's men")
     json.dump(known, open(os.path.join(a.work, "known.json"), "w"))
     say("render")
     r = subprocess.run(["node", os.path.join(ROOT, "site", "archive", "build.cjs"), "--data", data, "--shell", os.path.join(a.work, "shell.html"),

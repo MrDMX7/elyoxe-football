@@ -112,3 +112,11 @@ def test_the_fotmob_to_profile_map_goes_out_like_the_matches_one():
     files = J.map_files("fm2p", {"1526227": 5, "77": 6})
     assert files["v1/archive/fm2p.json"] == {"1526227": 5, "77": 6}
     assert files["v1/archive/fm2p/27.json"] == {"1526227": 5} and files["v1/archive/fm2p/77.json"] == {"77": 6}
+
+
+def test_a_fotmob_profile_is_cut_to_what_the_archive_profile_shows():
+    raw = {"bio": {"name": "Eugene Frimpong", "h": 174, "shirt": 16, "cc": "GHA", "mv": 139630, "contract": "2027-06-30", "pos": "وسط", "team": 1585, "n": 6},
+           "career": {"senior": {"seasons": [["2025/2026", 8005, "Ponferradina", "32", "2", "0", "6.05", []], ["2024/2025", 4031, "Zamora", "10", "0", "0", None, []]]}}}
+    assert J.fm_profile(raw) == {"bio": {"h": 174, "shirt": 16, "mv": 139630, "contract": "2027-06-30", "pos": "وسط", "team": 1585},
+                                 "s0": ["2025/2026", 8005, 32, 2, 0, 6.05]}
+    assert J.fm_profile({}) is None
