@@ -283,25 +283,35 @@ def main(argv=None):
     return 0
 
 
-def portraits(store, cand, st, index, dry):
-    """Commons licences, then a face-cropped grey portrait per candidate (key -> Commons file): v1/ph/<key>.webp + its credit"""
+def portraits(store, cand, st, index, dry, have=(), save=None, every=250):
+    """Commons licences, then a face-cropped grey portrait per candidate (key -> Commons file): v1/ph/<key>.webp + its credit.
+    `have`: the keys whose picture is up already (a stopped run's), credited and not sent again; `save()` after every `every`
+    men, so a stop keeps what was done (the caller saves the last)"""
     lic = commons(sorted(set(cand.values())))
     made = 0
-    for key, f in cand.items():
+
+    def one(key, f):
         L = lic.get(f)
         if not L or not L.get("thumb"):
-            st[key]["status"] = "no Commons record"; continue
+            st[key]["status"] = "no Commons record"; return 0
         st[key]["license"] = L["short"] or L["license"]
+        credit = {"artist": L["artist"], "license": L["short"] or L["license"], "page": L["page"]}
+        if key in have:
+            st[key]["status"] = "ok"; index["players"][key] = credit; return 1
         try:
             pic = portrait(http(L["thumb"], timeout=60))
         except Exception as e:
-            st[key]["status"] = f"download failed: {str(e)[:60]}"; continue
+            st[key]["status"] = f"download failed: {str(e)[:60]}"; return 0
         if not pic:
-            st[key]["status"] = "no clear face"; index["players"].pop(key, None); continue
-        st[key]["status"] = "ok"; made += 1
-        index["players"][key] = {"artist": L["artist"], "license": L["short"] or L["license"], "page": L["page"]}
+            st[key]["status"] = "no clear face"; index["players"].pop(key, None); return 0
+        st[key]["status"] = "ok"; index["players"][key] = credit
         if not dry:
             store.b.put(f"v1/ph/{key}.webp", pic, "image/webp", "public, max-age=2592000")
+        return 1
+    for i, (key, f) in enumerate(cand.items(), 1):
+        made += one(key, f)
+        if save and i % every == 0 and i < len(cand):
+            save()
     return made
 
 
@@ -321,7 +331,6 @@ def archive_run(store, a):
     print(f"{len(todo)} archive men to check")
     wd = wikidata(sorted({qids[k][0] for k in todo}))
     dobs = {k: qids[k][1] for k in todo if qids[k][1]}
-    cand = {}
     for k in todo:
         v = {"qid": qids[k][0], "latin": qids[k][2]}
         w = wd.get(v["qid"])
@@ -329,17 +338,33 @@ def archive_run(store, a):
         rec = {"qid": v["qid"], "checked": now.isoformat()[:19] + "Z", "identity": why or "ok"}
         rec["status"] = "no image" if not w else why
         if w and not why:
-            rec.pop("status"); cand[k] = w["img"]
+            rec.update(status="pending", img=w["img"])     # a stopped run's next run makes it, without asking Wikidata again
         st[k] = dict(st.get(k, {}), **rec)
+    if todo and not a.dry:
+        store.put_state("photos_archive.json", st)
+    cand = {k: v["img"] for k, v in st.items() if v.get("status") == "pending" and v.get("img")}
     print(f"{len(cand)} identity-checked photos; licences next")
     index = store.get_json("ph/index.json") or {"players": {}}
-    made = portraits(store, cand, st, index, a.dry)
-    index["generated"] = now.isoformat()[:19] + "Z"
+
+    def save():
+        if not a.dry:
+            index["generated"] = datetime.now(timezone.utc).isoformat()[:19] + "Z"
+            store.put_json("ph/index.json", index, cache="warm")
+            store.put_state("photos_archive.json", st)
+    made = portraits(store, cand, st, index, a.dry, have=uploaded(store), save=save)
+    save()
     print(f"{made} portraits made; {sum(1 for k in index['players'] if k.startswith('k'))} archive men in the index")
-    if not a.dry:
-        store.put_json("ph/index.json", index, cache="warm")
-        store.put_state("photos_archive.json", st)
     return 0
+
+
+def uploaded(store):
+    """the archive men whose portrait is in the bucket (v1/ph/k<id>.webp): a stopped run's, not sent again"""
+    keys = set()
+    for page in store.b.s3.get_paginator("list_objects_v2").paginate(Bucket=store.b.bucket, Prefix="v1/ph/k"):
+        for o in page.get("Contents") or []:
+            if o["Key"].endswith(".webp"):
+                keys.add(o["Key"][len("v1/ph/"):-len(".webp")])
+    return keys
 
 
 if __name__ == "__main__":
