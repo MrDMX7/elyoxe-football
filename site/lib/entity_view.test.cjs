@@ -38,3 +38,24 @@ test("a last-games row is one link to the match, with no club link inside it (a 
     for (const r of rows) assert.doesNotMatch(r.slice(2), /<a /, r);
   }
 });
+
+const K = { n: "Henk ten Cate", b: "1954-12-09", nat: "Netherlands", pid: 77, sp: [["الجزيرة", 102101, "2016-10-01", "2017-05-20", 30, 20, 5, 5, 60, 30], ["العين", null, "2010-01-01", "2010-06-01", 12, 6, 3, 3, 20, 14]],
+  hon: [["winner", 1, "مدرب العام", null, "2017", null]], last: [["2600001", "2016-10-01", "الجزيرة", 102101, "العين", 102117, 2, 1, 538]] };
+
+test("a coach's page: his record, every spell club by club, his awards and last games; his playing days linked", () => {
+  const h = V.coach(K, Object.assign({}, o, { team: id => id === 102101, person: pid => pid === 77 }));
+  assert.match(h, /Henk ten Cate/);
+  assert.match(h, /9 ديسمبر 1954/);
+  assert.match(h, /<span class="num">42<\/span> مباراة/);
+  assert.match(h, /<a href="\/t\/102101\/">الجزيرة<\/a>/);
+  assert.match(h, /2016–2017/);
+  assert.match(h, /مدرب العام[\s\S]*?2017/);
+  assert.match(h, /href="\/m\/2600001\/"/);
+  assert.match(h, /href="\/p\/k77\/"/);
+});
+
+test("a coach of 30 games or an award is for the search engines; a few games is not", () => {
+  assert.equal(V.coachIndexable(K), true);
+  assert.equal(V.coachIndexable({ n: "X", sp: [["a", null, "2000-01-01", "2000-02-01", 5, 1, 1, 3, 2, 6]] }), false);
+  assert.equal(V.coachIndexable({ n: "Y", hon: [["winner", 1, "مدرب العام", null, "2001", null]] }), true);
+});

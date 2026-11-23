@@ -20,9 +20,10 @@ def test_the_hourly_publish_leaves_the_archive_jobs_pages_alone():
     # list and every archive match; the site's --delete must never take them
     ex = runner.page_excludes()
     hit = lambda k: any(fnmatch.fnmatchcase(k, p) for p in ex)
-    for k in ("c/premier-league/s/1990-1991/index.html", "c/laliga/seasons/index.html", "m/k123456/index.html", "p/k55/index.html"):
+    for k in ("c/premier-league/s/1990-1991/index.html", "c/laliga/seasons/index.html", "m/k123456/index.html", "p/k55/index.html",
+              "coach/k77/index.html"):
         assert hit(k), k
-    for k in ("c/premier-league/index.html", "m/4813470/index.html", "p/30981/index.html", "t/8650/index.html"):
+    for k in ("c/premier-league/index.html", "m/4813470/index.html", "p/30981/index.html", "t/8650/index.html", "coach/500/index.html"):
         assert not hit(k), k
 
 

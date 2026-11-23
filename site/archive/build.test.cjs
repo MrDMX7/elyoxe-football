@@ -114,3 +114,25 @@ test("a page carries the shell's footer only, not a second one of its own", () =
     assert.match(h, /<p>SITE<\/p><\/footer>/, p);
   }
 });
+
+test("every coach without a site page gets /coach/k<id>/, and an old match links both coaches", () => {
+  const { o } = world();
+  const f = path.join(o.data, "matches", "47", "1990-1991.json"), s = JSON.parse(fs.readFileSync(f, "utf8"));
+  s.matches[0].co = { h: "George Graham", a: "Kenny Dalglish" };
+  s.matches[0].ck = { h: 11, a: 12 };
+  fs.writeFileSync(f, JSON.stringify(s));
+  fs.writeFileSync(path.join(o.data, "coaches.json"), JSON.stringify({
+    11: { n: "George Graham", sp: [["أرسنال", 9825, "1986-08-23", "1995-02-18", 460, 225, 133, 102, 700, 400]] },
+    12: { n: "Kenny Dalglish", fm: 500, sp: [["ليفربول", 8650, "1985-08-17", "1991-02-20", 300, 180, 70, 50, 600, 250]] } }));
+  fs.writeFileSync(o.known, JSON.stringify({ m: [], p: [], t: [9825, 8650], coach: [500] }));
+  const r = A.build(o);
+  const g = fs.readFileSync(path.join(o.out, "coach/k11/index.html"), "utf8");
+  assert.match(g, /George Graham/);
+  assert.match(g, /<a href="\/t\/9825\/">أرسنال<\/a>/);
+  assert.ok(!fs.existsSync(path.join(o.out, "coach/k12/index.html")));          // the site has Dalglish's /coach/500/
+  const m = fs.readFileSync(path.join(o.out, "m/k1/index.html"), "utf8");
+  assert.match(m, /href="\/coach\/k11\/"/);
+  assert.match(m, /href="\/coach\/500\/"/);
+  assert.equal(r.coaches, 1);
+  assert.ok(JSON.parse(fs.readFileSync(path.join(o.out, "_archive_urls.json"), "utf8")).includes("/coach/k11/"));
+});

@@ -47,6 +47,10 @@ function build(o) {
   // every referee of 5 games and every club FotMob has no page for (graph/archive_export referees, clubs): /r/k<id>/, /t/k<id>/
   const REFS = readJ(path.join(o.data, "referees.json")) || {}, CLUBS = readJ(path.join(o.data, "clubs.json")) || {};
   for (const [rid, r] of Object.entries(REFS)) if (r.fm && KR.has(String(r.fm))) delete REFS[rid];
+  // every coach with a bench or an award (graph/archive_export.coaches): /coach/k<id>/, unless the site has his /coach/<FotMob id>/
+  const COACHES = readJ(path.join(o.data, "coaches.json")) || {}, KC = new Set((known.coach || []).map(String));
+  for (const c of Object.values(COACHES)) if (c.fm && KC.has(String(c.fm))) c.site = `/coach/${c.fm}/`;
+  const coachHref = kid => { const c = kid != null && COACHES[String(kid)]; return c ? c.site || `/coach/k${kid}/` : null; };
   const comps = index.competitions.filter(c => !o.comps || o.comps.includes(+c.id));
   U.cfg.base = ""; U.cfg.pre = null; U.cfg.cn = {}; index.competitions.forEach((c, i) => { U.cfg.cn[c.id] = [c.key, c.name_ar, (c.country && c.country.iso2) || "", i]; });
   const written = new Set(), urls = [];        // urls: the indexable pages (the sitemaps)
@@ -61,10 +65,11 @@ function build(o) {
     const side = s => [s[0] && KT.has(String(s[0])) ? s[0] : s[2] != null && CLUBS[String(s[2])] ? `k${s[2]}` : null, s[1], s[2]];
     const man = (id, pid) => (id && KP.has(String(id)) ? id : pid != null && PERS.has(String(pid)) ? `k${pid}` : null);
     return Object.assign({}, m, { id: KM.has(String(m.id)) ? m.id : `k${m.k}`, h: side(m.h), a: side(m.a), rh: m.rk != null && REFS[String(m.rk)] ? `/r/k${m.rk}/` : null,
+      chref: m.ck ? { h: coachHref(m.ck.h), a: coachHref(m.ck.a) } : null,
       ev: (m.ev || []).map(e => [e[0], e[1], e[2], e[3], e[4], man(e[5], e[6]), e[6]]),          // e[6]: the man's Tifo id (the season's leaders)
       lu: m.lu ? Object.fromEntries(Object.entries(m.lu).map(([k, v]) => [k, v.map(p => [p[0], man(p[1], p[4]), p[2], p[3]])])) : null });
   });
-  const hpo = { team: id => KT.has(String(id)), player: id => KP.has(String(id)), person: () => false, coach: () => null, coachName: () => null,
+  const hpo = { team: id => KT.has(String(id)), player: id => KP.has(String(id)), person: () => false, coach: kid => coachHref(kid), coachName: () => null,
     teamName: () => null, playerName: () => null };
   let nSeasons = 0, nMatches = 0;
   for (const c of comps) {
@@ -143,6 +148,17 @@ function build(o) {
       ld: { "@context": "https://schema.org", "@graph": [{ "@type": "SportsTeam", name: nm, sport: "Soccer", url: SITE + pth }, Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
     if (ok) urls.push(pth);
   }
+  let nCoaches = 0;
+  for (const [kid, c] of Object.entries(COACHES)) {
+    if (c.site) continue;
+    const pth = `/coach/k${kid}/`, nm = EV.nameOf(c), ok = EV.coachIndexable(c);
+    write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: `المدرب ${nm}: مسيرته التدريبية | تيفو`,
+      desc: `المدرب ${nm}: كل فرقه في أرشيف تيفو وسجله معها، وجوائزه وآخر مبارياته.`, body: EV.coach(c, Object.assign({}, eo, { person: pid => PERS.has(String(pid)) })),
+      ld: { "@context": "https://schema.org", "@graph": [Object.assign({ "@type": "Person", name: nm, jobTitle: "Football coach", url: SITE + pth }, c.b ? { birthDate: c.b } : {}),
+        Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
+    if (ok) urls.push(pth);
+    nCoaches++;
+  }
   // links to pages neither the site nor this run has become plain text (the site build's own rule)
   const OWN = /^\/(m|p|t|c|coach|r|s)\//, SKIP = /^\/(v1|assets|logo|lg|og|api|embed|next)\//;
   let dead = 0;
@@ -156,7 +172,7 @@ function build(o) {
     if (h2 !== h) fs.writeFileSync(f, h2);
   }
   fs.writeFileSync(path.join(o.out, "_archive_urls.json"), JSON.stringify(urls));
-  return { seasons: nSeasons, matches: nMatches, persons: nPersons, pages: written.size, dead };
+  return { seasons: nSeasons, matches: nMatches, persons: nPersons, coaches: nCoaches, pages: written.size, dead };
 }
 
 if (require.main === module) {

@@ -43,7 +43,7 @@ def plain(f):
     """a match file without the Tifo ids the archive job reads (k, the clubs' third field, the men's last)"""
     out = []
     for m in f["matches"]:
-        m = {k: v for k, v in m.items() if k != "k"}
+        m = {k: v for k, v in m.items() if k not in ("k", "ck")}
         m["h"], m["a"] = m["h"][:2], m["a"][:2]
         if "ev" in m:
             m["ev"] = [e[:6] for e in m["ev"]]
@@ -134,3 +134,11 @@ def test_by_default_the_big_tournaments_are_published_too(tmp_path):
     publish.matches(G, str(tmp_path / "o"))
     ix = json.load(open(tmp_path / "o" / "matches" / "index.json", encoding="utf-8"))
     assert ix["comps"]["77"] == ["2002"]
+
+
+def test_a_match_carries_its_coaches_tifo_ids_for_the_archives_coach_pages(tmp_path):
+    G, m2, old = world(tmp_path)
+    publish.matches(G, str(tmp_path / "o"), comps=(538,), teams=(5789,))
+    m0 = json.load(open(tmp_path / "o" / "matches" / "538" / "2016-2017.json", encoding="utf-8"))["matches"][0]
+    kid = G.c.execute("select kid from coach").fetchone()[0]
+    assert m0["co"] == {"h": "Henk ten Cate"} and m0["ck"] == {"h": kid}

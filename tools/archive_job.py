@@ -50,9 +50,10 @@ def state_put(s3, name, obj):
 
 def known_pages(s3, bucket):
     """the site's own pages: a match, a man or a club with one links there (site/archive/build.cjs --known)"""
-    out = {"m": set(), "p": set(), "t": set(), "r": set()}
+    out = {"m": set(), "p": set(), "t": set(), "r": set(), "coach": set()}
     pages = s3.get_paginator("list_objects_v2")
-    for kind, pres in (("m", [f"m/{d}" for d in "123456789"]), ("p", ["p/"]), ("t", ["t/"]), ("r", ["r/"])):
+    # coach: the site's /coach/<FotMob id>/ (its /coach/k<id>/ are this job's now)
+    for kind, pres in (("m", [f"m/{d}" for d in "123456789"]), ("p", ["p/"]), ("t", ["t/"]), ("r", ["r/"]), ("coach", [f"coach/{d}" for d in "123456789"])):
         for pre in pres:
             for page in pages.paginate(Bucket=bucket, Prefix=pre):
                 for o in page.get("Contents") or []:
@@ -62,7 +63,7 @@ def known_pages(s3, bucket):
     return {k: sorted(v) for k, v in out.items()}
 
 
-ARCHIVE_PREFIXES = ("c/", "m/k", "p/k", "r/k", "t/k", "sitemap-archive")
+ARCHIVE_PREFIXES = ("c/", "m/k", "p/k", "r/k", "t/k", "coach/k", "sitemap-archive")
 
 
 def still_up(s3, bucket, old):

@@ -70,3 +70,19 @@ def test_a_page_the_manifest_holds_but_the_bucket_lost_is_sent_again(tmp_path):
     assert sorted(kept) == ["m/k3/index.html", "p/k1/index.html"]
     J.upload(s3, "b", str(tmp_path), kept)
     assert [k for k, _ in s3.put] == ["p/k2/index.html"]
+
+
+def test_the_site_coach_pages_are_known_so_the_archive_links_them_and_writes_no_second():
+    class Listed:
+        def get_paginator(self, _):
+            class P:
+                def paginate(self, Bucket, Prefix=""):
+                    keys = ["coach/500/index.html", "coach/k7/index.html", "coach/compare/index.html", "p/30981/index.html"]
+                    yield {"Contents": [{"Key": k} for k in keys if k.startswith(Prefix)]}
+            return P()
+    k = J.known_pages(Listed(), "b")
+    assert k["coach"] == ["500"] and k["p"] == ["30981"]
+
+
+def test_the_lost_page_check_lists_the_coach_pages_too():
+    assert "coach/k" in J.ARCHIVE_PREFIXES

@@ -176,6 +176,37 @@ def clubs(G, out, min_matches=30, last=10):
     return {"clubs": len(out_d)}
 
 
+def coaches(G, out, last=10):
+    """coaches.json {kid: {n, ar, b, nat, fm, pid, sp: [team, team FotMob id, start, end, m, w, d, l, gf, ga], hon: [kind, rank,
+    competition, competition FotMob id, season, value], last: [...]}}: every coach with a bench in the archive or a coach's
+    award (the owner, 22 Nov 2026: «كل المدربين»), for /coach/k<Tifo id>/"""
+    from collections import defaultdict
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    fm = lambda t: {a: int(b) for a, b in q(f"SELECT tifo_id, source_id FROM xref WHERE type='{t}' AND source='fotmob'") if str(b).isdigit()}
+    fm_k, fm_t, fm_c, fm_m = fm("coach"), fm("team"), fm("competition"), fm("match")
+    tn = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
+    cn = {c: (a or n) for c, n, a in q("SELECT cid, name, name_ar FROM competition")}
+    K = defaultdict(lambda: defaultdict(list))
+    for s in sorted(P.coach_spells(G), key=lambda s: s["start"], reverse=True):
+        K[s["kid"]]["sp"].append([tn.get(s["tid"]), fm_t.get(s["tid"]), *(s[k] for k in ("start", "end", "m", "w", "d", "l", "gf", "ga"))])
+    for kid, mid, d, h, a, hs, as_, cid in q("""SELECT x.kid, m.mid, substr(m.date,1,10), m.home, m.away, m.hs, m.as_, e.cid FROM match_coach x
+                                               JOIN match m ON m.mid=x.mid JOIN edition e ON e.eid=m.eid WHERE m.hs IS NOT NULL ORDER BY m.date DESC"""):
+        if len(K[kid]["last"]) < last:
+            K[kid]["last"].append([str(fm_m[mid]) if mid in fm_m else f"k{mid}", d, tn.get(h), fm_t.get(h), tn.get(a), fm_t.get(a), hs, as_, fm_c.get(cid)])
+    for kid, kind, rank, cid, season, value in q("""SELECT h.kid, h.kind, h.rank, e.cid, e.season, h.value FROM honour h JOIN edition e ON e.eid=h.eid
+                                                   WHERE h.kid IS NOT NULL ORDER BY e.season DESC"""):
+        K[kid]["hon"].append([kind, rank, cn.get(cid), fm_c.get(cid), season, value])
+    out_d = {}
+    for kid, name, ar, born, nat, pid in q("SELECT kid, name, name_ar, born, nationality, pid FROM coach"):
+        if kid in K:
+            c = K[kid]
+            out_d[str(kid)] = {k: v for k, v in {"n": name, "ar": ar, "b": born, "nat": nat, "fm": fm_k.get(kid), "pid": pid,
+                                                 "sp": c["sp"], "hon": c["hon"], "last": c["last"]}.items() if v not in (None, [], "")}
+    with open(os.path.join(out, "coaches.json"), "w", encoding="utf-8") as f:
+        json.dump(out_d, f, ensure_ascii=False, separators=(",", ":"))
+    return {"coaches": len(out_d)}
+
+
 def export(db, out, comps=None):
     G = open_graph(db)
     os.makedirs(out, exist_ok=True)
@@ -187,6 +218,7 @@ def export(db, out, comps=None):
     rec["persons"] = persons(G, out)            # people/<shard>.json: every man's profile (/p/k<id>/)
     rec["referees"] = referees(G, out)          # referees.json: every referee of 5 games (/r/k<id>/)
     rec["clubs"] = clubs(G, out)                # clubs.json: every club FotMob has no page for, 30 games (/t/k<id>/)
+    rec["coaches"] = coaches(G, out)            # coaches.json: every coach with a bench or an award (/coach/k<id>/)
     rec["secs"] = round(time.time() - t)
     rec["competitions"] = len(fids)
     return rec

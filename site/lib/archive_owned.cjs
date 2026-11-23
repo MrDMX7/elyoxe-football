@@ -4,7 +4,7 @@
 // so its sitemap leaves them out (23 Nov 2026: it listed 11,801 old matches and 3,957 profiles the archive's sitemaps carry).
 "use strict";
 
-const OWNED = [/^\/c\/[^/]+\/s\//, /^\/c\/[^/]+\/seasons\//, /^\/m\/k/, /^\/p\/k/, /^\/r\/k/, /^\/t\/k/];
+const OWNED = [/^\/c\/[^/]+\/s\//, /^\/c\/[^/]+\/seasons\//, /^\/m\/k/, /^\/p\/k/, /^\/r\/k/, /^\/t\/k/, /^\/coach\/k/];
 
 const owned = u => OWNED.some(r => r.test(u));
 

@@ -121,3 +121,13 @@ test("an old match with a result only says the archive holds no more, not «yet�
   assert.match(h, /في الأرشيف/);
   assert.doesNotMatch(h, /للحين/);
 });
+
+test("an old match names both coaches in its info, each linked to his page (most old matches have no lineups to carry them)", () => {
+  const P = require("../src/v5/pages.js");
+  const m = Object.assign({}, M, { lu: undefined, co: { h: "Coach A", a: "Coach B" }, chref: { h: "/coach/k7/" } });
+  const md = V.md(m);
+  assert.deepEqual(md.coaches, [{ name: "Coach A", team: "الأهلي", href: "/coach/k7/" }, { name: "Coach B", team: "الشباب" }]);
+  const v = P.match(md, { archive: 1, x: {} });
+  assert.match(v.body, /<a class="row[^"]*" href="\/coach\/k7\/">[\s\S]*?مدرب الأهلي[\s\S]*?Coach A/);
+  assert.match(v.body, /مدرب الشباب[\s\S]*?Coach B/);
+});

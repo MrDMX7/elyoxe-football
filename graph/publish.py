@@ -154,16 +154,11 @@ def motm(G, out_dir, today=None, top=50):
     return {"matches": len(rows), "players": len(players)}
 
 
-def coaches(G, out_dir, gap_days=180, national_gap_days=730):
-    """coaches/teams.json ({FotMob team id: spells, newest first}) and coaches/coaches.json ({Tifo coach id: name, FotMob id,
-    spells}): a spell is a coach's run of matches on one club's bench with no gap over gap_days (national_gap_days for a
-    national team, which can go a year between tournaments in our data), with its record."""
+def coach_spells(G, gap_days=180, national_gap_days=730):
+    """[{kid, tid, start, end, m, w, d, l, gf, ga}]: a coach's run of matches on one bench with no gap over gap_days
+    (national_gap_days for a national team, which can go a year between tournaments in our data), with its record"""
     from datetime import date
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
-    fm_t = {a: int(b) for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='team' AND source='fotmob'") if str(b).isdigit()}
-    fm_k = {a: int(b) for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='coach' AND source='fotmob'") if str(b).isdigit()}
-    cname = {k: (n, a) for k, n, a in q("SELECT kid, name, name_ar FROM coach")}
-    tname = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
     national = {t for (t,) in q("SELECT tid FROM team WHERE kind='national'")}
     runs = defaultdict(list)
     for kid, side, d, home, away, hs, as_ in q("""SELECT x.kid, x.side, substr(m.date,1,10), m.home, m.away, m.hs, m.as_ FROM match_coach x
@@ -186,6 +181,18 @@ def coaches(G, out_dir, gap_days=180, national_gap_days=730):
             cur["w" if gf > ga else "l" if gf < ga else "d"] += 1
         if cur:
             spells.append(cur)
+    return spells
+
+
+def coaches(G, out_dir, gap_days=180, national_gap_days=730):
+    """coaches/teams.json ({FotMob team id: spells, newest first}) and coaches/coaches.json ({Tifo coach id: name, FotMob id,
+    spells}): a spell is a coach's run of matches on one club's bench (coach_spells), with its record."""
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    fm_t = {a: int(b) for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='team' AND source='fotmob'") if str(b).isdigit()}
+    fm_k = {a: int(b) for a, b in q("SELECT tifo_id, source_id FROM xref WHERE type='coach' AND source='fotmob'") if str(b).isdigit()}
+    cname = {k: (n, a) for k, n, a in q("SELECT kid, name, name_ar FROM coach")}
+    tname = {t: (a or n) for t, n, a in q("SELECT tid, name, name_ar FROM team")}
+    spells = coach_spells(G, gap_days, national_gap_days)
     teams, people = defaultdict(list), defaultdict(lambda: {"spells": []})
     for s in sorted(spells, key=lambda s: s["start"], reverse=True):
         nm = cname.get(s["kid"]) or (None, None)
@@ -439,7 +446,7 @@ def matches(G, out_dir, comps=ARAB_LEAGUES + TOURNAMENTS, teams=(5789,), eras=No
         G.c.execute("DROP TABLE IF EXISTS pub_m")
         G.c.execute("CREATE TEMP TABLE pub_m(mid INTEGER PRIMARY KEY)")
         G.c.executemany("INSERT INTO pub_m VALUES(?)", [(m,) for m in mids])     # CROSS JOIN: pub_m first, never a scan of the big tables
-        ev, lu, co = defaultdict(list), defaultdict(lambda: defaultdict(list)), defaultdict(dict)
+        ev, lu, co, ck = defaultdict(list), defaultdict(lambda: defaultdict(list)), defaultdict(dict), defaultdict(dict)
         for mid, minute, added, tp, side, pid in q("SELECT e.mid, e.minute, e.added, e.type, e.side, e.pid FROM pub_m CROSS JOIN event e ON e.mid=pub_m.mid "
                                                    "WHERE e.type <> 'sub' ORDER BY e.mid, e.seq"):
             ev[mid].append([minute, added or 0, tp, side, pn.get(pid), pkey(pid), pid])   # pid: Tifo's, for the archive's /p/k<id>/
@@ -449,6 +456,7 @@ def matches(G, out_dir, comps=ARAB_LEAGUES + TOURNAMENTS, teams=(5789,), eras=No
             lu[mid]["h" if tid == home else "a"].append([pn.get(pid), pkey(pid), shirt, started, pid])
         for mid, side, kid in q("SELECT x.mid, x.side, x.kid FROM pub_m CROSS JOIN match_coach x ON x.mid=pub_m.mid"):
             co[mid][side] = kn.get(kid)
+            ck[mid][side] = kid                                                     # Tifo's, for the archive's /coach/k<id>/
         mo = {mid: [pn.get(pid), pkey(pid)] for mid, pid in q("SELECT w.mid, w.pid FROM pub_m CROSS JOIN match_award w ON w.mid=pub_m.mid WHERE w.kind='motm'")}
         out = []
         for mid, eid, rnd, d, h, a, hs, as_, hth, hta, ph, pa, sid, rid in q(
@@ -458,7 +466,7 @@ def matches(G, out_dir, comps=ARAB_LEAGUES + TOURNAMENTS, teams=(5789,), eras=No
             r = {"id": str(fm_m[mid]) if mid in fm_m else f"k{mid}", "k": mid, "date": d, "comp": comp, "season": season, "round": rnd,
                  "h": [fm_t.get(h), at(h, d), h], "a": [fm_t.get(a), at(a, d), a], "s": [hs, as_],
                  "ht": [hth, hta] if hth is not None else None, "pen": [ph, pa] if ph is not None else None,
-                 "venue": sn.get(sid), "ref": rn.get(rid), "rk": rid, "ev": ev.get(mid), "lu": dict(lu[mid]) if mid in lu else None, "co": co.get(mid), "motm": mo.get(mid)}
+                 "venue": sn.get(sid), "ref": rn.get(rid), "rk": rid, "ev": ev.get(mid), "lu": dict(lu[mid]) if mid in lu else None, "co": co.get(mid), "ck": ck.get(mid), "motm": mo.get(mid)}
             out.append({k: v for k, v in r.items() if v not in (None, [], {})})
         G.c.execute("DROP TABLE pub_m")
         return out

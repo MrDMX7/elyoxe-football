@@ -13,7 +13,10 @@ function md(m) {
     score: { home: m.s[0], away: m.s[1] }, penalties: m.pen ? { home: m.pen[0], away: m.pen[1] } : null, halftime_score: m.ht ? { home: m.ht[0], away: m.ht[1] } : null,
     kickoff_utc: (m.date || "") + "T12:00:00Z", time_tbd: true, date_fmt: "dy", archive: 1, home: team(m.h[0], m.h[1], "h"), away: team(m.a[0], m.a[1], "a"),
     events: (m.ev || []).map(e => ({ minute: e[0], added: e[1] || 0, type: e[2], team: e[3] === "a" ? "away" : "home", player: e[4] ? { id: e[5], name: e[4] } : null })),
-    venue: m.venue ? { name_ar: m.venue } : null, referee: m.ref ? Object.assign({ name: m.ref }, m.rh ? { href: m.rh } : {}) : null };
+    venue: m.venue ? { name_ar: m.venue } : null, referee: m.ref ? Object.assign({ name: m.ref }, m.rh ? { href: m.rh } : {}) : null,
+    // the two coaches in the match's info, each to his page (site/archive/build.cjs sets chref): the lineups tab carries them
+    // too, but most old matches have no lineups
+    coaches: m.co ? ["h", "a"].map(k => (m.co[k] ? Object.assign({ name: m.co[k], team: (k === "h" ? m.h : m.a)[1] }, m.chref && m.chref[k] ? { href: m.chref[k] } : {}) : null)) : null };
 }
 
 // the two sides' players as lists in the current page's style: the coach, the starters, the bench (a source that marked no
