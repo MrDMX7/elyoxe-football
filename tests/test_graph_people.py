@@ -122,3 +122,66 @@ def test_two_records_the_names_job_found_on_one_wikidata_item_are_one_player(tmp
     out = people.load(G, reg, Sources(str(tmp_path), s3=False))
     assert [p for (p,) in G.c.execute("select pid from player order by pid")] == [5, 11]
     assert G.c.execute("select pid from honour").fetchone()[0] == 5 and out["by_wikidata"] == 1
+
+
+def test_a_record_that_fits_two_records_of_one_man_joins_them_when_their_careers_agree():
+    """Thierry Henry was three (23 Nov 2026): Transfermarkt's (born, France's games), ESPN's (Arsenal, Barcelona) and
+    FotMob's (Red Bulls, France, Arsenal 2012), which fits both of the others and so joined neither"""
+    fra, ars, bar, nyrb = 10, 20, 30, 40
+    tm = P(2, "thierry henry", "1977-08-17", frozenset({fra}), "1998-06-12", "2010-06-22", False, frozenset(), frozenset({"France"}),
+           stints=frozenset({(fra, "1998-06-12", "2010-06-22", True)}))
+    espn = P(3, "thierry henry", None, frozenset({ars, bar}), "2001-08-18", "2010-05-16", False, frozenset({"England", "Spain"}), frozenset(),
+             stints=frozenset({(ars, "2001-08-18", "2007-03-07", False), (bar, "2007-08-26", "2010-05-16", False)}))
+    fm = P(1, "thierry henry", None, frozenset({nyrb, fra, ars}), "2004-06-13", "2014-11-29", True, frozenset({"England"}), frozenset({"France"}),
+           stints=frozenset({(nyrb, "2010-08-01", "2014-11-29", False), (fra, "2004-06-13", "2008-06-17", True), (ars, "2012-01-15", "2012-02-15", False)}))
+    assert people.pairs([tm, espn, fm]) == [(2, 1), (3, 1)]
+
+
+def test_a_bridge_between_two_men_whose_clubs_overlap_is_refused():
+    a = P(1, "ali hassan", None, frozenset({5}), "2000-01-01", "2005-01-01", False, stints=frozenset({(5, "2000-01-01", "2005-01-01", False)}))
+    b = P(2, "ali hassan", None, frozenset({6}), "2001-01-01", "2006-01-01", False, stints=frozenset({(6, "2001-01-01", "2006-01-01", False)}))
+    c = P(3, "ali hassan", None, frozenset({5, 6}), "2003-01-01", "2003-02-01", False,
+          stints=frozenset({(5, "2003-01-01", "2003-01-10", False), (6, "2003-01-20", "2003-02-01", False)}))
+    assert people.pairs([a, b, c]) == []                        # two clubs at once for four years: two men, c fits both
+
+
+def test_a_listed_top_scorer_is_the_one_man_of_his_name_who_scored_in_that_season():
+    tops = [(7, 1, "Gabriel Batistuta", "1969-02-01"), (8, 4, "Pauleta", None), (9, 6, "Ali Hassan", None)]
+    scorers = {7: [(2, "Gabriel Batistuta", None), (3, "Carlos Tenorio", None)],
+               8: [(5, "Pedro Miguel Pauleta", None)],
+               9: [(10, "Ali Hassan", None), (11, "Ali Hassan", None)]}                           # two fit: no guess
+    assert people.scorer_pairs(tops, scorers) == [(2, 1), (5, 4)]
+    assert people.scorer_pairs([(7, 1, "Gabriel Batistuta", "1969-02-01")], {7: [(2, "Gabriel Batistuta", "1980-01-01")]}) == []
+    assert people.scorer_pairs([(7, 1, "Husham Mohammed", None)], {7: [(2, "Haidar Mohammed", None)]}) == []
+
+
+def test_the_loader_joins_a_listed_top_scorer_to_his_goals(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    G.put("player", {"pid": 1, "name": "Gabriel Batistuta", "born": "1969-02-01"}, "wikidata")
+    G.put("player", {"pid": 2, "name": "Gabriel Batistuta"}, "rsssf")
+    G.put("match", {"mid": 50, "eid": 7, "date": "2004-01-01", "home": 1, "away": 2, "hs": 1, "as_": 0}, "rsssf")
+    G.many("event", [{"mid": 50, "seq": 0, "type": "goal", "pid": 2}], "rsssf")
+    G.c.execute("insert into honour(eid, kind, rank, pid, value, src) values(7, 'top_scorer', 1, 1, '25', 'wiki')")
+    people.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert [p for (p,) in G.c.execute("select pid from player")] == [1]
+    assert G.c.execute("select pid from event").fetchone()[0] == 1
+
+
+def test_the_people_rules_run_again_once_the_teams_are_one():
+    from graph.build import ORDER
+    assert ORDER.index("people") < ORDER.index("teams") < ORDER.index("people_again") < ORDER.index("twins")
+
+
+def test_a_bench_place_is_no_title_a_namesake_in_the_same_cup_stays_apart(tmp_path):
+    """Abraham Rodríguez, on Atlético Tordesillas' bench in the Copa del Rey 2025, is not Colorado's keeper of that name who
+    once played in it: the competitions of a record with no game are his titles' only"""
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    G.put("player", {"pid": 1, "name": "Abraham Rodriguez", "born": "1999-03-27"}, "fotmob")
+    G.xref("player", 1, "fotmob", 1, "fotmob-native")
+    G.put("player", {"pid": 2, "name": "Abraham Rodríguez"}, "tm")
+    for mid, eid, d in ((50, 7, "2021-11-30"), (51, 8, "2025-10-28")):
+        G.put("edition", {"eid": eid, "cid": 3, "season": d[:4]}, "fotmob")
+        G.put("match", {"mid": mid, "eid": eid, "date": d, "home": 10 + mid, "away": 20 + mid, "hs": 0, "as_": 1}, "fotmob")
+    G.many("appearance", [{"mid": 50, "pid": 1, "tid": 60, "played": 1}, {"mid": 51, "pid": 2, "tid": 71, "played": 0}], "fotmob")
+    people.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert [p for (p,) in G.c.execute("select pid from player order by pid")] == [1, 2]
