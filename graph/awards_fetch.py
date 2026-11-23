@@ -226,6 +226,15 @@ def comp_articles(S, http):
             t = ((e.get("sitelinks") or {}).get("enwiki") or {}).get("title")
             if t:
                 out[qids[qid]] = t
+    from graph.load.awards import _conf
+    return with_overrides(out, _conf())
+
+
+def with_overrides(out, conf):
+    """awards.yaml comp_articles: a competition whose champions file has no Wikidata item (the Arab Cup, the Gulf Cup), its
+    article named by hand; never over one the items give"""
+    for fid, title in ((conf or {}).get("comp_articles") or {}).items():
+        out.setdefault(str(fid), title)
     return out
 
 

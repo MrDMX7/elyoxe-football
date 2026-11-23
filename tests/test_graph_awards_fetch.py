@@ -48,3 +48,10 @@ def test_ar_links_resolve_through_arabic_wikipedia(tmp_path):
     items = AF.resolve(http, str(tmp_path), ["ar:نادي_الكويت"])
     assert items["ar:نادي_الكويت"]["qid"] == "Q7" and items["ar:نادي_الكويت"]["en"] == "Kuwait SC"
     assert not any("en.wikipedia.org" in c for c in http.calls)
+
+
+def test_a_competition_with_no_wikidata_item_in_its_champions_file_is_named_in_the_config():
+    # the Arab Cup (10242) and the Gulf Cup (329): no item in v1/history/champions, so their season pages were never read
+    from graph import awards_fetch as AF
+    got = AF.with_overrides({"50": "UEFA European Championship"}, {"comp_articles": {10242: "FIFA Arab Cup", 50: "Other"}})
+    assert got == {"50": "UEFA European Championship", "10242": "FIFA Arab Cup"}
