@@ -12,4 +12,10 @@ def load(G, reg, S):
         if ar:
             G.c.execute("UPDATE competition SET name_ar=? WHERE cid=?", (ar, cid))
             n += 1
-    return {"named": n}
+    # (23 Nov 2026) the old leagues' clubs with no Transfermarkt id (Bristol Rovers, Hearts, Ferencváros: 11,067), by Tifo id
+    # (names/clubs_k.py); a club merged away is not made again, a name it has stays
+    t = 0
+    for k, v in (S.read(os.path.join(S.names, "clubs_k_ar.json")) or {}).items():
+        if k.startswith("t") and k[1:].isdigit() and v.get("ar"):
+            t += G.c.execute("UPDATE team SET name_ar=? WHERE tid=? AND (name_ar IS NULL OR name_ar='')", (v["ar"], int(k[1:]))).rowcount
+    return {"named": n, "clubs": t}
