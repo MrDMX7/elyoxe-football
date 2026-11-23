@@ -54,7 +54,11 @@ with the commit or the evidence. A new session reads this first and continues at
 - Career competitions in Arabic (99c5926): 61 % of 1.29M lines (code-named competitions «FAC» gave way to the line's name; graph/tm_comps_ar.yaml for 135 common unambiguous names). Ruling: names several countries use («Premier League», «Super League») stay in English — cost if wrong: ~40 % of lines English.
 - Facts are card rows on profiles and coach pages (3ec4294): the bare list spilled out of its card. Referee pages carry a Person (ec36382).
 - Gulf Cup top scorers (1c9ce61): its English article added to comp_pages (27 editions; it had 8 of 56 seasons). Arab Cup and old Euros still lack per-edition scorers (no table: Euro pages list scorers as bullets).
-- Held (not pushed): the site links every coach (history_pages.coachLinks) — push once the archive has published /coach/k<id>/.
+- Profiles restored: 107,007 of 107,007 p/k in S3 (run 45107983786); every archive page one footer.
+- Coaches live (run 45114942854): 8,110 coach pages (2,089 indexed), 157,273 pages changed, 21,023 stale pages swept; the 1986 final names Bilardo and Beckenbauer, linked. Site links every coach (1252909); a coach with a site page gets a /coach/k<id>/ pointer to it.
+- Photos: 11,000 archive men and 585 coaches (the background limit stopped the batch once; checkpoints kept it).
+- Gulf Cup as 27 editions (e5b1ad6): national teams' tournaments are runs of games; «خليجي N» is the Nth; 60-day guard leaves friendlies, qualifiers, Copa América alone (only the Gulf Cup changes).
+- QA round 5 (104 coach, profile, referee pages): 0 defects.
 
 ## Indexing
 - [ ] Sitemap index (50k per file) incl. the archive; robots.txt lists it.
