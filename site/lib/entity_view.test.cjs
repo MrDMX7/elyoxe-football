@@ -59,3 +59,9 @@ test("a coach of 30 games or an award is for the search engines; a few games is 
   assert.equal(V.coachIndexable({ n: "X", sp: [["a", null, "2000-01-01", "2000-02-01", 5, 1, 1, 3, 2, 6]] }), false);
   assert.equal(V.coachIndexable({ n: "Y", hon: [["winner", 1, "مدرب العام", null, "2001", null]] }), true);
 });
+
+test("a coach's page carries his free photo with its credit", () => {
+  const h = V.coach(K, Object.assign({}, o, { photo: { src: "/v1/ph/c11.webp", page: "https://commons.wikimedia.org/wiki/File:G.jpg", artist: "A. B", license: "CC BY 2.0" } }));
+  assert.match(h, /<figure class="pph"[^>]*><img src="\/v1\/ph\/c11\.webp"/);
+  assert.match(h, /CC BY 2\.0/);
+});

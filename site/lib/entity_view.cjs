@@ -53,7 +53,7 @@ function coach(c, o) {
     sp.map(s => `<tr><td>${team(s[0], s[1], o)}</td><td>${num(yearOf(s[2]) === yearOf(s[3]) ? yearOf(s[2]) : `${yearOf(s[2])}–${yearOf(s[3])}`)}</td>${s.slice(4, 8).map(td).join("")}<td>${num(pct(s[5], s[4]))}%</td></tr>`).join("")}</tbody></table></div>`) : "";
   const hon = (c.hon || []).filter(h => h[1] === 1);
   const awards = hon.length ? U.grp("جوائزه", hon.map(h => U.row({ t: txt(h[2]), sub: num(h[4]), href: h[3] && o.comp && o.comp(h[3]) ? `/c/${o.comp(h[3]).key}/` : null })).join("")) : "";
-  return head(c) + (facts.length ? U.grp("", `<ul class="lc">${facts.map(x => `<li><span class="muted">${x[0]}:</span> ${x[1]}</li>`).join("")}</ul>`) : "") +
+  return (o.photo ? require("./person_view.cjs").header(c, o.photo) : head(c)) + (facts.length ? U.grp("", `<ul class="lc">${facts.map(x => `<li><span class="muted">${x[0]}:</span> ${x[1]}</li>`).join("")}</ul>`) : "") +
     (t[0] ? U.grp("", `<p class="note">${num(t[0])} مباراة على الدكة في أرشيف تيفو: ${num(t[1])} فوز و${num(t[2])} تعادل و${num(t[3])} خسارة (${num(pct(t[1], t[0]))}% فوز).</p>`) : "") +
     awards + table + lastGames(c, "آخر مبارياته");
 }

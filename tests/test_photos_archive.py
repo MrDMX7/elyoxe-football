@@ -62,3 +62,19 @@ def test_a_stopped_run_picks_up_the_men_whose_portrait_was_pending(monkeypatch):
     B.archive_run(s, SimpleNamespace(limit=0, dry=False))
     assert s.put == ["v1/ph/k1.webp"]
     assert s.state["photos_archive.json"]["k1"]["status"] == "ok" and "k1" in s.json["ph/index.json"]["players"]
+
+
+def test_a_coach_may_be_a_football_manager_on_wikidata_a_player_must_be_a_footballer():
+    w = {"fb": False, "mg": True, "dob": "1944-11-30", "img": "George Graham.jpg"}
+    assert B.identity("c5", {"qid": "Q55", "latin": "George Graham"}, w, {"c5": "1944-11-30"}, {}) is None
+    assert B.identity("k5", {"qid": "Q55", "latin": "George Graham"}, w, {"k5": "1944-11-30"}, {}) == "not a footballer (namesake)"
+
+
+def test_the_pictures_already_up_count_the_coaches_too():
+    keys = ["v1/ph/k1.webp", "v1/ph/c2.webp", "v1/ph/30981.webp", "v1/ph/index.json"]
+
+    class P:
+        def paginate(self, Bucket, Prefix=""):
+            yield {"Contents": [{"Key": k} for k in keys if k.startswith(Prefix)]}
+    s = SimpleNamespace(b=SimpleNamespace(bucket="b", s3=SimpleNamespace(get_paginator=lambda _: P())))
+    assert B.uploaded(s) == {"k1", "c2"}

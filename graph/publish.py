@@ -398,13 +398,18 @@ def people(G, out_dir, min_wc=3, min_caps=30):
 
 
 def person_qids(G, out_dir):
-    """people/qids.json {k<Tifo id>: [Wikidata id, born, name]}: every man the graph ties to Wikidata, for the photo stage's
+    """people/qids.json {k<Tifo id> | c<Tifo coach id>: [Wikidata id, born, name]}: every man the graph ties to Wikidata, for the photo stage's
     archive run (photos.build --archive: v1/ph/k<id>.webp on the archive's /p/k<id>/ profiles)"""
     out = {}
     for pid, qid, born, name in G.c.execute("""SELECT p.pid, x.source_id, p.born, p.name FROM player p JOIN xref x ON x.type='player'
                                                AND x.source='wikidata' AND x.tifo_id=p.pid ORDER BY p.pid"""):
         if str(qid).startswith("Q"):
             out.setdefault(f"k{pid}", [qid, born, name])
+    # (23 Nov) every coach too, c<Tifo id>: his /coach/k<id>/ page («كلهم بصورهم»)
+    for kid, qid, born, name in G.c.execute("""SELECT c.kid, x.source_id, c.born, c.name FROM coach c JOIN xref x ON x.type='coach'
+                                               AND x.source='wikidata' AND x.tifo_id=c.kid ORDER BY c.kid"""):
+        if str(qid).startswith("Q"):
+            out.setdefault(f"c{kid}", [qid, born, name])
     _dump(os.path.join(out_dir, "people", "qids.json"), out)
     return {"qids": len(out)}
 

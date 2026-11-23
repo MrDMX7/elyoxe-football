@@ -136,3 +136,15 @@ test("every coach without a site page gets /coach/k<id>/, and an old match links
   assert.equal(r.coaches, 1);
   assert.ok(JSON.parse(fs.readFileSync(path.join(o.out, "_archive_urls.json"), "utf8")).includes("/coach/k11/"));
 });
+
+test("a coach's page shows his own photo, else the one of his playing days", () => {
+  const { o } = world();
+  fs.writeFileSync(path.join(o.data, "coaches.json"), JSON.stringify({
+    11: { n: "George Graham", pid: 5, sp: [["أرسنال", 9825, "1986-08-23", "1995-02-18", 460, 225, 133, 102, 700, 400]] },
+    13: { n: "Bertie Mee", sp: [["أرسنال", 9825, "1966-08-20", "1976-05-01", 400, 200, 100, 100, 600, 400]] } }));
+  const cr = { artist: "A", license: "CC BY 2.0", page: "https://commons.wikimedia.org/wiki/File:X.jpg" };
+  fs.writeFileSync(o.known, JSON.stringify({ m: [], p: [], t: [9825, 8650], ph: { k5: cr, c13: cr } }));
+  A.build(o);
+  assert.match(fs.readFileSync(path.join(o.out, "coach/k11/index.html"), "utf8"), /<img src="\/v1\/ph\/k5\.webp"/);
+  assert.match(fs.readFileSync(path.join(o.out, "coach/k13/index.html"), "utf8"), /<img src="\/v1\/ph\/c13\.webp"/);
+});

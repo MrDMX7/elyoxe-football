@@ -25,6 +25,7 @@ from store import Store, S3Backend  # noqa: E402
 BUCKET = os.environ.get("FOOTBALL_BUCKET", "elyoxe-football-574771023173-ap-south-1")
 UA = "elyoxe-tifo/0.1 (https://tifo.elyoxe.com; hello@elyoxe.com)"
 FOOTBALLER = "Q937857"
+MANAGER = "Q628099"            # association football manager: an archive coach (c<id>) may be one and never a player
 RECHECK_DAYS = 60
 
 
@@ -55,7 +56,7 @@ def wikidata(qids, need_img=True):
     for i in range(0, len(qids), 250):
         chunk = qids[i:i + 250]
         q = ("SELECT ?p ?img ?dob ?fb WHERE { VALUES ?p { %s } %s OPTIONAL { ?p wdt:P569 ?dob } "
-             "BIND(EXISTS { ?p wdt:P106 wd:%s } AS ?fb) }") % (" ".join("wd:" + x for x in chunk), img, FOOTBALLER)
+             "BIND(EXISTS { ?p wdt:P106 wd:%s } AS ?fb) BIND(EXISTS { ?p wdt:P106 wd:%s } AS ?mg) }") % (" ".join("wd:" + x for x in chunk), img, FOOTBALLER, MANAGER)
         r = None
         if not MIRROR[0]:
             try:
@@ -70,7 +71,8 @@ def wikidata(qids, need_img=True):
             if qid in out:
                 continue
             out[qid] = {"img": urllib.parse.unquote(b["img"]["value"].rsplit("/", 1)[1]).replace("_", " ") if b.get("img") else None,
-                        "dob": b.get("dob", {}).get("value", "")[:10] or None, "fb": b["fb"]["value"] == "true"}
+                        "dob": b.get("dob", {}).get("value", "")[:10] or None, "fb": b["fb"]["value"] == "true",
+                        "mg": (b.get("mg") or {}).get("value") == "true"}
         time.sleep(1)
     return out
 
@@ -111,7 +113,7 @@ def identity(pid, v, w, dobs, shared):
     leads, e.g. Bruno of Port FC showing Bruno Guimarães)."""
     if not w:
         return "no Wikidata record"
-    if not w["fb"]:
+    if not w["fb"] and not (str(pid).startswith("c") and w.get("mg")):
         return "not a footballer (namesake)"
     if v["qid"] in shared:
         # two of our players on one person: the one whose birth date is the person's keeps it, when exactly one is
@@ -358,12 +360,14 @@ def archive_run(store, a):
 
 
 def uploaded(store):
-    """the archive men whose portrait is in the bucket (v1/ph/k<id>.webp): a stopped run's, not sent again"""
+    """the archive men and coaches whose portrait is in the bucket (v1/ph/k<id>.webp, v1/ph/c<id>.webp): a stopped run's, not
+    sent again"""
     keys = set()
-    for page in store.b.s3.get_paginator("list_objects_v2").paginate(Bucket=store.b.bucket, Prefix="v1/ph/k"):
-        for o in page.get("Contents") or []:
-            if o["Key"].endswith(".webp"):
-                keys.add(o["Key"][len("v1/ph/"):-len(".webp")])
+    for pre in ("v1/ph/k", "v1/ph/c"):
+        for page in store.b.s3.get_paginator("list_objects_v2").paginate(Bucket=store.b.bucket, Prefix=pre):
+            for o in page.get("Contents") or []:
+                if o["Key"].endswith(".webp"):
+                    keys.add(o["Key"][len("v1/ph/"):-len(".webp")])
     return keys
 
 

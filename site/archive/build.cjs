@@ -148,12 +148,15 @@ function build(o) {
       ld: { "@context": "https://schema.org", "@graph": [{ "@type": "SportsTeam", name: nm, sport: "Soccer", url: SITE + pth }, Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
     if (ok) urls.push(pth);
   }
+  // his own photo (c<id>), else the one of his playing days (k<his player id>)
+  const coachPhoto = (kid, c) => (PH[`c${kid}`] ? Object.assign({ src: `/v1/ph/c${kid}.webp` }, PH[`c${kid}`])
+    : c.pid != null && PH[`k${c.pid}`] ? Object.assign({ src: `/v1/ph/k${c.pid}.webp` }, PH[`k${c.pid}`]) : null);
   let nCoaches = 0;
   for (const [kid, c] of Object.entries(COACHES)) {
     if (c.site) continue;
     const pth = `/coach/k${kid}/`, nm = EV.nameOf(c), ok = EV.coachIndexable(c);
     write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: `المدرب ${nm}: مسيرته التدريبية | تيفو`,
-      desc: `المدرب ${nm}: كل فرقه في أرشيف تيفو وسجله معها، وجوائزه وآخر مبارياته.`, body: EV.coach(c, Object.assign({}, eo, { person: pid => PERS.has(String(pid)) })),
+      desc: `المدرب ${nm}: كل فرقه في أرشيف تيفو وسجله معها، وجوائزه وآخر مبارياته.`, body: EV.coach(c, Object.assign({}, eo, { person: pid => PERS.has(String(pid)), photo: coachPhoto(kid, c) })),
       ld: { "@context": "https://schema.org", "@graph": [Object.assign({ "@type": "Person", name: nm, jobTitle: "Football coach", url: SITE + pth }, c.b ? { birthDate: c.b } : {}),
         Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
     if (ok) urls.push(pth);

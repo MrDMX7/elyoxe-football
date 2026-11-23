@@ -94,3 +94,7 @@ def test_the_archives_own_pages_no_run_wrote_are_swept_and_the_sites_are_not():
     up = {"m/k1/index.html", "m/k9/index.html", "c/x/index.html", "c/x/s/1990/index.html", "c/x/s/1880/index.html", "p/30981/index.html", "coach/500/index.html"}
     new = {"m/k1/index.html": "a", "c/x/s/1990/index.html": "b"}
     assert J.orphans(up, new) == ["c/x/s/1880/index.html", "m/k9/index.html"]
+
+
+def test_the_photo_index_hands_the_renderer_the_men_and_the_coaches():
+    assert J.archive_photos({"k1": 1, "c2": 2, "30981": 3}) == {"k1": 1, "c2": 2}

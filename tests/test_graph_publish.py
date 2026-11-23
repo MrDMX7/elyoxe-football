@@ -252,3 +252,15 @@ def test_every_man_with_a_wikidata_item_is_listed_for_the_photo_stage(tmp_path):
     out = publish.person_qids(G, str(tmp_path / "o"))
     d = json.load(open(tmp_path / "o" / "people" / "qids.json", encoding="utf-8"))
     assert d == {f"k{p}": ["Q193464", "1962-11-21", "Alan Smith"]} and out["qids"] == 1
+
+
+def test_every_coach_with_a_wikidata_item_is_listed_for_the_photo_stage_as_c_his_id(tmp_path):
+    # «كلهم بصورهم» (22 Nov): the archive's coach pages, /coach/k<id>/, carry v1/ph/c<id>.webp
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    k = reg.mint("coach", "wikidata", "Q55")
+    G.put("coach", {"kid": k, "name": "George Graham", "born": "1944-11-30"}, "wikidata")
+    G.xref("coach", k, "wikidata", "Q55", "wikidata-native")
+    G.c.commit()
+    out = publish.person_qids(G, str(tmp_path / "o"))
+    d = json.load(open(tmp_path / "o" / "people" / "qids.json", encoding="utf-8"))
+    assert d == {f"c{k}": ["Q55", "1944-11-30", "George Graham"]} and out["qids"] == 1

@@ -85,14 +85,16 @@ function caps(p) {
   return U.grp("مع المنتخب", `<p>${txt(r[0])}: ${num(r[1] || 0)} مباراة دولية و${num(r[2] || 0)} هدف${r[3] ? ` (${esc(r[3])})` : ""}.</p>`);
 }
 
+// a free photo (photos.build --archive: Wikidata/Commons, face-cropped, grey) beside the name, with its author and licence;
+// the coach pages (lib/entity_view.cjs) use it too
+const figure = ph => (ph ? `<div class="lt-x"><figure class="pph" style="--pc:#1B4A3F"><img src="${esc(ph.src)}" alt="" width="400" height="500"><figcaption><a href="${esc(ph.page || "")}" rel="noopener">${
+  esc(((ph.artist || "").replace(/\s+/g, " ").trim().slice(0, 40)) + (ph.license ? " · " + ph.license : ""))}</a></figcaption></figure></div>` : "");
+const header = (p, ph) => { const fig = figure(ph);
+  return `<div class="lt${fig ? " lt-row" : ""}"><div><h1>${txt(nameOf(p))}</h1>${p.ar && p.n && p.ar !== p.n ? `<p class="muted"><span class="lat">${esc(p.n)}</span></p>` : ""}</div>${fig}</div>`; };
+
 function body(p, o) {
   o = o || {};
-  const nm = nameOf(p), ph = o.photo;
-  // a free photo (photos.build --archive: Wikidata/Commons, face-cropped, grey) beside the name, with its author and licence
-  const fig = ph ? `<div class="lt-x"><figure class="pph" style="--pc:#1B4A3F"><img src="${esc(ph.src)}" alt="" width="400" height="500"><figcaption><a href="${esc(ph.page || "")}" rel="noopener">${
-    esc(((ph.artist || "").replace(/\s+/g, " ").trim().slice(0, 40)) + (ph.license ? " · " + ph.license : ""))}</a></figcaption></figure></div>` : "";
-  return `<div class="lt${fig ? " lt-row" : ""}"><div><h1>${txt(nm)}</h1>${p.ar && p.n && p.ar !== p.n ? `<p class="muted"><span class="lat">${esc(p.n)}</span></p>` : ""}</div>${fig}</div>` +
-    facts(p) + honours(p, o) + career(p, o) + archive(p, o) + moves(p, o) + injuries(p) + caps(p);
+  return header(p, o.photo) + facts(p) + honours(p, o) + career(p, o) + archive(p, o) + moves(p, o) + injuries(p) + caps(p);
 }
 
 // worth the search engines: a career of three seasons, twenty games in the archive, a title or award, or ten caps
@@ -103,4 +105,4 @@ const ld = (p, pth) => Object.assign({ "@context": "https://schema.org", "@type"
   p.n && p.n !== nameOf(p) ? { alternateName: p.n } : {}, p.b ? { birthDate: p.b } : {}, p.d ? { deathDate: p.d } : {}, p.bp ? { birthPlace: p.bp } : {},
   p.nat ? { nationality: p.nat } : {}, p.h ? { height: `${p.h} cm` } : {}, { jobTitle: "لاعب كرة قدم" });
 
-module.exports = { body, indexable, title, desc, ld, nameOf };
+module.exports = { body, header, indexable, title, desc, ld, nameOf };

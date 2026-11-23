@@ -89,6 +89,11 @@ def orphans(up, new):
     return sorted(k for k in up if k not in new and any(fnmatch.fnmatchcase(k, p) for p in ARCHIVE_OWNED))
 
 
+def archive_photos(ph):
+    """the photo index's archive entries: the men (k<id>, /p/k<id>/) and the coaches (c<id>, /coach/k<id>/)"""
+    return {k: v for k, v in ph.items() if k[:1] in ("k", "c")}
+
+
 def md5(path):
     with open(path, "rb") as f:
         return hashlib.md5(f.read()).hexdigest()
@@ -217,7 +222,7 @@ def main(argv=None):
     try:                                           # the archive men's portraits (photos.build --archive)
         raw = s3.get_object(Bucket=DATA_BUCKET, Key="v1/ph/index.json")["Body"].read()
         ph = json.loads(gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw).get("players") or {}
-        known["ph"] = {k: v for k, v in ph.items() if k.startswith("k")}
+        known["ph"] = archive_photos(ph)
     except Exception as e:
         say(f"no photo index ({e})")
     json.dump(known, open(os.path.join(a.work, "known.json"), "w"))
