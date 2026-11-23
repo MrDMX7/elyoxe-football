@@ -165,3 +165,15 @@ test("a FotMob match the site has no page for is the archive's, and the build sa
   assert.deepEqual(JSON.parse(fs.readFileSync(path.join(o.out, "_fm2k.json"), "utf8")), { "4000001": 1 });
   assert.ok(fs.existsSync(path.join(o.out, "m/k1/index.html")) && !fs.existsSync(path.join(o.out, "m/k2/index.html")));
 });
+
+test("a FotMob man the site has no page for is the archive's, and the build says where (_fm2p.json)", () => {
+  const { o } = world();
+  fs.mkdirSync(path.join(o.data, "people"), { recursive: true });
+  fs.writeFileSync(path.join(o.data, "people", "5.json"), JSON.stringify({
+    "5": { n: "Eugene Frimpong", fm: 1526227, car: [["2025/2026", "LaLiga2", "بونفيرادينا", null, 32, 2, 0, null, 0, 0]] },
+    "6": { n: "Ian Wright", fm: 77, car: [["1993/1994", "Premier League", "أرسنال", 9825, 39, 23, 0, null, 0, 0]] },
+    "7": { n: "Old Man", car: [["1950/1951", "League", "x", null, 30, 1, 0, null, 0, 0]] } }));
+  fs.writeFileSync(o.known, JSON.stringify({ m: [], p: ["77"], t: [9825, 8650] }));
+  A.build(o);
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(o.out, "_fm2p.json"), "utf8")), { 1526227: 5 });
+});

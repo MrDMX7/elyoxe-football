@@ -37,7 +37,7 @@ function headFromWorld(w) {
 // (/db/player/<id>/, lib/world_stage.cjs) goes there, a club in the encyclopedia (world/index.json) or a match to its card; else null (unlinked)
 function relink(href, has) {
   let m = /^\/p\/(\d+)\/$/.exec(href);
-  if (m) return has.written.has(`/db/player/${m[1]}`) ? `/db/player/${m[1]}/` : null;
+  if (m) return has.fm2p && has.fm2p[m[1]] != null ? `/p/k${has.fm2p[m[1]]}/` : has.written.has(`/db/player/${m[1]}`) ? `/db/player/${m[1]}/` : null;
   m = /^\/t\/(\d+)\/$/.exec(href);
   if (m) return has.written.has(`/db/club/${m[1]}/`) || has.written.has(`/db/club/${m[1]}`) ? `/db/club/${m[1]}/` : has.clubs.has(+m[1]) ? `/db/club/?id=${m[1]}` : null;   // its static page first
   m = /^\/m\/(\d+)\/$/.exec(href);   // a match: its archive page (the same match page as today's; 23 Nov 2026, the owner: old

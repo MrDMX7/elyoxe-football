@@ -89,15 +89,19 @@ def orphans(up, new):
     return sorted(k for k in up if k not in new and any(fnmatch.fnmatchcase(k, p) for p in ARCHIVE_OWNED))
 
 
-def fm2k_files(fm2k):
-    """{key: object}: the FotMob id -> archive page map (site/archive/build.cjs _fm2k.json), whole for the site build's link
-    check and in 100 shards (by id % 100) for the browser: /db/match/?id= and the 404 page send a FotMob match there"""
-    out = {"v1/archive/fm2k.json": dict(fm2k)}
+def map_files(name, m):
+    """{key: object}: a FotMob id -> archive page map (site/archive/build.cjs _fm2k.json matches, _fm2p.json men), whole for
+    the site build's link check and in 100 shards (by id % 100) for the browser: the encyclopedia's card and the 404 page"""
+    out = {f"v1/archive/{name}.json": dict(m)}
     for n in range(100):
-        out[f"v1/archive/fm2k/{n}.json"] = {}
-    for fm, k in fm2k.items():
-        out[f"v1/archive/fm2k/{int(fm) % 100}.json"][fm] = k
+        out[f"v1/archive/{name}/{n}.json"] = {}
+    for fm, k in m.items():
+        out[f"v1/archive/{name}/{int(fm) % 100}.json"][fm] = k
     return out
+
+
+def fm2k_files(fm2k):
+    return map_files("fm2k", fm2k)
 
 
 def archive_photos(ph):
@@ -246,12 +250,14 @@ def main(argv=None):
         return 1
     say("render", r.stdout.strip()[-400:])
     urls = json.load(open(os.path.join(out, "_archive_urls.json"), encoding="utf-8"))
-    fm2k = json.load(open(os.path.join(out, "_fm2k.json"), encoding="utf-8")) if os.path.exists(os.path.join(out, "_fm2k.json")) else {}
-    if fm2k and not a.dry and not a.comps:          # a partial run knows some competitions' matches only
-        for key, obj in fm2k_files(fm2k).items():
-            s3.put_object(Bucket=DATA_BUCKET, Key=key, Body=gzip.compress(json.dumps(obj, separators=(",", ":")).encode()), ContentEncoding="gzip",
-                          ContentType="application/json; charset=utf-8", CacheControl="public, max-age=300, stale-while-revalidate=60")
-        say(f"fm2k: {len(fm2k)} FotMob matches have their archive page")
+    for name, what in (("fm2k", "matches"), ("fm2p", "men")):
+        f = os.path.join(out, f"_{name}.json")
+        m = json.load(open(f, encoding="utf-8")) if os.path.exists(f) else {}
+        if m and not a.dry and not a.comps:         # a partial run knows some competitions' matches only
+            for key, obj in map_files(name, m).items():
+                s3.put_object(Bucket=DATA_BUCKET, Key=key, Body=gzip.compress(json.dumps(obj, separators=(",", ":")).encode()), ContentEncoding="gzip",
+                              ContentType="application/json; charset=utf-8", CacheControl="public, max-age=300, stale-while-revalidate=60")
+            say(f"{name}: {len(m)} FotMob {what} have their archive page")
     sitemaps(out, urls)
     old = state_get(s3, MANIFEST, {}) or {}
     up = listed(s3, bucket) if not a.dry else set()

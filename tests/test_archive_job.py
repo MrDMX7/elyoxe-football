@@ -106,3 +106,9 @@ def test_the_fotmob_to_archive_map_goes_out_whole_for_the_site_and_in_100_shards
     assert files["v1/archive/fm2k/1.json"] == {"4000001": 1, "4000101": 2}
     assert files["v1/archive/fm2k/2.json"] == {"4000002": 3}
     assert len([k for k in files if k.startswith("v1/archive/fm2k/")]) == 100      # every shard, empty ones too: no 404 in the browser
+
+
+def test_the_fotmob_to_profile_map_goes_out_like_the_matches_one():
+    files = J.map_files("fm2p", {"1526227": 5, "77": 6})
+    assert files["v1/archive/fm2p.json"] == {"1526227": 5, "77": 6}
+    assert files["v1/archive/fm2p/27.json"] == {"1526227": 5} and files["v1/archive/fm2p/77.json"] == {"77": 6}
