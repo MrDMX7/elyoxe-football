@@ -57,8 +57,12 @@ def load(G, reg, S, arab_codes=None):
     named = dict(G.c.execute("""SELECT m.eid, count(*) FROM event v JOIN match m ON m.mid=v.mid WHERE m.eid IS NOT NULL
                                  AND v.type IN ('goal','penalty_goal','own_goal') AND v.pid IS NOT NULL GROUP BY m.eid"""))
     goals = dict(G.c.execute("SELECT eid, sum(coalesce(hs,0)+coalesce(as_,0)) FROM match WHERE eid IS NOT NULL GROUP BY eid"))
+    # only our competitions (FotMob's) hold whole seasons: one named by a Transfermarkt code («CL», «FAC») holds the games of
+    # the clubs it covers, and crowned Messi top scorer of «CL 2012/2013» with 4 goals (23 Nov 2026)
+    ours = {e for (e,) in G.c.execute("""SELECT e.eid FROM edition e JOIN xref x ON x.type='competition' AND x.source='fotmob'
+                                         AND x.tifo_id=e.cid""")}
     for eid, total, with_ev in cov:
-        if total < 3 or with_ev < 0.9 * total or _has(G, eid, "top_scorer"):
+        if eid not in ours or total < 3 or with_ev < 0.9 * total or _has(G, eid, "top_scorer"):
             continue
         if named.get(eid, 0) < 0.95 * (goals.get(eid) or 0):     # most goals with no scorer (FotMob's old seasons: Bundesliga
             n["top_scorer_unnamed"] += 1                           # 2011/12, 495 of 875) would crown the wrong man
@@ -76,6 +80,8 @@ def load(G, reg, S, arab_codes=None):
                                                           AND lower(coalesce(c.name, '')) NOT LIKE '%qualif%' ORDER BY m.date"""):
         legs[eid].append((h, a, hs, as_, ph, pa))
     for eid, ls in legs.items():
+        if eid not in ours:                    # a final in a competition named by a Transfermarkt code: «بطل FAC» beside the FA Cup's
+            continue
         teams = {ls[0][0], ls[0][1]}
         if len(ls) > 2 or any({x[0], x[1]} != teams for x in ls):
             continue

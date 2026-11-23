@@ -121,3 +121,19 @@ def test_a_table_two_games_in_gives_no_runner_up(tmp_path):
     _table(G, eid, 2)
     honours.load(G, reg, Sources(str(tmp_path), s3=False))
     assert G.c.execute("SELECT tid FROM honour WHERE eid=? AND kind='runner_up'", (eid,)).fetchall() == []
+
+
+def test_no_top_scorer_counted_in_a_competition_that_is_not_one_of_ours(tmp_path):
+    # 23 Nov 2026: Transfermarkt's «CL» (a competition named by its code, a slice of each season's games) crowned Messi top
+    # scorer of 2012/13 with 4 goals; a count needs the whole season, and only our competitions are whole
+    G, reg, cid, eid = base(tmp_path)
+    tm = reg.mint("competition", "tm", "CL")
+    G.put("competition", {"cid": tm, "name": "CL"}, "tm")
+    te = reg.mint("edition", "tm", "CL|2012/2013")
+    G.put("edition", {"eid": te, "cid": tm, "season": "2012/2013"}, "tm")
+    a = reg.mint("player", "fotmob", 1)
+    for k in (1, 2, 3):
+        match(G, reg, te, k, 10, 20, 1, 0, goals=[("goal", a)])
+    match(G, reg, te, 4, 10, 30, 2, 1, rnd="Final", goals=[("goal", a), ("goal", a), ("goal", 9)])    # nor a «بطل FAC» beside the FA Cup's
+    honours.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "m"), s3=False))
+    assert G.c.execute("select count(*) from honour where eid=?", (te,)).fetchone()[0] == 0
