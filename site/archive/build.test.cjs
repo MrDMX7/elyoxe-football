@@ -190,3 +190,18 @@ test("a FotMob man's profile carries his encyclopedia facts (data/fmp.json) with
   assert.match(h, /القيمة السوقية/);
   assert.match(h, /هذا الموسم[\s\S]*?بونفيرادينا/);
 });
+
+test("a season's top scorer links his profile", () => {
+  const { o } = world();
+  const ef = path.join(o.data, "editions", "47.json"), ed = JSON.parse(fs.readFileSync(ef, "utf8"));
+  ed.seasons[0].top_scorers = [{ rank: 1, name: "آلان سميث", value: "22", tifo: 5 }];
+  fs.writeFileSync(ef, JSON.stringify(ed));
+  const mf = path.join(o.data, "matches", "47", "1990-1991.json"), md = JSON.parse(fs.readFileSync(mf, "utf8"));
+  md.matches.forEach(m => { delete m.ev; });                                   // only the honours list names him
+  fs.writeFileSync(mf, JSON.stringify(md));
+  fs.mkdirSync(path.join(o.data, "people"), { recursive: true });
+  fs.writeFileSync(path.join(o.data, "people", "5.json"), JSON.stringify({ "5": { n: "Alan Smith", car: [["1990/1991", "Premier League", "أرسنال", 9825, 37, 22, 0, null, 0, 0]] } }));
+  A.build(o);
+  assert.match(fs.readFileSync(path.join(o.out, "c/premier-league/s/1990-1991/index.html"), "utf8"), /href="\/p\/k5\/"[^>]*>[\s\S]{0,80}آلان سميث/);
+  assert.match(fs.readFileSync(path.join(o.out, "c/premier-league/seasons/index.html"), "utf8"), /href="\/p\/k5\/"[^>]*>[\s\S]{0,80}آلان سميث/);   // the seasons list too
+});

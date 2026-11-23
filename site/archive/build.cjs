@@ -72,7 +72,7 @@ function build(o) {
       ev: (m.ev || []).map(e => [e[0], e[1], e[2], e[3], e[4], man(e[5], e[6]), e[6]]),          // e[6]: the man's Tifo id (the season's leaders)
       lu: m.lu ? Object.fromEntries(Object.entries(m.lu).map(([k, v]) => [k, v.map(p => [p[0], man(p[1], p[4]), p[2], p[3]].concat(p[5] != null ? [p[5]] : []))])) : null });
   });
-  const hpo = { team: id => KT.has(String(id)), player: id => KP.has(String(id)), person: () => false, coach: kid => coachHref(kid), coachName: () => null,
+  const hpo = { team: id => KT.has(String(id)), player: id => KP.has(String(id)), person: pid => PERS.has(String(pid)), coach: kid => coachHref(kid), coachName: () => null,
     teamName: () => null, playerName: () => null };
   let nSeasons = 0, nMatches = 0;
   for (const c of comps) {
