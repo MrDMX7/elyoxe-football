@@ -255,6 +255,10 @@ class Pass:
             return
         pairs = Counter((r[2], r[3]) for r in by[main])
         once = all(n == 1 for n in pairs.values())
+        # every pair home and away once: a second source's game of a pair already played is a copy (same score: one game;
+        # another: a wrong one, aside) — UAE 2005/06-2009/10 kept 19 of them beside the FA's full seasons
+        complete = once and len(pairs) == len(core) * (len(core) - 1)
+        span = (min(r[6] for r in by[main]), max(r[6] for r in by[main]))   # inside its days only: Argentina's Copa de la Liga is another tournament
         mine = {(r[2], r[3]): r for r in by[main]}
         twins, aside = [], []
         for s, rs in by.items():
@@ -269,7 +273,9 @@ class Pass:
                     aside.append(mid)
                     continue
                 k = mine.get((h, a))
-                if k and (k[4], k[5]) == (hs, as_) and k[6] == d:              # the same game, another copy (three on one day)
+                if k and complete and span[0] <= d <= span[1]:
+                    (twins.append((mid, k[0])) if (k[4], k[5]) == (hs, as_) else aside.append(mid))
+                elif k and (k[4], k[5]) == (hs, as_) and k[6] == d:            # the same game, another copy (three on one day)
                     twins.append((mid, k[0]))
                 elif once and "rsssf" in (src, main) and k and (k[4], k[5]) == (hs, as_) and abs((Date.fromisoformat(k[6]) - Date.fromisoformat(d)).days) <= PAIR_DAYS:
                     twins.append((mid, k[0]))

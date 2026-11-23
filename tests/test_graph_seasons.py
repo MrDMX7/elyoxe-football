@@ -296,3 +296,22 @@ def test_a_clubs_second_record_in_the_old_table_does_not_keep_its_copies(tmp_pat
     game(G, 40, e, "2006-10-20", 7, 1, 3, 0, src="rsssf")
     seasons.load(G, reg, None)
     assert G.c.execute("SELECT eid FROM match WHERE mid=40").fetchone() != (e,)
+
+
+def test_in_a_complete_round_robin_a_second_sources_game_of_a_pair_already_played_is_a_copy(tmp_path):
+    # UAE 2008/09: the FA's 132 games are every pair home and away; schochastics' «Sharjah 1-2 Al Wahda» of 12 Apr is the FA's of
+    # 15 Mar (a month off), RSSSF's «Al Jazira 1-1 Al Wahda» the FA's 4-0 (another score): copies, not games
+    G, reg, cid = world(tmp_path, fid=538)
+    e = ed(G, reg, cid, "2008/2009", "s365", fid=538, champion=1)
+    mid = 0
+    for h in (1, 2, 3, 4):
+        for a in (1, 2, 3, 4):
+            if h != a:
+                mid += 1
+                game(G, mid, e, f"2008-{9 + mid % 3:02d}-{1 + mid:02d}", h, a, 1, 2, src="uaefa")
+    game(G, 40, e, "2008-11-05", 1, 2, 1, 2, src="sch")               # the FA's 1-2 of 2008-10-02, 34 days off: one game
+    game(G, 41, e, "2008-10-25", 1, 3, 1, 1, src="rsssf")             # another score: a wrong copy, aside
+    out = seasons.load(G, reg, None)
+    assert not G.c.execute("SELECT 1 FROM match WHERE mid=40").fetchone()
+    assert G.c.execute("SELECT eid FROM match WHERE mid=41").fetchone() != (e,)
+    assert G.c.execute("SELECT count(*) FROM match WHERE eid=?", (e,)).fetchone() == (12,)
