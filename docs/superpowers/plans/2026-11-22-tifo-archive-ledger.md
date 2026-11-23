@@ -94,3 +94,9 @@ with the commit or the evidence. A new session reads this first and continues at
   Latin read in Arabic where one spelling is known, matched without accents/case/hyphens (9,357+).
 - Integrity, morning -> afternoon (Latin share): old clubs 0.69 -> 0.07, h2h 0.42 -> 0.0, scorers 0.32 -> 0.01, season pages
   0.13 -> 0.03, profiles 0.50 -> 0.24 (before the career terms), coaches 0.34 -> 0.15, awards 0.38 -> 0.16; 0 broken links.
+- Evening: the encyclopedia men's only (db/world.py mens/mens_clubs: 214 women's clubs, their pages down; world/removed.json
+  lets the stage delete deliberate removals past its 5 % guard: 1,312 pages). 34,652 world/transfer players named.
+  Integrity at 19:52 (720 sampled of 218,764): broken 0, old 0, twin 0; Latin share profiles 0.12, old clubs 0.07,
+  encyclopedia clubs 0.10, transfers 0.44, h2h 0.0. Still Latin: /arabs/ (0.88: referees and coaches abroad), /memorable/
+  (0.75), /messi/ (0.73), /worldcup-arabs/ (0.66). Pending: Arab Cup scorers (next awards stage), old Euros' scorers (season
+  pages as the fetch reaches them), the per-player stats table on old matches.
