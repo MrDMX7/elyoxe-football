@@ -30,6 +30,16 @@ from db.fotmob_profiles import fm_get, team_card, player_doc, BUCKET  # noqa: E4
 SKIP = re.compile(r"women|f[eé]min|frauen|damallsvenskan|toppserien|nwsl|futsal|beach|liga f\b|cup|copa|pokal|coupe|coppa|taça|beker|shield|super ?cup|supercopa|trophy|playoff|play-off|qualification|u1\d|u2\d|youth|reserve", re.I)
 
 
+def mens_clubs(raws, league_of):
+    """the club ids to keep by their own names (a league table names «Fiorentina», its details «Fiorentina (W)»: 130 women's
+    sides were left on 23 Nov 2026): no «(W)» club, and none of a league whose clubs are mostly «(W)»"""
+    from collections import Counter
+    w = {c for c, r in raws.items() if r and "(W)" in str((r.get("details") or {}).get("name") or "")}
+    n, nw = Counter(league_of[c] for c in raws if raws[c]), Counter(league_of[c] for c in w)
+    womens = {l for l in n if nw[l] >= 0.5 * n[l]}
+    return {c for c, r in raws.items() if r and c not in w and league_of[c] not in womens}
+
+
 def mens(teams):
     """a league's teams with FotMob's women's sides («(W)») left out, and none of a league that is mostly theirs (23 Nov 2026:
     214 women's clubs from leagues whose names never say so: Toppserien, the Northern Super League)"""
@@ -95,8 +105,11 @@ def main(argv=None):
     with ThreadPoolExecutor(4) as ex:
         raws = dict(zip(clubs, ex.map(lambda i: fm_get("t", i), clubs)))
     cards, squads = {}, {}
+    keep = mens_clubs(raws, {c: club_league[c][0] for c in raws})
+    print(f"{len([c for c in raws if raws[c]]) - len(keep)} women's clubs left out by their own names")
+    lg_out = [l for l in (dict(l, clubs=[c for c in l["clubs"] if c in keep]) for l in lg_out) if l["clubs"]]
     for cid, raw in raws.items():
-        if not raw:
+        if not raw or cid not in keep:
             continue
         try:
             c = team_card(raw, tt)
