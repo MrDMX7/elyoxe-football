@@ -37,7 +37,7 @@ TM_CODES = {"GB1": "Premier League", "GB2": "Championship", "GB3": "League One",
             "FRC": "Coupe de France"}
 
 
-def persons(G, out, min_apps=3, last=10):
+def persons(G, out, min_apps=3, last=10, nat=lambda v: v):
     """people/<pid % 500>.json: every man the graph holds a record of beyond a name (3 games in the archive, a career line, an
     honour, caps, a move or an injury), for the archive's /p/k<Tifo id>/ pages (phase 2: «بروفايلات لكل اللاعبين»):
     n, ar, fm (FotMob id), b, d, nat, pos, h, ft, bp; car [season, competition, club, club FotMob id, apps, goals, assists,
@@ -83,10 +83,10 @@ def persons(G, out, min_apps=3, last=10):
         P[pid]["last"].append([str(fm_m[mid]) if mid in fm_m else f"k{mid}", d, tn.get(h), fm_t.get(h), tn.get(a), fm_t.get(a), hs, as_, fm_c.get(cid)])
     G.c.execute("DROP TABLE exp_p")
     shards = defaultdict(dict)
-    for pid, name, ar, born, died, nat, pos, h, foot, bp in q("SELECT pid, name, name_ar, born, died, nationality, position, height, foot, birthplace FROM player"):
+    for pid, name, ar, born, died, nation, pos, h, foot, bp in q("SELECT pid, name, name_ar, born, died, nationality, position, height, foot, birthplace FROM player"):
         if pid in keep:
             d = P[pid]
-            shards[pid % SHARDS][str(pid)] = {k: v for k, v in {"n": name, "ar": ar, "fm": fm_p.get(pid), "b": born, "d": died, "nat": nat, "pos": pos,
+            shards[pid % SHARDS][str(pid)] = {k: v for k, v in {"n": name, "ar": ar, "fm": fm_p.get(pid), "b": born, "d": died, "nat": nat(nation), "pos": pos,
                                                                 "h": h, "ft": foot, "bp": bp, **{k: d.get(k) for k in ("car", "ms", "last", "tr", "inj", "hon", "intl")}}.items()
                                               if v not in (None, [], "")}
     os.makedirs(os.path.join(out, "people"), exist_ok=True)
@@ -96,7 +96,7 @@ def persons(G, out, min_apps=3, last=10):
     return {"persons": len(keep), "shards": len(shards)}
 
 
-def referees(G, out, min_matches=5, last=10):
+def referees(G, out, min_matches=5, last=10, nat=lambda v: v):
     """referees.json {rid: {n, ar, c, fm, ms: [season, competition FotMob id, competition, matches, yellow, red], last: [...]}}:
     every referee of 5 games or more (the owner: «كل الحكام»), for /r/k<Tifo id>/"""
     from collections import defaultdict
@@ -127,14 +127,14 @@ def referees(G, out, min_matches=5, last=10):
     out_d = {}
     for rid, name, ar, country in q("SELECT rid, name, name_ar, country FROM referee"):
         if rid in R:
-            out_d[str(rid)] = {k: v for k, v in {"n": name, "ar": ar, "c": country, "fm": fm_r.get(rid), "ms": sorted(R[rid]["ms"], key=lambda x: str(x[0]), reverse=True),
+            out_d[str(rid)] = {k: v for k, v in {"n": name, "ar": ar, "c": nat(country), "fm": fm_r.get(rid), "ms": sorted(R[rid]["ms"], key=lambda x: str(x[0]), reverse=True),
                                                  "last": R[rid]["last"]}.items() if v not in (None, [], "")}
     with open(os.path.join(out, "referees.json"), "w", encoding="utf-8") as f:
         json.dump(out_d, f, ensure_ascii=False, separators=(",", ":"))
     return {"referees": len(out_d)}
 
 
-def clubs(G, out, min_matches=30, last=10):
+def clubs(G, out, min_matches=30, last=10, nat=lambda v: v):
     """clubs.json {tid: {n, ar, c, ss: [season, competition FotMob id, competition, p, w, d, l, gf, ga], hon: [kind, competition,
     competition FotMob id, season], last: [...]}}: every club FotMob has no page for with 30 games or more in the archive
     (the Wimbledon of 1990, Dubai CSC, Al Khaleej), for /t/k<Tifo id>/"""
@@ -169,14 +169,46 @@ def clubs(G, out, min_matches=30, last=10):
     for tid, name, ar, country in q("SELECT tid, name, name_ar, country FROM team"):
         if tid in want:
             c = C[tid]
-            out_d[str(tid)] = {k: v for k, v in {"n": name, "ar": ar, "c": country, "ss": sorted(c["ss"], key=lambda x: str(x[0]), reverse=True),
+            out_d[str(tid)] = {k: v for k, v in {"n": name, "ar": ar, "c": nat(country), "ss": sorted(c["ss"], key=lambda x: str(x[0]), reverse=True),
                                                  "hon": sorted(c["hon"], key=lambda x: str(x[3]), reverse=True), "last": c["last"]}.items() if v not in (None, [], "")}
     with open(os.path.join(out, "clubs.json"), "w", encoding="utf-8") as f:
         json.dump(out_d, f, ensure_ascii=False, separators=(",", ":"))
     return {"clubs": len(out_d)}
 
 
-def coaches(G, out, last=10):
+def nation_ar(G):
+    """a nationality in Arabic (23 Nov: profiles showed «الجنسية: BRA»): the graph keeps FotMob's three-letter code for a player,
+    which reads as the senior national team most of that code's men played for, and an English name for a coach or a
+    referee, which reads as the senior national team of that name; anything else stays as it is"""
+    import re
+    from collections import Counter, defaultdict
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    senior = {t: (n, a) for t, n, a in q("SELECT tid, name, name_ar FROM team WHERE kind='national' AND name_ar IS NOT NULL")
+              if not re.search(r"\d|\(W\)|women|olympic", f"{n} {a}", re.I)}
+    by_name = {n: a for n, a in senior.values()}
+    votes = defaultdict(Counter)
+    for code, tid, k in q("""SELECT p.nationality, a.tid, count(*) FROM appearance a JOIN player p ON p.pid=a.pid JOIN team t ON t.tid=a.tid
+                             WHERE t.kind='national' AND length(p.nationality)=3 GROUP BY 1, 2"""):
+        if tid in senior:
+            votes[code][tid] += k
+    by_code = {}
+    for code, c in votes.items():
+        (tid, k), total = c.most_common(1)[0], sum(c.values())
+        if k >= 3 and k >= 0.6 * total:
+            by_code[code] = senior[tid][1]
+    return lambda v: by_code.get(v) or by_name.get(NATION_ALIAS.get(v, v)) or NATION_GONE.get(v) or v
+
+
+# the English forms the coaches' and referees' sources use for a national team named otherwise, and the states gone since
+NATION_ALIAS = {"United States": "USA", "Czech Republic": "Czechia", "Republic of Ireland": "Ireland", "Turkey": "Turkiye", "Türkiye": "Turkiye",
+                "United Arab Emirates": "UAE", "Korea Republic": "South Korea", "IR Iran": "Iran", "China PR": "China",
+                "Côte d'Ivoire": "Ivory Coast", "Bosnia-Herzegovina": "Bosnia and Herzegovina", "Macedonia": "North Macedonia"}
+NATION_GONE = {"Soviet Union": "الاتحاد السوفيتي", "West Germany": "ألمانيا الغربية", "East Germany": "ألمانيا الشرقية",
+               "Yugoslavia": "يوغوسلافيا", "Czechoslovakia": "تشيكوسلوفاكيا", "United Arab Republic": "الجمهورية العربية المتحدة",
+               "Zaire": "زائير", "Dutch East Indies": "جزر الهند الشرقية الهولندية", "Serbia and Montenegro": "صربيا والجبل الأسود"}
+
+
+def coaches(G, out, last=10, nat=lambda v: v):
     """coaches.json {kid: {n, ar, b, nat, fm, pid, sp: [team, team FotMob id, start, end, m, w, d, l, gf, ga], hon: [kind, rank,
     competition, competition FotMob id, season, value], last: [...]}}: every coach with a bench in the archive or a coach's
     award (the owner, 22 Nov 2026: «كل المدربين»), for /coach/k<Tifo id>/"""
@@ -197,10 +229,10 @@ def coaches(G, out, last=10):
                                                    WHERE h.kid IS NOT NULL ORDER BY e.season DESC"""):
         K[kid]["hon"].append([kind, rank, cn.get(cid), fm_c.get(cid), season, value])
     out_d = {}
-    for kid, name, ar, born, nat, pid in q("SELECT kid, name, name_ar, born, nationality, pid FROM coach"):
+    for kid, name, ar, born, nation, pid in q("SELECT kid, name, name_ar, born, nationality, pid FROM coach"):
         if kid in K:
             c = K[kid]
-            out_d[str(kid)] = {k: v for k, v in {"n": name, "ar": ar, "b": born, "nat": nat, "fm": fm_k.get(kid), "pid": pid,
+            out_d[str(kid)] = {k: v for k, v in {"n": name, "ar": ar, "b": born, "nat": nat(nation), "fm": fm_k.get(kid), "pid": pid,
                                                  "sp": c["sp"], "hon": c["hon"], "last": c["last"]}.items() if v not in (None, [], "")}
     with open(os.path.join(out, "coaches.json"), "w", encoding="utf-8") as f:
         json.dump(out_d, f, ensure_ascii=False, separators=(",", ":"))
@@ -215,10 +247,11 @@ def export(db, out, comps=None):
     fids = comps or competitions(G)
     rec["matches"] = P.matches(G, out, comps=tuple(fids), teams=())
     rec["people"] = P.people(G, out)
-    rec["persons"] = persons(G, out)            # people/<shard>.json: every man's profile (/p/k<id>/)
-    rec["referees"] = referees(G, out)          # referees.json: every referee of 5 games (/r/k<id>/)
-    rec["clubs"] = clubs(G, out)                # clubs.json: every club FotMob has no page for, 30 games (/t/k<id>/)
-    rec["coaches"] = coaches(G, out)            # coaches.json: every coach with a bench or an award (/coach/k<id>/)
+    ar = nation_ar(G)                           # «الجنسية: هولندا», not «NED»
+    rec["persons"] = persons(G, out, nat=ar)            # people/<shard>.json: every man's profile (/p/k<id>/)
+    rec["referees"] = referees(G, out, nat=ar)          # referees.json: every referee of 5 games (/r/k<id>/)
+    rec["clubs"] = clubs(G, out, nat=ar)                # clubs.json: every club FotMob has no page for, 30 games (/t/k<id>/)
+    rec["coaches"] = coaches(G, out, nat=ar)            # coaches.json: every coach with a bench or an award (/coach/k<id>/)
     rec["secs"] = round(time.time() - t)
     rec["competitions"] = len(fids)
     return rec

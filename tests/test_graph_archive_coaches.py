@@ -23,3 +23,14 @@ def test_every_coach_gets_his_spells_awards_and_last_games(tmp_path):
     assert c["sp"] == [["الجزيرة", 102101, "2016-10-01", "2016-10-01", 1, 1, 0, 0, 2, 1]]
     assert c["hon"] == [["winner", 1, "مدرب العام", None, "2017", None]]
     assert c["last"] == [["2600001", "2016-10-01", "الجزيرة", 102101, "العين", 102117, 2, 1, 538]]
+
+
+def test_a_coachs_nationality_reads_in_arabic(tmp_path):
+    G, m2, old = world(tmp_path)
+    kid = G.c.execute("select kid from coach").fetchone()[0]
+    G.c.execute("update coach set nationality='Netherlands' where kid=?", (kid,))
+    G.c.commit()
+    out = tmp_path / "d"
+    out.mkdir()
+    archive_export.coaches(G, str(out), nat=lambda v: {"Netherlands": "هولندا"}.get(v, v))
+    assert json.load(open(out / "coaches.json", encoding="utf-8"))[str(kid)]["nat"] == "هولندا"
