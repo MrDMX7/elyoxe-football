@@ -27,7 +27,16 @@ from store import Store, S3Backend  # noqa: E402
 from sources.fotmob import FotMob  # noqa: E402
 from db.fotmob_profiles import fm_get, team_card, player_doc, BUCKET  # noqa: E402
 
-SKIP = re.compile(r"women|femin|cup|copa|pokal|coupe|coppa|taça|beker|shield|super ?cup|supercopa|trophy|playoff|play-off|qualification|u1\d|u2\d|youth|reserve", re.I)
+SKIP = re.compile(r"women|f[eé]min|frauen|damallsvenskan|toppserien|nwsl|futsal|beach|liga f\b|cup|copa|pokal|coupe|coppa|taça|beker|shield|super ?cup|supercopa|trophy|playoff|play-off|qualification|u1\d|u2\d|youth|reserve", re.I)
+
+
+def mens(teams):
+    """a league's teams with FotMob's women's sides («(W)») left out, and none of a league that is mostly theirs (23 Nov 2026:
+    214 women's clubs from leagues whose names never say so: Toppserien, the Northern Super League)"""
+    w = [t for t in teams if "(W)" in str(t[1] if len(t) > 1 else "")]
+    if teams and len(w) >= 0.5 * len(teams):
+        return []
+    return [t for t in teams if t not in w]
 
 
 def league_teams(lid, http):
@@ -74,7 +83,7 @@ def main(argv=None):
         leagues = [x for x in leagues if x[0] == a.only_country]
     print(len(leagues), "domestic leagues")
     with ThreadPoolExecutor(4) as ex:
-        lt = list(ex.map(lambda x: league_teams(x[1]["id"], http), leagues))
+        lt = [mens(t) for t in ex.map(lambda x: league_teams(x[1]["id"], http), leagues)]
     club_league, lg_out = {}, []
     for (cc, l), teams in zip(leagues, lt):
         lg_out.append({"id": l["id"], "name": l.get("name"), "name_ar": tt.get(str(l["id"])), "cc": cc, "country_ar": cc_ar.get(cc), "clubs": [t[0] for t in teams]})
