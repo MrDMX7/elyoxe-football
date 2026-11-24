@@ -79,8 +79,11 @@ def load(G, reg, S, arab_codes=None):
                                                           WHERE lower(trim(m.round)) IN ('final', 'the final', 'finals') AND m.hs IS NOT NULL
                                                           AND lower(coalesce(c.name, '')) NOT LIKE '%qualif%' ORDER BY m.date"""):
         legs[eid].append((h, a, hs, as_, ph, pa))
+    # an organiser's own record of a competition that is over holds every game of it: the Fairs Cup, the Cup Winners' Cup
+    whole = {e for (e,) in G.c.execute("""SELECT e.eid FROM edition e JOIN xref x ON x.type='competition' AND x.tifo_id=e.cid
+                                          AND ((x.source='uefa' AND x.source_id='fairs-cup') OR (x.source='sch' AND x.source_id='cup-winners-cup'))""")}
     for eid, ls in legs.items():
-        if eid not in ours:                    # a final in a competition named by a Transfermarkt code: «بطل FAC» beside the FA Cup's
+        if eid not in ours and eid not in whole:   # a final in a competition named by a Transfermarkt code: «بطل FAC» beside the FA Cup's
             continue
         teams = {ls[0][0], ls[0][1]}
         if len(ls) > 2 or any({x[0], x[1]} != teams for x in ls):
@@ -92,9 +95,15 @@ def load(G, reg, S, arab_codes=None):
         t1, t2 = sorted(teams)
         if goals[t1] == goals[t2]:
             h, a, hs, as_, ph, pa = ls[-1]
-            if ph is None or pa is None or ph == pa:
+            away = defaultdict(int)
+            for x in ls:
+                away[x[1]] += x[3]
+            if ph is not None and pa is not None and ph != pa:
+                win = h if ph > pa else a
+            elif eid in whole and len(ls) == 2 and ls[0][0] == ls[1][1] and away[t1] != away[t2]:     # Leeds 1971: 2-2 away, 1-1 at home
+                win = t1 if away[t1] > away[t2] else t2
+            else:
                 continue
-            win = h if ph > pa else a
         else:
             win = t1 if goals[t1] > goals[t2] else t2
         lose = t2 if win == t1 else t1

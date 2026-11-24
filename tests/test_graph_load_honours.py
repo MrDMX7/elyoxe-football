@@ -137,3 +137,17 @@ def test_no_top_scorer_counted_in_a_competition_that_is_not_one_of_ours(tmp_path
     match(G, reg, te, 4, 10, 30, 2, 1, rnd="Final", goals=[("goal", a), ("goal", a), ("goal", 9)])    # nor a «بطل FAC» beside the FA Cup's
     honours.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "m"), s3=False))
     assert G.c.execute("select count(*) from honour where eid=?", (te,)).fetchone()[0] == 0
+
+
+def test_the_fairs_cup_final_crowns_its_champion_and_away_goals_settle_a_level_one(tmp_path):
+    G, reg, _, _ = base(tmp_path)
+    cid = reg.mint("competition", "uefa", "fairs-cup")
+    G.put("competition", {"cid": cid, "name": "Inter-Cities Fairs Cup"}, "uefa")
+    G.xref("competition", cid, "uefa", "fairs-cup", "uefa-native")
+    eid = reg.mint("edition", "uefa", "fairs-cup|1970/1971")
+    G.put("edition", {"eid": eid, "cid": cid, "season": "1970/1971"}, "uefa")
+    match(G, reg, eid, 1, 10, 20, 2, 2, rnd="final")             # Juventus 2-2 Leeds
+    match(G, reg, eid, 2, 20, 10, 1, 1, rnd="final")             # Leeds 1-1 Juventus
+    honours.load(G, reg, Sources(str(tmp_path), mirror=str(tmp_path / "m"), s3=False))
+    got = dict(G.c.execute("select kind, tid from honour where eid=? and kind in ('champion','runner_up')", (eid,)).fetchall())
+    assert got == {"champion": 20, "runner_up": 10}

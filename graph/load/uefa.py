@@ -31,7 +31,9 @@ COMP = {"champions": [("fotmob", "42"), ("sch", "UEFA CL"), ("tm", "CL")], "uefa
         "cup-winners": [("sch", "cup-winners-cup")], "intertoto": [("sch", "UEFA ITC")], "intercontinental": [("sch", "intercontinental-cup-old")],
         "euro": [("fotmob", "50"), ("martj42", "UEFA Euro"), ("tm", "EURO"), ("martj42", "UEFA Euro qualification")],
         "fairs-cup": [("uefa", "fairs-cup")] + EL}
-APART = ("fairs-cup",)     # a competition of its own whatever competition a source filed its games under
+# a competition of its own whatever competition or season a source filed its games under (the Cup Winners' Cup final of
+# 1962 was replayed in September, and stood in 1962/1963)
+APART = ("fairs-cup", "cup-winners")
 FAIRS = {"name": "Inter-Cities Fairs Cup", "name_ar": "كأس المعارض الأوروبية", "kind": "cup", "scope": "europe"}
 ROUND = {"FINAL": "final", "SEMIFINAL": "1/2", "QUARTER_FINALS": "1/4", "ROUND_OF_16": "1/8", "ROUND_OF_32": "1/16", "THIRD_PLACE_PLAY_OFF": "3rd place"}
 LINE = {"GOALKEEPER": "Goalkeeper", "DEFENDER": "Defender", "MIDFIELDER": "Midfielder", "FORWARD": "Forward"}

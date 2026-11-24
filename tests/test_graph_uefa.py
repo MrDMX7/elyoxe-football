@@ -207,3 +207,13 @@ def test_the_fairs_cup_has_its_name_on_a_build_whose_registry_already_knows_it(t
     known = reg.mint("competition", "uefa", "fairs-cup")                   # yesterday's build minted it; today's graph starts empty
     uefa.load(G, reg, S)
     assert G.c.execute("SELECT c.cid, c.name FROM match m JOIN edition e ON e.eid=m.eid JOIN competition c ON c.cid=e.cid").fetchall() == [(known, "Inter-Cities Fairs Cup")]
+
+
+def test_a_cup_winners_cup_final_replayed_in_september_stays_in_its_season(tmp_path):
+    rows = [rec(100, "1961-09-13", 2, 0, comp="cup-winners", year=1962), rec(101, "1962-09-05", 3, 0, comp="cup-winners", year=1962, round="FINAL")]
+    G, reg, cid, teams, S = world(tmp_path, rows)
+    cw = reg.mint("competition", "sch", "cup-winners-cup")
+    G.put("competition", {"cid": cw, "name": "UEFA Cup Winners' Cup", "kind": "cup"}, "sch")
+    replay, _ = held(G, reg, cw, teams, "1962-09-05", 3, 0, season="1962/1963", key="a")       # schochastics: by the date
+    uefa.load(G, reg, S)
+    assert G.c.execute("SELECT e.season FROM match m JOIN edition e ON e.eid=m.eid WHERE m.mid=?", (replay,)).fetchone() == ("1961/1962",)
