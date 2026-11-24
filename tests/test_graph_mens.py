@@ -78,3 +78,12 @@ def test_the_leagues_and_awards_named_by_their_initials_leave_too(tmp_path):
         assert not mens.WOMEN.search(name), name
     for name in ("FC Frauenfeld", "Frauental", "Trefelin Boys & Girls Club", "Liverpool"):
         assert not mens.WOMENS_SIDE.search(name), name
+
+
+def test_a_competition_only_its_arabic_name_calls_womens_leaves(tmp_path):
+    G = Graph(str(tmp_path / "t.db"))
+    G.put("competition", {"cid": 1, "name": "Toppserien", "name_ar": "الدوري النرويجي للسيدات", "kind": "league"}, "fotmob")
+    G.put("competition", {"cid": 2, "name": "Northern Super League", "name_ar": "الدوري الكندي ( سيدات )"}, "fotmob")
+    G.put("competition", {"cid": 3, "name": "Eliteserien", "name_ar": "الدوري النرويجي الممتاز", "kind": "league"}, "fotmob")
+    mens.load(G, Registry(), None)
+    assert [c for (c,) in G.c.execute("select cid from competition")] == [3]

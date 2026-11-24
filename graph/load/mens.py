@@ -18,6 +18,8 @@ WOMEN = re.compile(r"(?i)\b(women'?s?|womens|female|girls?|ladies|f[eé]minin\w*
                    r"|w-league|nwsl|wsl|liga f|copa de la reina)\b")
 WOMENS_SIDE = re.compile(r"(?i)\(w\)|\((women|femenino|féminines?)\)|\b(women'?s?|womens|ladies|f[eé]minin(e|es|as?|o)?|femen[ií](no|na|l)"
                          r"|femminile|frauen|vrouwen|damen|kvinner|w\.f\.c\.?|wfc|lfc)\b|سيدات|النسائي|للنساء")
+# FotMob's Arabic name says it where the English one does not (Toppserien, SWPL 1, WE League, Northern Super League: 24 Nov 2026)
+WOMEN_AR = re.compile("سيدات|نسائي|للنساء")
 SQUAD, SHARE, ROUNDS = 3, 0.8, 8
 
 
@@ -45,8 +47,8 @@ def load(G, reg, S):
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     side = {t for t, n, a in q("SELECT tid, name, name_ar FROM team") if WOMENS_SIDE.search(f"{n or ''} {a or ''}")}
     out = set()
-    for cid, name in q("SELECT cid, name FROM competition"):
-        if WOMEN.search(name or "") or "(W)" in (name or ""):
+    for cid, name, name_ar in q("SELECT cid, name, name_ar FROM competition"):
+        if WOMEN.search(name or "") or "(W)" in (name or "") or WOMEN_AR.search(name_ar or ""):
             out.add(cid)
             continue
         clubs = [t for (t,) in q("""SELECT h.tid FROM honour h JOIN edition e ON e.eid=h.eid WHERE e.cid=? AND h.tid IS NOT NULL
