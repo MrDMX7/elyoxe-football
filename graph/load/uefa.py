@@ -22,10 +22,16 @@ from graph.load.teams import alike, squash
 from graph.load.wikidata_facts import fold, house
 
 FILE = "uefa.json.gz"
-# our label -> the registry keys of the competitions its games may sit in, the first for a game of our own
-COMP = {"champions": [("fotmob", "42")], "uefa-cup": [("fotmob", "73")], "super-cup": [("fotmob", "74")],
+# our label -> the registry keys of the competitions its games may sit in, the first for a game of our own. A source's own
+# competition is one with FotMob's only at the end of the build (same_comp), so each is named here: schochastics holds the
+# European Cup of 1955-2009 under «UEFA CL», and the Fairs Cup under «UEFA EL» beside the UEFA Cup
+EL = [("fotmob", "73"), ("sch", "UEFA EL"), ("tm", "EL")]
+COMP = {"champions": [("fotmob", "42"), ("sch", "UEFA CL"), ("tm", "CL")], "uefa-cup": EL,
+        "super-cup": [("fotmob", "74"), ("sch", "UEFA SC"), ("tm", "USC")],
         "cup-winners": [("sch", "cup-winners-cup")], "intertoto": [("sch", "UEFA ITC")], "intercontinental": [("sch", "intercontinental-cup-old")],
-        "euro": [("fotmob", "50"), ("martj42", "UEFA Euro qualification")], "fairs-cup": [("uefa", "fairs-cup")]}
+        "euro": [("fotmob", "50"), ("martj42", "UEFA Euro"), ("tm", "EURO"), ("martj42", "UEFA Euro qualification")],
+        "fairs-cup": [("uefa", "fairs-cup")] + EL}
+APART = ("fairs-cup",)     # a competition of its own whatever competition a source filed its games under
 FAIRS = {"name": "Inter-Cities Fairs Cup", "name_ar": "كأس المعارض الأوروبية", "kind": "cup", "scope": "europe"}
 ROUND = {"FINAL": "final", "SEMIFINAL": "1/2", "QUARTER_FINALS": "1/4", "ROUND_OF_16": "1/8", "ROUND_OF_32": "1/16", "THIRD_PLACE_PLAY_OFF": "3rd place"}
 LINE = {"GOALKEEPER": "Goalkeeper", "DEFENDER": "Defender", "MIDFIELDER": "Midfielder", "FORWARD": "Forward"}
@@ -84,7 +90,7 @@ def load(G, reg, S):
         c = reg.mint("competition", "uefa", "fairs-cup")
         G.put("competition", {"cid": c, **FAIRS}, "uefa")
         G.xref("competition", c, "uefa", "fairs-cup", "uefa-native")
-    return apply(G, reg, rows, "uefa", COMP, group, own)
+    return apply(G, reg, rows, "uefa", COMP, group, own, own_home=APART)
 
 
 def group(r):
@@ -98,17 +104,18 @@ def own(r, g, dates, cids):
         y = r["date"][:4] if g[2] else str(r.get("year"))
         return cids["euro"][-1 if g[2] and len(cids["euro"]) > 1 else 0], f"euro|{'q' if g[2] else 't'}|{y}", y, True
     s = season_of(dates)
-    return cids[r["comp"]][0], f"{r['comp']}|{s}", s, False
+    return cids[r["comp"]][0], f"{r['comp']}|{s}", s, r["comp"] in APART
 
 
-def apply(G, reg, rows, src, comp, group, own, thin=THIN):
+def apply(G, reg, rows, src, comp, group, own, thin=THIN, own_home=()):
     """An organiser's records (UEFA's, FIFA's) onto the graph. `comp`: label -> registry keys of the competitions its games may
     sit in; `group(r)`: the games of one season; `own(r, g, dates, cids)`: where a game no source held goes; `thin`: sources
-    whose squads are only the scorers, which a full squad replaces."""
+    whose squads are only the scorers, which a full squad replaces; `own_home`: labels whose every game, the graph's copy too,
+    goes to the edition `own` names."""
     rows = sorted(rows, key=lambda r: (r["date"], str(r["id"])))
     q = lambda s, p=(): G.c.execute(s, p).fetchall()
     n = Counter()
-    cids = {lb: [c for c in (reg.get("competition", s, k) for s, k in keys) if c] for lb, keys in comp.items()}
+    cids = {lb: list(dict.fromkeys(c for c in (reg.get("competition", s, k) for s, k in keys) if c)) for lb, keys in comp.items()}
     eds = {c: {e for (e,) in q("SELECT eid FROM edition WHERE cid=?", (c,))} for cs in cids.values() for c in cs}
     comp_of = {e: c for c, es in eds.items() for e in es}
     marks = ",".join("?" * len(comp_of)) or "NULL"
@@ -437,7 +444,7 @@ def apply(G, reg, rows, src, comp, group, own, thin=THIN):
             if r["id"] in redate and of_mid[mid][5] != "fotmob":          # the organiser's date
                 G.c.execute("UPDATE match SET date=? WHERE mid=?", (redate[r["id"]], mid))
                 n["dates_corrected"] += 1
-            if moved.get(r["id"]):                                       # out of the friendlies, into its competition
+            if moved.get(r["id"]) or (r["comp"] in own_home and of_mid[mid][0] != edition(r)):      # out of the friendlies, into its competition
                 G.c.execute("UPDATE match SET eid=? WHERE mid=?", (edition(r), mid))
                 n["games_moved"] += 1
             if r["id"] in rescore:

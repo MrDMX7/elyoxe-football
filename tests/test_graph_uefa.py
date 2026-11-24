@@ -168,3 +168,35 @@ def test_a_copy_that_counted_the_shoot_out_is_the_same_game_and_takes_the_organi
     out = uefa.load(G, reg, S)
     assert out["games_joined"] == 2 and "games_own" not in out
     assert G.c.execute("SELECT mid, hs, as_, pen_h, pen_a FROM match ORDER BY mid").fetchall() == [(a, 1, 1, 1, 3), (b, 1, 1, 8, 7)]
+
+
+def test_a_european_cup_game_schochastics_holds_under_its_own_competition_is_that_game(tmp_path):
+    dukla = {"id": "2600880", "name": "Dukla", "official": "Dukla Praha", "ar": None, "country": "CZE", "national": False, "kind": "DOMESTIC_MEN_TEAM_A"}
+    rows = [rec(100 + i, d, hs, as_, home=REAL, away=dukla, year=1957) for i, (d, hs, as_) in enumerate((("1957-11-20", 3, 0), ("1957-12-04", 0, 1), ("1958-03-05", 2, 2)))]
+    G, reg, cid, teams, S = world(tmp_path, rows)
+    own = reg.mint("competition", "sch", "UEFA CL")                        # one with FotMob's only at the end of the build
+    G.put("competition", {"cid": own, "name": "UEFA CL", "kind": "tournament"}, "sch")
+    teams["d"] = reg.mint("team", "sch", "ASVS Dukla Praha")
+    G.put("team", {"tid": teams["d"], "name": "ASVS Dukla Praha", "kind": "club"}, "sch")
+    mids = [held(G, reg, own, teams, d, hs, as_, season="1957/1958", away="d", key=d)[0] for d, hs, as_ in (("1957-11-20", 3, 0), ("1957-12-04", 0, 1), ("1958-03-05", 2, 2))]
+    out = uefa.load(G, reg, S)
+    assert out["games_joined"] == 3 and "games_own" not in out and "teams_own" not in out
+    assert [m for (m,) in G.c.execute("SELECT mid FROM match ORDER BY date")] == mids
+    assert reg.get("team", "uefa", "2600880") == teams["d"]
+
+
+def test_the_fairs_cup_is_a_competition_of_its_own_wherever_a_source_filed_its_games(tmp_path):
+    rows = [rec(100, "1964-09-02", 2, 0, comp="fairs-cup", year=1964), rec(101, "1965-06-23", 1, 0, comp="fairs-cup", year=1964, round="FINAL"),
+            rec(102, "1971-09-15", 3, 1, comp="uefa-cup", year=1971)]
+    G, reg, cid, teams, S = world(tmp_path, rows)
+    el = reg.mint("competition", "fotmob", "73")
+    G.put("competition", {"cid": el, "name": "Europa League", "kind": "tournament"}, "fotmob")
+    fairs, e_old = held(G, reg, el, teams, "1964-09-02", 2, 0, season="1964/1965", key="a")       # schochastics: under the UEFA Cup
+    cup, e_cup = held(G, reg, el, teams, "1971-09-15", 3, 1, season="1971/1972", key="b")
+    out = uefa.load(G, reg, S)
+    assert out["games_joined"] == 2 and out["games_own"] == 1 and out["games_moved"] == 1
+    got = G.c.execute("SELECT m.mid, c.name, e.season FROM match m JOIN edition e ON e.eid=m.eid JOIN competition c ON c.cid=e.cid ORDER BY m.date").fetchall()
+    assert got[0] == (fairs, "Inter-Cities Fairs Cup", "1964/1965") and got[1][1:] == ("Inter-Cities Fairs Cup", "1964/1965")
+    assert got[2] == (cup, "Europa League", "1971/1972")
+    assert uefa.load(G, reg, S)["games_joined"] == 3                       # the second run finds them where they are
+    assert G.c.execute("SELECT count(*) FROM match").fetchone()[0] == 3

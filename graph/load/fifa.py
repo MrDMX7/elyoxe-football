@@ -18,11 +18,11 @@ from graph.load.teams import squash
 FILE = "fifa.json.gz"
 SRC = "fifa"
 # our label -> the registry keys of the competitions its games may sit in, the first for a game of our own
-COMP = {"world-cup": [("fotmob", "77")],
+COMP = {"world-cup": [("fotmob", "77"), ("martj42", "FIFA World Cup"), ("tm", "FIWC")],
         "world-cup-qualifiers": [("martj42", "FIFA World Cup qualification"), ("fotmob", "10199"), ("fotmob", "10197"), ("fotmob", "10196"),
                                  ("fotmob", "10198"), ("fotmob", "10195")],
-        "confederations-cup": [("fotmob", "43")], "olympics": [("fotmob", "66"), ("martj42", "Olympic Games")],
-        "club-world-cup": [("fotmob", "78")], "intercontinental": [("fotmob", "10703")]}
+        "confederations-cup": [("fotmob", "43"), ("martj42", "Confederations Cup")], "olympics": [("fotmob", "66"), ("martj42", "Olympic Games")],
+        "club-world-cup": [("fotmob", "78"), ("sch", "Fifa Club"), ("tm", "KLUB")], "intercontinental": [("fotmob", "10703")]}
 MEN, NATIONAL, OLYMPIC = 1, 1, 5                 # FIFA's Gender, TeamType and AgeType
 FINISHED, PENALTIES, EXTRA = 0, 2, (3, 8)        # MatchStatus; ResultType (8 is a golden goal)
 STAGE = {"final": "FINAL", "gold medal match": "FINAL", "semi-final": "SEMIFINAL", "semifinals": "SEMIFINAL", "quarter-final": "QUARTER_FINALS",
