@@ -1744,7 +1744,7 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
     // encyclopedia page, as the build's dead-link pass does for the links it sees (lib/world_squad.cjs relink)
     '<script>(function(){var m=/^\\/(m|p|t)\\/(\\d+)\\/?$/.exec(location.pathname);if(!m)return;var id=m[2];' +
     'if(m[1]==="m"){location.replace("/db/match/?id="+id);return;}' +
-    'var to=m[1]==="p"?"/db/player/"+id+"/":"/db/club/"+id+"/",alt=m[1]==="t"?"/db/club/?id="+id:null;' +
+    'var to=m[1]==="p"?"/db/player/"+id+"/":"/db/club/"+id+"/",alt=m[1]==="t"?"/db/club/?id="+id:"/db/player/?id="+id;' +
     'fetch(to,{method:"HEAD"}).then(function(r){if(r.ok)location.replace(to);else if(alt)location.replace(alt);}).catch(function(){});})();</script>' +
     U.foot() }, path:"/404", page:"none", title:"الصفحة مب موجودة | تيفو", desc:"" }));
   // 425: site/static/* is copied to the out/ root unchanged (Search Console's google<token>.html lives there), keeping its mtime

@@ -225,7 +225,7 @@ a.row:active,button.row:active,.mr:active,.hd-row:active{background:var(--fill)}
 .th{display:flex;flex-direction:column;align-items:center;gap:10px}
 .th h1{font-size:28px;line-height:34px;font-weight:800}
 .th .sub{font-size:15px;margin:0}
-.th-acts{display:flex;justify-content:center;gap:10px;margin-top:14px}
+.th-acts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:14px}
 .pill{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 18px;border-radius:22px;font-size:15px;font-weight:600;background:var(--fill);color:var(--label);transition:transform .15s var(--ease),background .2s}
 .pill svg{width:18px;height:18px}
 .pill.pri{background:var(--accent);color:var(--on-accent)}
