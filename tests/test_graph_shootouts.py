@@ -58,7 +58,7 @@ def test_with_the_true_score_two_sources_hold_one_game(tmp_path):
     game(G, 2, 1, 1, src="martj42", events=False)
     G.c.commit()
     shootouts.load(G, Registry(), None)
-    assert twins.load(G, Registry(), None) == {"merged": 1}
+    assert twins.load(G, Registry(), None)["merged"] == 1
     assert G.c.execute("SELECT count(*), max(pen_h) FROM match").fetchone() == (1, 3)
 
 

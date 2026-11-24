@@ -118,3 +118,32 @@ def test_a_country_and_its_successor_are_one_side_of_a_game(tmp_path):
     out = twins.load(G, reg, None)
     assert out["merged"] == 2
     assert sorted(r[0] for r in G.c.execute("select mid from match")) == [30, 32, 34]
+
+
+def test_a_shoot_out_inside_one_sources_score_is_taken_out_and_the_two_records_are_one(tmp_path):
+    G, reg = world(tmp_path)
+    G.put("match", {"mid": 5, "date": "2012-07-26", "home": 1, "away": 2, "hs": 2, "as_": 4, "round": "Second Round 2nd leg"}, "tm")
+    G.put("match", {"mid": 6, "date": "2012-07-26", "home": 1, "away": 2, "hs": 1, "as_": 0}, "sch")
+    G.put("match", {"mid": 8, "date": "2012-07-27", "home": 1, "away": 3, "hs": 3, "as_": 1}, "tm")       # two more: extra time
+    G.put("match", {"mid": 9, "date": "2012-07-27", "home": 3, "away": 1, "hs": 1, "as_": 1}, "sch")
+    G.put("match", {"mid": 12, "date": "2012-07-28", "home": 2, "away": 3, "hs": 6, "as_": 0}, "tm")      # four more: two games
+    G.put("match", {"mid": 13, "date": "2012-07-28", "home": 2, "away": 3, "hs": 2, "as_": 0}, "sch")
+    out = twins.load(G, reg, None)
+    assert G.c.execute("select mid, hs, as_, pen_h, pen_a, et from match order by mid").fetchall() == [
+        (5, 1, 0, 1, 4, 1), (8, 3, 1, None, None, 1), (12, 6, 0, None, None, None), (13, 2, 0, None, None, None)]
+    assert (out["merged"], out["shootouts"], out["extra_time"]) == (2, 1, 1)
+
+
+def test_two_sources_of_one_league_fixture_are_one_game_and_the_other_score_a_conflict(tmp_path):
+    G, reg = world(tmp_path)
+    G.put("competition", {"cid": 1, "name": "League", "kind": "league"}, "x")
+    G.put("competition", {"cid": 2, "name": "Cup", "kind": "cup"}, "x")
+    G.put("edition", {"eid": 1, "cid": 1, "season": "2005"}, "x")
+    G.put("edition", {"eid": 2, "cid": 2, "season": "2005"}, "x")
+    G.put("match", {"mid": 5, "eid": 1, "date": "2005-06-02", "home": 1, "away": 2, "hs": 1, "as_": 0}, "sch")
+    G.put("match", {"mid": 6, "eid": 1, "date": "2005-06-02", "home": 1, "away": 2, "hs": 3, "as_": 1}, "rsssf")
+    G.put("match", {"mid": 7, "eid": 2, "date": "2005-06-09", "home": 1, "away": 2, "hs": 1, "as_": 0}, "sch")
+    G.put("match", {"mid": 8, "eid": 2, "date": "2005-06-09", "home": 1, "away": 2, "hs": 3, "as_": 1}, "rsssf")
+    twins.load(G, reg, None)
+    assert G.c.execute("select mid, hs, as_ from match order by mid").fetchall() == [(6, 3, 1), (7, 1, 0), (8, 3, 1)]
+    assert G.c.execute("select count(*) from conflict where type='match' and tifo_id=6").fetchone()[0] == 2
