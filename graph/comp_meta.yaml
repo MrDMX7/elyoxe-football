@@ -91,6 +91,85 @@ names:
   "s365|578": {name: "Israel Youth State Cup", name_ar: "كأس الدولة للشباب (إسرائيل)", kind: cup}
   "fotmob|8982": {name: "Indian Football League", name_ar: "دوري كرة القدم الهندي (آي ليغ)", kind: league, country: IN, tier: 2}
   "martj42|Intercontinental Cup": {name: "Intercontinental Cup (India)", name_ar: "كأس القارات الهندية", kind: tournament, scope: international}
+# 24 Nov 2026: 82 competitions carried a Latin name as their Arabic one («Recopa Catarinense», «K League 3», «كأس CECAFA»)
+  "s365|7700": {name_ar: "الدوري السنغالي الممتاز", kind: league}
+  "s365|7734": {name_ar: "دوري سان مارينو", kind: league}
+  "s365|7725": {name_ar: "الدوري الكوبي", kind: league}
+  "s365|7727": {name_ar: "الدوري المنغولي الممتاز", kind: league}
+  "s365|8108": {name_ar: "دوري بورتوريكو للمحترفين", kind: league}
+  "s365|6167": {name_ar: "كأس سيكافا"}
+  "s365|7243": {name_ar: "ريكوبا كاتارينينسي", kind: supercup}
+  "s365|7260": {name_ar: "دوري تحت 23 سنة البرتغالي", kind: league}
+  "s365|7281": {name_ar: "التصفيات الأولمبية تحت 23 سنة (أمريكا الجنوبية)", kind: tournament}
+  "s365|7286": {name_ar: "كأس ريو غراندي دو سول تحت 20 سنة", kind: cup}
+  "s365|7315": {name_ar: "ريكوبا غاوتشا", kind: supercup}
+  "s365|7316": {name_ar: "كأس ألاغواس", kind: cup}
+  "s365|7322": {name_ar: "كأس السوبر (جزر فارو)", kind: supercup}
+  "s365|7514": {name_ar: "دوري الدرجة الثانية الكوستاريكي", kind: league}
+  "s365|7516": {name_ar: "الدوري الكوري الدرجة الثالثة", kind: league}
+  "s365|7592": {name_ar: "الدرجة الثالثة (أوروغواي)", kind: league}
+  "s365|7610": {name_ar: "دوري الدرجة الثانية الغواتيمالي", kind: league}
+  "s365|7618": {name_ar: "بطولة سيكافا تحت 20 سنة", kind: tournament}
+  "s365|7653": {name_ar: "كأس نجوم قطر", kind: cup}
+  "s365|7701": {name_ar: "الدوري البرازيلي تحت 23 سنة", kind: league}
+  "s365|7712": {name_ar: "دوري الرديف الأرجنتيني", kind: league}
+  "s365|7715": {name_ar: "دوري الرديف (أوروغواي)", kind: league}
+  "s365|7742": {name_ar: "بطولة ولاية أمابا", kind: league}
+  "s365|7775": {name_ar: "كأس سانتا كاتارينا", kind: cup}
+  "s365|7778": {name_ar: "كأس فاريس لوبيز", kind: cup}
+  "s365|7800": {name_ar: "كأس السوبر (باراغواي)", kind: supercup}
+  "s365|7830": {name_ar: "دورة مونتيغو تحت 16 سنة", kind: tournament}
+  "s365|7835": {name_ar: "بطولة مينيرو – الدرجة الثانية", kind: league}
+  "s365|7837": {name_ar: "درع أندية الكاريبي", kind: cup}
+  "s365|7840": {name_ar: "بطولة كاتارينينسي – الدرجة الثانية", kind: league}
+  "s365|7841": {name_ar: "بطولة باوليستا تحت 20 سنة", kind: league}
+  "s365|7843": {name_ar: "بطولة كاريوكا – الدرجة الثانية", kind: league}
+  "s365|7847": {name_ar: "كأس أوروغواي", kind: cup}
+  "s365|7906": {name_ar: "بطولة ولاية رورايما", kind: league}
+  "s365|7907": {name_ar: "بطولة ولاية توكانتينس", kind: league}
+  "s365|7919": {name_ar: "كأس لاباز", kind: cup}
+  "s365|7929": {name_ar: "كأس نيكاراغوا", kind: cup}
+  "s365|7939": {name_ar: "بطولة باوليستا – الدرجة الرابعة", kind: league}
+  "s365|7954": {name_ar: "كأس أمريكا الوسطى للأندية (كونكاكاف)", kind: cup}
+  "s365|7970": {name_ar: "تحدي الأندية بين يويفا وكونميبول", kind: cup}
+  "s365|7974": {name_ar: "ريكوبا كوستاريكا", kind: supercup}
+  "s365|7975": {name_ar: "كأس الكاريبي للأندية (كونكاكاف)", kind: cup}
+  "s365|7982": {name_ar: "كأس أسيرج", kind: cup}
+  "s365|7985": {name_ar: "كأس القارات تحت 20 سنة", kind: cup}
+  "s365|7986": {name_ar: "كأس ريو", kind: cup}
+  "s365|7989": {name_ar: "الدرجة الثالثة أ (تشيلي)", kind: league}
+  "s365|8043": {name_ar: "كأس الأبطال للرديف (الأرجنتين)", kind: cup}
+  "s365|8064": {name_ar: "دوري الهواة الترويجي (الأرجنتين)", kind: league}
+  "s365|8076": {name_ar: "الدوري الممتاز ب (المكسيك)", kind: league}
+  "s365|8086": {name_ar: "دوري الدرجة الثانية الفنلندي", kind: league}
+  "s365|8088": {name_ar: "بطولة باوليستا – الدرجة الخامسة", kind: league}
+  "s365|8122": {name_ar: "بطولة بارانا – الدرجة الثانية", kind: league}
+  "s365|8124": {name_ar: "دوري الصعود (بنما)", kind: league}
+  "s365|8130": {name_ar: "بطل الأبطال – دوري التوسعة (المكسيك)", kind: supercup}
+  "s365|8143": {name_ar: "كأس السوبر بايونير (البرازيل)", kind: supercup}
+  "s365|8155": {name_ar: "بطولة غاوتشو – الدرجة الثانية", kind: league}
+  "s365|8241": {name_ar: "الدرجة الأولى ب (باراغواي)", kind: league}
+  "s365|8259": {name_ar: "كأس السوبر الإيطالي للشباب (بريمافيرا)", kind: supercup}
+  "s365|8302": {name_ar: "كأس اتحاد غاوتشو", kind: cup}
+  "s365|8348": {name_ar: "الدرجة الثالثة (بيرو)", kind: league}
+  "s365|8413": {name_ar: "دوري الرديف (السلفادور)", kind: league}
+  "s365|8495": {name_ar: "الدرجة الأولى ج (باراغواي)", kind: league}
+  "s365|8502": {name_ar: "كأس السوبر غراو-بارا", kind: supercup}
+  "s365|8529": {name_ar: "دوري الدرجة الثانية النيكاراغوي", kind: league}
+  "s365|8574": {name_ar: "بطولة سيارا – الدرجة الثانية", kind: league}
+  "s365|8576": {name_ar: "الدورة الصيفية الودية البوليفية", kind: cup}
+  "s365|8591": {name_ar: "كأس السوبر (فنزويلا)", kind: supercup}
+  "s365|8652": {name_ar: "الدرجة الثالثة ب (تشيلي)", kind: league}
+  "s365|8751": {name_ar: "الدوري المكسيكي تحت 21 سنة", kind: league}
+  "s365|8774": {name_ar: "كأس حكومة سيرجيبي", kind: cup}
+  "s365|8778": {name_ar: "كأس السوبر (السلفادور)", kind: supercup}
+  "s365|8908": {name_ar: "ألعاب أمريكا الوسطى", kind: tournament}
+  "s365|8952": {name_ar: "بطولة أمريكا الوسطى تحت 19 سنة", kind: tournament}
+  "s365|8962": {name_ar: "كأس الرابطة (أوروغواي)", kind: cup}
+  "s365|9022": {name_ar: "كأس الجنوب والجنوب الشرقي (البرازيل)", kind: cup}
+  "s365|9049": {name_ar: "بطولة باهيا – الدرجة الثانية", kind: league}
+  "s365|9083": {name_ar: "كأس السوبر (هندوراس)", kind: supercup}
+  "s365|9132": {name_ar: "ألعاب أمريكا الجنوبية", kind: tournament}
 stages:
   "الدوري الأمريكي لكرة القدم": 130
   "دوري أبطال آسيا": 525

@@ -36,6 +36,33 @@ terms:
   best player: أفضل لاعب
   best referee: أفضل حكم
   top assists: الأكثر صناعة للأهداف
+  player of the month: لاعب الشهر
+  coach of the month: مدرب الشهر
+  manager of the month: مدرب الشهر
+  goal of the month: هدف الشهر
+  footballer of the year: لاعب العام
+  young footballer of the year: أفضل لاعب شاب
+  players' player of the year: لاعب العام باختيار اللاعبين
+  players' player: لاعب العام باختيار اللاعبين
+  hall of fame: قاعة المشاهير
+  team of the year: فريق العام
+  team of the season: فريق الموسم
+  best defender: أفضل مدافع
+  defender of the year: مدافع العام
+  best midfielder: أفضل لاعب وسط
+  midfielder of the year: لاعب وسط العام
+  best forward: أفضل مهاجم
+  forward of the year: مهاجم العام
+  best striker: أفضل مهاجم
+  rookie of the year: أفضل لاعب صاعد
+  newcomer of the year: أفضل لاعب صاعد
+  best foreign player: أفضل لاعب أجنبي
+  foreign player of the year: أفضل لاعب أجنبي
+  referee of the year: حكم العام
+  goalkeeper of the year: حارس العام
+  goalkeeper of the season: حارس الموسم
+  young player of the season: أفضل لاعب شاب
+  save of the season: تصدّي الموسم
 names:
   Ballon d'Or: الكرة الذهبية
   La Liga Player of the Month: لاعب الشهر في الدوري الإسباني      # Wikidata's label said «بطل الدوري الإسباني» (the champion)
@@ -53,7 +80,217 @@ names:
   African Footballer of the Year: أفضل لاعب في أفريقيا
   Pichichi Trophy: جائزة بيتشيتشي
   Premier League Player of the Season: لاعب الموسم في الدوري الإنجليزي
-skip: [Rosenborg BK]      # a club's article: its player-of-the-year table read as an award named «نادي روسنبورغ»
+# 24 Nov 2026: 452 awards (11,038 honours) had no Arabic name: Wikidata has no Arabic label for these pages
+  FAI International Football Awards: جوائز الاتحاد الأيرلندي الدولية
+  Greek football PSAP awards: جوائز رابطة اللاعبين المحترفين اليونانية
+  Trophées UNFP du football: جوائز رابطة اللاعبين المحترفين الفرنسية
+  Belgian professional football awards: جوائز كرة القدم البلجيكية للمحترفين
+  FAM Football Awards: جوائز الاتحاد الماليزي لكرة القدم
+  Ukrainian Footballer of the Year: لاعب العام في أوكرانيا
+  Canadian Soccer League Awards: جوائز الدوري الكندي لكرة القدم
+  MLS Player of the Month: لاعب الشهر في الدوري الأمريكي
+  List of Wellington Phoenix FC end-of-season awards: جوائز نهاية الموسم في ويلينغتون فينيكس
+  List of League of Ireland top scorers: هدافو الدوري الأيرلندي
+  V.League Awards: جوائز الدوري الفيتنامي
+  Hong Kong Top Footballer Awards: جوائز أفضل لاعبي هونغ كونغ
+  New Zealand Footballer of the Year: لاعب العام في نيوزيلندا
+  Prêmio Craque do Brasileirão: جائزة نجم الدوري البرازيلي
+  Chelsea F.C. Player of the Season: لاعب الموسم في تشيلسي
+  Canada Soccer Awards: جوائز الاتحاد الكندي لكرة القدم
+  Coventry City F.C. Player of the Year: لاعب العام في كوفنتري سيتي
+  Belgian Pro League top scorers: هدافو الدوري البلجيكي
+  Preston North End F.C. Player of the Year: لاعب العام في بريستون نورث إند
+  Copa América awards: جوائز كوبا أمريكا
+  Segunda División Player of the Month: لاعب الشهر في دوري الدرجة الثانية الإسباني
+  IFFHS World's Best Club Coach: أفضل مدرب أندية في العالم (IFFHS)
+  IFFHS World's Best National Coach: أفضل مدرب منتخبات في العالم (IFFHS)
+  Iran football award winners: جوائز كرة القدم الإيرانية
+  Swiss Footballer of the Year: لاعب العام في سويسرا
+  Brentford F.C. Player of the Year: لاعب العام في برينتفورد
+  Everton F.C. End of Season Awards: جوائز نهاية الموسم في إيفرتون
+  Bola de Prata (Portugal): الكرة الفضية (البرتغال)
+  ACF Fiorentina Hall of Fame: قاعة مشاهير فيورنتينا
+  Soviet Footballer of the Year: لاعب العام في الاتحاد السوفيتي
+  Uzbekistan Football Coach of the Year: مدرب العام في أوزبكستان
+  El País King of European Soccer: ملك الكرة الأوروبية (إل باييس)
+  Eredivisie Player of the Month: لاعب الشهر في الدوري الهولندي
+  U.S. Soccer Player of the Year: لاعب العام في الولايات المتحدة
+  Sheffield United F.C. Player of the Year: لاعب العام في شيفيلد يونايتد
+  Ulster Footballer of the Year: لاعب العام في أولستر
+  North American Soccer League: جوائز دوري أمريكا الشمالية لكرة القدم (1968–1984)
+  Sportske novosti Yellow Shirt award: جائزة القميص الأصفر (سبورتسكي نوفوستي)
+  PFA Scotland Players' Player of the Year (lower leagues): لاعب العام باختيار اللاعبين في اسكتلندا (الدرجات الأدنى)
+  Czech Footballer of the Year: لاعب العام في التشيك
+  Southampton F.C. Player of the Season: لاعب الموسم في ساوثهامبتون
+  Liverpool Player of the Season Awards: لاعب الموسم في ليفربول
+  Reading F.C. Player of the Season: لاعب الموسم في ريدينغ
+  Colchester United F.C. Player of the Year: لاعب العام في كولشستر يونايتد
+  Arsenal Player of the Season: لاعب الموسم في أرسنال
+  Norwich City F.C. Player of the Season: لاعب الموسم في نورويتش سيتي
+  Serie A Player of the Month: لاعب الشهر في الدوري الإيطالي
+  Vereinigung der Vertragsfußballspieler: جوائز رابطة اللاعبين المحترفين الألمانية
+  Port Vale F.C. Player of the Year: لاعب العام في بورت فايل
+  Rinus Michels Award: جائزة رينوس ميخلز
+  Derby County F.C. Player of the Year: لاعب العام في ديربي كاونتي
+  Sheffield Wednesday F.C. Player of the Year: لاعب العام في شيفيلد وينزداي
+  Northern Ireland Football Writers' Association Player of the Year: لاعب العام من رابطة كتّاب كرة القدم في أيرلندا الشمالية
+  Plymouth Argyle F.C. Player of the Year: لاعب العام في بليموث أرغايل
+  South Korean Footballer of the Year: لاعب العام في كوريا الجنوبية
+  K League Manager of the Year Award: مدرب العام في الدوري الكوري
+  K League Top Assist Provider Award: أفضل صانع أهداف في الدوري الكوري
+  Crystal Palace F.C. Player of the Year: لاعب العام في كريستال بالاس
+  K League Most Valuable Player Award: اللاعب الأكثر قيمة في الدوري الكوري
+  League Managers Association Awards: جوائز رابطة مدربي الدوري الإنجليزي
+  Luton Town F.C. Player of the Season: لاعب الموسم في لوتون تاون
+  Scottish Football League yearly awards: الجوائز السنوية لدوري كرة القدم الاسكتلندي
+  Soccer Star of the Year: نجم العام في زيمبابوي
+  Ipswich Town F.C. Player of the Year: لاعب العام في إيبسويتش تاون
+  York City F.C. Clubman of the Year: رجل النادي للعام في يورك سيتي
+  Atlantic Coast Conference Men's Soccer Coach of the Year: مدرب العام في مؤتمر الساحل الأطلسي الجامعي
+  SWAI Personality of the Year: شخصية العام من رابطة كتّاب الكرة الأيرلندية
+  Wrexham A.F.C. Player of the Season: لاعب الموسم في ريكسهام
+  Stoke City F.C. Player of the Year: لاعب العام في ستوك سيتي
+  PFA Scotland Players' Player of the Year: لاعب العام باختيار اللاعبين في اسكتلندا
+  Paraguayan Footballer of the Year: لاعب العام في باراغواي
+  AFC Asian Cup awards: جوائز كأس آسيا
+  PFA Scotland Young Player of the Year: أفضل لاعب شاب باختيار اللاعبين في اسكتلندا
+  K League Young Player of the Year Award: أفضل لاعب شاب في الدوري الكوري
+  PFA Footballer of the Year Awards: جوائز رابطة اللاعبين المحترفين الأسترالية
+  Watford F.C. Player of the Season: لاعب الموسم في واتفورد
+  Footballer of the Year in Baltic and Commonwealth of Independent States: لاعب العام في دول البلطيق ورابطة الدول المستقلة
+  PFAI Players' Player of the Year: لاعب العام باختيار اللاعبين في أيرلندا
+  Bristol Rovers F.C. Player of the Year: لاعب العام في بريستول روفرز
+  Gazeta Sporturilor Monthly Football Awards: الجوائز الشهرية من غازيتا سبورتوريلور
+  I-League Golden Boot: الحذاء الذهبي في الدوري الهندي
+  PFAI Young Player of the Year: أفضل لاعب شاب باختيار اللاعبين في أيرلندا
+  Liechtensteiner Footballer of the Year: لاعب العام في ليختنشتاين
+  Troféu Mesa Redonda: جائزة ميسا ريدوندا
+  Belarusian Footballer of the Year: لاعب العام في بيلاروسيا
+  Finnish Football Manager of the Year: مدرب العام في فنلندا
+  Austrian Footballer of the Year: لاعب العام في النمسا
+  Haveeru Sports Awards (football): جوائز هافيرو الرياضية (كرة القدم)
+  Surinamese Footballer of the Year: لاعب العام في سورينام
+  Canadian Premier League Awards: جوائز الدوري الكندي الممتاز
+  J.League Player of the Year: لاعب العام في الدوري الياباني
+  Meistriliiga Player of the Year: لاعب العام في الدوري الإستوني
+  North American Soccer League awards: جوائز دوري أمريكا الشمالية لكرة القدم
+  Northeast Conference Men's Soccer Coach of the Year: مدرب العام في مؤتمر الشمال الشرقي الجامعي
+  Atlantic 10 Conference Men's Soccer Coach of the Year: مدرب العام في مؤتمر أتلانتيك 10 الجامعي
+  Det Gyldne Bur: القفص الذهبي (الدنمارك)
+  Guerin d'Oro: غويرين الذهبي
+  South American Coach of the Year: مدرب العام في أمريكا الجنوبية
+  Best Footballer in Asia: أفضل لاعب كرة قدم في آسيا (تايتان سبورتس)
+  Eredivisie Awards: جوائز الدوري الهولندي
+  Panchina d'Oro: المقعد الذهبي
+  Big Ten Conference Men's Soccer Coach of the Year: مدرب العام في مؤتمر العشرة الكبار الجامعي
+  Danish Football Manager of the Year: مدرب العام في الدنمارك
+  Balón de Oro (Mexico): الكرة الذهبية (المكسيك)
+  Estonian Footballer of the Year: لاعب العام في إستونيا
+  Torino FC Hall of Fame: قاعة مشاهير تورينو
+  Footballer of the Year in Russia (Sport-Express): لاعب العام في روسيا (سبورت إكسبرس)
+  Georgian Footballer of the Year: لاعب العام في جورجيا
+  Gustaf VI Adolfs Pokal: كأس غوستاف السادس أدولف
+  Joe Johnson Memorial Trophy: جائزة جو جونسون التذكارية
+  Moldovan Footballer of the Year: لاعب العام في مولدوفا
+  J.League Best Young Player: أفضل لاعب شاب في الدوري الياباني
+  J.League Manager of the Year: مدرب العام في الدوري الياباني
+  Latvian Footballer of the Year: لاعب العام في لاتفيا
+  Lesley Manyathela Golden Boot: الحذاء الذهبي ليسلي مانياثيلا
+  Ligue 1 Young Player of the Year: أفضل لاعب شاب في الدوري الفرنسي
+  Algerian professional football awards: جوائز كرة القدم الجزائرية للمحترفين
+  Luxembourgish Footballer of the Year: لاعب العام في لوكسمبورغ
+  AIFF Player of the Year Awards: لاعب العام من الاتحاد الهندي لكرة القدم
+  AS Roma Hall of Fame: قاعة مشاهير روما
+  Diamantbollen: الكرة الماسية (السويد)
+  Estonian Silverball: الكرة الفضية الإستونية
+  Heart of Hajduk Award: جائزة قلب هايدوك
+  IFFHS World's Best Top Division Goal Scorer: أفضل هداف في دوريات الدرجة الأولى في العالم (IFFHS)
+  'Premio Nazionale Carriera Esemplare "Gaetano Scirea"': جائزة غايتانو شيريا للمسيرة المثالية
+  MLS Goal of the Year Award: هدف العام في الدوري الأمريكي
+  MLS Goalkeeper of the Year Award: حارس العام في الدوري الأمريكي
+  MLS Young Player of the Year Award: أفضل لاعب شاب في الدوري الأمريكي
+  Sigi Schmid Coach of the Year Award: مدرب العام في الدوري الأمريكي (جائزة سيغي شميد)
+  Icelandic Footballer of the Year: لاعب العام في آيسلندا
+  Romania Coach of the Year: مدرب العام في رومانيا
+  Faroese Footballer of the Year: لاعب العام في جزر فارو
+  Footballer of the Year in Russia (Futbol): لاعب العام في روسيا (مجلة فوتبول)
+  Ghana Player of the Year: لاعب العام في غانا
+  Hungarian Golden Ball: الكرة الذهبية المجرية
+  La Liga U23 Player of the Month: لاعب الشهر تحت 23 سنة في الدوري الإسباني
+  National Soccer League Coach of the Year: مدرب العام في الدوري الوطني الأسترالي
+  National Soccer League Under 21 Player of the Year: أفضل لاعب تحت 21 سنة في الدوري الوطني الأسترالي
+  Vietnamese Golden Ball: الكرة الذهبية الفيتنامية
+  Oceania Footballer of the Year: لاعب العام في أوقيانوسيا
+  Premiership Coach of the Season: مدرب الموسم في الدوري الجنوب أفريقي
+  FAM Awards: جوائز اتحاد المالديف لكرة القدم
+  Mike Berticelli Award: جائزة مايك بيرتيتشيلي
+  Pac-12 Conference Men's Soccer Coach of the Year: مدرب العام في مؤتمر باك-12 الجامعي
+  SFWA Young Player of the Year: أفضل لاعب شاب من رابطة كتّاب كرة القدم الاسكتلندية
+  A-League Men Player of the Month: لاعب الشهر في الدوري الأسترالي
+  Bolton Wanderers F.C. Player of the Year: لاعب العام في بولتون واندررز
+  Melbourne Victory FC Player of the Season: لاعب الموسم في ملبورن فيكتوري
+  Welsh Footballer of the Year: لاعب العام في ويلز
+  Prva HNL Player of the Year (Tportal): لاعب العام في الدوري الكرواتي (تي بورتال)
+  A-League Men Goalkeeper of the Year: حارس العام في الدوري الأسترالي
+  A-League Men Young Footballer of the Year: أفضل لاعب شاب في الدوري الأسترالي
+  Golden Ball (Czech Republic): الكرة الذهبية (التشيك)
+  Scottish Premier League Yearly Awards: الجوائز السنوية للدوري الاسكتلندي الممتاز (1998–2013)
+  A-League Men Coach of the Year: مدرب العام في الدوري الأسترالي
+  Foreign Player of the Year in Romania (Gazeta Sporturilor): أفضل لاعب أجنبي في رومانيا (غازيتا سبورتوريلور)
+  Kazakhstani Footballer of the Year: لاعب العام في كازاخستان
+  Maldives Football Awards: جوائز كرة القدم المالديفية
+  A-League Men Goal of the Year: هدف العام في الدوري الأسترالي
+  Keough Award: جائزة كيو
+  Portuguese Golden Ball: الكرة الذهبية البرتغالية
+  Scottish Professional Football League yearly awards: الجوائز السنوية لدوري المحترفين الاسكتلندي
+  PFA Scotland Manager of the Year: مدرب العام باختيار اللاعبين في اسكتلندا
+  PSL Footballer of the Year: لاعب العام في الدوري الجنوب أفريقي
+  Chinese Footballer of the Year: لاعب العام في الصين
+  George Gross Memorial Trophy: جائزة جورج غروس التذكارية
+  MLS Save of the Year Award: تصدّي العام في الدوري الأمريكي
+  Pallone d'Argento: الكرة الفضية (إيطاليا)
+  SFWA International Player of the Year: اللاعب الدولي للعام من رابطة كتّاب كرة القدم الاسكتلندية
+  TT Pro League Golden Boot: الحذاء الذهبي في دوري ترينيداد وتوباغو
+  Melbourne City FC Player of the Year: لاعب العام في ملبورن سيتي
+  Serie B Footballer of the Year: لاعب العام في دوري الدرجة الثانية الإيطالي
+  National Soccer League Player of the Year: لاعب العام في الدوري الوطني الأسترالي
+  Maurice Burlaz Trophy: جائزة موريس بورلاز
+  Raymond Goethals Trophy: جائزة ريمون غوتالس
+  Scottish Premier League Golden Boot: الحذاء الذهبي في الدوري الاسكتلندي الممتاز
+  Esiliiga Player of the Year: لاعب العام في دوري الدرجة الثانية الإستوني
+  Premiership Player of the Month: لاعب الشهر في الدوري الجنوب أفريقي
+  Rex Kingsley Footballer of the Year: لاعب العام (جائزة ريكس كينغسلي)
+  Serie A Goalkeeper of the Year: حارس العام في الدوري الإيطالي
+  Serie A Young Footballer of the Year: أفضل لاعب شاب في الدوري الإيطالي
+  Sportske Novosti award: جائزة سبورتسكي نوفوستي
+  Estonian Football Manager of the Year: مدرب العام في إستونيا
+  Football Supporters' Association: جوائز رابطة مشجعي كرة القدم
+  Esiliiga B Player of the Year: لاعب العام في دوري الدرجة الثالثة الإستوني
+  FFA Australian Football Awards: جوائز الاتحاد الأسترالي لكرة القدم
+  Indian Super League Golden Ball: الكرة الذهبية في الدوري الهندي الممتاز
+  K League Players' Player of the Year: لاعب العام باختيار اللاعبين في الدوري الكوري
+  Pakistan Premier League Golden Boot: الحذاء الذهبي في الدوري الباكستاني الممتاز
+  Pallone Azzurro: الكرة الزرقاء (منتخب إيطاليا)
+  Sydney FC Hall of Fame: قاعة مشاهير سيدني
+  One Club Award: جائزة النادي الواحد (أتلتيك بلباو)
+  United States Adult Soccer Association: جوائز اتحاد كرة القدم للكبار في الولايات المتحدة
+  FIFPRO: جوائز فيفبرو
+  International Football Hall of Champions: قاعة الأبطال الدولية لكرة القدم
+  Canadian Premier League Coach of the Year: مدرب العام في الدوري الكندي الممتاز
+  Canadian Premier League Player of the Year: لاعب العام في الدوري الكندي الممتاز
+  Football Hall of Fame Western Australia: قاعة مشاهير كرة القدم في غرب أستراليا
+  Best Soccer Player ESPY Award: جائزة إسبي لأفضل لاعب كرة قدم
+  Caribbean Footballer of the Year: لاعب العام في الكاريبي
+  League of Ireland Premier Division Manager of the Year: مدرب العام في الدوري الأيرلندي الممتاز
+  Western United FC Player of the Season: لاعب الموسم في ويسترن يونايتد
+  Indian Super League Winning Pass of the League: التمريرة الحاسمة في الدوري الهندي الممتاز
+  PFAM Player of the Month (Malaysia Premier League): لاعب الشهر في الدوري الماليزي الممتاز
+  Serie A Coach of the Month: مدرب الشهر في الدوري الإيطالي
+  Serie A Goal of the Month: هدف الشهر في الدوري الإيطالي
+  AFF Player of the Year: لاعب العام في جنوب شرق آسيا
+  Azerbaijani Footballer of the Year: لاعب العام في أذربيجان
+  West African Footballer of the Year: لاعب العام في غرب أفريقيا
+skip: [Rosenborg BK, Futsal Awards, Naiste Meistriliiga Player of the Year, Canberra United FC Player of the Year]      # a club's article: its player-of-the-year table read as an award named «نادي روسنبورغ»
 # comp_pages: a league's own list articles (FotMob competition id -> enwiki titles), read like its article: champion,
 # runner-up and top scorer a season, for the leagues whose main article does not carry them all
 # comp_articles: a competition whose champions file has no Wikidata item: its article by hand, so its season pages are read

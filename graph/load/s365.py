@@ -17,8 +17,9 @@ def fold(s):
 # 1969-71 all "Mps"); 6238 Icelandic League Cup: lower-division winners (KB, Berserkir, Ymir) for Breidablik, FH,
 # KR, Valur; 6152 Belgian and 82 Turkish Super Cups: old editions shifted a year or duplicated (Goztepe 2020/21).
 UNRELIABLE_CHAMPIONS = {128, 6238, 6152, 82}
-# 365's own test record («TestFake», four made-up seasons, 24 Nov 2026): not a competition
-NOT_A_COMPETITION = {7197}
+# 365's own test record («TestFake», four made-up seasons, 24 Nov 2026) and its rap battles («FMS Mexico», «FMS Caribe»: the
+# champions are rappers): not a football competition
+NOT_A_COMPETITION = {7197, 8842, 8843}
 # FotMob women's leagues whose name carries no gender word (11015 "Supercoppa Italiana" is the women's Supercoppa).
 FOTMOB_WOMEN = {11015}
 WOMEN = re.compile(r"\b(women|womens|ladies|female|femminile|feminine|feminin|femenina|feminino|frauen|vrouwen|dames|dam|damer|damallsvenskan|kvinner|kvinnor|naiset|kvenna)\b")

@@ -481,11 +481,11 @@ def test_a_section_award_with_no_arabic_page_name_keeps_no_bare_arabic_term(tmp_
     # «Brentford F.C. Player of the Year — Player» showed as a bare «لاعب العام», the club lost; the English name says more
     page = (b'<html><body>' + T(_rows("A_B", "C_D", "E_F"), "Player of the Year")[12:-14] + T(_rows("G_H", "I_J", "K_L"), "Young Player of the Year")[12:-14] + b'</body></html>')
     items = dict(ITEMS, **{p: item(f"Q{60 + i}", p.replace("_", " "), born="1970-01-01") for i, p in enumerate(("A_B", "C_D", "E_F", "G_H", "I_J", "K_L"))})
-    S = mk(tmp_path, {"Brentford F.C. Player of the Year": page}, items)
+    S = mk(tmp_path, {"Nowhere F.C. Player of the Year": page}, items)
     G, reg = Graph(str(tmp_path / "t.db")), Registry()
     awards.load(G, reg, S)
     got = dict(G.c.execute("select name, name_ar from competition where kind='award'").fetchall())
-    assert got == {"Brentford F.C. Player of the Year — Player of the Year": None, "Brentford F.C. Player of the Year — Young Player of the Year": None}
+    assert got == {"Nowhere F.C. Player of the Year — Player of the Year": None, "Nowhere F.C. Player of the Year — Young Player of the Year": None}
 
 
 def test_a_coach_of_the_year_keeps_his_wikidata_item_and_his_playing_days(tmp_path):
