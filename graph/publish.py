@@ -8,6 +8,7 @@ Keys are slugs of the English name, unique (the Tifo id is appended on a clash).
 import json, os, re, unicodedata
 from collections import Counter, defaultdict
 from graph.award_names import distinct
+from graph.countries import canon
 
 GROUPS = [("women", re.compile(r"women|féminin|female|ladies|girls", re.I)),
           ("club", re.compile(r"\b(f\.?c\.?|a\.?f\.?c\.?|s\.?c\.?|c\.?f\.?)\b.*(player|season|year)|\b(united|city|rovers|athletic|wanderers|albion|hotspur|county|town|"
@@ -224,7 +225,7 @@ def _season_start(season):
 
 def three_points_from(country):
     """the season a league first gave three points for a win: England 1981/82, nearly everyone else 1994/95"""
-    return 1981 if country in ("ENG", "England") else 1994
+    return 1981 if canon(country) == "GB-ENG" else 1994
 
 
 def looks_like_league(rows):

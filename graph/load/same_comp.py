@@ -125,11 +125,9 @@ def candidates(c, keys=None, fixed=(), never=frozenset(), explain=None):
         return True
 
     label = lambda x: f"{x} «{(comp.get(x) or ('?',))[0]}» [{(comp.get(x) or (0, 0, 0, '-'))[3]}]"
-    for a, b in fixed:
-        if allowed(a, b):
+    for a, b in fixed:                                   # read by hand: a source's second number of one competition
+        if not any(frozenset((x, y)) in never for x in group(a) for y in group(b)):   # (a play-off's own code) is no bar
             join(a, b, f"curated  {label(a)} = {label(b)}")
-        elif explain is not None and find(a) != find(b):
-            explain.append(f"REFUSED  {label(a)} = {label(b)}: each holds its own id of one source")
 
     def lists():
         out = defaultdict(dict)

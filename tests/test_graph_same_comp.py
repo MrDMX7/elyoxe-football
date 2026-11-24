@@ -110,13 +110,14 @@ def test_a_curated_pair_is_one_and_a_pair_kept_apart_never(tmp_path):
     assert same_comp.candidates(G.c, fixed=[(50, 900)], never={frozenset((60, 900))}) == [(50, 900)]
 
 
-def test_a_curated_pair_two_numbers_of_one_source_refuse_is_reported(tmp_path):
+def test_a_curated_pair_joins_two_numbers_of_one_source_unless_kept_apart(tmp_path):
     G = world(tmp_path)
-    comp(G, 900, "NB I", "fotmob", 212)
-    comp(G, 901, "NB II", "fotmob", 213)
+    comp(G, 900, "Premier League", "fotmob", 47)
+    comp(G, 901, "Premier League Play-off", "fotmob", 9999)
     why = []
-    assert same_comp.candidates(G.c, fixed=[(901, 900)], explain=why) == []
-    assert why and why[0].startswith("REFUSED")
+    assert same_comp.candidates(G.c, fixed=[(901, 900)], explain=why) == [(901, 900)]
+    assert why and why[0].startswith("curated")
+    assert same_comp.candidates(G.c, fixed=[(901, 900)], never={frozenset((901, 900))}) == []
 
 
 def test_the_curated_list_joins_a_sources_league_to_fotmobs_and_makes_fotmobs_record_when_no_loader_did(tmp_path, monkeypatch):

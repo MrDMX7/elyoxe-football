@@ -1,0 +1,72 @@
+# What a competition is called and what it is, where no source says it right (graph/load/comp_meta.py).
+# names: «source|its id» -> any of name, name_ar, kind, country, scope, tier. Written over whatever the build holds.
+#   FotMob's trophy lists name a league with one generic word («Cup», «Premier League») and no country: each one here was
+#   read off the clubs that hold its titles, 24 Nov 2026.
+# stages: FotMob files a round of a competition under a stage's number, with the competition's Arabic name; where that
+#   name is not letter for letter the name of the competition itself: the Arabic name -> the competition's FotMob id.
+names:
+  "fotmob|None": {name: "Club Friendlies", name_ar: "مباريات ودية للأندية", kind: friendly, scope: international}
+  "fotmob|0": {name: "Other Matches", name_ar: "مباريات أخرى", kind: friendly}
+  "sch|None": {name: "National Soccer League", name_ar: "الدوري الوطني الأسترالي", kind: league, country: AU}
+  "sch|soviet-union": {name: "Soviet Top League", country: SU}
+  "sch|yugoslavia": {name: "Yugoslav First League", country: YU}
+  "sch|east-germany": {name: "DDR-Oberliga", country: DD}
+  "sch|serbia-and-montenegro": {name: "First League of Serbia and Montenegro", country: RS}
+  "sch|cup-winners-cup": {name: "UEFA Cup Winners' Cup", kind: cup, scope: europe}
+  "sch|intercontinental-cup-old": {name: "Intercontinental Cup", kind: cup, scope: world}
+  "sch|namibia": {country: NA}
+  "sch|tahiti": {country: PF}
+  "fotmob|1000000000": {name: "Trofeo Silvio Berlusconi", name_ar: "كأس سيلفيو برلسكوني", kind: friendly, country: IT}
+  "fotmob|10037": {name: "Copa Bicentenario", name_ar: "كأس بيسنتيناريو البيروفي", kind: cup, country: PE}
+  "fotmob|10239": {name: "Campeonato Pernambucano", name_ar: "بطولة ولاية بيرنامبوكو", kind: league, country: BR}
+  "fotmob|11025": {name: "Thailand Champions Cup", name_ar: "كأس أبطال تايلاند", kind: supercup, country: TH}
+  "fotmob|115": {name: "Maltese Premier League", name_ar: "الدوري المالطي الممتاز", kind: league, country: MT}
+  "fotmob|14": {name: "Slovenian PrvaLiga", name_ar: "الدوري السلوفيني الممتاز", kind: league, country: SI}
+  "fotmob|150": {name: "Coupe de la Ligue", name_ar: "كأس الرابطة الفرنسية", kind: cup, country: FR}
+  "fotmob|261": {name: "Primera Divisió", name_ar: "الدوري الأندوري الممتاز", kind: league, country: AD}
+  "fotmob|334": {name: "Campionato Sammarinese", name_ar: "دوري سان مارينو", kind: league, country: SM}
+  "fotmob|43": {name: "FIFA Confederations Cup", name_ar: "كأس القارات", kind: tournament, scope: world}
+  "fotmob|463": {name: "Armenian Cup", name_ar: "كأس أرمينيا", kind: cup, country: AM}
+  "fotmob|513": {name: "TFF 2. Lig", name_ar: "دوري الدرجة الثانية التركي", kind: league, country: TR}
+  "fotmob|518": {name: "Bahraini Premier League", name_ar: "الدوري البحريني الممتاز", kind: league, country: BH}
+  "fotmob|532": {name: "Lebanese Premier League", name_ar: "الدوري اللبناني", kind: league, country: LB}
+  "fotmob|542": {name: "Syrian Premier League", name_ar: "الدوري السوري الممتاز", kind: league, country: SY}
+  "fotmob|547": {name: "Oman Professional League", name_ar: "دوري المحترفين العماني", kind: league, country: OM}
+  "fotmob|8980": {name: "Campeonato Cearense", name_ar: "بطولة ولاية سيارا", kind: league, country: BR}
+  "fotmob|8981": {name: "Hong Kong Premier League", name_ar: "دوري هونغ كونغ الممتاز", kind: league, country: HK}
+  "fotmob|8988": {name: "Botswana Premier League", name_ar: "الدوري البوتسواني الممتاز", kind: league, country: BW}
+  "fotmob|9061": {name: "Moçambola", name_ar: "الدوري الموزمبيقي", kind: league, country: MZ}
+  "fotmob|9114": {name: "Serbian First League", name_ar: "دوري الدرجة الأولى الصربي", kind: league, country: RS, tier: 2}
+  "fotmob|9132": {name: "Belarusian First League", name_ar: "دوري الدرجة الأولى البيلاروسي", kind: league, country: BY, tier: 2}
+  "fotmob|9147": {name: "NIFL Championship", name_ar: "دوري البطولة الأيرلندي الشمالي", kind: league, country: GB-NIR, tier: 2}
+  "fotmob|9325": {name: "Erovnuli Liga 2", name_ar: "دوري الدرجة الثانية الجورجي", kind: league, country: GE, tier: 2}
+  "fotmob|9408": {name: "International Champions Cup", name_ar: "الكأس الدولية للأبطال", kind: friendly, scope: international}
+  "fotmob|9494": {name: "USL League Two", name_ar: "دوري يو إس إل الثاني", kind: league, country: US, tier: 4}
+  "fotmob|9505": {name: "Primera C Metropolitana", name_ar: "دوري الدرجة الرابعة الأرجنتيني", kind: league, country: AR, tier: 4}
+  "fotmob|9515": {name: "Kazakhstan Cup", name_ar: "كأس كازاخستان", kind: cup, country: KZ}
+  "fotmob|9516": {name: "Azerbaijan Cup", name_ar: "كأس أذربيجان", kind: cup, country: AZ}
+  "fotmob|9517": {name: "Bosnia and Herzegovina Cup", name_ar: "كأس البوسنة والهرسك", kind: cup, country: BA}
+  "fotmob|9518": {name: "Liechtenstein Cup", name_ar: "كأس ليختنشتاين", kind: cup, country: LI}
+  "fotmob|9519": {name: "Albanian Cup", name_ar: "كأس ألبانيا", kind: cup, country: AL}
+  "fotmob|9522": {name: "Estonian Cup", name_ar: "كأس إستونيا", kind: cup, country: EE}
+  "fotmob|9525": {name: "Latvian Cup", name_ar: "كأس لاتفيا", kind: cup, country: LV}
+  "fotmob|9526": {name: "Lithuanian Cup", name_ar: "كأس ليتوانيا", kind: cup, country: LT}
+  "fotmob|9531": {name: "Montenegrin Cup", name_ar: "كأس الجبل الأسود", kind: cup, country: ME}
+  "fotmob|9543": {name: "Premier League Asia Trophy", name_ar: "كأس آسيا للدوري الإنجليزي", kind: friendly, scope: international}
+  "fotmob|9675": {name: "Audi Cup", name_ar: "كأس أودي", kind: friendly, country: DE}
+  "fotmob|9815": {name: "Copa Perú", name_ar: "كأس بيرو", kind: cup, country: PE}
+  "fotmob|9985": {name: "Moldovan Super Cup", name_ar: "كأس السوبر المولدوفي", kind: supercup, country: MD}
+  "fotmob|9821": {name: "CONCACAF Nations League", kind: tournament, scope: americas}
+  "s365|621": {kind: league}
+  "fotmob|9253": {name_ar: "كأس إف إيه تروفي"}
+  "fotmob|10611": {kind: cup}
+  "fotmob|10613": {kind: cup}
+  "fotmob|10615": {kind: cup}
+  "fotmob|247": {name: "FA Community Shield", name_ar: "الدرع الخيرية الإنجليزية", kind: supercup, country: GB-ENG}
+  "fotmob|11038": {name: "King's Cup (Thailand)", name_ar: "كأس ملك تايلاند", kind: tournament, scope: international}
+  "martj42|Intercontinental Cup": {name: "Intercontinental Cup (India)", name_ar: "كأس القارات الهندية", kind: tournament, scope: international}
+stages:
+  "الدوري الأمريكي لكرة القدم": 130
+  "دوري أبطال آسيا": 525
+  "دوري أبطال الكونكاكاف": 297
+  "كأس سود أمريكانا": 299

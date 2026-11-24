@@ -4,7 +4,8 @@ countries they kept 497 clubs on two pages each (Hearts, Aalborg, Alanyaspor: 23
 
 graph/country_codes.json: the three-letter codes (FIFA's, Wikidata P3441 on the national teams, and ISO alpha-3, P298) to
 alpha-2, the ones Wikidata gives two countries for set by hand (POR, IRL, GRE...). A region («Asia», «International») is no
-country: None."""
+country: None. A value already in the one spelling stays as it is (GB-ENG, SU): the function is read twice over
+the same column. The countries that are no more keep the code they left with (SU, YU, DD, CS)."""
 import json
 import os
 import re
@@ -15,7 +16,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CODES = os.path.join(HERE, "country_codes.json")
 NATIONS = os.path.join(os.path.dirname(HERE), "news", "nations.json")
 # FotMob's own three letters where they are not FIFA's
-EXTRA = {"BOS": "BA", "CDR": "CD", "CHT": "TW", "CON": "CG", "CPR": "CN", "CVI": "CV", "FGU": "GF", "IVR": "CI", "KIT": "KN"}
+EXTRA = {"BOS": "BA", "CDR": "CD", "CHT": "TW", "CON": "CG", "CPR": "CN", "CVI": "CV", "FGU": "GF", "IVR": "CI", "KIT": "KN", "TAH": "PF", "TCH": "CS"}
 
 
 def _fold(s):
@@ -30,7 +31,8 @@ def _tables():
     names = {_fold(x): k for k, vs in nat["names"].items() for x in vs if _fold(x)}
     names.update({_fold(k): v for k, v in nat["fotmob"].items() if _fold(k)})
     names["the phillipines"] = "PH"
-    return codes, set(nat["names"]), names
+    names.update({"soviet union": "SU", "ussr": "SU", "yugoslavia": "YU", "east germany": "DD", "czechoslovakia": "CS"})
+    return codes, set(nat["names"]) | set(codes.values()), names
 
 
 def canon(x):
@@ -38,7 +40,7 @@ def canon(x):
         return None
     codes, iso2, names = _tables()
     s = str(x).strip()
-    if len(s) == 2 and s.upper() in iso2:
+    if s.upper() in iso2:
         return s.upper()
     if len(s) == 3 and s.upper() in codes:
         return codes[s.upper()]

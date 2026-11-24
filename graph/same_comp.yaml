@@ -196,4 +196,38 @@ same:
   "sch|bahrain": "s365|5479"
   "sch|oman": "s365|5480"
   "rsssf|oman": "s365|5480"
+  # (24 Nov 2026) one competition under a second record: a super cup's Transfermarkt code, a nations' tournament by name
+  "martj42|CONCACAF Nations League": 9821
+  "martj42|Confederations Cup": 43
+  "martj42|ASEAN Championship": 9265
+  "tm|DFL": 8924
+  "tm|GBCS": 247
+  "tm|FRCH": 207
+  "s365|40": 207
+  "tm|POSU": 188
+  "tm|UKRS": "s365|130"
+  "rsssf|uae:cup": 9943
+  "tm|EJPL": 40
+  "tm|POBE": 40
+  "tm|BPO4": 40
+  "s365|5796": 9519
+  "s365|5641": 463
+  "sch|botswana": 8988
+  "s365|7808": 10270
+  "s365|5606": 9522
+  "s365|5808": 9515
+  "s365|5085": 9525
+  "s365|614": 9526
+  "s365|564": 542
+  "s365|7826": 10282
+  "s365|7180": 9265
+  "s365|7165": 9821
+  "martj42|Asian Games": "s365|7142"
+  "martj42|Baltic Cup": "s365|6372"
+  "martj42|CAFA Nations Cup": "s365|8823"
+  "martj42|CECAFA Cup": "s365|6167"
+  "martj42|COSAFA Cup": "s365|6381"
+  "martj42|Central American and Caribbean Games": "s365|7130"
+  "martj42|Kirin Cup": "s365|6375"
+  "martj42|King's Cup": 11038
 apart: []
