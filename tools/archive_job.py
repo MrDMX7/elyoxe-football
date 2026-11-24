@@ -50,12 +50,12 @@ def state_put(s3, name, obj):
 
 def known_pages(s3, bucket):
     """the site's own pages: a match, a man or a club with one links there (site/archive/build.cjs --known)"""
-    out = {"m": set(), "p": set(), "t": set(), "r": set(), "coach": set(), "dbclub": set()}
+    out = {"m": set(), "p": set(), "t": set(), "r": set(), "coach": set(), "dbclub": set(), "h2h": set()}
     pages = s3.get_paginator("list_objects_v2")
     # coach: the site's /coach/<FotMob id>/ (its /coach/k<id>/ are this job's now)
     # dbclub: the encyclopedia's /db/club/<FotMob id>/, a club's one page when it has it (24 Nov 2026)
     for kind, pres in (("m", [f"m/{d}" for d in "123456789"]), ("p", ["p/"]), ("t", ["t/"]), ("r", ["r/"]), ("coach", [f"coach/{d}" for d in "123456789"]),
-                       ("dbclub", ["db/club/"])):
+                       ("dbclub", ["db/club/"]), ("h2h", ["h2h/"])):      # h2h: a pair the site has a page for keeps that one page
         for pre in pres:
             for page in pages.paginate(Bucket=bucket, Prefix=pre):
                 for o in page.get("Contents") or []:
@@ -65,7 +65,7 @@ def known_pages(s3, bucket):
     return {k: sorted(v) for k, v in out.items()}
 
 
-ARCHIVE_PREFIXES = ("c/", "m/k", "p/k", "r/k", "t/k", "coach/k", "sitemap-archive")
+ARCHIVE_PREFIXES = ("c/", "m/k", "p/k", "r/k", "t/k", "coach/k", "vs/", "elo/", "sitemap-archive")
 
 
 def listed(s3, bucket):

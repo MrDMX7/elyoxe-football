@@ -232,7 +232,7 @@ PAGE_EXCLUDES = ["assets/*", "logo/*", "next/*", "google*.html", "db/player/[0-9
 FAST_OWNED = ["news/index.html", "news/[a-z]-*", "news/a.*.css", "sitemap-news.xml", "_shells/*"]
 # (2026-11-22) what the archive job owns (site/archive/build.cjs, .github/workflows/tifo-archive.yml): every season page, every
 # season list, every archive match, and its sitemaps
-ARCHIVE_OWNED = ["c/*/s/*", "c/*/seasons/*", "c/k[0-9]*", "c/archive/*", "m/k*", "p/k*", "r/k*", "t/k*", "coach/k*", "sitemap-archive*"]   # p/r/t/coach k*: men, referees, old clubs, coaches (23 Nov)
+ARCHIVE_OWNED = ["c/*/s/*", "c/*/seasons/*", "c/k[0-9]*", "c/archive/*", "m/k*", "p/k*", "r/k*", "t/k*", "coach/k*", "vs/*", "elo/*", "sitemap-archive*"]   # p/r/t/coach k*: men, referees, old clubs, coaches (23 Nov)
 
 
 def fallback_args(args):

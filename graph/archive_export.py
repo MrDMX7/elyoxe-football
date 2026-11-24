@@ -375,6 +375,9 @@ def export(db, out, comps=None):
     rec["clubs"] = clubs(G, out, nat=ar)                # clubs.json: every club FotMob has no page for, 30 games (/t/k<id>/)
     rec["coaches"] = coaches(G, out, nat=ar)
     rec["fm_teams"] = fm_teams(G, out)          # fm_teams.json: a FotMob man's club on his profile            # coaches.json: every coach with a bench or an award (/coach/k<id>/)
+    if not comps:                               # vs/, elo/: every pair's meetings, every team's record and rating (/vs/, /elo/)
+        from graph import features_export
+        rec["versus"] = features_export.versus(G, out)
     rec["secs"] = round(time.time() - t)
     rec["competitions"] = len(fids)
     G.c.rollback()                              # publication_ids' rows: never written

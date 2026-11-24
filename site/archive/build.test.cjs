@@ -280,3 +280,53 @@ test("a run of some competitions writes no directory", () => {
   A.build(Object.assign({}, o, { comps: [2000000123] }));
   assert.ok(fs.existsSync(path.join(o.out, "c/k123/index.html")) && !fs.existsSync(path.join(o.out, "c/archive/index.html")) && !fs.existsSync(path.join(o.out, "_comps.json")));
 });
+
+// graph/features_export.py's files next to the world's: Arsenal (Tifo 1) and Liverpool (Tifo 2) met three times
+function versusWorld(known) {
+  const w = world(), vs = path.join(w.o.data, "vs"), J = (p, x) => { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, JSON.stringify(x)); };
+  const ms = [["1989-05-26", 47, "1988/1989", 0, 0, 2, 900, 0], ["1990-09-01", 47, "1990/1991", 1, 2, 1, 1, 0], ["1991-03-03", 47, "1990/1991", 0, 0, 1, 901, 0]];
+  J(path.join(vs, "names.json"), { 1: ["أرسنال", 9825, 0], 2: ["ليفربول", 8650, 0], 3: ["إنجلترا", 0, 1] });
+  J(path.join(vs, "index.json"), { pairs: { "1-2": 3 }, hubs: { 1: 120 } });
+  J(path.join(vs, "pairs", "1.json"), { "1-2": ms });
+  J(path.join(vs, "teams", "1.json"), { 1: { tot: [120, 70, 30, 20, 200, 90], first: "1989-05-26", last: "1991-03-03", opp: [[2, 3, 3, 0, 0, 5, 1]],
+    run: { win: [3, "1989-05-26", "1991-03-03"] }, elo: { now: 1700, peak: [1710, "1991-01-01"], low: [1500, "1989-06-01"], yr: [[1989, 1550], [1990, 1650], [1991, 1700]] } } });
+  J(path.join(w.o.data, "elo", "nations.json"), { day: "1991-03-03", now: [[3, 2000, 2100, "1990-07-01", 400]], peaks: [[3, 2100, "1990-07-01"]] });
+  J(path.join(w.o.data, "elo", "leagues.json"), { 47: [[1, 1700, 1710, "1991-01-01"], [2, 1500, null, null]] });
+  if (known) fs.writeFileSync(w.o.known, JSON.stringify(Object.assign({ m: [], p: [], t: [9825, 8650] }, known)));
+  return w;
+}
+
+test("two teams' every meeting is one page, a team's record against everyone another, and the ratings a third; the match and the seasons list link them", () => {
+  const { o } = versusWorld();
+  const r = A.build(o);
+  const read = p => fs.readFileSync(path.join(o.out, p, "index.html"), "utf8");
+  const p = read("vs/1-2");
+  assert.match(p, /أرسنال/);
+  assert.match(p, /ليفربول/);
+  assert.match(p, /href="\/m\/k1\/"/);                          // the meeting the archive has a page for
+  assert.doesNotMatch(p, /\/m\/k900\//);                        // and none for the one it has not
+  assert.doesNotMatch(p, /noindex/);
+  assert.match(read("vs/1"), /href="\/vs\/1-2\/"/);
+  assert.match(read("elo"), /إنجلترا/);
+  assert.match(read("elo"), /href="\/elo\/premier-league\/"/);
+  assert.match(read("elo/premier-league"), /أرسنال[\s\S]*ليفربول/);
+  assert.match(read("m/k1"), /href="\/vs\/1-2\/"/);
+  assert.match(read("c/premier-league/seasons"), /href="\/elo\/premier-league\/"/);
+  const urls = JSON.parse(fs.readFileSync(path.join(o.out, "_archive_urls.json"), "utf8"));
+  for (const u of ["/vs/1-2/", "/vs/1/", "/elo/", "/elo/premier-league/"]) assert.ok(urls.includes(u), u);
+  assert.equal(r.versus, 2);
+});
+
+test("a pair the site has its own page for gets no second one: the match links the site's", () => {
+  const { o } = versusWorld({ h2h: ["8650-9825"] });
+  A.build(o);
+  assert.ok(!fs.existsSync(path.join(o.out, "vs/1-2/index.html")));
+  assert.match(fs.readFileSync(path.join(o.out, "m/k1/index.html"), "utf8"), /href="\/h2h\/8650-9825\/"/);
+});
+
+test("a run of some competitions writes none of them", () => {
+  const { o } = versusWorld();
+  A.build(Object.assign({}, o, { comps: [47] }));
+  assert.ok(!fs.existsSync(path.join(o.out, "vs")) && !fs.existsSync(path.join(o.out, "elo")));
+  assert.doesNotMatch(fs.readFileSync(path.join(o.out, "m/k1/index.html"), "utf8"), /\/vs\//);
+});
