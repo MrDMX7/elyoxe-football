@@ -154,9 +154,7 @@ with the commit or the evidence. A new session reads this first and continues at
   (graph/uefa.json, graph/fifa.json); steps `uefa` and `fifa` after `espn`.
   * UEFA (graph/uefa_fetch.py, graph/load/uefa.py): 21,098 games 1955-2010 of the European Cup, the UEFA Cup, the Cup
     Winners' Cup, the Intertoto Cup, the Super Cup, the Intercontinental Cup, the EURO with its qualifiers and the Fairs
-    Cup. Read on a copy of the live graph: 19,951 joined to a game held, 1,073 UEFA's own (1,032 the Fairs Cup, a new
-    competition with 13 seasons), 16,108 line-ups, 169,783 events, 19,969 coaches, 45,945 men of UEFA's own, 222 dates
-    and 134 scores corrected. 11 Intertoto games answer HTTP 500 at UEFA and are left out.
+    Cup. 11 Intertoto games answer HTTP 500 at UEFA and are left out.
   * FIFA (graph/fifa_fetch.py, graph/load/fifa.py): 11,173 games of the World Cup, its qualifiers, the Confederations
     Cup, the Olympics and the Club World Cup with 64,762 men: 10,495 joined, 636 FIFA's own (Olympics mostly), 38,067 men
     of FIFA's own, 9 scores differ.
@@ -165,6 +163,19 @@ with the commit or the evidence. A new session reads this first and continues at
   * teams: FotMob's records of countries that are gone («Soviet Union», «West Germany», «Yugoslavia», «Czechoslovakia»,
     holding only old EURO finals) fold into the team the other sources hold; a game of «Yugoslavia» from 1992-04-28 is
     Serbia's (games_of_the_successor). The EURO 1976 final stood twice for it.
+  * Four builds on 24 Nov set it right; the fourth's graph: 1,516,294 games, 45,165 teams, 306,749 men, 6,391,251
+    appearances, 2,288,598 events, line-ups before 2010 from 31,364 games to 48,295.
+    - Build 1 read the competitions as the finished graph names them, and at the `uefa` step schochastics' «UEFA CL»,
+      «UEFA EL», «UEFA SC» and Transfermarkt's codes are still competitions of their own (same_comp joins them later and
+      the registry does not keep that): 374 European Cup games stood twice, the Fairs Cup was split. COMP now names every
+      source's key; UEFA's own games fell to 25 in the Champions League (second legs and replays no source held), its
+      own clubs from 38 to 5.
+    - The Fairs Cup is one competition whatever a source filed its games under (APART): 1,032 games, 13 seasons. Its
+      row is written on every build: the registry remembers the id, the graph starts empty (build 2 left 13 seasons of
+      a competition with no row).
+    - The Fairs Cup and the Cup Winners' Cup crown champion and runner-up from the final (honours.py `whole`), away
+      goals settling a level two-legged one (Leeds 1971); the Cup Winners' Cup is in APART so the 1962 final's September
+      replay stays in 1961/1962. 13 and 39 champions, all checked.
   * Open: Slavia Mozyr's 2001 qualifiers stand three times (UEFA, schochastics twice under two names); FIFA's «X Olympic»
-    sides before 1992 beside «X U23»; UEFA's Fairs Cup clubs of its own («Coventry», «Birmingham», «Union SG»…) to check
-    against the clubs held after the first build.
+    sides before 1992 beside «X U23» (73 teams of FIFA's own); FotMob «Club Friendlies» copies of a cup game with the
+    shoot-out counted in the score (7 pairs); late merges (same_comp, same_club, same_name) are not kept in the registry.
