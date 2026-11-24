@@ -20,7 +20,8 @@ def test_a_move_to_the_same_club_leaves_and_a_date_a_millennium_ahead_takes_its_
     move(G, 1, 10, 11, "2015-07-01", "2015/2016")
     move(G, 2, 10, 11, "3026-06-30", "2025/2026")
     move(G, 3, 10, 11, "3026-06-30", None)
-    assert tidy.load(G, Registry(), None, today=datetime.date(2026, 11, 24)) == {"moves_to_itself": 1, "dates_set_right": 1, "dates_dropped": 1}
+    assert tidy.load(G, Registry(), None, today=datetime.date(2026, 11, 24)) == {
+        "moves_to_itself": 1, "dates_set_right": 1, "dates_dropped": 1, "empty_seasons": 0, "empty_competitions": 0, "births_dropped": 0, "namesakes": 0}
     assert G.c.execute("SELECT pid, date FROM transfer ORDER BY pid").fetchall() == [(1, "2015-07-01"), (2, "2026-06-30")]
 
 
@@ -55,13 +56,51 @@ def test_what_should_not_be_there_is_counted(tmp_path):
         G.put("match", {"mid": mid, "eid": 10, "date": "2001-03-01", "home": 1, "away": 2, "hs": 1, "as_": 0}, "x")
     G.put("match", {"mid": 3, "eid": 10, "date": "2001-03-08", "home": 2, "away": 2, "hs": 1, "as_": 0}, "x")
     for tid in (1, 2):
-        G.c.execute("INSERT INTO honour(eid, kind, rank, tid, src) VALUES(10, 'champion', 1, ?, 'x')", (tid,))
+        G.c.execute("INSERT INTO honour(eid, kind, rank, tid, src) VALUES(10, 'champion', 1, ?, ?)", (tid, f"x{tid}"))
     move(G, 1, 1, 1, "2001-01-01", "2000/2001")
     found = integrity.compute(G)
     assert {k: v for k, v in found.items() if v} == {"same_game": 1, "side_plays_itself": 1, "season_of_nothing": 1, "two_champions": 1, "nameless_team": 1,
                                                      "nameless_competition": 1, "competition_of_no_kind": 1, "transfer_to_itself": 1}
     cov = coverage.compute(G)
     assert cov["integrity"] == found and "| same_game |" in coverage.markdown(cov, "2026-11-24")
+
+
+def test_a_season_of_nothing_leaves_and_one_sources_two_champions_are_no_fault(tmp_path):
+    G = Graph(str(tmp_path / "t.db"))
+    G.put("competition", {"cid": 1, "name": "Cup", "kind": "cup"}, "x")
+    for eid in (10, 11, 12):
+        G.put("edition", {"eid": eid, "cid": 1, "season": str(1990 + eid)}, "x")
+        G.xref("edition", eid, "x", str(eid), "native")
+    G.c.execute("UPDATE edition SET note='not held' WHERE eid=12")
+    for tid in (1, 2):
+        G.c.execute("INSERT INTO honour(eid, kind, rank, tid, src) VALUES(10, 'champion', 1, ?, 'x')", (tid,))
+    assert tidy.load(G, Registry(), None)["empty_seasons"] == 1
+    assert [e for (e,) in G.c.execute("SELECT eid FROM edition ORDER BY eid")] == [10, 12]
+    assert [i for (i,) in G.c.execute("SELECT tifo_id FROM xref WHERE type='edition' ORDER BY 1")] == [10, 12]
+    assert not any(integrity.compute(G).values())
+
+
+def test_a_man_too_young_for_a_game_is_a_namesake_or_his_birth_date_is_wrong(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    G.put("competition", {"cid": 5, "name": "FotMob 11036"}, "x")
+    assert [reg.mint("player", "fotmob", i) for i in "abc"] == [1, 2, 3]
+    G.put("player", {"pid": 1, "name": "Hassan El Shazly", "born": "1995-02-02"}, "fotmob")
+    G.put("player", {"pid": 2, "name": "Young Regular", "born": "2002-01-26"}, "fotmob")
+    G.put("player", {"pid": 3, "name": "No Date", "born": "not available"}, "fjelstul")
+    G.put("match", {"mid": 1, "date": "1963-11-24", "home": 1, "away": 2, "hs": 1, "as_": 0}, "martj42")
+    G.put("match", {"mid": 2, "date": "2019-11-24", "home": 1, "away": 2, "hs": 1, "as_": 0}, "fotmob")
+    G.put("match", {"mid": 3, "date": "2013-09-14", "home": 1, "away": 2, "hs": 1, "as_": 0}, "fotmob")
+    for mid, pid, src in ((1, 1, "martj42"), (2, 1, "fotmob"), (3, 2, "fotmob")):
+        G.c.execute("INSERT INTO appearance(mid, pid, tid, src) VALUES(?,?,1,?)", (mid, pid, src))
+    G.c.execute("INSERT INTO event(mid, seq, type, pid, src) VALUES(1, 1, 'goal', 1, 'martj42')")
+    out = tidy.load(G, reg, None)
+    assert (out["namesakes"], out["births_dropped"], out["empty_competitions"]) == (1, 2, 1)
+    other = reg.get("player", "namesake", "1")
+    assert G.c.execute("SELECT pid FROM appearance ORDER BY mid").fetchall() == [(other,), (1,), (2,)]
+    assert G.c.execute("SELECT pid FROM event").fetchall() == [(other,)]
+    assert G.c.execute("SELECT name, born FROM player ORDER BY pid").fetchall() == [
+        ("Hassan El Shazly", "1995-02-02"), ("Young Regular", None), ("No Date", None), ("Hassan El Shazly", None)]
+    assert integrity.compute(G)["born_after_playing"] == 0
 
 
 def test_it_is_the_last_pass():

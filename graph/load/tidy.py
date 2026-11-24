@@ -2,7 +2,11 @@
 A move from a club to itself is no move (Transfermarkt's rows, and two records of a club made one after the moves were
 read); a move dated a millennium ahead takes the year of its season («3026-06-30» of 2025/2026). A man or a club a loader wrote
 without a name (a scorer Transfermarkt's lineups do not list, a club its games leave blank) takes the name the source
-gives somewhere else."""
+gives somewhere else. A season left with no game, champion, table or note (a list's winner no record answers to) is no season, and a competition known by a
+source's number alone, left with no season, is none. A birth date that is no date is no birth date. A man in a game before
+he was thirteen, or past fifty in one a source matched to him by his name, is another man of that name (Hassan El Shazly of
+1963 under the one born in 1995): those games go to a record of their own; where the source knew him by its own number, the
+birth date is the doubt and leaves."""
 import datetime
 import os
 import re
@@ -59,6 +63,37 @@ def names(G, reg, S):
     return n
 
 
+BY_NAME = ("martj42", "espn", "rsssf", "fjelstul", "worldcup", "intl_goals")       # sources that know a man by his name alone
+
+
+def namesakes(G, reg):
+    n = {"births_dropped": G.c.execute("UPDATE player SET born=NULL WHERE born IS NOT NULL AND (born NOT GLOB '[12][0-9][0-9][0-9]*' OR born < '1840')").rowcount,
+         "namesakes": 0}
+    age = "cast(substr(m.date, 1, 4) AS int) - cast(substr(p.born, 1, 4) AS int)"
+    odd = {}
+    for t in ("appearance", "event"):
+        for pid, mid, src, a in G.c.execute(f"""SELECT a.pid, a.mid, a.src, {age} FROM {t} a JOIN player p ON p.pid = a.pid JOIN match m ON m.mid = a.mid
+                                               WHERE p.born IS NOT NULL AND m.date IS NOT NULL AND ({age} < 13 OR ({age} > 50 AND a.src IN ({",".join("?" * len(BY_NAME))})))
+                                               AND (a.src IN ({",".join("?" * len(BY_NAME))}) OR {age} < 13)""", BY_NAME * 2):
+            odd.setdefault(pid, {}).setdefault(src in BY_NAME, set()).add(mid)
+    for pid, by in sorted(odd.items()):
+        if by.get(False):                             # the source's own number for him: the date is wrong, not the man
+            G.c.execute("UPDATE player SET born=NULL WHERE pid=?", (pid,))
+            n["births_dropped"] += 1
+            continue
+        name, ar = G.c.execute("SELECT name, name_ar FROM player WHERE pid=?", (pid,)).fetchone()
+        new = reg.mint("player", "namesake", str(pid))
+        G.put("player", {"pid": new, "name": name, "name_ar": ar}, "namesake")
+        G.xref("player", new, "namesake", str(pid), "age")
+        for mid in sorted(by[True]):
+            G.c.execute("UPDATE OR IGNORE appearance SET pid=? WHERE pid=? AND mid=?", (new, pid, mid))
+            G.c.execute("DELETE FROM appearance WHERE pid=? AND mid=?", (pid, mid))
+            G.c.execute("UPDATE event SET pid=? WHERE pid=? AND mid=?", (new, pid, mid))
+            G.c.execute("UPDATE event SET pid2=? WHERE pid2=? AND mid=?", (new, pid, mid))
+        n["namesakes"] += 1
+    return n
+
+
 def load(G, reg, S, today=None):
     ahead = str((today or datetime.date.today()).year + 2)
     n = {"moves_to_itself": G.c.execute("DELETE FROM transfer WHERE from_tid = to_tid").rowcount, "dates_set_right": 0, "dates_dropped": 0}
@@ -73,5 +108,15 @@ def load(G, reg, S, today=None):
             G.c.execute(f"DELETE FROM transfer WHERE {where}", (pid, date, to))
             n["dates_dropped"] += 1
     n.update(names(G, reg, S))
+    G.c.execute("""CREATE TEMP TABLE bare AS SELECT eid FROM edition e WHERE e.note IS NULL AND NOT EXISTS(SELECT 1 FROM match m WHERE m.eid = e.eid)
+                   AND NOT EXISTS(SELECT 1 FROM honour h WHERE h.eid = e.eid) AND NOT EXISTS(SELECT 1 FROM standing s WHERE s.eid = e.eid)""")
+    G.c.execute("DELETE FROM xref WHERE type = 'edition' AND tifo_id IN (SELECT eid FROM bare)")
+    n["empty_seasons"] = G.c.execute("DELETE FROM edition WHERE eid IN (SELECT eid FROM bare)").rowcount
+    G.c.execute("DROP TABLE bare")
+    G.c.execute("CREATE TEMP TABLE bare AS SELECT cid FROM competition c WHERE (ifnull(name, '') = '' OR name GLOB 'FotMob [0-9]*') AND NOT EXISTS(SELECT 1 FROM edition e WHERE e.cid = c.cid)")
+    G.c.execute("DELETE FROM xref WHERE type = 'competition' AND tifo_id IN (SELECT cid FROM bare)")
+    n["empty_competitions"] = G.c.execute("DELETE FROM competition WHERE cid IN (SELECT cid FROM bare)").rowcount
+    G.c.execute("DROP TABLE bare")
+    n.update(namesakes(G, reg))
     G.c.commit()
     return n

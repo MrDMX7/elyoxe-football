@@ -16,9 +16,9 @@ CHECKS = (
         AND NOT EXISTS(SELECT 1 FROM honour h WHERE h.eid = e.eid) AND NOT EXISTS(SELECT 1 FROM standing s WHERE s.eid = e.eid)"""),
     ("season_without_competition", "editions of no competition",
      "SELECT count(*) FROM edition e WHERE NOT EXISTS(SELECT 1 FROM competition c WHERE c.cid = e.cid)"),
-    ("two_champions", "seasons of a league or a cup with more than one champion",
+    ("two_champions", "seasons whose champion two sources name differently (two of one source are a shared or a split title)",
      """SELECT count(*) FROM (SELECT 1 FROM honour h JOIN edition e ON e.eid = h.eid JOIN competition c ON c.cid = e.cid
-        WHERE h.kind = 'champion' AND h.tid IS NOT NULL AND ifnull(c.kind, '') <> 'award' GROUP BY h.eid HAVING count(DISTINCT h.tid) > 1)"""),
+        WHERE h.kind = 'champion' AND h.tid IS NOT NULL AND ifnull(c.kind, '') <> 'award' GROUP BY h.eid HAVING count(DISTINCT h.tid) > 1 AND count(DISTINCT h.src) > 1)"""),
     ("nameless_team", "teams without a name", "SELECT count(*) FROM team WHERE ifnull(name, '') = '' AND ifnull(name_ar, '') = ''"),
     ("nameless_player", "players without a name", "SELECT count(*) FROM player WHERE ifnull(name, '') = '' AND ifnull(name_ar, '') = ''"),
     ("nameless_competition", "competitions without a name, or named by a source's number",
