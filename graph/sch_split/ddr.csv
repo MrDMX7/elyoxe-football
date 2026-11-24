@@ -1,0 +1,590 @@
+competition,date,home_ident,away_ident,gh,ga,new_home,new_away,kind
+ddr,1952-08-31,Dinamo Zagreb (Croatia),Lokomotiva Zagreb (Croatia),0,2,Nk Zagreb (Croatia),Lokomotiva Zagreb (Croatia),move
+ddr,1952-09-14,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),0,0,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1952-09-28,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),3,1,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1952-10-12,Dinamo Zagreb (Croatia),Partizan (Serbia),0,1,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1952-10-19,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),2,0,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1952-10-26,Dinamo Zagreb (Croatia),Spartak Subotica (Serbia),1,1,Nk Zagreb (Croatia),Spartak Subotica (Serbia),move
+ddr,1952-11-09,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),2,0,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1952-11-16,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),1,0,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1952-11-23,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),0,2,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1952-12-07,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),2,0,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1952-12-14,Dinamo Zagreb (Croatia),Vojvodina (Serbia),2,0,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1953-03-08,Lokomotiva Zagreb (Croatia),Dinamo Zagreb (Croatia),2,2,Lokomotiva Zagreb (Croatia),Nk Zagreb (Croatia),move
+ddr,1953-03-15,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),0,1,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1953-03-22,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),1,2,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1953-03-29,Partizan (Serbia),Dinamo Zagreb (Croatia),1,2,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1953-04-01,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),0,3,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1953-04-16,Spartak Subotica (Serbia),Dinamo Zagreb (Croatia),0,3,Spartak Subotica (Serbia),Nk Zagreb (Croatia),move
+ddr,1953-04-29,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),3,3,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1953-05-24,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),0,4,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1953-05-31,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,2,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1953-06-14,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),3,6,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1954-08-29,Vojvodina (Serbia),Dinamo Zagreb (Croatia),0,1,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1954-09-12,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),1,3,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1954-09-19,Dinamo Zagreb (Croatia),Spartak Subotica (Serbia),2,3,Nk Zagreb (Croatia),Spartak Subotica (Serbia),move
+ddr,1954-09-26,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),2,1,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1954-10-10,Radnicki Beograd (Serbia),Dinamo Zagreb (Croatia),1,0,Radnicki Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1954-10-24,Dinamo Zagreb (Croatia),Proleter Zrenjanin (Serbia),1,0,Nk Zagreb (Croatia),Proleter Zrenjanin (Serbia),move
+ddr,1954-10-31,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),2,2,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1954-11-07,Dinamo Zagreb (Croatia),Partizan (Serbia),1,1,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1954-11-14,Dinamo Zagreb (Croatia),Lokomotiva Zagreb (Croatia),1,1,Nk Zagreb (Croatia),Lokomotiva Zagreb (Croatia),move
+ddr,1954-11-21,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),0,0,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1954-11-28,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),3,1,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1954-12-05,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),1,1,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1954-12-12,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),3,1,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1955-03-13,Dinamo Zagreb (Croatia),Vojvodina (Serbia),1,2,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1955-03-20,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),2,5,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1955-03-27,Spartak Subotica (Serbia),Dinamo Zagreb (Croatia),1,2,Spartak Subotica (Serbia),Nk Zagreb (Croatia),move
+ddr,1955-04-03,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,5,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1955-04-17,Dinamo Zagreb (Croatia),Radnicki Beograd (Serbia),1,2,Nk Zagreb (Croatia),Radnicki Beograd (Serbia),move
+ddr,1955-04-24,Proleter Zrenjanin (Serbia),Dinamo Zagreb (Croatia),0,1,Proleter Zrenjanin (Serbia),Nk Zagreb (Croatia),move
+ddr,1955-05-08,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),1,2,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1955-05-18,Partizan (Serbia),Dinamo Zagreb (Croatia),3,1,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1955-05-22,Lokomotiva Zagreb (Croatia),Dinamo Zagreb (Croatia),1,0,Lokomotiva Zagreb (Croatia),Nk Zagreb (Croatia),move
+ddr,1955-05-29,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),0,4,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1955-06-05,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),1,2,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1955-06-12,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),4,2,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1955-06-19,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),0,0,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1955-08-21,Partizan (Serbia),Dinamo Zagreb (Croatia),2,1,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1955-08-28,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),3,1,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1955-09-11,Spartak Subotica (Serbia),Dinamo Zagreb (Croatia),3,0,Spartak Subotica (Serbia),Nk Zagreb (Croatia),move
+ddr,1955-09-18,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),3,0,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1955-09-28,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),2,0,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1955-10-09,Dinamo Zagreb (Croatia),Radnicki Beograd (Serbia),2,4,Nk Zagreb (Croatia),Radnicki Beograd (Serbia),move
+ddr,1955-10-16,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),2,1,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1955-11-16,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),3,0,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1955-11-20,Vojvodina (Serbia),Dinamo Zagreb (Croatia),2,1,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1955-11-27,Dinamo Zagreb (Croatia),Proleter Zrenjanin (Serbia),8,1,Nk Zagreb (Croatia),Proleter Zrenjanin (Serbia),move
+ddr,1955-12-04,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),3,1,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1955-12-11,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),2,1,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1955-12-18,Dinamo Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),0,3,Nk Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),move
+ddr,1956-03-04,Dinamo Zagreb (Croatia),Partizan (Serbia),2,1,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1956-03-11,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),3,3,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1956-03-18,Dinamo Zagreb (Croatia),Spartak Subotica (Serbia),0,0,Nk Zagreb (Croatia),Spartak Subotica (Serbia),move
+ddr,1956-03-25,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,0,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1956-04-08,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),2,0,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1956-04-15,Radnicki Beograd (Serbia),Dinamo Zagreb (Croatia),0,2,Radnicki Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1956-05-05,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),0,2,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1956-05-09,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),0,2,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1956-05-13,Dinamo Zagreb (Croatia),Vojvodina (Serbia),1,5,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1956-05-20,Proleter Zrenjanin (Serbia),Dinamo Zagreb (Croatia),2,0,Proleter Zrenjanin (Serbia),Nk Zagreb (Croatia),move
+ddr,1956-05-27,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),1,2,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1956-06-03,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),3,4,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1956-06-09,Buducnost Banovici (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,0,Buducnost Banovici (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1956-08-05,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),1,2,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1956-08-12,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),3,1,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1956-08-19,Dinamo Zagreb (Croatia),Radnicki Beograd (Serbia),1,0,Nk Zagreb (Croatia),Radnicki Beograd (Serbia),move
+ddr,1956-08-22,Lokomotiva Zagreb (Croatia),Dinamo Zagreb (Croatia),0,1,Lokomotiva Zagreb (Croatia),Nk Zagreb (Croatia),move
+ddr,1956-08-26,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),2,7,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1956-09-02,Spartak Subotica (Serbia),Dinamo Zagreb (Croatia),0,0,Spartak Subotica (Serbia),Nk Zagreb (Croatia),move
+ddr,1956-09-23,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),4,0,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1956-10-07,Dinamo Zagreb (Croatia),Vojvodina (Serbia),2,3,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1956-10-10,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),3,2,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1956-10-14,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),0,1,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1956-10-17,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,1,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1956-10-21,Dinamo Zagreb (Croatia),Partizan (Serbia),0,0,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1956-10-28,Buducnost Banovici (Bosnia Herzegovina),Dinamo Zagreb (Croatia),2,0,Buducnost Banovici (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1957-03-03,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),2,2,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1957-03-10,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),0,2,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1957-03-20,Radnicki Beograd (Serbia),Dinamo Zagreb (Croatia),1,1,Radnicki Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1957-03-24,Dinamo Zagreb (Croatia),Lokomotiva Zagreb (Croatia),2,2,Nk Zagreb (Croatia),Lokomotiva Zagreb (Croatia),move
+ddr,1957-03-31,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),0,6,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1957-04-07,Dinamo Zagreb (Croatia),Spartak Subotica (Serbia),0,2,Nk Zagreb (Croatia),Spartak Subotica (Serbia),move
+ddr,1957-04-14,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,2,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1957-04-21,Vojvodina (Serbia),Dinamo Zagreb (Croatia),4,2,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1957-05-26,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),0,0,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1957-06-02,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),0,5,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1957-06-09,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),2,5,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1957-06-16,Partizan (Serbia),Dinamo Zagreb (Croatia),5,2,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1957-06-23,Dinamo Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),0,0,Nk Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),move
+ddr,1957-08-11,Dinamo Zagreb (Croatia),Partizan (Serbia),1,2,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1957-08-18,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),1,1,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1957-08-25,Dinamo Zagreb (Croatia),Radnicki Beograd (Serbia),0,2,Nk Zagreb (Croatia),Radnicki Beograd (Serbia),move
+ddr,1957-09-01,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),2,4,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1957-09-08,Dinamo Zagreb (Croatia),Rnk Split (Croatia),2,1,Nk Zagreb (Croatia),Rnk Split (Croatia),move
+ddr,1957-10-06,Dinamo Zagreb (Croatia),Spartak Subotica (Serbia),0,2,Nk Zagreb (Croatia),Spartak Subotica (Serbia),move
+ddr,1957-10-13,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),1,1,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1957-10-20,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),2,1,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1957-10-27,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),2,0,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1957-11-24,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),2,2,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1957-12-01,Buducnost Banovici (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,1,Buducnost Banovici (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1957-12-08,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),1,3,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1957-12-15,Vojvodina (Serbia),Dinamo Zagreb (Croatia),6,1,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1958-02-16,Partizan (Serbia),Dinamo Zagreb (Croatia),0,3,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1958-02-23,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),2,0,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1958-03-02,Radnicki Beograd (Serbia),Dinamo Zagreb (Croatia),1,1,Radnicki Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1958-03-09,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),2,1,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1958-03-16,Rnk Split (Croatia),Dinamo Zagreb (Croatia),2,4,Rnk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1958-03-23,Spartak Subotica (Serbia),Dinamo Zagreb (Croatia),2,6,Spartak Subotica (Serbia),Nk Zagreb (Croatia),move
+ddr,1958-03-26,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),0,1,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1958-03-30,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,4,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1958-04-06,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),1,0,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1958-04-09,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),2,3,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1958-04-13,Dinamo Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),0,5,Nk Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),move
+ddr,1958-04-23,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),5,2,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1958-04-27,Dinamo Zagreb (Croatia),Vojvodina (Serbia),5,0,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1961-08-20,Vojvodina (Serbia),Velež (Bosnia Herzegovina),3,2,FK Novi Sad (Serbia),Velež (Bosnia Herzegovina),move
+ddr,1961-08-27,Sarajevo (Bosnia Herzegovina),Vojvodina (Serbia),5,1,Sarajevo (Bosnia Herzegovina),FK Novi Sad (Serbia),move
+ddr,1961-09-03,Vojvodina (Serbia),Partizan (Serbia),0,0,FK Novi Sad (Serbia),Partizan (Serbia),move
+ddr,1961-09-10,OFK Beograd (Serbia),Vojvodina (Serbia),3,0,OFK Beograd (Serbia),FK Novi Sad (Serbia),move
+ddr,1961-09-17,Vojvodina (Serbia),Dinamo Zagreb (Croatia),1,1,FK Novi Sad (Serbia),Dinamo Zagreb (Croatia),move
+ddr,1961-09-24,Vojvodina (Serbia),Rijeka (Croatia),0,0,FK Novi Sad (Serbia),Rijeka (Croatia),move
+ddr,1961-10-01,Borac Banja Luka (Bosnia Herzegovina),Vojvodina (Serbia),2,3,Borac Banja Luka (Bosnia Herzegovina),FK Novi Sad (Serbia),move
+ddr,1961-10-15,Vojvodina (Serbia),Vardar Skopje (Macedonia Fyr),2,1,FK Novi Sad (Serbia),Vardar Skopje (Macedonia Fyr),move
+ddr,1961-10-22,Crvena zvezda (Serbia),Vojvodina (Serbia),4,2,Crvena zvezda (Serbia),FK Novi Sad (Serbia),move
+ddr,1961-10-29,Vojvodina (Serbia),Hajduk Split (Croatia),2,4,FK Novi Sad (Serbia),Hajduk Split (Croatia),move
+ddr,1961-11-05,Vojvodina (Serbia),Vojvodina (Serbia),3,0,Vojvodina (Serbia),FK Novi Sad (Serbia),add
+ddr,1961-11-12,Velež (Bosnia Herzegovina),Vojvodina (Serbia),1,2,Velež (Bosnia Herzegovina),FK Novi Sad (Serbia),move
+ddr,1961-12-02,Vojvodina (Serbia),Velež (Bosnia Herzegovina),0,0,FK Novi Sad (Serbia),Velež (Bosnia Herzegovina),move
+ddr,1962-03-04,Vojvodina (Serbia),Sarajevo (Bosnia Herzegovina),2,3,FK Novi Sad (Serbia),Sarajevo (Bosnia Herzegovina),move
+ddr,1962-03-11,Partizan (Serbia),Vojvodina (Serbia),0,1,Partizan (Serbia),FK Novi Sad (Serbia),move
+ddr,1962-03-18,Vojvodina (Serbia),OFK Beograd (Serbia),1,1,FK Novi Sad (Serbia),OFK Beograd (Serbia),move
+ddr,1962-03-25,Dinamo Zagreb (Croatia),Vojvodina (Serbia),2,3,Dinamo Zagreb (Croatia),FK Novi Sad (Serbia),move
+ddr,1962-04-01,Rijeka (Croatia),Vojvodina (Serbia),3,0,Rijeka (Croatia),FK Novi Sad (Serbia),move
+ddr,1962-04-08,Vojvodina (Serbia),Borac Banja Luka (Bosnia Herzegovina),1,2,FK Novi Sad (Serbia),Borac Banja Luka (Bosnia Herzegovina),move
+ddr,1962-04-15,Vardar Skopje (Macedonia Fyr),Vojvodina (Serbia),0,2,Vardar Skopje (Macedonia Fyr),FK Novi Sad (Serbia),move
+ddr,1962-04-21,Vojvodina (Serbia),Crvena zvezda (Serbia),0,1,FK Novi Sad (Serbia),Crvena zvezda (Serbia),move
+ddr,1962-04-29,Hajduk Split (Croatia),Vojvodina (Serbia),0,3,Hajduk Split (Croatia),FK Novi Sad (Serbia),move
+ddr,1962-05-02,Vojvodina (Serbia),Vojvodina (Serbia),0,0,FK Novi Sad (Serbia),Vojvodina (Serbia),add
+ddr,1962-08-19,Vojvodina (Serbia),Vojvodina (Serbia),1,0,FK Novi Sad (Serbia),Vojvodina (Serbia),add
+ddr,1962-08-26,Rijeka (Croatia),Vojvodina (Serbia),2,1,Rijeka (Croatia),FK Novi Sad (Serbia),move
+ddr,1962-09-02,Vojvodina (Serbia),Buducnost Banovici (Bosnia Herzegovina),0,0,FK Novi Sad (Serbia),Buducnost Banovici (Bosnia Herzegovina),move
+ddr,1962-09-09,Crvena zvezda (Serbia),Vojvodina (Serbia),4,2,Crvena zvezda (Serbia),FK Novi Sad (Serbia),move
+ddr,1962-09-23,Vojvodina (Serbia),OFK Beograd (Serbia),1,2,FK Novi Sad (Serbia),OFK Beograd (Serbia),move
+ddr,1962-10-07,Sarajevo (Bosnia Herzegovina),Vojvodina (Serbia),3,1,Sarajevo (Bosnia Herzegovina),FK Novi Sad (Serbia),move
+ddr,1962-10-21,Vojvodina (Serbia),Sloboda Tuzla (Bosnia Herzegovina),3,2,FK Novi Sad (Serbia),Sloboda Tuzla (Bosnia Herzegovina),move
+ddr,1962-10-28,Vojvodina (Serbia),Radnicki Beograd (Serbia),2,1,FK Novi Sad (Serbia),Radnicki Beograd (Serbia),move
+ddr,1962-11-11,Hajduk Split (Croatia),Vojvodina (Serbia),2,1,Hajduk Split (Croatia),FK Novi Sad (Serbia),move
+ddr,1962-11-18,Vojvodina (Serbia),Dinamo Zagreb (Croatia),1,2,FK Novi Sad (Serbia),Dinamo Zagreb (Croatia),move
+ddr,1962-11-25,Partizan (Serbia),Vojvodina (Serbia),5,1,Partizan (Serbia),FK Novi Sad (Serbia),move
+ddr,1962-12-09,Željezničar (Bosnia Herzegovina),Vojvodina (Serbia),4,1,Željezničar (Bosnia Herzegovina),FK Novi Sad (Serbia),move
+ddr,1963-03-03,Vojvodina (Serbia),Vojvodina (Serbia),0,0,Vojvodina (Serbia),FK Novi Sad (Serbia),add
+ddr,1963-03-10,Vojvodina (Serbia),Rijeka (Croatia),1,2,FK Novi Sad (Serbia),Rijeka (Croatia),move
+ddr,1963-03-17,Buducnost Banovici (Bosnia Herzegovina),Vojvodina (Serbia),2,1,Buducnost Banovici (Bosnia Herzegovina),FK Novi Sad (Serbia),move
+ddr,1963-03-24,Vojvodina (Serbia),Crvena zvezda (Serbia),1,1,FK Novi Sad (Serbia),Crvena zvezda (Serbia),move
+ddr,1963-04-07,OFK Beograd (Serbia),Vojvodina (Serbia),1,1,OFK Beograd (Serbia),FK Novi Sad (Serbia),move
+ddr,1963-04-14,Vojvodina (Serbia),Sarajevo (Bosnia Herzegovina),0,1,FK Novi Sad (Serbia),Sarajevo (Bosnia Herzegovina),move
+ddr,1963-04-21,Sloboda Tuzla (Bosnia Herzegovina),Vojvodina (Serbia),0,0,Sloboda Tuzla (Bosnia Herzegovina),FK Novi Sad (Serbia),move
+ddr,1963-04-28,Radnicki Beograd (Serbia),Vojvodina (Serbia),0,2,Radnicki Beograd (Serbia),FK Novi Sad (Serbia),move
+ddr,1963-05-05,Vojvodina (Serbia),Hajduk Split (Croatia),0,0,FK Novi Sad (Serbia),Hajduk Split (Croatia),move
+ddr,1963-05-12,Dinamo Zagreb (Croatia),Vojvodina (Serbia),3,0,Dinamo Zagreb (Croatia),FK Novi Sad (Serbia),move
+ddr,1963-05-19,Vojvodina (Serbia),Partizan (Serbia),2,2,FK Novi Sad (Serbia),Partizan (Serbia),move
+ddr,1963-06-02,Velež (Bosnia Herzegovina),Vojvodina (Serbia),1,1,Velež (Bosnia Herzegovina),FK Novi Sad (Serbia),move
+ddr,1963-06-09,Vojvodina (Serbia),Željezničar (Bosnia Herzegovina),0,1,FK Novi Sad (Serbia),Željezničar (Bosnia Herzegovina),move
+ddr,1963-08-18,Vojvodina (Serbia),Vojvodina (Serbia),0,0,FK Novi Sad (Serbia),Vojvodina (Serbia),add
+ddr,1963-08-25,Željezničar (Bosnia Herzegovina),Vojvodina (Serbia),2,3,Željezničar (Bosnia Herzegovina),FK Novi Sad (Serbia),move
+ddr,1963-09-01,Vojvodina (Serbia),Hajduk Split (Croatia),0,4,FK Novi Sad (Serbia),Hajduk Split (Croatia),move
+ddr,1963-09-08,Nk Tresnjevka (Croatia),Vojvodina (Serbia),2,0,Nk Tresnjevka (Croatia),FK Novi Sad (Serbia),move
+ddr,1963-09-22,Vojvodina (Serbia),Crvena zvezda (Serbia),2,2,FK Novi Sad (Serbia),Crvena zvezda (Serbia),move
+ddr,1963-09-29,Radnicki Beograd (Serbia),Vojvodina (Serbia),3,1,Radnicki Beograd (Serbia),FK Novi Sad (Serbia),move
+ddr,1963-10-13,Vojvodina (Serbia),Rijeka (Croatia),0,0,FK Novi Sad (Serbia),Rijeka (Croatia),move
+ddr,1963-10-20,Vojvodina (Serbia),Sarajevo (Bosnia Herzegovina),1,1,FK Novi Sad (Serbia),Sarajevo (Bosnia Herzegovina),move
+ddr,1963-11-10,Velež (Bosnia Herzegovina),Vojvodina (Serbia),0,0,Velež (Bosnia Herzegovina),FK Novi Sad (Serbia),move
+ddr,1963-11-17,Vojvodina (Serbia),Vardar Skopje (Macedonia Fyr),2,1,FK Novi Sad (Serbia),Vardar Skopje (Macedonia Fyr),move
+ddr,1963-11-24,Dinamo Zagreb (Croatia),Vojvodina (Serbia),1,0,Dinamo Zagreb (Croatia),FK Novi Sad (Serbia),move
+ddr,1963-12-01,Vojvodina (Serbia),Partizan (Serbia),2,1,FK Novi Sad (Serbia),Partizan (Serbia),move
+ddr,1963-12-08,OFK Beograd (Serbia),Vojvodina (Serbia),6,2,OFK Beograd (Serbia),FK Novi Sad (Serbia),move
+ddr,1964-03-01,Vojvodina (Serbia),Vojvodina (Serbia),1,2,Vojvodina (Serbia),FK Novi Sad (Serbia),add
+ddr,1964-03-08,Vojvodina (Serbia),Željezničar (Bosnia Herzegovina),0,2,FK Novi Sad (Serbia),Željezničar (Bosnia Herzegovina),move
+ddr,1964-03-15,Hajduk Split (Croatia),Vojvodina (Serbia),1,2,Hajduk Split (Croatia),FK Novi Sad (Serbia),move
+ddr,1964-03-22,Vojvodina (Serbia),Nk Tresnjevka (Croatia),2,0,FK Novi Sad (Serbia),Nk Tresnjevka (Croatia),move
+ddr,1964-03-28,Crvena zvezda (Serbia),Vojvodina (Serbia),1,6,Crvena zvezda (Serbia),FK Novi Sad (Serbia),move
+ddr,1964-04-05,Vojvodina (Serbia),Radnicki Beograd (Serbia),0,2,FK Novi Sad (Serbia),Radnicki Beograd (Serbia),move
+ddr,1964-04-12,Rijeka (Croatia),Vojvodina (Serbia),0,6,Rijeka (Croatia),FK Novi Sad (Serbia),move
+ddr,1964-04-19,Sarajevo (Bosnia Herzegovina),Vojvodina (Serbia),0,3,Sarajevo (Bosnia Herzegovina),FK Novi Sad (Serbia),move
+ddr,1964-04-26,Vojvodina (Serbia),Velež (Bosnia Herzegovina),2,2,FK Novi Sad (Serbia),Velež (Bosnia Herzegovina),move
+ddr,1964-05-03,Vardar Skopje (Macedonia Fyr),Vojvodina (Serbia),3,0,Vardar Skopje (Macedonia Fyr),FK Novi Sad (Serbia),move
+ddr,1964-05-31,Vojvodina (Serbia),Dinamo Zagreb (Croatia),3,1,FK Novi Sad (Serbia),Dinamo Zagreb (Croatia),move
+ddr,1964-06-07,Partizan (Serbia),Vojvodina (Serbia),0,1,Partizan (Serbia),FK Novi Sad (Serbia),move
+ddr,1964-06-14,Vojvodina (Serbia),OFK Beograd (Serbia),3,3,FK Novi Sad (Serbia),OFK Beograd (Serbia),move
+ddr,1964-08-09,Vojvodina (Serbia),Dinamo Zagreb (Croatia),0,0,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1964-08-16,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),2,0,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1964-08-23,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),2,2,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1964-08-26,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),4,1,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1964-08-30,Radnicki Beograd (Serbia),Dinamo Zagreb (Croatia),3,0,Radnicki Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1964-09-06,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),2,2,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1964-09-13,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),3,1,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1964-11-08,Dinamo Zagreb (Croatia),Sutjeska (Montenegro),3,0,Nk Zagreb (Croatia),Sutjeska (Montenegro),move
+ddr,1964-11-11,Rijeka (Croatia),Dinamo Zagreb (Croatia),3,2,Rijeka (Croatia),Nk Zagreb (Croatia),move
+ddr,1964-11-15,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),4,1,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1964-11-29,Partizan (Serbia),Dinamo Zagreb (Croatia),3,1,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1964-12-06,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),1,0,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1964-12-13,Nk Tresnjevka (Croatia),Dinamo Zagreb (Croatia),1,1,Nk Tresnjevka (Croatia),Nk Zagreb (Croatia),move
+ddr,1964-12-20,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),2,3,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1965-02-28,Dinamo Zagreb (Croatia),Vojvodina (Serbia),2,2,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1965-03-07,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,3,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1965-03-14,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),0,1,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1965-03-21,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),2,0,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1965-03-24,Dinamo Zagreb (Croatia),Radnicki Beograd (Serbia),1,2,Nk Zagreb (Croatia),Radnicki Beograd (Serbia),move
+ddr,1965-04-04,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),1,2,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1965-04-11,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),0,4,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1965-04-25,Sutjeska (Montenegro),Dinamo Zagreb (Croatia),2,3,Sutjeska (Montenegro),Nk Zagreb (Croatia),move
+ddr,1965-05-02,Dinamo Zagreb (Croatia),Rijeka (Croatia),0,1,Nk Zagreb (Croatia),Rijeka (Croatia),move
+ddr,1965-05-16,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),1,2,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1965-05-23,Dinamo Zagreb (Croatia),Partizan (Serbia),3,0,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1965-05-30,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),2,4,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1965-06-06,Dinamo Zagreb (Croatia),Nk Tresnjevka (Croatia),0,1,Nk Zagreb (Croatia),Nk Tresnjevka (Croatia),move
+ddr,1965-06-10,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,2,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1965-08-15,Dinamo Zagreb (Croatia),Rijeka (Croatia),0,2,Nk Zagreb (Croatia),Rijeka (Croatia),move
+ddr,1965-08-22,Radnicki Beograd (Serbia),Dinamo Zagreb (Croatia),1,0,Radnicki Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1965-08-29,Dinamo Zagreb (Croatia),Partizan (Serbia),2,1,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1965-09-12,Vojvodina (Serbia),Dinamo Zagreb (Croatia),0,0,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1965-09-17,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),4,1,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1965-09-26,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),3,1,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1965-10-20,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,0,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1965-10-24,Radnički Niš (Serbia),Dinamo Zagreb (Croatia),4,0,Radnički Niš (Serbia),Nk Zagreb (Croatia),move
+ddr,1965-10-31,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),1,4,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1965-11-14,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),4,1,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1965-11-21,Dinamo Zagreb (Croatia),Olimpija (Slovenia),2,1,Nk Zagreb (Croatia),Olimpija (Slovenia),move
+ddr,1965-11-28,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),5,4,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1965-12-05,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),1,1,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1965-12-12,Nk Tresnjevka (Croatia),Dinamo Zagreb (Croatia),1,2,Nk Tresnjevka (Croatia),Nk Zagreb (Croatia),move
+ddr,1965-12-19,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),2,3,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1966-03-06,Rijeka (Croatia),Dinamo Zagreb (Croatia),0,3,Rijeka (Croatia),Nk Zagreb (Croatia),move
+ddr,1966-03-13,Dinamo Zagreb (Croatia),Radnicki Beograd (Serbia),3,3,Nk Zagreb (Croatia),Radnicki Beograd (Serbia),move
+ddr,1966-03-20,Partizan (Serbia),Dinamo Zagreb (Croatia),0,3,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1966-03-27,Dinamo Zagreb (Croatia),Vojvodina (Serbia),1,1,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1966-04-03,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,3,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1966-04-10,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),0,1,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1966-04-17,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),0,1,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1966-04-24,Dinamo Zagreb (Croatia),Radnički Niš (Serbia),2,2,Nk Zagreb (Croatia),Radnički Niš (Serbia),move
+ddr,1966-05-01,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),1,4,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1966-05-15,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),2,0,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1966-05-22,Olimpija (Slovenia),Dinamo Zagreb (Croatia),1,0,Olimpija (Slovenia),Nk Zagreb (Croatia),move
+ddr,1966-05-29,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),2,3,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1966-06-05,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,3,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1966-06-12,Dinamo Zagreb (Croatia),Nk Tresnjevka (Croatia),1,2,Nk Zagreb (Croatia),Nk Tresnjevka (Croatia),move
+ddr,1966-06-19,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),1,1,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1966-08-21,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),1,1,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1966-08-28,Olimpija (Slovenia),Dinamo Zagreb (Croatia),2,0,Olimpija (Slovenia),Nk Zagreb (Croatia),move
+ddr,1966-09-04,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),3,2,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1966-09-11,Dinamo Zagreb (Croatia),Radnicki Beograd (Serbia),2,1,Nk Zagreb (Croatia),Radnicki Beograd (Serbia),move
+ddr,1966-09-25,Rijeka (Croatia),Dinamo Zagreb (Croatia),1,1,Rijeka (Croatia),Nk Zagreb (Croatia),move
+ddr,1966-10-02,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),0,1,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1966-10-09,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),3,1,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1966-10-16,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),1,0,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1966-10-23,Vojvodina (Serbia),Dinamo Zagreb (Croatia),1,1,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1966-10-30,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),1,3,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1966-11-13,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),3,1,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1966-11-20,Dinamo Zagreb (Croatia),Celik Zenica (Bosnia Herzegovina),1,0,Nk Zagreb (Croatia),Celik Zenica (Bosnia Herzegovina),move
+ddr,1966-11-27,Sutjeska (Montenegro),Dinamo Zagreb (Croatia),2,1,Sutjeska (Montenegro),Nk Zagreb (Croatia),move
+ddr,1966-12-04,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),2,3,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1966-12-11,Partizan (Serbia),Dinamo Zagreb (Croatia),7,0,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1967-03-05,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),1,2,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1967-03-12,Dinamo Zagreb (Croatia),Olimpija (Slovenia),2,3,Nk Zagreb (Croatia),Olimpija (Slovenia),move
+ddr,1967-03-19,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,1,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1967-03-26,Radnicki Beograd (Serbia),Dinamo Zagreb (Croatia),3,1,Radnicki Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1967-04-02,Dinamo Zagreb (Croatia),Rijeka (Croatia),0,0,Nk Zagreb (Croatia),Rijeka (Croatia),move
+ddr,1967-04-09,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),3,2,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1967-04-16,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),0,0,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1967-05-07,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),2,1,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1967-05-21,Dinamo Zagreb (Croatia),Vojvodina (Serbia),0,0,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1967-05-28,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),0,1,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1967-06-04,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),0,3,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1967-06-11,Celik Zenica (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,1,Celik Zenica (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1967-06-18,Dinamo Zagreb (Croatia),Sutjeska (Montenegro),1,2,Nk Zagreb (Croatia),Sutjeska (Montenegro),move
+ddr,1967-06-25,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,2,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1967-07-02,Dinamo Zagreb (Croatia),Partizan (Serbia),1,2,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1967-08-20,Dinamo Zagreb (Croatia),Partizan (Serbia),0,0,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1967-08-27,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),1,5,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1967-09-03,Dinamo Zagreb (Croatia),Maribor (Slovenia),5,1,Nk Zagreb (Croatia),Maribor (Slovenia),move
+ddr,1967-09-10,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),5,0,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1967-09-17,Dinamo Zagreb (Croatia),Radnicki Beograd (Serbia),3,1,Nk Zagreb (Croatia),Radnicki Beograd (Serbia),move
+ddr,1967-09-24,Rijeka (Croatia),Dinamo Zagreb (Croatia),2,2,Rijeka (Croatia),Nk Zagreb (Croatia),move
+ddr,1967-10-11,Dinamo Zagreb (Croatia),Vojvodina (Serbia),3,1,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1967-10-15,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),5,2,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1967-10-22,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),0,1,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1967-10-29,Olimpija (Slovenia),Dinamo Zagreb (Croatia),1,0,Olimpija (Slovenia),Nk Zagreb (Croatia),move
+ddr,1967-11-05,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),2,2,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1967-11-19,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),2,0,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1967-11-26,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),3,1,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1967-12-03,Proleter Zrenjanin (Serbia),Dinamo Zagreb (Croatia),3,3,Proleter Zrenjanin (Serbia),Nk Zagreb (Croatia),move
+ddr,1967-12-10,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),2,2,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1968-03-10,Partizan (Serbia),Dinamo Zagreb (Croatia),0,2,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1968-03-17,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),2,3,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1968-03-24,Maribor (Slovenia),Dinamo Zagreb (Croatia),0,2,Maribor (Slovenia),Nk Zagreb (Croatia),move
+ddr,1968-03-31,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),0,4,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1968-04-14,Radnicki Beograd (Serbia),Dinamo Zagreb (Croatia),0,3,Radnicki Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1968-04-17,Dinamo Zagreb (Croatia),Rijeka (Croatia),0,3,Nk Zagreb (Croatia),Rijeka (Croatia),move
+ddr,1968-05-01,Vojvodina (Serbia),Dinamo Zagreb (Croatia),0,1,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1968-05-05,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),3,2,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1968-05-12,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),1,1,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1968-05-19,Dinamo Zagreb (Croatia),Olimpija (Slovenia),1,0,Nk Zagreb (Croatia),Olimpija (Slovenia),move
+ddr,1968-05-26,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,1,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1968-06-16,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),1,3,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1968-06-19,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),4,3,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1968-06-23,Dinamo Zagreb (Croatia),Proleter Zrenjanin (Serbia),1,1,Nk Zagreb (Croatia),Proleter Zrenjanin (Serbia),move
+ddr,1968-06-30,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),5,2,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1968-08-18,FK Bor (Serbia),Dinamo Zagreb (Croatia),2,1,FK Bor (Serbia),Nk Zagreb (Croatia),move
+ddr,1968-08-25,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),1,1,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1968-09-01,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),4,1,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1968-09-08,Vojvodina (Serbia),Dinamo Zagreb (Croatia),1,0,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1968-09-15,Dinamo Zagreb (Croatia),Partizan (Serbia),1,3,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1968-09-22,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,2,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1968-09-29,Dinamo Zagreb (Croatia),Maribor (Slovenia),1,1,Nk Zagreb (Croatia),Maribor (Slovenia),move
+ddr,1968-10-06,Rijeka (Croatia),Dinamo Zagreb (Croatia),0,1,Rijeka (Croatia),Nk Zagreb (Croatia),move
+ddr,1968-10-09,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),2,1,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1968-10-20,Celik Zenica (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,1,Celik Zenica (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1968-10-30,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),1,2,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1968-11-03,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),1,0,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1968-11-10,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),1,1,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1968-11-17,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),4,0,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1968-11-24,Dinamo Zagreb (Croatia),Radnicki Beograd (Serbia),1,0,Nk Zagreb (Croatia),Radnicki Beograd (Serbia),move
+ddr,1968-12-01,Olimpija (Slovenia),Dinamo Zagreb (Croatia),0,2,Olimpija (Slovenia),Nk Zagreb (Croatia),move
+ddr,1968-12-08,Dinamo Zagreb (Croatia),Proleter Zrenjanin (Serbia),3,0,Nk Zagreb (Croatia),Proleter Zrenjanin (Serbia),move
+ddr,1969-03-09,Dinamo Zagreb (Croatia),FK Bor (Serbia),0,2,Nk Zagreb (Croatia),FK Bor (Serbia),move
+ddr,1969-03-16,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),2,3,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1969-03-23,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),1,2,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1969-03-30,Dinamo Zagreb (Croatia),Vojvodina (Serbia),1,0,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1969-04-06,Partizan (Serbia),Dinamo Zagreb (Croatia),0,3,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1969-04-13,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),4,2,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1969-04-20,Maribor (Slovenia),Dinamo Zagreb (Croatia),0,0,Maribor (Slovenia),Nk Zagreb (Croatia),move
+ddr,1969-05-04,Dinamo Zagreb (Croatia),Rijeka (Croatia),0,2,Nk Zagreb (Croatia),Rijeka (Croatia),move
+ddr,1969-05-07,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),2,0,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1969-05-11,Dinamo Zagreb (Croatia),Celik Zenica (Bosnia Herzegovina),2,2,Nk Zagreb (Croatia),Celik Zenica (Bosnia Herzegovina),move
+ddr,1969-05-18,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),1,5,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1969-05-25,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),0,5,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1969-06-08,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),0,3,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1969-06-15,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),2,1,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1969-06-22,Radnicki Beograd (Serbia),Dinamo Zagreb (Croatia),2,1,Radnicki Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1969-06-29,Dinamo Zagreb (Croatia),Olimpija (Slovenia),3,1,Nk Zagreb (Croatia),Olimpija (Slovenia),move
+ddr,1969-07-07,Proleter Zrenjanin (Serbia),Dinamo Zagreb (Croatia),3,3,Proleter Zrenjanin (Serbia),Nk Zagreb (Croatia),move
+ddr,1969-08-24,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),4,0,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1969-08-31,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),0,1,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1969-09-07,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),1,0,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1969-09-14,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),3,3,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1969-09-21,FK Bor (Serbia),Dinamo Zagreb (Croatia),1,0,FK Bor (Serbia),Nk Zagreb (Croatia),move
+ddr,1969-09-28,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),0,0,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1969-10-05,Celik Zenica (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,1,Celik Zenica (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1969-10-08,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),0,2,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1969-10-12,Maribor (Slovenia),Dinamo Zagreb (Croatia),1,0,Maribor (Slovenia),Nk Zagreb (Croatia),move
+ddr,1969-10-26,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),5,0,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1969-11-02,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),0,1,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1969-11-09,Olimpija (Slovenia),Dinamo Zagreb (Croatia),1,0,Olimpija (Slovenia),Nk Zagreb (Croatia),move
+ddr,1969-11-16,Dinamo Zagreb (Croatia),Vojvodina (Serbia),0,0,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1969-11-23,Radnički Kragujevac (Serbia),Dinamo Zagreb (Croatia),3,2,Radnički Kragujevac (Serbia),Nk Zagreb (Croatia),move
+ddr,1969-11-30,Dinamo Zagreb (Croatia),Sloboda Tuzla (Bosnia Herzegovina),2,2,Nk Zagreb (Croatia),Sloboda Tuzla (Bosnia Herzegovina),move
+ddr,1969-12-07,Partizan (Serbia),Dinamo Zagreb (Croatia),2,0,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1969-12-14,Dinamo Zagreb (Croatia),Radnički Niš (Serbia),2,1,Nk Zagreb (Croatia),Radnički Niš (Serbia),move
+ddr,1970-03-08,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),0,2,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1970-03-15,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,1,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1970-03-22,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),0,0,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1970-03-29,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,2,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1970-04-05,Dinamo Zagreb (Croatia),FK Bor (Serbia),1,1,Nk Zagreb (Croatia),FK Bor (Serbia),move
+ddr,1970-04-19,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),0,5,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1970-04-26,Dinamo Zagreb (Croatia),Celik Zenica (Bosnia Herzegovina),0,1,Nk Zagreb (Croatia),Celik Zenica (Bosnia Herzegovina),move
+ddr,1970-04-29,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),0,3,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1970-05-03,Dinamo Zagreb (Croatia),Maribor (Slovenia),0,3,Nk Zagreb (Croatia),Maribor (Slovenia),move
+ddr,1970-05-10,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),4,2,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1970-05-17,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,3,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1970-05-24,Dinamo Zagreb (Croatia),Olimpija (Slovenia),2,1,Nk Zagreb (Croatia),Olimpija (Slovenia),move
+ddr,1970-05-31,Vojvodina (Serbia),Dinamo Zagreb (Croatia),1,3,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1970-06-07,Dinamo Zagreb (Croatia),Radnički Kragujevac (Serbia),0,1,Nk Zagreb (Croatia),Radnički Kragujevac (Serbia),move
+ddr,1970-06-14,Sloboda Tuzla (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,2,Sloboda Tuzla (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1970-06-21,Dinamo Zagreb (Croatia),Partizan (Serbia),5,0,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1970-06-28,Radnički Niš (Serbia),Dinamo Zagreb (Croatia),0,2,Radnički Niš (Serbia),Nk Zagreb (Croatia),move
+ddr,1973-08-19,Radnički Niš (Serbia),Dinamo Zagreb (Croatia),2,2,Radnički Niš (Serbia),Nk Zagreb (Croatia),move
+ddr,1973-08-26,Dinamo Zagreb (Croatia),Celik Zenica (Bosnia Herzegovina),0,0,Nk Zagreb (Croatia),Celik Zenica (Bosnia Herzegovina),move
+ddr,1973-09-02,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,0,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1973-09-09,Dinamo Zagreb (Croatia),Proleter Zrenjanin (Serbia),0,4,Nk Zagreb (Croatia),Proleter Zrenjanin (Serbia),move
+ddr,1973-09-12,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),2,0,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1973-09-16,Dinamo Zagreb (Croatia),Partizan (Serbia),3,1,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1973-09-23,Sloboda Tuzla (Bosnia Herzegovina),Dinamo Zagreb (Croatia),3,1,Sloboda Tuzla (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1973-09-30,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),6,1,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1973-10-07,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),1,2,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1973-10-28,Olimpija (Slovenia),Dinamo Zagreb (Croatia),1,0,Olimpija (Slovenia),Nk Zagreb (Croatia),move
+ddr,1973-10-31,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),1,0,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1973-11-04,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,1,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1973-11-11,Dinamo Zagreb (Croatia),Borac Banja Luka (Bosnia Herzegovina),0,0,Nk Zagreb (Croatia),Borac Banja Luka (Bosnia Herzegovina),move
+ddr,1973-11-18,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),6,1,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1973-11-25,Dinamo Zagreb (Croatia),Vojvodina (Serbia),1,0,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1973-12-02,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),1,1,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1973-12-09,Dinamo Zagreb (Croatia),FK Bor (Serbia),2,0,Nk Zagreb (Croatia),FK Bor (Serbia),move
+ddr,1974-02-24,Dinamo Zagreb (Croatia),Radnički Niš (Serbia),0,2,Nk Zagreb (Croatia),Radnički Niš (Serbia),move
+ddr,1974-03-03,Celik Zenica (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,1,Celik Zenica (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1974-03-10,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),0,0,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1974-03-17,Proleter Zrenjanin (Serbia),Dinamo Zagreb (Croatia),0,0,Proleter Zrenjanin (Serbia),Nk Zagreb (Croatia),move
+ddr,1974-03-24,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),1,0,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1974-03-27,Partizan (Serbia),Dinamo Zagreb (Croatia),3,0,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1974-03-31,Dinamo Zagreb (Croatia),Sloboda Tuzla (Bosnia Herzegovina),2,0,Nk Zagreb (Croatia),Sloboda Tuzla (Bosnia Herzegovina),move
+ddr,1974-04-03,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),2,0,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1974-04-07,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),1,1,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1974-04-14,Dinamo Zagreb (Croatia),Olimpija (Slovenia),1,0,Nk Zagreb (Croatia),Olimpija (Slovenia),move
+ddr,1974-04-21,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),1,2,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1974-04-24,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),0,2,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1974-04-28,Borac Banja Luka (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,1,Borac Banja Luka (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1974-05-01,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),0,1,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1974-05-05,Vojvodina (Serbia),Dinamo Zagreb (Croatia),0,0,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1974-05-12,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),1,2,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1974-05-14,FK Bor (Serbia),Dinamo Zagreb (Croatia),1,2,FK Bor (Serbia),Nk Zagreb (Croatia),move
+ddr,1976-08-22,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),3,3,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1976-08-29,Napredak (Serbia),Dinamo Zagreb (Croatia),2,0,Napredak (Serbia),Nk Zagreb (Croatia),move
+ddr,1976-09-01,Dinamo Zagreb (Croatia),Partizan (Serbia),2,0,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1976-09-05,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),0,3,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1976-09-12,Dinamo Zagreb (Croatia),Olimpija (Slovenia),0,2,Nk Zagreb (Croatia),Olimpija (Slovenia),move
+ddr,1976-09-19,Buducnost Banovici (Bosnia Herzegovina),Dinamo Zagreb (Croatia),4,0,Buducnost Banovici (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1976-10-03,Dinamo Zagreb (Croatia),Radnički Niš (Serbia),0,1,Nk Zagreb (Croatia),Radnički Niš (Serbia),move
+ddr,1976-10-17,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,1,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1976-10-24,Dinamo Zagreb (Croatia),Celik Zenica (Bosnia Herzegovina),2,1,Nk Zagreb (Croatia),Celik Zenica (Bosnia Herzegovina),move
+ddr,1976-10-27,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),2,1,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1976-10-31,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),2,2,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1976-11-07,Sloboda Tuzla (Bosnia Herzegovina),Dinamo Zagreb (Croatia),3,0,Sloboda Tuzla (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1976-11-14,Dinamo Zagreb (Croatia),Vojvodina (Serbia),3,2,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1976-11-17,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),1,0,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1976-11-21,Dinamo Zagreb (Croatia),Rijeka (Croatia),4,0,Nk Zagreb (Croatia),Rijeka (Croatia),move
+ddr,1976-11-28,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),3,2,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1976-12-05,Dinamo Zagreb (Croatia),Borac Banja Luka (Bosnia Herzegovina),4,3,Nk Zagreb (Croatia),Borac Banja Luka (Bosnia Herzegovina),move
+ddr,1977-03-06,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),3,3,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1977-03-13,Dinamo Zagreb (Croatia),Napredak (Serbia),0,3,Nk Zagreb (Croatia),Napredak (Serbia),move
+ddr,1977-03-20,Partizan (Serbia),Dinamo Zagreb (Croatia),0,1,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1977-03-27,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),1,2,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1977-04-03,Olimpija (Slovenia),Dinamo Zagreb (Croatia),1,1,Olimpija (Slovenia),Nk Zagreb (Croatia),move
+ddr,1977-04-10,Dinamo Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),0,0,Nk Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),move
+ddr,1977-04-17,Radnički Niš (Serbia),Dinamo Zagreb (Croatia),3,1,Radnički Niš (Serbia),Nk Zagreb (Croatia),move
+ddr,1977-04-20,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),0,3,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1977-04-24,Celik Zenica (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,2,Celik Zenica (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1977-05-15,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),0,2,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1977-05-18,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),1,3,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1977-05-22,Dinamo Zagreb (Croatia),Sloboda Tuzla (Bosnia Herzegovina),0,2,Nk Zagreb (Croatia),Sloboda Tuzla (Bosnia Herzegovina),move
+ddr,1977-05-29,Vojvodina (Serbia),Dinamo Zagreb (Croatia),0,0,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1977-06-05,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),0,1,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1977-06-08,Rijeka (Croatia),Dinamo Zagreb (Croatia),0,2,Rijeka (Croatia),Nk Zagreb (Croatia),move
+ddr,1977-06-12,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),1,0,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1977-06-19,Borac Banja Luka (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,1,Borac Banja Luka (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1977-08-14,Dinamo Zagreb (Croatia),Radnicki Beograd (Serbia),0,0,Nk Zagreb (Croatia),Radnicki Beograd (Serbia),move
+ddr,1977-08-21,Dinamo Zagreb (Croatia),Partizan (Serbia),0,0,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1977-08-28,Borac Banja Luka (Bosnia Herzegovina),Dinamo Zagreb (Croatia),4,0,Borac Banja Luka (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1977-08-31,Dinamo Zagreb (Croatia),Rijeka (Croatia),2,1,Nk Zagreb (Croatia),Rijeka (Croatia),move
+ddr,1977-09-04,Sloboda Tuzla (Bosnia Herzegovina),Dinamo Zagreb (Croatia),2,1,Sloboda Tuzla (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1977-09-11,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),1,1,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1977-09-18,Celik Zenica (Bosnia Herzegovina),Dinamo Zagreb (Croatia),2,1,Celik Zenica (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1977-09-21,Dinamo Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),3,1,Nk Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),move
+ddr,1977-09-25,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),3,1,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1977-10-09,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),0,1,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1977-10-12,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),2,0,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1977-10-16,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),1,2,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1977-10-23,Kosovo KS Trepca Mitrovice (Kosovo),Dinamo Zagreb (Croatia),1,2,Kosovo KS Trepca Mitrovice (Kosovo),Nk Zagreb (Croatia),move
+ddr,1977-10-30,Dinamo Zagreb (Croatia),Vojvodina (Serbia),1,0,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1977-11-06,Osijek (Croatia),Dinamo Zagreb (Croatia),0,1,Osijek (Croatia),Nk Zagreb (Croatia),move
+ddr,1977-11-20,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),0,0,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1977-12-04,Olimpija (Slovenia),Dinamo Zagreb (Croatia),2,0,Olimpija (Slovenia),Nk Zagreb (Croatia),move
+ddr,1977-12-11,Dinamo Zagreb (Croatia),Radnicki Beograd (Serbia),1,3,Nk Zagreb (Croatia),Radnicki Beograd (Serbia),move
+ddr,1978-03-05,Dinamo Zagreb (Croatia),Partizan (Serbia),1,2,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1978-03-12,Borac Banja Luka (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,1,Borac Banja Luka (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1978-03-19,Dinamo Zagreb (Croatia),Rijeka (Croatia),3,3,Nk Zagreb (Croatia),Rijeka (Croatia),move
+ddr,1978-03-26,Sloboda Tuzla (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,1,Sloboda Tuzla (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1978-04-02,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),1,2,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1978-04-09,Celik Zenica (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,1,Celik Zenica (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1978-04-12,Dinamo Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),0,1,Nk Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),move
+ddr,1978-04-16,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),3,3,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1978-04-23,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),1,1,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1978-04-26,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),0,2,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1978-04-30,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),0,4,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1978-05-07,Kosovo KS Trepca Mitrovice (Kosovo),Dinamo Zagreb (Croatia),1,1,Kosovo KS Trepca Mitrovice (Kosovo),Nk Zagreb (Croatia),move
+ddr,1978-05-10,Dinamo Zagreb (Croatia),Vojvodina (Serbia),0,1,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1978-05-14,Osijek (Croatia),Dinamo Zagreb (Croatia),1,3,Osijek (Croatia),Nk Zagreb (Croatia),move
+ddr,1978-05-21,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),1,1,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1978-05-28,Olimpija (Slovenia),Dinamo Zagreb (Croatia),3,2,Olimpija (Slovenia),Nk Zagreb (Croatia),move
+ddr,1978-08-13,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),2,2,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1978-08-20,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,0,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1978-08-23,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),2,2,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1978-08-27,Radnički Niš (Serbia),Dinamo Zagreb (Croatia),1,0,Radnički Niš (Serbia),Nk Zagreb (Croatia),move
+ddr,1978-09-03,Dinamo Zagreb (Croatia),Borac Banja Luka (Bosnia Herzegovina),3,1,Nk Zagreb (Croatia),Borac Banja Luka (Bosnia Herzegovina),move
+ddr,1978-09-10,Osijek (Croatia),Dinamo Zagreb (Croatia),2,2,Osijek (Croatia),Nk Zagreb (Croatia),move
+ddr,1978-09-17,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),1,0,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1978-09-24,Vojvodina (Serbia),Dinamo Zagreb (Croatia),0,1,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1978-10-08,Dinamo Zagreb (Croatia),Rijeka (Croatia),1,0,Nk Zagreb (Croatia),Rijeka (Croatia),move
+ddr,1978-10-15,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,0,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1978-10-29,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),0,0,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1978-11-05,Dinamo Zagreb (Croatia),Sloboda Tuzla (Bosnia Herzegovina),3,1,Nk Zagreb (Croatia),Sloboda Tuzla (Bosnia Herzegovina),move
+ddr,1978-11-12,Partizan (Serbia),Dinamo Zagreb (Croatia),3,2,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1978-11-19,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),2,1,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1978-11-26,Buducnost Banovici (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,0,Buducnost Banovici (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1978-11-29,Dinamo Zagreb (Croatia),Napredak (Serbia),1,0,Nk Zagreb (Croatia),Napredak (Serbia),move
+ddr,1978-12-03,Olimpija (Slovenia),Dinamo Zagreb (Croatia),3,1,Olimpija (Slovenia),Nk Zagreb (Croatia),move
+ddr,1979-03-04,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),1,1,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1979-03-11,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),1,0,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1979-03-18,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),3,2,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1979-03-25,Dinamo Zagreb (Croatia),Radnički Niš (Serbia),3,2,Nk Zagreb (Croatia),Radnički Niš (Serbia),move
+ddr,1979-04-08,Borac Banja Luka (Bosnia Herzegovina),Dinamo Zagreb (Croatia),0,0,Borac Banja Luka (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1979-04-15,Dinamo Zagreb (Croatia),Osijek (Croatia),0,1,Nk Zagreb (Croatia),Osijek (Croatia),move
+ddr,1979-04-22,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),3,1,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1979-04-29,Dinamo Zagreb (Croatia),Vojvodina (Serbia),2,0,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1979-05-06,Rijeka (Croatia),Dinamo Zagreb (Croatia),1,1,Rijeka (Croatia),Nk Zagreb (Croatia),move
+ddr,1979-05-09,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),1,0,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1979-05-13,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),0,1,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1979-05-20,Sloboda Tuzla (Bosnia Herzegovina),Dinamo Zagreb (Croatia),5,0,Sloboda Tuzla (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1979-05-27,Dinamo Zagreb (Croatia),Partizan (Serbia),1,1,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1979-05-30,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),1,0,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1979-06-03,Dinamo Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),0,1,Nk Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),move
+ddr,1979-06-10,Napredak (Serbia),Dinamo Zagreb (Croatia),0,1,Napredak (Serbia),Nk Zagreb (Croatia),move
+ddr,1979-06-17,Dinamo Zagreb (Croatia),Olimpija (Slovenia),2,0,Nk Zagreb (Croatia),Olimpija (Slovenia),move
+ddr,1980-08-17,Partizan (Serbia),Dinamo Zagreb (Croatia),4,1,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1980-08-24,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),2,0,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1980-08-31,Dinamo Zagreb (Croatia),Rijeka (Croatia),3,6,Nk Zagreb (Croatia),Rijeka (Croatia),move
+ddr,1980-09-07,Radnički Niš (Serbia),Dinamo Zagreb (Croatia),4,0,Radnički Niš (Serbia),Nk Zagreb (Croatia),move
+ddr,1980-09-14,Dinamo Zagreb (Croatia),Sloboda Tuzla (Bosnia Herzegovina),2,1,Nk Zagreb (Croatia),Sloboda Tuzla (Bosnia Herzegovina),move
+ddr,1980-09-21,Borac Banja Luka (Bosnia Herzegovina),Dinamo Zagreb (Croatia),4,0,Borac Banja Luka (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1980-10-05,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),3,0,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1980-10-08,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,0,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1980-10-12,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),2,1,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1980-10-19,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),1,1,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1980-10-26,Dinamo Zagreb (Croatia),Vojvodina (Serbia),4,1,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1980-10-29,Olimpija (Slovenia),Dinamo Zagreb (Croatia),0,0,Olimpija (Slovenia),Nk Zagreb (Croatia),move
+ddr,1980-11-02,Dinamo Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),4,1,Nk Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),move
+ddr,1980-11-09,Napredak (Serbia),Dinamo Zagreb (Croatia),0,1,Napredak (Serbia),Nk Zagreb (Croatia),move
+ddr,1980-11-23,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),2,0,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1980-11-30,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),3,0,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1980-12-07,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),2,0,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1981-03-01,Dinamo Zagreb (Croatia),Partizan (Serbia),3,2,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1981-03-08,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),1,1,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1981-03-15,Rijeka (Croatia),Dinamo Zagreb (Croatia),0,0,Rijeka (Croatia),Nk Zagreb (Croatia),move
+ddr,1981-03-22,Dinamo Zagreb (Croatia),Radnički Niš (Serbia),2,2,Nk Zagreb (Croatia),Radnički Niš (Serbia),move
+ddr,1981-03-29,Sloboda Tuzla (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,1,Sloboda Tuzla (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1981-04-05,Dinamo Zagreb (Croatia),Borac Banja Luka (Bosnia Herzegovina),1,1,Nk Zagreb (Croatia),Borac Banja Luka (Bosnia Herzegovina),move
+ddr,1981-04-12,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),0,2,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1981-04-15,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),2,1,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1981-04-19,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,3,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1981-05-03,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),1,1,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1981-05-10,Vojvodina (Serbia),Dinamo Zagreb (Croatia),0,1,Vojvodina (Serbia),Nk Zagreb (Croatia),move
+ddr,1981-05-17,Dinamo Zagreb (Croatia),Olimpija (Slovenia),0,1,Nk Zagreb (Croatia),Olimpija (Slovenia),move
+ddr,1981-05-24,Buducnost Banovici (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,3,Buducnost Banovici (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1981-05-31,Dinamo Zagreb (Croatia),Napredak (Serbia),1,3,Nk Zagreb (Croatia),Napredak (Serbia),move
+ddr,1981-06-07,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),0,1,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1981-06-10,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),1,3,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1981-06-14,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),0,3,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1981-07-26,Partizan (Serbia),Dinamo Zagreb (Croatia),4,2,Partizan (Serbia),Nk Zagreb (Croatia),move
+ddr,1981-08-02,Dinamo Zagreb (Croatia),Rijeka (Croatia),7,0,Nk Zagreb (Croatia),Rijeka (Croatia),move
+ddr,1981-08-09,Osijek (Croatia),Dinamo Zagreb (Croatia),1,0,Osijek (Croatia),Nk Zagreb (Croatia),move
+ddr,1981-08-16,Dinamo Zagreb (Croatia),Olimpija (Slovenia),2,0,Nk Zagreb (Croatia),Olimpija (Slovenia),move
+ddr,1981-08-23,Vardar Skopje (Macedonia Fyr),Dinamo Zagreb (Croatia),0,0,Vardar Skopje (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1981-08-30,Dinamo Zagreb (Croatia),Željezničar (Bosnia Herzegovina),2,3,Nk Zagreb (Croatia),Željezničar (Bosnia Herzegovina),move
+ddr,1981-09-13,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),7,0,Dinamo Zagreb (Croatia),Nk Zagreb (Croatia),add
+ddr,1981-09-20,Dinamo Zagreb (Croatia),Velež (Bosnia Herzegovina),2,2,Nk Zagreb (Croatia),Velež (Bosnia Herzegovina),move
+ddr,1981-09-23,Buducnost Banovici (Bosnia Herzegovina),Dinamo Zagreb (Croatia),2,2,Buducnost Banovici (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1981-09-27,Dinamo Zagreb (Croatia),OFK Beograd (Serbia),0,0,Nk Zagreb (Croatia),OFK Beograd (Serbia),move
+ddr,1981-10-04,Crvena zvezda (Serbia),Dinamo Zagreb (Croatia),1,0,Crvena zvezda (Serbia),Nk Zagreb (Croatia),move
+ddr,1981-10-11,Dinamo Zagreb (Croatia),Hajduk Split (Croatia),0,3,Nk Zagreb (Croatia),Hajduk Split (Croatia),move
+ddr,1981-10-25,Sloboda Tuzla (Bosnia Herzegovina),Dinamo Zagreb (Croatia),2,0,Sloboda Tuzla (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1981-10-28,Dinamo Zagreb (Croatia),FK Teteks (Macedonia Fyr),4,0,Nk Zagreb (Croatia),FK Teteks (Macedonia Fyr),move
+ddr,1981-11-01,Sarajevo (Bosnia Herzegovina),Dinamo Zagreb (Croatia),4,3,Sarajevo (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1981-11-05,Radnički Niš (Serbia),Dinamo Zagreb (Croatia),2,0,Radnički Niš (Serbia),Nk Zagreb (Croatia),move
+ddr,1981-11-15,Dinamo Zagreb (Croatia),Vojvodina (Serbia),2,1,Nk Zagreb (Croatia),Vojvodina (Serbia),move
+ddr,1982-02-14,Dinamo Zagreb (Croatia),Partizan (Serbia),4,2,Nk Zagreb (Croatia),Partizan (Serbia),move
+ddr,1982-02-21,Rijeka (Croatia),Dinamo Zagreb (Croatia),2,0,Rijeka (Croatia),Nk Zagreb (Croatia),move
+ddr,1982-02-28,Dinamo Zagreb (Croatia),Osijek (Croatia),1,0,Nk Zagreb (Croatia),Osijek (Croatia),move
+ddr,1982-03-07,Olimpija (Slovenia),Dinamo Zagreb (Croatia),2,2,Olimpija (Slovenia),Nk Zagreb (Croatia),move
+ddr,1982-03-10,Dinamo Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),3,0,Nk Zagreb (Croatia),Vardar Skopje (Macedonia Fyr),move
+ddr,1982-03-14,Željezničar (Bosnia Herzegovina),Dinamo Zagreb (Croatia),1,0,Željezničar (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1982-03-21,Dinamo Zagreb (Croatia),Dinamo Zagreb (Croatia),1,2,Nk Zagreb (Croatia),Dinamo Zagreb (Croatia),add
+ddr,1982-03-24,Velež (Bosnia Herzegovina),Dinamo Zagreb (Croatia),2,1,Velež (Bosnia Herzegovina),Nk Zagreb (Croatia),move
+ddr,1982-03-28,Dinamo Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),1,1,Nk Zagreb (Croatia),Buducnost Banovici (Bosnia Herzegovina),move
+ddr,1982-03-31,OFK Beograd (Serbia),Dinamo Zagreb (Croatia),3,2,OFK Beograd (Serbia),Nk Zagreb (Croatia),move
+ddr,1982-04-04,Dinamo Zagreb (Croatia),Crvena zvezda (Serbia),3,1,Nk Zagreb (Croatia),Crvena zvezda (Serbia),move
+ddr,1982-04-11,Hajduk Split (Croatia),Dinamo Zagreb (Croatia),2,1,Hajduk Split (Croatia),Nk Zagreb (Croatia),move
+ddr,1982-04-14,Dinamo Zagreb (Croatia),Sloboda Tuzla (Bosnia Herzegovina),3,2,Nk Zagreb (Croatia),Sloboda Tuzla (Bosnia Herzegovina),move
+ddr,1982-04-18,FK Teteks (Macedonia Fyr),Dinamo Zagreb (Croatia),0,0,FK Teteks (Macedonia Fyr),Nk Zagreb (Croatia),move
+ddr,1982-04-25,Dinamo Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),0,3,Nk Zagreb (Croatia),Sarajevo (Bosnia Herzegovina),move
+ddr,1982-04-28,Dinamo Zagreb (Croatia),Radnički Niš (Serbia),2,0,Nk Zagreb (Croatia),Radnički Niš (Serbia),move
+ddr,1982-05-02,Vojvodina (Serbia),Dinamo Zagreb (Croatia),2,0,Vojvodina (Serbia),Nk Zagreb (Croatia),move

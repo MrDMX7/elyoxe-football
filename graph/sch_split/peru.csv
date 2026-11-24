@@ -1,0 +1,49 @@
+competition,date,home_ident,away_ident,gh,ga,new_home,new_away,kind
+peru,1997-02-23,Cienciano (Peru),Club Alianza Atletico (Peru),0,0,Cienciano (Peru),Alianza Lima (Peru),move
+peru,1997-03-01,Sport Boys (Peru),Club Alianza Atletico (Peru),1,3,Sport Boys (Peru),Alianza Lima (Peru),move
+peru,1997-03-08,Club Alianza Atletico (Peru),La Loretana (Peru),4,0,Alianza Lima (Peru),La Loretana (Peru),move
+peru,1997-03-15,Deportivo Municipal (Peru),Club Alianza Atletico (Peru),2,0,Deportivo Municipal (Peru),Alianza Lima (Peru),move
+peru,1997-03-22,Club Alianza Atletico (Peru),Club Alianza Atletico (Peru),2,1,Alianza Lima (Peru),Club Alianza Atletico (Peru),add
+peru,1997-04-05,Club Alianza Atletico (Peru),Universitario De Deportes (Peru),1,0,Alianza Lima (Peru),Universitario De Deportes (Peru),move
+peru,1997-04-12,Club Alianza Atletico (Peru),Alcides Vigo (Peru),0,0,Alianza Lima (Peru),Alcides Vigo (Peru),move
+peru,1997-04-19,Jose Galvez (Peru),Club Alianza Atletico (Peru),0,4,Jose Galvez (Peru),Alianza Lima (Peru),move
+peru,1997-04-26,Club Alianza Atletico (Peru),Club Union Minas (Peru),0,0,Alianza Lima (Peru),Club Union Minas (Peru),move
+peru,1997-05-03,Club Alianza Atletico (Peru),Sporting Cristal (Peru),5,4,Alianza Lima (Peru),Sporting Cristal (Peru),move
+peru,1997-05-10,Wanka (Peru),Club Alianza Atletico (Peru),0,3,Wanka (Peru),Alianza Lima (Peru),move
+peru,1997-05-17,Club Alianza Atletico (Peru),Atletico Torino (Peru),3,1,Alianza Lima (Peru),Atletico Torino (Peru),move
+peru,1997-05-24,Fbc Melgar (Peru),Club Alianza Atletico (Peru),0,2,Fbc Melgar (Peru),Alianza Lima (Peru),move
+peru,1997-07-12,Club Alianza Atletico (Peru),Cienciano (Peru),2,0,Alianza Lima (Peru),Cienciano (Peru),move
+peru,1997-07-19,Club Alianza Atletico (Peru),Sport Boys (Peru),2,2,Alianza Lima (Peru),Sport Boys (Peru),move
+peru,1997-07-26,La Loretana (Peru),Club Alianza Atletico (Peru),0,1,La Loretana (Peru),Alianza Lima (Peru),move
+peru,1997-08-01,Club Alianza Atletico (Peru),Deportivo Municipal (Peru),4,0,Alianza Lima (Peru),Deportivo Municipal (Peru),move
+peru,1997-08-08,Club Alianza Atletico (Peru),Club Alianza Atletico (Peru),0,2,Club Alianza Atletico (Peru),Alianza Lima (Peru),add
+peru,1997-08-31,Club Alianza Atletico (Peru),Universitario De Deportes (Peru),0,0,Alianza Lima (Peru),Universitario De Deportes (Peru),move
+peru,1997-09-14,Alcides Vigo (Peru),Club Alianza Atletico (Peru),1,3,Alcides Vigo (Peru),Alianza Lima (Peru),move
+peru,1997-09-21,Club Alianza Atletico (Peru),Jose Galvez (Peru),4,0,Alianza Lima (Peru),Jose Galvez (Peru),move
+peru,1997-09-28,Club Union Minas (Peru),Club Alianza Atletico (Peru),1,0,Club Union Minas (Peru),Alianza Lima (Peru),move
+peru,1997-10-18,Sporting Cristal (Peru),Club Alianza Atletico (Peru),2,3,Sporting Cristal (Peru),Alianza Lima (Peru),move
+peru,1997-10-25,Club Alianza Atletico (Peru),Wanka (Peru),2,1,Alianza Lima (Peru),Wanka (Peru),move
+peru,1997-11-05,Atletico Torino (Peru),Club Alianza Atletico (Peru),0,5,Atletico Torino (Peru),Alianza Lima (Peru),move
+peru,1997-11-08,Club Alianza Atletico (Peru),Fbc Melgar (Peru),5,0,Alianza Lima (Peru),Fbc Melgar (Peru),move
+peru,1998-02-14,Club Alianza Atletico (Peru),Cienciano (Peru),2,0,Alianza Lima (Peru),Cienciano (Peru),move
+peru,1998-02-21,Club Union Minas (Peru),Club Alianza Atletico (Peru),1,0,Club Union Minas (Peru),Alianza Lima (Peru),move
+peru,1998-02-25,Club Alianza Atletico (Peru),Fbc Melgar (Peru),2,0,Alianza Lima (Peru),Fbc Melgar (Peru),move
+peru,1998-02-25,Sport Boys (Peru),Club Alianza Atletico (Peru),0,0,Sport Boys (Peru),Alianza Lima (Peru),move
+peru,1998-03-07,Club Alianza Atletico (Peru),Deportivo Municipal (Peru),7,0,Alianza Lima (Peru),Deportivo Municipal (Peru),move
+peru,1998-03-14,Sporting Cristal (Peru),Club Alianza Atletico (Peru),1,1,Sporting Cristal (Peru),Alianza Lima (Peru),move
+peru,1998-03-21,Club Alianza Atletico (Peru),Club Alianza Atletico (Peru),4,2,Club Alianza Atletico (Peru),Alianza Lima (Peru),add
+peru,1998-03-28,Club Alianza Atletico (Peru),Universitario De Deportes (Peru),0,0,Alianza Lima (Peru),Universitario De Deportes (Peru),move
+peru,1998-04-04,Wanka (Peru),Club Alianza Atletico (Peru),2,2,Wanka (Peru),Alianza Lima (Peru),move
+peru,1998-04-11,Club Alianza Atletico (Peru),Lawn Tennis FC (Peru),3,0,Alianza Lima (Peru),Lawn Tennis FC (Peru),move
+peru,1998-04-18,Juan Aurich (Peru),Club Alianza Atletico (Peru),2,2,Juan Aurich (Peru),Alianza Lima (Peru),move
+peru,1998-04-25,Cienciano (Peru),Club Alianza Atletico (Peru),4,0,Cienciano (Peru),Alianza Lima (Peru),move
+peru,1998-05-02,Club Alianza Atletico (Peru),Club Union Minas (Peru),6,0,Alianza Lima (Peru),Club Union Minas (Peru),move
+peru,1998-05-06,Fbc Melgar (Peru),Club Alianza Atletico (Peru),1,0,Fbc Melgar (Peru),Alianza Lima (Peru),move
+peru,1998-05-09,Club Alianza Atletico (Peru),Sport Boys (Peru),3,0,Alianza Lima (Peru),Sport Boys (Peru),move
+peru,1998-05-13,Deportivo Municipal (Peru),Club Alianza Atletico (Peru),2,0,Deportivo Municipal (Peru),Alianza Lima (Peru),move
+peru,1998-05-16,Club Alianza Atletico (Peru),Club Alianza Atletico (Peru),1,0,Alianza Lima (Peru),Club Alianza Atletico (Peru),add
+peru,1998-05-16,Club Alianza Atletico (Peru),Sporting Cristal (Peru),0,0,Alianza Lima (Peru),Sporting Cristal (Peru),move
+peru,1998-05-30,Universitario De Deportes (Peru),Club Alianza Atletico (Peru),2,1,Universitario De Deportes (Peru),Alianza Lima (Peru),move
+peru,1998-06-03,Club Alianza Atletico (Peru),Wanka (Peru),0,1,Alianza Lima (Peru),Wanka (Peru),move
+peru,1998-06-07,Club Alianza Atletico (Peru),Juan Aurich (Peru),2,1,Alianza Lima (Peru),Juan Aurich (Peru),move
+peru,1998-06-07,Lawn Tennis FC (Peru),Club Alianza Atletico (Peru),0,1,Lawn Tennis FC (Peru),Alianza Lima (Peru),move

@@ -1,0 +1,229 @@
+competition,date,home_ident,away_ident,gh,ga,new_home,new_away,kind
+japan,1993-05-16,Yokohama F. Marinos (Japan),Shimizu S-Pulse (Japan),3,2,Yokohama Flugels (Japan),Shimizu S-Pulse (Japan),move
+japan,1993-05-19,Kashima Antlers (Japan),Yokohama F. Marinos (Japan),3,2,Kashima Antlers (Japan),Yokohama Flugels (Japan),move
+japan,1993-05-22,Yokohama F. Marinos (Japan),Urawa Reds (Japan),3,1,Yokohama Flugels (Japan),Urawa Reds (Japan),move
+japan,1993-05-26,Nagoya Grampus (Japan),Yokohama F. Marinos (Japan),1,2,Nagoya Grampus (Japan),Yokohama Flugels (Japan),move
+japan,1993-05-29,Yokohama F. Marinos (Japan),Sanfrecce Hiroshima (Japan),1,2,Yokohama Flugels (Japan),Sanfrecce Hiroshima (Japan),move
+japan,1993-06-02,Yokohama F. Marinos (Japan),Gamba Osaka (Japan),0,1,Yokohama Flugels (Japan),Gamba Osaka (Japan),move
+japan,1993-06-05,Tokyo Verdy (Japan),Yokohama F. Marinos (Japan),5,4,Tokyo Verdy (Japan),Yokohama Flugels (Japan),move
+japan,1993-06-09,Yokohama F. Marinos (Japan),Jef United Ichihara Chiba (Japan),1,0,Yokohama Flugels (Japan),Jef United Ichihara Chiba (Japan),move
+japan,1993-06-12,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),3,2,Yokohama F. Marinos (Japan),Yokohama Flugels (Japan),add
+japan,1993-06-16,Yokohama F. Marinos (Japan),Kashima Antlers (Japan),2,0,Yokohama Flugels (Japan),Kashima Antlers (Japan),move
+japan,1993-06-19,Shimizu S-Pulse (Japan),Yokohama F. Marinos (Japan),1,0,Shimizu S-Pulse (Japan),Yokohama Flugels (Japan),move
+japan,1993-06-23,Yokohama F. Marinos (Japan),Nagoya Grampus (Japan),1,2,Yokohama Flugels (Japan),Nagoya Grampus (Japan),move
+japan,1993-06-26,Sanfrecce Hiroshima (Japan),Yokohama F. Marinos (Japan),1,2,Sanfrecce Hiroshima (Japan),Yokohama Flugels (Japan),move
+japan,1993-06-30,Gamba Osaka (Japan),Yokohama F. Marinos (Japan),2,1,Gamba Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1993-07-03,Yokohama F. Marinos (Japan),Tokyo Verdy (Japan),1,3,Yokohama Flugels (Japan),Tokyo Verdy (Japan),move
+japan,1993-07-07,Jef United Ichihara Chiba (Japan),Yokohama F. Marinos (Japan),1,0,Jef United Ichihara Chiba (Japan),Yokohama Flugels (Japan),move
+japan,1993-07-10,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),1,0,Yokohama Flugels (Japan),Yokohama F. Marinos (Japan),add
+japan,1993-07-14,Urawa Reds (Japan),Yokohama F. Marinos (Japan),0,2,Urawa Reds (Japan),Yokohama Flugels (Japan),move
+japan,1993-07-24,Nagoya Grampus (Japan),Yokohama F. Marinos (Japan),1,2,Nagoya Grampus (Japan),Yokohama Flugels (Japan),move
+japan,1993-07-31,Yokohama F. Marinos (Japan),Jef United Ichihara Chiba (Japan),2,3,Yokohama Flugels (Japan),Jef United Ichihara Chiba (Japan),move
+japan,1993-08-04,Sanfrecce Hiroshima (Japan),Yokohama F. Marinos (Japan),3,0,Sanfrecce Hiroshima (Japan),Yokohama Flugels (Japan),move
+japan,1993-08-07,Yokohama F. Marinos (Japan),Shimizu S-Pulse (Japan),0,1,Yokohama Flugels (Japan),Shimizu S-Pulse (Japan),move
+japan,1993-08-14,Kashima Antlers (Japan),Yokohama F. Marinos (Japan),1,2,Kashima Antlers (Japan),Yokohama Flugels (Japan),move
+japan,1993-08-20,Urawa Reds (Japan),Yokohama F. Marinos (Japan),0,1,Urawa Reds (Japan),Yokohama Flugels (Japan),move
+japan,1993-08-25,Yokohama F. Marinos (Japan),Tokyo Verdy (Japan),0,1,Yokohama Flugels (Japan),Tokyo Verdy (Japan),move
+japan,1993-08-28,Gamba Osaka (Japan),Yokohama F. Marinos (Japan),4,5,Gamba Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1993-09-03,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),3,2,Yokohama Flugels (Japan),Yokohama F. Marinos (Japan),add
+japan,1993-11-06,Jef United Ichihara Chiba (Japan),Yokohama F. Marinos (Japan),1,2,Jef United Ichihara Chiba (Japan),Yokohama Flugels (Japan),move
+japan,1993-11-10,Yokohama F. Marinos (Japan),Nagoya Grampus (Japan),1,0,Yokohama Flugels (Japan),Nagoya Grampus (Japan),move
+japan,1993-11-13,Shimizu S-Pulse (Japan),Yokohama F. Marinos (Japan),3,1,Shimizu S-Pulse (Japan),Yokohama Flugels (Japan),move
+japan,1993-11-17,Yokohama F. Marinos (Japan),Kashima Antlers (Japan),2,3,Yokohama Flugels (Japan),Kashima Antlers (Japan),move
+japan,1993-11-20,Yokohama F. Marinos (Japan),Urawa Reds (Japan),2,1,Yokohama Flugels (Japan),Urawa Reds (Japan),move
+japan,1993-11-27,Tokyo Verdy (Japan),Yokohama F. Marinos (Japan),3,0,Tokyo Verdy (Japan),Yokohama Flugels (Japan),move
+japan,1993-12-01,Yokohama F. Marinos (Japan),Gamba Osaka (Japan),0,1,Yokohama Flugels (Japan),Gamba Osaka (Japan),move
+japan,1993-12-08,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),4,1,Yokohama F. Marinos (Japan),Yokohama Flugels (Japan),add
+japan,1993-12-15,Yokohama F. Marinos (Japan),Sanfrecce Hiroshima (Japan),1,2,Yokohama Flugels (Japan),Sanfrecce Hiroshima (Japan),move
+japan,1994-03-12,Shimizu S-Pulse (Japan),Yokohama F. Marinos (Japan),1,0,Shimizu S-Pulse (Japan),Yokohama Flugels (Japan),move
+japan,1994-03-16,Yokohama F. Marinos (Japan),Jef United Ichihara Chiba (Japan),4,1,Yokohama Flugels (Japan),Jef United Ichihara Chiba (Japan),move
+japan,1994-03-19,Sanfrecce Hiroshima (Japan),Yokohama F. Marinos (Japan),2,1,Sanfrecce Hiroshima (Japan),Yokohama Flugels (Japan),move
+japan,1994-03-23,Yokohama F. Marinos (Japan),Nagoya Grampus (Japan),1,0,Yokohama Flugels (Japan),Nagoya Grampus (Japan),move
+japan,1994-03-26,Gamba Osaka (Japan),Yokohama F. Marinos (Japan),1,3,Gamba Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1994-04-02,Jubilo Iwata (Japan),Yokohama F. Marinos (Japan),1,2,Jubilo Iwata (Japan),Yokohama Flugels (Japan),move
+japan,1994-04-06,Yokohama F. Marinos (Japan),Urawa Reds (Japan),2,1,Yokohama Flugels (Japan),Urawa Reds (Japan),move
+japan,1994-04-09,Shonan Bellmare (Japan),Yokohama F. Marinos (Japan),1,4,Shonan Bellmare (Japan),Yokohama Flugels (Japan),move
+japan,1994-04-13,Yokohama F. Marinos (Japan),Kashima Antlers (Japan),1,0,Yokohama Flugels (Japan),Kashima Antlers (Japan),move
+japan,1994-04-16,Tokyo Verdy (Japan),Yokohama F. Marinos (Japan),0,1,Tokyo Verdy (Japan),Yokohama Flugels (Japan),move
+japan,1994-04-23,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),1,0,Yokohama Flugels (Japan),Yokohama F. Marinos (Japan),add
+japan,1994-04-27,Jef United Ichihara Chiba (Japan),Yokohama F. Marinos (Japan),2,1,Jef United Ichihara Chiba (Japan),Yokohama Flugels (Japan),move
+japan,1994-04-30,Yokohama F. Marinos (Japan),Sanfrecce Hiroshima (Japan),1,2,Yokohama Flugels (Japan),Sanfrecce Hiroshima (Japan),move
+japan,1994-05-04,Nagoya Grampus (Japan),Yokohama F. Marinos (Japan),0,2,Nagoya Grampus (Japan),Yokohama Flugels (Japan),move
+japan,1994-05-07,Yokohama F. Marinos (Japan),Gamba Osaka (Japan),3,2,Yokohama Flugels (Japan),Gamba Osaka (Japan),move
+japan,1994-05-14,Yokohama F. Marinos (Japan),Jubilo Iwata (Japan),1,2,Yokohama Flugels (Japan),Jubilo Iwata (Japan),move
+japan,1994-05-18,Urawa Reds (Japan),Yokohama F. Marinos (Japan),3,0,Urawa Reds (Japan),Yokohama Flugels (Japan),move
+japan,1994-06-01,Yokohama F. Marinos (Japan),Shonan Bellmare (Japan),3,0,Yokohama Flugels (Japan),Shonan Bellmare (Japan),move
+japan,1994-06-04,Kashima Antlers (Japan),Yokohama F. Marinos (Japan),3,2,Kashima Antlers (Japan),Yokohama Flugels (Japan),move
+japan,1994-06-08,Yokohama F. Marinos (Japan),Tokyo Verdy (Japan),5,3,Yokohama Flugels (Japan),Tokyo Verdy (Japan),move
+japan,1994-06-11,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),2,1,Yokohama F. Marinos (Japan),Yokohama Flugels (Japan),add
+japan,1994-06-15,Yokohama F. Marinos (Japan),Shimizu S-Pulse (Japan),1,2,Yokohama Flugels (Japan),Shimizu S-Pulse (Japan),move
+japan,1994-08-10,Shimizu S-Pulse (Japan),Yokohama F. Marinos (Japan),0,3,Shimizu S-Pulse (Japan),Yokohama Flugels (Japan),move
+japan,1994-08-13,Yokohama F. Marinos (Japan),Jef United Ichihara Chiba (Japan),1,2,Yokohama Flugels (Japan),Jef United Ichihara Chiba (Japan),move
+japan,1994-08-17,Sanfrecce Hiroshima (Japan),Yokohama F. Marinos (Japan),4,1,Sanfrecce Hiroshima (Japan),Yokohama Flugels (Japan),move
+japan,1994-08-20,Yokohama F. Marinos (Japan),Nagoya Grampus (Japan),1,2,Yokohama Flugels (Japan),Nagoya Grampus (Japan),move
+japan,1994-08-27,Gamba Osaka (Japan),Yokohama F. Marinos (Japan),1,3,Gamba Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1994-08-31,Jubilo Iwata (Japan),Yokohama F. Marinos (Japan),0,2,Jubilo Iwata (Japan),Yokohama Flugels (Japan),move
+japan,1994-09-03,Yokohama F. Marinos (Japan),Urawa Reds (Japan),0,1,Yokohama Flugels (Japan),Urawa Reds (Japan),move
+japan,1994-09-07,Shonan Bellmare (Japan),Yokohama F. Marinos (Japan),2,1,Shonan Bellmare (Japan),Yokohama Flugels (Japan),move
+japan,1994-09-10,Kashima Antlers (Japan),Yokohama F. Marinos (Japan),1,2,Kashima Antlers (Japan),Yokohama Flugels (Japan),move
+japan,1994-09-14,Yokohama F. Marinos (Japan),Tokyo Verdy (Japan),2,3,Yokohama Flugels (Japan),Tokyo Verdy (Japan),move
+japan,1994-09-17,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),1,0,Yokohama Flugels (Japan),Yokohama F. Marinos (Japan),add
+japan,1994-09-21,Jef United Ichihara Chiba (Japan),Yokohama F. Marinos (Japan),0,3,Jef United Ichihara Chiba (Japan),Yokohama Flugels (Japan),move
+japan,1994-10-19,Yokohama F. Marinos (Japan),Sanfrecce Hiroshima (Japan),3,1,Yokohama Flugels (Japan),Sanfrecce Hiroshima (Japan),move
+japan,1994-10-22,Nagoya Grampus (Japan),Yokohama F. Marinos (Japan),0,3,Nagoya Grampus (Japan),Yokohama Flugels (Japan),move
+japan,1994-10-26,Yokohama F. Marinos (Japan),Gamba Osaka (Japan),0,2,Yokohama Flugels (Japan),Gamba Osaka (Japan),move
+japan,1994-10-29,Yokohama F. Marinos (Japan),Jubilo Iwata (Japan),1,3,Yokohama Flugels (Japan),Jubilo Iwata (Japan),move
+japan,1994-11-02,Urawa Reds (Japan),Yokohama F. Marinos (Japan),3,1,Urawa Reds (Japan),Yokohama Flugels (Japan),move
+japan,1994-11-05,Yokohama F. Marinos (Japan),Shonan Bellmare (Japan),3,0,Yokohama Flugels (Japan),Shonan Bellmare (Japan),move
+japan,1994-11-09,Yokohama F. Marinos (Japan),Kashima Antlers (Japan),0,2,Yokohama Flugels (Japan),Kashima Antlers (Japan),move
+japan,1994-11-12,Tokyo Verdy (Japan),Yokohama F. Marinos (Japan),2,0,Tokyo Verdy (Japan),Yokohama Flugels (Japan),move
+japan,1994-11-16,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),2,0,Yokohama F. Marinos (Japan),Yokohama Flugels (Japan),add
+japan,1994-11-19,Yokohama F. Marinos (Japan),Shimizu S-Pulse (Japan),0,2,Yokohama Flugels (Japan),Shimizu S-Pulse (Japan),move
+japan,1995-03-18,Yokohama F. Marinos (Japan),Urawa Reds (Japan),1,0,Yokohama Flugels (Japan),Urawa Reds (Japan),move
+japan,1995-03-22,Shonan Bellmare (Japan),Yokohama F. Marinos (Japan),0,3,Shonan Bellmare (Japan),Yokohama Flugels (Japan),move
+japan,1995-03-25,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),0,1,Yokohama Flugels (Japan),Yokohama F. Marinos (Japan),add
+japan,1995-03-29,Kashiwa Reysol (Japan),Yokohama F. Marinos (Japan),2,1,Kashiwa Reysol (Japan),Yokohama Flugels (Japan),move
+japan,1995-04-01,Yokohama F. Marinos (Japan),Sanfrecce Hiroshima (Japan),1,2,Yokohama Flugels (Japan),Sanfrecce Hiroshima (Japan),move
+japan,1995-04-05,Yokohama F. Marinos (Japan),Kashima Antlers (Japan),0,1,Yokohama Flugels (Japan),Kashima Antlers (Japan),move
+japan,1995-04-08,Shimizu S-Pulse (Japan),Yokohama F. Marinos (Japan),2,3,Shimizu S-Pulse (Japan),Yokohama Flugels (Japan),move
+japan,1995-04-12,Tokyo Verdy (Japan),Yokohama F. Marinos (Japan),4,1,Tokyo Verdy (Japan),Yokohama Flugels (Japan),move
+japan,1995-04-15,Yokohama F. Marinos (Japan),Cerezo Osaka (Japan),2,3,Yokohama Flugels (Japan),Cerezo Osaka (Japan),move
+japan,1995-04-22,Yokohama F. Marinos (Japan),Jef United Ichihara Chiba (Japan),0,3,Yokohama Flugels (Japan),Jef United Ichihara Chiba (Japan),move
+japan,1995-04-26,Gamba Osaka (Japan),Yokohama F. Marinos (Japan),3,2,Gamba Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1995-04-29,Yokohama F. Marinos (Japan),Nagoya Grampus (Japan),4,3,Yokohama Flugels (Japan),Nagoya Grampus (Japan),move
+japan,1995-05-03,Jubilo Iwata (Japan),Yokohama F. Marinos (Japan),2,1,Jubilo Iwata (Japan),Yokohama Flugels (Japan),move
+japan,1995-05-06,Yokohama F. Marinos (Japan),Shonan Bellmare (Japan),1,5,Yokohama Flugels (Japan),Shonan Bellmare (Japan),move
+japan,1995-05-10,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),4,5,Yokohama F. Marinos (Japan),Yokohama Flugels (Japan),add
+japan,1995-05-13,Yokohama F. Marinos (Japan),Kashiwa Reysol (Japan),0,1,Yokohama Flugels (Japan),Kashiwa Reysol (Japan),move
+japan,1995-06-17,Sanfrecce Hiroshima (Japan),Yokohama F. Marinos (Japan),1,2,Sanfrecce Hiroshima (Japan),Yokohama Flugels (Japan),move
+japan,1995-06-21,Kashima Antlers (Japan),Yokohama F. Marinos (Japan),2,3,Kashima Antlers (Japan),Yokohama Flugels (Japan),move
+japan,1995-06-24,Yokohama F. Marinos (Japan),Shimizu S-Pulse (Japan),6,1,Yokohama Flugels (Japan),Shimizu S-Pulse (Japan),move
+japan,1995-06-28,Yokohama F. Marinos (Japan),Tokyo Verdy (Japan),0,1,Yokohama Flugels (Japan),Tokyo Verdy (Japan),move
+japan,1995-07-01,Cerezo Osaka (Japan),Yokohama F. Marinos (Japan),5,3,Cerezo Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1995-07-08,Jef United Ichihara Chiba (Japan),Yokohama F. Marinos (Japan),3,2,Jef United Ichihara Chiba (Japan),Yokohama Flugels (Japan),move
+japan,1995-07-12,Yokohama F. Marinos (Japan),Gamba Osaka (Japan),1,4,Yokohama Flugels (Japan),Gamba Osaka (Japan),move
+japan,1995-07-15,Nagoya Grampus (Japan),Yokohama F. Marinos (Japan),2,1,Nagoya Grampus (Japan),Yokohama Flugels (Japan),move
+japan,1995-07-19,Yokohama F. Marinos (Japan),Jubilo Iwata (Japan),2,1,Yokohama Flugels (Japan),Jubilo Iwata (Japan),move
+japan,1995-07-22,Urawa Reds (Japan),Yokohama F. Marinos (Japan),5,3,Urawa Reds (Japan),Yokohama Flugels (Japan),move
+japan,1995-08-12,Yokohama F. Marinos (Japan),Urawa Reds (Japan),0,6,Yokohama Flugels (Japan),Urawa Reds (Japan),move
+japan,1995-08-16,Shonan Bellmare (Japan),Yokohama F. Marinos (Japan),1,2,Shonan Bellmare (Japan),Yokohama Flugels (Japan),move
+japan,1995-08-19,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),2,1,Yokohama Flugels (Japan),Yokohama F. Marinos (Japan),add
+japan,1995-08-23,Jubilo Iwata (Japan),Yokohama F. Marinos (Japan),1,2,Jubilo Iwata (Japan),Yokohama Flugels (Japan),move
+japan,1995-08-26,Yokohama F. Marinos (Japan),Jef United Ichihara Chiba (Japan),0,1,Yokohama Flugels (Japan),Jef United Ichihara Chiba (Japan),move
+japan,1995-09-02,Nagoya Grampus (Japan),Yokohama F. Marinos (Japan),2,1,Nagoya Grampus (Japan),Yokohama Flugels (Japan),move
+japan,1995-09-06,Yokohama F. Marinos (Japan),Kashima Antlers (Japan),1,2,Yokohama Flugels (Japan),Kashima Antlers (Japan),move
+japan,1995-09-09,Yokohama F. Marinos (Japan),Gamba Osaka (Japan),2,1,Yokohama Flugels (Japan),Gamba Osaka (Japan),move
+japan,1995-09-13,Tokyo Verdy (Japan),Yokohama F. Marinos (Japan),4,1,Tokyo Verdy (Japan),Yokohama Flugels (Japan),move
+japan,1995-09-16,Yokohama F. Marinos (Japan),Shimizu S-Pulse (Japan),0,3,Yokohama Flugels (Japan),Shimizu S-Pulse (Japan),move
+japan,1995-09-23,Cerezo Osaka (Japan),Yokohama F. Marinos (Japan),5,1,Cerezo Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1995-09-27,Yokohama F. Marinos (Japan),Kashiwa Reysol (Japan),2,1,Yokohama Flugels (Japan),Kashiwa Reysol (Japan),move
+japan,1995-09-30,Sanfrecce Hiroshima (Japan),Yokohama F. Marinos (Japan),0,1,Sanfrecce Hiroshima (Japan),Yokohama Flugels (Japan),move
+japan,1995-10-04,Yokohama F. Marinos (Japan),Shonan Bellmare (Japan),4,5,Yokohama Flugels (Japan),Shonan Bellmare (Japan),move
+japan,1995-10-07,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),1,0,Yokohama F. Marinos (Japan),Yokohama Flugels (Japan),add
+japan,1995-10-14,Yokohama F. Marinos (Japan),Jubilo Iwata (Japan),1,3,Yokohama Flugels (Japan),Jubilo Iwata (Japan),move
+japan,1995-10-18,Jef United Ichihara Chiba (Japan),Yokohama F. Marinos (Japan),6,3,Jef United Ichihara Chiba (Japan),Yokohama Flugels (Japan),move
+japan,1995-10-21,Yokohama F. Marinos (Japan),Nagoya Grampus (Japan),2,0,Yokohama Flugels (Japan),Nagoya Grampus (Japan),move
+japan,1995-11-01,Kashima Antlers (Japan),Yokohama F. Marinos (Japan),5,1,Kashima Antlers (Japan),Yokohama Flugels (Japan),move
+japan,1995-11-04,Gamba Osaka (Japan),Yokohama F. Marinos (Japan),0,1,Gamba Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1995-11-08,Yokohama F. Marinos (Japan),Tokyo Verdy (Japan),1,4,Yokohama Flugels (Japan),Tokyo Verdy (Japan),move
+japan,1995-11-11,Shimizu S-Pulse (Japan),Yokohama F. Marinos (Japan),0,1,Shimizu S-Pulse (Japan),Yokohama Flugels (Japan),move
+japan,1995-11-15,Yokohama F. Marinos (Japan),Cerezo Osaka (Japan),3,1,Yokohama Flugels (Japan),Cerezo Osaka (Japan),move
+japan,1995-11-18,Kashiwa Reysol (Japan),Yokohama F. Marinos (Japan),3,2,Kashiwa Reysol (Japan),Yokohama Flugels (Japan),move
+japan,1995-11-22,Yokohama F. Marinos (Japan),Sanfrecce Hiroshima (Japan),4,3,Yokohama Flugels (Japan),Sanfrecce Hiroshima (Japan),move
+japan,1995-11-25,Urawa Reds (Japan),Yokohama F. Marinos (Japan),2,1,Urawa Reds (Japan),Yokohama Flugels (Japan),move
+japan,1996-03-16,Cerezo Osaka (Japan),Yokohama F. Marinos (Japan),0,2,Cerezo Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1996-03-20,Gamba Osaka (Japan),Yokohama F. Marinos (Japan),0,1,Gamba Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1996-03-23,Yokohama F. Marinos (Japan),Shimizu S-Pulse (Japan),1,0,Yokohama Flugels (Japan),Shimizu S-Pulse (Japan),move
+japan,1996-03-30,Sanfrecce Hiroshima (Japan),Yokohama F. Marinos (Japan),0,1,Sanfrecce Hiroshima (Japan),Yokohama Flugels (Japan),move
+japan,1996-04-03,Yokohama F. Marinos (Japan),Kyoto Sanga (Japan),3,0,Yokohama Flugels (Japan),Kyoto Sanga (Japan),move
+japan,1996-04-06,Shonan Bellmare (Japan),Yokohama F. Marinos (Japan),0,4,Shonan Bellmare (Japan),Yokohama Flugels (Japan),move
+japan,1996-04-13,Yokohama F. Marinos (Japan),Kashiwa Reysol (Japan),2,1,Yokohama Flugels (Japan),Kashiwa Reysol (Japan),move
+japan,1996-04-17,Avispa Fukuoka (Japan),Yokohama F. Marinos (Japan),3,4,Avispa Fukuoka (Japan),Yokohama Flugels (Japan),move
+japan,1996-04-20,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),1,2,Yokohama Flugels (Japan),Yokohama F. Marinos (Japan),add
+japan,1996-04-27,Yokohama F. Marinos (Japan),Urawa Reds (Japan),1,4,Yokohama Flugels (Japan),Urawa Reds (Japan),move
+japan,1996-05-01,Jubilo Iwata (Japan),Yokohama F. Marinos (Japan),2,3,Jubilo Iwata (Japan),Yokohama Flugels (Japan),move
+japan,1996-05-04,Nagoya Grampus (Japan),Yokohama F. Marinos (Japan),2,3,Nagoya Grampus (Japan),Yokohama Flugels (Japan),move
+japan,1996-05-11,Yokohama F. Marinos (Japan),Tokyo Verdy (Japan),4,3,Yokohama Flugels (Japan),Tokyo Verdy (Japan),move
+japan,1996-05-15,Jef United Ichihara Chiba (Japan),Yokohama F. Marinos (Japan),4,2,Jef United Ichihara Chiba (Japan),Yokohama Flugels (Japan),move
+japan,1996-05-18,Yokohama F. Marinos (Japan),Kashima Antlers (Japan),6,5,Yokohama Flugels (Japan),Kashima Antlers (Japan),move
+japan,1996-08-28,Yokohama F. Marinos (Japan),Nagoya Grampus (Japan),1,2,Yokohama Flugels (Japan),Nagoya Grampus (Japan),move
+japan,1996-08-31,Tokyo Verdy (Japan),Yokohama F. Marinos (Japan),3,2,Tokyo Verdy (Japan),Yokohama Flugels (Japan),move
+japan,1996-09-07,Yokohama F. Marinos (Japan),Jef United Ichihara Chiba (Japan),2,0,Yokohama Flugels (Japan),Jef United Ichihara Chiba (Japan),move
+japan,1996-09-14,Kashima Antlers (Japan),Yokohama F. Marinos (Japan),2,1,Kashima Antlers (Japan),Yokohama Flugels (Japan),move
+japan,1996-09-21,Yokohama F. Marinos (Japan),Cerezo Osaka (Japan),2,1,Yokohama Flugels (Japan),Cerezo Osaka (Japan),move
+japan,1996-09-28,Yokohama F. Marinos (Japan),Gamba Osaka (Japan),3,2,Yokohama Flugels (Japan),Gamba Osaka (Japan),move
+japan,1996-10-02,Shimizu S-Pulse (Japan),Yokohama F. Marinos (Japan),4,2,Shimizu S-Pulse (Japan),Yokohama Flugels (Japan),move
+japan,1996-10-05,Yokohama F. Marinos (Japan),Sanfrecce Hiroshima (Japan),2,0,Yokohama Flugels (Japan),Sanfrecce Hiroshima (Japan),move
+japan,1996-10-16,Kyoto Sanga (Japan),Yokohama F. Marinos (Japan),0,1,Kyoto Sanga (Japan),Yokohama Flugels (Japan),move
+japan,1996-10-19,Yokohama F. Marinos (Japan),Shonan Bellmare (Japan),1,0,Yokohama Flugels (Japan),Shonan Bellmare (Japan),move
+japan,1996-10-26,Kashiwa Reysol (Japan),Yokohama F. Marinos (Japan),1,2,Kashiwa Reysol (Japan),Yokohama Flugels (Japan),move
+japan,1996-10-30,Yokohama F. Marinos (Japan),Avispa Fukuoka (Japan),3,1,Yokohama Flugels (Japan),Avispa Fukuoka (Japan),move
+japan,1996-11-02,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),1,2,Yokohama F. Marinos (Japan),Yokohama Flugels (Japan),add
+japan,1996-11-06,Yokohama F. Marinos (Japan),Jubilo Iwata (Japan),1,2,Yokohama Flugels (Japan),Jubilo Iwata (Japan),move
+japan,1996-11-09,Urawa Reds (Japan),Yokohama F. Marinos (Japan),3,0,Urawa Reds (Japan),Yokohama Flugels (Japan),move
+japan,1997-04-12,Yokohama F. Marinos (Japan),Avispa Fukuoka (Japan),3,1,Yokohama Flugels (Japan),Avispa Fukuoka (Japan),move
+japan,1997-04-16,Cerezo Osaka (Japan),Yokohama F. Marinos (Japan),0,2,Cerezo Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1997-04-19,Yokohama F. Marinos (Japan),Vissel Kobe (Japan),3,1,Yokohama Flugels (Japan),Vissel Kobe (Japan),move
+japan,1997-04-23,Kashima Antlers (Japan),Yokohama F. Marinos (Japan),1,0,Kashima Antlers (Japan),Yokohama Flugels (Japan),move
+japan,1997-04-26,Yokohama F. Marinos (Japan),Nagoya Grampus (Japan),2,0,Yokohama Flugels (Japan),Nagoya Grampus (Japan),move
+japan,1997-05-07,Jubilo Iwata (Japan),Yokohama F. Marinos (Japan),3,1,Jubilo Iwata (Japan),Yokohama Flugels (Japan),move
+japan,1997-05-10,Yokohama F. Marinos (Japan),Kashiwa Reysol (Japan),2,0,Yokohama Flugels (Japan),Kashiwa Reysol (Japan),move
+japan,1997-05-24,Yokohama F. Marinos (Japan),Gamba Osaka (Japan),2,1,Yokohama Flugels (Japan),Gamba Osaka (Japan),move
+japan,1997-05-28,Tokyo Verdy (Japan),Yokohama F. Marinos (Japan),0,4,Tokyo Verdy (Japan),Yokohama Flugels (Japan),move
+japan,1997-05-31,Yokohama F. Marinos (Japan),Kyoto Sanga (Japan),0,1,Yokohama Flugels (Japan),Kyoto Sanga (Japan),move
+japan,1997-07-02,Urawa Reds (Japan),Yokohama F. Marinos (Japan),1,3,Urawa Reds (Japan),Yokohama Flugels (Japan),move
+japan,1997-07-05,Jef United Ichihara Chiba (Japan),Yokohama F. Marinos (Japan),0,4,Jef United Ichihara Chiba (Japan),Yokohama Flugels (Japan),move
+japan,1997-07-09,Yokohama F. Marinos (Japan),Shonan Bellmare (Japan),2,1,Yokohama Flugels (Japan),Shonan Bellmare (Japan),move
+japan,1997-07-12,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),1,0,Yokohama F. Marinos (Japan),Yokohama Flugels (Japan),add
+japan,1997-07-16,Yokohama F. Marinos (Japan),Shimizu S-Pulse (Japan),4,3,Yokohama Flugels (Japan),Shimizu S-Pulse (Japan),move
+japan,1997-07-19,Sanfrecce Hiroshima (Japan),Yokohama F. Marinos (Japan),2,3,Sanfrecce Hiroshima (Japan),Yokohama Flugels (Japan),move
+japan,1997-07-30,Shimizu S-Pulse (Japan),Yokohama F. Marinos (Japan),3,1,Shimizu S-Pulse (Japan),Yokohama Flugels (Japan),move
+japan,1997-08-02,Avispa Fukuoka (Japan),Yokohama F. Marinos (Japan),0,1,Avispa Fukuoka (Japan),Yokohama Flugels (Japan),move
+japan,1997-08-06,Yokohama F. Marinos (Japan),Cerezo Osaka (Japan),1,2,Yokohama Flugels (Japan),Cerezo Osaka (Japan),move
+japan,1997-08-09,Vissel Kobe (Japan),Yokohama F. Marinos (Japan),2,3,Vissel Kobe (Japan),Yokohama Flugels (Japan),move
+japan,1997-08-16,Yokohama F. Marinos (Japan),Kashima Antlers (Japan),5,3,Yokohama Flugels (Japan),Kashima Antlers (Japan),move
+japan,1997-08-20,Nagoya Grampus (Japan),Yokohama F. Marinos (Japan),2,1,Nagoya Grampus (Japan),Yokohama Flugels (Japan),move
+japan,1997-08-30,Yokohama F. Marinos (Japan),Jubilo Iwata (Japan),0,2,Yokohama Flugels (Japan),Jubilo Iwata (Japan),move
+japan,1997-09-03,Kashiwa Reysol (Japan),Yokohama F. Marinos (Japan),0,2,Kashiwa Reysol (Japan),Yokohama Flugels (Japan),move
+japan,1997-09-06,Yokohama F. Marinos (Japan),Urawa Reds (Japan),1,3,Yokohama Flugels (Japan),Urawa Reds (Japan),move
+japan,1997-09-10,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),2,3,Yokohama Flugels (Japan),Yokohama F. Marinos (Japan),add
+japan,1997-09-13,Gamba Osaka (Japan),Yokohama F. Marinos (Japan),2,1,Gamba Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1997-09-20,Kyoto Sanga (Japan),Yokohama F. Marinos (Japan),1,2,Kyoto Sanga (Japan),Yokohama Flugels (Japan),move
+japan,1997-09-24,Yokohama F. Marinos (Japan),Tokyo Verdy (Japan),0,1,Yokohama Flugels (Japan),Tokyo Verdy (Japan),move
+japan,1997-09-27,Yokohama F. Marinos (Japan),Jef United Ichihara Chiba (Japan),1,2,Yokohama Flugels (Japan),Jef United Ichihara Chiba (Japan),move
+japan,1997-10-01,Shonan Bellmare (Japan),Yokohama F. Marinos (Japan),4,5,Shonan Bellmare (Japan),Yokohama Flugels (Japan),move
+japan,1997-10-04,Yokohama F. Marinos (Japan),Sanfrecce Hiroshima (Japan),2,1,Yokohama Flugels (Japan),Sanfrecce Hiroshima (Japan),move
+japan,1998-03-21,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),1,2,Yokohama F. Marinos (Japan),Yokohama Flugels (Japan),add
+japan,1998-03-25,Yokohama F. Marinos (Japan),Urawa Reds (Japan),0,2,Yokohama Flugels (Japan),Urawa Reds (Japan),move
+japan,1998-03-28,Nagoya Grampus (Japan),Yokohama F. Marinos (Japan),2,1,Nagoya Grampus (Japan),Yokohama Flugels (Japan),move
+japan,1998-04-04,Yokohama F. Marinos (Japan),Shonan Bellmare (Japan),1,3,Yokohama Flugels (Japan),Shonan Bellmare (Japan),move
+japan,1998-04-11,Jubilo Iwata (Japan),Yokohama F. Marinos (Japan),4,0,Jubilo Iwata (Japan),Yokohama Flugels (Japan),move
+japan,1998-04-15,Yokohama F. Marinos (Japan),Tokyo Verdy (Japan),0,3,Yokohama Flugels (Japan),Tokyo Verdy (Japan),move
+japan,1998-04-18,Vissel Kobe (Japan),Yokohama F. Marinos (Japan),1,4,Vissel Kobe (Japan),Yokohama Flugels (Japan),move
+japan,1998-04-25,Yokohama F. Marinos (Japan),Jef United Ichihara Chiba (Japan),2,0,Yokohama Flugels (Japan),Jef United Ichihara Chiba (Japan),move
+japan,1998-04-29,Kyoto Sanga (Japan),Yokohama F. Marinos (Japan),1,2,Kyoto Sanga (Japan),Yokohama Flugels (Japan),move
+japan,1998-05-02,Cerezo Osaka (Japan),Yokohama F. Marinos (Japan),1,4,Cerezo Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1998-05-05,Yokohama F. Marinos (Japan),Sanfrecce Hiroshima (Japan),5,1,Yokohama Flugels (Japan),Sanfrecce Hiroshima (Japan),move
+japan,1998-05-09,Avispa Fukuoka (Japan),Yokohama F. Marinos (Japan),0,1,Avispa Fukuoka (Japan),Yokohama Flugels (Japan),move
+japan,1998-07-25,Yokohama F. Marinos (Japan),Consadole Sapporo (Japan),5,3,Yokohama Flugels (Japan),Consadole Sapporo (Japan),move
+japan,1998-07-29,Shimizu S-Pulse (Japan),Yokohama F. Marinos (Japan),2,0,Shimizu S-Pulse (Japan),Yokohama Flugels (Japan),move
+japan,1998-08-01,Yokohama F. Marinos (Japan),Kashima Antlers (Japan),3,2,Yokohama Flugels (Japan),Kashima Antlers (Japan),move
+japan,1998-08-05,Kashiwa Reysol (Japan),Yokohama F. Marinos (Japan),1,3,Kashiwa Reysol (Japan),Yokohama Flugels (Japan),move
+japan,1998-08-08,Yokohama F. Marinos (Japan),Gamba Osaka (Japan),3,6,Yokohama Flugels (Japan),Gamba Osaka (Japan),move
+japan,1998-08-22,Yokohama F. Marinos (Japan),Shimizu S-Pulse (Japan),2,4,Yokohama Flugels (Japan),Shimizu S-Pulse (Japan),move
+japan,1998-08-29,Kashima Antlers (Japan),Yokohama F. Marinos (Japan),1,3,Kashima Antlers (Japan),Yokohama Flugels (Japan),move
+japan,1998-09-05,Yokohama F. Marinos (Japan),Kashiwa Reysol (Japan),1,2,Yokohama Flugels (Japan),Kashiwa Reysol (Japan),move
+japan,1998-09-12,Gamba Osaka (Japan),Yokohama F. Marinos (Japan),1,4,Gamba Osaka (Japan),Yokohama Flugels (Japan),move
+japan,1998-09-15,Yokohama F. Marinos (Japan),Yokohama F. Marinos (Japan),0,2,Yokohama Flugels (Japan),Yokohama F. Marinos (Japan),add
+japan,1998-09-19,Urawa Reds (Japan),Yokohama F. Marinos (Japan),3,0,Urawa Reds (Japan),Yokohama Flugels (Japan),move
+japan,1998-09-23,Yokohama F. Marinos (Japan),Nagoya Grampus (Japan),2,3,Yokohama Flugels (Japan),Nagoya Grampus (Japan),move
+japan,1998-09-26,Shonan Bellmare (Japan),Yokohama F. Marinos (Japan),3,1,Shonan Bellmare (Japan),Yokohama Flugels (Japan),move
+japan,1998-10-03,Yokohama F. Marinos (Japan),Jubilo Iwata (Japan),0,4,Yokohama Flugels (Japan),Jubilo Iwata (Japan),move
+japan,1998-10-14,Tokyo Verdy (Japan),Yokohama F. Marinos (Japan),0,3,Tokyo Verdy (Japan),Yokohama Flugels (Japan),move
+japan,1998-10-17,Yokohama F. Marinos (Japan),Vissel Kobe (Japan),4,3,Yokohama Flugels (Japan),Vissel Kobe (Japan),move
+japan,1998-10-21,Jef United Ichihara Chiba (Japan),Yokohama F. Marinos (Japan),0,3,Jef United Ichihara Chiba (Japan),Yokohama Flugels (Japan),move
+japan,1998-10-24,Yokohama F. Marinos (Japan),Kyoto Sanga (Japan),2,3,Yokohama Flugels (Japan),Kyoto Sanga (Japan),move
+japan,1998-10-31,Yokohama F. Marinos (Japan),Cerezo Osaka (Japan),7,0,Yokohama Flugels (Japan),Cerezo Osaka (Japan),move
+japan,1998-11-03,Sanfrecce Hiroshima (Japan),Yokohama F. Marinos (Japan),1,2,Sanfrecce Hiroshima (Japan),Yokohama Flugels (Japan),move
+japan,1998-11-07,Yokohama F. Marinos (Japan),Avispa Fukuoka (Japan),2,1,Yokohama Flugels (Japan),Avispa Fukuoka (Japan),move
+japan,1998-11-14,Consadole Sapporo (Japan),Yokohama F. Marinos (Japan),1,4,Consadole Sapporo (Japan),Yokohama Flugels (Japan),move

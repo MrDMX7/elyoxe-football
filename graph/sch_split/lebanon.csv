@@ -1,0 +1,27 @@
+competition,date,home_ident,away_ident,gh,ga,new_home,new_away,kind
+lebanon,2001-12-16,Homenetmen (Lebanon),Al Ansar (Lebanon),0,1,Homenmen (Lebanon),Al Ansar (Lebanon),move
+lebanon,2001-12-22,Homenetmen (Lebanon),Safa (Lebanon),1,1,Homenmen (Lebanon),Safa (Lebanon),move
+lebanon,2001-12-26,Shabab Al Sahel Beirut (Lebanon),Homenetmen (Lebanon),1,0,Shabab Al Sahel Beirut (Lebanon),Homenmen (Lebanon),move
+lebanon,2001-12-30,Homenetmen (Lebanon),Tadamon Sour (Lebanon),0,2,Homenmen (Lebanon),Tadamon Sour (Lebanon),move
+lebanon,2002-01-05,Homenetmen (Lebanon),Al Ahed (Lebanon),1,3,Homenmen (Lebanon),Al Ahed (Lebanon),move
+lebanon,2002-01-10,Homenetmen (Lebanon),Salam Zgharta (Lebanon),1,1,Homenmen (Lebanon),Salam Zgharta (Lebanon),move
+lebanon,2002-01-13,Al Hikma (Lebanon),Homenetmen (Lebanon),5,2,Al Hikma (Lebanon),Homenmen (Lebanon),move
+lebanon,2002-01-19,Al Nejmeh (Lebanon),Homenetmen (Lebanon),4,1,Al Nejmeh (Lebanon),Homenmen (Lebanon),move
+lebanon,2002-01-23,Homenetmen (Lebanon),Homenetmen (Lebanon),1,3,Homenetmen (Lebanon),Homenmen (Lebanon),add
+lebanon,2002-01-26,Homenetmen (Lebanon),Al Ahli Bourj Rehal (Lebanon),2,2,Homenmen (Lebanon),Al Ahli Bourj Rehal (Lebanon),move
+lebanon,2002-02-02,Homenetmen (Lebanon),Akhaa Ahli (Lebanon),1,2,Homenmen (Lebanon),Akhaa Ahli (Lebanon),move
+lebanon,2002-02-06,Racing (Lebanon),Homenetmen (Lebanon),0,2,Racing (Lebanon),Homenmen (Lebanon),move
+lebanon,2002-02-09,Al Ahley Saida (Lebanon),Homenetmen (Lebanon),2,2,Al Ahley Saida (Lebanon),Homenmen (Lebanon),move
+lebanon,2002-03-03,Safa (Lebanon),Homenetmen (Lebanon),2,1,Safa (Lebanon),Homenmen (Lebanon),move
+lebanon,2002-03-06,Homenetmen (Lebanon),Shabab Al Sahel Beirut (Lebanon),0,3,Homenmen (Lebanon),Shabab Al Sahel Beirut (Lebanon),move
+lebanon,2002-03-10,Homenetmen (Lebanon),Al Nejmeh (Lebanon),0,3,Homenmen (Lebanon),Al Nejmeh (Lebanon),move
+lebanon,2002-03-17,Homenetmen (Lebanon),Al Hikma (Lebanon),1,2,Homenmen (Lebanon),Al Hikma (Lebanon),move
+lebanon,2002-03-23,Homenetmen (Lebanon),Homenetmen (Lebanon),2,0,Homenmen (Lebanon),Homenetmen (Lebanon),add
+lebanon,2002-03-30,Homenetmen (Lebanon),Al Ahley Saida (Lebanon),3,1,Homenmen (Lebanon),Al Ahley Saida (Lebanon),move
+lebanon,2002-04-06,Homenetmen (Lebanon),Racing (Lebanon),3,0,Homenmen (Lebanon),Racing (Lebanon),move
+lebanon,2002-04-13,Al Ansar (Lebanon),Homenetmen (Lebanon),3,1,Al Ansar (Lebanon),Homenmen (Lebanon),move
+lebanon,2002-04-19,Al Ahli Bourj Rehal (Lebanon),Homenetmen (Lebanon),0,1,Al Ahli Bourj Rehal (Lebanon),Homenmen (Lebanon),move
+lebanon,2002-04-27,Al Ahed (Lebanon),Homenetmen (Lebanon),1,1,Al Ahed (Lebanon),Homenmen (Lebanon),move
+lebanon,2002-05-04,Salam Zgharta (Lebanon),Homenetmen (Lebanon),1,2,Salam Zgharta (Lebanon),Homenmen (Lebanon),move
+lebanon,2002-05-11,Akhaa Ahli (Lebanon),Homenetmen (Lebanon),0,1,Akhaa Ahli (Lebanon),Homenmen (Lebanon),move
+lebanon,2002-05-18,Tadamon Sour (Lebanon),Homenetmen (Lebanon),4,0,Tadamon Sour (Lebanon),Homenmen (Lebanon),move

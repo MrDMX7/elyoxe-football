@@ -1,0 +1,371 @@
+competition,date,home_ident,away_ident,gh,ga,new_home,new_away,kind
+ecuador,1995-02-26,LDU Quito (Ecuador),Barcelona SC (Ecuador),0,4,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1995-03-01,Club 9 De Octubre (Ecuador),LDU Quito (Ecuador),0,1,Club 9 De Octubre (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-03-04,LDU Quito (Ecuador),El Nacional (Ecuador),2,1,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,1995-03-12,CA Green Cross (Ecuador),LDU Quito (Ecuador),3,0,CA Green Cross (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-03-18,CS Emelec (Ecuador),LDU Quito (Ecuador),3,0,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-03-25,LDU Quito (Ecuador),Delfín (Ecuador),8,0,Deportivo Quito (Ecuador),Delfín (Ecuador),move
+ecuador,1995-03-29,Ldu Portoviejo (Ecuador),LDU Quito (Ecuador),1,0,Ldu Portoviejo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-04-02,LDU Quito (Ecuador),Cd Olmedo (Ecuador),0,0,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,1995-04-08,LDU Quito (Ecuador),LDU Quito (Ecuador),0,1,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,1995-04-15,Espoli (Ecuador),LDU Quito (Ecuador),1,0,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-04-19,LDU Quito (Ecuador),Sd Aucas (Ecuador),0,0,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,1995-04-23,Barcelona SC (Ecuador),LDU Quito (Ecuador),6,0,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-04-30,LDU Quito (Ecuador),Club 9 De Octubre (Ecuador),1,0,Deportivo Quito (Ecuador),Club 9 De Octubre (Ecuador),move
+ecuador,1995-05-07,El Nacional (Ecuador),LDU Quito (Ecuador),1,1,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-05-10,LDU Quito (Ecuador),CA Green Cross (Ecuador),1,2,Deportivo Quito (Ecuador),CA Green Cross (Ecuador),move
+ecuador,1995-05-13,LDU Quito (Ecuador),CS Emelec (Ecuador),2,0,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,1995-05-17,Delfín (Ecuador),LDU Quito (Ecuador),3,2,Delfín (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-05-21,LDU Quito (Ecuador),Ldu Portoviejo (Ecuador),2,1,Deportivo Quito (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,1995-05-24,Cd Olmedo (Ecuador),LDU Quito (Ecuador),1,6,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-05-28,LDU Quito (Ecuador),LDU Quito (Ecuador),1,0,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,1995-05-31,LDU Quito (Ecuador),Espoli (Ecuador),0,1,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,1995-06-04,Sd Aucas (Ecuador),LDU Quito (Ecuador),0,0,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-06-07,CS Emelec (Ecuador),LDU Quito (Ecuador),3,2,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-06-11,LDU Quito (Ecuador),El Nacional (Ecuador),0,0,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,1995-06-14,LDU Quito (Ecuador),Delfín (Ecuador),0,0,Deportivo Quito (Ecuador),Delfín (Ecuador),move
+ecuador,1995-06-18,Delfín (Ecuador),LDU Quito (Ecuador),1,1,Delfín (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-06-21,El Nacional (Ecuador),LDU Quito (Ecuador),2,0,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-06-25,LDU Quito (Ecuador),CS Emelec (Ecuador),1,4,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,1995-08-27,LDU Quito (Ecuador),El Nacional (Ecuador),0,1,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,1995-08-30,Delfín (Ecuador),LDU Quito (Ecuador),2,0,Delfín (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-09-03,LDU Quito (Ecuador),Barcelona SC (Ecuador),1,1,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1995-09-06,CA Green Cross (Ecuador),LDU Quito (Ecuador),1,0,CA Green Cross (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-09-10,LDU Quito (Ecuador),LDU Quito (Ecuador),1,2,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,1995-09-16,LDU Quito (Ecuador),LDU Quito (Ecuador),1,0,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,1995-09-20,LDU Quito (Ecuador),CA Green Cross (Ecuador),1,1,Deportivo Quito (Ecuador),CA Green Cross (Ecuador),move
+ecuador,1995-09-24,Barcelona SC (Ecuador),LDU Quito (Ecuador),1,0,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-10-01,LDU Quito (Ecuador),Delfín (Ecuador),1,0,Deportivo Quito (Ecuador),Delfín (Ecuador),move
+ecuador,1995-10-08,El Nacional (Ecuador),LDU Quito (Ecuador),1,2,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-10-15,LDU Quito (Ecuador),Club 9 De Octubre (Ecuador),8,0,Deportivo Quito (Ecuador),Club 9 De Octubre (Ecuador),move
+ecuador,1995-10-21,CA Green Cross (Ecuador),LDU Quito (Ecuador),1,1,CA Green Cross (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-10-29,Delfín (Ecuador),LDU Quito (Ecuador),1,0,Delfín (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-11-05,LDU Quito (Ecuador),Cd Olmedo (Ecuador),1,2,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,1995-11-11,Ldu Portoviejo (Ecuador),LDU Quito (Ecuador),0,1,Ldu Portoviejo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-11-19,LDU Quito (Ecuador),Ldu Portoviejo (Ecuador),4,2,Deportivo Quito (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,1995-11-25,Cd Olmedo (Ecuador),LDU Quito (Ecuador),0,0,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1995-12-03,LDU Quito (Ecuador),Delfín (Ecuador),5,0,Deportivo Quito (Ecuador),Delfín (Ecuador),move
+ecuador,1995-12-10,LDU Quito (Ecuador),CA Green Cross (Ecuador),1,1,Deportivo Quito (Ecuador),CA Green Cross (Ecuador),move
+ecuador,1995-12-17,Club 9 De Octubre (Ecuador),LDU Quito (Ecuador),1,2,Club 9 De Octubre (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-02-10,Cd Olmedo (Ecuador),LDU Quito (Ecuador),0,2,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-02-17,LDU Quito (Ecuador),LDU Quito (Ecuador),2,2,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,1996-02-24,Deportivo Cuenca (Ecuador),LDU Quito (Ecuador),0,0,Deportivo Cuenca (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-03-02,LDU Quito (Ecuador),CS Emelec (Ecuador),1,2,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,1996-03-09,Ldu Portoviejo (Ecuador),LDU Quito (Ecuador),3,3,Ldu Portoviejo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-03-16,LDU Quito (Ecuador),El Nacional (Ecuador),2,2,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,1996-03-23,LDU Quito (Ecuador),Tecnico Universitario (Ecuador),6,2,Deportivo Quito (Ecuador),Tecnico Universitario (Ecuador),move
+ecuador,1996-03-30,Barcelona SC (Ecuador),LDU Quito (Ecuador),1,1,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-04-06,Espoli (Ecuador),LDU Quito (Ecuador),1,0,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-04-13,LDU Quito (Ecuador),Sd Aucas (Ecuador),2,1,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,1996-04-20,LDU Quito (Ecuador),CA Green Cross (Ecuador),6,0,Deportivo Quito (Ecuador),CA Green Cross (Ecuador),move
+ecuador,1996-04-27,CA Green Cross (Ecuador),LDU Quito (Ecuador),0,1,CA Green Cross (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-05-04,Sd Aucas (Ecuador),LDU Quito (Ecuador),0,1,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-05-11,LDU Quito (Ecuador),Espoli (Ecuador),1,1,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,1996-05-18,LDU Quito (Ecuador),Barcelona SC (Ecuador),1,0,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1996-05-25,Tecnico Universitario (Ecuador),LDU Quito (Ecuador),3,1,Tecnico Universitario (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-06-01,El Nacional (Ecuador),LDU Quito (Ecuador),2,0,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-06-08,LDU Quito (Ecuador),Ldu Portoviejo (Ecuador),3,0,Deportivo Quito (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,1996-06-15,CS Emelec (Ecuador),LDU Quito (Ecuador),1,1,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-06-22,LDU Quito (Ecuador),Deportivo Cuenca (Ecuador),1,2,Deportivo Quito (Ecuador),Deportivo Cuenca (Ecuador),move
+ecuador,1996-06-29,LDU Quito (Ecuador),LDU Quito (Ecuador),2,2,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,1996-07-06,LDU Quito (Ecuador),Cd Olmedo (Ecuador),3,1,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,1996-08-24,Barcelona SC (Ecuador),LDU Quito (Ecuador),2,2,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-08-31,Sd Aucas (Ecuador),LDU Quito (Ecuador),1,0,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-09-07,LDU Quito (Ecuador),Tecnico Universitario (Ecuador),3,2,Deportivo Quito (Ecuador),Tecnico Universitario (Ecuador),move
+ecuador,1996-09-14,Sd Aucas (Ecuador),LDU Quito (Ecuador),0,2,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-09-21,Tecnico Universitario (Ecuador),LDU Quito (Ecuador),2,3,Tecnico Universitario (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-09-28,LDU Quito (Ecuador),Barcelona SC (Ecuador),1,0,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1996-10-05,Deportivo Cuenca (Ecuador),LDU Quito (Ecuador),0,0,Deportivo Cuenca (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-10-12,LDU Quito (Ecuador),Barcelona SC (Ecuador),4,2,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1996-10-19,LDU Quito (Ecuador),CS Emelec (Ecuador),2,1,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,1996-10-26,Cd Olmedo (Ecuador),LDU Quito (Ecuador),0,1,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-11-02,El Nacional (Ecuador),LDU Quito (Ecuador),2,0,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-11-09,LDU Quito (Ecuador),El Nacional (Ecuador),2,2,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,1996-11-16,LDU Quito (Ecuador),Cd Olmedo (Ecuador),1,1,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,1996-11-23,CS Emelec (Ecuador),LDU Quito (Ecuador),7,0,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1996-11-30,LDU Quito (Ecuador),Barcelona SC (Ecuador),0,3,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1996-12-02,LDU Quito (Ecuador),Deportivo Cuenca (Ecuador),3,0,Deportivo Quito (Ecuador),Deportivo Cuenca (Ecuador),move
+ecuador,1997-03-08,LDU Quito (Ecuador),Deportivo Quevedo (Ecuador),3,0,Deportivo Quito (Ecuador),Deportivo Quevedo (Ecuador),move
+ecuador,1997-03-15,CS Emelec (Ecuador),LDU Quito (Ecuador),1,0,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-03-22,LDU Quito (Ecuador),LDU Quito (Ecuador),1,1,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,1997-04-05,LDU Quito (Ecuador),Cd Olmedo (Ecuador),0,1,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,1997-04-12,Espoli (Ecuador),LDU Quito (Ecuador),2,2,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-04-19,LDU Quito (Ecuador),Espoli (Ecuador),0,1,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,1997-05-03,Cd Olmedo (Ecuador),LDU Quito (Ecuador),1,0,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-05-10,LDU Quito (Ecuador),LDU Quito (Ecuador),2,1,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,1997-05-17,LDU Quito (Ecuador),CS Emelec (Ecuador),2,7,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,1997-05-24,Deportivo Quevedo (Ecuador),LDU Quito (Ecuador),1,1,Deportivo Quevedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-07-11,LDU Quito (Ecuador),El Nacional (Ecuador),2,2,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,1997-07-24,Calvi (Ecuador),LDU Quito (Ecuador),0,1,Calvi (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-07-26,LDU Quito (Ecuador),CS Emelec (Ecuador),3,0,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,1997-08-03,Tecnico Universitario (Ecuador),LDU Quito (Ecuador),1,1,Tecnico Universitario (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-08-08,LDU Quito (Ecuador),Espoli (Ecuador),4,1,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,1997-08-22,Sd Aucas (Ecuador),LDU Quito (Ecuador),1,2,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-08-29,Barcelona SC (Ecuador),LDU Quito (Ecuador),0,0,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-09-05,LDU Quito (Ecuador),LDU Quito (Ecuador),1,1,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,1997-09-12,LDU Quito (Ecuador),Deportivo Quevedo (Ecuador),5,0,Deportivo Quito (Ecuador),Deportivo Quevedo (Ecuador),move
+ecuador,1997-09-18,LDU Quito (Ecuador),Cd Olmedo (Ecuador),3,0,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,1997-09-21,Cd Olmedo (Ecuador),LDU Quito (Ecuador),1,1,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-09-24,Deportivo Cuenca (Ecuador),LDU Quito (Ecuador),2,0,Deportivo Cuenca (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-09-28,Deportivo Quevedo (Ecuador),LDU Quito (Ecuador),0,0,Deportivo Quevedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-10-05,LDU Quito (Ecuador),Deportivo Cuenca (Ecuador),2,1,Deportivo Quito (Ecuador),Deportivo Cuenca (Ecuador),move
+ecuador,1997-10-19,LDU Quito (Ecuador),LDU Quito (Ecuador),1,1,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,1997-10-22,LDU Quito (Ecuador),Barcelona SC (Ecuador),1,1,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1997-10-26,LDU Quito (Ecuador),Sd Aucas (Ecuador),0,0,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,1997-10-29,Espoli (Ecuador),LDU Quito (Ecuador),0,2,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-11-01,LDU Quito (Ecuador),Tecnico Universitario (Ecuador),4,0,Deportivo Quito (Ecuador),Tecnico Universitario (Ecuador),move
+ecuador,1997-11-05,CS Emelec (Ecuador),LDU Quito (Ecuador),1,0,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-11-09,El Nacional (Ecuador),LDU Quito (Ecuador),0,1,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-11-09,LDU Quito (Ecuador),Calvi (Ecuador),4,2,Deportivo Quito (Ecuador),Calvi (Ecuador),move
+ecuador,1997-12-07,LDU Quito (Ecuador),Barcelona SC (Ecuador),2,2,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1997-12-10,Sd Aucas (Ecuador),LDU Quito (Ecuador),0,0,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-12-14,LDU Quito (Ecuador),El Nacional (Ecuador),2,1,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,1997-12-21,LDU Quito (Ecuador),CS Emelec (Ecuador),5,1,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,1997-12-23,LDU Quito (Ecuador),LDU Quito (Ecuador),0,0,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,1997-12-25,LDU Quito (Ecuador),LDU Quito (Ecuador),3,1,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,1997-12-26,CS Emelec (Ecuador),LDU Quito (Ecuador),1,0,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-12-27,El Nacional (Ecuador),LDU Quito (Ecuador),1,2,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1997-12-28,LDU Quito (Ecuador),Sd Aucas (Ecuador),2,0,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,1997-12-30,Barcelona SC (Ecuador),LDU Quito (Ecuador),3,0,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-03-06,LDU Quito (Ecuador),LDU Quito (Ecuador),1,1,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,1998-03-15,Panama FC (Ecuador),LDU Quito (Ecuador),1,1,Panama FC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-03-21,LDU Quito (Ecuador),El Nacional (Ecuador),1,1,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,1998-03-28,Tecnico Universitario (Ecuador),LDU Quito (Ecuador),3,5,Tecnico Universitario (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-04-05,LDU Quito (Ecuador),Cd Olmedo (Ecuador),3,2,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,1998-04-08,Delfín (Ecuador),LDU Quito (Ecuador),1,0,Delfín (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-04-12,LDU Quito (Ecuador),Espoli (Ecuador),2,3,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,1998-04-19,Barcelona SC (Ecuador),LDU Quito (Ecuador),5,0,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-04-22,Sd Aucas (Ecuador),LDU Quito (Ecuador),1,1,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-04-26,LDU Quito (Ecuador),Deportivo Cuenca (Ecuador),1,2,Deportivo Quito (Ecuador),Deportivo Cuenca (Ecuador),move
+ecuador,1998-05-02,CS Emelec (Ecuador),LDU Quito (Ecuador),2,2,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-05-09,LDU Quito (Ecuador),CS Emelec (Ecuador),2,2,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,1998-05-15,Deportivo Cuenca (Ecuador),LDU Quito (Ecuador),0,0,Deportivo Cuenca (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-05-20,LDU Quito (Ecuador),Sd Aucas (Ecuador),3,2,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,1998-05-23,LDU Quito (Ecuador),Barcelona SC (Ecuador),2,0,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1998-05-29,Espoli (Ecuador),LDU Quito (Ecuador),3,1,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-06-03,LDU Quito (Ecuador),Delfín (Ecuador),2,2,Deportivo Quito (Ecuador),Delfín (Ecuador),move
+ecuador,1998-06-06,Cd Olmedo (Ecuador),LDU Quito (Ecuador),3,0,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-07-19,LDU Quito (Ecuador),Tecnico Universitario (Ecuador),3,0,Deportivo Quito (Ecuador),Tecnico Universitario (Ecuador),move
+ecuador,1998-07-26,El Nacional (Ecuador),LDU Quito (Ecuador),2,1,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-07-29,LDU Quito (Ecuador),Panama FC (Ecuador),3,0,Deportivo Quito (Ecuador),Panama FC (Ecuador),move
+ecuador,1998-08-02,LDU Quito (Ecuador),LDU Quito (Ecuador),0,0,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,1998-08-09,Deportivo Cuenca (Ecuador),LDU Quito (Ecuador),1,2,Deportivo Cuenca (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-08-15,LDU Quito (Ecuador),Panama FC (Ecuador),0,0,Deportivo Quito (Ecuador),Panama FC (Ecuador),move
+ecuador,1998-08-23,Tecnico Universitario (Ecuador),LDU Quito (Ecuador),1,2,Tecnico Universitario (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-08-29,LDU Quito (Ecuador),Tecnico Universitario (Ecuador),3,1,Deportivo Quito (Ecuador),Tecnico Universitario (Ecuador),move
+ecuador,1998-09-06,Panama FC (Ecuador),LDU Quito (Ecuador),1,3,Panama FC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-09-11,LDU Quito (Ecuador),Deportivo Cuenca (Ecuador),1,1,Deportivo Quito (Ecuador),Deportivo Cuenca (Ecuador),move
+ecuador,1998-09-20,LDU Quito (Ecuador),Panama FC (Ecuador),5,1,Deportivo Quito (Ecuador),Panama FC (Ecuador),move
+ecuador,1998-10-03,Espoli (Ecuador),LDU Quito (Ecuador),2,3,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-10-09,LDU Quito (Ecuador),CS Emelec (Ecuador),2,0,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,1998-10-18,Sd Aucas (Ecuador),LDU Quito (Ecuador),1,0,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-10-24,LDU Quito (Ecuador),Sd Aucas (Ecuador),2,1,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,1998-11-01,CS Emelec (Ecuador),LDU Quito (Ecuador),1,2,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-11-04,El Nacional (Ecuador),LDU Quito (Ecuador),1,3,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-11-08,LDU Quito (Ecuador),Espoli (Ecuador),2,3,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,1998-11-15,LDU Quito (Ecuador),El Nacional (Ecuador),3,3,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,1998-11-22,Panama FC (Ecuador),LDU Quito (Ecuador),1,1,Panama FC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-11-29,LDU Quito (Ecuador),Barcelona SC (Ecuador),2,0,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1998-12-02,LDU Quito (Ecuador),LDU Quito (Ecuador),1,0,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,1998-12-06,LDU Quito (Ecuador),Sd Aucas (Ecuador),0,2,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,1998-12-13,Sd Aucas (Ecuador),LDU Quito (Ecuador),1,1,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1998-12-16,LDU Quito (Ecuador),LDU Quito (Ecuador),0,1,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,1998-12-20,Barcelona SC (Ecuador),LDU Quito (Ecuador),5,0,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-03-07,LDU Quito (Ecuador),LDU Quito (Ecuador),1,2,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,1999-03-14,CA Audaz Octubrino (Ecuador),LDU Quito (Ecuador),1,2,CA Audaz Octubrino (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-03-24,LDU Quito (Ecuador),Cd Olmedo (Ecuador),1,2,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,1999-03-27,Espoli (Ecuador),LDU Quito (Ecuador),1,1,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-03-31,LDU Quito (Ecuador),Barcelona SC (Ecuador),2,0,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1999-04-04,LDU Quito (Ecuador),El Nacional (Ecuador),2,2,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,1999-04-11,Delfín (Ecuador),LDU Quito (Ecuador),1,0,Delfín (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-04-18,LDU Quito (Ecuador),Deportivo Cuenca (Ecuador),4,1,Deportivo Quito (Ecuador),Deportivo Cuenca (Ecuador),move
+ecuador,1999-04-25,LDU Quito (Ecuador),Sd Aucas (Ecuador),0,0,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,1999-04-28,CS Emelec (Ecuador),LDU Quito (Ecuador),2,1,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-05-02,Macará (Ecuador),LDU Quito (Ecuador),2,0,Macará (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-05-09,LDU Quito (Ecuador),Macará (Ecuador),1,1,Deportivo Quito (Ecuador),Macará (Ecuador),move
+ecuador,1999-05-16,LDU Quito (Ecuador),CS Emelec (Ecuador),4,2,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,1999-05-23,Sd Aucas (Ecuador),LDU Quito (Ecuador),2,2,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-05-28,Deportivo Cuenca (Ecuador),LDU Quito (Ecuador),0,1,Deportivo Cuenca (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-06-06,LDU Quito (Ecuador),Delfín (Ecuador),2,1,Deportivo Quito (Ecuador),Delfín (Ecuador),move
+ecuador,1999-06-12,El Nacional (Ecuador),LDU Quito (Ecuador),2,1,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-07-25,Barcelona SC (Ecuador),LDU Quito (Ecuador),2,0,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-07-27,LDU Quito (Ecuador),Espoli (Ecuador),1,2,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,1999-08-01,Cd Olmedo (Ecuador),LDU Quito (Ecuador),2,2,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-08-06,LDU Quito (Ecuador),CA Audaz Octubrino (Ecuador),4,0,Deportivo Quito (Ecuador),CA Audaz Octubrino (Ecuador),move
+ecuador,1999-08-15,LDU Quito (Ecuador),LDU Quito (Ecuador),1,0,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,1999-08-22,LDU Quito (Ecuador),CA Audaz Octubrino (Ecuador),4,1,Deportivo Quito (Ecuador),CA Audaz Octubrino (Ecuador),move
+ecuador,1999-08-28,Barcelona SC (Ecuador),LDU Quito (Ecuador),3,1,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-09-05,Macará (Ecuador),LDU Quito (Ecuador),2,1,Macará (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-09-08,LDU Quito (Ecuador),Delfín (Ecuador),3,0,Deportivo Quito (Ecuador),Delfín (Ecuador),move
+ecuador,1999-09-12,El Nacional (Ecuador),LDU Quito (Ecuador),2,2,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-09-19,LDU Quito (Ecuador),El Nacional (Ecuador),3,0,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,1999-09-22,Delfín (Ecuador),LDU Quito (Ecuador),0,1,Delfín (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-09-26,LDU Quito (Ecuador),Macará (Ecuador),2,0,Deportivo Quito (Ecuador),Macará (Ecuador),move
+ecuador,1999-10-03,LDU Quito (Ecuador),Barcelona SC (Ecuador),2,0,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1999-10-09,CA Audaz Octubrino (Ecuador),LDU Quito (Ecuador),1,0,CA Audaz Octubrino (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-10-17,LDU Quito (Ecuador),CS Emelec (Ecuador),2,2,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,1999-10-24,LDU Quito (Ecuador),Espoli (Ecuador),4,1,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,1999-10-31,LDU Quito (Ecuador),LDU Quito (Ecuador),3,1,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,1999-11-03,LDU Quito (Ecuador),Barcelona SC (Ecuador),1,0,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,1999-11-07,El Nacional (Ecuador),LDU Quito (Ecuador),1,1,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-11-14,LDU Quito (Ecuador),El Nacional (Ecuador),3,3,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,1999-11-19,Barcelona SC (Ecuador),LDU Quito (Ecuador),4,1,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-11-21,LDU Quito (Ecuador),LDU Quito (Ecuador),2,3,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,1999-11-28,Espoli (Ecuador),LDU Quito (Ecuador),0,1,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,1999-12-05,CS Emelec (Ecuador),LDU Quito (Ecuador),3,0,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-02-13,Tecnico Universitario (Ecuador),LDU Quito (Ecuador),2,2,Tecnico Universitario (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-02-20,LDU Quito (Ecuador),CS Emelec (Ecuador),1,1,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,2000-02-27,LDU Quito (Ecuador),Espoli (Ecuador),1,2,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,2000-03-05,El Nacional (Ecuador),LDU Quito (Ecuador),0,0,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-03-12,LDU Quito (Ecuador),Barcelona SC (Ecuador),1,1,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,2000-03-18,Macará (Ecuador),LDU Quito (Ecuador),2,1,Macará (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-03-31,LDU Quito (Ecuador),Sd Aucas (Ecuador),1,1,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,2000-04-08,LDU Quito (Ecuador),LDU Quito (Ecuador),2,1,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,2000-04-15,LDU Quito (Ecuador),Cd Olmedo (Ecuador),0,0,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,2000-04-30,Cd Olmedo (Ecuador),LDU Quito (Ecuador),2,0,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-05-07,LDU Quito (Ecuador),LDU Quito (Ecuador),2,1,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,2000-05-14,Sd Aucas (Ecuador),LDU Quito (Ecuador),3,1,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-05-20,LDU Quito (Ecuador),Macará (Ecuador),5,0,Deportivo Quito (Ecuador),Macará (Ecuador),move
+ecuador,2000-05-28,Barcelona SC (Ecuador),LDU Quito (Ecuador),2,2,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-06-10,LDU Quito (Ecuador),El Nacional (Ecuador),2,0,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,2000-06-14,Espoli (Ecuador),LDU Quito (Ecuador),0,2,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-06-17,CS Emelec (Ecuador),LDU Quito (Ecuador),4,1,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-06-21,LDU Quito (Ecuador),Tecnico Universitario (Ecuador),1,1,Deportivo Quito (Ecuador),Tecnico Universitario (Ecuador),move
+ecuador,2000-07-02,Sd Aucas (Ecuador),LDU Quito (Ecuador),1,0,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-07-05,LDU Quito (Ecuador),Cd Olmedo (Ecuador),2,0,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,2000-07-09,Tecnico Universitario (Ecuador),LDU Quito (Ecuador),4,3,Tecnico Universitario (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-07-12,LDU Quito (Ecuador),Espoli (Ecuador),1,0,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,2000-07-30,LDU Quito (Ecuador),LDU Quito (Ecuador),0,1,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,2000-08-05,LDU Quito (Ecuador),Barcelona SC (Ecuador),2,2,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,2000-08-20,LDU Quito (Ecuador),CS Emelec (Ecuador),2,1,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,2000-08-27,Macará (Ecuador),LDU Quito (Ecuador),2,0,Macará (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-09-10,LDU Quito (Ecuador),El Nacional (Ecuador),2,2,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,2000-09-16,El Nacional (Ecuador),LDU Quito (Ecuador),2,1,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-09-24,LDU Quito (Ecuador),Macará (Ecuador),0,1,Deportivo Quito (Ecuador),Macará (Ecuador),move
+ecuador,2000-10-01,CS Emelec (Ecuador),LDU Quito (Ecuador),4,3,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-10-15,Barcelona SC (Ecuador),LDU Quito (Ecuador),2,2,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-10-22,LDU Quito (Ecuador),LDU Quito (Ecuador),2,1,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,2000-10-25,Espoli (Ecuador),LDU Quito (Ecuador),0,1,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-10-29,LDU Quito (Ecuador),Tecnico Universitario (Ecuador),3,2,Deportivo Quito (Ecuador),Tecnico Universitario (Ecuador),move
+ecuador,2000-11-01,Cd Olmedo (Ecuador),LDU Quito (Ecuador),0,0,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2000-11-05,LDU Quito (Ecuador),Sd Aucas (Ecuador),3,1,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,2001-02-17,LDU Quito (Ecuador),Macará (Ecuador),2,1,Deportivo Quito (Ecuador),Macará (Ecuador),move
+ecuador,2001-02-22,CS Emelec (Ecuador),LDU Quito (Ecuador),3,1,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-02-25,LDU Quito (Ecuador),Ldu Portoviejo (Ecuador),1,0,Deportivo Quito (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-03-04,Sd Aucas (Ecuador),LDU Quito (Ecuador),1,0,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-03-11,LDU Quito (Ecuador),Espoli (Ecuador),2,5,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,2001-03-18,Barcelona SC (Ecuador),LDU Quito (Ecuador),2,0,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-03-18,LDU Quito (Ecuador),Delfín (Ecuador),3,2,Ldu Portoviejo (Ecuador),Delfín (Ecuador),move
+ecuador,2001-03-31,LDU Quito (Ecuador),Delfín (Ecuador),2,3,Deportivo Quito (Ecuador),Delfín (Ecuador),move
+ecuador,2001-04-01,LDU Quito (Ecuador),Sd Aucas (Ecuador),1,1,Ldu Portoviejo (Ecuador),Sd Aucas (Ecuador),move
+ecuador,2001-04-06,El Nacional (Ecuador),LDU Quito (Ecuador),1,0,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-04-08,Macará (Ecuador),LDU Quito (Ecuador),1,0,Macará (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-04-13,Cd Olmedo (Ecuador),LDU Quito (Ecuador),4,1,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-04-15,CS Emelec (Ecuador),LDU Quito (Ecuador),0,0,CS Emelec (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-04-29,LDU Quito (Ecuador),CS Emelec (Ecuador),2,4,Ldu Portoviejo (Ecuador),CS Emelec (Ecuador),move
+ecuador,2001-04-29,LDU Quito (Ecuador),Cd Olmedo (Ecuador),2,3,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,2001-05-06,LDU Quito (Ecuador),El Nacional (Ecuador),0,0,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,2001-05-06,LDU Quito (Ecuador),Macará (Ecuador),2,0,Ldu Portoviejo (Ecuador),Macará (Ecuador),move
+ecuador,2001-05-13,Delfín (Ecuador),LDU Quito (Ecuador),3,0,Delfín (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-05-13,Sd Aucas (Ecuador),LDU Quito (Ecuador),1,1,Sd Aucas (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-05-18,LDU Quito (Ecuador),Barcelona SC (Ecuador),0,2,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,2001-05-19,Delfín (Ecuador),LDU Quito (Ecuador),2,1,Delfín (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-05-23,Espoli (Ecuador),LDU Quito (Ecuador),1,1,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-05-23,LDU Quito (Ecuador),El Nacional (Ecuador),0,1,Ldu Portoviejo (Ecuador),El Nacional (Ecuador),move
+ecuador,2001-06-10,Barcelona SC (Ecuador),LDU Quito (Ecuador),3,2,Barcelona SC (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-06-10,LDU Quito (Ecuador),Sd Aucas (Ecuador),2,0,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,2001-06-17,LDU Quito (Ecuador),LDU Quito (Ecuador),0,0,Ldu Portoviejo (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,2001-06-20,Cd Olmedo (Ecuador),LDU Quito (Ecuador),1,0,Cd Olmedo (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-06-20,LDU Quito (Ecuador),CS Emelec (Ecuador),1,1,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,2001-06-24,LDU Quito (Ecuador),Espoli (Ecuador),3,1,Ldu Portoviejo (Ecuador),Espoli (Ecuador),move
+ecuador,2001-06-24,Macará (Ecuador),LDU Quito (Ecuador),3,1,Macará (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-08-01,Espoli (Ecuador),LDU Quito (Ecuador),4,1,Espoli (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-08-01,LDU Quito (Ecuador),Macará (Ecuador),2,1,Deportivo Quito (Ecuador),Macará (Ecuador),move
+ecuador,2001-08-05,CS Emelec (Ecuador),LDU Quito (Ecuador),1,0,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-08-05,LDU Quito (Ecuador),Cd Olmedo (Ecuador),0,1,Ldu Portoviejo (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,2001-08-19,LDU Quito (Ecuador),LDU Quito (Ecuador),6,1,Deportivo Quito (Ecuador),Ldu Portoviejo (Ecuador),add
+ecuador,2001-08-23,LDU Quito (Ecuador),Barcelona SC (Ecuador),0,0,Ldu Portoviejo (Ecuador),Barcelona SC (Ecuador),move
+ecuador,2001-08-24,Sd Aucas (Ecuador),LDU Quito (Ecuador),3,1,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-08-26,El Nacional (Ecuador),LDU Quito (Ecuador),5,0,El Nacional (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-08-26,LDU Quito (Ecuador),Espoli (Ecuador),2,1,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,2001-09-08,LDU Quito (Ecuador),Delfín (Ecuador),2,3,Ldu Portoviejo (Ecuador),Delfín (Ecuador),move
+ecuador,2001-09-09,Barcelona SC (Ecuador),LDU Quito (Ecuador),1,1,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-09-13,LDU Quito (Ecuador),Delfín (Ecuador),2,1,Deportivo Quito (Ecuador),Delfín (Ecuador),move
+ecuador,2001-09-13,LDU Quito (Ecuador),Sd Aucas (Ecuador),3,1,Ldu Portoviejo (Ecuador),Sd Aucas (Ecuador),move
+ecuador,2001-09-16,El Nacional (Ecuador),LDU Quito (Ecuador),5,2,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-09-16,Macará (Ecuador),LDU Quito (Ecuador),4,0,Macará (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-09-19,Cd Olmedo (Ecuador),LDU Quito (Ecuador),1,3,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-09-21,CS Emelec (Ecuador),LDU Quito (Ecuador),2,0,CS Emelec (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-09-23,LDU Quito (Ecuador),CS Emelec (Ecuador),1,2,Ldu Portoviejo (Ecuador),CS Emelec (Ecuador),move
+ecuador,2001-09-23,LDU Quito (Ecuador),Cd Olmedo (Ecuador),2,1,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,2001-09-26,LDU Quito (Ecuador),El Nacional (Ecuador),1,1,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,2001-09-26,LDU Quito (Ecuador),Macará (Ecuador),2,2,Ldu Portoviejo (Ecuador),Macará (Ecuador),move
+ecuador,2001-10-10,Delfín (Ecuador),LDU Quito (Ecuador),3,2,Delfín (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-10-10,Sd Aucas (Ecuador),LDU Quito (Ecuador),6,0,Sd Aucas (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-10-14,Delfín (Ecuador),LDU Quito (Ecuador),3,2,Delfín (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-10-14,LDU Quito (Ecuador),Barcelona SC (Ecuador),2,2,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,2001-10-17,Espoli (Ecuador),LDU Quito (Ecuador),0,2,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-10-17,LDU Quito (Ecuador),El Nacional (Ecuador),2,1,Ldu Portoviejo (Ecuador),El Nacional (Ecuador),move
+ecuador,2001-10-21,Barcelona SC (Ecuador),LDU Quito (Ecuador),3,1,Barcelona SC (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-10-21,LDU Quito (Ecuador),Sd Aucas (Ecuador),2,0,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,2001-10-23,LDU Quito (Ecuador),LDU Quito (Ecuador),1,2,Ldu Portoviejo (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,2001-10-25,Cd Olmedo (Ecuador),LDU Quito (Ecuador),4,2,Cd Olmedo (Ecuador),Ldu Portoviejo (Ecuador),move
+ecuador,2001-10-25,LDU Quito (Ecuador),CS Emelec (Ecuador),2,0,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,2001-10-28,LDU Quito (Ecuador),Espoli (Ecuador),3,0,Ldu Portoviejo (Ecuador),Espoli (Ecuador),move
+ecuador,2001-10-28,Macará (Ecuador),LDU Quito (Ecuador),2,1,Macará (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-11-18,Barcelona SC (Ecuador),LDU Quito (Ecuador),2,0,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-11-21,LDU Quito (Ecuador),El Nacional (Ecuador),2,2,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,2001-11-23,LDU Quito (Ecuador),Cd Olmedo (Ecuador),2,2,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,2001-11-28,Espoli (Ecuador),LDU Quito (Ecuador),0,2,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-12-02,CS Emelec (Ecuador),LDU Quito (Ecuador),4,0,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-12-09,LDU Quito (Ecuador),CS Emelec (Ecuador),0,3,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,2001-12-12,LDU Quito (Ecuador),Espoli (Ecuador),1,0,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,2001-12-16,Cd Olmedo (Ecuador),LDU Quito (Ecuador),4,1,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-12-19,El Nacional (Ecuador),LDU Quito (Ecuador),1,0,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2001-12-23,LDU Quito (Ecuador),Barcelona SC (Ecuador),1,0,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,2002-02-03,Macará (Ecuador),LDU Quito (Ecuador),0,0,Macará (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-02-10,LDU Quito (Ecuador),CS Emelec (Ecuador),0,4,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,2002-02-16,LDU Quito (Ecuador),LDU Quito (Ecuador),2,1,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,2002-02-24,Espoli (Ecuador),LDU Quito (Ecuador),2,0,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-03-03,LDU Quito (Ecuador),Barcelona SC (Ecuador),1,0,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,2002-03-08,Deportivo Cuenca (Ecuador),LDU Quito (Ecuador),1,1,Deportivo Cuenca (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-03-16,LDU Quito (Ecuador),Sd Aucas (Ecuador),3,0,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,2002-03-23,El Nacional (Ecuador),LDU Quito (Ecuador),2,1,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-03-31,LDU Quito (Ecuador),Cd Olmedo (Ecuador),2,2,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,2002-04-03,Cd Olmedo (Ecuador),LDU Quito (Ecuador),3,2,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-04-06,LDU Quito (Ecuador),El Nacional (Ecuador),1,1,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,2002-04-13,Sd Aucas (Ecuador),LDU Quito (Ecuador),2,1,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-04-20,LDU Quito (Ecuador),Deportivo Cuenca (Ecuador),2,1,Deportivo Quito (Ecuador),Deportivo Cuenca (Ecuador),move
+ecuador,2002-04-24,Barcelona SC (Ecuador),LDU Quito (Ecuador),4,0,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-04-28,LDU Quito (Ecuador),Espoli (Ecuador),3,2,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,2002-05-05,LDU Quito (Ecuador),LDU Quito (Ecuador),2,1,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,2002-05-12,CS Emelec (Ecuador),LDU Quito (Ecuador),0,2,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-05-19,LDU Quito (Ecuador),Macará (Ecuador),3,1,Deportivo Quito (Ecuador),Macará (Ecuador),move
+ecuador,2002-06-30,LDU Quito (Ecuador),Barcelona SC (Ecuador),3,2,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,2002-07-05,Deportivo Cuenca (Ecuador),LDU Quito (Ecuador),1,1,Deportivo Cuenca (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-07-14,CS Emelec (Ecuador),LDU Quito (Ecuador),2,2,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-07-21,LDU Quito (Ecuador),Espoli (Ecuador),3,0,Deportivo Quito (Ecuador),Espoli (Ecuador),move
+ecuador,2002-07-28,Cd Olmedo (Ecuador),LDU Quito (Ecuador),1,1,Cd Olmedo (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-08-04,LDU Quito (Ecuador),Macará (Ecuador),3,1,Deportivo Quito (Ecuador),Macará (Ecuador),move
+ecuador,2002-08-07,El Nacional (Ecuador),LDU Quito (Ecuador),3,3,El Nacional (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-08-11,LDU Quito (Ecuador),LDU Quito (Ecuador),2,1,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,2002-08-18,Sd Aucas (Ecuador),LDU Quito (Ecuador),2,2,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-08-24,LDU Quito (Ecuador),Sd Aucas (Ecuador),2,2,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,2002-08-31,LDU Quito (Ecuador),LDU Quito (Ecuador),0,2,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,2002-09-04,LDU Quito (Ecuador),El Nacional (Ecuador),1,0,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,2002-09-08,Macará (Ecuador),LDU Quito (Ecuador),1,2,Macará (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-09-15,LDU Quito (Ecuador),Cd Olmedo (Ecuador),1,0,Deportivo Quito (Ecuador),Cd Olmedo (Ecuador),move
+ecuador,2002-09-22,Espoli (Ecuador),LDU Quito (Ecuador),2,2,Espoli (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-09-29,LDU Quito (Ecuador),CS Emelec (Ecuador),1,0,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,2002-10-05,LDU Quito (Ecuador),Deportivo Cuenca (Ecuador),2,0,Deportivo Quito (Ecuador),Deportivo Cuenca (Ecuador),move
+ecuador,2002-10-13,Barcelona SC (Ecuador),LDU Quito (Ecuador),3,1,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-10-27,LDU Quito (Ecuador),El Nacional (Ecuador),0,1,Deportivo Quito (Ecuador),El Nacional (Ecuador),move
+ecuador,2002-11-03,CS Emelec (Ecuador),LDU Quito (Ecuador),2,1,CS Emelec (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-11-09,LDU Quito (Ecuador),Sd Aucas (Ecuador),2,2,Deportivo Quito (Ecuador),Sd Aucas (Ecuador),move
+ecuador,2002-11-13,LDU Quito (Ecuador),LDU Quito (Ecuador),0,1,Deportivo Quito (Ecuador),LDU Quito (Ecuador),add
+ecuador,2002-11-17,Barcelona SC (Ecuador),LDU Quito (Ecuador),4,1,Barcelona SC (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-12-01,LDU Quito (Ecuador),Barcelona SC (Ecuador),0,1,Deportivo Quito (Ecuador),Barcelona SC (Ecuador),move
+ecuador,2002-12-04,LDU Quito (Ecuador),LDU Quito (Ecuador),1,1,LDU Quito (Ecuador),Deportivo Quito (Ecuador),add
+ecuador,2002-12-08,Sd Aucas (Ecuador),LDU Quito (Ecuador),1,3,Sd Aucas (Ecuador),Deportivo Quito (Ecuador),move
+ecuador,2002-12-15,LDU Quito (Ecuador),CS Emelec (Ecuador),3,0,Deportivo Quito (Ecuador),CS Emelec (Ecuador),move
+ecuador,2002-12-22,El Nacional (Ecuador),LDU Quito (Ecuador),1,4,El Nacional (Ecuador),Deportivo Quito (Ecuador),move

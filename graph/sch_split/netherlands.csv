@@ -1,0 +1,137 @@
+competition,date,home_ident,away_ident,gh,ga,new_home,new_away,kind
+netherlands,1956-09-02,Fortuna Sittard (Netherlands),PSV (Netherlands),4,1,Fortuna Sittard (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1956-09-09,PSV (Netherlands),VVV Venlo (Netherlands),0,2,FC Eindhoven (Netherlands),VVV Venlo (Netherlands),move
+netherlands,1956-09-23,Dos Utrecht (Netherlands),PSV (Netherlands),0,1,Dos Utrecht (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1956-09-30,PSV (Netherlands),Ajax (Netherlands),0,3,FC Eindhoven (Netherlands),Ajax (Netherlands),move
+netherlands,1956-10-07,Noad Tilburg (Netherlands),PSV (Netherlands),2,0,Noad Tilburg (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1956-10-21,PSV (Netherlands),NAC Breda (Netherlands),2,2,FC Eindhoven (Netherlands),NAC Breda (Netherlands),move
+netherlands,1956-10-28,Sparta Rotterdam (Netherlands),PSV (Netherlands),6,0,Sparta Rotterdam (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1956-11-11,PSV (Netherlands),Groningen (Netherlands),1,1,FC Eindhoven (Netherlands),Groningen (Netherlands),move
+netherlands,1956-11-18,PSV (Netherlands),Afc Dws (Netherlands),1,1,FC Eindhoven (Netherlands),Afc Dws (Netherlands),move
+netherlands,1956-11-25,MVV (Netherlands),PSV (Netherlands),3,0,MVV (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1956-12-02,PSV (Netherlands),Roda JC Kerkrade (Netherlands),0,2,FC Eindhoven (Netherlands),Roda JC Kerkrade (Netherlands),move
+netherlands,1956-12-09,Usv Elinkwijk (Netherlands),PSV (Netherlands),5,2,Usv Elinkwijk (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1956-12-16,PSV (Netherlands),Feyenoord (Netherlands),0,1,FC Eindhoven (Netherlands),Feyenoord (Netherlands),move
+netherlands,1956-12-23,Willem II (Netherlands),PSV (Netherlands),3,2,Willem II (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1956-12-30,PSV (Netherlands),Bvv (Netherlands),2,3,FC Eindhoven (Netherlands),Bvv (Netherlands),move
+netherlands,1957-01-06,SC Enschede Alt (Netherlands),PSV (Netherlands),6,1,SC Enschede Alt (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1957-01-13,PSV (Netherlands),PSV (Netherlands),0,2,FC Eindhoven (Netherlands),PSV (Netherlands),add
+netherlands,1957-01-20,PSV (Netherlands),Fortuna Sittard (Netherlands),1,5,FC Eindhoven (Netherlands),Fortuna Sittard (Netherlands),move
+netherlands,1957-01-27,VVV Venlo (Netherlands),PSV (Netherlands),2,1,VVV Venlo (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1957-02-03,PSV (Netherlands),Dos Utrecht (Netherlands),0,1,FC Eindhoven (Netherlands),Dos Utrecht (Netherlands),move
+netherlands,1957-02-10,Ajax (Netherlands),PSV (Netherlands),3,1,Ajax (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1957-02-17,PSV (Netherlands),Noad Tilburg (Netherlands),3,1,FC Eindhoven (Netherlands),Noad Tilburg (Netherlands),move
+netherlands,1957-03-03,NAC Breda (Netherlands),PSV (Netherlands),0,1,NAC Breda (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1957-03-10,PSV (Netherlands),Sparta Rotterdam (Netherlands),3,2,FC Eindhoven (Netherlands),Sparta Rotterdam (Netherlands),move
+netherlands,1957-03-17,Groningen (Netherlands),PSV (Netherlands),1,1,Groningen (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1957-03-24,Afc Dws (Netherlands),PSV (Netherlands),2,1,Afc Dws (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1957-03-31,PSV (Netherlands),MVV (Netherlands),0,3,FC Eindhoven (Netherlands),MVV (Netherlands),move
+netherlands,1957-04-07,Roda JC Kerkrade (Netherlands),PSV (Netherlands),0,1,Roda JC Kerkrade (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1957-04-14,PSV (Netherlands),Usv Elinkwijk (Netherlands),1,0,FC Eindhoven (Netherlands),Usv Elinkwijk (Netherlands),move
+netherlands,1957-04-22,Feyenoord (Netherlands),PSV (Netherlands),4,0,Feyenoord (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1957-05-05,PSV (Netherlands),Willem II (Netherlands),2,3,FC Eindhoven (Netherlands),Willem II (Netherlands),move
+netherlands,1957-05-12,Bvv (Netherlands),PSV (Netherlands),1,3,Bvv (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1957-05-19,PSV (Netherlands),SC Enschede Alt (Netherlands),3,2,FC Eindhoven (Netherlands),SC Enschede Alt (Netherlands),move
+netherlands,1957-06-02,PSV (Netherlands),PSV (Netherlands),7,4,PSV (Netherlands),FC Eindhoven (Netherlands),add
+netherlands,1975-08-17,Roda JC Kerkrade (Netherlands),PSV (Netherlands),1,2,Roda JC Kerkrade (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1975-08-24,PSV (Netherlands),PSV (Netherlands),1,5,FC Eindhoven (Netherlands),PSV (Netherlands),add
+netherlands,1975-08-31,De Graafschap (Netherlands),PSV (Netherlands),1,1,De Graafschap (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1975-09-14,PSV (Netherlands),AZ (Netherlands),1,3,FC Eindhoven (Netherlands),AZ (Netherlands),move
+netherlands,1975-09-21,Utrecht (Netherlands),PSV (Netherlands),2,2,Utrecht (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1975-09-28,PSV (Netherlands),FC Amsterdam Old (Netherlands),2,1,FC Eindhoven (Netherlands),FC Amsterdam Old (Netherlands),move
+netherlands,1975-10-05,Feyenoord (Netherlands),PSV (Netherlands),5,0,Feyenoord (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1975-10-19,PSV (Netherlands),Go Ahead Eagles (Netherlands),4,2,FC Eindhoven (Netherlands),Go Ahead Eagles (Netherlands),move
+netherlands,1975-10-26,NEC Nijmegen (Netherlands),PSV (Netherlands),0,0,NEC Nijmegen (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1975-11-02,PSV (Netherlands),MVV (Netherlands),1,0,FC Eindhoven (Netherlands),MVV (Netherlands),move
+netherlands,1975-11-09,PSV (Netherlands),NAC Breda (Netherlands),2,3,FC Eindhoven (Netherlands),NAC Breda (Netherlands),move
+netherlands,1975-11-16,FC Twente (Netherlands),PSV (Netherlands),3,1,FC Twente (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1975-11-30,PSV (Netherlands),SC Telstar (Netherlands),0,0,FC Eindhoven (Netherlands),SC Telstar (Netherlands),move
+netherlands,1975-12-14,Ajax (Netherlands),PSV (Netherlands),2,0,Ajax (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1975-12-21,PSV (Netherlands),Sparta Rotterdam (Netherlands),1,1,FC Eindhoven (Netherlands),Sparta Rotterdam (Netherlands),move
+netherlands,1976-01-04,Sbv Excelsior (Netherlands),PSV (Netherlands),2,1,Sbv Excelsior (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-01-11,PSV (Netherlands),Roda JC Kerkrade (Netherlands),0,1,FC Eindhoven (Netherlands),Roda JC Kerkrade (Netherlands),move
+netherlands,1976-01-18,PSV (Netherlands),PSV (Netherlands),2,1,PSV (Netherlands),FC Eindhoven (Netherlands),add
+netherlands,1976-01-25,PSV (Netherlands),De Graafschap (Netherlands),1,1,FC Eindhoven (Netherlands),De Graafschap (Netherlands),move
+netherlands,1976-02-15,FC Amsterdam Old (Netherlands),PSV (Netherlands),3,4,FC Amsterdam Old (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-02-22,PSV (Netherlands),Feyenoord (Netherlands),0,0,FC Eindhoven (Netherlands),Feyenoord (Netherlands),move
+netherlands,1976-03-07,Go Ahead Eagles (Netherlands),PSV (Netherlands),2,1,Go Ahead Eagles (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-03-14,PSV (Netherlands),NEC Nijmegen (Netherlands),1,0,FC Eindhoven (Netherlands),NEC Nijmegen (Netherlands),move
+netherlands,1976-03-21,AZ (Netherlands),PSV (Netherlands),2,0,AZ (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-03-28,PSV (Netherlands),Utrecht (Netherlands),3,3,FC Eindhoven (Netherlands),Utrecht (Netherlands),move
+netherlands,1976-04-04,MVV (Netherlands),PSV (Netherlands),1,1,MVV (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-04-11,NAC Breda (Netherlands),PSV (Netherlands),2,0,NAC Breda (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-04-17,PSV (Netherlands),ADO Den Haag (Netherlands),2,4,FC Eindhoven (Netherlands),ADO Den Haag (Netherlands),move
+netherlands,1976-04-19,ADO Den Haag (Netherlands),PSV (Netherlands),6,0,ADO Den Haag (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-05-02,PSV (Netherlands),FC Twente (Netherlands),0,1,FC Eindhoven (Netherlands),FC Twente (Netherlands),move
+netherlands,1976-05-09,SC Telstar (Netherlands),PSV (Netherlands),0,2,SC Telstar (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-05-16,PSV (Netherlands),Ajax (Netherlands),2,3,FC Eindhoven (Netherlands),Ajax (Netherlands),move
+netherlands,1976-05-30,Sparta Rotterdam (Netherlands),PSV (Netherlands),0,1,Sparta Rotterdam (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-06-07,PSV (Netherlands),Sbv Excelsior (Netherlands),2,1,FC Eindhoven (Netherlands),Sbv Excelsior (Netherlands),move
+netherlands,1976-08-22,PSV (Netherlands),PSV (Netherlands),2,2,FC Eindhoven (Netherlands),PSV (Netherlands),add
+netherlands,1976-08-25,Go Ahead Eagles (Netherlands),PSV (Netherlands),0,0,Go Ahead Eagles (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-08-29,ADO Den Haag (Netherlands),PSV (Netherlands),1,1,ADO Den Haag (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-09-01,PSV (Netherlands),Feyenoord (Netherlands),0,4,FC Eindhoven (Netherlands),Feyenoord (Netherlands),move
+netherlands,1976-09-05,Sparta Rotterdam (Netherlands),PSV (Netherlands),3,0,Sparta Rotterdam (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-09-12,PSV (Netherlands),FC Amsterdam Old (Netherlands),3,0,FC Eindhoven (Netherlands),FC Amsterdam Old (Netherlands),move
+netherlands,1976-09-19,Ajax (Netherlands),PSV (Netherlands),3,2,Ajax (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-09-26,PSV (Netherlands),Roda JC Kerkrade (Netherlands),0,0,FC Eindhoven (Netherlands),Roda JC Kerkrade (Netherlands),move
+netherlands,1976-10-03,NAC Breda (Netherlands),PSV (Netherlands),4,1,NAC Breda (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-10-17,PSV (Netherlands),NEC Nijmegen (Netherlands),3,1,FC Eindhoven (Netherlands),NEC Nijmegen (Netherlands),move
+netherlands,1976-10-24,VVV Venlo (Netherlands),PSV (Netherlands),0,0,VVV Venlo (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-10-31,PSV (Netherlands),De Graafschap (Netherlands),1,0,FC Eindhoven (Netherlands),De Graafschap (Netherlands),move
+netherlands,1976-11-07,FC Twente (Netherlands),PSV (Netherlands),4,0,FC Twente (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-11-14,PSV (Netherlands),AZ (Netherlands),0,7,FC Eindhoven (Netherlands),AZ (Netherlands),move
+netherlands,1976-11-28,Utrecht (Netherlands),PSV (Netherlands),6,1,Utrecht (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1976-12-05,PSV (Netherlands),Hfc Haarlem (Netherlands),2,1,FC Eindhoven (Netherlands),Hfc Haarlem (Netherlands),move
+netherlands,1976-12-12,SC Telstar (Netherlands),PSV (Netherlands),3,1,SC Telstar (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1977-01-09,PSV (Netherlands),PSV (Netherlands),3,0,PSV (Netherlands),FC Eindhoven (Netherlands),add
+netherlands,1977-01-16,PSV (Netherlands),Go Ahead Eagles (Netherlands),2,2,FC Eindhoven (Netherlands),Go Ahead Eagles (Netherlands),move
+netherlands,1977-01-23,PSV (Netherlands),ADO Den Haag (Netherlands),1,0,FC Eindhoven (Netherlands),ADO Den Haag (Netherlands),move
+netherlands,1977-01-30,Feyenoord (Netherlands),PSV (Netherlands),1,1,Feyenoord (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1977-02-06,PSV (Netherlands),Sparta Rotterdam (Netherlands),0,0,FC Eindhoven (Netherlands),Sparta Rotterdam (Netherlands),move
+netherlands,1977-02-13,FC Amsterdam Old (Netherlands),PSV (Netherlands),0,0,FC Amsterdam Old (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1977-02-27,PSV (Netherlands),Ajax (Netherlands),0,1,FC Eindhoven (Netherlands),Ajax (Netherlands),move
+netherlands,1977-03-06,Roda JC Kerkrade (Netherlands),PSV (Netherlands),2,0,Roda JC Kerkrade (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1977-03-13,PSV (Netherlands),NAC Breda (Netherlands),1,1,FC Eindhoven (Netherlands),NAC Breda (Netherlands),move
+netherlands,1977-03-20,NEC Nijmegen (Netherlands),PSV (Netherlands),2,0,NEC Nijmegen (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1977-04-03,PSV (Netherlands),VVV Venlo (Netherlands),1,1,FC Eindhoven (Netherlands),VVV Venlo (Netherlands),move
+netherlands,1977-04-11,De Graafschap (Netherlands),PSV (Netherlands),2,0,De Graafschap (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1977-04-17,PSV (Netherlands),FC Twente (Netherlands),1,1,FC Eindhoven (Netherlands),FC Twente (Netherlands),move
+netherlands,1977-04-24,AZ (Netherlands),PSV (Netherlands),3,0,AZ (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1977-05-01,PSV (Netherlands),Utrecht (Netherlands),1,2,FC Eindhoven (Netherlands),Utrecht (Netherlands),move
+netherlands,1977-05-08,Hfc Haarlem (Netherlands),PSV (Netherlands),3,2,Hfc Haarlem (Netherlands),FC Eindhoven (Netherlands),move
+netherlands,1977-05-15,PSV (Netherlands),SC Telstar (Netherlands),1,0,FC Eindhoven (Netherlands),SC Telstar (Netherlands),move
+netherlands,1980-08-24,Groningen (Netherlands),PEC Zwolle (Netherlands),0,0,Wvv Wageningen (Netherlands),PEC Zwolle (Netherlands),move
+netherlands,1980-08-27,NEC Nijmegen (Netherlands),Groningen (Netherlands),2,2,NEC Nijmegen (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1980-08-31,Ajax (Netherlands),Groningen (Netherlands),2,4,Ajax (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1980-09-03,Groningen (Netherlands),MVV (Netherlands),1,2,Wvv Wageningen (Netherlands),MVV (Netherlands),move
+netherlands,1980-09-14,FC Twente (Netherlands),Groningen (Netherlands),2,1,FC Twente (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1980-09-21,Groningen (Netherlands),Feyenoord (Netherlands),0,1,Wvv Wageningen (Netherlands),Feyenoord (Netherlands),move
+netherlands,1980-09-28,Willem II (Netherlands),Groningen (Netherlands),1,2,Willem II (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1980-10-05,Groningen (Netherlands),Utrecht (Netherlands),1,1,Wvv Wageningen (Netherlands),Utrecht (Netherlands),move
+netherlands,1980-10-19,Go Ahead Eagles (Netherlands),Groningen (Netherlands),2,2,Go Ahead Eagles (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1980-10-26,Groningen (Netherlands),Roda JC Kerkrade (Netherlands),1,1,Wvv Wageningen (Netherlands),Roda JC Kerkrade (Netherlands),move
+netherlands,1980-11-02,Groningen (Netherlands),Sparta Rotterdam (Netherlands),1,2,Wvv Wageningen (Netherlands),Sparta Rotterdam (Netherlands),move
+netherlands,1980-11-09,NAC Breda (Netherlands),Groningen (Netherlands),1,1,NAC Breda (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1980-11-23,Groningen (Netherlands),PSV (Netherlands),0,3,Wvv Wageningen (Netherlands),PSV (Netherlands),move
+netherlands,1980-11-30,Sbv Excelsior (Netherlands),Groningen (Netherlands),1,2,Sbv Excelsior (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1980-12-14,ADO Den Haag (Netherlands),Groningen (Netherlands),3,2,ADO Den Haag (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1980-12-21,Groningen (Netherlands),AZ (Netherlands),1,2,Wvv Wageningen (Netherlands),AZ (Netherlands),move
+netherlands,1981-02-01,PEC Zwolle (Netherlands),Groningen (Netherlands),1,0,PEC Zwolle (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1981-02-08,Groningen (Netherlands),NEC Nijmegen (Netherlands),1,1,Wvv Wageningen (Netherlands),NEC Nijmegen (Netherlands),move
+netherlands,1981-02-15,Groningen (Netherlands),Ajax (Netherlands),0,2,Wvv Wageningen (Netherlands),Ajax (Netherlands),move
+netherlands,1981-03-01,MVV (Netherlands),Groningen (Netherlands),1,0,MVV (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1981-03-08,Groningen (Netherlands),FC Twente (Netherlands),0,1,Wvv Wageningen (Netherlands),FC Twente (Netherlands),move
+netherlands,1981-03-15,Feyenoord (Netherlands),Groningen (Netherlands),6,0,Feyenoord (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1981-03-22,Groningen (Netherlands),Groningen (Netherlands),3,0,Wvv Wageningen (Netherlands),Groningen (Netherlands),add
+netherlands,1981-03-29,Groningen (Netherlands),Willem II (Netherlands),2,1,Wvv Wageningen (Netherlands),Willem II (Netherlands),move
+netherlands,1981-04-05,Utrecht (Netherlands),Groningen (Netherlands),5,0,Utrecht (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1981-04-12,Groningen (Netherlands),Go Ahead Eagles (Netherlands),2,1,Wvv Wageningen (Netherlands),Go Ahead Eagles (Netherlands),move
+netherlands,1981-04-20,Roda JC Kerkrade (Netherlands),Groningen (Netherlands),4,1,Roda JC Kerkrade (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1981-04-26,Sparta Rotterdam (Netherlands),Groningen (Netherlands),3,0,Sparta Rotterdam (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1981-05-03,Groningen (Netherlands),NAC Breda (Netherlands),2,2,Wvv Wageningen (Netherlands),NAC Breda (Netherlands),move
+netherlands,1981-05-10,PSV (Netherlands),Groningen (Netherlands),4,0,PSV (Netherlands),Wvv Wageningen (Netherlands),move
+netherlands,1981-05-17,Groningen (Netherlands),Sbv Excelsior (Netherlands),0,0,Wvv Wageningen (Netherlands),Sbv Excelsior (Netherlands),move
+netherlands,1981-05-24,Groningen (Netherlands),Groningen (Netherlands),2,0,Groningen (Netherlands),Wvv Wageningen (Netherlands),add
+netherlands,1981-05-31,Groningen (Netherlands),ADO Den Haag (Netherlands),1,2,Wvv Wageningen (Netherlands),ADO Den Haag (Netherlands),move
+netherlands,1981-06-06,AZ (Netherlands),Groningen (Netherlands),1,0,AZ (Netherlands),Wvv Wageningen (Netherlands),move

@@ -1,0 +1,88 @@
+competition,date,home_ident,away_ident,gh,ga,new_home,new_away,kind
+korea-republic,1996-05-11,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),2,0,Suwon Bluewings (Korea Republic),Jeonbuk Motors (Korea Republic),add
+korea-republic,1996-06-05,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),0,2,Suwon Bluewings (Korea Republic),Ulsan HD (Korea Republic),add
+korea-republic,1996-06-08,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),3,2,Suwon Bluewings (Korea Republic),Busan Ipark (Korea Republic),add
+korea-republic,1996-06-19,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),2,0,Suwon Bluewings (Korea Republic),Jeju FC (Korea Republic),add
+korea-republic,1996-07-07,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),0,0,Suwon Bluewings (Korea Republic),Pohang Steelers (Korea Republic),add
+korea-republic,1996-07-11,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),4,2,Suwon Bluewings (Korea Republic),Seongnam FC (Korea Republic),add
+korea-republic,1996-07-21,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),1,2,Suwon Bluewings (Korea Republic),Jeonnam Dragons (Korea Republic),add
+korea-republic,1996-07-25,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),2,1,Suwon Bluewings (Korea Republic),Anyang (Korea Republic),add
+korea-republic,1996-08-18,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),3,3,Suwon Bluewings (Korea Republic),Pohang Steelers (Korea Republic),add
+korea-republic,1996-08-31,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),0,0,Suwon Bluewings (Korea Republic),Jeonnam Dragons (Korea Republic),add
+korea-republic,1996-09-11,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),1,0,Suwon Bluewings (Korea Republic),Jeonbuk Motors (Korea Republic),add
+korea-republic,1996-09-22,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),3,1,Suwon Bluewings (Korea Republic),Jeju FC (Korea Republic),add
+korea-republic,1996-10-05,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),3,1,Suwon Bluewings (Korea Republic),Ulsan HD (Korea Republic),add
+korea-republic,1996-10-10,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),2,0,Suwon Bluewings (Korea Republic),Anyang (Korea Republic),add
+korea-republic,1996-10-13,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),2,1,Suwon Bluewings (Korea Republic),Busan Ipark (Korea Republic),add
+korea-republic,1996-10-23,Suwon Bluewings (Korea Republic),Suwon Bluewings (Korea Republic),2,1,Suwon Bluewings (Korea Republic),Seongnam FC (Korea Republic),add
+korea-republic,1998-03-21,Pohang Steelers (Korea Republic),Jeonnam Dragons (Korea Republic),2,0,Pohang Steelers (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-03-28,Jeonnam Dragons (Korea Republic),Jeonnam Dragons (Korea Republic),0,0,Jeonnam Dragons (Korea Republic),Seongnam FC (Korea Republic),add
+korea-republic,1998-03-31,Jeju FC (Korea Republic),Jeonnam Dragons (Korea Republic),1,0,Jeju FC (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-04-08,Jeonbuk Motors (Korea Republic),Jeonnam Dragons (Korea Republic),2,1,Jeonbuk Motors (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-04-11,Jeonnam Dragons (Korea Republic),Jeonbuk Motors (Korea Republic),3,0,Seongnam FC (Korea Republic),Jeonbuk Motors (Korea Republic),move
+korea-republic,1998-04-15,Jeonnam Dragons (Korea Republic),Jeju FC (Korea Republic),1,2,Seongnam FC (Korea Republic),Jeju FC (Korea Republic),move
+korea-republic,1998-04-25,Jeonnam Dragons (Korea Republic),Pohang Steelers (Korea Republic),0,1,Seongnam FC (Korea Republic),Pohang Steelers (Korea Republic),move
+korea-republic,1998-05-10,Jeonnam Dragons (Korea Republic),Jeonbuk Motors (Korea Republic),2,2,Seongnam FC (Korea Republic),Jeonbuk Motors (Korea Republic),move
+korea-republic,1998-05-13,Anyang (Korea Republic),Jeonnam Dragons (Korea Republic),1,2,Anyang (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-05-17,Jeonnam Dragons (Korea Republic),Daejeon Hana Citizen (Korea Republic),2,1,Seongnam FC (Korea Republic),Daejeon Hana Citizen (Korea Republic),move
+korea-republic,1998-05-20,Jeonnam Dragons (Korea Republic),Busan Ipark (Korea Republic),0,0,Seongnam FC (Korea Republic),Busan Ipark (Korea Republic),move
+korea-republic,1998-05-23,Ulsan HD (Korea Republic),Jeonnam Dragons (Korea Republic),4,3,Ulsan HD (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-05-26,Jeonnam Dragons (Korea Republic),Jeju FC (Korea Republic),0,1,Seongnam FC (Korea Republic),Jeju FC (Korea Republic),move
+korea-republic,1998-05-30,Suwon Bluewings (Korea Republic),Jeonnam Dragons (Korea Republic),4,1,Suwon Bluewings (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-06-03,Jeonnam Dragons (Korea Republic),Jeonnam Dragons (Korea Republic),1,1,Seongnam FC (Korea Republic),Jeonnam Dragons (Korea Republic),add
+korea-republic,1998-06-06,Pohang Steelers (Korea Republic),Jeonnam Dragons (Korea Republic),0,1,Pohang Steelers (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-07-19,Ulsan HD (Korea Republic),Jeonnam Dragons (Korea Republic),3,1,Ulsan HD (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-07-22,Jeonnam Dragons (Korea Republic),Busan Ipark (Korea Republic),0,4,Seongnam FC (Korea Republic),Busan Ipark (Korea Republic),move
+korea-republic,1998-07-25,Jeonbuk Motors (Korea Republic),Jeonnam Dragons (Korea Republic),3,1,Jeonbuk Motors (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-08-01,Jeonnam Dragons (Korea Republic),Suwon Bluewings (Korea Republic),2,3,Seongnam FC (Korea Republic),Suwon Bluewings (Korea Republic),move
+korea-republic,1998-08-19,Jeju FC (Korea Republic),Jeonnam Dragons (Korea Republic),3,1,Jeju FC (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-08-22,Jeonnam Dragons (Korea Republic),Jeonnam Dragons (Korea Republic),1,1,Seongnam FC (Korea Republic),Jeonnam Dragons (Korea Republic),add
+korea-republic,1998-08-26,Jeonnam Dragons (Korea Republic),Pohang Steelers (Korea Republic),0,1,Seongnam FC (Korea Republic),Pohang Steelers (Korea Republic),move
+korea-republic,1998-08-29,Jeonnam Dragons (Korea Republic),Daejeon Hana Citizen (Korea Republic),0,3,Seongnam FC (Korea Republic),Daejeon Hana Citizen (Korea Republic),move
+korea-republic,1998-09-02,Anyang (Korea Republic),Jeonnam Dragons (Korea Republic),0,1,Anyang (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-09-05,Jeonnam Dragons (Korea Republic),Anyang (Korea Republic),0,1,Seongnam FC (Korea Republic),Anyang (Korea Republic),move
+korea-republic,1998-09-09,Suwon Bluewings (Korea Republic),Jeonnam Dragons (Korea Republic),2,1,Suwon Bluewings (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-09-12,Daejeon Hana Citizen (Korea Republic),Jeonnam Dragons (Korea Republic),0,0,Daejeon Hana Citizen (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-09-19,Pohang Steelers (Korea Republic),Jeonnam Dragons (Korea Republic),1,2,Pohang Steelers (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-09-23,Jeonnam Dragons (Korea Republic),Jeonnam Dragons (Korea Republic),1,0,Jeonnam Dragons (Korea Republic),Seongnam FC (Korea Republic),add
+korea-republic,1998-09-26,Jeonnam Dragons (Korea Republic),Jeju FC (Korea Republic),4,0,Seongnam FC (Korea Republic),Jeju FC (Korea Republic),move
+korea-republic,1998-09-30,Jeonnam Dragons (Korea Republic),Jeonbuk Motors (Korea Republic),0,1,Seongnam FC (Korea Republic),Jeonbuk Motors (Korea Republic),move
+korea-republic,1998-10-10,Busan Ipark (Korea Republic),Jeonnam Dragons (Korea Republic),3,2,Busan Ipark (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1998-10-14,Jeonnam Dragons (Korea Republic),Ulsan HD (Korea Republic),1,2,Seongnam FC (Korea Republic),Ulsan HD (Korea Republic),move
+korea-republic,1999-03-31,Jeonnam Dragons (Korea Republic),Anyang (Korea Republic),0,1,Seongnam FC (Korea Republic),Anyang (Korea Republic),move
+korea-republic,1999-04-03,Ulsan HD (Korea Republic),Jeonnam Dragons (Korea Republic),2,1,Ulsan HD (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-04-14,Jeonbuk Motors (Korea Republic),Jeonnam Dragons (Korea Republic),1,2,Jeonbuk Motors (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-04-21,Jeonnam Dragons (Korea Republic),Jeonbuk Motors (Korea Republic),0,3,Seongnam FC (Korea Republic),Jeonbuk Motors (Korea Republic),move
+korea-republic,1999-04-24,Jeonnam Dragons (Korea Republic),Jeonnam Dragons (Korea Republic),0,1,Jeonnam Dragons (Korea Republic),Seongnam FC (Korea Republic),add
+korea-republic,1999-04-28,Jeonnam Dragons (Korea Republic),Jeonnam Dragons (Korea Republic),2,1,Seongnam FC (Korea Republic),Jeonnam Dragons (Korea Republic),add
+korea-republic,1999-05-09,Jeonnam Dragons (Korea Republic),Ulsan HD (Korea Republic),3,1,Seongnam FC (Korea Republic),Ulsan HD (Korea Republic),move
+korea-republic,1999-05-12,Anyang (Korea Republic),Jeonnam Dragons (Korea Republic),2,2,Anyang (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-05-16,Suwon Bluewings (Korea Republic),Jeonnam Dragons (Korea Republic),2,2,Suwon Bluewings (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-05-31,Daejeon Hana Citizen (Korea Republic),Jeonnam Dragons (Korea Republic),1,2,Daejeon Hana Citizen (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-06-02,Jeonnam Dragons (Korea Republic),Jeju FC (Korea Republic),0,2,Seongnam FC (Korea Republic),Jeju FC (Korea Republic),move
+korea-republic,1999-06-09,Jeonnam Dragons (Korea Republic),Jeonnam Dragons (Korea Republic),1,2,Jeonnam Dragons (Korea Republic),Seongnam FC (Korea Republic),add
+korea-republic,1999-06-23,Jeonnam Dragons (Korea Republic),Anyang (Korea Republic),0,0,Seongnam FC (Korea Republic),Anyang (Korea Republic),move
+korea-republic,1999-06-26,Ulsan HD (Korea Republic),Jeonnam Dragons (Korea Republic),3,1,Ulsan HD (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-06-30,Suwon Bluewings (Korea Republic),Jeonnam Dragons (Korea Republic),2,1,Suwon Bluewings (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-07-04,Jeonnam Dragons (Korea Republic),Pohang Steelers (Korea Republic),2,3,Seongnam FC (Korea Republic),Pohang Steelers (Korea Republic),move
+korea-republic,1999-07-07,Jeonbuk Motors (Korea Republic),Jeonnam Dragons (Korea Republic),0,0,Jeonbuk Motors (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-07-11,Jeonnam Dragons (Korea Republic),Busan Ipark (Korea Republic),0,0,Seongnam FC (Korea Republic),Busan Ipark (Korea Republic),move
+korea-republic,1999-07-17,Daejeon Hana Citizen (Korea Republic),Jeonnam Dragons (Korea Republic),2,3,Daejeon Hana Citizen (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-07-21,Jeonnam Dragons (Korea Republic),Jeju FC (Korea Republic),2,3,Seongnam FC (Korea Republic),Jeju FC (Korea Republic),move
+korea-republic,1999-07-25,Jeonnam Dragons (Korea Republic),Jeonnam Dragons (Korea Republic),2,1,Jeonnam Dragons (Korea Republic),Seongnam FC (Korea Republic),add
+korea-republic,1999-07-28,Jeonnam Dragons (Korea Republic),Anyang (Korea Republic),2,1,Seongnam FC (Korea Republic),Anyang (Korea Republic),move
+korea-republic,1999-08-06,Jeonnam Dragons (Korea Republic),Anyang (Korea Republic),0,1,Seongnam FC (Korea Republic),Anyang (Korea Republic),move
+korea-republic,1999-08-18,Suwon Bluewings (Korea Republic),Jeonnam Dragons (Korea Republic),3,1,Suwon Bluewings (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-08-25,Jeonbuk Motors (Korea Republic),Jeonnam Dragons (Korea Republic),3,2,Jeonbuk Motors (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-08-29,Jeonnam Dragons (Korea Republic),Busan Ipark (Korea Republic),2,0,Seongnam FC (Korea Republic),Busan Ipark (Korea Republic),move
+korea-republic,1999-09-01,Jeonnam Dragons (Korea Republic),Pohang Steelers (Korea Republic),1,0,Seongnam FC (Korea Republic),Pohang Steelers (Korea Republic),move
+korea-republic,1999-09-04,Busan Ipark (Korea Republic),Jeonnam Dragons (Korea Republic),1,2,Busan Ipark (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-09-08,Jeonnam Dragons (Korea Republic),Jeonbuk Motors (Korea Republic),0,1,Seongnam FC (Korea Republic),Jeonbuk Motors (Korea Republic),move
+korea-republic,1999-09-11,Pohang Steelers (Korea Republic),Jeonnam Dragons (Korea Republic),2,0,Pohang Steelers (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-09-15,Jeonnam Dragons (Korea Republic),Suwon Bluewings (Korea Republic),0,0,Seongnam FC (Korea Republic),Suwon Bluewings (Korea Republic),move
+korea-republic,1999-09-19,Jeonnam Dragons (Korea Republic),Ulsan HD (Korea Republic),2,1,Seongnam FC (Korea Republic),Ulsan HD (Korea Republic),move
+korea-republic,1999-09-29,Anyang (Korea Republic),Jeonnam Dragons (Korea Republic),3,3,Anyang (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-10-02,Jeonnam Dragons (Korea Republic),Jeonnam Dragons (Korea Republic),1,3,Seongnam FC (Korea Republic),Jeonnam Dragons (Korea Republic),add
+korea-republic,1999-10-06,Jeju FC (Korea Republic),Jeonnam Dragons (Korea Republic),2,1,Jeju FC (Korea Republic),Seongnam FC (Korea Republic),move
+korea-republic,1999-10-09,Jeonnam Dragons (Korea Republic),Daejeon Hana Citizen (Korea Republic),2,3,Seongnam FC (Korea Republic),Daejeon Hana Citizen (Korea Republic),move
+korea-republic,1999-10-09,Ulsan HD (Korea Republic),Jeonnam Dragons (Korea Republic),2,1,Ulsan HD (Korea Republic),Seongnam FC (Korea Republic),move

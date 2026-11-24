@@ -1,0 +1,238 @@
+competition,date,home_ident,away_ident,gh,ga,new_home,new_away,kind
+venezuela,1996-08-11,Llaneros De Guanare (Venezuela),Minerven FC (Venezuela),3,3,Llaneros De Guanare (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1996-08-11,Minerven FC (Venezuela),Nacional Tachira (Venezuela),2,1,Minerven FC (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1996-08-18,Minerven FC (Venezuela),Deportivo Petare (Venezuela),2,1,Mineros De Guayana (Venezuela),Deportivo Petare (Venezuela),move
+venezuela,1996-08-18,Nacional Tachira (Venezuela),Inter Lara (Venezuela),1,1,Deportivo Tachira (Venezuela),Inter Lara (Venezuela),move
+venezuela,1996-08-21,Atletico El Vigia (Venezuela),Minerven FC (Venezuela),0,1,Atletico El Vigia (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1996-08-21,Deportivo Zulia (Venezuela),Nacional Tachira (Venezuela),1,0,Deportivo Zulia (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1996-08-25,Caracas (Venezuela),Nacional Tachira (Venezuela),1,0,Caracas (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1996-08-25,Minerven FC (Venezuela),Minerven FC (Venezuela),1,0,Mineros De Guayana (Venezuela),Minerven FC (Venezuela),add
+venezuela,1996-09-08,Inter Lara (Venezuela),Minerven FC (Venezuela),1,0,Inter Lara (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1996-09-08,Nacional Tachira (Venezuela),Estudiantes De Merida (Venezuela),2,1,Deportivo Tachira (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1996-09-11,Minerven FC (Venezuela),Nacional Tachira (Venezuela),1,1,Mineros De Guayana (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1996-09-15,Caracas (Venezuela),Minerven FC (Venezuela),2,1,Caracas (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1996-09-15,Nacional Tachira (Venezuela),Valencia FC (Venezuela),0,0,Deportivo Tachira (Venezuela),Valencia FC (Venezuela),move
+venezuela,1996-09-22,Minerven FC (Venezuela),Estudiantes De Merida (Venezuela),1,0,Mineros De Guayana (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1996-09-22,Nacional Tachira (Venezuela),Nacional Tachira (Venezuela),0,1,Nacional Tachira (Venezuela),Deportivo Tachira (Venezuela),add
+venezuela,1996-09-25,Deportivo Zulia (Venezuela),Minerven FC (Venezuela),3,1,Deportivo Zulia (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1996-09-25,Nacional Tachira (Venezuela),Llaneros De Guanare (Venezuela),3,0,Deportivo Tachira (Venezuela),Llaneros De Guanare (Venezuela),move
+venezuela,1996-10-13,Minerven FC (Venezuela),Nacional Tachira (Venezuela),2,2,Mineros De Guayana (Venezuela),Nacional Tachira (Venezuela),move
+venezuela,1996-10-13,Nacional Tachira (Venezuela),Atletico El Vigia (Venezuela),3,2,Deportivo Tachira (Venezuela),Atletico El Vigia (Venezuela),move
+venezuela,1996-10-16,Deportivo Petare (Venezuela),Nacional Tachira (Venezuela),1,2,Deportivo Petare (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1996-10-16,Valencia FC (Venezuela),Minerven FC (Venezuela),2,1,Valencia FC (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1996-10-20,Minerven FC (Venezuela),Llaneros De Guanare (Venezuela),3,1,Mineros De Guayana (Venezuela),Llaneros De Guanare (Venezuela),move
+venezuela,1996-10-20,Nacional Tachira (Venezuela),Minerven FC (Venezuela),2,1,Deportivo Tachira (Venezuela),Minerven FC (Venezuela),move
+venezuela,1996-10-27,Deportivo Petare (Venezuela),Minerven FC (Venezuela),1,1,Deportivo Petare (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1996-10-27,Inter Lara (Venezuela),Nacional Tachira (Venezuela),1,1,Inter Lara (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1996-10-30,Minerven FC (Venezuela),Atletico El Vigia (Venezuela),1,0,Mineros De Guayana (Venezuela),Atletico El Vigia (Venezuela),move
+venezuela,1996-10-30,Nacional Tachira (Venezuela),Deportivo Zulia (Venezuela),3,0,Deportivo Tachira (Venezuela),Deportivo Zulia (Venezuela),move
+venezuela,1996-11-03,Minerven FC (Venezuela),Minerven FC (Venezuela),2,1,Minerven FC (Venezuela),Mineros De Guayana (Venezuela),add
+venezuela,1996-11-03,Nacional Tachira (Venezuela),Caracas (Venezuela),3,2,Deportivo Tachira (Venezuela),Caracas (Venezuela),move
+venezuela,1996-11-17,Estudiantes De Merida (Venezuela),Nacional Tachira (Venezuela),1,0,Estudiantes De Merida (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1996-11-17,Minerven FC (Venezuela),Inter Lara (Venezuela),2,1,Mineros De Guayana (Venezuela),Inter Lara (Venezuela),move
+venezuela,1996-11-20,Minerven FC (Venezuela),Nacional Tachira (Venezuela),1,0,Mineros De Guayana (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1996-11-24,Minerven FC (Venezuela),Caracas (Venezuela),2,3,Mineros De Guayana (Venezuela),Caracas (Venezuela),move
+venezuela,1996-11-24,Valencia FC (Venezuela),Nacional Tachira (Venezuela),2,2,Valencia FC (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1996-12-01,Minerven FC (Venezuela),Estudiantes De Merida (Venezuela),2,0,Mineros De Guayana (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1996-12-01,Nacional Tachira (Venezuela),Nacional Tachira (Venezuela),2,0,Deportivo Tachira (Venezuela),Nacional Tachira (Venezuela),add
+venezuela,1996-12-04,Llaneros De Guanare (Venezuela),Nacional Tachira (Venezuela),1,2,Llaneros De Guanare (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1996-12-04,Minerven FC (Venezuela),Deportivo Zulia (Venezuela),1,1,Mineros De Guayana (Venezuela),Deportivo Zulia (Venezuela),move
+venezuela,1996-12-08,Atletico El Vigia (Venezuela),Nacional Tachira (Venezuela),0,3,Atletico El Vigia (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1996-12-08,Minerven FC (Venezuela),Valencia FC (Venezuela),1,0,Mineros De Guayana (Venezuela),Valencia FC (Venezuela),move
+venezuela,1996-12-08,Nacional Tachira (Venezuela),Deportivo Petare (Venezuela),3,0,Deportivo Tachira (Venezuela),Deportivo Petare (Venezuela),move
+venezuela,1996-12-08,Nacional Tachira (Venezuela),Minerven FC (Venezuela),0,2,Nacional Tachira (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-01-18,Minerven FC (Venezuela),Deportivo Zulia (Venezuela),2,0,Mineros De Guayana (Venezuela),Deportivo Zulia (Venezuela),move
+venezuela,1997-01-25,Caracas (Venezuela),Nacional Tachira (Venezuela),0,1,Caracas (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-01-25,Llaneros De Guanare (Venezuela),Minerven FC (Venezuela),3,3,Llaneros De Guanare (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-02-02,Inter Lara (Venezuela),Minerven FC (Venezuela),4,1,Inter Lara (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-02-02,Nacional Tachira (Venezuela),Minerven FC (Venezuela),1,0,Deportivo Tachira (Venezuela),Minerven FC (Venezuela),move
+venezuela,1997-02-05,Estudiantes De Merida (Venezuela),Minerven FC (Venezuela),2,1,Estudiantes De Merida (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-02-05,Llaneros De Guanare (Venezuela),Nacional Tachira (Venezuela),1,0,Llaneros De Guanare (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-02-09,Minerven FC (Venezuela),Atletico El Vigia (Venezuela),2,0,Mineros De Guayana (Venezuela),Atletico El Vigia (Venezuela),move
+venezuela,1997-02-09,Nacional Tachira (Venezuela),Estudiantes De Merida (Venezuela),2,1,Deportivo Tachira (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1997-02-16,Nacional Tachira (Venezuela),Minerven FC (Venezuela),2,1,Deportivo Tachira (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-02-23,Deportivo Petare (Venezuela),Nacional Tachira (Venezuela),2,2,Deportivo Petare (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-02-23,Minerven FC (Venezuela),Caracas (Venezuela),3,1,Mineros De Guayana (Venezuela),Caracas (Venezuela),move
+venezuela,1997-03-02,Deportivo Petare (Venezuela),Minerven FC (Venezuela),0,1,Deportivo Petare (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-03-02,Nacional Tachira (Venezuela),Deportivo Zulia (Venezuela),4,1,Deportivo Tachira (Venezuela),Deportivo Zulia (Venezuela),move
+venezuela,1997-03-09,Inter Lara (Venezuela),Nacional Tachira (Venezuela),1,1,Inter Lara (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-03-09,Minerven FC (Venezuela),Minerven FC (Venezuela),2,1,Mineros De Guayana (Venezuela),Minerven FC (Venezuela),add
+venezuela,1997-03-16,Deportivo Zulia (Venezuela),Minerven FC (Venezuela),3,3,Deportivo Zulia (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-03-16,Nacional Tachira (Venezuela),Atletico El Vigia (Venezuela),3,0,Deportivo Tachira (Venezuela),Atletico El Vigia (Venezuela),move
+venezuela,1997-03-23,Minerven FC (Venezuela),Llaneros De Guanare (Venezuela),1,1,Mineros De Guayana (Venezuela),Llaneros De Guanare (Venezuela),move
+venezuela,1997-03-23,Nacional Tachira (Venezuela),Caracas (Venezuela),3,3,Deportivo Tachira (Venezuela),Caracas (Venezuela),move
+venezuela,1997-04-06,Inter Lara (Venezuela),Minerven FC (Venezuela),0,0,Inter Lara (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-04-06,Minerven FC (Venezuela),Nacional Tachira (Venezuela),1,2,Minerven FC (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-04-09,Minerven FC (Venezuela),Estudiantes De Merida (Venezuela),1,2,Mineros De Guayana (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1997-04-09,Nacional Tachira (Venezuela),Llaneros De Guanare (Venezuela),3,1,Deportivo Tachira (Venezuela),Llaneros De Guanare (Venezuela),move
+venezuela,1997-04-13,Estudiantes De Merida (Venezuela),Nacional Tachira (Venezuela),0,0,Estudiantes De Merida (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-04-13,Minerven FC (Venezuela),Atletico El Vigia (Venezuela),2,0,Mineros De Guayana (Venezuela),Atletico El Vigia (Venezuela),move
+venezuela,1997-04-20,Minerven FC (Venezuela),Nacional Tachira (Venezuela),3,2,Mineros De Guayana (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-05-04,Caracas (Venezuela),Minerven FC (Venezuela),3,1,Caracas (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-05-04,Nacional Tachira (Venezuela),Deportivo Petare (Venezuela),2,0,Deportivo Tachira (Venezuela),Deportivo Petare (Venezuela),move
+venezuela,1997-05-11,Deportivo Zulia (Venezuela),Nacional Tachira (Venezuela),3,2,Deportivo Zulia (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-05-11,Minerven FC (Venezuela),Deportivo Petare (Venezuela),2,3,Mineros De Guayana (Venezuela),Deportivo Petare (Venezuela),move
+venezuela,1997-05-18,Minerven FC (Venezuela),Minerven FC (Venezuela),2,1,Minerven FC (Venezuela),Mineros De Guayana (Venezuela),add
+venezuela,1997-05-18,Nacional Tachira (Venezuela),Inter Lara (Venezuela),0,0,Deportivo Tachira (Venezuela),Inter Lara (Venezuela),move
+venezuela,1997-08-03,Minerven FC (Venezuela),Inter Lara (Venezuela),3,0,Mineros De Guayana (Venezuela),Inter Lara (Venezuela),move
+venezuela,1997-08-03,Nacional Tachira (Venezuela),Deportivo Petare (Venezuela),2,1,Deportivo Tachira (Venezuela),Deportivo Petare (Venezuela),move
+venezuela,1997-08-10,Inter Lara (Venezuela),Nacional Tachira (Venezuela),4,2,Inter Lara (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-08-10,Minerven FC (Venezuela),Deportivo Zulia (Venezuela),3,3,Mineros De Guayana (Venezuela),Deportivo Zulia (Venezuela),move
+venezuela,1997-08-17,Nacional Tachira (Venezuela),Minerven FC (Venezuela),1,0,Deportivo Tachira (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-08-24,Deportivo Zulia (Venezuela),Nacional Tachira (Venezuela),0,0,Deportivo Zulia (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-08-24,Minerven FC (Venezuela),Estudiantes De Merida (Venezuela),1,0,Mineros De Guayana (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1997-08-31,Estudiantes De Merida (Venezuela),Nacional Tachira (Venezuela),0,0,Estudiantes De Merida (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-08-31,Llaneros De Guanare (Venezuela),Minerven FC (Venezuela),2,1,Llaneros De Guanare (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-09-07,Minerven FC (Venezuela),Caracas (Venezuela),2,3,Mineros De Guayana (Venezuela),Caracas (Venezuela),move
+venezuela,1997-09-07,Nacional Tachira (Venezuela),Llaneros De Guanare (Venezuela),0,0,Deportivo Tachira (Venezuela),Llaneros De Guanare (Venezuela),move
+venezuela,1997-09-14,Caracas (Venezuela),Nacional Tachira (Venezuela),3,0,Caracas (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-09-14,Minerven FC (Venezuela),Minerven FC (Venezuela),1,1,Minerven FC (Venezuela),Mineros De Guayana (Venezuela),add
+venezuela,1997-09-21,Minerven FC (Venezuela),Nacional Tachira (Venezuela),3,0,Mineros De Guayana (Venezuela),Nacional Tachira (Venezuela),move
+venezuela,1997-09-21,Nacional Tachira (Venezuela),Minerven FC (Venezuela),1,1,Deportivo Tachira (Venezuela),Minerven FC (Venezuela),move
+venezuela,1997-09-24,Atletico El Vigia (Venezuela),Minerven FC (Venezuela),1,0,Atletico El Vigia (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-09-24,Nacional Tachira (Venezuela),Nacional Tachira (Venezuela),3,2,Nacional Tachira (Venezuela),Deportivo Tachira (Venezuela),add
+venezuela,1997-09-28,Atletico El Vigia (Venezuela),Nacional Tachira (Venezuela),1,2,Atletico El Vigia (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-09-28,Carabobo FC (Venezuela),Minerven FC (Venezuela),3,2,Carabobo FC (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-10-05,Minerven FC (Venezuela),Deportivo Petare (Venezuela),1,3,Mineros De Guayana (Venezuela),Deportivo Petare (Venezuela),move
+venezuela,1997-10-05,Nacional Tachira (Venezuela),Carabobo FC (Venezuela),2,1,Deportivo Tachira (Venezuela),Carabobo FC (Venezuela),move
+venezuela,1997-10-19,Deportivo Petare (Venezuela),Nacional Tachira (Venezuela),2,1,Deportivo Petare (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-10-19,Inter Lara (Venezuela),Minerven FC (Venezuela),0,0,Inter Lara (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-10-26,Deportivo Zulia (Venezuela),Minerven FC (Venezuela),2,1,Deportivo Zulia (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-10-26,Nacional Tachira (Venezuela),Inter Lara (Venezuela),1,1,Deportivo Tachira (Venezuela),Inter Lara (Venezuela),move
+venezuela,1997-11-01,Minerven FC (Venezuela),Nacional Tachira (Venezuela),0,1,Mineros De Guayana (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-11-08,Deportivo Zulia (Venezuela),Nacional Tachira (Venezuela),2,1,Deportivo Zulia (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-11-08,Estudiantes De Merida (Venezuela),Minerven FC (Venezuela),2,0,Estudiantes De Merida (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-11-15,Minerven FC (Venezuela),Llaneros De Guanare (Venezuela),2,0,Mineros De Guayana (Venezuela),Llaneros De Guanare (Venezuela),move
+venezuela,1997-11-15,Nacional Tachira (Venezuela),Estudiantes De Merida (Venezuela),1,0,Deportivo Tachira (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1997-11-23,Caracas (Venezuela),Minerven FC (Venezuela),3,0,Caracas (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-11-23,Llaneros De Guanare (Venezuela),Nacional Tachira (Venezuela),0,2,Llaneros De Guanare (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-11-30,Minerven FC (Venezuela),Minerven FC (Venezuela),0,0,Mineros De Guayana (Venezuela),Minerven FC (Venezuela),add
+venezuela,1997-11-30,Nacional Tachira (Venezuela),Caracas (Venezuela),1,0,Deportivo Tachira (Venezuela),Caracas (Venezuela),move
+venezuela,1997-12-07,Minerven FC (Venezuela),Nacional Tachira (Venezuela),2,4,Minerven FC (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-12-07,Nacional Tachira (Venezuela),Minerven FC (Venezuela),3,1,Nacional Tachira (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1997-12-10,Minerven FC (Venezuela),Atletico El Vigia (Venezuela),5,0,Mineros De Guayana (Venezuela),Atletico El Vigia (Venezuela),move
+venezuela,1997-12-10,Nacional Tachira (Venezuela),Nacional Tachira (Venezuela),0,1,Deportivo Tachira (Venezuela),Nacional Tachira (Venezuela),add
+venezuela,1997-12-14,Minerven FC (Venezuela),Carabobo FC (Venezuela),1,1,Mineros De Guayana (Venezuela),Carabobo FC (Venezuela),move
+venezuela,1997-12-14,Nacional Tachira (Venezuela),Atletico El Vigia (Venezuela),0,0,Deportivo Tachira (Venezuela),Atletico El Vigia (Venezuela),move
+venezuela,1997-12-21,Carabobo FC (Venezuela),Nacional Tachira (Venezuela),1,2,Carabobo FC (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1997-12-21,Deportivo Petare (Venezuela),Minerven FC (Venezuela),2,1,Deportivo Petare (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-01-17,Deportivo Petare (Venezuela),Nacional Tachira (Venezuela),2,0,Deportivo Petare (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-01-17,Inter Lara (Venezuela),Minerven FC (Venezuela),5,1,Inter Lara (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-01-24,Minerven FC (Venezuela),Nacional Tachira (Venezuela),2,1,Mineros De Guayana (Venezuela),Nacional Tachira (Venezuela),move
+venezuela,1998-01-24,Nacional Tachira (Venezuela),Deportivo Zulia (Venezuela),0,2,Deportivo Tachira (Venezuela),Deportivo Zulia (Venezuela),move
+venezuela,1998-01-27,Llaneros De Guanare (Venezuela),Minerven FC (Venezuela),0,0,Llaneros De Guanare (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-01-27,Minerven FC (Venezuela),Nacional Tachira (Venezuela),1,2,Minerven FC (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-02-01,Carabobo FC (Venezuela),Nacional Tachira (Venezuela),2,2,Carabobo FC (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-02-01,Minerven FC (Venezuela),Atletico El Vigia (Venezuela),4,2,Mineros De Guayana (Venezuela),Atletico El Vigia (Venezuela),move
+venezuela,1998-02-08,Deportivo Petare (Venezuela),Minerven FC (Venezuela),2,1,Deportivo Petare (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-02-08,Nacional Tachira (Venezuela),Estudiantes De Merida (Venezuela),1,1,Deportivo Tachira (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1998-02-15,Caracas (Venezuela),Nacional Tachira (Venezuela),1,0,Caracas (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-02-15,Minerven FC (Venezuela),Deportivo Zulia (Venezuela),4,1,Mineros De Guayana (Venezuela),Deportivo Zulia (Venezuela),move
+venezuela,1998-02-19,Nacional Tachira (Venezuela),Minerven FC (Venezuela),1,0,Deportivo Tachira (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-02-22,Inter Lara (Venezuela),Nacional Tachira (Venezuela),3,1,Inter Lara (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-02-22,Minerven FC (Venezuela),Carabobo FC (Venezuela),3,1,Mineros De Guayana (Venezuela),Carabobo FC (Venezuela),move
+venezuela,1998-03-01,Estudiantes De Merida (Venezuela),Minerven FC (Venezuela),3,2,Estudiantes De Merida (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-03-01,Nacional Tachira (Venezuela),Nacional Tachira (Venezuela),1,0,Deportivo Tachira (Venezuela),Nacional Tachira (Venezuela),add
+venezuela,1998-03-08,Llaneros De Guanare (Venezuela),Nacional Tachira (Venezuela),1,0,Llaneros De Guanare (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-03-08,Minerven FC (Venezuela),Caracas (Venezuela),2,0,Mineros De Guayana (Venezuela),Caracas (Venezuela),move
+venezuela,1998-03-15,Minerven FC (Venezuela),Minerven FC (Venezuela),1,2,Minerven FC (Venezuela),Mineros De Guayana (Venezuela),add
+venezuela,1998-03-15,Nacional Tachira (Venezuela),Atletico El Vigia (Venezuela),1,1,Deportivo Tachira (Venezuela),Atletico El Vigia (Venezuela),move
+venezuela,1998-03-22,Minerven FC (Venezuela),Inter Lara (Venezuela),0,1,Mineros De Guayana (Venezuela),Inter Lara (Venezuela),move
+venezuela,1998-03-22,Nacional Tachira (Venezuela),Deportivo Petare (Venezuela),2,3,Deportivo Tachira (Venezuela),Deportivo Petare (Venezuela),move
+venezuela,1998-03-29,Deportivo Zulia (Venezuela),Nacional Tachira (Venezuela),1,0,Deportivo Zulia (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-03-29,Nacional Tachira (Venezuela),Minerven FC (Venezuela),1,0,Nacional Tachira (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-04-01,Minerven FC (Venezuela),Llaneros De Guanare (Venezuela),1,1,Mineros De Guayana (Venezuela),Llaneros De Guanare (Venezuela),move
+venezuela,1998-04-01,Nacional Tachira (Venezuela),Minerven FC (Venezuela),3,1,Deportivo Tachira (Venezuela),Minerven FC (Venezuela),move
+venezuela,1998-04-05,Atletico El Vigia (Venezuela),Minerven FC (Venezuela),3,1,Atletico El Vigia (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-04-05,Nacional Tachira (Venezuela),Carabobo FC (Venezuela),2,1,Deportivo Tachira (Venezuela),Carabobo FC (Venezuela),move
+venezuela,1998-04-12,Estudiantes De Merida (Venezuela),Nacional Tachira (Venezuela),5,2,Estudiantes De Merida (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-04-12,Minerven FC (Venezuela),Deportivo Petare (Venezuela),2,0,Mineros De Guayana (Venezuela),Deportivo Petare (Venezuela),move
+venezuela,1998-04-19,Deportivo Zulia (Venezuela),Minerven FC (Venezuela),3,1,Deportivo Zulia (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-04-19,Nacional Tachira (Venezuela),Caracas (Venezuela),1,3,Deportivo Tachira (Venezuela),Caracas (Venezuela),move
+venezuela,1998-04-22,Minerven FC (Venezuela),Nacional Tachira (Venezuela),2,3,Mineros De Guayana (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-04-26,Carabobo FC (Venezuela),Minerven FC (Venezuela),1,0,Carabobo FC (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-04-26,Nacional Tachira (Venezuela),Inter Lara (Venezuela),0,0,Deportivo Tachira (Venezuela),Inter Lara (Venezuela),move
+venezuela,1998-05-03,Minerven FC (Venezuela),Estudiantes De Merida (Venezuela),0,2,Mineros De Guayana (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1998-05-03,Nacional Tachira (Venezuela),Nacional Tachira (Venezuela),1,1,Nacional Tachira (Venezuela),Deportivo Tachira (Venezuela),add
+venezuela,1998-05-10,Caracas (Venezuela),Minerven FC (Venezuela),3,2,Caracas (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-05-10,Nacional Tachira (Venezuela),Llaneros De Guanare (Venezuela),0,2,Deportivo Tachira (Venezuela),Llaneros De Guanare (Venezuela),move
+venezuela,1998-05-17,Atletico El Vigia (Venezuela),Nacional Tachira (Venezuela),1,2,Atletico El Vigia (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-05-17,Minerven FC (Venezuela),Minerven FC (Venezuela),2,0,Mineros De Guayana (Venezuela),Minerven FC (Venezuela),add
+venezuela,1998-08-09,Carabobo FC (Venezuela),Minerven FC (Venezuela),2,3,Carabobo FC (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-08-09,Zulianos FC (Venezuela),Nacional Tachira (Venezuela),1,1,Zulianos FC (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-08-16,Caracas (Venezuela),Nacional Tachira (Venezuela),0,4,Caracas (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-08-16,Minerven FC (Venezuela),Ula Merida (Venezuela),4,1,Mineros De Guayana (Venezuela),Ula Merida (Venezuela),move
+venezuela,1998-08-19,Minerven FC (Venezuela),Nacional Tachira (Venezuela),1,2,Mineros De Guayana (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-08-23,Inter Lara (Venezuela),Nacional Tachira (Venezuela),3,3,Inter Lara (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-08-23,Minerven FC (Venezuela),Caracas (Venezuela),1,2,Mineros De Guayana (Venezuela),Caracas (Venezuela),move
+venezuela,1998-08-30,Nacional Tachira (Venezuela),Estudiantes De Merida (Venezuela),2,1,Deportivo Tachira (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1998-08-30,Zulianos FC (Venezuela),Minerven FC (Venezuela),2,2,Zulianos FC (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-09-02,Inter Lara (Venezuela),Minerven FC (Venezuela),0,2,Inter Lara (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-09-02,Zamora FC (Venezuela),Nacional Tachira (Venezuela),1,2,Zamora FC (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-09-06,Minerven FC (Venezuela),Estudiantes De Merida (Venezuela),2,4,Mineros De Guayana (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1998-09-06,Nacional Tachira (Venezuela),Nacional Tachira (Venezuela),2,1,Deportivo Tachira (Venezuela),Nacional Tachira (Venezuela),add
+venezuela,1998-09-13,Deportivo Petare (Venezuela),Nacional Tachira (Venezuela),1,2,Deportivo Petare (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-09-13,Zamora FC (Venezuela),Minerven FC (Venezuela),2,2,Zamora FC (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-09-20,Minerven FC (Venezuela),Nacional Tachira (Venezuela),1,3,Mineros De Guayana (Venezuela),Nacional Tachira (Venezuela),move
+venezuela,1998-09-20,Nacional Tachira (Venezuela),Minerven FC (Venezuela),0,0,Deportivo Tachira (Venezuela),Minerven FC (Venezuela),move
+venezuela,1998-09-27,Minerven FC (Venezuela),Deportivo Petare (Venezuela),1,3,Mineros De Guayana (Venezuela),Deportivo Petare (Venezuela),move
+venezuela,1998-09-27,Nacional Tachira (Venezuela),Carabobo FC (Venezuela),2,1,Deportivo Tachira (Venezuela),Carabobo FC (Venezuela),move
+venezuela,1998-10-04,Minerven FC (Venezuela),Minerven FC (Venezuela),1,0,Minerven FC (Venezuela),Mineros De Guayana (Venezuela),add
+venezuela,1998-10-04,Ula Merida (Venezuela),Nacional Tachira (Venezuela),0,0,Ula Merida (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-10-11,Minerven FC (Venezuela),Carabobo FC (Venezuela),1,0,Mineros De Guayana (Venezuela),Carabobo FC (Venezuela),move
+venezuela,1998-10-11,Nacional Tachira (Venezuela),Zulianos FC (Venezuela),3,0,Deportivo Tachira (Venezuela),Zulianos FC (Venezuela),move
+venezuela,1998-10-18,Nacional Tachira (Venezuela),Caracas (Venezuela),2,3,Deportivo Tachira (Venezuela),Caracas (Venezuela),move
+venezuela,1998-10-18,Ula Merida (Venezuela),Minerven FC (Venezuela),6,2,Ula Merida (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-10-21,Nacional Tachira (Venezuela),Minerven FC (Venezuela),0,0,Deportivo Tachira (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-10-25,Caracas (Venezuela),Minerven FC (Venezuela),1,1,Caracas (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-10-25,Nacional Tachira (Venezuela),Inter Lara (Venezuela),2,1,Deportivo Tachira (Venezuela),Inter Lara (Venezuela),move
+venezuela,1998-11-01,Estudiantes De Merida (Venezuela),Nacional Tachira (Venezuela),3,1,Estudiantes De Merida (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-11-01,Minerven FC (Venezuela),Zulianos FC (Venezuela),0,0,Mineros De Guayana (Venezuela),Zulianos FC (Venezuela),move
+venezuela,1998-11-04,Minerven FC (Venezuela),Inter Lara (Venezuela),2,3,Mineros De Guayana (Venezuela),Inter Lara (Venezuela),move
+venezuela,1998-11-04,Nacional Tachira (Venezuela),Zamora FC (Venezuela),1,0,Deportivo Tachira (Venezuela),Zamora FC (Venezuela),move
+venezuela,1998-11-15,Estudiantes De Merida (Venezuela),Minerven FC (Venezuela),2,1,Estudiantes De Merida (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-11-15,Nacional Tachira (Venezuela),Nacional Tachira (Venezuela),2,3,Nacional Tachira (Venezuela),Deportivo Tachira (Venezuela),add
+venezuela,1998-11-22,Minerven FC (Venezuela),Zamora FC (Venezuela),1,4,Mineros De Guayana (Venezuela),Zamora FC (Venezuela),move
+venezuela,1998-11-22,Nacional Tachira (Venezuela),Deportivo Petare (Venezuela),4,0,Deportivo Tachira (Venezuela),Deportivo Petare (Venezuela),move
+venezuela,1998-11-29,Minerven FC (Venezuela),Nacional Tachira (Venezuela),1,2,Minerven FC (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1998-11-29,Nacional Tachira (Venezuela),Minerven FC (Venezuela),2,0,Nacional Tachira (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-12-13,Deportivo Petare (Venezuela),Minerven FC (Venezuela),2,1,Deportivo Petare (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1998-12-13,Nacional Tachira (Venezuela),Carabobo FC (Venezuela),1,0,Deportivo Tachira (Venezuela),Carabobo FC (Venezuela),move
+venezuela,1998-12-20,Minerven FC (Venezuela),Minerven FC (Venezuela),2,0,Mineros De Guayana (Venezuela),Minerven FC (Venezuela),add
+venezuela,1998-12-20,Nacional Tachira (Venezuela),Ula Merida (Venezuela),3,1,Deportivo Tachira (Venezuela),Ula Merida (Venezuela),move
+venezuela,1999-02-07,Minerven FC (Venezuela),Caracas (Venezuela),3,0,Mineros De Guayana (Venezuela),Caracas (Venezuela),move
+venezuela,1999-02-07,Ula Merida (Venezuela),Nacional Tachira (Venezuela),4,1,Ula Merida (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1999-02-14,Caracas (Venezuela),Nacional Tachira (Venezuela),0,0,Caracas (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1999-02-14,Minerven FC (Venezuela),Deportivo Zulia (Venezuela),3,3,Mineros De Guayana (Venezuela),Deportivo Zulia (Venezuela),move
+venezuela,1999-02-21,Deportivo Zulia (Venezuela),Nacional Tachira (Venezuela),3,3,Deportivo Zulia (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1999-02-21,Estudiantes De Merida (Venezuela),Minerven FC (Venezuela),3,3,Estudiantes De Merida (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1999-02-28,Minerven FC (Venezuela),Deportivo Petare (Venezuela),1,1,Mineros De Guayana (Venezuela),Deportivo Petare (Venezuela),move
+venezuela,1999-02-28,Nacional Tachira (Venezuela),Estudiantes De Merida (Venezuela),1,1,Deportivo Tachira (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1999-03-07,Deportivo Petare (Venezuela),Nacional Tachira (Venezuela),3,0,Deportivo Petare (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1999-03-07,Inter Lara (Venezuela),Minerven FC (Venezuela),1,0,Inter Lara (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1999-03-10,Nacional Tachira (Venezuela),Minerven FC (Venezuela),1,2,Deportivo Tachira (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1999-03-14,Minerven FC (Venezuela),Nacional Tachira (Venezuela),2,2,Mineros De Guayana (Venezuela),Nacional Tachira (Venezuela),move
+venezuela,1999-03-14,Nacional Tachira (Venezuela),Inter Lara (Venezuela),2,1,Deportivo Tachira (Venezuela),Inter Lara (Venezuela),move
+venezuela,1999-03-21,Minerven FC (Venezuela),Ula Merida (Venezuela),2,2,Mineros De Guayana (Venezuela),Ula Merida (Venezuela),move
+venezuela,1999-03-21,Nacional Tachira (Venezuela),Carabobo FC (Venezuela),3,1,Deportivo Tachira (Venezuela),Carabobo FC (Venezuela),move
+venezuela,1999-03-28,Carabobo FC (Venezuela),Minerven FC (Venezuela),1,1,Carabobo FC (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1999-03-28,Nacional Tachira (Venezuela),Nacional Tachira (Venezuela),2,1,Nacional Tachira (Venezuela),Deportivo Tachira (Venezuela),add
+venezuela,1999-04-04,Caracas (Venezuela),Minerven FC (Venezuela),5,2,Caracas (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1999-04-04,Nacional Tachira (Venezuela),Ula Merida (Venezuela),1,0,Deportivo Tachira (Venezuela),Ula Merida (Venezuela),move
+venezuela,1999-04-11,Deportivo Zulia (Venezuela),Minerven FC (Venezuela),6,1,Deportivo Zulia (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1999-04-11,Nacional Tachira (Venezuela),Caracas (Venezuela),1,1,Deportivo Tachira (Venezuela),Caracas (Venezuela),move
+venezuela,1999-04-18,Minerven FC (Venezuela),Estudiantes De Merida (Venezuela),1,0,Mineros De Guayana (Venezuela),Estudiantes De Merida (Venezuela),move
+venezuela,1999-04-18,Nacional Tachira (Venezuela),Deportivo Zulia (Venezuela),1,1,Deportivo Tachira (Venezuela),Deportivo Zulia (Venezuela),move
+venezuela,1999-04-24,Deportivo Petare (Venezuela),Minerven FC (Venezuela),3,2,Deportivo Petare (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1999-04-24,Estudiantes De Merida (Venezuela),Nacional Tachira (Venezuela),1,0,Estudiantes De Merida (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1999-05-02,Deportivo Petare (Venezuela),Nacional Tachira (Venezuela),0,0,Deportivo Petare (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1999-05-02,Minerven FC (Venezuela),Inter Lara (Venezuela),1,3,Mineros De Guayana (Venezuela),Inter Lara (Venezuela),move
+venezuela,1999-05-05,Minerven FC (Venezuela),Nacional Tachira (Venezuela),3,0,Mineros De Guayana (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1999-05-09,Inter Lara (Venezuela),Nacional Tachira (Venezuela),2,2,Inter Lara (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1999-05-09,Nacional Tachira (Venezuela),Minerven FC (Venezuela),1,2,Nacional Tachira (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1999-05-16,Carabobo FC (Venezuela),Nacional Tachira (Venezuela),2,1,Carabobo FC (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1999-05-16,Ula Merida (Venezuela),Minerven FC (Venezuela),3,3,Ula Merida (Venezuela),Mineros De Guayana (Venezuela),move
+venezuela,1999-05-23,Minerven FC (Venezuela),Carabobo FC (Venezuela),0,1,Mineros De Guayana (Venezuela),Carabobo FC (Venezuela),move
+venezuela,1999-05-23,Nacional Tachira (Venezuela),Nacional Tachira (Venezuela),0,1,Deportivo Tachira (Venezuela),Nacional Tachira (Venezuela),add
+venezuela,1999-05-30,Deportivo Petare (Venezuela),Nacional Tachira (Venezuela),5,1,Deportivo Petare (Venezuela),Deportivo Tachira (Venezuela),move
+venezuela,1999-06-06,Nacional Tachira (Venezuela),Deportivo Petare (Venezuela),1,2,Deportivo Tachira (Venezuela),Deportivo Petare (Venezuela),move

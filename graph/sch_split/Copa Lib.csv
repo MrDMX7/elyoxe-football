@@ -1,0 +1,67 @@
+competition,date,home_ident,away_ident,gh,ga,new_home,new_away,kind
+Copa Lib,1999-09-29,Club América (Mexico),Guadalajara (Mexico),2,0,Club América (Mexico),Atlas (Mexico),move
+Copa Lib,1999-10-19,Deportivo Tachira (Venezuela),Guadalajara (Mexico),2,2,Deportivo Tachira (Venezuela),Atlas (Mexico),move
+Copa Lib,1999-10-21,Deportivo Petare (Venezuela),Guadalajara (Mexico),3,3,Deportivo Petare (Venezuela),Atlas (Mexico),move
+Copa Lib,1999-10-27,Guadalajara (Mexico),Club América (Mexico),6,3,Atlas (Mexico),Club América (Mexico),move
+Copa Lib,1999-11-11,Guadalajara (Mexico),Deportivo Tachira (Venezuela),3,0,Atlas (Mexico),Deportivo Tachira (Venezuela),move
+Copa Lib,1999-11-18,Guadalajara (Mexico),Deportivo Petare (Venezuela),2,2,Atlas (Mexico),Deportivo Petare (Venezuela),move
+Copa Lib,2000-02-23,Guadalajara (Mexico),River Plate (Argentina),1,1,Atlas (Mexico),River Plate (Argentina),move
+Copa Lib,2000-02-29,Atletico Nacional (Colombia),Guadalajara (Mexico),2,3,Atletico Nacional (Colombia),Atlas (Mexico),move
+Copa Lib,2000-03-08,Guadalajara (Mexico),Universidad de Chile (Chile),0,0,Atlas (Mexico),Universidad de Chile (Chile),move
+Copa Lib,2000-03-15,River Plate (Argentina),Guadalajara (Mexico),3,2,River Plate (Argentina),Atlas (Mexico),move
+Copa Lib,2000-03-22,Guadalajara (Mexico),Atletico Nacional (Colombia),5,1,Atlas (Mexico),Atletico Nacional (Colombia),move
+Copa Lib,2000-04-20,Universidad de Chile (Chile),Guadalajara (Mexico),3,2,Universidad de Chile (Chile),Atlas (Mexico),move
+Copa Lib,2000-05-03,Guadalajara (Mexico),Atletico Junior (Colombia),2,0,Atlas (Mexico),Atletico Junior (Colombia),move
+Copa Lib,2000-05-10,Atletico Junior (Colombia),Guadalajara (Mexico),1,3,Atletico Junior (Colombia),Atlas (Mexico),move
+Copa Lib,2000-05-18,Guadalajara (Mexico),Se Palmeiras (Brazil),0,2,Atlas (Mexico),Se Palmeiras (Brazil),move
+Copa Lib,2000-05-25,Se Palmeiras (Brazil),Guadalajara (Mexico),3,2,Se Palmeiras (Brazil),Atlas (Mexico),move
+Copa Lib,2002-10-22,Estudiantes De Merida (Venezuela),Tigres UANL (Mexico),1,0,Estudiantes De Merida (Venezuela),Pumas UNAM (Mexico),move
+Copa Lib,2002-10-24,Nacional Tachira (Venezuela),Tigres UANL (Mexico),1,2,Nacional Tachira (Venezuela),Pumas UNAM (Mexico),move
+Copa Lib,2002-11-06,Tigres UANL (Mexico),Cruz Azul (Mexico),1,1,Pumas UNAM (Mexico),Cruz Azul (Mexico),move
+Copa Lib,2002-11-12,Tigres UANL (Mexico),Estudiantes De Merida (Venezuela),3,1,Pumas UNAM (Mexico),Estudiantes De Merida (Venezuela),move
+Copa Lib,2002-11-19,Tigres UANL (Mexico),Nacional Tachira (Venezuela),4,0,Pumas UNAM (Mexico),Nacional Tachira (Venezuela),move
+Copa Lib,2002-11-28,Cruz Azul (Mexico),Tigres UANL (Mexico),0,2,Cruz Azul (Mexico),Pumas UNAM (Mexico),move
+Copa Lib,2003-02-05,Gremio Porto Alegre (Brazil),Tigres UANL (Mexico),3,2,Gremio Porto Alegre (Brazil),Pumas UNAM (Mexico),move
+Copa Lib,2003-02-12,Tigres UANL (Mexico),Club Bolivar (Bolivia),2,0,Pumas UNAM (Mexico),Club Bolivar (Bolivia),move
+Copa Lib,2003-03-12,CA Penarol (Uruguay),Tigres UANL (Mexico),2,0,CA Penarol (Uruguay),Pumas UNAM (Mexico),move
+Copa Lib,2003-03-21,Tigres UANL (Mexico),Gremio Porto Alegre (Brazil),1,0,Pumas UNAM (Mexico),Gremio Porto Alegre (Brazil),move
+Copa Lib,2003-03-26,Club Bolivar (Bolivia),Tigres UANL (Mexico),2,0,Club Bolivar (Bolivia),Pumas UNAM (Mexico),move
+Copa Lib,2003-04-11,Tigres UANL (Mexico),CA Penarol (Uruguay),3,1,Pumas UNAM (Mexico),CA Penarol (Uruguay),move
+Copa Lib,2003-04-25,Tigres UANL (Mexico),Cd Cobreloa (Chile),0,1,Pumas UNAM (Mexico),Cd Cobreloa (Chile),move
+Copa Lib,2003-05-09,Cd Cobreloa (Chile),Tigres UANL (Mexico),0,0,Cd Cobreloa (Chile),Pumas UNAM (Mexico),move
+Copa Lib,2004-01-21,Club América (Mexico),Guadalajara (Mexico),2,1,Club América (Mexico),Atlas (Mexico),move
+Copa Lib,2004-02-01,Guadalajara (Mexico),Club América (Mexico),1,2,Atlas (Mexico),Club América (Mexico),move
+Copa Lib,2006-02-08,Nacional (Uruguay),Tigres UANL (Mexico),2,0,Nacional (Uruguay),Pumas UNAM (Mexico),move
+Copa Lib,2006-02-22,Tigres UANL (Mexico),Union Atletico Maracaibo (Venezuela),0,1,Pumas UNAM (Mexico),Union Atletico Maracaibo (Venezuela),move
+Copa Lib,2006-03-08,Tigres UANL (Mexico),Internacional (Brazil),1,2,Pumas UNAM (Mexico),Internacional (Brazil),move
+Copa Lib,2006-03-22,Internacional (Brazil),Tigres UANL (Mexico),3,2,Internacional (Brazil),Pumas UNAM (Mexico),move
+Copa Lib,2006-03-30,Union Atletico Maracaibo (Venezuela),Tigres UANL (Mexico),3,0,Union Atletico Maracaibo (Venezuela),Pumas UNAM (Mexico),move
+Copa Lib,2006-04-18,Tigres UANL (Mexico),Nacional (Uruguay),1,1,Pumas UNAM (Mexico),Nacional (Uruguay),move
+Copa Lib,2008-01-31,Guadalajara (Mexico),La Paz FC (Bolivia),2,0,Atlas (Mexico),La Paz FC (Bolivia),move
+Copa Lib,2008-02-06,La Paz FC (Bolivia),Guadalajara (Mexico),1,0,La Paz FC (Bolivia),Atlas (Mexico),move
+Copa Lib,2008-02-22,Guadalajara (Mexico),Colo Colo (Chile),3,0,Atlas (Mexico),Colo Colo (Chile),move
+Copa Lib,2008-03-07,Boca Juniors (Argentina),Guadalajara (Mexico),3,0,Boca Juniors (Argentina),Atlas (Mexico),move
+Copa Lib,2008-03-13,Guadalajara (Mexico),Union Atletico Maracaibo (Venezuela),3,0,Atlas (Mexico),Union Atletico Maracaibo (Venezuela),move
+Copa Lib,2008-03-26,Union Atletico Maracaibo (Venezuela),Guadalajara (Mexico),1,1,Union Atletico Maracaibo (Venezuela),Atlas (Mexico),move
+Copa Lib,2008-04-09,Guadalajara (Mexico),Boca Juniors (Argentina),3,1,Atlas (Mexico),Boca Juniors (Argentina),move
+Copa Lib,2008-04-23,Colo Colo (Chile),Guadalajara (Mexico),1,1,Colo Colo (Chile),Atlas (Mexico),move
+Copa Lib,2008-04-30,CA Lanus (Argentina),Guadalajara (Mexico),0,1,CA Lanus (Argentina),Atlas (Mexico),move
+Copa Lib,2008-05-07,Guadalajara (Mexico),CA Lanus (Argentina),2,2,Atlas (Mexico),CA Lanus (Argentina),move
+Copa Lib,2008-05-15,Boca Juniors (Argentina),Guadalajara (Mexico),2,2,Boca Juniors (Argentina),Atlas (Mexico),move
+Copa Lib,2008-05-22,Guadalajara (Mexico),Boca Juniors (Argentina),0,3,Atlas (Mexico),Boca Juniors (Argentina),move
+Copa Lib,2015-02-18,Guadalajara (Mexico),Santa Fe (Colombia),0,1,Atlas (Mexico),Santa Fe (Colombia),move
+Copa Lib,2015-02-25,Atletico Mineiro (Brazil),Guadalajara (Mexico),0,1,Atletico Mineiro (Brazil),Atlas (Mexico),move
+Copa Lib,2015-03-04,Colo Colo (Chile),Guadalajara (Mexico),2,0,Colo Colo (Chile),Atlas (Mexico),move
+Copa Lib,2015-04-08,Guadalajara (Mexico),Colo Colo (Chile),1,3,Atlas (Mexico),Colo Colo (Chile),move
+Copa Lib,2015-04-16,Guadalajara (Mexico),Atletico Mineiro (Brazil),1,0,Atlas (Mexico),Atletico Mineiro (Brazil),move
+Copa Lib,2015-04-23,Santa Fe (Colombia),Guadalajara (Mexico),3,1,Santa Fe (Colombia),Atlas (Mexico),move
+Copa Lib,2016-02-19,Tigres UANL (Mexico),CS Emelec (Ecuador),4,2,Pumas UNAM (Mexico),CS Emelec (Ecuador),move
+Copa Lib,2016-03-01,Club Olimpia (Paraguay),Tigres UANL (Mexico),0,2,Club Olimpia (Paraguay),Pumas UNAM (Mexico),move
+Copa Lib,2016-03-10,Deportivo Tachira (Venezuela),Tigres UANL (Mexico),2,0,Deportivo Tachira (Venezuela),Pumas UNAM (Mexico),move
+Copa Lib,2016-03-18,Tigres UANL (Mexico),Deportivo Tachira (Venezuela),4,1,Pumas UNAM (Mexico),Deportivo Tachira (Venezuela),move
+Copa Lib,2016-04-07,Tigres UANL (Mexico),Club Olimpia (Paraguay),4,1,Pumas UNAM (Mexico),Club Olimpia (Paraguay),move
+Copa Lib,2016-04-14,CS Emelec (Ecuador),Tigres UANL (Mexico),2,3,CS Emelec (Ecuador),Pumas UNAM (Mexico),move
+Copa Lib,2016-04-27,Deportivo Tachira (Venezuela),Tigres UANL (Mexico),1,0,Deportivo Tachira (Venezuela),Pumas UNAM (Mexico),move
+Copa Lib,2016-05-04,Tigres UANL (Mexico),Deportivo Tachira (Venezuela),2,0,Pumas UNAM (Mexico),Deportivo Tachira (Venezuela),move
+Copa Lib,2016-05-18,Independiente Valle (Ecuador),Tigres UANL (Mexico),2,1,Independiente Valle (Ecuador),Pumas UNAM (Mexico),move
+Copa Lib,2016-05-25,Tigres UANL (Mexico),Independiente Valle (Ecuador),2,1,Pumas UNAM (Mexico),Independiente Valle (Ecuador),move
