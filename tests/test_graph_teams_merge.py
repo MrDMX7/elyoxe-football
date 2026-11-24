@@ -107,7 +107,7 @@ def test_load_remaps_and_settles_the_honour_conflict(tmp_path):
     G.conflict("honour", 1, "champion", "8674", "s365", "30", "fotmob")
     G.conflict("honour", 2, "champion", "31", "s365", "30", "fotmob")
     out = T.load(G, None, None)
-    assert out == {"merged": 1, "conflicts_settled": 1}
+    assert out == {"merged": 1, "conflicts_settled": 1, "games_of_the_successor": 0}
     assert G.c.execute("SELECT tid FROM honour").fetchall() == [(30,)]
     assert G.c.execute("SELECT count(*) FROM team WHERE tid=8674").fetchone()[0] == 0
     assert G.c.execute("SELECT tifo_id FROM conflict").fetchall() == [(2,)]
@@ -203,3 +203,31 @@ def test_a_fotmob_club_with_no_games_here_takes_its_country_from_the_encyclopedi
     out = T.load(G, None, None, world=world)
     assert out["merged"] == 1
     assert [t for (t,) in G.c.execute("SELECT tid FROM team ORDER BY tid")] == [10, 12, 20, 21, 22]
+
+
+def test_fotmobs_record_of_a_country_that_is_gone_is_the_team_the_other_sources_hold():
+    # FotMob holds the old EURO finals under records of their own («Soviet Union» 797, «Yugoslavia» 395, no kind)
+    from graph.load.teams import national_pairs
+    teams = [(16, "Russia", None, "national", True), (797, "Soviet Union", None, None, True), (395, "Yugoslavia", None, None, True),
+             (27620, "Yugoslavia", None, "national", False), (799, "Czechoslovakia", None, None, True),
+             (27614, "Czechoslovakia", None, "national", False), (900, "Georgia", None, None, True)]
+    played = {16: 752, 797: 4, 395: 6, 27620: 486, 799: 1, 27614: 520, 900: 30}
+    share = {797: 1.0, 395: 1.0, 799: 1.0, 900: 0.0}
+    assert national_pairs(teams, frozenset(), played, share) == [(395, 27620), (797, 16), (799, 27614)]
+    assert national_pairs(teams, frozenset({(16, 797)}), played, share) == [(395, 27620), (799, 27614)]
+
+
+def test_fr_yugoslavias_games_are_serbias(tmp_path):
+    from graph.db import Graph
+    from graph.load.teams import later
+    G = Graph(str(tmp_path / "t.db"))
+    G.put("team", {"tid": 27620, "name": "Yugoslavia", "kind": "national"}, "martj42")
+    G.put("team", {"tid": 1240, "name": "Serbia", "kind": "national"}, "fotmob")
+    G.xref("team", 1240, "fotmob", "8205", "fotmob-native")
+    G.put("team", {"tid": 4, "name": "Spain", "kind": "national"}, "fotmob")
+    G.put("match", {"mid": 1, "date": "1990-06-26", "home": 4, "away": 27620, "hs": 1, "as_": 2}, "fjelstul")
+    G.put("match", {"mid": 2, "date": "2000-06-21T16:00:00Z", "home": 27620, "away": 4, "hs": 3, "as_": 4}, "fotmob")
+    G.many("event", [{"mid": 2, "minute": 30, "type": "goal", "tid": 27620, "pid": 7}], "fotmob")
+    assert later(G) == 1
+    assert G.c.execute("SELECT mid, home, away FROM match ORDER BY mid").fetchall() == [(1, 4, 27620), (2, 1240, 4)]
+    assert G.c.execute("SELECT tid FROM event").fetchall() == [(1240,)]

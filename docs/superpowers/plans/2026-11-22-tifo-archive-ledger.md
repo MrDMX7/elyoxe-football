@@ -150,3 +150,21 @@ with the commit or the evidence. A new session reads this first and continues at
   * Open: about 30 small folded clubs (Charleroi, Odense, Sarpsborg, Servette…), Honduras «Broncos De La Universidad» from
     2001/02, 51 competitions named as leagues and filed as cups, RSSSF's years of a season that ends in August (Algeria
     2020/21 dated 2020 for 2021).
+- 24 Nov (night): two organisers' own records join the graph, fetched once on the laptop and kept in the bucket's state
+  (graph/uefa.json, graph/fifa.json); steps `uefa` and `fifa` after `espn`.
+  * UEFA (graph/uefa_fetch.py, graph/load/uefa.py): 21,098 games 1955-2010 of the European Cup, the UEFA Cup, the Cup
+    Winners' Cup, the Intertoto Cup, the Super Cup, the Intercontinental Cup, the EURO with its qualifiers and the Fairs
+    Cup. Read on a copy of the live graph: 19,951 joined to a game held, 1,073 UEFA's own (1,032 the Fairs Cup, a new
+    competition with 13 seasons), 16,108 line-ups, 169,783 events, 19,969 coaches, 45,945 men of UEFA's own, 222 dates
+    and 134 scores corrected. 11 Intertoto games answer HTTP 500 at UEFA and are left out.
+  * FIFA (graph/fifa_fetch.py, graph/load/fifa.py): 11,173 games of the World Cup, its qualifiers, the Confederations
+    Cup, the Olympics and the Club World Cup with 64,762 men: 10,495 joined, 636 FIFA's own (Olympics mostly), 38,067 men
+    of FIFA's own, 9 scores differ.
+  * A copy that counted the shoot-out in its score (kicks alone, or on top of the goals) is the same game and takes the
+    organiser's score.
+  * teams: FotMob's records of countries that are gone («Soviet Union», «West Germany», «Yugoslavia», «Czechoslovakia»,
+    holding only old EURO finals) fold into the team the other sources hold; a game of «Yugoslavia» from 1992-04-28 is
+    Serbia's (games_of_the_successor). The EURO 1976 final stood twice for it.
+  * Open: Slavia Mozyr's 2001 qualifiers stand three times (UEFA, schochastics twice under two names); FIFA's «X Olympic»
+    sides before 1992 beside «X U23»; UEFA's Fairs Cup clubs of its own («Coventry», «Birmingham», «Union SG»…) to check
+    against the clubs held after the first build.

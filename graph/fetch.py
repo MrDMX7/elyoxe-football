@@ -128,6 +128,16 @@ def espn(S):
     _state_file(S, "espn.json.gz", "graph/espn.json")
 
 
+def uefa(S):
+    """UEFA's records of 1955-2011 (graph/uefa_fetch.py): db/.cache/uefa.json.gz for graph/load/uefa.py"""
+    _state_file(S, "uefa.json.gz", "graph/uefa.json")
+
+
+def fifa(S):
+    """FIFA's records (graph/fifa_fetch.py): db/.cache/fifa.json.gz for graph/load/fifa.py"""
+    _state_file(S, "fifa.json.gz", "graph/fifa.json")
+
+
 def uaefa(S):
     """the UAE FA's record of the top flight 2003/04-2016/17 (graph/uaefa_fetch.py, fetched once on the laptop and kept in
     the bucket's state/graph/uaefa.json): db/.cache/uaefa.json.gz for graph/load/uaefa.py"""

@@ -162,6 +162,9 @@ COUNTRY = [{"united states", "usa"}, {"czech republic", "czechia"}, {"turkey", "
 # a country's old name whose games the sources keep under its successor (martj42's «Russia» of 1970, FotMob's Germany); its
 # name on those days is teams_ar.yaml era_names'
 SUCCESSOR = {"soviet union": "russia", "ussr": "russia", "west germany": "germany", "germany fr": "germany"}
+# a name two countries carried: a game of «Yugoslavia» from this day is FR Yugoslavia's, which martj42 (the source of nearly
+# every game of a national team) files as Serbia's
+LATER = {"yugoslavia": ("1992-04-28", "serbia")}
 
 
 def _country(name):
@@ -172,13 +175,21 @@ def _country(name):
 def national_pairs(teams, met, played, share, min_share=0.5):
     """[(drop, keep)]: a record without a FotMob id named as a country (Transfermarkt's «Mexico», «United Arab Emirates»)
     whose games are mostly against national teams folds into FotMob's national team of that name; of two FotMob records of
-    one name (FotMob holds Mexico twice) the one with games. A record that met it is another team."""
-    nat = defaultdict(list)
+    one name (FotMob holds Mexico twice) the one with games. A record that met it is another team. FotMob's own record of
+    a country that is gone (it holds only the old EURO finals: «Soviet Union», «Yugoslavia», «Czechoslovakia», no kind)
+    folds into the successor's, else into the one national team of that name another source holds with games."""
+    nat, old = defaultdict(list), defaultdict(list)
     for tid, name, _, kind, fm in teams:
-        if fm and kind == "national" and name:
-            nat[_country(name)].append(tid)
+        if kind == "national" and name:
+            (nat if fm else old)[_country(name)].append(tid)
     out = []
     for tid, name, _, kind, fm in teams:
+        if fm and kind is None and name and share.get(tid, 0) >= min_share:
+            c = _country(name)
+            fits = [k for k in (nat.get(SUCCESSOR[c], ()) if c in SUCCESSOR else old.get(c, ())) if played.get(k, 0) > 0]
+            if len(fits) == 1 and (min(tid, fits[0]), max(tid, fits[0])) not in met:
+                out.append((tid, fits[0]))
+            continue
         succ = SUCCESSOR.get(_country(name or "")) if not fm else None
         if succ:                               # Fjelstul's «Soviet Union»: martj42 and FotMob hold its games as Russia's
             fits = [k for k in nat.get(succ, ()) if played.get(k, 0) > 0]
@@ -246,7 +257,7 @@ def candidates(c, alias=None, guard=None, era=None, world=None):
     out = pairs(teams, met, aliases() if alias is None else alias, guard, era, apart(), keyed, joins())
     # national teams (graph/load/teams.national_pairs): who plays whom, and how much of it against a country's team
     named = {_country(t[1]) for t in teams if t[3] == "national" and t[1]}
-    nationalish = {t[0] for t in teams if t[3] == "national" or (t[3] != "club" and t[1] and _country(t[1]) in named)}
+    nationalish = {t[0] for t in teams if t[3] == "national" or (t[3] != "club" and t[1] and (_country(t[1]) in named or _country(t[1]) in SUCCESSOR))}
     played, vs = Counter(), Counter()
     for h, a in q("SELECT home, away FROM match WHERE home IS NOT NULL AND away IS NOT NULL"):
         for me, other in ((h, a), (a, h)):
@@ -282,7 +293,29 @@ def world_countries(S):
     return {int(c[0]): c[3] for c in d.get("clubs") or [] if len(c) > 3 and c[3] and str(c[0]).isdigit()}
 
 
+def later(G):
+    """LATER: the games a gone country's record holds from the day its name passed on go to the successor's national team
+    (EURO 2000 and the 1998 World Cup beside the qualifiers martj42 files as Serbia's); one record each side, else nothing."""
+    n = 0
+    for name, (day, new) in LATER.items():
+        a = [t for t, in G.c.execute("SELECT tid FROM team WHERE kind='national' AND lower(name)=?", (name,))]
+        b = [t for t, in G.c.execute("""SELECT tid FROM team WHERE kind='national' AND lower(name)=? AND tid IN
+                                        (SELECT tifo_id FROM xref WHERE type='team' AND source='fotmob')""", (new,))]
+        if len(a) != 1 or len(b) != 1:
+            continue
+        a, b = a[0], b[0]
+        mids = [m for m, in G.c.execute("SELECT mid FROM match WHERE (home=? OR away=?) AND date>=?", (a, a, day))]
+        for i in range(0, len(mids), 500):
+            marks = ",".join("?" * len(mids[i:i + 500]))
+            for t in ("appearance", "event", "match_award"):
+                G.c.execute(f"UPDATE OR IGNORE {t} SET tid=? WHERE tid=? AND mid IN ({marks})", (b, a, *mids[i:i + 500]))
+        G.c.execute("UPDATE match SET home=? WHERE home=? AND date>=?", (b, a, day))
+        G.c.execute("UPDATE match SET away=? WHERE away=? AND date>=?", (b, a, day))
+        n += len(mids)
+    return n
+
+
 def load(G, reg, S, world=None):
     merged = candidates(G.c, world=world_countries(S) if world is None else world)
     G.remap_many("team", merged)
-    return {"merged": len(merged), "conflicts_settled": settle_conflicts(G, merged)}
+    return {"merged": len(merged), "conflicts_settled": settle_conflicts(G, merged), "games_of_the_successor": later(G)}
