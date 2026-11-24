@@ -40,5 +40,19 @@ def test_one_name_and_the_same_men_are_one_club_and_a_name_of_one_word_needs_mor
     assert same_name.candidates(G.c, era=set(), never=set(), kept=set()) == [(2, 1), (6, 5)]
 
 
+def test_a_record_with_no_game_and_no_man_is_the_one_club_of_its_name_unless_the_country_is_against_it(tmp_path):
+    G = Graph(str(tmp_path / "t.db"))
+    G.put("competition", {"cid": 1, "name": "Serie A", "kind": "league", "country": "BR"}, "x")
+    G.put("edition", {"eid": 1, "cid": 1, "season": "1990"}, "x")
+    for tid, name, country, src in ((1, "Real Brasília", None, "fotmob"), (2, "Real Brasilia", "Brazil", "s365"), (3, "Olaria", None, "fotmob"),
+                                    (4, "Olaria", "Brazil", "s365"), (5, "Olaria", None, "wikidata"), (6, "San Pedro", "Ivory Coast", "fotmob"),
+                                    (7, "San Pedro", "Guatemala", "s365"), (8, "Rio Branco", None, "fotmob"), (9, "Rio Branco", None, "sch"),
+                                    (10, "Rio Branco", "Brazil", "s365"), (11, "Real Brasília B", None, "wikidata")):
+        G.put("team", {"tid": tid, "name": name, "country": country}, src)
+    for mid, (h, a) in enumerate(((1, 3), (3, 6), (8, 9)), 1):
+        G.put("match", {"mid": mid, "eid": 1, "date": f"1990-03-{mid:02d}", "home": h, "away": a, "hs": 1, "as_": 0}, "x")
+    assert same_name.candidates(G.c, era=set(), never=set(), kept=set()) == [(2, 1), (4, 3)]
+
+
 def test_it_runs_once_the_competitions_have_their_countries_and_the_games_are_paired_after():
     assert ORDER.index("comp_meta") < ORDER.index("same_name") < ORDER.index("twins_last") < ORDER.index("tidy")

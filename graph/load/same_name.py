@@ -12,15 +12,19 @@ Rules:
   * no record of the one ever met a record of the other;
   * clubs only; two numbers of one numbering source are two clubs; the guards of graph/load/same_club.py hold (a UAE
     historic club, a club FotMob keeps under a later name, a pair graph/team_aliases.yaml keeps apart);
-  * the FotMob record is kept, else the better source's, else the lower id.
+  * the FotMob record is kept, else the better source's, else the lower id;
+  * a record with no game and no man (an honour roll's «Olaria», a table's «JS Bordj-Menaïel») is the one club of its name
+    that has them, when no other club carries the name and the country of the one is not against the other's; a name of
+    one word needs its country known.
 graph/load/twins_last.py then makes each game held twice one."""
 import re
 import unicodedata
 from collections import defaultdict
 
 from graph.db import SRC_RANK
+from graph.load.comp_meta import lands
 from graph.load.same_club import ONE_ID
-from graph.load.teams import apart, guarded, settle_conflicts
+from graph.load.teams import _country, apart, guarded, settle_conflicts
 from graph.load.teams import fold as loose
 
 
@@ -41,14 +45,15 @@ def candidates(c, era=None, never=None, kept=None):
     for tid, source, sid in q("SELECT tifo_id, source, source_id FROM xref WHERE type='team'"):
         if source in ONE_ID:
             ids[tid][source].add(sid)
-    home = {eid: cid for eid, cid in q("""SELECT e.eid, e.cid FROM edition e JOIN competition c ON c.cid = e.cid
+    home = {eid: (cid, country) for eid, cid, country in q("""SELECT e.eid, e.cid, c.country FROM edition e JOIN competition c ON c.cid = e.cid
                                           WHERE ifnull(c.country, '') != '' AND c.kind IN ('league', 'cup', 'supercup')""")}
-    plays, met = defaultdict(set), set()
+    plays, met, land, en = defaultdict(set), set(), defaultdict(set), lands()[0]
     for eid, h, a in q("SELECT eid, home, away FROM match WHERE home IS NOT NULL AND away IS NOT NULL"):
         met.add((h, a) if h < a else (a, h))
         if eid in home:
-            plays[h].add(home[eid])
-            plays[a].add(home[eid])
+            for t in (h, a):
+                plays[t].add(home[eid][0])
+                land[t].add(_country(en.get(home[eid][1], home[eid][1])))
     men = defaultdict(set)
     for sql in ("SELECT from_tid, pid FROM transfer", "SELECT to_tid, pid FROM transfer", "SELECT tid, pid FROM spell", "SELECT DISTINCT tid, pid FROM appearance"):
         for tid, pid in q(sql):
@@ -80,6 +85,25 @@ def candidates(c, era=None, never=None, kept=None):
             if len(g) > 1:
                 keep = min(g, key=lambda t: ("fotmob" not in ids[t], SRC_RANK.get(team[t][1], 9), t))
                 out += [(t, keep) for t in g if t != keep]
+    one = dict(out)
+    own = {tid: _country(country) for tid, country in q("SELECT tid, country FROM team WHERE ifnull(country, '') != ''")}
+    for tid, country in own.items():
+        land[tid].add(country)
+    for t, keep in out:
+        land[keep] |= land[t]
+    idle = defaultdict(list)
+    for tid, (name, _) in sorted(team.items()):
+        if tid not in plays and tid not in men and tid not in era and fold(name) and loose(name) not in kept:
+            idle[fold(name)].append(tid)
+    for key, tids in sorted(idle.items()):
+        clubs = {one.get(t, t) for t in by.get(key, ())}
+        if len(clubs) != 1 or (loose(key), loose(key)) in never:
+            continue
+        keep = clubs.pop()
+        for t in tids:
+            if (not (t in own and land[keep] and own[t] not in land[keep]) and (" " in key or t in own)
+                    and not any(ids[t][s] != ids[keep][s] for s in ids[t].keys() & ids[keep].keys())):
+                out.append((t, keep))
     return sorted(out)
 
 
