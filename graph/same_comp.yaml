@@ -1,6 +1,8 @@
 # competitions the games and the champion lists cannot join by themselves: «source|its id»: FotMob's league id.
 # A league a source files under its country (schochastics) or its own code (Transfermarkt) is the country's top flight
 # through all its names; ids checked against FotMob's league list and the clubs of each record, 24 Nov 2026.
+# Where FotMob has no record of the league the value is another source's «source|its id» (365Scores' champion list of
+# the country's top flight: its clubs and the seasons both hold checked one by one, 24 Nov 2026).
 # apart: pairs never joined, whatever their games say.
 same:
   "sch|albania": 260
@@ -169,4 +171,29 @@ same:
   "tm|DK1": 46
   "tm|SC1": 64
   "tm|ARG1": 112
+  "sch|cameroon": "s365|5621"
+  "sch|cote-divoire": "s365|7302"
+  "sch|angola": "s365|7337"
+  "sch|jamaica": "s365|5798"
+  "sch|nicaragua": "s365|6108"
+  "sch|ethiopia": "s365|7318"
+  "sch|cuba": "s365|7725"
+  "sch|senegal": "s365|7700"
+  "sch|kenya": "s365|5575"
+  "sch|libya": "s365|559"
+  "sch|lebanon": "s365|566"
+  "sch|sudan": "s365|5481"
+  "sch|syria": "s365|564"
+  "sch|yemen": "s365|5478"
+  "sch|dominican-republic": "s365|6869"
+  "sch|mongolia": "s365|7727"
+  "sch|chinese-taipei": "s365|7298"
+  "sch|myanmar": "s365|7299"
+  "sch|philippines": "s365|6255"
+  "sch|puerto-rico": "s365|8108"
+  "sch|jordan": "s365|565"
+  "rsssf|jord": "s365|565"
+  "sch|bahrain": "s365|5479"
+  "sch|oman": "s365|5480"
+  "rsssf|oman": "s365|5480"
 apart: []

@@ -4,7 +4,8 @@ titles and no game («Gor Mahia» with 21 Kenyan titles beside the «Gor Mahia»
 Atletico»): the club page showed no title, the title hung on a record no page showed, and graph/load/same_comp.py could not
 see that the list's champion topped the table of the games.
 
-Rules, for a record with titles and fewer than 5 games (a list's record):
+Rules, for a record with titles and fewer than 5 games, or with 365Scores' number alone (a list's record: 365Scores files
+this season's games under it too, «Al Hilal Omdurman» with 31 Sudanese titles and 17 games beside the one of 772):
   * its country is the country of the competitions it won (its own country when they have none);
   * a club is a candidate when it played in a competition of that country in the seasons of the titles (a calendar-year
     label may sit a year off a split-season one);
@@ -16,12 +17,13 @@ Rules, for a record with titles and fewer than 5 games (a list's record):
   * one candidate only: two of the same strength and as many tables topped leave the record alone (the same name, then
     a namesake of other seasons, then a name and the tables, then the tables, then a loose name);
   * the strongest pairs are joined first, and a later one is refused when the club then holds another number of the
-    record's numbering source or a title of the same champion list (one list never names a club twice);
+    record's numbering source or a title of the same champion list (one list never names a club twice), or when
+    the two ever met in a game;
   * never a record of `ALONE_IDS`, a national team, a reserve or youth side with a first team, a UAE club of the `historic` and `rename` lists or
     a pair graph/team_aliases.yaml keeps `apart`;
   * the record with the games is kept.
 Rebuilt in every build and never written to the registry; runs before graph/load/same_comp.py, whose table rule then finds
-the list's champions on top of the games' tables."""
+the list's champions on top of the games' tables. graph/load/twins_again.py follows: a game both records held is one game."""
 import re
 from collections import Counter, defaultdict
 
@@ -84,13 +86,15 @@ def candidates(c, never=None, kept=None, explain=None):
             ids[tid][source].add(str(sid))
     comp = {cid: (name, kind, canon(country)) for cid, name, kind, country in q("SELECT cid, name, kind, country FROM competition")}
     league = lambda cid: (comp.get(cid) or (0, 0))[1] not in ("cup", "supercup") and not CUP.search(fold((comp.get(cid) or ("",))[0]))
-    games = Counter()
+    games, met = Counter(), defaultdict(set)
     pts, sides = defaultdict(Counter), defaultdict(set)     # (country, year, cid) -> table; (country, year) -> clubs
     lands = defaultdict(Counter)                # club -> the countries of its games
     for cid, season, h, a, hs, as_ in q("""SELECT e.cid, e.season, m.home, m.away, m.hs, m.as_ FROM match m LEFT JOIN edition e ON e.eid=m.eid
                                            WHERE m.home IS NOT NULL AND m.away IS NOT NULL"""):
         games[h] += 1
         games[a] += 1
+        met[h].add(a)
+        met[a].add(h)
         land, y = (comp.get(cid) or (0, 0, None))[2], end_year(season)
         if not land or y is None:
             continue
@@ -115,11 +119,11 @@ def candidates(c, never=None, kept=None, explain=None):
             continue
         if kind == "champion" and rank == 1:
             lists[tid].add((cid, src))
-        if games[tid] >= GAMES or team[tid][2] == "national":
+        if team[tid][2] == "national":
             continue
         y = end_year(season)
         land = (comp.get(cid) or (0, 0, None))[2] or team[tid][3]
-        if y and land:
+        if y and land and (games[tid] < GAMES or set(ids[tid]) == {"s365"} == {s for s, _ in keys[tid]}):
             won[tid].append((land, y, kind == "champion" and rank == 1 and league(cid)))
     alias = {}
     known = lambda t: alias.get(t) or alias.setdefault(t, names_of(team[t][0], keys[t]))
@@ -180,7 +184,7 @@ def candidates(c, never=None, kept=None, explain=None):
             continue
         if any(ids[g][s] != ids[t][s] for s in ids[g].keys() & ids[t].keys()):       # two numbers of one source
             continue
-        if lists[g] & lists[t]:                 # one champion list names both: two clubs
+        if lists[g] & lists[t] or t in met[g]:   # one champion list names both, or they met: two clubs
             continue
         out.append((g, t))
         for s, v in ids[g].items():

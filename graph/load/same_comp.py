@@ -267,6 +267,11 @@ def load(G, reg, S):
         a = cid_of(key)
         if a is None or a not in have:
             continue
+        if isinstance(lid, str):               # another source's record of it, where FotMob has none
+            b = cid_of(lid)
+            if b is not None and b in have and b != a:
+                fixed.append((a, b))
+            continue
         b = reg.mint("competition", "fotmob", int(lid))
         if b not in have:                      # FotMob's league no loader made: its record starts here
             d = info.get(int(lid)) or {}

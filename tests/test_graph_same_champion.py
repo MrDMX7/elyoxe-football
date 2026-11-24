@@ -139,6 +139,18 @@ def test_a_reserve_side_a_national_team_and_a_record_known_alone_are_never_joine
     assert same_champion.candidates(G.c) == []
 
 
+def test_a_record_of_365scores_alone_with_games_of_its_own_is_a_lists_record_unless_the_two_met(tmp_path):
+    G = world(tmp_path, {**CLUBS, 7: "Sofapaka"})
+    comp(G, 50, "kenya"), comp(G, 60, "Premier League")
+    tables(G, 50, range(2001, 2009))
+    listed(G, 90, "Gor Mahia", 60, (2001, 2005))
+    listed(G, 91, "Tusker", 60, (2003, 2007))
+    for i in range(6):                                   # this season's games, filed under the list's records
+        G.put("match", {"mid": 900 + i, "eid": 600001, "date": f"2009-05-{i + 1:02d}", "home": 90, "away": 7, "hs": 1, "as_": 0}, "s365")
+        G.put("match", {"mid": 950 + i, "eid": 600001, "date": f"2009-06-{i + 1:02d}", "home": 91, "away": 3, "hs": 1, "as_": 0}, "s365")
+    assert same_champion.candidates(G.c) == [(90, 1)]    # the list's Tusker played the Tusker of the games: two clubs
+
+
 def test_the_club_of_the_games_keeps_its_record_and_takes_the_titles(tmp_path):
     G = world(tmp_path)
     comp(G, 50, "kenya"), comp(G, 60, "Premier League")
@@ -153,4 +165,4 @@ def test_the_club_of_the_games_keeps_its_record_and_takes_the_titles(tmp_path):
 
 
 def test_it_runs_before_the_competitions_are_made_one():
-    assert ORDER.index("same_club") < ORDER.index("same_champion") < ORDER.index("same_comp")
+    assert ORDER.index("same_club") < ORDER.index("same_champion") < ORDER.index("twins_again") < ORDER.index("same_comp")

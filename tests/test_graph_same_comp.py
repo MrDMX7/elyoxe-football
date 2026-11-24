@@ -145,9 +145,23 @@ def test_a_joined_record_without_a_source_link_gets_one(tmp_path, monkeypatch):
     assert G.c.execute("select tifo_id, method from xref where type='competition' and source='martj42'").fetchall() == [(fm, "same-comp")]
 
 
+def test_the_curated_list_joins_a_sources_league_to_another_sources_where_fotmob_has_none(tmp_path, monkeypatch):
+    G, reg = world(tmp_path), Registry()
+    a, b = reg.mint("competition", "sch", "kenya"), reg.mint("competition", "s365", "5575")
+    comp(G, a, "kenya", "sch", "kenya", country="KE")
+    comp(G, b, "Premier League", "s365", 5575, country="KE")
+    tables(G, a, range(2001, 2003), "sch")
+    champions(G, b, range(2009, 2012), "s365")
+    monkeypatch.setattr(same_comp, "curated", lambda: ({"sch|kenya": "s365|5575", "sch|nowhere": "s365|1"}, []))
+    assert same_comp.load(G, reg, None)["merged"] == 1
+    assert [c for (c,) in G.c.execute("select cid from competition")] == [b]         # 365Scores' record carries the name
+    assert {c for (c,) in G.c.execute("select cid from edition")} == {b}
+    assert G.c.execute("select tifo_id from xref where type='competition' and source='sch'").fetchall() == [(b,)]
+
+
 def test_every_curated_id_is_a_number_and_no_key_is_listed_twice():
     same, apart = same_comp.curated()
-    assert same and all(isinstance(v, int) and "|" in k for k, v in same.items())
+    assert same and all((isinstance(v, int) or "|" in v) and "|" in k for k, v in same.items())
     raw = open(same_comp.CURATED, encoding="utf-8").read()
     keys = [line.split('":')[0].strip() for line in raw.splitlines() if line.startswith('  "')]
     assert len(keys) == len(set(keys))
