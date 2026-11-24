@@ -22,6 +22,74 @@ def fresh(seen, key, score):
     return k
 
 
+SPLIT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sch_split")
+
+
+def _name(ident):
+    return ident.rsplit(" (", 1)[0]
+
+
+def unfold(rows, folder=SPLIT):
+    """The dataset folded some clubs into another's name (24 Nov 2026: «Lens» is RC Lens and RC Paris in every season both
+    were in the division, 34 home games a season and the derby a «Lens v Lens»; before Lens came up it is RC Paris alone, and
+    «Nantes» of the 1930s is FC Antibes, ten years before Nantes was founded). graph/sch_split/ says whose each row is:
+      whole.csv           competition,ident,from,to,new: every row of the name between the two dates is the other club's
+      <competition>.csv   competition,date,home_ident,away_ident,gh,ga,new_home,new_away,kind, from the season's result
+                          table: `move` renames a row's two clubs; `add` is a row the query dropped (the derby, or the same
+                          result twice on one placeholder date)
+    rows as load()'s query gives them; returns (rows, counts)."""
+    import csv
+    moves, adds, whole = {}, [], defaultdict(list)
+    for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+        if not f.endswith(".csv"):
+            continue
+        with open(os.path.join(folder, f), encoding="utf-8", newline="") as fh:
+            for r in csv.DictReader(fh):
+                if f == "whole.csv":
+                    whole[(r["competition"], r["ident"])].append((r["from"], r["to"], r["new"]))
+                elif r["kind"] == "move":
+                    moves[(r["competition"], r["date"], r["home_ident"], r["away_ident"], int(r["gh"]), int(r["ga"]))] = (r["new_home"], r["new_away"])
+                else:
+                    adds.append(r)
+    if not (moves or adds or whole):
+        return rows, {}
+    n = Counter()
+
+    def other(comp, ident, day):
+        for lo, hi, new in whole.get((comp, ident), ()):
+            if lo <= day <= hi:
+                return new
+        return ident
+
+    out, code, seen = [], {}, set()
+    for d, hi, ai, gh, ga, comp, lvl, hn, an, cc in rows:
+        day = str(d)[:10]
+        code.setdefault((comp, hi), (lvl, cc))
+        to = moves.get((comp, day, hi, ai, gh, ga))
+        if to:
+            seen.add((comp, day, hi, ai, gh, ga))
+            to = (other(comp, to[0], day), other(comp, to[1], day))
+            n["moved"] += 1
+        else:
+            to = (other(comp, hi, day), other(comp, ai, day))
+            n["renamed"] += to != (hi, ai)
+        if to[0] == to[1]:
+            continue
+        out.append((d, to[0], to[1], gh, ga, comp, lvl, hn if to[0] == hi else _name(to[0]), an if to[1] == ai else _name(to[1]), cc))
+    import datetime
+    for r in adds:
+        lvl, cc = code.get((r["competition"], r["home_ident"])) or code.get((r["competition"], r["away_ident"])) or (None, None)
+        if lvl is None:
+            n["add_without_club"] += 1
+            continue
+        h, a = other(r["competition"], r["new_home"], r["date"]), other(r["competition"], r["new_away"], r["date"])
+        out.append((datetime.date.fromisoformat(r["date"]), h, a, int(r["gh"]), int(r["ga"]), r["competition"], lvl, _name(h), _name(a), cc))
+        n["added"] += 1
+    n["move_without_row"] = len(moves) - len(seen)
+    out.sort(key=lambda r: (str(r[0]), r[5] or "", r[1], r[2]))
+    return out, dict(n)
+
+
 SOVIET = {"RU", "UA", "GE", "BY", "AM", "AZ", "KZ", "UZ", "LT", "LV", "EE", "MD", "TJ", "TM", "KG"}
 SOUTH_AMERICA = {"AR", "BR", "UY", "PY", "CL", "CO", "PE", "EC", "BO", "VE"}
 
@@ -52,6 +120,7 @@ def load(G, reg, S):
           and home_ident not in {BLANK} and away_ident not in {BLANK}
         qualify row_number() over (partition by date, home_ident, away_ident, gh, ga, competition order by level) = 1
         order by date, competition, home_ident, away_ident""").fetchall()
+    rows, unfolded = unfold(rows)
     code = {}
     for r in rows:
         code.setdefault(r[1], r[9])
@@ -130,4 +199,5 @@ def load(G, reg, S):
         if new % 100000 == 0:
             print(f"schochastics: {new} new", flush=True)
             G.c.commit()
-    return {"rows": len(rows), "clubs_voted": len(voted), "linked": linked, "new": new, "stage_moved": moved, "comps_linked": sum(1 for k in cvotes if reg.get("competition", "sch", k))}
+    return {"rows": len(rows), "clubs_voted": len(voted), "linked": linked, "new": new, "stage_moved": moved, "comps_linked": sum(1 for k in cvotes if reg.get("competition", "sch", k)),
+            "unfolded": unfolded}

@@ -215,9 +215,9 @@ DCARIBOU = "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data/"
 
 def depth(S, max_age_days=7):
     """Phase 4's other free sources, weekly: martj42's international scorers, and Transfermarkt's lineups, appearances and
-    events (dcaribou, CC0)."""
+    events (dcaribou, CC0), and its list of players (the name of a scorer no lineup lists)."""
     jobs = [(MARTJ42.replace("results.csv", "goalscorers.csv"), "martj42_goalscorers.csv")]
-    jobs += [(DCARIBOU + f"{n}.csv.gz", f"tm_{n}.csv.gz") for n in ("game_lineups", "appearances", "game_events")]
+    jobs += [(DCARIBOU + f"{n}.csv.gz", f"tm_{n}.csv.gz") for n in ("game_lineups", "appearances", "game_events", "players")]
     for url, name in jobs:
         p = os.path.join(S.db, name)
         if not os.path.exists(p) or time.time() - os.path.getmtime(p) > max_age_days * 86400:

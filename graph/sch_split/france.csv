@@ -1,0 +1,563 @@
+competition,date,home_ident,away_ident,gh,ga,new_home,new_away,kind
+france,1937-07-01,Lens (France),Nantes (France),1,2,RC Paris (France),Nantes (France),move
+france,1937-07-01,Nantes (France),Lens (France),2,2,Nantes (France),RC Paris (France),move
+france,1937-07-01,Lens (France),As Cannes (France),3,1,RC Paris (France),As Cannes (France),move
+france,1937-07-01,As Cannes (France),Lens (France),2,2,As Cannes (France),RC Paris (France),move
+france,1937-07-01,Lens (France),SC Fives Lille (France),1,1,RC Paris (France),SC Fives Lille (France),move
+france,1937-07-01,SC Fives Lille (France),Lens (France),1,0,SC Fives Lille (France),RC Paris (France),move
+france,1937-07-01,Lens (France),Lille (France),1,0,RC Paris (France),Lille (France),move
+france,1937-07-01,Lille (France),Lens (France),0,1,Lille (France),RC Paris (France),move
+france,1937-07-01,Lens (France),Olympique Marseille (France),3,3,RC Paris (France),Olympique Marseille (France),move
+france,1937-07-01,Olympique Marseille (France),Lens (France),2,1,Olympique Marseille (France),RC Paris (France),move
+france,1937-07-01,Lens (France),FC Metz (France),2,2,RC Paris (France),FC Metz (France),move
+france,1937-07-01,FC Metz (France),Lens (France),4,4,FC Metz (France),RC Paris (France),move
+france,1937-07-01,Lens (France),Red Star Olympique (France),2,1,RC Paris (France),Red Star Olympique (France),move
+france,1937-07-01,Red Star Olympique (France),Lens (France),2,2,Red Star Olympique (France),RC Paris (France),move
+france,1937-07-01,Lens (France),Excelsior Roubaix (France),5,1,RC Paris (France),Excelsior Roubaix (France),move
+france,1937-07-01,Excelsior Roubaix (France),Lens (France),3,2,Excelsior Roubaix (France),RC Paris (France),move
+france,1937-07-01,Lens (France),RC Roubaix (France),2,1,RC Paris (France),RC Roubaix (France),add
+france,1937-07-01,RC Roubaix (France),Lens (France),2,1,RC Roubaix (France),RC Paris (France),move
+france,1937-07-01,Lens (France),FC Rouen (France),2,1,RC Paris (France),FC Rouen (France),move
+france,1937-07-01,FC Rouen (France),Lens (France),3,1,FC Rouen (France),RC Paris (France),add
+france,1937-07-01,Lens (France),FC Sete (France),0,2,RC Paris (France),FC Sete (France),add
+france,1937-07-01,FC Sete (France),Lens (France),2,2,FC Sete (France),RC Paris (France),move
+france,1937-07-01,Lens (France),FC Sochaux (France),0,4,RC Paris (France),FC Sochaux (France),move
+france,1937-07-01,FC Sochaux (France),Lens (France),4,0,FC Sochaux (France),RC Paris (France),add
+france,1937-07-01,Lens (France),Strasbourg (France),0,3,RC Paris (France),Strasbourg (France),move
+france,1937-07-01,Strasbourg (France),Lens (France),1,3,Strasbourg (France),RC Paris (France),move
+france,1937-07-01,Lens (France),Valenciennes FC (France),0,3,RC Paris (France),Valenciennes FC (France),move
+france,1937-07-01,Valenciennes FC (France),Lens (France),1,3,Valenciennes FC (France),RC Paris (France),add
+france,1937-07-01,Lens (France),Lens (France),1,3,RC Paris (France),Lens (France),add
+france,1937-07-01,Lens (France),Lens (France),2,1,Lens (France),RC Paris (France),add
+france,1938-12-25,Lens (France),Nantes (France),3,0,RC Paris (France),Nantes (France),move
+france,1939-05-07,Nantes (France),Lens (France),1,1,Nantes (France),RC Paris (France),move
+france,1939-03-12,Lens (France),As Cannes (France),5,1,RC Paris (France),As Cannes (France),move
+france,1938-10-16,As Cannes (France),Lens (France),1,2,As Cannes (France),RC Paris (France),move
+france,1938-09-11,Lens (France),SC Fives Lille (France),2,2,RC Paris (France),SC Fives Lille (France),move
+france,1939-01-15,SC Fives Lille (France),Lens (France),0,1,SC Fives Lille (France),RC Paris (France),move
+france,1939-01-29,Lens (France),Le Havre (France),3,0,RC Paris (France),Le Havre (France),move
+france,1938-09-18,Le Havre (France),Lens (France),2,1,Le Havre (France),RC Paris (France),move
+france,1938-10-09,Lens (France),Lille (France),2,2,RC Paris (France),Lille (France),move
+france,1939-03-05,Lille (France),Lens (France),0,2,Lille (France),RC Paris (France),move
+france,1939-01-01,Lens (France),Olympique Marseille (France),1,1,RC Paris (France),Olympique Marseille (France),move
+france,1938-09-04,Olympique Marseille (France),Lens (France),5,2,Olympique Marseille (France),RC Paris (France),move
+france,1938-10-30,Lens (France),FC Metz (France),3,2,RC Paris (France),FC Metz (France),move
+france,1939-03-26,FC Metz (France),Lens (France),3,0,FC Metz (France),RC Paris (France),move
+france,1938-11-06,Lens (France),Excelsior Roubaix (France),3,1,RC Paris (France),Excelsior Roubaix (France),move
+france,1939-04-02,Excelsior Roubaix (France),Lens (France),6,2,Excelsior Roubaix (France),RC Paris (France),move
+france,1939-03-19,Lens (France),RC Roubaix (France),1,1,RC Paris (France),RC Roubaix (France),move
+france,1938-10-23,RC Roubaix (France),Lens (France),0,3,RC Roubaix (France),RC Paris (France),move
+france,1939-04-08,Lens (France),FC Rouen (France),3,0,RC Paris (France),FC Rouen (France),move
+france,1938-11-11,FC Rouen (France),Lens (France),3,1,FC Rouen (France),RC Paris (France),move
+france,1938-09-25,Lens (France),Saint-Étienne (France),1,1,RC Paris (France),Saint-Étienne (France),move
+france,1939-02-12,Saint-Étienne (France),Lens (France),0,1,Saint-Étienne (France),RC Paris (France),move
+france,1939-02-26,Lens (France),FC Sete (France),3,0,RC Paris (France),FC Sete (France),move
+france,1938-10-02,FC Sete (France),Lens (France),5,0,FC Sete (France),RC Paris (France),move
+france,1938-11-20,Lens (France),FC Sochaux (France),6,1,RC Paris (France),FC Sochaux (France),move
+france,1939-04-16,FC Sochaux (France),Lens (France),1,0,FC Sochaux (France),RC Paris (France),move
+france,1939-04-10,Lens (France),Strasbourg (France),3,2,RC Paris (France),Strasbourg (France),move
+france,1938-11-13,Strasbourg (France),Lens (France),1,1,Strasbourg (France),RC Paris (France),move
+france,1938-12-11,Lens (France),Lens (France),1,1,Lens (France),RC Paris (France),add
+france,1939-04-30,Lens (France),Lens (France),1,0,RC Paris (France),Lens (France),add
+france,1949-10-23,Lens (France),Girondins Bordeaux (France),3,4,RC Paris (France),Girondins Bordeaux (France),move
+france,1950-03-26,Girondins Bordeaux (France),Lens (France),4,0,Girondins Bordeaux (France),RC Paris (France),move
+france,1949-10-02,Lens (France),Lille (France),3,1,RC Paris (France),Lille (France),move
+france,1950-03-05,Lille (France),Lens (France),2,2,Lille (France),RC Paris (France),move
+france,1949-09-22,Lens (France),Olympique Marseille (France),5,0,RC Paris (France),Olympique Marseille (France),move
+france,1950-02-16,Olympique Marseille (France),Lens (France),1,1,Olympique Marseille (France),RC Paris (France),move
+france,1950-01-22,Lens (France),FC Metz (France),2,2,RC Paris (France),FC Metz (France),move
+france,1949-09-04,FC Metz (France),Lens (France),1,4,FC Metz (France),RC Paris (France),move
+france,1950-02-19,Lens (France),Montpellier (France),6,0,RC Paris (France),Montpellier (France),move
+france,1949-09-25,Montpellier (France),Lens (France),3,1,Montpellier (France),RC Paris (France),move
+france,1950-03-12,Lens (France),As Nancy (France),4,1,RC Paris (France),As Nancy (France),move
+france,1949-10-16,As Nancy (France),Lens (France),1,1,As Nancy (France),RC Paris (France),move
+france,1949-08-28,Lens (France),Nice (France),1,2,RC Paris (France),Nice (France),move
+france,1950-01-15,Nice (France),Lens (France),1,4,Nice (France),RC Paris (France),move
+france,1949-09-11,Lens (France),Reims (France),2,4,RC Paris (France),Reims (France),move
+france,1950-01-29,Reims (France),Lens (France),3,2,Reims (France),RC Paris (France),move
+france,1950-04-09,Lens (France),Rennes (France),1,2,RC Paris (France),Rennes (France),move
+france,1949-11-06,Rennes (France),Lens (France),1,2,Rennes (France),RC Paris (France),move
+france,1949-12-25,Lens (France),RC Roubaix (France),1,1,RC Paris (France),RC Roubaix (France),move
+france,1950-05-21,RC Roubaix (France),Lens (France),1,3,RC Roubaix (France),RC Paris (France),move
+france,1950-04-23,Lens (France),Saint-Étienne (France),4,3,RC Paris (France),Saint-Étienne (France),move
+france,1949-11-27,Saint-Étienne (France),Lens (France),1,1,Saint-Étienne (France),RC Paris (France),move
+france,1950-01-01,Lens (France),FC Sete (France),2,1,RC Paris (France),FC Sete (France),move
+france,1950-05-07,FC Sete (France),Lens (France),5,0,FC Sete (France),RC Paris (France),move
+france,1950-03-28,Lens (France),FC Sochaux (France),2,1,RC Paris (France),FC Sochaux (France),move
+france,1949-08-21,FC Sochaux (France),Lens (France),0,2,FC Sochaux (France),RC Paris (France),move
+france,1949-09-18,Stade Red Star (France),Lens (France),2,1,Stade Red Star (France),RC Paris (France),move
+france,1949-11-20,Lens (France),Strasbourg (France),3,0,RC Paris (France),Strasbourg (France),move
+france,1950-04-06,Strasbourg (France),Lens (France),2,0,Strasbourg (France),RC Paris (France),move
+france,1950-05-04,Lens (France),Toulouse (France),1,1,RC Paris (France),Toulouse (France),move
+france,1949-12-18,Toulouse (France),Lens (France),2,0,Toulouse (France),RC Paris (France),move
+france,1950-02-12,Lens (France),Stade Red Star (France),2,1,RC Paris (France),Stade Red Star (France),move
+france,1949-12-04,Lens (France),Lens (France),0,0,Lens (France),RC Paris (France),add
+france,1950-05-01,Lens (France),Lens (France),1,2,RC Paris (France),Lens (France),add
+france,1951-01-07,Lens (France),Girondins Bordeaux (France),1,0,RC Paris (France),Girondins Bordeaux (France),move
+france,1950-09-10,Girondins Bordeaux (France),Lens (France),0,3,Girondins Bordeaux (France),RC Paris (France),move
+france,1951-04-29,Lens (France),Le Havre (France),2,3,RC Paris (France),Le Havre (France),move
+france,1950-11-19,Le Havre (France),Lens (France),2,0,Le Havre (France),RC Paris (France),move
+france,1951-01-28,Lens (France),Lille (France),2,0,RC Paris (France),Lille (France),move
+france,1950-09-21,Lille (France),Lens (France),1,1,Lille (France),RC Paris (France),move
+france,1951-04-01,Olympique Marseille (France),Lens (France),4,2,Olympique Marseille (France),RC Paris (France),move
+france,1950-11-11,Lens (France),As Nancy (France),2,0,RC Paris (France),As Nancy (France),move
+france,1951-04-22,As Nancy (France),Lens (France),0,1,As Nancy (France),RC Paris (France),move
+france,1950-10-15,Lens (France),Nice (France),0,3,RC Paris (France),Nice (France),move
+france,1951-03-11,Nice (France),Lens (France),3,0,Nice (France),RC Paris (France),move
+france,1951-03-04,Lens (France),Nimes Olympique (France),0,2,RC Paris (France),Nimes Olympique (France),move
+france,1950-10-08,Nimes Olympique (France),Lens (France),4,2,Nimes Olympique (France),RC Paris (France),move
+france,1951-04-08,Lens (France),Reims (France),0,0,RC Paris (France),Reims (France),move
+france,1950-11-05,Reims (France),Lens (France),2,2,Reims (France),RC Paris (France),move
+france,1950-09-17,Lens (France),Rennes (France),4,2,RC Paris (France),Rennes (France),move
+france,1951-01-21,Rennes (France),Lens (France),3,4,Rennes (France),RC Paris (France),move
+france,1950-12-31,Lens (France),RC Roubaix (France),1,2,RC Paris (France),RC Roubaix (France),move
+france,1950-09-03,RC Roubaix (France),Lens (France),1,4,RC Roubaix (France),RC Paris (France),move
+france,1951-03-24,Lens (France),Saint-Étienne (France),2,2,RC Paris (France),Saint-Étienne (France),move
+france,1950-10-22,Saint-Étienne (France),Lens (France),2,1,Saint-Étienne (France),RC Paris (France),move
+france,1950-12-17,Lens (France),FC Sete (France),3,2,RC Paris (France),FC Sete (France),move
+france,1951-05-27,FC Sete (France),Lens (France),5,1,FC Sete (France),RC Paris (France),move
+france,1950-08-27,Lens (France),FC Sochaux (France),4,1,RC Paris (France),FC Sochaux (France),move
+france,1950-12-24,FC Sochaux (France),Lens (France),0,1,FC Sochaux (France),RC Paris (France),move
+france,1950-09-24,Lens (France),Stade Francais (France),1,1,RC Paris (France),Stade Francais (France),move
+france,1951-02-11,Stade Francais (France),Lens (France),0,3,Stade Francais (France),RC Paris (France),move
+france,1950-10-01,Lens (France),Strasbourg (France),2,4,RC Paris (France),Strasbourg (France),move
+france,1951-02-18,Strasbourg (France),Lens (France),3,0,Strasbourg (France),RC Paris (France),move
+france,1950-11-26,Lens (France),Toulouse (France),1,1,RC Paris (France),Toulouse (France),move
+france,1951-05-06,Toulouse (France),Lens (France),1,0,Toulouse (France),RC Paris (France),move
+france,1950-10-29,Lens (France),Olympique Marseille (France),1,1,RC Paris (France),Olympique Marseille (France),move
+france,1950-12-03,Lens (France),Lens (France),1,1,Lens (France),RC Paris (France),add
+france,1951-05-20,Lens (France),Lens (France),1,3,RC Paris (France),Lens (France),add
+france,1953-04-05,Lens (France),Girondins Bordeaux (France),3,3,RC Paris (France),Girondins Bordeaux (France),move
+france,1952-11-02,Girondins Bordeaux (France),Lens (France),3,1,Girondins Bordeaux (France),RC Paris (France),move
+france,1953-03-08,Lens (France),Le Havre (France),1,1,RC Paris (France),Le Havre (France),move
+france,1952-10-09,Le Havre (France),Lens (France),4,1,Le Havre (France),RC Paris (France),move
+france,1953-02-01,Lens (France),Lille (France),1,0,RC Paris (France),Lille (France),move
+france,1952-09-14,Lille (France),Lens (France),3,0,Lille (France),RC Paris (France),move
+france,1953-04-12,Olympique Marseille (France),Lens (France),3,0,Olympique Marseille (France),RC Paris (France),move
+france,1952-09-21,Lens (France),FC Metz (France),0,2,RC Paris (France),FC Metz (France),move
+france,1953-02-15,FC Metz (France),Lens (France),0,2,FC Metz (France),RC Paris (France),move
+france,1953-03-15,Montpellier (France),Lens (France),0,1,Montpellier (France),RC Paris (France),move
+france,1953-05-24,Lens (France),As Nancy (France),1,2,RC Paris (France),As Nancy (France),move
+france,1952-12-21,As Nancy (France),Lens (France),1,0,As Nancy (France),RC Paris (France),move
+france,1953-04-19,Lens (France),Nice (France),1,3,RC Paris (France),Nice (France),move
+france,1952-11-23,Nice (France),Lens (France),1,2,Nice (France),RC Paris (France),move
+france,1952-09-07,Lens (France),Nimes Olympique (France),1,2,RC Paris (France),Nimes Olympique (France),move
+france,1953-01-11,Nimes Olympique (France),Lens (France),4,2,Nimes Olympique (France),RC Paris (France),move
+france,1952-09-28,Reims (France),Lens (France),5,1,Reims (France),RC Paris (France),move
+france,1952-08-24,Lens (France),Rennes (France),2,0,RC Paris (France),Rennes (France),move
+france,1952-12-28,Rennes (France),Lens (France),1,0,Rennes (France),RC Paris (France),move
+france,1953-05-10,Lens (France),RC Roubaix (France),0,2,RC Paris (France),RC Roubaix (France),move
+france,1952-09-11,Lens (France),Saint-Étienne (France),2,1,RC Paris (France),Saint-Étienne (France),move
+france,1953-01-25,Saint-Étienne (France),Lens (France),3,1,Saint-Étienne (France),RC Paris (France),move
+france,1952-12-14,Lens (France),FC Sete (France),2,1,RC Paris (France),FC Sete (France),move
+france,1953-05-17,FC Sete (France),Lens (France),0,1,FC Sete (France),RC Paris (France),move
+france,1953-02-12,Lens (France),FC Sochaux (France),2,1,RC Paris (France),FC Sochaux (France),move
+france,1952-08-31,FC Sochaux (France),Lens (France),3,3,FC Sochaux (France),RC Paris (France),move
+france,1953-03-22,Lens (France),Stade Francais (France),2,2,RC Paris (France),Stade Francais (France),move
+france,1952-10-26,Stade Francais (France),Lens (France),5,0,Stade Francais (France),RC Paris (France),move
+france,1952-11-09,Lens (France),Olympique Marseille (France),1,1,RC Paris (France),Olympique Marseille (France),move
+france,1952-10-12,Lens (France),Montpellier (France),2,1,RC Paris (France),Montpellier (France),move
+france,1953-02-22,Lens (France),Reims (France),1,3,RC Paris (France),Reims (France),move
+france,1952-12-07,RC Roubaix (France),Lens (France),0,1,RC Roubaix (France),RC Paris (France),move
+france,1952-11-30,Lens (France),Lens (France),1,1,RC Paris (France),Lens (France),add
+france,1953-05-03,Lens (France),Lens (France),2,1,Lens (France),RC Paris (France),add
+france,1954-09-12,Lens (France),Girondins Bordeaux (France),2,0,RC Paris (France),Girondins Bordeaux (France),move
+france,1955-01-09,Girondins Bordeaux (France),Lens (France),0,0,Girondins Bordeaux (France),RC Paris (France),move
+france,1954-12-12,Lens (France),Lille (France),1,3,RC Paris (France),Lille (France),move
+france,1954-08-22,Lille (France),Lens (France),6,0,Lille (France),RC Paris (France),move
+france,1954-09-30,Lens (France),Olympique Lyon (France),5,0,RC Paris (France),Olympique Lyon (France),move
+france,1955-01-23,Olympique Lyon (France),Lens (France),2,2,Olympique Lyon (France),RC Paris (France),move
+france,1954-08-28,Lens (France),Olympique Marseille (France),3,3,RC Paris (France),Olympique Marseille (France),move
+france,1954-12-19,Olympique Marseille (France),Lens (France),3,1,Olympique Marseille (France),RC Paris (France),move
+france,1955-02-20,Lens (France),FC Metz (France),4,0,RC Paris (France),FC Metz (France),move
+france,1954-10-10,FC Metz (France),Lens (France),1,4,FC Metz (France),RC Paris (France),move
+france,1954-11-21,Lens (France),Monaco (France),1,2,RC Paris (France),Monaco (France),move
+france,1955-04-24,Monaco (France),Lens (France),1,1,Monaco (France),RC Paris (France),move
+france,1954-09-26,Lens (France),As Nancy (France),0,0,RC Paris (France),As Nancy (France),move
+france,1955-01-30,As Nancy (France),Lens (France),1,0,As Nancy (France),RC Paris (France),move
+france,1955-01-16,Lens (France),Nice (France),3,1,RC Paris (France),Nice (France),move
+france,1954-09-19,Nice (France),Lens (France),3,2,Nice (France),RC Paris (France),move
+france,1955-03-13,Lens (France),Nimes Olympique (France),1,0,RC Paris (France),Nimes Olympique (France),move
+france,1954-10-31,Nimes Olympique (France),Lens (France),2,0,Nimes Olympique (France),RC Paris (France),move
+france,1955-02-13,Lens (France),Reims (France),2,5,RC Paris (France),Reims (France),move
+france,1954-10-03,Reims (France),Lens (France),0,3,Reims (France),RC Paris (France),move
+france,1955-05-22,Lens (France),RC Roubaix (France),2,2,RC Paris (France),RC Roubaix (France),move
+france,1954-12-05,RC Roubaix (France),Lens (France),3,3,RC Roubaix (France),RC Paris (France),move
+france,1954-11-07,Lens (France),Saint-Étienne (France),4,0,RC Paris (France),Saint-Étienne (France),move
+france,1955-03-20,Saint-Étienne (France),Lens (France),0,1,Saint-Étienne (France),RC Paris (France),move
+france,1955-01-02,Lens (France),FC Sochaux (France),0,3,RC Paris (France),FC Sochaux (France),move
+france,1954-09-09,FC Sochaux (France),Lens (France),3,2,FC Sochaux (France),RC Paris (France),move
+france,1955-04-10,Lens (France),Strasbourg (France),4,2,RC Paris (France),Strasbourg (France),move
+france,1954-11-14,Strasbourg (France),Lens (France),3,1,Strasbourg (France),RC Paris (France),move
+france,1954-10-24,Lens (France),Toulouse (France),2,0,RC Paris (France),Toulouse (France),move
+france,1955-02-27,Toulouse (France),Lens (France),0,1,Toulouse (France),RC Paris (France),move
+france,1954-12-26,Lens (France),As Troyes Savinienne (France),4,1,RC Paris (France),As Troyes Savinienne (France),move
+france,1954-09-05,As Troyes Savinienne (France),Lens (France),3,1,As Troyes Savinienne (France),RC Paris (France),move
+france,1954-11-28,Lens (France),Lens (France),1,1,RC Paris (France),Lens (France),add
+france,1955-05-01,Lens (France),Lens (France),3,1,Lens (France),RC Paris (France),add
+france,1956-08-26,Lens (France),Angers SCO (France),6,2,RC Paris (France),Angers SCO (France),move
+france,1957-03-10,Angers SCO (France),Lens (France),1,1,Angers SCO (France),RC Paris (France),move
+france,1956-12-25,Lens (France),Olympique Lyon (France),1,2,RC Paris (France),Olympique Lyon (France),move
+france,1957-02-17,Olympique Lyon (France),Lens (France),1,2,Olympique Lyon (France),RC Paris (France),move
+france,1956-11-25,Lens (France),Olympique Marseille (France),1,3,RC Paris (France),Olympique Marseille (France),move
+france,1957-04-14,Olympique Marseille (France),Lens (France),0,3,Olympique Marseille (France),RC Paris (France),move
+france,1957-02-10,Lens (France),FC Metz (France),4,1,RC Paris (France),FC Metz (France),move
+france,1956-09-02,FC Metz (France),Lens (France),2,2,FC Metz (France),RC Paris (France),move
+france,1956-12-23,Lens (France),Monaco (France),2,1,RC Paris (France),Monaco (France),move
+france,1957-05-01,Monaco (France),Lens (France),1,1,Monaco (France),RC Paris (France),move
+france,1956-09-30,Lens (France),As Nancy (France),6,1,RC Paris (France),As Nancy (France),move
+france,1956-12-30,As Nancy (France),Lens (France),2,5,As Nancy (France),RC Paris (France),move
+france,1957-02-24,Lens (France),Nice (France),3,2,RC Paris (France),Nice (France),move
+france,1956-09-23,Nice (France),Lens (France),1,1,Nice (France),RC Paris (France),move
+france,1957-04-21,Lens (France),Nimes Olympique (France),0,0,RC Paris (France),Nimes Olympique (France),move
+france,1956-12-02,Nimes Olympique (France),Lens (France),4,2,Nimes Olympique (France),RC Paris (France),move
+france,1957-01-06,Lens (France),Reims (France),4,2,RC Paris (France),Reims (France),move
+france,1956-12-16,Reims (France),Lens (France),2,4,Reims (France),RC Paris (France),move
+france,1956-09-09,Rennes (France),Lens (France),2,2,Rennes (France),RC Paris (France),move
+france,1956-11-04,Lens (France),Saint-Étienne (France),1,2,RC Paris (France),Saint-Étienne (France),move
+france,1956-12-09,Lens (France),Ua Sedan Torcy (France),1,2,RC Paris (France),Ua Sedan Torcy (France),move
+france,1957-03-31,Ua Sedan Torcy (France),Lens (France),1,1,Ua Sedan Torcy (France),RC Paris (France),move
+france,1956-11-18,FC Sochaux (France),Lens (France),3,5,FC Sochaux (France),RC Paris (France),move
+france,1956-10-28,Lens (France),Strasbourg (France),2,0,RC Paris (France),Strasbourg (France),move
+france,1957-01-01,Strasbourg (France),Lens (France),2,1,Strasbourg (France),RC Paris (France),move
+france,1957-05-12,Lens (France),Toulouse (France),6,2,RC Paris (France),Toulouse (France),move
+france,1956-08-19,Toulouse (France),Lens (France),3,3,Toulouse (France),RC Paris (France),move
+france,1957-04-28,Lens (France),Valenciennes FC (France),3,1,RC Paris (France),Valenciennes FC (France),move
+france,1956-10-14,Valenciennes FC (France),Lens (France),3,1,Valenciennes FC (France),RC Paris (France),move
+france,1957-01-20,Lens (France),Rennes (France),3,0,RC Paris (France),Rennes (France),move
+france,1957-01-27,Saint-Étienne (France),Lens (France),3,1,Saint-Étienne (France),RC Paris (France),move
+france,1957-03-17,Lens (France),FC Sochaux (France),3,1,RC Paris (France),FC Sochaux (France),move
+france,1956-09-16,Lens (France),Lens (France),5,0,RC Paris (France),Lens (France),add
+france,1957-05-19,Lens (France),Lens (France),2,0,Lens (France),RC Paris (France),add
+france,1958-05-04,Lens (France),Olympique Ales (France),3,2,RC Paris (France),Olympique Ales (France),move
+france,1957-09-29,Olympique Ales (France),Lens (France),1,3,Olympique Ales (France),RC Paris (France),move
+france,1957-09-08,Lens (France),Angers SCO (France),1,2,RC Paris (France),Angers SCO (France),move
+france,1958-02-23,Angers SCO (France),Lens (France),0,0,Angers SCO (France),RC Paris (France),move
+france,1957-12-15,Lens (France),As Beziers (France),1,0,RC Paris (France),As Beziers (France),move
+france,1958-03-09,As Beziers (France),Lens (France),1,0,As Beziers (France),RC Paris (France),move
+france,1958-01-19,Lens (France),Lille (France),1,3,RC Paris (France),Lille (France),move
+france,1957-09-15,Lille (France),Lens (France),1,3,Lille (France),RC Paris (France),move
+france,1957-12-29,Lens (France),Olympique Lyon (France),2,4,RC Paris (France),Olympique Lyon (France),move
+france,1957-09-22,Olympique Lyon (France),Lens (France),2,0,Olympique Lyon (France),RC Paris (France),move
+france,1958-04-20,Lens (France),Olympique Marseille (France),4,3,RC Paris (France),Olympique Marseille (France),move
+france,1957-08-25,Olympique Marseille (France),Lens (France),1,1,Olympique Marseille (France),RC Paris (France),move
+france,1958-04-13,Lens (France),FC Metz (France),1,2,RC Paris (France),FC Metz (France),move
+france,1957-11-24,FC Metz (France),Lens (France),1,1,FC Metz (France),RC Paris (France),move
+france,1957-10-20,Lens (France),Monaco (France),2,3,RC Paris (France),Monaco (France),move
+france,1958-05-11,Monaco (France),Lens (France),3,2,Monaco (France),RC Paris (France),move
+france,1958-03-16,Lens (France),Nice (France),3,1,RC Paris (France),Nice (France),move
+france,1957-11-10,Nice (France),Lens (France),2,0,Nice (France),RC Paris (France),move
+france,1957-09-18,Lens (France),Nimes Olympique (France),3,1,RC Paris (France),Nimes Olympique (France),move
+france,1957-12-22,Nimes Olympique (France),Lens (France),0,1,Nimes Olympique (France),RC Paris (France),move
+france,1958-02-16,Lens (France),Reims (France),1,5,RC Paris (France),Reims (France),move
+france,1957-12-08,Reims (France),Lens (France),4,1,Reims (France),RC Paris (France),move
+france,1957-10-13,Lens (France),Saint-Étienne (France),1,1,RC Paris (France),Saint-Étienne (France),move
+france,1958-01-26,Saint-Étienne (France),Lens (France),0,1,Saint-Étienne (France),RC Paris (France),move
+france,1957-12-01,Lens (France),Ua Sedan Torcy (France),4,2,RC Paris (France),Ua Sedan Torcy (France),move
+france,1958-03-30,Ua Sedan Torcy (France),Lens (France),2,0,Ua Sedan Torcy (France),RC Paris (France),move
+france,1957-08-18,Lens (France),FC Sochaux (France),6,4,RC Paris (France),FC Sochaux (France),move
+france,1958-01-05,FC Sochaux (France),Lens (France),5,0,FC Sochaux (France),RC Paris (France),move
+france,1957-11-03,Lens (France),Toulouse (France),1,2,RC Paris (France),Toulouse (France),move
+france,1958-03-23,Toulouse (France),Lens (France),1,1,Toulouse (France),RC Paris (France),move
+france,1958-02-09,Lens (France),Valenciennes FC (France),2,2,RC Paris (France),Valenciennes FC (France),move
+france,1957-11-01,Valenciennes FC (France),Lens (France),0,5,Valenciennes FC (France),RC Paris (France),move
+france,1957-11-17,Lens (France),Lens (France),5,0,RC Paris (France),Lens (France),add
+france,1958-05-01,Lens (France),Lens (France),1,1,Lens (France),RC Paris (France),add
+france,1959-03-08,Lens (France),Olympique Ales (France),5,2,RC Paris (France),Olympique Ales (France),move
+france,1958-10-19,Olympique Ales (France),Lens (France),1,1,Olympique Ales (France),RC Paris (France),move
+france,1959-04-26,Lens (France),Angers SCO (France),5,0,RC Paris (France),Angers SCO (France),move
+france,1958-09-10,Angers SCO (France),Lens (France),1,2,Angers SCO (France),RC Paris (France),move
+france,1959-05-10,Lens (France),Lille (France),7,2,RC Paris (France),Lille (France),move
+france,1958-08-27,Lille (France),Lens (France),1,6,Lille (France),RC Paris (France),move
+france,1959-01-25,Lens (France),Limoges FC (France),4,1,RC Paris (France),Limoges FC (France),move
+france,1958-10-30,Limoges FC (France),Lens (France),1,1,Limoges FC (France),RC Paris (France),move
+france,1958-09-14,Lens (France),Olympique Lyon (France),2,2,RC Paris (France),Olympique Lyon (France),move
+france,1959-05-31,Olympique Lyon (France),Lens (France),3,2,Olympique Lyon (France),RC Paris (France),move
+france,1959-03-29,Lens (France),Olympique Marseille (France),2,1,RC Paris (France),Olympique Marseille (France),move
+france,1958-11-23,Olympique Marseille (France),Lens (France),1,2,Olympique Marseille (France),RC Paris (France),move
+france,1959-04-19,Lens (France),Monaco (France),2,0,RC Paris (France),Monaco (France),move
+france,1958-12-07,Monaco (France),Lens (France),4,1,Monaco (France),RC Paris (France),move
+france,1958-08-24,Lens (France),As Nancy (France),4,4,RC Paris (France),As Nancy (France),move
+france,1959-05-07,As Nancy (France),Lens (France),1,2,As Nancy (France),RC Paris (France),move
+france,1958-10-12,Lens (France),Nice (France),1,1,RC Paris (France),Nice (France),move
+france,1959-01-18,Nice (France),Lens (France),3,2,Nice (France),RC Paris (France),move
+france,1959-01-04,Lens (France),Nimes Olympique (France),2,2,RC Paris (France),Nimes Olympique (France),move
+france,1958-07-21,Nimes Olympique (France),Lens (France),0,0,Nimes Olympique (France),RC Paris (France),move
+france,1958-12-21,Lens (France),Reims (France),0,1,RC Paris (France),Reims (France),move
+france,1958-11-11,Reims (France),Lens (France),0,0,Reims (France),RC Paris (France),move
+france,1958-09-24,Lens (France),Rennes (France),1,0,RC Paris (France),Rennes (France),move
+france,1959-02-15,Rennes (France),Lens (France),0,1,Rennes (France),RC Paris (France),move
+france,1958-11-16,Lens (France),Saint-Étienne (France),2,2,RC Paris (France),Saint-Étienne (France),move
+france,1959-03-15,Saint-Étienne (France),Lens (France),3,3,Saint-Étienne (France),RC Paris (France),move
+france,1958-12-28,Lens (France),Ua Sedan Torcy (France),1,1,RC Paris (France),Ua Sedan Torcy (France),move
+france,1958-08-17,Ua Sedan Torcy (France),Lens (France),0,3,Ua Sedan Torcy (France),RC Paris (France),move
+france,1958-11-30,Lens (France),FC Sochaux (France),0,2,RC Paris (France),FC Sochaux (France),move
+france,1959-04-05,FC Sochaux (France),Lens (France),1,1,FC Sochaux (France),RC Paris (France),move
+france,1958-11-02,Lens (France),Strasbourg (France),5,2,RC Paris (France),Strasbourg (France),move
+france,1958-12-14,Strasbourg (France),Lens (France),0,2,Strasbourg (France),RC Paris (France),move
+france,1959-05-23,Lens (France),Toulouse (France),2,0,RC Paris (France),Toulouse (France),move
+france,1958-09-07,Toulouse (France),Lens (France),1,1,Toulouse (France),RC Paris (France),move
+france,1958-09-28,Lens (France),Valenciennes FC (France),3,0,RC Paris (France),Valenciennes FC (France),move
+france,1959-02-08,Valenciennes FC (France),Lens (France),1,0,Valenciennes FC (France),RC Paris (France),move
+france,1958-08-31,Lens (France),Lens (France),5,0,RC Paris (France),Lens (France),add
+france,1959-05-17,Lens (France),Lens (France),2,1,Lens (France),RC Paris (France),add
+france,1959-12-27,Lens (France),Angers SCO (France),4,1,RC Paris (France),Angers SCO (France),move
+france,1959-08-30,Angers SCO (France),Lens (France),0,0,Angers SCO (France),RC Paris (France),move
+france,1959-09-30,Lens (France),Girondins Bordeaux (France),6,1,RC Paris (France),Girondins Bordeaux (France),move
+france,1960-01-31,Girondins Bordeaux (France),Lens (France),1,5,Girondins Bordeaux (France),RC Paris (France),move
+france,1959-08-23,Lens (France),Le Havre (France),9,0,RC Paris (France),Le Havre (France),move
+france,1959-12-20,Le Havre (France),Lens (France),2,2,Le Havre (France),RC Paris (France),move
+france,1960-02-07,Lens (France),Limoges FC (France),4,0,RC Paris (France),Limoges FC (France),move
+france,1959-10-04,Limoges FC (France),Lens (France),1,0,Limoges FC (France),RC Paris (France),move
+france,1959-11-01,Lens (France),Olympique Lyon (France),4,0,RC Paris (France),Olympique Lyon (France),move
+france,1960-05-08,Olympique Lyon (France),Lens (France),0,0,Olympique Lyon (France),RC Paris (France),move
+france,1960-01-17,Lens (France),Monaco (France),1,1,RC Paris (France),Monaco (France),move
+france,1959-08-15,Monaco (France),Lens (France),3,3,Monaco (France),RC Paris (France),move
+france,1960-03-20,Lens (France),Nice (France),1,2,RC Paris (France),Nice (France),move
+france,1959-09-17,Nice (France),Lens (France),2,5,Nice (France),RC Paris (France),move
+france,1959-09-20,Lens (France),Nimes Olympique (France),1,2,RC Paris (France),Nimes Olympique (France),move
+france,1960-04-24,Nimes Olympique (France),Lens (France),0,2,Nimes Olympique (France),RC Paris (France),move
+france,1960-04-13,Lens (France),Reims (France),3,3,RC Paris (France),Reims (France),move
+france,1959-11-22,Reims (France),Lens (France),0,0,Reims (France),RC Paris (France),move
+france,1959-10-25,Lens (France),Rennes (France),0,2,RC Paris (France),Rennes (France),move
+france,1960-04-17,Rennes (France),Lens (France),3,2,Rennes (France),RC Paris (France),move
+france,1959-10-21,Lens (France),Saint-Étienne (France),4,0,RC Paris (France),Saint-Étienne (France),move
+france,1960-03-13,Saint-Étienne (France),Lens (France),3,4,Saint-Étienne (France),RC Paris (France),move
+france,1960-01-10,Lens (France),Ua Sedan Torcy (France),2,3,RC Paris (France),Ua Sedan Torcy (France),move
+france,1959-11-15,Ua Sedan Torcy (France),Lens (France),1,4,Ua Sedan Torcy (France),RC Paris (France),move
+france,1959-11-29,Lens (France),FC Sochaux (France),8,0,RC Paris (France),FC Sochaux (France),move
+france,1960-05-28,FC Sochaux (France),Lens (France),3,6,FC Sochaux (France),RC Paris (France),move
+france,1960-04-10,Lens (France),Stade Francais (France),1,1,RC Paris (France),Stade Francais (France),move
+france,1959-10-18,Stade Francais (France),Lens (France),3,3,Stade Francais (France),RC Paris (France),move
+france,1959-11-08,Lens (France),Strasbourg (France),2,2,RC Paris (France),Strasbourg (France),move
+france,1960-01-03,Strasbourg (France),Lens (France),2,5,Strasbourg (France),RC Paris (France),move
+france,1959-09-06,Lens (France),Sporting Toulon Var (France),7,1,RC Paris (France),Sporting Toulon Var (France),move
+france,1960-02-21,Sporting Toulon Var (France),Lens (France),1,3,Sporting Toulon Var (France),RC Paris (France),move
+france,1960-05-22,Lens (France),Toulouse (France),1,3,RC Paris (France),Toulouse (France),move
+france,1959-10-28,Toulouse (France),Lens (France),1,1,Toulouse (France),RC Paris (France),move
+france,1960-05-01,Lens (France),Valenciennes FC (France),6,4,RC Paris (France),Valenciennes FC (France),move
+france,1959-09-27,Valenciennes FC (France),Lens (France),1,4,Valenciennes FC (France),RC Paris (France),move
+france,1959-09-13,Lens (France),Lens (France),3,2,Lens (France),RC Paris (France),add
+france,1959-12-06,Lens (France),Lens (France),3,0,RC Paris (France),Lens (France),add
+france,1960-12-18,Lens (France),Angers SCO (France),5,3,RC Paris (France),Angers SCO (France),move
+france,1960-08-31,Angers SCO (France),Lens (France),0,3,Angers SCO (France),RC Paris (France),move
+france,1960-09-04,Lens (France),Grenoble Foot 38 (France),6,3,RC Paris (France),Grenoble Foot 38 (France),move
+france,1961-03-12,Grenoble Foot 38 (France),Lens (France),0,2,Grenoble Foot 38 (France),RC Paris (France),move
+france,1960-08-21,Lens (France),Le Havre (France),4,4,RC Paris (France),Le Havre (France),move
+france,1961-06-04,Le Havre (France),Lens (France),2,2,Le Havre (France),RC Paris (France),move
+france,1961-03-19,Lens (France),Limoges FC (France),3,1,RC Paris (France),Limoges FC (France),move
+france,1960-09-11,Limoges FC (France),Lens (France),0,1,Limoges FC (France),RC Paris (France),move
+france,1960-09-15,Lens (France),Olympique Lyon (France),3,2,RC Paris (France),Olympique Lyon (France),move
+france,1960-12-24,Olympique Lyon (France),Lens (France),4,2,Olympique Lyon (France),RC Paris (France),move
+france,1961-05-14,Lens (France),Monaco (France),3,0,RC Paris (France),Monaco (France),move
+france,1960-11-19,Monaco (France),Lens (France),3,0,Monaco (France),RC Paris (France),move
+france,1961-01-22,Lens (France),As Nancy (France),2,0,RC Paris (France),As Nancy (France),move
+france,1960-09-18,As Nancy (France),Lens (France),1,1,As Nancy (France),RC Paris (France),move
+france,1961-04-23,Lens (France),Nice (France),4,2,RC Paris (France),Nice (France),move
+france,1960-10-19,Nice (France),Lens (France),0,1,Nice (France),RC Paris (France),move
+france,1960-11-27,Lens (France),Nimes Olympique (France),3,2,RC Paris (France),Nimes Olympique (France),move
+france,1961-02-05,Nimes Olympique (France),Lens (France),2,2,Nimes Olympique (France),RC Paris (France),move
+france,1961-05-28,Lens (France),Reims (France),1,1,RC Paris (France),Reims (France),move
+france,1960-12-04,Reims (France),Lens (France),5,3,Reims (France),RC Paris (France),move
+france,1960-11-13,Lens (France),Rennes (France),0,2,RC Paris (France),Rennes (France),move
+france,1961-01-08,Rennes (France),Lens (France),1,1,Rennes (France),RC Paris (France),move
+france,1961-01-29,Lens (France),FC Rouen (France),0,1,RC Paris (France),FC Rouen (France),move
+france,1960-10-23,FC Rouen (France),Lens (France),0,3,FC Rouen (France),RC Paris (France),move
+france,1961-05-10,Lens (France),Saint-Étienne (France),4,2,RC Paris (France),Saint-Étienne (France),move
+france,1960-11-01,Saint-Étienne (France),Lens (France),1,2,Saint-Étienne (France),RC Paris (France),move
+france,1960-10-16,Lens (France),Ua Sedan Torcy (France),2,0,RC Paris (France),Ua Sedan Torcy (France),move
+france,1961-04-29,Ua Sedan Torcy (France),Lens (France),1,3,Ua Sedan Torcy (France),RC Paris (France),move
+france,1960-10-02,Lens (France),Stade Francais (France),3,1,RC Paris (France),Stade Francais (France),move
+france,1961-04-09,Stade Francais (France),Lens (France),3,3,Stade Francais (France),RC Paris (France),move
+france,1960-11-23,Lens (France),Toulouse (France),3,0,RC Paris (France),Toulouse (France),move
+france,1961-05-19,Toulouse (France),Lens (France),1,1,Toulouse (France),RC Paris (France),move
+france,1961-02-26,Lens (France),As Troyes Savinienne (France),3,3,RC Paris (France),As Troyes Savinienne (France),move
+france,1960-11-11,As Troyes Savinienne (France),Lens (France),1,4,As Troyes Savinienne (France),RC Paris (France),move
+france,1961-01-01,Lens (France),Valenciennes FC (France),1,1,RC Paris (France),Valenciennes FC (France),move
+france,1960-10-09,Valenciennes FC (France),Lens (France),1,3,Valenciennes FC (France),RC Paris (France),move
+france,1960-11-06,Lens (France),Lens (France),3,2,RC Paris (France),Lens (France),add
+france,1961-02-19,Lens (France),Lens (France),1,3,Lens (France),RC Paris (France),add
+france,1961-08-27,Lens (France),Angers SCO (France),4,3,RC Paris (France),Angers SCO (France),move
+france,1962-03-28,Angers SCO (France),Lens (France),2,3,Angers SCO (France),RC Paris (France),move
+france,1961-09-10,Lens (France),Le Havre (France),4,1,RC Paris (France),Le Havre (France),move
+france,1962-04-15,Le Havre (France),Lens (France),0,4,Le Havre (France),RC Paris (France),move
+france,1962-01-21,Lens (France),Olympique Lyon (France),0,4,RC Paris (France),Olympique Lyon (France),move
+france,1961-09-16,Olympique Lyon (France),Lens (France),2,0,Olympique Lyon (France),RC Paris (France),move
+france,1961-11-19,Lens (France),FC Metz (France),11,2,RC Paris (France),FC Metz (France),move
+france,1962-04-21,FC Metz (France),Lens (France),2,4,FC Metz (France),RC Paris (France),move
+france,1962-04-24,Lens (France),Monaco (France),3,0,RC Paris (France),Monaco (France),move
+france,1962-05-20,Monaco (France),Lens (France),1,2,Monaco (France),RC Paris (France),move
+france,1961-09-20,Lens (France),Montpellier (France),2,1,RC Paris (France),Montpellier (France),move
+france,1961-11-26,Montpellier (France),Lens (France),2,1,Montpellier (France),RC Paris (France),move
+france,1961-12-03,Lens (France),As Nancy (France),2,0,RC Paris (France),As Nancy (France),move
+france,1961-08-20,As Nancy (France),Lens (France),0,0,As Nancy (France),RC Paris (France),move
+france,1961-12-31,Lens (France),Nice (France),3,1,RC Paris (France),Nice (France),move
+france,1961-09-25,Nice (France),Lens (France),1,0,Nice (France),RC Paris (France),move
+france,1961-10-22,Lens (France),Nimes Olympique (France),0,4,RC Paris (France),Nimes Olympique (France),move
+france,1962-02-25,Nimes Olympique (France),Lens (France),2,4,Nimes Olympique (France),RC Paris (France),move
+france,1962-04-18,Lens (France),Reims (France),2,6,RC Paris (France),Reims (France),move
+france,1961-11-22,Reims (France),Lens (France),1,4,Reims (France),RC Paris (France),move
+france,1961-10-08,Lens (France),Rennes (France),3,1,RC Paris (France),Rennes (France),move
+france,1962-03-18,Rennes (France),Lens (France),2,3,Rennes (France),RC Paris (France),move
+france,1961-10-29,Lens (France),FC Rouen (France),0,2,RC Paris (France),FC Rouen (France),move
+france,1962-04-08,Lens (France),Saint-Étienne (France),1,2,RC Paris (France),Saint-Étienne (France),move
+france,1961-11-01,Saint-Étienne (France),Lens (France),1,1,Saint-Étienne (France),RC Paris (France),move
+france,1961-10-01,Lens (France),Ua Sedan Torcy (France),2,2,RC Paris (France),Ua Sedan Torcy (France),move
+france,1962-01-14,Ua Sedan Torcy (France),Lens (France),0,1,Ua Sedan Torcy (France),RC Paris (France),move
+france,1961-12-24,Lens (France),FC Sochaux (France),2,2,RC Paris (France),FC Sochaux (France),move
+france,1961-09-06,FC Sochaux (France),Lens (France),4,3,FC Sochaux (France),RC Paris (France),move
+france,1962-03-25,Lens (France),Stade Francais (France),3,1,RC Paris (France),Stade Francais (France),move
+france,1961-10-15,Stade Francais (France),Lens (France),2,0,Stade Francais (France),RC Paris (France),move
+france,1962-02-11,Lens (France),Strasbourg (France),3,3,RC Paris (France),Strasbourg (France),move
+france,1961-09-03,Strasbourg (France),Lens (France),1,3,Strasbourg (France),RC Paris (France),move
+france,1962-04-29,Lens (France),Toulouse (France),2,0,RC Paris (France),Toulouse (France),move
+france,1961-10-04,Toulouse (France),Lens (France),1,1,Toulouse (France),RC Paris (France),move
+france,1962-02-04,FC Rouen (France),Lens (France),2,1,FC Rouen (France),RC Paris (France),move
+france,1961-10-25,Lens (France),Lens (France),2,3,Lens (France),RC Paris (France),add
+france,1962-03-04,Lens (France),Lens (France),1,0,RC Paris (France),Lens (France),add
+france,1963-04-06,Lens (France),Angers SCO (France),2,4,RC Paris (France),Angers SCO (France),move
+france,1962-09-02,Angers SCO (France),Lens (France),2,1,Angers SCO (France),RC Paris (France),move
+france,1962-10-11,Lens (France),Girondins Bordeaux (France),1,3,RC Paris (France),Girondins Bordeaux (France),move
+france,1963-05-25,Girondins Bordeaux (France),Lens (France),2,1,Girondins Bordeaux (France),RC Paris (France),move
+france,1962-12-23,Grenoble Foot 38 (France),Lens (France),1,1,Grenoble Foot 38 (France),RC Paris (France),move
+france,1962-12-30,Lens (France),Olympique Lyon (France),1,1,RC Paris (France),Olympique Lyon (France),move
+france,1962-11-04,Olympique Lyon (France),Lens (France),1,1,Olympique Lyon (France),RC Paris (France),move
+france,1963-01-27,Lens (France),Olympique Marseille (France),3,0,RC Paris (France),Olympique Marseille (France),move
+france,1962-10-07,Olympique Marseille (France),Lens (France),1,3,Olympique Marseille (France),RC Paris (France),move
+france,1963-03-03,Lens (France),Monaco (France),2,3,RC Paris (France),Monaco (France),move
+france,1962-09-19,Monaco (France),Lens (France),1,1,Monaco (France),RC Paris (France),move
+france,1963-05-19,Lens (France),Montpellier (France),9,1,RC Paris (France),Montpellier (France),move
+france,1962-09-09,Montpellier (France),Lens (France),4,1,Montpellier (France),RC Paris (France),move
+france,1962-11-01,Lens (France),As Nancy (France),4,2,RC Paris (France),As Nancy (France),move
+france,1963-03-30,As Nancy (France),Lens (France),2,2,As Nancy (France),RC Paris (France),move
+france,1963-02-10,Lens (France),Nice (France),3,4,RC Paris (France),Nice (France),move
+france,1962-10-28,Nice (France),Lens (France),3,3,Nice (France),RC Paris (France),move
+france,1962-12-02,Lens (France),Nimes Olympique (France),2,2,RC Paris (France),Nimes Olympique (France),move
+france,1963-04-20,Nimes Olympique (France),Lens (France),4,1,Nimes Olympique (France),RC Paris (France),move
+france,1962-11-21,Lens (France),Reims (France),3,3,RC Paris (France),Reims (France),move
+france,1963-05-05,Reims (France),Lens (France),3,2,Reims (France),RC Paris (France),move
+france,1962-09-23,Lens (France),Rennes (France),2,1,RC Paris (France),Rennes (France),move
+france,1962-12-09,Rennes (France),Lens (France),3,5,Rennes (France),RC Paris (France),move
+france,1963-05-01,Lens (France),FC Rouen (France),3,0,RC Paris (France),FC Rouen (France),move
+france,1962-11-25,FC Rouen (France),Lens (France),0,2,FC Rouen (France),RC Paris (France),move
+france,1963-04-03,Lens (France),Ua Sedan Torcy (France),4,3,RC Paris (France),Ua Sedan Torcy (France),move
+france,1962-08-18,Ua Sedan Torcy (France),Lens (France),0,0,Ua Sedan Torcy (France),RC Paris (France),move
+france,1962-10-21,Lens (France),Stade Francais (France),0,2,RC Paris (France),Stade Francais (France),move
+france,1963-03-24,Stade Francais (France),Lens (France),1,2,Stade Francais (France),RC Paris (France),move
+france,1962-09-16,Lens (France),Strasbourg (France),1,1,RC Paris (France),Strasbourg (France),move
+france,1963-04-12,Strasbourg (France),Lens (France),2,2,Strasbourg (France),RC Paris (France),move
+france,1963-01-06,Lens (France),Toulouse (France),2,2,RC Paris (France),Toulouse (France),move
+france,1962-10-14,Toulouse (France),Lens (France),1,1,Toulouse (France),RC Paris (France),move
+france,1962-12-16,Lens (France),Valenciennes FC (France),3,2,RC Paris (France),Valenciennes FC (France),move
+france,1962-11-18,Valenciennes FC (France),Lens (France),4,0,Valenciennes FC (France),RC Paris (France),move
+france,1962-09-05,Lens (France),Grenoble Foot 38 (France),2,0,RC Paris (France),Grenoble Foot 38 (France),move
+france,1962-08-26,Lens (France),Lens (France),2,1,RC Paris (France),Lens (France),add
+france,1963-03-17,Lens (France),Lens (France),1,2,Lens (France),RC Paris (France),add
+france,1964-04-12,Lens (France),Angers SCO (France),3,4,RC Paris (France),Angers SCO (France),move
+france,1963-11-10,Angers SCO (France),Lens (France),2,1,Angers SCO (France),RC Paris (France),move
+france,1963-10-06,Lens (France),Girondins Bordeaux (France),3,1,RC Paris (France),Girondins Bordeaux (France),move
+france,1964-02-23,Girondins Bordeaux (France),Lens (France),2,2,Girondins Bordeaux (France),RC Paris (France),move
+france,1963-11-03,Lens (France),Olympique Lyon (France),1,3,RC Paris (France),Olympique Lyon (France),move
+france,1964-05-13,Olympique Lyon (France),Lens (France),5,1,Olympique Lyon (France),RC Paris (France),move
+france,1964-03-26,Lens (France),Monaco (France),1,5,RC Paris (France),Monaco (France),move
+france,1963-10-31,Monaco (France),Lens (France),5,3,Monaco (France),RC Paris (France),move
+france,1963-09-08,Lens (France),Nantes (France),3,0,RC Paris (France),Nantes (France),move
+france,1964-01-26,Nantes (France),Lens (France),1,0,Nantes (France),RC Paris (France),move
+france,1964-05-31,Lens (France),Nice (France),3,2,RC Paris (France),Nice (France),move
+france,1963-12-22,Nice (France),Lens (France),1,1,Nice (France),RC Paris (France),move
+france,1963-11-17,Lens (France),Nimes Olympique (France),5,0,RC Paris (France),Nimes Olympique (France),move
+france,1964-04-18,Nimes Olympique (France),Lens (France),3,1,Nimes Olympique (France),RC Paris (France),move
+france,1963-11-24,Reims (France),Lens (France),1,4,Reims (France),RC Paris (France),move
+france,1964-01-19,Lens (France),Rennes (France),0,2,RC Paris (France),Rennes (France),move
+france,1963-09-01,Rennes (France),Lens (France),2,2,Rennes (France),RC Paris (France),move
+france,1963-12-15,Lens (France),FC Rouen (France),2,2,RC Paris (France),FC Rouen (France),move
+france,1964-06-07,FC Rouen (France),Lens (France),1,2,FC Rouen (France),RC Paris (France),move
+france,1963-12-29,Lens (France),Saint-Étienne (France),1,3,RC Paris (France),Saint-Étienne (France),move
+france,1964-01-05,Saint-Étienne (France),Lens (France),2,1,Saint-Étienne (France),RC Paris (France),move
+france,1963-09-21,Lens (France),Ua Sedan Torcy (France),2,2,RC Paris (France),Ua Sedan Torcy (France),move
+france,1964-02-16,Ua Sedan Torcy (France),Lens (France),1,0,Ua Sedan Torcy (France),RC Paris (France),move
+france,1963-12-01,Lens (France),Stade Francais (France),3,2,RC Paris (France),Stade Francais (France),move
+france,1964-05-03,Stade Francais (France),Lens (France),2,3,Stade Francais (France),RC Paris (France),move
+france,1964-02-02,Lens (France),Strasbourg (France),3,0,RC Paris (France),Strasbourg (France),move
+france,1963-09-13,Strasbourg (France),Lens (France),2,1,Strasbourg (France),RC Paris (France),move
+france,1963-10-20,Lens (France),Toulouse (France),1,1,RC Paris (France),Toulouse (France),move
+france,1964-03-15,Toulouse (France),Lens (France),2,2,Toulouse (France),RC Paris (France),move
+france,1964-03-08,Lens (France),Valenciennes FC (France),1,3,RC Paris (France),Valenciennes FC (France),move
+france,1963-10-13,Valenciennes FC (France),Lens (France),1,3,Valenciennes FC (France),RC Paris (France),move
+france,1964-04-29,Lens (France),Reims (France),2,1,RC Paris (France),Reims (France),move
+france,1963-12-08,Lens (France),Lens (France),10,2,Lens (France),RC Paris (France),add
+france,1964-05-17,Lens (France),Lens (France),3,2,RC Paris (France),Lens (France),add
+france,1984-12-01,Lens (France),Auxerre (France),1,3,RC Paris (France),Auxerre (France),move
+france,1985-05-24,Auxerre (France),Lens (France),1,0,Auxerre (France),RC Paris (France),move
+france,1984-11-13,Lens (France),SC Bastia (France),0,0,RC Paris (France),SC Bastia (France),move
+france,1985-05-07,SC Bastia (France),Lens (France),0,0,SC Bastia (France),RC Paris (France),move
+france,1985-04-27,Lens (France),Girondins Bordeaux (France),0,0,RC Paris (France),Girondins Bordeaux (France),move
+france,1984-11-10,Girondins Bordeaux (France),Lens (France),1,0,Girondins Bordeaux (France),RC Paris (France),move
+france,1985-04-12,Lens (France),Brest (France),3,0,RC Paris (France),Brest (France),move
+france,1984-10-26,Brest (France),Lens (France),3,0,Brest (France),RC Paris (France),move
+france,1984-09-11,Lens (France),Stade Laval (France),2,0,RC Paris (France),Stade Laval (France),move
+france,1985-02-19,Stade Laval (France),Lens (France),1,0,Stade Laval (France),RC Paris (France),move
+france,1984-10-05,Lens (France),Lille (France),2,2,RC Paris (France),Lille (France),move
+france,1985-03-22,Lille (France),Lens (France),2,1,Lille (France),RC Paris (France),move
+france,1985-01-26,Lens (France),Olympique Marseille (France),0,2,RC Paris (France),Olympique Marseille (France),move
+france,1984-08-31,Olympique Marseille (France),Lens (France),0,2,Olympique Marseille (France),RC Paris (France),move
+france,1985-05-28,Lens (France),FC Metz (France),0,2,RC Paris (France),FC Metz (France),move
+france,1984-08-17,FC Metz (France),Lens (France),2,0,FC Metz (France),RC Paris (France),move
+france,1985-02-23,Lens (France),Monaco (France),0,1,RC Paris (France),Monaco (France),move
+france,1985-03-16,Lens (France),As Nancy (France),1,0,RC Paris (France),As Nancy (France),move
+france,1984-09-28,As Nancy (France),Lens (France),4,0,As Nancy (France),RC Paris (France),move
+france,1984-10-20,Lens (France),Nantes (France),1,2,RC Paris (France),Nantes (France),move
+france,1985-04-06,Nantes (France),Lens (France),1,1,Nantes (France),RC Paris (France),move
+france,1984-11-02,Lens (France),PSG (France),0,1,RC Paris (France),PSG (France),move
+france,1985-04-19,PSG (France),Lens (France),2,2,PSG (France),RC Paris (France),move
+france,1985-03-05,FC Rouen (France),Lens (France),1,1,FC Rouen (France),RC Paris (France),move
+france,1984-12-21,Lens (France),FC Sochaux (France),0,2,RC Paris (France),FC Sochaux (France),move
+france,1984-08-24,FC Sochaux (France),Lens (France),6,1,FC Sochaux (France),RC Paris (France),move
+france,1985-02-02,Lens (France),Strasbourg (France),2,2,RC Paris (France),Strasbourg (France),move
+france,1984-09-07,Strasbourg (France),Lens (France),3,0,Strasbourg (France),RC Paris (France),move
+france,1985-03-26,Lens (France),Sporting Toulon Var (France),0,1,RC Paris (France),Sporting Toulon Var (France),move
+france,1984-09-25,Lens (France),Toulouse (France),3,1,RC Paris (France),Toulouse (France),move
+france,1985-03-01,Toulouse (France),Lens (France),1,3,Toulouse (France),RC Paris (France),move
+france,1985-05-14,Lens (France),Tours FC (France),3,1,RC Paris (France),Tours FC (France),move
+france,1984-11-24,Tours FC (France),Lens (France),2,0,Tours FC (France),RC Paris (France),move
+france,1984-09-22,Monaco (France),Lens (France),3,0,Monaco (France),RC Paris (France),move
+france,1984-08-28,Lens (France),FC Rouen (France),1,0,RC Paris (France),FC Rouen (France),move
+france,1984-10-16,Sporting Toulon Var (France),Lens (France),1,0,Sporting Toulon Var (France),RC Paris (France),move
+france,1984-08-21,Lens (France),Lens (France),2,1,RC Paris (France),Lens (France),add
+france,1984-12-14,Lens (France),Lens (France),1,0,Lens (France),RC Paris (France),add
+france,1986-10-31,Auxerre (France),Lens (France),2,0,Auxerre (France),RC Paris (France),move
+france,1986-12-13,Lens (France),Girondins Bordeaux (France),1,2,RC Paris (France),Girondins Bordeaux (France),move
+france,1986-08-12,Girondins Bordeaux (France),Lens (France),2,0,Girondins Bordeaux (France),RC Paris (France),move
+france,1986-10-04,Lens (France),Brest (France),2,2,RC Paris (France),Brest (France),move
+france,1986-09-20,Lens (France),Stade Laval (France),1,1,RC Paris (France),Stade Laval (France),move
+france,1986-08-08,Lens (France),Le Havre (France),2,1,RC Paris (France),Le Havre (France),move
+france,1986-12-05,Le Havre (France),Lens (France),2,2,Le Havre (France),RC Paris (France),move
+france,1986-08-15,Lens (France),Olympique Marseille (France),0,1,RC Paris (France),Olympique Marseille (France),move
+france,1986-12-17,Olympique Marseille (France),Lens (France),2,0,Olympique Marseille (France),RC Paris (France),move
+france,1986-10-25,Lens (France),FC Metz (France),1,1,RC Paris (France),FC Metz (France),move
+france,1986-12-20,Lens (France),As Nancy (France),1,0,RC Paris (France),As Nancy (France),move
+france,1986-08-22,As Nancy (France),Lens (France),2,1,As Nancy (France),RC Paris (France),move
+france,1986-11-29,Lens (France),Nantes (France),1,1,RC Paris (France),Nantes (France),move
+france,1986-11-22,Nice (France),Lens (France),1,0,Nice (France),RC Paris (France),move
+france,1986-09-13,PSG (France),Lens (France),1,2,PSG (France),RC Paris (France),move
+france,1986-08-05,Rennes (France),Lens (France),1,0,Rennes (France),RC Paris (France),move
+france,1986-10-17,Saint-Étienne (France),Lens (France),4,0,Saint-Étienne (France),RC Paris (France),move
+france,1986-08-26,Lens (France),FC Sochaux (France),0,2,RC Paris (France),FC Sochaux (France),move
+france,1986-11-12,Lens (France),Sporting Toulon Var (France),2,0,RC Paris (France),Sporting Toulon Var (France),move
+france,1986-09-24,Toulouse (France),Lens (France),3,0,Toulouse (France),RC Paris (France),move
+france,1986-11-08,Lille (France),Lens (France),0,1,Lille (France),RC Paris (France),move
+france,1986-09-03,Lens (France),Monaco (France),1,1,RC Paris (France),Monaco (France),move
+france,1986-08-29,Lens (France),Lens (France),0,1,Lens (France),RC Paris (France),add
+france,1989-05-13,Auxerre (France),Lens (France),1,1,Auxerre (France),RC Paris (France),move
+france,1989-04-01,Girondins Bordeaux (France),Lens (France),3,2,Girondins Bordeaux (France),RC Paris (France),move
+france,1989-04-12,Lens (France),SM Caen (France),3,1,RC Paris (France),SM Caen (France),move
+france,1989-03-25,Lens (France),As Cannes (France),1,0,RC Paris (France),As Cannes (France),move
+france,1989-05-20,Lens (France),Lille (France),1,0,RC Paris (France),Lille (France),move
+france,1989-02-04,Lens (France),Olympique Marseille (France),0,2,RC Paris (France),Olympique Marseille (France),move
+france,1989-03-11,Lens (France),FC Metz (France),1,4,RC Paris (France),FC Metz (France),move
+france,1989-03-18,Nantes (France),Lens (France),1,0,Nantes (France),RC Paris (France),move
+france,1989-04-22,PSG (France),Lens (France),2,1,PSG (France),RC Paris (France),move
+france,1989-05-06,Lens (France),Sporting Toulon Var (France),1,1,RC Paris (France),Sporting Toulon Var (France),move
+france,1989-02-21,Monaco (France),Lens (France),1,0,Monaco (France),RC Paris (France),move
+france,1989-05-31,Toulouse (France),Lens (France),2,1,Toulouse (France),RC Paris (France),move
+france,1989-02-28,Lens (France),Lens (France),3,0,RC Paris (France),Lens (France),add

@@ -31,16 +31,21 @@ def test_a_record_without_a_name_takes_the_one_the_source_gives_elsewhere(tmp_pa
     os.makedirs(tmp_path / "db" / "tm")
     (tmp_path / "db" / "tm" / "player_profiles.csv").write_text("player_id,player_name\n77,Danilo (3)\n78,Known Elsewhere\n", encoding="utf-8")
     (tmp_path / "db" / "tm" / "transfer_history.csv").write_text("player_id,from_team_id,from_team_name,to_team_id,to_team_name\n77,5722,FC Nowhere,9,Big Club\n", encoding="utf-8")
-    a, b, c = reg.mint("player", "tm", "77"), reg.mint("player", "tm", "78"), reg.mint("player", "tm", "79")
+    # a scorer no lineup lists (145 on 24 Nov 2026) is in the source's list of players
+    import gzip
+    with gzip.open(tmp_path / "db" / "tm_players.csv.gz", "wt", encoding="utf-8", newline="") as f:
+        f.write("player_id,first_name,last_name,name\n80,Only,Scored,Only Scored\n")
+    a, b, c, d = (reg.mint("player", "tm", k) for k in ("77", "78", "79", "80"))
     G.put("player", {"pid": a}, "tm")
     G.put("player", {"pid": b, "name": "His Own Name"}, "tm")
     G.put("player", {"pid": c}, "tm")
+    G.put("player", {"pid": d}, "tm")
     t, s = reg.mint("team", "tm", "5722"), reg.mint("team", "sch", "Aiglon (Martinique)")
     G.put("team", {"tid": t}, "tm")
     G.put("team", {"tid": s, "kind": "club"}, "sch")
     out = tidy.load(G, reg, types.SimpleNamespace(db=str(tmp_path / "db")))
-    assert (out["players_named"], out["clubs_named"]) == (1, 2)
-    assert G.c.execute("SELECT name FROM player ORDER BY pid").fetchall() == [("Danilo",), ("His Own Name",), (None,)]
+    assert (out["players_named"], out["clubs_named"]) == (2, 2)
+    assert G.c.execute("SELECT name FROM player ORDER BY pid").fetchall() == [("Danilo",), ("His Own Name",), (None,), ("Only Scored",)]
     assert G.c.execute("SELECT name FROM team ORDER BY tid").fetchall() == [("FC Nowhere",), ("Aiglon",)]
 
 

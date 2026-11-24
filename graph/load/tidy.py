@@ -58,6 +58,7 @@ def names(G, reg, S):
     n = {"players_named": named(G, "player", "pid", men, ((r["player_id"], r.get("player_name")) for f in ("tm_game_lineups.csv.gz", "tm_appearances.csv.gz")
                                                            for r in rows(os.path.join(db, f))))}
     n["players_named"] += named(G, "player", "pid", men, ((r["player_id"], r.get("player_name")) for r in tm("player_profiles.csv")))
+    n["players_named"] += named(G, "player", "pid", men, ((r["player_id"], r.get("name")) for r in rows(os.path.join(db, "tm_players.csv.gz"))))
     clubs = nameless(G, reg, "team", "tid", "tm")
     n["clubs_named"] = named(G, "team", "tid", clubs, ((r.get(a + "_team_id"), r.get(a + "_team_name")) for r in tm("transfer_history.csv") for a in ("from", "to")))
     n["clubs_named"] += named(G, "team", "tid", clubs, ((r.get("team_id"), r.get("team_name")) for r in tm("player_performances.csv")))
