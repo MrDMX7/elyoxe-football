@@ -41,6 +41,8 @@ def load(G, reg, S):
             fm_by.setdefault((fold(grp.get("name")), fold(lg.get("name"))), []).append(
                 (int(lg["id"]), women(lg.get("name")) or int(lg["id"]) in FOTMOB_WOMEN))
     n = {"teams": 0, "teams_linked": 0, "comps": 0, "comps_linked": 0, "champions": 0, "standings": 0, "matches": 0, "matches_linked": 0}
+    listed = {r[0] for r in ix.get("teams") or [] if r[1] and r[2]}       # named in both languages by the index
+    indexed = {r[0] for r in ix.get("teams") or []}
     for sid, ar, en, cc, fid in sorted(ix.get("teams") or [], key=lambda r: r[0]):
         if fid:
             tid = reg.link("team", "s365", sid, reg.mint("team", "fotmob", int(fid)))
@@ -85,7 +87,17 @@ def load(G, reg, S):
             return eids[k]
 
         def team(sid):
-            return reg.get("team", "s365", sid) or reg.mint("team", "s365", sid)
+            # a side of an old table that the index does not list (57 on 24 Nov 2026: three of Morocco's 2003/04 stood in
+            # the table without a name) is named by the competition's own file
+            tid = reg.get("team", "s365", sid) or reg.mint("team", "s365", sid)
+            if sid not in listed:
+                listed.add(sid)
+                G.put("team", {"tid": tid, "name": (d.get("names_en") or {}).get(str(sid)) or None, "name_ar": (d.get("names") or {}).get(str(sid)) or None,
+                               "country": None if ko else cname}, "s365")
+                if sid not in indexed:
+                    G.xref("team", tid, "s365", sid, "s365-native")
+                    n["teams"] += 1
+            return tid
 
         for season, winner, vals, *_ in [] if cid_s in UNRELIABLE_CHAMPIONS else d.get("champions") or []:
             if winner:

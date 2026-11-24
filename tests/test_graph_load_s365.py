@@ -93,3 +93,16 @@ def test_s365_does_not_link_a_mens_competition_to_a_womens_one(tmp_path):
     assert reg.get("competition", "s365", 6216) != reg.mint("competition", "fotmob", 9000)
     assert s365.women("Eredivisie Vrouwen") and s365.women("Coupe de France Féminine") and s365.women("Damallsvenskan") \
         and s365.women("Toppserien Kvinner") and s365.women("Serie A Femminile") and not s365.women("Danish Superliga")
+
+
+def test_a_side_of_a_table_the_index_does_not_list_takes_its_name_from_the_competitions_file(tmp_path):
+    S = mk(tmp_path)
+    f = tmp_path / "mirror" / "s365" / "comp" / "565.json"
+    d = json.loads(f.read_text(encoding="utf-8"))
+    d["tables"]["2003/2004"] = [[1, 8276, 18, 12, 4, 2, 30, 10, 40.0], [2, 13397, 18, 10, 5, 3, 25, 12, 35.0]]
+    d["names"], d["names_en"] = {"13397": "الجزيرة"}, {"13397": "Al Jazeera"}
+    f.write_text(json.dumps(d), encoding="utf-8")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    s365.load(G, reg, S)
+    assert G.c.execute("select name, name_ar, country from team where tid=?", (reg.get("team", "s365", 13397),)).fetchone() == ("Al Jazeera", "الجزيرة", "Jordan")
+    assert G.c.execute("select count(*) from standing s left join team t using(tid) where t.name is null").fetchone()[0] == 0
