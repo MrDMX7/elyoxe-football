@@ -64,6 +64,7 @@ def test_what_should_not_be_there_is_counted(tmp_path):
                                                      "nameless_competition": 1, "competition_of_no_kind": 1, "transfer_to_itself": 1}
     cov = coverage.compute(G)
     assert cov["integrity"] == found and "| same_game |" in coverage.markdown(cov, "2026-11-24")
+    assert cov["integrity_samples"]["same_game"][0][:2] == ["2001-03-01", 1] and "### nameless_team" in coverage.markdown(cov, "2026-11-24")
 
 
 def test_a_season_of_nothing_leaves_and_one_sources_two_champions_are_no_fault(tmp_path):

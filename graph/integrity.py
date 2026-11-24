@@ -38,13 +38,35 @@ CHECKS = (
              + (SELECT count(*) FROM xref x WHERE x.type = 'competition' AND NOT EXISTS(SELECT 1 FROM competition c WHERE c.cid = x.tifo_id))"""),
 )
 
+SAMPLES = {     # the records behind a count, where a count alone does not say which
+    "same_game": """SELECT m.date, m.home, h.name, m.away, a.name, group_concat(m.mid || ':' || m.src || ':' || m.eid || ':' || ifnull(m.hs, '') || '-' || ifnull(m.as_, ''), ' ')
+        FROM match m LEFT JOIN team h ON h.tid = m.home LEFT JOIN team a ON a.tid = m.away
+        WHERE m.date IS NOT NULL AND m.home IS NOT NULL AND m.away IS NOT NULL GROUP BY m.date, m.home, m.away HAVING count(*) > 1""",
+    "game_without_side": """SELECT m.mid, m.src, m.eid, m.date, m.home, m.away FROM match m
+        WHERE NOT EXISTS(SELECT 1 FROM team t WHERE t.tid = m.home) OR NOT EXISTS(SELECT 1 FROM team t WHERE t.tid = m.away)""",
+    "nameless_team": """SELECT t.tid, t.src, t.kind, t.country, (SELECT group_concat(x.source || ':' || x.source_id, ' ') FROM xref x WHERE x.type = 'team' AND x.tifo_id = t.tid),
+        (SELECT count(*) FROM match m WHERE m.home = t.tid OR m.away = t.tid) FROM team t WHERE ifnull(t.name, '') = '' AND ifnull(t.name_ar, '') = ''""",
+    "nameless_player": """SELECT p.pid, p.src, p.born, (SELECT group_concat(x.source || ':' || x.source_id, ' ') FROM xref x WHERE x.type = 'player' AND x.tifo_id = p.pid),
+        (SELECT count(*) FROM appearance a WHERE a.pid = p.pid) FROM player p WHERE ifnull(p.name, '') = '' AND ifnull(p.name_ar, '') = ''""",
+    "nameless_competition": "SELECT cid, name, src, kind, country FROM competition WHERE ifnull(name, '') = '' OR name GLOB 'FotMob [0-9]*'",
+    "competition_of_no_kind": "SELECT cid, name, src, country FROM competition WHERE kind IS NULL",
+}
+
+
+def samples(G, found, limit=200):
+    """{check: [row]} for each check that found something and has its records listed above"""
+    return {name: [list(r) for r in G.c.execute(f"{SAMPLES[name]} LIMIT {int(limit)}").fetchall()] for name in SAMPLES if found.get(name)}
+
 
 def compute(G):
     """{check: count}, in the order above"""
     return {name: G.c.execute(sql).fetchone()[0] for name, _, sql in CHECKS}
 
 
-def markdown(found):
+def markdown(found, which=None):
     out = ["## Integrity (each should be nothing)", "", "| check | what it counts | found |", "|---|---|---|"]
     out += [f"| {name} | {what} | {found.get(name, 0):,} |" for name, what, _ in CHECKS]
-    return out + [""]
+    out.append("")
+    for name, rows in (which or {}).items():
+        out += [f"### {name}", ""] + ["- " + " | ".join("" if v is None else str(v) for v in r) for r in rows] + [""]
+    return out
