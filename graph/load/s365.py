@@ -17,6 +17,8 @@ def fold(s):
 # 1969-71 all "Mps"); 6238 Icelandic League Cup: lower-division winners (KB, Berserkir, Ymir) for Breidablik, FH,
 # KR, Valur; 6152 Belgian and 82 Turkish Super Cups: old editions shifted a year or duplicated (Goztepe 2020/21).
 UNRELIABLE_CHAMPIONS = {128, 6238, 6152, 82}
+# 365's own test record («TestFake», four made-up seasons, 24 Nov 2026): not a competition
+NOT_A_COMPETITION = {7197}
 # FotMob women's leagues whose name carries no gender word (11015 "Supercoppa Italiana" is the women's Supercoppa).
 FOTMOB_WOMEN = {11015}
 WOMEN = re.compile(r"\b(women|womens|ladies|female|femminile|feminine|feminin|femenina|feminino|frauen|vrouwen|dames|dam|damer|damallsvenskan|kvinner|kvinnor|naiset|kvenna)\b")
@@ -56,6 +58,8 @@ def load(G, reg, S):
     eids = {}
     for row in sorted(ix.get("comps") or [], key=lambda r: r[0]):
         cid_s, ar, en, cc, ko = row[0], row[1], row[2], row[3], row[4]
+        if cid_s in NOT_A_COMPETITION:
+            continue
         cname = (countries.get(str(cc)) or [None, None])[1]
         cands = [curated[cid_s]] if cid_s in curated else [f for f, w in fm_by.get((fold(cname), fold(en)), []) if w == women(en)]
         if len(cands) == 1 and reg.link("competition", "s365", cid_s, reg.mint("competition", "fotmob", cands[0])) is not None:

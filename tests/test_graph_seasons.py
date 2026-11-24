@@ -380,3 +380,28 @@ def test_what_goes_aside_leaves_the_graph_so_nothing_publishes_it(tmp_path):
     assert G.c.execute("SELECT count(*) FROM event").fetchone()[0] == 0
     assert G.c.execute("SELECT count(*) FROM competition WHERE name LIKE '%(aside)'").fetchone()[0] == 0
     assert out["aside_dropped"] == 1
+
+
+def test_a_league_nobody_names_is_read_off_its_games(tmp_path):
+    # the Soviet league, March to November, filed July-June by schochastics: no list names a season of it
+    G, reg, cid = world(tmp_path)
+    a, b = ed(G, reg, cid, "1987/1988", "sch"), ed(G, reg, cid, "1988/1989", "sch")
+    mid = 0
+    for year, parts in ((1988, ((a, (3, 4, 5, 6)), (b, (7, 8, 9, 10, 11)))), (1989, ((b, (3, 4, 5, 6)),))):
+        for eid, months in parts:
+            for mo in months:
+                for d in range(1, 13):
+                    mid += 1
+                    game(G, mid, eid, f"{year}-{mo:02d}-{d:02d}", 1 + d % 4, 5 + d % 4)
+    G.c.commit()
+    seasons.load(G, reg, None)
+    assert labels(G, cid) == ["1988", "1989"]
+    assert G.c.execute("SELECT count(*) FROM match m JOIN edition e ON e.eid=m.eid WHERE e.season='1988'").fetchone() == (108,)
+
+
+def test_the_games_say_calendar_or_split_or_nothing():
+    months = lambda ms: {f"1988-{m:02d}": 30 for m in ms}
+    assert seasons.played(months(range(3, 12)), 1988) == "calendar"
+    assert seasons.played(months((8, 9, 10, 11, 12, 1, 2, 3, 4, 5)), 1988) == "split"
+    assert seasons.played(months((7, 8, 9, 10, 11, 3, 4, 5)), 1988) is None        # a winter break and a summer one
+    assert seasons.played({"1988-05": 9}, 1988) is None

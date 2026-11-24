@@ -58,6 +58,8 @@ names:
   "fotmob|9985": {name: "Moldovan Super Cup", name_ar: "كأس السوبر المولدوفي", kind: supercup, country: MD}
   "fotmob|9821": {name: "CONCACAF Nations League", kind: tournament, scope: americas}
   "s365|621": {kind: league}
+  "s365|6370": {name: "Olympic Football Tournament", name_ar: "كرة القدم في الألعاب الأولمبية", kind: tournament, scope: world}
+  "s365|7254": {name: "Pan American Games", name_ar: "دورة الألعاب الأمريكية", kind: tournament, scope: americas}
   "fotmob|9253": {name_ar: "كأس إف إيه تروفي"}
   "fotmob|10611": {kind: cup}
   "fotmob|10613": {kind: cup}

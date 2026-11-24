@@ -70,6 +70,28 @@ def era(fm, auth, year):
     return near(auth)
 
 
+def played(months, year):
+    """«calendar» or «split» from the games themselves, where no list names the seasons (24 Nov 2026: the Soviet league, March
+    to November, sat cut at July into «1988/1989»). A calendar league rests over the new year and plays every month from May
+    to August; a split one plays over the new year and rests in June or July. A league with a winter break and a summer one
+    (Slovenia) does not say, nor do a few games. months: {«1988-07»: games}."""
+    for reach in (1, 3):
+        m = Counter()
+        for ym, n in months.items():
+            if abs(int(ym[:4]) - year) <= reach:
+                m[int(ym[5:7])] += n
+        total = sum(m.values())
+        if total < 60:
+            continue
+        avg, winter = total / 12, m[12] + m[1]
+        if winter < 0.3 * avg and min(m[5], m[6], m[7], m[8]) >= 0.5 * avg:
+            return "calendar"
+        if winter >= avg and min(m[6], m[7]) < 0.15 * avg:
+            return "split"
+        return None
+    return None
+
+
 def canon(label, dates, era_at):
     """the label in the competition's form for its era; None: a July-June label in a calendar competition with no games
     (which year it meant is settled against the seasons there are)"""
@@ -201,7 +223,9 @@ class Pass:
         eds = q("SELECT eid, season FROM edition WHERE cid=? ORDER BY eid", (cid,))
         fm = [s for e, s in eds if self.x(e, FM)]
         auth = [s for e, s in eds if self.x(e, AUTH)]
-        era_at = lambda y: era(fm, auth, y)
+        months = dict(q("""SELECT substr(m.date,1,7), count(*) FROM match m JOIN edition e ON e.eid=m.eid
+                           WHERE e.cid=? AND length(m.date) >= 7 GROUP BY 1""", (cid,))) if kind == "league" else {}
+        era_at = lambda y: era(fm, auth, y) or played(months, y)
         # 1. games another source filed July-June: to FotMob's season whose games span their day, else in a calendar era
         #    to their year (Argentina's league until 1990, the Libertadores, the CAF Champions League until 2017)
         span = [(lo, hi, e, s) for e, s in eds if self.x(e, FM) for lo, hi in
