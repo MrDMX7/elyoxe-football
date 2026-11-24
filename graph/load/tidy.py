@@ -8,7 +8,8 @@ he was thirteen, or past fifty in one a source matched to him by his name, is an
 1963 under the one born in 1995): those games go to a record of their own; where the source knew him by its own number, the
 birth date is the doubt and leaves. A referee or a ground written twice under one name (an accent, a hyphen, a dot after an
 initial; a ground with its city and without) is one: grounds of one name in two cities stay two, and a referee known by
-an initial joins his namesake only where both took games of one competition."""
+an initial joins his namesake only where both took games of one competition. A coach each source wrote under its own number
+is one man where the name is one, no two birth dates or countries differ and the two never sat on a bench the same day."""
 import datetime
 import os
 import re
@@ -103,8 +104,23 @@ def fold(s):
 
 
 def twice(G, reg):
-    """referees and grounds one source or two wrote twice"""
-    n, pairs = {"referees_joined": 0, "grounds_joined": 0}, {"referee": [], "stadium": []}
+    """referees, grounds and coaches one source or two wrote twice"""
+    n, pairs = {"referees_joined": 0, "grounds_joined": 0, "coaches_joined": 0}, {"referee": [], "stadium": [], "coach": []}
+    by = {}
+    for kid, name, born, nat, pid in G.c.execute("SELECT kid, name, born, nationality, pid FROM coach ORDER BY kid"):
+        if fold(name):
+            by.setdefault(fold(name), []).append((kid, born, nat, pid))
+    days = lambda kid: {d for (d,) in G.c.execute("SELECT DISTINCT substr(m.date, 1, 10) FROM match_coach c JOIN match m ON m.mid = c.mid WHERE c.kid=?", (kid,))}
+    for key, group in sorted(by.items()):
+        if len(group) < 2 or any(len({r[i] for r in group if r[i]}) > 1 for i in (1, 2, 3)):
+            continue
+        keep, sat = group[0][0], days(group[0][0])
+        for kid, *_ in group[1:]:
+            his = days(kid)
+            if sat & his:
+                continue
+            sat |= his
+            pairs["coach"].append((kid, reg.merge("coach", keep, kid)))
     by = {}
     for rid, name, country in G.c.execute("SELECT rid, name, country FROM referee ORDER BY rid"):
         if fold(name):
@@ -142,7 +158,7 @@ def twice(G, reg):
         for ids in groups:
             for sid in ids[1:]:
                 pairs["stadium"].append((sid, reg.merge("stadium", min(ids), sid)))
-    for t, k in (("referee", "referees_joined"), ("stadium", "grounds_joined")):
+    for t, k in (("referee", "referees_joined"), ("stadium", "grounds_joined"), ("coach", "coaches_joined")):
         G.remap_many(t, pairs[t])
         n[k] = len(pairs[t])
     return n

@@ -22,7 +22,7 @@ def test_a_move_to_the_same_club_leaves_and_a_date_a_millennium_ahead_takes_its_
     move(G, 3, 10, 11, "3026-06-30", None)
     assert tidy.load(G, Registry(), None, today=datetime.date(2026, 11, 24)) == {
         "moves_to_itself": 1, "dates_set_right": 1, "dates_dropped": 1, "empty_seasons": 0, "empty_competitions": 0, "births_dropped": 0, "namesakes": 0,
-        "referees_joined": 0, "grounds_joined": 0}
+        "referees_joined": 0, "grounds_joined": 0, "coaches_joined": 0}
     assert G.c.execute("SELECT pid, date FROM transfer ORDER BY pid").fetchall() == [(1, "2015-07-01"), (2, "2026-06-30")]
 
 
@@ -118,8 +118,15 @@ def test_a_referee_or_a_ground_written_twice_is_one(tmp_path):
         G.put("stadium", {"sid": sid, "name": name, "city": city}, "x")
     for mid, eid, rid, sid in ((1, 1, 2, 2), (2, 1, 3, 5), (3, 1, 4, 6), (4, 1, 5, 1), (5, 2, 6, 4)):
         G.put("match", {"mid": mid, "eid": eid, "date": f"2001-03-0{mid}", "home": 1, "away": 2, "hs": 1, "as_": 0, "rid": rid, "sid": sid}, "x")
+    assert [reg.mint("coach", "x", i) for i in "abcde"] == [1, 2, 3, 4, 5]
+    for kid, name, born in ((1, "Dusan Bajevic", None), (2, "Dušan Bajević", "1948-12-10"), (3, "Gary Smith", None), (4, "Gary Smith", None), (5, "Dušan Bajević", None)):
+        G.put("coach", {"kid": kid, "name": name, "born": born}, "x")
+    for mid, kid in ((1, 1), (2, 5), (3, 3), (3, 4)):
+        G.c.execute("INSERT INTO match_coach(mid, side, kid, src) VALUES(?,?,?,'x')", (mid, "h" if kid != 4 else "a", kid))
     out = tidy.load(G, reg, None)
-    assert (out["referees_joined"], out["grounds_joined"]) == (2, 2)
+    assert (out["referees_joined"], out["grounds_joined"], out["coaches_joined"]) == (2, 2, 2)
+    assert G.c.execute("SELECT kid, born FROM coach ORDER BY kid").fetchall() == [(1, "1948-12-10"), (3, None), (4, None)]
+    assert G.c.execute("SELECT mid, kid FROM match_coach ORDER BY mid, kid").fetchall() == [(1, 1), (2, 1), (3, 3), (3, 4)]
     assert G.c.execute("SELECT rid, name, country FROM referee ORDER BY rid").fetchall() == [(1, "Benoit Bastien", "France"), (3, "A Romeo", None), (5, "B Knight", None), (6, "B. Knight", None)]
     assert G.c.execute("SELECT sid, city FROM stadium ORDER BY sid").fetchall() == [(1, "Paris"), (3, "Qarshi (Karshi)"), (4, "Namangan"), (6, None)]
     assert G.c.execute("SELECT rid, sid FROM match ORDER BY mid").fetchall() == [(1, 1), (3, 3), (3, 6), (5, 1), (6, 4)]
