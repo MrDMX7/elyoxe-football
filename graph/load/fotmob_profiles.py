@@ -63,7 +63,7 @@ def load(G, reg, S):
         n += 1
         for kind, entries in ((d.get("careerHistory") or {}).get("careerItems") or {}).items():
             for e in entries.get("teamEntries") or []:
-                if not e.get("teamId"):
+                if (_int(e.get("teamId")) or 0) <= 0:           # -1: a club FotMob has no page of (40,121 spells stood under one record)
                     continue
                 tid = reg.mint("team", "fotmob", e["teamId"])
                 G.put("team", {"tid": tid, "name": e.get("team"), "kind": "national" if kind == "national team" else None}, "fotmob")

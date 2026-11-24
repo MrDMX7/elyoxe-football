@@ -49,9 +49,21 @@ def test_two_games_on_one_day_with_other_scores_stay_two(tmp_path):
     assert G.c.execute("select count(*) from match").fetchone()[0] == 2
 
 
-def test_three_records_of_one_day_are_left_alone(tmp_path):
+def test_three_sources_records_of_one_game_are_one_match(tmp_path):
+    # a Europa League night held by FotMob, Transfermarkt and schochastics: one goal, held by two of them, counted once
     G, reg = world(tmp_path)
-    for mid, src in ((5, "rsssf"), (6, "sch"), (7, "tm")):
+    for mid, src in ((5, "sch"), (6, "tm"), (7, "rsssf")):
+        G.put("match", {"mid": mid, "date": "2003-01-10", "home": 1, "away": 2, "hs": 1, "as_": 0}, src)
+    for mid, src in ((5, "sch"), (7, "rsssf")):
+        G.many("event", [{"mid": mid, "seq": 0, "minute": 9, "type": "goal", "side": "h", "tid": 1, "pid": 10}], src)
+    assert twins.load(G, reg, None)["merged"] == 2
+    assert [r[0] for r in G.c.execute("select mid from match")] == [6]
+    assert G.c.execute("select mid, count(*) from event").fetchall() == [(6, 1)]
+
+
+def test_two_records_of_one_source_on_one_day_stay_two(tmp_path):
+    G, reg = world(tmp_path)
+    for mid, src in ((5, "sch"), (6, "sch"), (7, "tm")):
         G.put("match", {"mid": mid, "date": "2003-01-10", "home": 1, "away": 2, "hs": 1, "as_": 0}, src)
     assert twins.load(G, reg, None)["merged"] == 0
 
