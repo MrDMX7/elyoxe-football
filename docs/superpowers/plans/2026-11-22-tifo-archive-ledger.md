@@ -122,5 +122,20 @@ with the commit or the evidence. A new session reads this first and continues at
     finished graph. Every club of 30 games gets its history (738 FotMob clubs had none); a club with the encyclopedia's
     /db/club page shows its history there (v1/archive/club_history.json) and gets no /t/k page; a folded club's old page
     forwards to /t/<id>/ or /db/club/<id>/.
+- 24 Nov (day): the cleaning pass over the live graph (live.db read whole, every finding from a count, not a sample).
+  * schochastics folded clubs into another's name: «Lens» was RC Lens and RC Paris (a 20-club division with 19 names and
+    a club playing itself), «Nantes» of the 1930s is FC Antibes. graph/sch_split/ says whose each row is (whole.csv: a name
+    is another club between two dates; <competition>.csv: row by row, from the season's result matrix); unfold() counts a
+    line that names no row. More countries' lines are added as they are checked against a matrix, never guessed.
+  * RSSSF's Arab leagues: 25,064 of 52,558 «league» games were the cup's and the lower divisions' (Algeria 37 seasons,
+    Morocco 26, Tunisia 21, Iraq 11: a heading in French ended nothing), and every game of a club with an accent in its
+    name was dropped (MATCH was A-Z). db/rsssf.py reads both now; graph/load/rsssf.league_part cuts where another
+    competition begins whatever the heading says (league_not_the_league in the build's numbers). The parser's part shows
+    after the next rsssf stage (force=rsssf). Left as they are: Iraq's seasons played in groups keep the first group only.
+  * FotMob answers some old ids with a game of today (2465133: a 2015 id, a February 2026 game): the game stood twice,
+    the copy in a season of the 2010s. The later id stays (stale_ids in the build's numbers).
+  * tidy: a Transfermarkt player or club without a name takes the one the source gives in another file.
+  * Open: 57 Transfermarkt cup clubs have no name in any free file; «Bundesliga» 1947-1963 holds the regional Oberligen
+    under one name; Chad's and Benin's leagues in schochastics are several regional leagues as one season.
   * Next: Transfermarkt's league codes (SC1, BE1, TR1, PO1, NL1…: 200k games) are competitions apart from 365Scores'/FotMob's
     same leagues — the archive has no season pages for them. Archive match pages leave a /db/club club unlinked.
