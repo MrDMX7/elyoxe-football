@@ -228,3 +228,45 @@ test("a club with the encyclopedia's page is shown there: its history goes out f
   assert.deepEqual(Object.keys(h), ["4678"]);
   assert.equal(h["4678"].n, "Alanyaspor");
 });
+
+// a competition the site has no page for: graph/archive_export.py's competitions.json names it, its files carry our own number
+function archiveWorld() {
+  const w = world(), data = w.o.data, id = 2000000123;
+  fs.mkdirSync(path.join(data, "matches", String(id)), { recursive: true });
+  fs.writeFileSync(path.join(data, "competitions.json"), JSON.stringify([
+    { id: 47, cid: 9, name: "Premier League", name_ar: "الدوري الإنجليزي", kind: "league", country: "GB-ENG", seasons: 2, matches: 2 },
+    { id, cid: 123, name: "Maltese Cup", name_ar: "كأس مالطا", kind: "cup", scope: "national", country: "MT", country_ar: "مالطا", seasons: 1, matches: 2, first: "1950", last: "1950" }]));
+  fs.writeFileSync(path.join(data, "editions", `${id}.json`), JSON.stringify({ fotmob: id, seasons: [
+    { season: "1950", matches: 2, champion: { fotmob: null, name: "فلوريانا" }, runner_up: null, table: [], top_scorers: [] }] }));
+  const m = (k, ev) => ({ id: `k${k}`, k, date: "1950-05-01", comp: id, season: "1950", h: [null, "فلوريانا", 1], a: [null, "سليما", 2], s: [2, 1],
+    ev: ev ? [[10, 0, "goal", "h", "بورغ", null, 5]] : undefined });
+  fs.writeFileSync(path.join(data, "matches", String(id), "1950.json"), JSON.stringify({ comp: id, season: "1950", matches: [m(71, true), m(72, false)] }));
+  return w;
+}
+
+test("a competition the site has no page for gets its seasons at /c/k<id>/, a place in the directory, and pages for the matches that hold more than a score", () => {
+  const { o } = archiveWorld();
+  A.build(o);
+  const has = p => fs.existsSync(path.join(o.out, p, "index.html")), read = p => fs.readFileSync(path.join(o.out, p, "index.html"), "utf8");
+  assert.ok(has("c/k123") && has("c/k123/s/1950") && !has("c/k123/seasons"));
+  assert.ok(has("c/premier-league/seasons") && !has("c/k9"));                  // the site's own keep their key
+  assert.ok(has("m/k71") && !has("m/k72"));
+  assert.match(read("c/k123/s/1950"), /href="\/c\/k123\/"/);
+  assert.doesNotMatch(read("c/k123/s/1950"), /\/m\/k72\//);
+  assert.match(read("c/k123/s/1950"), /<div class="mr" data-mid="k72">/);
+  assert.match(read("c/k123/s/1950"), /<a class="mr" href="\/m\/k71\/"/);
+  const dir = read("c/archive");
+  assert.match(dir, /مالطا/);
+  assert.match(dir, /href="\/c\/k123\/"[\s\S]*كأس مالطا/);
+  assert.doesNotMatch(dir, /premier-league/);
+  const c = JSON.parse(fs.readFileSync(path.join(o.out, "_comps.json"), "utf8"));
+  assert.deepEqual(c, { n: 1, keys: ["k123"], fm: {} });
+  const urls = JSON.parse(fs.readFileSync(path.join(o.out, "_archive_urls.json"), "utf8"));
+  assert.ok(urls.includes("/c/k123/") && urls.includes("/c/archive/") && urls.includes("/c/k123/s/1950/"));
+});
+
+test("a run of some competitions writes no directory", () => {
+  const { o } = archiveWorld();
+  A.build(Object.assign({}, o, { comps: [2000000123] }));
+  assert.ok(fs.existsSync(path.join(o.out, "c/k123/index.html")) && !fs.existsSync(path.join(o.out, "c/archive/index.html")) && !fs.existsSync(path.join(o.out, "_comps.json")));
+});

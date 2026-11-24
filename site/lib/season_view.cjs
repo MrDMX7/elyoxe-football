@@ -40,9 +40,9 @@ const KO = [[/^round of 32$/i, "1/16"], [/^round of 16$/i, "1/8"], [/quarter/i, 
 const roundKey = r => { const s = String(r).trim(), k = KO.find(x => x[0].test(s)); return k ? k[1] : s; };
 
 // the season's matches, finished, by round; a season the archive holds no rounds for, by month (أكتوبر 2002)
-function fixtures(ms) {
+function fixtures(ms, paged) {        // paged: says which matches have a page; the rest are rows without a link
   const month = d => (d && d.length >= 7 ? MONTHS[+d.slice(5, 7) - 1] + " " + d.slice(0, 4) : "—");
-  return { matches: (ms || []).map((m, i) => ({ id: m.id, href: "/m/" + m.id + "/", round: m.round != null && m.round !== "" ? roundKey(m.round) : month(m.date), status: "finished",
+  return { matches: (ms || []).map((m, i) => ({ id: m.id, href: "/m/" + m.id + "/", nolink: paged ? !paged(m) : false, round: m.round != null && m.round !== "" ? roundKey(m.round) : month(m.date), status: "finished",
     score: { home: m.s[0], away: m.s[1] }, penalties: m.pen ? { home: m.pen[0], away: m.pen[1] } : null, kickoff_utc: (m.date || "") + "T12:00:00Z",
     home: team(m.h[0], m.h[1], "h" + i), away: team(m.a[0], m.a[1], "a" + i) })) };
 }

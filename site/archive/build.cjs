@@ -39,6 +39,21 @@ function shellPage(shell, o) {
     .split('{"__LD__":1}').join(JSON.stringify(o.ld || {}).replace(/</g, "\\u003c")).split("__BODY__").join(noFoot(o.body));
 }
 
+// the archive's competitions by where they are played: the world's and the continents' first, then every country by its name
+const REGIONS = [["world", "العالم"], ["international", "بطولات دولية"], ["europe", "أوروبا"], ["asia", "آسيا"], ["africa", "أفريقيا"], ["americas", "الأمريكيتين"],
+  ["oceania", "أوقيانوسيا"], ["arab", "العرب"], ["gulf", "الخليج"]];
+const KINDS = { league: "دوري", cup: "كأس", supercup: "كأس سوبر", tournament: "بطولة", friendly: "وديات" };
+function directory(cs) {
+  const num = v => `<span class="num">${esc(v)}</span>`, by = new Map();
+  for (const c of cs) { const g = c.country ? c.country.name_ar : (REGIONS.find(r => r[0] === c.scope) || REGIONS[1])[1]; if (!by.has(g)) by.set(g, []); by.get(g).push(c); }
+  const reg = REGIONS.map(r => r[1]).filter(g => by.has(g)), rest = [...by.keys()].filter(g => !reg.includes(g)).sort((a, b) => a.localeCompare(b, "ar"));
+  const row = c => { const r = c.cat || {}; return U.row({ href: `/c/${c.key}/`, t: esc(c.name_ar), sub: [KINDS[c.kind], r.seasons ? `${num(r.seasons)} موسم` : "",
+    r.first ? (r.first === r.last ? num(r.first) : `${num(r.first)} - ${num(r.last)}`) : "", r.matches ? `${num(r.matches)} مباراة` : ""].filter(Boolean).join(" · ") }); };
+  const grp = g => U.grp(`${esc(g)} ${num(by.get(g).length)}`, by.get(g).slice().sort((a, b) => ((a.cat || {}).tier || 9) - ((b.cat || {}).tier || 9) || ((b.cat || {}).matches || 0) - ((a.cat || {}).matches || 0)).map(row).join(""));
+  return `<div class="lt"><h1>${esc("أرشيف البطولات")}</h1><p>${num(cs.length)} بطولة من كل العالم: مواسمها وأبطالها ومبارياتها. البطولات اللي نتابعها يوم بيوم في <a href="/competitions/">صفحة البطولات</a>.</p></div>` +
+    reg.concat(rest).map(grp).join("");
+}
+
 function build(o) {
   const index = readJ(o.index) || { competitions: [] }, known = readJ(o.known) || {}, shell = fs.readFileSync(o.shell, "utf8");
   const KM = new Set((known.m || []).map(String)), KP = new Set((known.p || []).map(String)), KT = new Set((known.t || []).map(String));
@@ -58,8 +73,15 @@ function build(o) {
   const COACHES = readJ(path.join(o.data, "coaches.json")) || {}, KC = new Set((known.coach || []).map(String));
   for (const c of Object.values(COACHES)) if (c.fm && KC.has(String(c.fm))) c.site = `/coach/${c.fm}/`;
   const coachHref = kid => { const c = kid != null && COACHES[String(kid)]; return c ? c.site || `/coach/k${kid}/` : null; };
-  const comps = index.competitions.filter(c => !o.comps || o.comps.includes(+c.id));
-  U.cfg.base = ""; U.cfg.pre = null; U.cfg.cn = {}; index.competitions.forEach((c, i) => { U.cfg.cn[c.id] = [c.key, c.name_ar, (c.country && c.country.iso2) || "", i]; });
+  // every competition the site has no page for (24 Nov 2026: 1,568 of them, 1,143,246 matches): its seasons at /c/k<Tifo id>/,
+  // from graph/archive_export's competitions.json; the site's own keep their key and their /c/<key>/seasons/
+  const SITEC = new Set(index.competitions.map(c => +c.id));
+  const ARCH = (readJ(path.join(o.data, "competitions.json")) || []).filter(r => !SITEC.has(+r.id)).map(r => ({ id: r.id, key: `k${r.cid}`, arch: 1,
+    name_ar: r.name_ar || r.name, name_en: r.name, kind: r.kind || null, scope: r.scope || null, cat: r,
+    country: r.country ? { iso2: r.country, name_ar: r.country_ar || r.country } : null }));
+  const ALL = index.competitions.concat(ARCH);
+  const comps = ALL.filter(c => !o.comps || o.comps.includes(+c.id));
+  U.cfg.base = ""; U.cfg.pre = null; U.cfg.cn = {}; ALL.forEach((c, i) => { U.cfg.cn[c.id] = [c.key, c.name_ar, (c.country && c.country.iso2) || "", i]; });
   fs.mkdirSync(o.out, { recursive: true });
   fs.writeFileSync(path.join(o.out, "_club_history.json"), JSON.stringify(HIST));
   const written = new Set(), urls = [];        // urls: the indexable pages (the sitemaps)
@@ -82,6 +104,7 @@ function build(o) {
   const hpo = { team: id => KT.has(String(id)), player: id => KP.has(String(id)), person: pid => PERS.has(String(pid)), coach: kid => coachHref(kid), coachName: () => null,
     teamName: () => null, playerName: () => null };
   let nSeasons = 0, nMatches = 0;
+  const DIR = "/c/archive/", DIRT = "أرشيف البطولات", ARCHW = [];
   for (const c of comps) {
     const ed0 = readJ(path.join(o.data, "editions", `${c.id}.json`)), mdir = path.join(o.data, "matches", String(c.id));
     const MSEA = new Map();
@@ -91,19 +114,23 @@ function build(o) {
     // the two clubs' meetings in this competition (lib/match_view.cjs pairs/h2h), keyed by the site's club id, else k<Tifo id>
     const tkey = s => (s[0] ? String(s[0]) : `k${s[2]}`);
     const PAIRS = MV.pairs([...MSEA.values()].map(ms => ms.map(m => Object.assign({}, m, { h: [tkey(m.h), m.h[1]], a: [tkey(m.a), m.a[1]] }))), () => c.name_ar);
-    const ss = ed.seasons, arch = `/c/${c.key}/seasons/`, msOf = s => MSEA.get(`${c.id}|${HP.slug(s.season)}`) || [];
+    const ss = ed.seasons, arch = c.arch ? `/c/${c.key}/` : `/c/${c.key}/seasons/`, msOf = s => MSEA.get(`${c.id}|${HP.slug(s.season)}`) || [];
     const sNav = (title, back, label) => ({ back, backLabel: label, title });
-    write(arch, shellPage(shell, { path: arch, nav: sNav("كل المواسم", `/c/${c.key}/`, esc(c.name_ar)),
-      title: `أبطال ${c.name_ar} عبر التاريخ: كل المواسم والهدافين | تيفو`, desc: `كل مواسم ${c.name_ar}: البطل والوصيف والهداف في ${ss.length} موسم.`,
-      body: `<div class="lt"><h1>${esc(c.name_ar)}: كل المواسم</h1>${ss.length ? `<p>البطل والوصيف والهداف في كل موسم، من <span class="num">${esc(ss[ss.length - 1].season)}</span> لين <span class="num">${esc(ss[0].season)}</span>.</p>` : ""}</div>` + HP.seasonsBody(ed, c, Object.assign({ page: s => HP.seasonRich(s) || msOf(s).length }, hpo)),
-      ld: bcLd([[c.name_ar, `/c/${c.key}/`], ["كل المواسم", arch]]) }));
+    const bare = !ss.some(s => s.champion || (s.parts || []).some(p => p.champion));      // qualifiers, friendlies: seasons of games and no champion
+    const up = c.arch ? [DIRT, DIR] : [c.name_ar, `/c/${c.key}/`];        // above the seasons list: the competition's page, else the directory
+    write(arch, shellPage(shell, { path: arch, nav: sNav(c.arch ? esc(c.name_ar) : "كل المواسم", up[1], esc(up[0])),
+      title: bare ? `${c.name_ar}: كل المواسم والمباريات | تيفو` : `أبطال ${c.name_ar} عبر التاريخ: كل المواسم والهدافين | تيفو`,
+      desc: bare ? `كل مواسم ${c.name_ar} ومبارياتها: ${ss.length} موسم.` : `كل مواسم ${c.name_ar}: البطل والوصيف والهداف في ${ss.length} موسم.`,
+      body: `<div class="lt"><h1>${esc(c.name_ar)}: كل المواسم</h1>${ss.length ? `<p>${bare ? "المباريات" : "البطل والوصيف والهداف"} في كل موسم، من <span class="num">${esc(ss[ss.length - 1].season)}</span> لين <span class="num">${esc(ss[0].season)}</span>.</p>` : ""}</div>` + HP.seasonsBody(ed, c, Object.assign({ page: s => HP.seasonRich(s) || msOf(s).length, bare, count: s => msOf(s).length }, hpo)),
+      ld: bcLd(c.arch ? [up, [c.name_ar, arch]] : [up, ["كل المواسم", arch]]) }));
     urls.push(arch);
+    if (c.arch) ARCHW.push(c);
     for (const s of ss.filter(s => HP.seasonRich(s) || msOf(s).length)) {
       const sp = `/c/${c.key}/s/${HP.slug(s.season)}/`, ms = msOf(s), nb = SV.around(ss, s.season);
       const sLink = (x, t) => `<a class="chip" href="/c/${c.key}/s/${HP.slug(x)}/">${t} <span class="num">${esc(x)}</span></a>`;
       const cd = SV.cards(ms), segs = [["y", "الإنذارات", cd.yellow], ["r", "الطرد", cd.red]].filter(z => z[2].length).map(z => [z[0], z[1], U.leaders(z[2], 10)]);
-      const v5s = P5.comp(Object.assign({}, c, { season: s.season, dormant: false }), { st: SV.standings(s, ms), fx: SV.fixtures(ms), stats: SV.stats(s, ms), archive: 1, x: { leadSegs: segs,
-        crumbs: `<a href="/c/${c.key}/">${esc(c.name_ar)}</a>، <a href="${arch}">كل المواسم</a>`,
+      const v5s = P5.comp(Object.assign({}, c, { season: s.season, dormant: false }), { st: SV.standings(s, ms), fx: SV.fixtures(ms, c.arch ? MA.indexable : null), stats: SV.stats(s, ms), archive: 1, x: { leadSegs: segs,
+        crumbs: c.arch ? `<a href="${arch}">${esc(c.name_ar)}: كل المواسم</a>` : `<a href="/c/${c.key}/">${esc(c.name_ar)}</a>، <a href="${arch}">كل المواسم</a>`,
         chips: [nb.older && sLink(nb.older, "الموسم اللي قبله"), nb.newer && (nb.newer === c.season ? `<a class="chip" href="/c/${c.key}/">الموسم الحالي</a>` : sLink(nb.newer, "اللي بعده")),
           `<a class="chip" href="${arch}">كل المواسم</a>`].filter(Boolean).join(""),
         note: (s.note ? `<p class="note mt">${esc(s.note)}</p>` : "") + (s.table_from_matches ? '<p class="note mt">الترتيب محسوب من نتايج مباريات الموسم، بنظام النقاط في زمانه.</p>' : ""),
@@ -112,11 +139,12 @@ function build(o) {
       const okS = !!((s.table || []).length || (s.top_scorers || []).length || ms.length);
       write(sp, shellPage(shell, { path: sp, nav: sNav(`موسم ${esc(s.season)}`, arch, "كل المواسم"), body: v5s.body, noindex: !okS,
         title: `${c.name_ar} ${s.season}: البطل والترتيب والهدافين | تيفو`, desc: `موسم ${s.season} من ${c.name_ar}${chN ? `: البطل ${chN}` : ""}، والترتيب النهائي والمباريات والهدافين.`,
-        ld: bcLd([[c.name_ar, `/c/${c.key}/`], ["كل المواسم", arch], [s.season, sp]]) }));
+        ld: bcLd(c.arch ? [[c.name_ar, arch], [s.season, sp]] : [[c.name_ar, `/c/${c.key}/`], ["كل المواسم", arch], [s.season, sp]]) }));
       if (okS) urls.push(sp);
       nSeasons++;
       for (const m of ms) {
         if (KM.has(String(m.id))) continue;                      // the site's own page
+        if (c.arch && !MA.indexable(m)) continue;                // a result and no more: it is on its season's page, no page of its own
         const pth = `/m/${m.id}/`, md = MV.md(m), hk = tkey(m.h), ak = tkey(m.a);
         md.h2h = MV.h2h(PAIRS.get([hk, ak].sort().join("-")), Object.assign({}, md, { home: Object.assign({}, md.home, { id: hk }) }));
         const v5m = P5.match(md, { archive: 1, x: { lu: MV.lineups(m, md), h2h: null, share: "",
@@ -134,7 +162,8 @@ function build(o) {
   }
   // the men's profiles
   let nPersons = 0;
-  const compOf = fid => { const c = comps.find(x => +x.id === +fid) || index.competitions.find(x => +x.id === +fid); return c ? { key: c.key } : null; };
+  const BYID = new Map(ALL.map(c => [+c.id, c]));
+  const compOf = fid => { const c = BYID.get(+fid); return c ? { key: c.key } : null; };
   for (const f of shards) for (const [pid, p] of Object.entries(readJ(path.join(pdir, f)) || {})) {
     if (!PERS.has(pid)) continue;
     const pth = `/p/k${pid}/`, nm = PV.nameOf(p), ok = PV.indexable(p);
@@ -179,6 +208,14 @@ function build(o) {
         Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
     if (ok) urls.push(pth);
     nCoaches++;
+  }
+  // the directory of the competitions whose only pages are the archive's, and the list the site build reads to link them
+  // (_comps.json -> v1/archive/comps.json); a partial run knows some of them only and writes neither
+  if (!o.comps && ARCHW.length) {
+    write(DIR, shellPage(shell, { path: DIR, nav: { back: "/competitions/", backLabel: "البطولات", title: DIRT }, title: `${DIRT}: كل دوري وكأس وبطولة بمواسمها | تيفو`,
+      desc: `${ARCHW.length} بطولة من كل العالم في أرشيف تيفو: مواسمها وأبطالها ومبارياتها.`, body: directory(ARCHW), ld: bcLd([["البطولات", "/competitions/"], [DIRT, DIR]]) }));
+    urls.push(DIR);
+    fs.writeFileSync(path.join(o.out, "_comps.json"), JSON.stringify({ n: ARCHW.length, keys: ARCHW.map(c => c.key), fm: Object.fromEntries(ARCHW.filter(c => +c.id < 2e9).map(c => [c.id, c.key])) }));
   }
   // links to pages neither the site nor this run has become plain text (the site build's own rule)
   const OWN = /^\/(m|p|t|c|coach|r|s)\//, SKIP = /^\/(v1|assets|logo|lg|og|api|embed|next)\//;

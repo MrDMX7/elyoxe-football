@@ -335,7 +335,7 @@ def main(argv=None):
         say("no archive shell from the site build yet: nothing to do")
         return 1
     index = json.loads(gzip.decompress(raw) if (raw := s3.get_object(Bucket=DATA_BUCKET, Key="v1/index.json")["Body"].read())[:2] == b"\x1f\x8b" else raw)
-    comps = [int(x) for x in a.comps.split(",") if x.strip()] or [int(c["id"]) for c in index["competitions"]]
+    comps = [int(x) for x in a.comps.split(",") if x.strip()] or None      # none named: every competition the graph holds (24 Nov 2026)
     data, out = os.path.join(a.work, "data"), os.path.join(a.work, "out")
     for d in (data, out):
         shutil.rmtree(d, ignore_errors=True)
@@ -357,8 +357,8 @@ def main(argv=None):
     json.dump(known, open(os.path.join(a.work, "known.json"), "w"))
     say("render")
     r = subprocess.run(["node", os.path.join(ROOT, "site", "archive", "build.cjs"), "--data", data, "--shell", os.path.join(a.work, "shell.html"),
-                        "--index", os.path.join(a.work, "index.json"), "--known", os.path.join(a.work, "known.json"), "--out", out,
-                        "--comps", ",".join(map(str, comps))], capture_output=True, text=True, encoding="utf-8")
+                        "--index", os.path.join(a.work, "index.json"), "--known", os.path.join(a.work, "known.json"), "--out", out]
+                       + (["--comps", ",".join(map(str, comps))] if comps else []), capture_output=True, text=True, encoding="utf-8")
     if r.returncode:
         say("render failed", r.stderr[-3000:])
         return 1
@@ -370,6 +370,11 @@ def main(argv=None):
         s3.put_object(Bucket=DATA_BUCKET, Key="v1/archive/club_history.json", Body=gzip.compress(json.dumps(h, ensure_ascii=False, separators=(",", ":")).encode()),
                       ContentEncoding="gzip", ContentType="application/json; charset=utf-8", CacheControl="public, max-age=300")
         say(f"club history: {len(h)} clubs shown on the encyclopedia's club page")
+    cf_ = os.path.join(out, "_comps.json")          # the competitions whose pages are the archive's: the site build links them
+    if os.path.exists(cf_) and not a.dry and not a.comps:
+        s3.put_object(Bucket=DATA_BUCKET, Key="v1/archive/comps.json", Body=gzip.compress(open(cf_, "rb").read()), ContentEncoding="gzip",
+                      ContentType="application/json; charset=utf-8", CacheControl="public, max-age=300, stale-while-revalidate=60")
+        say(f"comps: {json.load(open(cf_, encoding='utf-8'))['n']} competitions have their pages in the archive only")
     for name, what in (("fm2k", "matches"), ("fm2p", "men")):
         f = os.path.join(out, f"_{name}.json")
         m = json.load(open(f, encoding="utf-8")) if os.path.exists(f) else {}

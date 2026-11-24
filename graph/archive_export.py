@@ -20,8 +20,59 @@ def open_graph(path):
     return G
 
 
+PUB = 2_000_000_000          # FotMob's numbers end at 1,000,000,000: above them, a number of ours
+
+
+def publication_ids(G):
+    """A competition FotMob has no number for is published under PUB + its Tifo id (24 Nov 2026: 1,568 competitions and
+    1,143,246 matches had no page, the season files being named by FotMob's number). The numbers live in this connection only,
+    as rows of xref never committed (export() rolls them back): every reader of graph/publish.py finds them where it finds
+    FotMob's. An award is no competition: its winners are on the men's pages."""
+    c = G.c
+    have = {t for t, s in c.execute("SELECT tifo_id, source_id FROM xref WHERE type='competition' AND source='fotmob'") if str(s).isdigit()}
+    rows = [(cid, str(PUB + cid)) for (cid,) in c.execute("SELECT cid FROM competition WHERE kind IS NULL OR kind <> 'award'") if cid not in have]
+    c.executemany("INSERT INTO xref(type, tifo_id, source, source_id, method) VALUES('competition', ?, 'fotmob', ?, 'archive-key')", rows)
+    return len(rows)
+
+
+GONE_AR = {"SU": "الاتحاد السوفيتي", "DD": "ألمانيا الشرقية", "YU": "يوغوسلافيا", "CS": "تشيكوسلوفاكيا"}
+
+
+def countries_ar():
+    """a country's code -> its name in Arabic (news/nations.json: the shortest Arabic name that is not its national team's)"""
+    with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "news", "nations.json"), encoding="utf-8") as f:
+        names = json.load(f)["names"]
+    out = dict(GONE_AR)
+    for code, ns in names.items():
+        ar = sorted((n for n in ns if re.search("[؀-ۿ]", n) and "منتخب" not in n), key=len)
+        if ar:
+            out[code] = ar[0]
+    return out
+
+
+def catalogue(G, out):
+    """competitions.json: every competition with a season file, for the archive's own pages of the ones the site has none for
+    (/c/k<Tifo id>/): [{id (the files' number), cid, name, name_ar, kind, scope, country, country_ar, tier, seasons, matches,
+    first, last}]"""
+    q = lambda s, p=(): G.c.execute(s, p).fetchall()
+    car = countries_ar()
+    pub = {t: int(s) for t, s in q("SELECT tifo_id, source_id FROM xref WHERE type='competition' AND source='fotmob'") if str(s).isdigit()}
+    games = {c: (n, e) for c, n, e in q("SELECT e.cid, count(*), count(DISTINCT e.eid) FROM match m JOIN edition e ON e.eid=m.eid WHERE m.hs IS NOT NULL GROUP BY 1")}
+    span = {c: (a, b, n) for c, a, b, n in q("SELECT cid, min(season), max(season), count(*) FROM edition GROUP BY 1")}
+    rows = []
+    for cid, name, name_ar, kind, scope, country, tier in q("SELECT cid, name, name_ar, kind, scope, country, tier FROM competition WHERE kind IS NULL OR kind <> 'award'"):
+        if cid not in pub or not os.path.exists(os.path.join(out, "editions", f"{pub[cid]}.json")):
+            continue
+        r = {"id": pub[cid], "cid": cid, "name": name, "name_ar": name_ar, "kind": kind, "scope": scope, "country": country, "country_ar": car.get(country), "tier": tier,
+             "seasons": span.get(cid, (None, None, 0))[2], "matches": games.get(cid, (0, 0))[0], "first": span.get(cid, (None,))[0], "last": span.get(cid, (None, None))[1]}
+        rows.append({k: v for k, v in r.items() if v is not None})
+    with open(os.path.join(out, "competitions.json"), "w", encoding="utf-8") as f:
+        json.dump(rows, f, ensure_ascii=False, separators=(",", ":"))
+    return {"catalogue": len(rows)}
+
+
 def competitions(G):
-    """every FotMob competition with matches in the archive"""
+    """every competition with a number (FotMob's, else ours: publication_ids) and matches in the archive"""
     return sorted({int(fid) for (fid,) in G.c.execute("""SELECT DISTINCT x.source_id FROM xref x JOIN edition e ON e.cid=x.tifo_id
                                                           JOIN match m ON m.eid=e.eid WHERE x.type='competition' AND x.source='fotmob'""")
                    if str(fid).isdigit()})
@@ -312,7 +363,9 @@ def export(db, out, comps=None):
     G = open_graph(db)
     os.makedirs(out, exist_ok=True)
     t = time.time()
-    rec = {"editions": P.editions(G, out)}
+    rec = {"ours": publication_ids(G)}
+    rec["editions"] = P.editions(G, out)
+    rec.update(catalogue(G, out))
     fids = comps or competitions(G)
     rec["matches"] = P.matches(G, out, comps=tuple(fids), teams=())
     rec["people"] = P.people(G, out)
@@ -324,6 +377,7 @@ def export(db, out, comps=None):
     rec["fm_teams"] = fm_teams(G, out)          # fm_teams.json: a FotMob man's club on his profile            # coaches.json: every coach with a bench or an award (/coach/k<id>/)
     rec["secs"] = round(time.time() - t)
     rec["competitions"] = len(fids)
+    G.c.rollback()                              # publication_ids' rows: never written
     return rec
 
 

@@ -48,7 +48,7 @@ function seasonsBody(ed, comp, o) {
     const inPlay = !s.champion && !s.note && end >= new Date().toISOString().slice(0, 10);      // the season still being played
     const parts = (s.parts || []).filter(p => p.champion).map(p => `${esc(partName(p.name))} <b>${teamL(p.champion, o)}</b>`).join(" · ");
     const main = s.note && !s.champion ? `<span class="muted">${esc(s.note)}</span>` : (s.champion ? `<b>${teamL(s.champion, o)}</b>` : parts ? parts :
-      inPlay ? '<span class="muted">الموسم الجاري</span>' : '<span class="muted">—</span>');
+      inPlay ? '<span class="muted">الموسم الجاري</span>' : o.count && o.count(s) ? `<span class="muted"><span class="num">${o.count(s)}</span> مباراة</span>` : '<span class="muted">—</span>');
     const sub = [s.champion && parts, s.runner_up && `الوصيف ${teamL(s.runner_up, o)}`,
       top.length && `${inPlay ? "يتصدر الهدافين" : "الهداف"} ${top.map(p => `${playerL(p, o)}${p.value ? ` <span class="num">(${esc(p.value)})</span>` : ""}`).join(" و")}`,
       // no scorer of its own: each tournament's (Argentina's Apertura and Clausura)
@@ -57,7 +57,7 @@ function seasonsBody(ed, comp, o) {
     return U.row({ t: `${season} · ${main}`, sub, cls: "ssn" });
   }).join("");
   return U.grp(`كل المواسم <span class="num">${(ed.seasons || []).length}</span>`, rows) +
-    '<p class="src">من قاعدة تيفو: الأبطال من 365Scores وRSSSF وويكيبيديا، والهدافين من عدّنا للأهداف وقوائم FotMob وTransfermarkt.</p>';
+    (o.bare ? '<p class="src">من قاعدة تيفو.</p>' : '<p class="src">من قاعدة تيفو: الأبطال من 365Scores وRSSSF وويكيبيديا، والهدافين من عدّنا للأهداف وقوائم FotMob وTransfermarkt.</p>');
 }
 
 function seasonBody(s, comp, o) {

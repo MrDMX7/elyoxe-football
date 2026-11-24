@@ -1634,7 +1634,10 @@ function go(){fetch("/v1/match/"+id+".json",{cache:"no-cache"}).then(function(r)
     // المزيد (settings and every other page, Settings style) and بحث. فريقي, المزيد and بحث are new URLs (no page had them before)
     const nats5 = ((NATJ && NATJ.teams) || []).map(t => ({ id:+t.team, name_ar:t.name_ar, name:t.name_en, sub:t.fifa && t.fifa.rank ? `تصنيف فيفا <span class="num">${t.fifa.rank}</span>` : "" })).filter(t => t.id).sort((a, b) => (a.id === 5789 ? -1 : b.id === 5789 ? 1 : 0));
     const ctry5 = R.COUNTRIES.filter(c => (byC[c[0]] || []).length || NAT[c[0]]).map(c => [c[0], c[1]]);
-    { const v5 = P5.comps(index, nats5, { countries:ctry5 }); v5.data = {}; write("competitions/index.html", page({ v5, path:"/competitions/", page:"comps", nav:"comps", title:"كل البطولات | تيفو", desc:"كل البطولات اللي يغطيها تيفو: الإماراتية والخليجية والآسيوية والعربية والأوروبية." })); }
+    // the competitions the archive job has pages for and the site none (tools/archive_job.py, 24 Nov 2026): their directory, linked here
+    const ARCHC = (await get("archive/comps.json")) || {};
+    if (ARCHC.n) { WRITTEN.add("/c/archive/"); (ARCHC.keys || []).forEach(k => WRITTEN.add(`/c/${k}/`)); }
+    { const v5 = P5.comps(index, nats5, { countries:ctry5, archive:ARCHC.n }); v5.data = {}; write("competitions/index.html", page({ v5, path:"/competitions/", page:"comps", nav:"comps", title:"كل البطولات | تيفو", desc:"كل البطولات اللي يغطيها تيفو: الإماراتية والخليجية والآسيوية والعربية والأوروبية." })); }
     { const pick = [], seen = new Set(), add = id => { id = +id; if (!id || seen.has(id)) return; const t = S_TEAMS[id]; if (!t || !(t.name_ar || TAR[id])) return; seen.add(id); pick.push({ id, name_ar:t.name_ar || TAR[id], name:t.name }); };
       add(5789); stIdsOf((compData.find(d => d.c.id === 538) || {}).st).forEach(add); R.COUNTRIES.forEach(c => { if (NAT[c[0]]) add(NAT[c[0]]); });
       [536, 519, 47, 87].forEach(cid => stIdsOf((compData.find(d => d.c.id === cid) || {}).st).slice(0, 4).forEach(add));

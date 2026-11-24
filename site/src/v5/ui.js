@@ -190,7 +190,8 @@
     o = o || {};
     var w = winner(m), mine = o.mine && (o.mine[m.home.id] || o.mine[m.away.id]);
     var side = function (t, k, win, lose) { var n = '<span class="tn">' + (t.placeholder && U.slot(t) ? esc(U.slot(t)) : U.tname(t)) + "</span>", c = U.crest(t); return '<span class="mr-t ' + k + (win ? " w" : lose ? " l" : "") + '">' + (k === "h" ? n + c : c + n) + "</span>"; };
-    return '<a class="mr' + (mine ? " mine" : "") + (isLive(m) ? " is-live" : "") + '" href="' + esc(m.href || L("m", m.id)) + '" data-mid="' + esc(m.id) + '">' + side(m.home, "h", w === 1, w === 2) + '<span class="mr-m">' + mid(m, o.spoil ? "hide" : "") + caption(m, o) + "</span>" + side(m.away, "a", w === 2, w === 1) + "</a>";
+    var tag = m.nolink ? "div" : "a";        // an old result the archive holds no page for: a row, not a link
+    return "<" + tag + ' class="mr' + (mine ? " mine" : "") + (isLive(m) ? " is-live" : "") + '"' + (m.nolink ? "" : ' href="' + esc(m.href || L("m", m.id)) + '"') + ' data-mid="' + esc(m.id) + '">' + side(m.home, "h", w === 1, w === 2) + '<span class="mr-m">' + mid(m, o.spoil ? "hide" : "") + caption(m, o) + "</span>" + side(m.away, "a", w === 2, w === 1) + "</" + tag + ">";
   };
   U.slot = function (t) { var m = /^(winner|loser)\s+(sf|qf|r16|semi[- ]?final|quarter[- ]?final)\s*(\d+)/i.exec(String((t && t.name) || "")); if (!m) return null; var st = /^s/i.test(m[2]) ? "نص النهائي" : /^q/i.test(m[2]) ? "ربع النهائي" : "دور الـ16"; return (/^w/i.test(m[1]) ? "الفايز من " : "الخسران من ") + st + " " + m[3]; };
   // a competition's block in a day list: header row (logo, name, round) + its matches
