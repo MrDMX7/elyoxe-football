@@ -138,6 +138,11 @@ def fifa(S):
     _state_file(S, "fifa.json.gz", "graph/fifa.json")
 
 
+def fbref(S):
+    """worldfootballR_data's referees, grounds and attendances (graph/fbref_fetch.py): db/.cache/fbref.json.gz for graph/load/fbref.py"""
+    _state_file(S, "fbref.json.gz", "graph/fbref.json")
+
+
 def uaefa(S):
     """the UAE FA's record of the top flight 2003/04-2016/17 (graph/uaefa_fetch.py, fetched once on the laptop and kept in
     the bucket's state/graph/uaefa.json): db/.cache/uaefa.json.gz for graph/load/uaefa.py"""
