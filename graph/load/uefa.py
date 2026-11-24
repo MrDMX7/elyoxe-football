@@ -86,7 +86,7 @@ def load(G, reg, S):
     ok = lambda t: t.get("id") and t.get("name") and "WOMEN" not in str(t.get("kind") or "") and "YOUTH" not in str(t.get("kind") or "")
     rows = [r for r in json.load(gzip.open(f, "rt", encoding="utf-8"))["matches"] if r.get("comp") in COMP and r.get("status") == "FINISHED"
             and r.get("date") and score(r) and ok(r.get("home") or {}) and ok(r.get("away") or {})]
-    if reg.get("competition", "uefa", "fairs-cup") is None and any(r["comp"] == "fairs-cup" for r in rows):
+    if any(r["comp"] == "fairs-cup" for r in rows):       # every build: the registry remembers the id, the graph starts empty
         c = reg.mint("competition", "uefa", "fairs-cup")
         G.put("competition", {"cid": c, **FAIRS}, "uefa")
         G.xref("competition", c, "uefa", "fairs-cup", "uefa-native")

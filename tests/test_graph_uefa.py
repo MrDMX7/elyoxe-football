@@ -200,3 +200,10 @@ def test_the_fairs_cup_is_a_competition_of_its_own_wherever_a_source_filed_its_g
     assert got[2] == (cup, "Europa League", "1971/1972")
     assert uefa.load(G, reg, S)["games_joined"] == 3                       # the second run finds them where they are
     assert G.c.execute("SELECT count(*) FROM match").fetchone()[0] == 3
+
+
+def test_the_fairs_cup_has_its_name_on_a_build_whose_registry_already_knows_it(tmp_path):
+    G, reg, cid, teams, S = world(tmp_path, [rec(100, "1964-09-02", 2, 0, comp="fairs-cup", year=1964)])
+    known = reg.mint("competition", "uefa", "fairs-cup")                   # yesterday's build minted it; today's graph starts empty
+    uefa.load(G, reg, S)
+    assert G.c.execute("SELECT c.cid, c.name FROM match m JOIN edition e ON e.eid=m.eid JOIN competition c ON c.cid=e.cid").fetchall() == [(known, "Inter-Cities Fairs Cup")]
