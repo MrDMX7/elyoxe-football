@@ -15,7 +15,9 @@ Rules:
   * the FotMob record is kept, else the better source's, else the lower id;
   * a record with no game and no man (an honour roll's «Olaria», a table's «JS Bordj-Menaïel») is the one club of its name
     that has them, when no other club carries the name and the country of the one is not against the other's; a name of
-    one word needs its country known.
+    one word needs its country known;
+  * then the same rules once more with the club's form of address off the name («Syrianska FC» and «Syrianska», «CF
+    Villanovense» and «Villanovense»), where one of the two names carries none: «SC Alger» and «US Alger» stay two.
 graph/load/twins_last.py then makes each game held twice one."""
 import re
 import unicodedata
@@ -33,7 +35,22 @@ def fold(s):
     return re.sub(r"[^a-z0-9]+", " ", s).strip()
 
 
-def candidates(c, era=None, never=None, kept=None):
+FORMS = {"fc", "sc", "cf", "afc", "fk", "sk", "ac", "cd", "sv", "ca", "club", "as", "us", "ss", "cs", "if", "bk"}
+
+
+def bare(s):
+    """(the folded name without its forms of address, the forms it carried); Brazil's state after the name is no form
+    («Pinheiros-SC», «Peñarol AC (AM)»: Santa Catarina, Amazonas)"""
+    words = fold(s).split()
+    state = words[-1:] if re.search(r"[-(/]\s*[A-Za-z]{2}\)?\s*$", str(s or "")) else []
+    words = words[:len(words) - len(state)]
+    rest = [w for w in words if w not in FORMS] + state
+    words += state
+    return (" ".join(rest), frozenset(words) - frozenset(rest)) if len(rest) > len(state) else (" ".join(words), frozenset())
+
+
+def candidates(c, era=None, never=None, kept=None, loose_forms=False):
+    key_of = (lambda s: bare(s)[0]) if loose_forms else fold
     q = lambda s, p=(): c.execute(s, p).fetchall()
     team = {tid: (name, src) for tid, name, src in q("SELECT tid, name, src FROM team WHERE ifnull(kind, 'club') != 'national'")}
     kept = guarded()[0] if kept is None else kept
@@ -64,10 +81,15 @@ def candidates(c, era=None, never=None, kept=None):
         n, least = len(men[a] & men[b]), min(len(men[a]), len(men[b]))
         return n >= 3 and n * 4 >= least if " " not in key else n >= 2 or (n == 1 and least <= 4)
 
+    def fits(a, b):         # without the forms of address: the same name, or one of the two carries no form
+        if not loose_forms or fold(team[a][0]) == fold(team[b][0]):
+            return True
+        return not (bare(team[a][0])[1] and bare(team[b][0])[1])
+
     by = defaultdict(list)
     for tid, (name, _) in sorted(team.items()):
         if (tid in plays or tid in men) and tid not in era and fold(name) and loose(name) not in kept:
-            by[fold(name)].append(tid)
+            by[key_of(name)].append(tid)
     out = []
     for key, tids in sorted(by.items()):
         if len(tids) < 2 or (loose(key), loose(key)) in never:
@@ -75,7 +97,7 @@ def candidates(c, era=None, never=None, kept=None):
         groups = []
         for t in tids:
             for g in groups:
-                if (any(plays[t] & plays[m] or same_men(t, m, key) for m in g) and not any(((t, m) if t < m else (m, t)) in met for m in g)
+                if (any((plays[t] & plays[m] or same_men(t, m, key)) and fits(t, m) for m in g) and not any(((t, m) if t < m else (m, t)) in met for m in g)
                         and not any(ids[t][s] != ids[m][s] for m in g for s in ids[t].keys() & ids[m].keys())):
                     g.append(t)
                     break
@@ -94,14 +116,14 @@ def candidates(c, era=None, never=None, kept=None):
     idle = defaultdict(list)
     for tid, (name, _) in sorted(team.items()):
         if tid not in plays and tid not in men and tid not in era and fold(name) and loose(name) not in kept:
-            idle[fold(name)].append(tid)
+            idle[key_of(name)].append(tid)
     for key, tids in sorted(idle.items()):
         clubs = {one.get(t, t) for t in by.get(key, ())}
         if len(clubs) != 1 or (loose(key), loose(key)) in never:
             continue
         keep = clubs.pop()
         for t in tids:
-            if (not (t in own and land[keep] and own[t] not in land[keep]) and (" " in key or t in own)
+            if (not (t in own and land[keep] and own[t] not in land[keep]) and (" " in key or t in own) and fits(t, keep)
                     and not any(ids[t][s] != ids[keep][s] for s in ids[t].keys() & ids[keep].keys())):
                 out.append((t, keep))
     return sorted(out)
@@ -110,4 +132,6 @@ def candidates(c, era=None, never=None, kept=None):
 def load(G, reg, S):
     merged = candidates(G.c)
     G.remap_many("team", merged)
-    return {"merged": len(merged), "clubs": len({k for _, k in merged}), "conflicts_settled": settle_conflicts(G, merged)}
+    forms = candidates(G.c, loose_forms=True)
+    G.remap_many("team", forms)
+    return {"merged": len(merged), "by_form": len(forms), "clubs": len({k for _, k in merged + forms}), "conflicts_settled": settle_conflicts(G, merged + forms)}

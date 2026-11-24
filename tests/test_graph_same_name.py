@@ -54,5 +54,20 @@ def test_a_record_with_no_game_and_no_man_is_the_one_club_of_its_name_unless_the
     assert same_name.candidates(G.c, era=set(), never=set(), kept=set()) == [(2, 1), (4, 3)]
 
 
+def test_a_form_of_address_off_the_name_is_the_same_club_where_one_of_the_two_carries_none(tmp_path):
+    G = Graph(str(tmp_path / "t.db"))
+    G.put("competition", {"cid": 1, "name": "Allsvenskan", "kind": "league", "country": "SE"}, "x")
+    G.put("edition", {"eid": 1, "cid": 1, "season": "1990"}, "x")
+    for tid, name, src in ((1, "Syrianska", "fotmob"), (2, "Syrianska FC", "tm"), (3, "SC Alger", "rsssf"), (4, "US Alger", "rsssf"), (5, "Rivals", "x"),
+                           (6, "Pinheiros", "s365"), (7, "Pinheiros-SC", "tm")):
+        G.put("team", {"tid": tid, "name": name}, src)
+    for mid, h in enumerate((1, 2, 3, 4, 6, 7), 1):
+        G.put("match", {"mid": mid, "eid": 1, "date": f"1990-03-{mid:02d}", "home": h, "away": 5, "hs": 1, "as_": 0}, "x")
+    assert same_name.bare("Peñarol AC (AM)") == ("penarol am", frozenset({"ac"}))
+    assert same_name.candidates(G.c, era=set(), never=set(), kept=set()) == []
+    assert same_name.candidates(G.c, era=set(), never=set(), kept=set(), loose_forms=True) == [(2, 1)]
+    assert same_name.load(G, None, None)["by_form"] == 1
+
+
 def test_it_runs_once_the_competitions_have_their_countries_and_the_games_are_paired_after():
     assert ORDER.index("comp_meta") < ORDER.index("same_name") < ORDER.index("twins_last") < ORDER.index("tidy")
