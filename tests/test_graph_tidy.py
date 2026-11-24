@@ -1,5 +1,7 @@
 """graph/load/tidy.py: the last pass, and graph/integrity.py: what is left, counted."""
 import datetime
+import os
+import types
 
 from graph import coverage, integrity
 from graph.build import ORDER
@@ -20,6 +22,24 @@ def test_a_move_to_the_same_club_leaves_and_a_date_a_millennium_ahead_takes_its_
     move(G, 3, 10, 11, "3026-06-30", None)
     assert tidy.load(G, Registry(), None, today=datetime.date(2026, 11, 24)) == {"moves_to_itself": 1, "dates_set_right": 1, "dates_dropped": 1}
     assert G.c.execute("SELECT pid, date FROM transfer ORDER BY pid").fetchall() == [(1, "2015-07-01"), (2, "2026-06-30")]
+
+
+def test_a_record_without_a_name_takes_the_one_the_source_gives_elsewhere(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    os.makedirs(tmp_path / "db" / "tm")
+    (tmp_path / "db" / "tm" / "player_profiles.csv").write_text("player_id,player_name\n77,Danilo (3)\n78,Known Elsewhere\n", encoding="utf-8")
+    (tmp_path / "db" / "tm" / "transfer_history.csv").write_text("player_id,from_team_id,from_team_name,to_team_id,to_team_name\n77,5722,FC Nowhere,9,Big Club\n", encoding="utf-8")
+    a, b, c = reg.mint("player", "tm", "77"), reg.mint("player", "tm", "78"), reg.mint("player", "tm", "79")
+    G.put("player", {"pid": a}, "tm")
+    G.put("player", {"pid": b, "name": "His Own Name"}, "tm")
+    G.put("player", {"pid": c}, "tm")
+    t, s = reg.mint("team", "tm", "5722"), reg.mint("team", "sch", "Aiglon (Martinique)")
+    G.put("team", {"tid": t}, "tm")
+    G.put("team", {"tid": s, "kind": "club"}, "sch")
+    out = tidy.load(G, reg, types.SimpleNamespace(db=str(tmp_path / "db")))
+    assert (out["players_named"], out["clubs_named"]) == (1, 2)
+    assert G.c.execute("SELECT name FROM player ORDER BY pid").fetchall() == [("Danilo",), ("His Own Name",), (None,)]
+    assert G.c.execute("SELECT name FROM team ORDER BY tid").fetchall() == [("FC Nowhere",), ("Aiglon",)]
 
 
 def test_what_should_not_be_there_is_counted(tmp_path):
