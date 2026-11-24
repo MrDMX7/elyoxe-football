@@ -80,6 +80,16 @@ names:
   "fotmob|10615": {kind: cup}
   "fotmob|247": {name: "FA Community Shield", name_ar: "الدرع الخيرية الإنجليزية", kind: supercup, country: GB-ENG}
   "fotmob|11038": {name: "King's Cup (Thailand)", name_ar: "كأس ملك تايلاند", kind: tournament, scope: international}
+  "martj42|Taça das Nações": {name: "Taça das Nações (Brazil 1964)", name_ar: "كأس الأمم (البرازيل 1964)", kind: tournament, scope: international}
+  "martj42|Nations Cup": {name: "Nations Cup (Ireland 2011)", name_ar: "كأس الأمم (أيرلندا 2011)", kind: tournament, scope: international}
+  "s365|5960": {kind: tournament, scope: asia}
+  "s365|6237": {kind: cup, scope: oceania}
+  "s365|5078": {name: "Torneo Federal A", name_ar: "تورنيو فيدرال أ (الأرجنتين)", kind: league, tier: 3}
+  "s365|622": {name: "Primera B de Chile", name_ar: "الدرجة الأولى ب (تشيلي)", kind: league, tier: 2}
+  "s365|5652": {name: "Segunda División Profesional de Chile", name_ar: "الدرجة الثانية الاحترافية (تشيلي)", kind: league, tier: 3}
+  "s365|525": {name: "Israeli Noar Premier League", name_ar: "دوري الشباب الممتاز (إسرائيل)", kind: league}
+  "s365|578": {name: "Israel Youth State Cup", name_ar: "كأس الدولة للشباب (إسرائيل)", kind: cup}
+  "fotmob|8982": {name: "Indian Football League", name_ar: "دوري كرة القدم الهندي (آي ليغ)", kind: league, country: IN, tier: 2}
   "martj42|Intercontinental Cup": {name: "Intercontinental Cup (India)", name_ar: "كأس القارات الهندية", kind: tournament, scope: international}
 stages:
   "الدوري الأمريكي لكرة القدم": 130

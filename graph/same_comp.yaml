@@ -231,4 +231,14 @@ same:
   "martj42|Central American and Caribbean Games": "s365|7130"
   "martj42|Kirin Cup": "s365|6375"
   "martj42|King's Cup": 11038
+  # (24 Nov 2026, second pass) the pairs still standing under one Arabic name on the finished graph
+  "s365|143": 215          # Iceland's Besta deild
+  "s365|566": 532          # Lebanon's Premier League
+  "s365|5632": 249         # North Macedonia's First League
+  "sch|mozambique": 9061   # Moçambola
+  "sch|OFC CC": "s365|6237"
+  "martj42|WAFF Championship": "s365|5960"
+  "martj42|Arab Cup qualification": 11156
+  "martj42|AFF Championship qualification": "martj42|ASEAN Championship qualification"
+  "martj42|Southeast Asian Peninsular Games": "martj42|Southeast Asian Games"   # one games, renamed in 1977
 apart: []

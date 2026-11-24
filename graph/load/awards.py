@@ -11,6 +11,7 @@
   * a winner born after the end of the season is dropped (a wrong link) and counted.
 """
 import os, re, unicodedata
+from collections import Counter
 import yaml
 from graph import awards_fetch as AF
 from graph.awards_wiki import canonical, extract
@@ -19,6 +20,8 @@ from graph.link import edition_for
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GENERIC = re.compile(r"^(winners?|list of (winners|recipients|award winners)|recipients|award winners|results|by year|history|"
                      r"(list of )?(winners|champions) by (year|season)|)$", re.I)
+# a section that is only a span of years («1970s», «1990–1999», «2010–present») is a page of the one award, not an award
+PERIOD = re.compile(r"^\d{4}s?(\s*[–-]\s*(\d{2,4}s?|present))?$", re.I)
 YEAR_PAGE = re.compile(r"^(\d{4}(?:[–-]\d{2,4})?)\s+(.+)$")
 # an award page or table of another sport gives nobody (23 Nov 2026: profiles carried «Gatorade Player of the Year — Track and
 # field», US high-school awards). Women's football and futsal are football: their awards stay
@@ -284,6 +287,9 @@ def load(G, reg, S):
         m = YEAR_PAGE.match(page)
         base = m.group(2) if m and m.group(2) in award_pages else page
         fid = comp_of.get(page)
+        is_generic = lambda t: bool(GENERIC.match(t["section"].strip()) or PERIOD.match(t["section"].strip())) or len(tables) == 1
+        ar_of = lambda t: None if is_generic(t) else _ar_term(t["section"], terms)
+        shared = Counter(ar_of(t) for t in {t["section"]: t for t in tables if not is_generic(t)}.values())   # sections of one Arabic name
         for t in tables:
             n["tables"] += 1
             if fid:                                                       # our competition's article: edition honours
@@ -314,13 +320,15 @@ def load(G, reg, S):
                 continue
             if t["kind"] in ("champion_table", "champion"):
                 continue
-            generic = GENERIC.match(t["section"].strip()) or len(tables) == 1
+            generic = is_generic(t)
             key = base if generic else f"{base}|{t['section']}"
             ar_page = names.get(base) or it(base).get("ar")
             name = base if generic else f"{base} — {t['section']}"
             term = None if generic else _ar_term(t["section"], terms)
             # a section's term alone («لاعب العام») loses whose award it is: with no Arabic page name the English name stands
             name_ar = ar_page if generic else (f"{ar_page} — {term}" if ar_page and term else ar_page)
+            if name_ar and not generic and (not term or shared[term] > 1):   # two awards of one page never share a name
+                name_ar = f"{name_ar} ({t['section']})"
             cid = reg.get("competition", "wiki", key)
             if cid is None:
                 cid = reg.mint("competition", "wiki", key)

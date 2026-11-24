@@ -501,3 +501,18 @@ def test_a_coach_of_the_year_keeps_his_wikidata_item_and_his_playing_days(tmp_pa
     kid = reg.get("coach", "wikidata", "Q55")
     assert G.c.execute("select source_id from xref where type='coach' and tifo_id=? and source='wikidata'", (kid,)).fetchone() == ("Q55",)
     assert G.c.execute("select pid from coach where kid=?", (kid,)).fetchone() == (pl,)
+
+
+def test_a_decade_is_a_page_of_the_one_award_and_two_awards_of_one_page_never_share_a_name(tmp_path):
+    rows = lambda y: '<tr><th>Year</th><th>Player</th></tr>' + ''.join(f'<tr><td>{y + i}</td><td>{L(p)}</td></tr>' for i, p in enumerate(("Stanley_Matthews", "Raymond_Kopa", "Alfredo_Di_Stéfano")))
+    page = lambda *secs: b'<html><body>' + b''.join(T(rows(y), h)[12:-14] for h, y in secs) + b'</body></html>'
+    merit, asia = page(("1970s", 1974), ("1980s", 1980)), page(("IFFHS award", 1990), ("AFC award", 1994))
+    items = dict(ITEMS, **{"PFA Merit Award": {"qid": "Q7", "en": "PFA Merit Award", "ar": "جائزة الاستحقاق", **HUMAN, "human": False, "born": None, "tm_player": None},
+                           "Asian Footballer of the Year": {"qid": "Q8", "en": "Asian Footballer of the Year", "ar": "أفضل لاعب في آسيا", **HUMAN, "human": False, "born": None, "tm_player": None}})
+    S = mk(tmp_path, {"PFA Merit Award": merit, "Asian Footballer of the Year": asia}, items)
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    awards.load(G, reg, S)
+    got = sorted(G.c.execute("SELECT name, name_ar, (SELECT count(*) FROM edition e WHERE e.cid = c.cid) FROM competition c WHERE kind='award'").fetchall())
+    assert got == [("Asian Footballer of the Year — AFC award", "أفضل لاعب في آسيا (AFC award)", 3),
+                   ("Asian Footballer of the Year — IFFHS award", "أفضل لاعب في آسيا (IFFHS award)", 3),
+                   ("PFA Merit Award", "جائزة الاستحقاق", 6)]
