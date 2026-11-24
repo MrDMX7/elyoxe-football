@@ -24,5 +24,21 @@ def test_one_name_in_one_league_is_one_club_and_two_countries_are_two(tmp_path):
     assert G.c.execute("SELECT home FROM match WHERE mid IN (2, 7) ORDER BY mid").fetchall() == [(1,), (9,)]
 
 
+def test_one_name_and_the_same_men_are_one_club_and_a_name_of_one_word_needs_more(tmp_path):
+    G = Graph(str(tmp_path / "t.db"))
+    for tid, name, src in ((1, "Wuhan Three Towns", "fotmob"), (2, "Wuhan Three Towns", "tm"), (3, "Nacional", "fotmob"), (4, "Nacional", "tm"),
+                           (5, "FC Odesa", "fotmob"), (6, "FC Odesa", "names"), (7, "Real Bamako", "fotmob"), (8, "Real Bamako", "tm")):
+        G.put("team", {"tid": tid, "name": name}, src)
+    spell = lambda pid, tid: G.c.execute("INSERT INTO spell(pid, tid, start, src) VALUES(?,?,?,'x')", (pid, tid, "2020"))
+    move = lambda pid, tid: G.c.execute("INSERT INTO transfer(pid, from_tid, to_tid, date, src) VALUES(?,?,?,?,'tm')", (pid, 99, tid, "2020-01-01"))
+    for pid in (1, 2):
+        spell(pid, 1), move(pid, 2), spell(pid, 3), move(pid, 4)
+    spell(3, 5), move(3, 6)
+    for pid in range(10, 20):
+        spell(pid, 7), move(pid + 10, 8)
+    spell(30, 7), move(30, 8)
+    assert same_name.candidates(G.c, era=set(), never=set(), kept=set()) == [(2, 1), (6, 5)]
+
+
 def test_it_runs_once_the_competitions_have_their_countries_and_the_games_are_paired_after():
     assert ORDER.index("comp_meta") < ORDER.index("same_name") < ORDER.index("twins_last") < ORDER.index("tidy")

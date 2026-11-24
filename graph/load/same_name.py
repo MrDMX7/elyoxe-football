@@ -1,4 +1,4 @@
-"""One club, one record, by its name in its own league (after graph/load/comp_meta.py, when every competition has its country):
+"""One club, one record, by its name in its own league or by its name and its men (after graph/load/comp_meta.py, when every competition has its country):
 graph/load/same_club.py joins two records by the games both hold, so two records of one club whose games never fall on one
 day stayed two — RSSSF's «MA Hussein Dey» and «MA Hussein-Dey», «Al-Ramtha» and «Al Ramtha» of Jordan's league, schochastics'
 two «Police FC» of Trinidad, Transfermarkt's cup ties of «Alemannia Aachen» beside FotMob's league seasons.
@@ -6,7 +6,10 @@ two «Police FC» of Trinidad, Transfermarkt's cup ties of «Alemannia Aachen» 
 Rules:
   * the same name letter for letter once accents, case and punctuation are gone;
   * both have a game in one competition of one country (a league or a cup: two clubs of one name in two countries meet in
-    a continental cup, never in a domestic one), and no record of the one ever met a record of the other;
+    a continental cup, never in a domestic one), or the same men are on both books (a transfer, a spell or a line-up: the
+    club Transfermarkt's transfers name and the one FotMob's games name) — two men, or one where he is a quarter of the
+    smaller book; a name of one word («Nacional») needs three and the quarter;
+  * no record of the one ever met a record of the other;
   * clubs only; two numbers of one numbering source are two clubs; the guards of graph/load/same_club.py hold (a UAE
     historic club, a club FotMob keeps under a later name, a pair graph/team_aliases.yaml keeps apart);
   * the FotMob record is kept, else the better source's, else the lower id.
@@ -46,9 +49,19 @@ def candidates(c, era=None, never=None, kept=None):
         if eid in home:
             plays[h].add(home[eid])
             plays[a].add(home[eid])
+    men = defaultdict(set)
+    for sql in ("SELECT from_tid, pid FROM transfer", "SELECT to_tid, pid FROM transfer", "SELECT tid, pid FROM spell", "SELECT DISTINCT tid, pid FROM appearance"):
+        for tid, pid in q(sql):
+            if tid in team and pid is not None:
+                men[tid].add(pid)
+
+    def same_men(a, b, key):
+        n, least = len(men[a] & men[b]), min(len(men[a]), len(men[b]))
+        return n >= 3 and n * 4 >= least if " " not in key else n >= 2 or (n == 1 and least <= 4)
+
     by = defaultdict(list)
     for tid, (name, _) in sorted(team.items()):
-        if tid in plays and tid not in era and fold(name) and loose(name) not in kept:
+        if (tid in plays or tid in men) and tid not in era and fold(name) and loose(name) not in kept:
             by[fold(name)].append(tid)
     out = []
     for key, tids in sorted(by.items()):
@@ -57,7 +70,7 @@ def candidates(c, era=None, never=None, kept=None):
         groups = []
         for t in tids:
             for g in groups:
-                if (any(plays[t] & plays[m] for m in g) and not any(((t, m) if t < m else (m, t)) in met for m in g)
+                if (any(plays[t] & plays[m] or same_men(t, m, key) for m in g) and not any(((t, m) if t < m else (m, t)) in met for m in g)
                         and not any(ids[t][s] != ids[m][s] for m in g for s in ids[t].keys() & ids[m].keys())):
                     g.append(t)
                     break
