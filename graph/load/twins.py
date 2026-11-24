@@ -14,6 +14,7 @@ same (24 Nov 2026, 92 on the finished graph):
 - two sources' records in one season of a league, the same side at home: a league plays that fixture once. The better
   source's score is kept and the other is written down as a conflict."""
 from collections import defaultdict
+from datetime import date
 from graph.db import SRC_RANK
 from graph.load.shootouts import shootout
 
@@ -89,4 +90,59 @@ def load(G, reg, S):
     for t in DETAIL:                          # what the kept record holds already is never copied: a goal counted once
         G.c.executemany(f"DELETE FROM {t} WHERE mid=? AND EXISTS(SELECT 1 FROM {t} k WHERE k.mid=?)", twice)
     G.remap_many("match", pairs)
-    return {"merged": len(pairs), "shootouts": len(kicks), "extra_time": len(extra)}
+    return {"merged": len(pairs), "shootouts": len(kicks), "extra_time": len(extra), "days_apart": apart(G, held)}
+
+
+NEAR = 3      # days between two sources' dates of one league game: the round's first day and the day it was played
+
+
+def apart_pairs(c, held=None):
+    """[(drop, keep, the day to keep or None)]: two sources' records of one league fixture (one season, the same side at home,
+    the same score) on different days. RSSSF dates a round by its first day and files a postponed game under its round (on
+    24 Nov 2026 Morocco's 2003/04 held 407 games for 16 sides, Egypt's 2007/08 335). Within NEAR days they are one game; any
+    further apart only where one of the two is RSSSF's, in a season where no source holds a fixture twice (a league of three
+    or four rounds, or one that ends in a play-off group, plays it again, perhaps to the same score: Brøndby 2-0 Nordsjælland
+    in August 2018 and in May 2019). The day kept is the other source's when the better record is RSSSF's."""
+    held = held or {}
+    by, again, size = defaultdict(list), defaultdict(int), defaultdict(int)
+    for mid, eid, day, h, a, hs, as_, src in c.execute(
+            """SELECT m.mid, m.eid, substr(m.date,1,10), m.home, m.away, m.hs, m.as_, m.src FROM match m JOIN edition e ON e.eid=m.eid
+               JOIN competition k ON k.cid=e.cid WHERE k.kind='league' AND m.date IS NOT NULL AND m.hs IS NOT NULL AND length(m.date)>=10"""):
+        by[(eid, h, a)].append((mid, day, (hs, as_), src))
+    for (eid, _, _), ms in by.items():
+        size[eid] += 1
+        again[eid] += len({m[3] for m in ms}) < len(ms)
+    often = {e for e, n in again.items() if n >= max(3, size[e] // 20)}      # one or two are a source's own slip
+    out = []
+    for (eid, _, _), ms in by.items():
+        if len({m[3] for m in ms}) < 2:
+            continue
+        kept = []                                  # [mid, day, score, {sources}]
+        for mid, day, score, src in sorted(ms, key=lambda m: (SRC_RANK.get(m[3], 9), -held.get(m[0], 0), m[0])):
+            best = None
+            for k in kept:
+                if k[2] != score or src in k[3]:
+                    continue
+                try:
+                    gap = abs((date.fromisoformat(day) - date.fromisoformat(k[1])).days)
+                except ValueError:
+                    continue
+                if (gap <= NEAR or (eid not in often and "rsssf" in k[3] | {src})) and (best is None or gap < best[0]):
+                    best = (gap, k)
+            if best is None:
+                kept.append([mid, day, score, {src}, src])
+                continue
+            k = best[1]
+            k[3].add(src)
+            out.append((mid, k[0], day if k[4] == "rsssf" and src != "rsssf" and len(k[3]) == 2 else None))
+    return out
+
+
+def apart(G, held=None):
+    found = apart_pairs(G.c, held)
+    G.c.executemany("UPDATE match SET date=? WHERE mid=?", [(day, keep) for _, keep, day in found if day])
+    twice = [(drop, keep) for drop, keep, _ in found]
+    for t in DETAIL:
+        G.c.executemany(f"DELETE FROM {t} WHERE mid=? AND EXISTS(SELECT 1 FROM {t} k WHERE k.mid=?)", twice)
+    G.remap_many("match", twice)
+    return len(found)

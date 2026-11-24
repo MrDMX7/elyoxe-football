@@ -139,3 +139,14 @@ with the commit or the evidence. A new session reads this first and continues at
     under one name; Chad's and Benin's leagues in schochastics are several regional leagues as one season.
   * Next: Transfermarkt's league codes (SC1, BE1, TR1, PO1, NL1…: 200k games) are competitions apart from 365Scores'/FotMob's
     same leagues — the archive has no season pages for them. Archive match pages leave a /db/club club unlinked.
+- 24 Nov (evening): production built with the day's fixes (database run 45341813081, archive 45345014351): 1,516,772 games
+  (sch 1,159,088 · eng 132,013 · fotmob 93,260 · tm 55,677 · martj42 47,510 · rsssf 24,199), 44,924 teams, 232,811 players.
+  * graph/sch_split: sixteen more folded clubs (Mexico, France, Yugoslavia, Lithuania, Japan, Korea, the Copas…): 464 names,
+    5,315 games moved, 395 added, checked with the loader's own unfold on the whole file. Live from the next build.
+  * twins: two sources' days of one league fixture are one game (graph/load/twins.py apart). Read on the live graph: 1,832
+    games held twice (RSSSF and schochastics 1,073, RSSSF and FotMob 697, Transfermarkt and schochastics 62): Morocco
+    2003/04 407 games for 16 sides, Egypt 2007/08 335. After it the only Arab seasons over a double round are those that
+    played three (Qatar 2004-2009, Kuwait's eight, the UAE's 1997/98 and 1998/99).
+  * Open: about 30 small folded clubs (Charleroi, Odense, Sarpsborg, Servette…), Honduras «Broncos De La Universidad» from
+    2001/02, 51 competitions named as leagues and filed as cups, RSSSF's years of a season that ends in August (Algeria
+    2020/21 dated 2020 for 2021).

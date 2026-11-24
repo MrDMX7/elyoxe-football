@@ -147,3 +147,41 @@ def test_two_sources_of_one_league_fixture_are_one_game_and_the_other_score_a_co
     twins.load(G, reg, None)
     assert G.c.execute("select mid, hs, as_ from match order by mid").fetchall() == [(6, 3, 1), (7, 1, 0), (8, 3, 1)]
     assert G.c.execute("select count(*) from conflict where type='match' and tifo_id=6").fetchone()[0] == 2
+
+
+def test_two_sources_days_of_one_league_fixture_are_one_game(tmp_path):
+    G, reg = world(tmp_path)
+    G.put("competition", {"cid": 1, "name": "League", "kind": "league"}, "x")
+    G.put("competition", {"cid": 2, "name": "Cup", "kind": "cup"}, "x")
+    for eid, cid in ((1, 1), (2, 2), (3, 1)):
+        G.put("edition", {"eid": eid, "cid": cid, "season": str(2002 + eid)}, "x")
+    # the round's first day and the day it was played; a postponed game under its round; a cup tie is left alone
+    G.put("match", {"mid": 5, "eid": 1, "date": "2003-09-27", "home": 1, "away": 2, "hs": 0, "as_": 0}, "rsssf")
+    G.put("match", {"mid": 6, "eid": 1, "date": "2003-09-28", "home": 1, "away": 2, "hs": 0, "as_": 0}, "sch")
+    G.put("match", {"mid": 7, "eid": 1, "date": "2003-10-04", "home": 2, "away": 3, "hs": 2, "as_": 1}, "rsssf")
+    G.put("match", {"mid": 8, "eid": 1, "date": "2003-12-17T18:00:00Z", "home": 2, "away": 3, "hs": 2, "as_": 1}, "fotmob")
+    G.put("match", {"mid": 9, "eid": 2, "date": "2003-11-01", "home": 1, "away": 3, "hs": 1, "as_": 1}, "rsssf")
+    G.put("match", {"mid": 10, "eid": 2, "date": "2003-11-03", "home": 1, "away": 3, "hs": 1, "as_": 1}, "sch")
+    # neither is RSSSF's: the same score months apart is the play-off group's game
+    G.put("match", {"mid": 11, "eid": 3, "date": "2004-08-05", "home": 1, "away": 2, "hs": 2, "as_": 0}, "tm")
+    G.put("match", {"mid": 12, "eid": 3, "date": "2005-05-13", "home": 1, "away": 2, "hs": 2, "as_": 0}, "sch")
+    G.put("match", {"mid": 13, "eid": 3, "date": "2004-09-11", "home": 3, "away": 2, "hs": 1, "as_": 0}, "tm")
+    G.put("match", {"mid": 14, "eid": 3, "date": "2004-09-12", "home": 3, "away": 2, "hs": 1, "as_": 0}, "sch")
+    assert twins.load(G, reg, None)["days_apart"] == 3
+    assert G.c.execute("select mid, date from match order by mid").fetchall() == [
+        (5, "2003-09-28"), (8, "2003-12-17T18:00:00Z"), (9, "2003-11-01"), (10, "2003-11-03"), (11, "2004-08-05"), (12, "2005-05-13"), (13, "2004-09-11")]
+
+
+def test_a_league_of_three_rounds_plays_a_fixture_again(tmp_path):
+    G, reg = world(tmp_path)
+    G.put("competition", {"cid": 1, "name": "League", "kind": "league"}, "x")
+    G.put("edition", {"eid": 1, "cid": 1, "season": "2006"}, "x")
+    mid = 20
+    for h, a in ((1, 2), (2, 3), (3, 1)):
+        for day in ("2006-09-07", "2007-03-01"):
+            mid += 1
+            G.put("match", {"mid": mid, "eid": 1, "date": day, "home": h, "away": a, "hs": 1, "as_": 1}, "rsssf")
+    G.put("match", {"mid": 30, "eid": 1, "date": "2007-01-20", "home": 1, "away": 2, "hs": 1, "as_": 1}, "sch")
+    G.put("match", {"mid": 31, "eid": 1, "date": "2006-09-08", "home": 2, "away": 3, "hs": 1, "as_": 1}, "sch")
+    assert twins.load(G, reg, None)["days_apart"] == 1
+    assert G.c.execute("select count(*), max(mid) from match").fetchone() == (7, 30)
