@@ -213,3 +213,23 @@ def test_a_season_the_dataset_left_without_a_league_goes_to_its_countrys_league(
     schochastics.load(G, reg, Sources(str(tmp_path), s3=False))
     comps = dict(G.c.execute("select c.name, count(*) from match m join edition e using(eid) join competition c using(cid) group by 1"))
     assert comps == {"australia": 2, "none-BT": 1}
+
+
+def test_a_world_cup_side_under_another_name_is_the_side_the_results_hold(tmp_path):
+    # East Germany 2-0 Australia, 1974: the international results say «German DR», and the game stood twice
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    W(db / "fjelstul_matches.csv", ["tournament_id", "tournament_name", "match_id", "stage_name", "match_date", "stadium_id", "stadium_name", "city_name", "country_name",
+                                    "home_team_id", "home_team_name", "away_team_id", "away_team_name", "home_team_score", "away_team_score", "extra_time",
+                                    "penalty_shootout", "home_team_score_penalties", "away_team_score_penalties"],
+      [["WC-1974", "1974 FIFA Men's World Cup", "M-1974-02", "group stage", "1974-06-14", "S-1", "Volksparkstadion", "Hamburg", "West Germany",
+        "T-24", "East Germany", "T-04", "Australia", "2", "0", "0", "0", "0", "0"]])
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    gdr, aus = reg.mint("team", "martj42", "German DR"), reg.mint("team", "martj42", "Australia")
+    old = reg.mint("team", "fjelstul", "T-24")                          # an earlier build's own East Germany
+    mid = reg.mint("match", "martj42", "1974-06-14|German DR|Australia")
+    G.put("match", {"mid": mid, "date": "1974-06-14", "home": gdr, "away": aus, "hs": 2, "as_": 0}, "martj42")
+    out = worldcup.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert out["linked"] == 1 and out["new"] == 0
+    assert reg.get("team", "fjelstul", "T-24") == gdr and old != gdr
+    assert G.c.execute("select count(*) from match").fetchone()[0] == 1 and G.c.execute("select count(*) from team where tid=?", (old,)).fetchone()[0] == 0

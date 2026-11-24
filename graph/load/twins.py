@@ -82,15 +82,19 @@ def load(G, reg, S):
     G.c.executemany("UPDATE match SET et=1 WHERE mid=?", extra)
     G.c.executemany("UPDATE match SET hs=?, as_=? WHERE mid=?", late)
     G.c.executemany("UPDATE match SET eid=? WHERE mid=?", moved)
-    # a record filed the other way round is turned first (its sides with it), so the merge sees no false disagreement
+    turn(G, turned)
+    for t in DETAIL:                          # what the kept record holds already is never copied: a goal counted once
+        G.c.executemany(f"DELETE FROM {t} WHERE mid=? AND EXISTS(SELECT 1 FROM {t} k WHERE k.mid=?)", twice)
+    G.remap_many("match", pairs)
+    return {"merged": len(pairs), "shootouts": len(kicks), "extra_time": len(extra), "days_apart": apart(G, held), "next_day": next_day(G, held)}
+
+
+def turn(G, turned):
+    """a record filed the other way round is turned first (its sides with it), so the merge sees no false disagreement"""
     G.c.executemany("UPDATE match SET home=away, away=home, hs=as_, as_=hs, ht_h=ht_a, ht_a=ht_h, pen_h=pen_a, pen_a=pen_h WHERE mid=?", turned)
     for t in ("event", "match_coach"):        # through «x»: match_coach holds one row a side, so h and a never swap in one pass
         for a, b in (("h", "x"), ("a", "h"), ("x", "a")):
             G.c.executemany(f"UPDATE {t} SET side='{b}' WHERE mid=? AND side='{a}'", turned)
-    for t in DETAIL:                          # what the kept record holds already is never copied: a goal counted once
-        G.c.executemany(f"DELETE FROM {t} WHERE mid=? AND EXISTS(SELECT 1 FROM {t} k WHERE k.mid=?)", twice)
-    G.remap_many("match", pairs)
-    return {"merged": len(pairs), "shootouts": len(kicks), "extra_time": len(extra), "days_apart": apart(G, held)}
 
 
 NEAR = 3      # days between two sources' dates of one league game: the round's first day and the day it was played
@@ -141,6 +145,64 @@ def apart_pairs(c, held=None):
 def apart(G, held=None):
     found = apart_pairs(G.c, held)
     G.c.executemany("UPDATE match SET date=? WHERE mid=?", [(day, keep) for _, keep, day in found if day])
+    twice = [(drop, keep) for drop, keep, _ in found]
+    for t in DETAIL:
+        G.c.executemany(f"DELETE FROM {t} WHERE mid=? AND EXISTS(SELECT 1 FROM {t} k WHERE k.mid=?)", twice)
+    G.remap_many("match", twice)
+    return len(found)
+
+
+def next_day_pairs(c, held=None):
+    """[(drop, keep, turned)]: two sources' records of one game on two days running, in any competition: the same two teams
+    and the same score. One source dates a game by the day at the ground and another by the clock in Greenwich (a Copa
+    Sudamericana night is the next day there: 421 of FotMob's and schochastics' on 24 Nov 2026, with the World Cup of 2014
+    holding Russia-South Korea twice, martj42's and Transfermarkt's). No two sides meet two days running to the same score,
+    but a source that holds both days holds two games: a record is never joined to one its own source is in already, and
+    a record with a twin on either side of its day is left alone."""
+    held = held or {}
+    named = defaultdict(set)
+    for mid, src in c.execute("SELECT tifo_id, source FROM xref WHERE type='match'"):
+        named[mid].add(src)
+    by = defaultdict(list)
+    for mid, day, h, a, hs, as_, src in c.execute(
+            "SELECT mid, substr(date,1,10), home, away, hs, as_, src FROM match WHERE date IS NOT NULL AND hs IS NOT NULL AND length(date)>=10"):
+        lo = min(h, a)
+        by[(lo, max(h, a))].append((mid, day, (hs, as_) if h == lo else (as_, hs), src, h))
+    out = []
+    for ms in by.values():
+        if len({m[3] for m in ms}) < 2:
+            continue
+        kept = []                                  # [mid, day, score, {sources}, home]
+        for mid, day, score, src, home in sorted(ms, key=lambda m: (SRC_RANK.get(m[3], 9), -held.get(m[0], 0), m[0])):
+            mine = named[mid] | {src}
+            try:
+                near = [k for k in kept if k[2] == score and not (k[3] & mine) and abs((date.fromisoformat(day) - date.fromisoformat(k[1])).days) == 1]
+            except ValueError:
+                near = []
+            if len(near) != 1:
+                kept.append([mid, day, score, mine, home])
+                continue
+            near[0][3] |= mine
+            out.append((mid, near[0][0], home != near[0][4]))
+    return out
+
+
+def next_day(G, held=None):
+    found = next_day_pairs(G.c, held)
+    if not found:
+        return 0
+    row = {mid: (eid, day, src) for mid, eid, day, src in G.c.execute("SELECT mid, eid, date, src FROM match")}
+    kind = dict(G.c.execute("SELECT e.eid, c.kind FROM edition e JOIN competition c ON c.cid=e.cid"))
+    ours = {e for (e,) in G.c.execute("SELECT e.eid FROM edition e JOIN xref x ON x.type='competition' AND x.source='fotmob' AND x.tifo_id=e.cid")}
+    for drop, keep, _ in found:
+        (de, dd, ds), (ke, _, ks) = row[drop], row[keep]
+        # RSSSF's day is its round's first, and Transfermarkt's a national side's night by the clock in Europe: the other's is the game's
+        if ks == "rsssf" or (ks == "tm" and ds == "martj42"):
+            G.c.execute("UPDATE match SET date=? WHERE mid=?", (dd, keep))
+        # FotMob filed a continental night among its friendlies: the game is the cup's; and the site's season wins (as above)
+        if de is not None and ((kind.get(ke) == "friendly" and kind.get(de) not in ("friendly", None)) or (de in ours and ke not in ours)):
+            G.c.execute("UPDATE match SET eid=? WHERE mid=?", (de, keep))
+    turn(G, [(drop,) for drop, _, t in found if t])
     twice = [(drop, keep) for drop, keep, _ in found]
     for t in DETAIL:
         G.c.executemany(f"DELETE FROM {t} WHERE mid=? AND EXISTS(SELECT 1 FROM {t} k WHERE k.mid=?)", twice)

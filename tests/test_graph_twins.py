@@ -185,3 +185,28 @@ def test_a_league_of_three_rounds_plays_a_fixture_again(tmp_path):
     G.put("match", {"mid": 31, "eid": 1, "date": "2006-09-08", "home": 2, "away": 3, "hs": 1, "as_": 1}, "sch")
     assert twins.load(G, reg, None)["days_apart"] == 1
     assert G.c.execute("select count(*), max(mid) from match").fetchone() == (7, 30)
+
+
+def test_two_sources_records_a_day_apart_are_one_game_in_any_competition(tmp_path):
+    G, reg = world(tmp_path)
+    G.put("competition", {"cid": 1, "name": "Cup", "kind": "tournament"}, "x")
+    G.put("competition", {"cid": 2, "name": "Club Friendlies", "kind": "friendly"}, "x")
+    G.put("edition", {"eid": 1, "cid": 1, "season": "2014"}, "x")
+    G.put("edition", {"eid": 2, "cid": 2, "season": "2014"}, "x")
+    # the day at the ground and the day in Europe; the home side filed the other way round; a continental night among the friendlies
+    G.put("match", {"mid": 5, "eid": 1, "date": "2014-06-17", "home": 1, "away": 2, "hs": 1, "as_": 1}, "martj42")
+    G.put("match", {"mid": 6, "eid": 1, "date": "2014-06-18", "home": 1, "away": 2, "hs": 1, "as_": 1}, "tm")
+    G.put("match", {"mid": 7, "eid": 2, "date": "2014-10-01T23:00:00Z", "home": 2, "away": 3, "hs": 2, "as_": 0}, "fotmob")
+    G.put("match", {"mid": 8, "eid": 1, "date": "2014-10-02", "home": 3, "away": 2, "hs": 0, "as_": 2}, "sch")
+    # one source's two days are two games, and so is a record between two twins; another score is another game
+    G.put("match", {"mid": 9, "eid": 1, "date": "2014-03-01", "home": 1, "away": 3, "hs": 0, "as_": 0}, "sch")
+    G.put("match", {"mid": 10, "eid": 1, "date": "2014-03-02", "home": 1, "away": 3, "hs": 0, "as_": 0}, "sch")
+    G.put("match", {"mid": 11, "eid": 1, "date": "2014-05-01", "home": 1, "away": 3, "hs": 1, "as_": 0}, "tm")
+    G.put("match", {"mid": 12, "eid": 1, "date": "2014-05-02", "home": 1, "away": 3, "hs": 1, "as_": 0}, "sch")
+    G.put("match", {"mid": 13, "eid": 1, "date": "2014-05-03", "home": 1, "away": 3, "hs": 1, "as_": 0}, "tm")
+    G.put("match", {"mid": 14, "eid": 1, "date": "2014-08-01", "home": 1, "away": 2, "hs": 1, "as_": 0}, "tm")
+    G.put("match", {"mid": 15, "eid": 1, "date": "2014-08-02", "home": 1, "away": 2, "hs": 2, "as_": 0}, "sch")
+    assert twins.load(G, reg, None)["next_day"] == 2
+    assert G.c.execute("select mid, eid, date, home, hs from match order by mid").fetchall() == [
+        (6, 1, "2014-06-17", 1, 1), (7, 1, "2014-10-01T23:00:00Z", 2, 2), (9, 1, "2014-03-01", 1, 0), (10, 1, "2014-03-02", 1, 0),
+        (11, 1, "2014-05-01", 1, 1), (12, 1, "2014-05-02", 1, 1), (13, 1, "2014-05-03", 1, 1), (14, 1, "2014-08-01", 1, 1), (15, 1, "2014-08-02", 1, 2)]

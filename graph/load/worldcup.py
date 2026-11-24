@@ -23,6 +23,9 @@ def _i(v):
     except (TypeError, ValueError):
         return None
 
+# Fjelstul's name of a side -> the name the international results hold it under
+NAMED = {"East Germany": "German DR", "Zaire": "DR Congo", "Dutch East Indies": "Indonesia"}
+
 
 def load(G, reg, S):
     matches = rows(S, "matches")
@@ -39,7 +42,10 @@ def load(G, reg, S):
     n = {"matches": 0, "new": 0, "linked": 0, "detailed": 0}
 
     def team(tid, name):
-        t = reg.get("team", "martj42", name) or reg.get("team", "fjelstul", tid) or reg.mint("team", "fjelstul", tid)
+        t = reg.get("team", "martj42", NAMED.get(name, name))
+        if t:
+            reg.link("team", "fjelstul", tid, t)          # a side minted under Fjelstul's name before its other name was known
+        t = t or reg.get("team", "fjelstul", tid) or reg.mint("team", "fjelstul", tid)
         if t not in written:
             written.add(t)
             G.put("team", {"tid": t, "name": name, "kind": "national"}, "fjelstul")
