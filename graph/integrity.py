@@ -21,6 +21,8 @@ CHECKS = (
         WHERE h.kind = 'champion' AND h.tid IS NOT NULL AND ifnull(c.kind, '') <> 'award' GROUP BY h.eid HAVING count(DISTINCT h.tid) > 1 AND count(DISTINCT h.src) > 1)"""),
     ("nameless_team", "teams without a name", "SELECT count(*) FROM team WHERE ifnull(name, '') = '' AND ifnull(name_ar, '') = ''"),
     ("nameless_player", "players without a name", "SELECT count(*) FROM player WHERE ifnull(name, '') = '' AND ifnull(name_ar, '') = ''"),
+    ("same_man", "players held twice: one name, one full birth date",
+     "SELECT count(*) FROM (SELECT 1 FROM player WHERE length(born) = 10 AND ifnull(name, '') != '' GROUP BY lower(name), born HAVING count(*) > 1)"),
     ("nameless_competition", "competitions without a name, or named by a source's number",
      "SELECT count(*) FROM competition WHERE ifnull(name, '') = '' OR name GLOB 'FotMob [0-9]*'"),
     ("competition_of_no_kind", "competitions that are no league, cup, tournament, friendly or award",
@@ -48,6 +50,9 @@ SAMPLES = {     # the records behind a count, where a count alone does not say w
         (SELECT count(*) FROM match m WHERE m.home = t.tid OR m.away = t.tid) FROM team t WHERE ifnull(t.name, '') = '' AND ifnull(t.name_ar, '') = ''""",
     "nameless_player": """SELECT p.pid, p.src, p.born, (SELECT group_concat(x.source || ':' || x.source_id, ' ') FROM xref x WHERE x.type = 'player' AND x.tifo_id = p.pid),
         (SELECT count(*) FROM appearance a WHERE a.pid = p.pid) FROM player p WHERE ifnull(p.name, '') = '' AND ifnull(p.name_ar, '') = ''""",
+    "same_man": """SELECT p.name, p.born, group_concat(p.pid || ':' || p.src || ':' || (SELECT count(*) FROM appearance a WHERE a.pid = p.pid)
+        || ':' || ifnull((SELECT group_concat(x.source || '=' || x.source_id, ',') FROM xref x WHERE x.type = 'player' AND x.tifo_id = p.pid), ''), ' ')
+        FROM player p WHERE length(p.born) = 10 AND ifnull(p.name, '') != '' GROUP BY lower(p.name), p.born HAVING count(*) > 1""",
     "nameless_competition": "SELECT cid, name, src, kind, country FROM competition WHERE ifnull(name, '') = '' OR name GLOB 'FotMob [0-9]*'",
     "competition_of_no_kind": "SELECT cid, name, src, country FROM competition WHERE kind IS NULL",
 }
