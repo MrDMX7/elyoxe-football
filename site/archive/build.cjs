@@ -116,15 +116,25 @@ function build(o) {
     const PAIRS = MV.pairs([...MSEA.values()].map(ms => ms.map(m => Object.assign({}, m, { h: [tkey(m.h), m.h[1]], a: [tkey(m.a), m.a[1]] }))), () => c.name_ar);
     const ss = ed.seasons, arch = c.arch ? `/c/${c.key}/` : `/c/${c.key}/seasons/`, msOf = s => MSEA.get(`${c.id}|${HP.slug(s.season)}`) || [];
     const sNav = (title, back, label) => ({ back, backLabel: label, title });
+    const AT = MSEA.size >= 3 ? SV.alltime([...MSEA.values()]) : [], atp = `${arch}alltime/`;
     const bare = !ss.some(s => s.champion || (s.parts || []).some(p => p.champion));      // qualifiers, friendlies: seasons of games and no champion
     const up = c.arch ? [DIRT, DIR] : [c.name_ar, `/c/${c.key}/`];        // above the seasons list: the competition's page, else the directory
     write(arch, shellPage(shell, { path: arch, nav: sNav(c.arch ? esc(c.name_ar) : "كل المواسم", up[1], esc(up[0])),
       title: bare ? `${c.name_ar}: كل المواسم والمباريات | تيفو` : `أبطال ${c.name_ar} عبر التاريخ: كل المواسم والهدافين | تيفو`,
       desc: bare ? `كل مواسم ${c.name_ar} ومبارياتها: ${ss.length} موسم.` : `كل مواسم ${c.name_ar}: البطل والوصيف والهداف في ${ss.length} موسم.`,
-      body: `<div class="lt"><h1>${esc(c.name_ar)}: كل المواسم</h1>${ss.length ? `<p>${bare ? "المباريات" : "البطل والوصيف والهداف"} في كل موسم، من <span class="num">${esc(ss[ss.length - 1].season)}</span> لين <span class="num">${esc(ss[0].season)}</span>.</p>` : ""}</div>` + HP.seasonsBody(ed, c, Object.assign({ page: s => HP.seasonRich(s) || msOf(s).length, bare, count: s => msOf(s).length }, hpo)),
+      body: `<div class="lt"><h1>${esc(c.name_ar)}: كل المواسم</h1>${ss.length ? `<p>${bare ? "المباريات" : "البطل والوصيف والهداف"} في كل موسم، من <span class="num">${esc(ss[ss.length - 1].season)}</span> لين <span class="num">${esc(ss[0].season)}</span>.</p>` : ""}${AT.length >= 4 ? `<p><a class="chip" href="${atp}">الترتيب التاريخي</a></p>` : ""}</div>` + HP.seasonsBody(ed, c, Object.assign({ page: s => HP.seasonRich(s) || msOf(s).length, bare, count: s => msOf(s).length }, hpo)),
       ld: bcLd(c.arch ? [up, [c.name_ar, arch]] : [up, ["كل المواسم", arch]]) }));
     urls.push(arch);
     if (c.arch) ARCHW.push(c);
+    if (AT.length >= 4) {                                   // the all-time table, under the seasons list (a path the archive owns)
+      write(atp, shellPage(shell, { path: atp, nav: sNav("الترتيب التاريخي", arch, "كل المواسم"),
+        title: `الترتيب التاريخي لـ${c.name_ar}: كل الفرق عبر كل المواسم | تيفو`,
+        desc: `الترتيب التاريخي لـ${c.name_ar}: ${AT.length} فريق، مباريات كل فريق وانتصاراته وأهدافه في ${MSEA.size} موسم من أرشيف تيفو.`,
+        body: `<div class="lt"><h1>الترتيب التاريخي: ${esc(c.name_ar)}</h1><p>كل مباراة في أرشيف تيفو من <span class="num">${MSEA.size}</span> موسم، و<span class="num">3</span> نقاط للفوز في كل الأزمنة عشان تنقاس المواسم بمقياس واحد.</p></div>` +
+          U.table(AT, { full: 1 }) + '<p class="src">محسوب من نتايج المباريات في قاعدة تيفو؛ المواسم اللي ما وصلتنا مبارياتها مب داخلة.</p>',
+        ld: bcLd(c.arch ? [up, [c.name_ar, arch], ["الترتيب التاريخي", atp]] : [up, ["كل المواسم", arch], ["الترتيب التاريخي", atp]]) }));
+      urls.push(atp);
+    }
     for (const s of ss.filter(s => HP.seasonRich(s) || msOf(s).length)) {
       const sp = `/c/${c.key}/s/${HP.slug(s.season)}/`, ms = msOf(s), nb = SV.around(ss, s.season);
       const sLink = (x, t) => `<a class="chip" href="/c/${c.key}/s/${HP.slug(x)}/">${t} <span class="num">${esc(x)}</span></a>`;

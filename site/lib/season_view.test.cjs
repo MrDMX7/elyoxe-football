@@ -27,6 +27,14 @@ test("the matches by round, a round-less season by month, each linked to its arc
   assert.match(m.kickoff_utc, /^2002-11-02T/);
 });
 
+test("the all-time table: one row a club over every season, three points a win, its latest name", () => {
+  const rows = V.alltime([[{ date: "1990-01-01", season: "1989/1990", h: [null, "الأهلي دبي", 7], a: [102122, "الوحدة", 9], s: [2, 0] }, { date: "1990-02-01", season: "1989/1990", h: [null, "دبي", null], a: [102122, "الوحدة", 9], s: [1, 1] }],
+    [{ date: "2015-01-01", season: "2014/2015", h: [102119, "شباب الأهلي", 7], a: [102122, "الوحدة", 9], s: [1, 3] }, { date: "2015-02-01", h: [102119, "شباب الأهلي", 7], a: [102122, "الوحدة", 9], s: [null, null] }]]);
+  assert.deepEqual(rows.map(r => [r.rank, r.team.name_ar, r.seasons, r.played, r.won, r.drawn, r.lost, r.gf, r.ga, r.pts]),
+    [[1, "الوحدة", 2, 3, 1, 1, 1, 4, 4, 4], [2, "شباب الأهلي", 2, 2, 1, 0, 1, 3, 3, 3], [3, "دبي", 1, 1, 0, 1, 0, 1, 1, 1]]);
+  assert.equal(rows[1].team.id, 102119);
+});
+
 test("the top scorers as the current scorers' list: a man FotMob never had links to his archive page", () => {
   const g = V.stats(S).lists.goals;
   assert.deepEqual(g[0], { rank: 1, player: { id: "k238460", name: "علي دائي" }, team: null, value: "17" });

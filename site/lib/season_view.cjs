@@ -91,4 +91,25 @@ function seasons(ed, msea, cid) {
   return out.sort((a, b) => y(b) - y(a) || String(b.season).localeCompare(String(a.season)));
 }
 
-module.exports = { standings, fixtures, stats, cards, leaders, around, seasons, MONTHS };
+// the competition's all-time table: every finished game of every season the archive holds, one row a club (its Tifo id, so a
+// club is one row under every name it played by; its latest name), 3 points a win in every era so the eras compare; a tie
+// settled on penalties is a draw. lists: each season's matches, any order.
+function alltime(lists) {
+  const by = new Map();
+  lists.forEach((ms, i) => { for (const m of ms || []) {
+    if (!m.s || m.s[0] == null || m.s[1] == null) continue;
+    [[m.h, m.s[0], m.s[1]], [m.a, m.s[1], m.s[0]]].forEach(([t, f, a]) => {
+      const key = t[2] != null ? "t" + t[2] : String(t[0] || t[1]);
+      if (!by.has(key)) by.set(key, { team: null, at: "", years: new Set(), played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, pts: 0 });
+      const r = by.get(key), d = String(m.date || "");
+      if (!r.team || d >= r.at) { r.team = team(t[0], t[1], "a" + key); r.at = d; }
+      r.years.add(i);
+      r.played++; r.gf += f; r.ga += a; if (f > a) { r.won++; r.pts += 3; } else if (f === a) { r.drawn++; r.pts++; } else r.lost++;
+    });
+  } });
+  return [...by.values()].map(r => ({ team: r.team, seasons: r.years.size, played: r.played, won: r.won, drawn: r.drawn, lost: r.lost, gf: r.gf, ga: r.ga, gd: r.gf - r.ga, pts: r.pts }))
+    .sort((x, y) => y.pts - x.pts || y.gd - x.gd || y.gf - x.gf || String(x.team.name_ar).localeCompare(String(y.team.name_ar), "ar"))
+    .map((r, i) => Object.assign({ rank: i + 1 }, r));
+}
+
+module.exports = { standings, fixtures, stats, cards, leaders, around, seasons, alltime, MONTHS };
