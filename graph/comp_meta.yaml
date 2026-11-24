@@ -58,7 +58,21 @@ names:
   "fotmob|9985": {name: "Moldovan Super Cup", name_ar: "كأس السوبر المولدوفي", kind: supercup, country: MD}
   "fotmob|9821": {name: "CONCACAF Nations League", kind: tournament, scope: americas}
   "s365|621": {kind: league}
-  "s365|6370": {name: "Olympic Football Tournament", name_ar: "كرة القدم في الألعاب الأولمبية", kind: tournament, scope: world}
+  "fotmob|66": {name: "Olympic Football Tournament", name_ar: "كرة القدم في الألعاب الأولمبية", kind: tournament, scope: world}
+  "sch|OFC CC": {name: "OFC Champions League", name_ar: "دوري أبطال أوقيانوسيا", kind: cup, scope: oceania}
+  "sch|UEFA ITC": {name: "UEFA Intertoto Cup", name_ar: "كأس إنترتوتو", kind: cup, scope: europe}
+  "sch|CFU CC": {name: "CFU Club Championship", name_ar: "بطولة أندية الكاريبي", kind: cup, scope: americas}
+  "sch|CONCACAF L": {name: "CONCACAF League", name_ar: "دوري الكونكاكاف", kind: cup, scope: americas}
+  "fotmob|179": {name: "Scottish Challenge Cup", name_ar: "كأس التحدي الاسكتلندي", kind: cup, country: GB-SCT}
+  "fotmob|10226": {name: "2. deild karla", kind: league, country: IS, tier: 3}
+  "fotmob|9474": {name: "MTN 8", name_ar: "كأس الثمانية الجنوب أفريقي", kind: cup, country: ZA}
+  "fotmob|206": {name: "Norwegian Cup", name_ar: "كأس النرويج", kind: cup, country: "NO"}
+  "fotmob|204": {name: "Norwegian Second Division", name_ar: "دوري الدرجة الثالثة النرويجي", kind: league, country: "NO", tier: 3}
+  "fotmob|9143": {name: "Singapore Cup", name_ar: "كأس سنغافورة", kind: cup, country: SG}
+  "fotmob|11024": {name: "Thai League Cup", name_ar: "كأس الرابطة التايلاندية", kind: cup, country: TH}
+  "fotmob|10161": {name: "Vietnamese Cup", name_ar: "كأس فيتنام", kind: cup, country: VN}
+  "fotmob|10654": {name: "USL Cup", kind: cup, country: US}
+  "fotmob|10084": {name: "NISA", name_ar: "الدوري الوطني المستقل الأمريكي", kind: league, country: US, tier: 3}
   "s365|7254": {name: "Pan American Games", name_ar: "دورة الألعاب الأمريكية", kind: tournament, scope: americas}
   "fotmob|9253": {name_ar: "كأس إف إيه تروفي"}
   "fotmob|10611": {kind: cup}

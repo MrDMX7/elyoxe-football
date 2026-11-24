@@ -1,4 +1,6 @@
 """What the graph holds, per competition × edition and per entity type (spec §3.5): the report phases 2-5 start from."""
+from graph import integrity
+
 TYPES = ("team", "player", "coach", "referee", "stadium", "competition", "edition", "match")
 
 
@@ -24,7 +26,7 @@ def compute(G):
     honours = [dict(zip(("kind", "src", "n", "editions"), r)) for r in q("SELECT kind, src, count(*), count(DISTINCT eid) FROM honour GROUP BY 1, 2 ORDER BY 1, 3 DESC")]
     awards = q("""SELECT c.name, c.name_ar, count(DISTINCT e.eid), min(e.season), max(e.season) FROM competition c JOIN edition e ON e.cid=c.cid
                   JOIN honour h ON h.eid=e.eid WHERE c.kind='award' GROUP BY c.cid ORDER BY 3 DESC""")
-    return {"counts": counts, "by_src": by_src, "linked": linked, "arabic": arabic, "player_born": born,
+    return {"counts": counts, "integrity": integrity.compute(G), "by_src": by_src, "linked": linked, "arabic": arabic, "player_born": born,
             "editions": [dict(zip(("cid", "name", "season", "matches", "scores", "lineups", "events", "stats", "ratings", "champion", "runner_up", "table"), r)) for r in editions],
             "conflicts": [dict(zip(("type", "field", "kept_src", "other_src", "n"), r)) for r in conflicts],
             "honours": honours, "awards": [dict(zip(("name", "name_ar", "years", "first", "last"), r)) for r in awards]}
@@ -38,7 +40,8 @@ def markdown(cov, day, run=None):
     out += ["## Totals", "", "| table | rows | by source |", "|---|---|---|"]
     for t, n in c.items():
         out.append(f"| {t} | {n:,} | {', '.join(f'{s} {k:,}' for s, k in sorted(cov['by_src'].get(t, {}).items()))} |")
-    out += ["", "## Links between sources (distinct Tifo ids with a row in xref)", "", "| type | " + " | ".join(["source", "ids"]) + " |", "|---|---|---|"]
+    out += [""] + integrity.markdown(cov.get("integrity") or {})
+    out += ["## Links between sources (distinct Tifo ids with a row in xref)", "", "| type | " + " | ".join(["source", "ids"]) + " |", "|---|---|---|"]
     for t, d in cov["linked"].items():
         for s, k in sorted(d.items()):
             out.append(f"| {t} | {s} | {k:,} |")
