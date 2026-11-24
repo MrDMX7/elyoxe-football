@@ -229,6 +229,16 @@ test("a club with the encyclopedia's page is shown there: its history goes out f
   assert.equal(h["4678"].n, "Alanyaspor");
 });
 
+test("a match links a club whose page is the encyclopedia's to that page", () => {
+  const { o } = world();
+  fs.writeFileSync(o.known, JSON.stringify({ m: [], p: [], t: [9825], dbclub: ["8650"] }));
+  A.build(o);
+  const m = fs.readFileSync(path.join(o.out, "m/k1/index.html"), "utf8");
+  assert.match(m, /href="\/db\/club\/8650\/"/);
+  assert.match(m, /href="\/t\/9825\/"/);
+  assert.doesNotMatch(m, /\/t\/8650\//);
+});
+
 // a competition the site has no page for: graph/archive_export.py's competitions.json names it, its files carry our own number
 function archiveWorld() {
   const w = world(), data = w.o.data, id = 2000000123;

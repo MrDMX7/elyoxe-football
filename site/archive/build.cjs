@@ -90,18 +90,21 @@ function build(o) {
   const pdir = path.join(o.data, "people"), PERS = new Set();
   const shards = fs.existsSync(pdir) ? fs.readdirSync(pdir).filter(f => /^\d+\.json$/.test(f)) : [];
   for (const f of shards) for (const [pid, p] of Object.entries(readJ(path.join(pdir, f)) || {})) if (!(p.fm && KP.has(String(p.fm)))) PERS.add(pid);
-  const write = (p, html) => { const f = path.join(o.out, p.replace(/^\//, ""), "index.html"); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, html); written.add(p); };
+  // a club whose page is the encyclopedia's is linked there: every renderer writes /t/<FotMob id>/, set right as the page is written
+  const hasT = id => KT.has(String(id)) || KDB.has(String(id));
+  const toDb = html => (KDB.size ? html.replace(/\/t\/(\d+)\/(?=["#?])/g, (m, id) => (!KT.has(id) && KDB.has(id) ? `/db/club/${id}/` : m)) : html);
+  const write = (p, html) => { html = toDb(html); const f = path.join(o.out, p.replace(/^\//, ""), "index.html"); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, html); written.add(p); };
   // a match links to the site's page when it has one, else to this archive's; a man or a club to the site's, else nothing yet
   const mHref = m => (KM.has(String(m.id)) ? `/m/${m.id}/` : `/m/k${m.k}/`);
   const relink = ms => ms.map(m => {
-    const side = s => [s[0] && KT.has(String(s[0])) ? s[0] : s[2] != null && CLUBS[String(s[2])] ? `k${s[2]}` : null, s[1], s[2]];
+    const side = s => [s[0] && hasT(s[0]) ? s[0] : s[2] != null && CLUBS[String(s[2])] ? `k${s[2]}` : null, s[1], s[2]];
     const man = (id, pid) => (id && KP.has(String(id)) ? id : pid != null && PERS.has(String(pid)) ? `k${pid}` : null);
     return Object.assign({}, m, { id: KM.has(String(m.id)) ? m.id : `k${m.k}`, fm: /^\d+$/.test(String(m.id)) ? String(m.id) : null, h: side(m.h), a: side(m.a), rh: m.rk != null && REFS[String(m.rk)] ? `/r/k${m.rk}/` : null,
       chref: m.ck ? { h: coachHref(m.ck.h), a: coachHref(m.ck.a) } : null,
       ev: (m.ev || []).map(e => [e[0], e[1], e[2], e[3], e[4], man(e[5], e[6]), e[6]]),          // e[6]: the man's Tifo id (the season's leaders)
       lu: m.lu ? Object.fromEntries(Object.entries(m.lu).map(([k, v]) => [k, v.map(p => [p[0], man(p[1], p[4]), p[2], p[3]].concat(p[5] != null ? [p[5]] : []))])) : null });
   });
-  const hpo = { team: id => KT.has(String(id)), player: id => KP.has(String(id)), person: pid => PERS.has(String(pid)), coach: kid => coachHref(kid), coachName: () => null,
+  const hpo = { team: hasT, player: id => KP.has(String(id)), person: pid => PERS.has(String(pid)), coach: kid => coachHref(kid), coachName: () => null,
     teamName: () => null, playerName: () => null };
   let nSeasons = 0, nMatches = 0;
   const DIR = "/c/archive/", DIRT = "أرشيف البطولات", ARCHW = [];
@@ -178,7 +181,7 @@ function build(o) {
     if (!PERS.has(pid)) continue;
     const pth = `/p/k${pid}/`, nm = PV.nameOf(p), ok = PV.indexable(p);
     write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: PV.title(p), desc: PV.desc(p),
-      body: PV.body(p, { team: id => KT.has(String(id)), comp: compOf, photo: PH[`k${pid}`] ? Object.assign({ src: `/v1/ph/k${pid}.webp` }, PH[`k${pid}`]) : null,
+      body: PV.body(p, { team: hasT, comp: compOf, photo: PH[`k${pid}`] ? Object.assign({ src: `/v1/ph/k${pid}.webp` }, PH[`k${pid}`]) : null,
         fm: p.fm ? FMP[p.fm] : null, teamName: id => FMT[id] }),
       ld: { "@context": "https://schema.org", "@graph": [Object.assign(PV.ld(p, pth), { "@context": undefined }), Object.assign(bcLd([[nm, pth]]), { "@context": undefined })] } }));
     if (ok) urls.push(pth);
@@ -186,7 +189,7 @@ function build(o) {
     nPersons++;
   }
   // the referees' and the old clubs' pages
-  const eo = { team: id => KT.has(String(id)), comp: compOf };
+  const eo = { team: hasT, comp: compOf };
   for (const [rid, r] of Object.entries(REFS)) {
     const pth = `/r/k${rid}/`, nm = EV.nameOf(r), ok = EV.refIndexable(r);
     write(pth, shellPage(shell, { path: pth, nav: { back: "/", backLabel: "تيفو", title: esc(nm) }, noindex: !ok, title: `الحكم ${nm}: مبارياته وكروته | تيفو`,
