@@ -115,3 +115,43 @@ def test_an_unknown_scorer_and_an_own_goal_are_goals_with_no_name():
 def test_an_own_goal_written_out_in_the_minutes():
     """«[Fahad Massoud (10' own goal) - Bouri Lah (48')]»: an own goal, not Fahad Massoud's goal"""
     assert R._scorers("[Fahad Massoud (10' own goal) - Bouri Lah (48')]", 1, 1) == [["h", "Fahad Massoud", 10, "own_goal"], ["a", "Bouri Lah", 48, "goal"]]
+
+
+ALG08 = """Algeria 2007/08
+
+Championnat National Division 1
+Coupe Nationale
+Championnat Division 2
+
+Championnat National Division 1
+
+Round 1 [Aug 23]
+ES Sétif         3-1 MC Oran
+JSM Béjaïa       0-0 CR Bélouizdad
+
+Round 2 [Aug 30]
+MC Oran          1-1 JSM Béjaïa
+
+Coupe Nationale
+
+Round 1 [Dec 27]
+USM Sétif        1-0 MC Oran
+
+Championnat Division 2
+
+Round 1 [Aug 24]
+MO Béjaïa        2-0 USM Blida
+"""
+
+
+def test_a_club_with_an_accent_in_its_name_keeps_its_games():
+    assert [(r[0], r[1], r[2]) for r in R.league_rounds(ALG08, "Algeria 2007/08")][:2] == [
+        ("2007-08-23", "ES Sétif", "MC Oran"), ("2007-08-23", "JSM Béjaïa", "CR Bélouizdad")]
+
+
+def test_the_french_headings_end_the_league_but_not_in_the_list_of_contents():
+    assert len(R.league_rounds(ALG08, "Algeria 2007/08")) == 3
+    for h in ("Coupe du Trône", "Championnat Division 3 (Division Inter-Régions)", "Ligue 2", "GNF 2", "Second Level (Division d'Honneur)", "Super Coupe"):
+        assert R.LEAGUE_END_FR.match(h), h
+    for h in ("Championnat National Division 1", "Ligue 1", "Round 2", "Round 20 [Apr 4]", "Final Table:"):
+        assert not R.LEAGUE_END_FR.match(h), h

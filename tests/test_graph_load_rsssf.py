@@ -94,6 +94,21 @@ def _league(tmp_path, rows):
     return S
 
 
+def test_the_games_after_the_league_on_the_page_are_not_the_leagues(tmp_path):
+    clubs = ["A", "B", "C", "D"]
+    league = [[f"2000-01-{1 + i:02d}", h, None, a, None, 1, 0, []] for i, (h, a) in enumerate((h, a) for h in clubs for a in clubs if h != a)]
+    cup = [[f"2000-03-{1 + i:02d}", f"Cup {2 * i}", None, f"Cup {2 * i + 1}", None, 2, 1, []] for i in range(4)]
+    assert rsssf.league_part(league) == 12 and rsssf.league_part(league + cup) == 12
+    # a club that comes in late (a name spelled a second way) ends nothing
+    assert rsssf.league_part(league + [["2000-02-01", "A", None, "Dee", None, 0, 0, []]] + league) == 25
+    # a cup's rounds alone are no league
+    assert rsssf.league_part([["2000-03-01", f"K {2 * i}", None, f"K {2 * i + 1}", None, 2, 1, []] for i in range(20)]) == 0
+    S, G = _league(tmp_path, league + cup), Graph(str(tmp_path / "t.db"))
+    out = rsssf.load(G, Registry(), S, codes=["uae"])
+    assert out["league_matches"] == 12 and out["league_not_the_league"] == 4
+    assert G.c.execute("SELECT COUNT(*) FROM team WHERE name LIKE 'Cup %'").fetchone()[0] == 0
+
+
 def test_two_meetings_of_one_source_stay_two_matches(tmp_path):
     """RSSSF dates both legs of a pairing the same (or next) day: A v B and B v A, or the same pairing listed twice with
     another score, are two meetings, never one match with a score conflict between RSSSF and itself"""

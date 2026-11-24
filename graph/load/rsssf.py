@@ -39,6 +39,30 @@ def _label(G, tid, name=None):
     t = (r[0] if r else None) or name or ""
     return re.sub(r"[^a-z0-9]+", " ", unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode().lower()).strip()
 
+def league_part(ms):
+    """How many of a season's games, in the page's order, are the league's. A page lists the league, then the cup and the lower
+    divisions under headings of every wording, and a heading db/rsssf.py did not know left their games in the league's list
+    (24 Nov 2026: Algeria 2022/23 was 1,901 games of 191 clubs). The games tell it themselves: once the first round is over
+    every club has been seen, so a later run of games that brings six clubs never seen is another competition beginning. And a
+    list where nearly every game brings a new club is no league at all (a cup's rounds: Algeria 1946 to 1951)."""
+    seen, settled, keep = set(), False, len(ms)
+    for i, m in enumerate(ms):
+        new = {m[1], m[3]} - seen
+        if not new:
+            settled = True
+        elif settled:
+            ahead = set()
+            for x in ms[i:i + 8]:
+                ahead |= {x[1], x[3]} - seen
+            if len(ahead) >= 6:
+                keep = i
+                break
+        seen |= {m[1], m[3]}
+    if len(seen) > 24 and len(seen) >= 0.8 * keep:
+        return 0
+    return keep
+
+
 def load(G, reg, S, codes=None):
     if codes is None:
         try:
@@ -47,7 +71,7 @@ def load(G, reg, S, codes=None):
         except Exception as e:
             print(f"db.rsssf not importable: {e}", flush=True)
             codes = []
-    n = {"seasons": 0, "standings": 0, "champions": 0, "champion_conflicts": 0, "matches": 0, "matches_linked": 0, "league_matches": 0, "league_linked": 0, "league_bad": 0, "goals": 0}
+    n = {"seasons": 0, "standings": 0, "champions": 0, "champion_conflicts": 0, "matches": 0, "matches_linked": 0, "league_matches": 0, "league_linked": 0, "league_bad": 0, "league_not_the_league": 0, "goals": 0}
     written, idx = set(), MatchIndex(G)
     mine = {}            # the matches RSSSF's own league rows claimed in this build: {mid: (hs, as_) as the row gave it}
 
@@ -156,7 +180,12 @@ def load(G, reg, S, codes=None):
                     G.c.execute("INSERT OR IGNORE INTO standing VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                                 (eid, "", pos, team(code, name, fid), p, w, dr, l, gf, ga, pts, "rsssf"))
                     n["standings"] += 1
-            for d, hn, hid, an, aid, hs, as_, goals in s.get("league_matches") or []:
+            games = s.get("league_matches") or []
+            keep = league_part(games)
+            if keep < len(games):
+                n["league_not_the_league"] += len(games) - keep
+                print(f"rsssf {code} {season}: {keep} of {len(games)} games are the league's", flush=True)
+            for d, hn, hid, an, aid, hs, as_, goals in games[:keep]:
                 try:
                     league_match(code, eid, d, hn, hid, an, aid, hs, as_, goals)
                 except (ValueError, TypeError) as e:      # one bad row (a date that does not exist) never stops the loader

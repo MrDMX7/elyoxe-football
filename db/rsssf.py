@@ -220,10 +220,19 @@ def parse_season(t, label):
 # «[Adib Obaid (12'; 64'), Dane Fayne (21') - Campo Romeo (52')]» (home - away). An «og» goal stays on the side it counted for.
 MONTHS = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), 1)}
 DATE_IN = re.compile(r"\[\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})\b[^\]]*\]", re.I)
-MATCH = re.compile(r"^\s*([A-Za-z][A-Za-z'.\- ()]*?)\s+(\d{1,2})-(\d{1,2})\s+([A-Za-z][A-Za-z'.\- ()]*?)\s*(\[.*)?$")
+# a club's name is letters of any alphabet («ES Sétif», «JSM Béjaïa»): with A-Z alone every game of an accented club was dropped
+# (24 Nov 2026: Algeria 2015/16 kept 132 of 240 games, the twelve clubs without an accent)
+_L = r"[^\W\d_]"
+MATCH = re.compile(r"^\s*(%s(?:%s|['.\- ()])*?)\s+(\d{1,2})-(\d{1,2})\s+(%s(?:%s|['.\- ()])*?)\s*(\[.*)?$" % (_L, _L, _L, _L))
 # a heading at the line's start: «Cups 1999/2000», «Emir's Cup», «Super Cup 2002», «Promoted: ...», «Second Division» (never a
 # table row's «Relegated» or an indented «no relegation this season»)
 LEAGUE_END = re.compile(r"^(?:(?:[A-Za-z][A-Za-z'.\-]*\s+)*cups?\b.*|promoted\b.*|relegated\b.*|(?:second|first|third) division\b.*|division\s+\d.*)$", re.I)
+# the same headings as the French-speaking pages write them («Coupe Nationale», «Championnat Division 2», «Division 3
+# (Inter-Régions)», «Ligue 2», «GNF 2», «Second Level»): the page's list of contents names them too, so they end the league
+# only once it has begun. 24 Nov 2026: Algeria 2007/08 filed 118 clubs in the top flight, the cup's and two lower divisions'.
+LEAGUE_END_FR = re.compile(r"^(?:(?:super ?)?coupe\b.*|troph[ée]e\b.*|(?:championnat\s+)?(?:(?:de\s+)?(?:division|ligue|gnf|botola|nationale?|niveau|level)\s*(?:2|3|4|ii|iii|iv|deux|trois|two|three)\b.*)"
+                           r"|(?:championnat\s+)?(?:de\s+)?(?:deuxi[eè]me|troisi[eè]me|2[eè]me|3[eè]me|second|third|2nd|3rd)\s+(?:division|level|ligue|niveau)\b.*"
+                           r"|(?:regional|preliminary) (?:phase|rounds?)\b.*|inter-?r[ée]gions?\b.*|(?:division )?amateurs?\b.*)$", re.I)
 NOT_SCORERS = re.compile(r"\b(aet|pen|awd|abd|annulled|walkover|w/o)\b", re.I)
 
 
@@ -318,7 +327,8 @@ def league_rounds(t, label):
     i = 0
     while i < len(lines):
         l = lines[i]
-        if cup_heading(lines, i) or (len(l.strip()) <= 60 and l[:1].strip() and not MATCH.match(l) and LEAGUE_END.match(l.strip())):
+        if cup_heading(lines, i) or (len(l.strip()) <= 60 and l[:1].strip() and not MATCH.match(l)
+                                     and (LEAGUE_END.match(l.strip()) or (out and LEAGUE_END_FR.match(l.strip())))):
             break
         m = MATCH.match(l)
         if not m:
