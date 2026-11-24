@@ -100,6 +100,20 @@ def test_games_from_before_the_competition_existed_leave_it(tmp_path):
     assert out["detached"] == 2                     # its two years (1982, 1983) once split
 
 
+def test_a_sources_own_record_of_the_competition_keeps_its_seasons_from_before_the_champions_list(tmp_path):
+    # schochastics' «switzerland» is the Super League (same_comp): its 1920-1993 seasons stay under a champions list from 1994
+    G, reg, cid = world(tmp_path, fid=69)
+    G.xref("competition", cid, "sch", "switzerland", "sch-native")
+    ed(G, reg, cid, "1993/1994", "fotmob-trophy", fid=69, champion=1)
+    old = ed(G, reg, cid, "1950/1951", "sch", fid=69)
+    game(G, 1, old, "1950-09-03", 3, 4)
+    game(G, 2, old, "1951-04-08", 4, 3)
+    out = seasons.load(G, reg, None)
+    assert labels(G, cid) == ["1950/1951", "1993/1994"]
+    assert G.c.execute("SELECT count(*) FROM match").fetchone()[0] == 2
+    assert out.get("detached", 0) == 0
+
+
 def test_a_calendar_leagues_games_filed_july_june_go_to_their_years(tmp_path):
     # Argentina played its league in calendar years until 1990: schochastics' «1936/1937» is the end of 1936 and the start of 1937
     G, reg, cid = world(tmp_path, fid=112)

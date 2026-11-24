@@ -241,13 +241,18 @@ class Pass:
                 lab[eid] = m.group(2)
             elif re.fullmatch(r"\d{4}", v) and f"{int(v) - 1}/{v}" in fms:
                 lab[eid] = f"{int(v) - 1}/{v}"
-        # 3. before the first champion, with no honour and none of FotMob's games: not this competition's
+        # 3. before the first champion, with no honour and none of FotMob's games: not this competition's. A source whose own
+        # record of the competition is this one (not a vote of its games) keeps its seasons: schochastics' Swiss league of
+        # 1920-1993 under a champions list that starts in 1994 (24 Nov 2026: 74 seasons, 14,260 games)
+        own = {s for (s,) in q("SELECT DISTINCT source FROM xref WHERE type='competition' AND tifo_id=? AND method <> 'vote'", (cid,))} - set(FM)
         champs = [_start(lab[e] or s) for e, s in eds if q("SELECT 1 FROM honour WHERE eid=? AND kind='champion' AND src <> 'tifo' LIMIT 1", (e,))]
         first = min((y for y in champs if y), default=None)
         for eid, season in eds:
             y = _start(lab[eid] or season)
             if first is None or y is None or y >= first or self.x(eid, FM) or q("SELECT 1 FROM honour WHERE eid=? LIMIT 1", (eid,)) \
                     or q("SELECT 1 FROM match WHERE eid=? AND src='fotmob' LIMIT 1", (eid,)) or not q("SELECT 1 FROM match WHERE eid=? LIMIT 1", (eid,)):
+                continue
+            if own and q(f"SELECT 1 FROM match WHERE eid=? AND src IN ({','.join('?' * len(own))}) LIMIT 1", (eid, *own)):
                 continue
             self.G.c.execute("UPDATE match SET eid=? WHERE eid=?", (self.aside_edition(cid, season), eid))
             self.G.c.execute("DELETE FROM standing WHERE eid=?", (eid,))

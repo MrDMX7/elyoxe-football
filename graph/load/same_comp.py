@@ -282,6 +282,10 @@ def load(G, reg, S):
     why = []
     merged = candidates(G.c, keys=keys, fixed=fixed, never={p for p in never if len(p) == 2}, explain=why)
     G.remap_many("competition", merged)
+    for a, b in merged:                         # the joined source's own record is this competition (seasons.py keeps its old seasons)
+        for src, sid in keys.get(a, ()):
+            if src != "fotmob" and not G.c.execute("SELECT 1 FROM xref WHERE type='competition' AND source=? AND source_id=?", (src, str(sid))).fetchone():
+                G.xref("competition", b, src, sid, "same-comp")
     for line in why:
         print("  same_comp " + line, flush=True)
     return {"described": made, "made": minted, "merged": len(merged), "competitions": len({k for _, k in merged})}

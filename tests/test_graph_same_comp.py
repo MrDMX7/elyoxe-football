@@ -134,6 +134,17 @@ def test_the_curated_list_joins_a_sources_league_to_fotmobs_and_makes_fotmobs_re
     assert G.c.execute("select tifo_id from xref where type='competition' and source='sch'").fetchall() == [(fm,)]
 
 
+def test_a_joined_record_without_a_source_link_gets_one(tmp_path, monkeypatch):
+    G, reg = world(tmp_path), Registry()
+    cid = reg.mint("competition", "martj42", "AFF Championship")
+    G.put("competition", {"cid": cid, "name": "AFF Championship", "kind": "cup"}, "martj42")
+    tables(G, cid, range(1996, 1998), "martj42")
+    monkeypatch.setattr(same_comp, "curated", lambda: ({"martj42|AFF Championship": 9265}, []))
+    same_comp.load(G, reg, None)
+    fm = reg.get("competition", "fotmob", 9265)
+    assert G.c.execute("select tifo_id, method from xref where type='competition' and source='martj42'").fetchall() == [(fm, "same-comp")]
+
+
 def test_every_curated_id_is_a_number_and_no_key_is_listed_twice():
     same, apart = same_comp.curated()
     assert same and all(isinstance(v, int) and "|" in k for k, v in same.items())
