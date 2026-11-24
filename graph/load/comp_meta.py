@@ -13,6 +13,9 @@ In this order:
      cup is a cup, a super cup by name is a super cup. Never the competitions of the index (competitions.yaml);
   5. graph/comp_meta.yaml `names`, over everything;
   6. a name two competitions share takes the country: «Moldova Super Cup», «كأس السوبر (مولدوفا)».
+  7. a record that holds several FotMob numbers (a stage joined to it) keeps one as `fotmob`: the index's, else its own
+     lowest; the others stay as `fotmob_stage`. The files of a competition are written under its FotMob number, and with two
+     the last read won: the Champions League under a qualifying stage's number.
 Rebuilt in every build; runs after graph/load/comp_names.py (the Arabic names) and before graph/load/mens.py."""
 import json
 import os
@@ -249,6 +252,18 @@ def load(G, reg, S, path=CURATED):
             if new:
                 c.execute(f"UPDATE competition SET {FIELDS[col - 1]}=? WHERE cid=?", (new, cid))
                 out["names_told_apart"] += 1
+    # 7. one FotMob number a competition: every reader takes a record's FotMob id as the one it is published under
+    held = defaultdict(list)
+    for cid, sid in q("SELECT tifo_id, source_id FROM xref WHERE type='competition' AND source='fotmob'"):
+        held[cid].append(str(sid))
+    for cid, ids in held.items():
+        if len(ids) < 2:
+            continue
+        own = min(ids, key=lambda x: (x not in listed, is_stage(x), int(x) if x.isdigit() else 0, x))
+        for sid in ids:
+            if sid != own:
+                c.execute("UPDATE OR REPLACE xref SET source='fotmob_stage' WHERE type='competition' AND tifo_id=? AND source='fotmob' AND source_id=?", (cid, sid))
+                out["numbers_set_aside"] += 1
     out["unnamed"] = sum(bool(PLACEHOLDER.match(n or "")) for (n,) in q("SELECT name FROM competition"))
     c.commit()
     return dict(out)

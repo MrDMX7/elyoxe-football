@@ -156,5 +156,19 @@ def test_a_name_two_competitions_share_takes_the_country(tmp_path):
     assert out["names_told_apart"] == 4
 
 
+def test_a_competition_keeps_one_fotmob_number_its_own(tmp_path, monkeypatch):
+    G = world(tmp_path)
+    comp(G, 1, "Major League", "fotmob", 99130, name_ar="الدوري الكبير", kind="league", country="US")
+    comp(G, 2, "FotMob 901234", "fotmob", 901234, name_ar="الدوري الكبير")
+    comp(G, 3, "Old Cup", "fotmob", 99700, kind="cup")
+    G.xref("competition", 3, "fotmob", 99200, "same-comp")
+    G.xref("competition", 3, "fotmob", 99500, "same-comp")
+    monkeypatch.setattr(comp_meta, "index_ids", lambda: {"99500"})
+    out = run(G, tmp_path)
+    ids = lambda src: sorted(G.c.execute("SELECT tifo_id, source_id FROM xref WHERE type='competition' AND source=?", (src,)).fetchall())
+    assert ids("fotmob") == [(1, "99130"), (3, "99500")]          # its own before a stage's; the index's before any
+    assert ids("fotmob_stage") == [(1, "901234"), (3, "99200"), (3, "99700")] and out["numbers_set_aside"] == 3
+
+
 def test_it_runs_once_the_competitions_are_one_and_before_the_womens_leave():
     assert ORDER.index("same_comp") < ORDER.index("comp_names") < ORDER.index("comp_meta") < ORDER.index("mens") < ORDER.index("seasons")
