@@ -19,3 +19,17 @@ def test_loads_two_matches(tmp_path):
     assert G.c.execute("select season from edition order by season").fetchall() == [("2026/2027",)]
     assert G.c.execute("select count(*) from appearance where played=1").fetchone()[0] >= 5
     assert G.c.execute("select count(*) from xref where type='match'").fetchone()[0] == 2
+
+
+def test_an_old_id_answered_with_a_game_that_has_its_own_id_is_dropped(tmp_path):
+    mx = tmp_path / "db" / ".cache" / "fm" / "mx"
+    mx.mkdir(parents=True)
+    (mx / "900.json").write_text(json.dumps(REC))
+    (mx / "5000900.json").write_text(json.dumps(dict(REC, id=5000900)))
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    n = fotmob_matches.load(G, reg, Sources(str(tmp_path), s3=False))
+    assert (n["matches"], n["stale_ids"]) == (1, 1)
+    mid = reg.get("match", "fotmob", "5000900")
+    assert G.c.execute("select mid from match").fetchall() == [(mid,)]
+    assert G.c.execute("select distinct mid from appearance").fetchall() == [(mid,)]
+    assert G.c.execute("select source_id from xref where type='match'").fetchall() == [("5000900",)]

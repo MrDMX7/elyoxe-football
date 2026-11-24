@@ -14,7 +14,8 @@ def load(G, reg, S, limit=None):
         files = files[:limit]
     labels, calendar = fm.season_map(S)
     comps, done_c, done_e = fm.comp_info(S), set(), set()
-    n = skipped = 0
+    n = skipped = stale = 0
+    seen = {}            # {(kick-off, home, away): mid}
     for f in files:
         rec = S.read(os.path.join(base, f))
         if not rec or not rec.get("home") or not rec.get("away") or not rec.get("date") or rec["home"][0] is None:
@@ -34,6 +35,17 @@ def load(G, reg, S, limit=None):
             G.put("edition", {"eid": eid, "cid": cid, "season": season}, "fotmob")
             G.xref("edition", eid, "fotmob", f"{c}|{season}", "fotmob-native")
         rows = match_rows(rec, eid, reg)
+        # an old id FotMob now answers with a game of today (24 Nov 2026: 2465133, a 2015 id, is Cruzeiro v Coritiba of
+        # February 2026, filed in the 2015 season): the game is there again under its own, higher id, and that one stays
+        key = (rec["date"][:16], rec["home"][0], rec["away"][0])
+        for m in rows.get("match", ()):
+            old = seen.get(key)
+            if old is not None and old != m["mid"]:
+                for t in ("match", "appearance", "event", "match_coach"):
+                    G.c.execute(f"DELETE FROM {t} WHERE mid=?", (old,))
+                G.c.execute("DELETE FROM xref WHERE type='match' AND tifo_id=?", (old,))
+                stale += 1
+            seen[key] = m["mid"]
         for t in ENT:
             for r in rows.get(t, ()):
                 G.put(t, r, "fotmob")
@@ -50,4 +62,4 @@ def load(G, reg, S, limit=None):
         raise RuntimeError(f"no FotMob match read from {base}")
     G.c.execute("""UPDATE edition SET start=(SELECT min(substr(date,1,10)) FROM match WHERE match.eid=edition.eid),
                    end=(SELECT max(substr(date,1,10)) FROM match WHERE match.eid=edition.eid)""")
-    return {"matches": n, "skipped": skipped}
+    return {"matches": n - stale, "skipped": skipped, "stale_ids": stale}
