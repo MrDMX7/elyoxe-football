@@ -55,7 +55,14 @@ def load(G, reg, S):
     code = {}
     for r in rows:
         code.setdefault(r[1], r[9])
-    rows = [(*r[:5], league_of(r[5], r[6], r[9], code.get(r[2])), *r[6:]) for r in rows]
+    # the dataset left some seasons without a league (24 Nov 2026: Australia's NSL 1977-2004 with Haiti, Panama, the Philippines,
+    # Indonesia and Bhutan, 8,502 games under one «None»): each under the league its country's other seasons carry
+    named = defaultdict(Counter)
+    for r in rows:
+        if r[5] and r[5] != "ddr" and r[6] == "national":
+            named[r[9]][r[5]] += 1
+    own = {cc: n.most_common(1)[0][0] for cc, n in named.items()}
+    rows = [(*r[:5], league_of(r[5], r[6], r[9], code.get(r[2])) or own.get(r[9]) or f"none-{r[9]}", *r[6:]) for r in rows]
     # clubs the crosswalk lacks: the same date+score votes, on the seasons FotMob covers (since 2010/11)
     voted = vote_teams(G, reg, "sch", [(str(r[0]), r[1], r[2], r[3], r[4]) for r in rows], since="2010-07-01")
     for k, tid in voted.items():

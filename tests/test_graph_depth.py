@@ -195,3 +195,21 @@ def test_a_fotmob_match_under_a_stage_id_moves_to_the_league_its_schochastics_tw
     assert G.c.execute("select count(*) from match where eid=?", (es,)).fetchone()[0] == 0
     assert G.c.execute("select count(*) from match where eid=?", (e11,)).fetchone()[0] == 2
     assert G.c.execute("select count(*) from edition where cid=? and season='2011/2012'", (lg,)).fetchone()[0] == 1
+
+
+def test_a_season_the_dataset_left_without_a_league_goes_to_its_countrys_league(tmp_path):
+    # 24 Nov 2026: Australia's NSL 1977-2004 sat with Haiti's, Panama's and Bhutan's games in one competition named «None»
+    import duckdb
+    from graph.load import schochastics
+    db = tmp_path / "db" / ".cache"
+    db.mkdir(parents=True)
+    pq = str(db / "games.parquet").replace("\\", "/")
+    duckdb.sql(f"""copy (select * from (values
+        (date '1977-04-02', 'canberra', 'hellas', 1, 3, NULL, 'national', 'Canberra City', 'West Adelaide', 'AU'),
+        (date '2005-08-26', 'sydney', 'victory', 1, 1, 'australia', 'national', 'Sydney FC', 'Melbourne Victory', 'AU'),
+        (date '2009-06-20', 'druk', 'yeedzin', 2, 0, NULL, 'national', 'Druk Star', 'Yeedzin', 'BT'))
+        t(date, home_ident, away_ident, gh, ga, competition, level, home, away, home_code)) to '{pq}' (format parquet)""")
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    schochastics.load(G, reg, Sources(str(tmp_path), s3=False))
+    comps = dict(G.c.execute("select c.name, count(*) from match m join edition e using(eid) join competition c using(cid) group by 1"))
+    assert comps == {"australia": 2, "none-BT": 1}

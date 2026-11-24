@@ -1,0 +1,172 @@
+# competitions the games and the champion lists cannot join by themselves: «source|its id»: FotMob's league id.
+# A league a source files under its country (schochastics) or its own code (Transfermarkt) is the country's top flight
+# through all its names; ids checked against FotMob's league list and the clubs of each record, 24 Nov 2026.
+# apart: pairs never joined, whatever their games say.
+same:
+  "sch|albania": 260
+  "sch|algeria": 516
+  "sch|argentina": 112
+  "sch|armenia": 118
+  "sch|australia": 113
+  "sch|austria": 38
+  "sch|azerbaijan": 262
+  "sch|bangladesh": 10443
+  "sch|belarus": 263
+  "sch|belgium": 40
+  "sch|bolivia": 144
+  "sch|bosnia-herzegovina": 267
+  "sch|brazil": 268
+  "sch|bulgaria": 270
+  "sch|chile": 273
+  "sch|china-pr": 120
+  "sch|colombia": 274
+  "sch|costa-rica": 121
+  "sch|croatia": 252
+  "sch|cyprus": 136
+  "sch|czech-republic": 122
+  "sch|denmark": 46
+  "sch|ecuador": 246
+  "sch|egypt": 519
+  "sch|el-salvador": 335
+  "sch|england": 47
+  "sch|estonia": 248
+  "sch|faroe-islands": 250
+  "sch|finland": 51
+  "sch|france": 53
+  "sch|georgia": 439
+  "sch|germany": 54
+  "sch|ghana": 522
+  "sch|greece": 135
+  "sch|guatemala": 336
+  "sch|honduras": 337
+  "sch|hungary": 212
+  "sch|iceland": 215
+  "sch|india": 9478
+  "sch|indonesia": 8983
+  "sch|iran": 523
+  "sch|iraq": 524
+  "sch|ireland-republic": 126
+  "sch|israel": 127
+  "sch|italy": 55
+  "sch|japan": 223
+  "sch|kazakhstan": 225
+  "sch|kuwait": 529
+  "sch|latvia": 226
+  "sch|lithuania": 228
+  "sch|luxembourg": 229
+  "sch|macedonia-fyr": 249
+  "sch|malaysia": 8985
+  "sch|mexico": 230
+  "sch|moldova": 231
+  "sch|montenegro": 232
+  "sch|morocco": 530
+  "sch|netherlands": 57
+  "sch|new-zealand": 8870
+  "sch|nigeria": 533
+  "sch|northern-ireland": 129
+  "sch|norway": 59
+  "sch|panama": 9039
+  "sch|paraguay": 199
+  "sch|peru": 131
+  "sch|poland": 196
+  "sch|portugal": 61
+  "sch|qatar": 535
+  "sch|romania": 189
+  "sch|russia": 63
+  "sch|saudi-arabia": 536
+  "sch|scotland": 64
+  "sch|serbia": 182
+  "sch|singapore": 461
+  "sch|slovakia": 176
+  "sch|slovenia": 173
+  "sch|south-africa": 537
+  "sch|korea-republic": 9080
+  "sch|spain": 87
+  "sch|sweden": 67
+  "sch|switzerland": 69
+  "sch|tanzania": 9066
+  "sch|thailand": 8984
+  "sch|tunisia": 544
+  "sch|turkey": 71
+  "sch|ukraine": 441
+  "sch|united-arab-emirates": 538
+  "sch|united-states": 130
+  "sch|uruguay": 161
+  "sch|uzbekistan": 540
+  "sch|venezuela": 339
+  "sch|vietnam": 9088
+  "sch|wales": 116
+  "sch|UEFA CL": 42
+  "sch|UEFA EL": 73
+  "sch|UEFA CONF L": 10216
+  "sch|UEFA SC": 74
+  "sch|AFC CL": 525
+  "sch|AFC Pokal": 9469
+  "sch|AFC Pres. Cup": 9470
+  "sch|CAF CL": 526
+  "sch|CAF CC": 9468
+  "sch|CAF SC": 9467
+  "sch|CONCACAF CC": 297
+  "sch|Copa Lib": 45
+  "sch|Copa Sud": 299
+  "sch|Recopa": 491
+  "sch|Fifa Club": 78
+  "tm|FAC": 132
+  "tm|CGB": 133
+  "tm|SFA": 137
+  "tm|CIT": 141
+  "tm|GRP": 145
+  "tm|UKRP": 442
+  "tm|SUC": 139
+  "tm|USC": 74
+  "tm|SCI": 222
+  "tm|NLSC": 237
+  "tm|BESC": 266
+  "tm|RUSS": 195
+  "tm|CLQ": 10611
+  "tm|ELQ": 10613
+  "tm|ECLQ": 10615
+  "tm|CL": 42
+  "tm|EL": 73
+  "tm|UCOL": 10216
+  "tm|KLUB": 78
+  "tm|FIWC": 77
+  "tm|EURO": 50
+  "tm|COPA": 44
+  "tm|AFAC": 290
+  "tm|AFCN": 289
+  "tm|CDR": 138
+  "tm|DFB": 209
+  "tm|NLP": 235
+  "tm|DKP": 242
+  "tm|RUP": 193
+  "tm|PL1": 196
+  "tm|TS1": 122
+  "tm|RO1": 189
+  "tm|SER1": 182
+  "tm|C1": 69
+  "tm|A1": 38
+  "tm|KR1": 252
+  "tm|SE1": 67
+  "tm|NO1": 59
+  "tm|AUS1": 113
+  "tm|JAP1": 223
+  "tm|MEX1": 230
+  "tm|RSK1": 9080
+  "tm|COL1": 274
+  "tm|IT1": 55
+  "tm|FR1": 53
+  "tm|BRA1": 268
+  "tm|SA1": 536
+  "tm|L1": 54
+  "tm|BE1": 40
+  "tm|NL1": 57
+  "tm|PO1": 61
+  "tm|TR1": 71
+  "tm|GR1": 135
+  "tm|RU1": 63
+  "tm|UKR1": 441
+  "tm|DK1": 46
+  "tm|SC1": 64
+  "tm|ARG1": 112
+apart: []
