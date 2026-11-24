@@ -6,10 +6,13 @@ gives somewhere else. A season left with no game, champion, table or note (a lis
 source's number alone, left with no season, is none. A birth date that is no date is no birth date. A man in a game before
 he was thirteen, or past fifty in one a source matched to him by his name, is another man of that name (Hassan El Shazly of
 1963 under the one born in 1995): those games go to a record of their own; where the source knew him by its own number, the
-birth date is the doubt and leaves."""
+birth date is the doubt and leaves. A referee or a ground written twice under one name (an accent, a hyphen, a dot after an
+initial; a ground with its city and without) is one: grounds of one name in two cities stay two, and a referee known by
+an initial joins his namesake only where both took games of one competition."""
 import datetime
 import os
 import re
+import unicodedata
 
 from graph.load.tm import rows
 
@@ -94,6 +97,57 @@ def namesakes(G, reg):
     return n
 
 
+def fold(s):
+    s = unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", " ", s).strip()
+
+
+def twice(G, reg):
+    """referees and grounds one source or two wrote twice"""
+    n, pairs = {"referees_joined": 0, "grounds_joined": 0}, {"referee": [], "stadium": []}
+    by = {}
+    for rid, name, country in G.c.execute("SELECT rid, name, country FROM referee ORDER BY rid"):
+        if fold(name):
+            by.setdefault(fold(name), []).append((rid, country))
+    took = lambda rid: {c for (c,) in G.c.execute("SELECT DISTINCT e.cid FROM match m JOIN edition e ON e.eid = m.eid WHERE m.rid=?", (rid,))}
+    for key, group in sorted(by.items()):
+        if len(group) < 2 or len({c for _, c in group if c}) > 1:
+            continue
+        keep = group[0][0]
+        initial = len(key.split()[0]) == 1
+        for rid, _ in group[1:]:
+            if initial and not took(keep) & took(rid):
+                continue
+            pairs["referee"].append((rid, reg.merge("referee", keep, rid)))
+    by = {}
+    for sid, name, city in G.c.execute("SELECT sid, name, city FROM stadium ORDER BY sid"):
+        if fold(name):
+            by.setdefault(fold(name), []).append((sid, fold(city)))
+    for key, group in sorted(by.items()):
+        if len(group) < 2:
+            continue
+        towns = []                                    # each town's records; a town is one where one name opens the other
+        for sid, city in group:
+            if city:
+                for t in towns:
+                    if any(c.startswith(city) or city.startswith(c) for c in t["names"]):
+                        t["names"].add(city), t["ids"].append(sid)
+                        break
+                else:
+                    towns.append({"names": {city}, "ids": [sid]})
+        if len(towns) > 1:                            # two grounds of one name: a record with no city could be either
+            groups = [t["ids"] for t in towns]
+        else:
+            groups = [[sid for sid, _ in group]]
+        for ids in groups:
+            for sid in ids[1:]:
+                pairs["stadium"].append((sid, reg.merge("stadium", min(ids), sid)))
+    for t, k in (("referee", "referees_joined"), ("stadium", "grounds_joined")):
+        G.remap_many(t, pairs[t])
+        n[k] = len(pairs[t])
+    return n
+
+
 def load(G, reg, S, today=None):
     ahead = str((today or datetime.date.today()).year + 2)
     n = {"moves_to_itself": G.c.execute("DELETE FROM transfer WHERE from_tid = to_tid").rowcount, "dates_set_right": 0, "dates_dropped": 0}
@@ -118,5 +172,6 @@ def load(G, reg, S, today=None):
     n["empty_competitions"] = G.c.execute("DELETE FROM competition WHERE cid IN (SELECT cid FROM bare)").rowcount
     G.c.execute("DROP TABLE bare")
     n.update(namesakes(G, reg))
+    n.update(twice(G, reg))
     G.c.commit()
     return n

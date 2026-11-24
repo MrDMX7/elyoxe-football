@@ -21,7 +21,8 @@ def test_a_move_to_the_same_club_leaves_and_a_date_a_millennium_ahead_takes_its_
     move(G, 2, 10, 11, "3026-06-30", "2025/2026")
     move(G, 3, 10, 11, "3026-06-30", None)
     assert tidy.load(G, Registry(), None, today=datetime.date(2026, 11, 24)) == {
-        "moves_to_itself": 1, "dates_set_right": 1, "dates_dropped": 1, "empty_seasons": 0, "empty_competitions": 0, "births_dropped": 0, "namesakes": 0}
+        "moves_to_itself": 1, "dates_set_right": 1, "dates_dropped": 1, "empty_seasons": 0, "empty_competitions": 0, "births_dropped": 0, "namesakes": 0,
+        "referees_joined": 0, "grounds_joined": 0}
     assert G.c.execute("SELECT pid, date FROM transfer ORDER BY pid").fetchall() == [(1, "2015-07-01"), (2, "2026-06-30")]
 
 
@@ -101,6 +102,27 @@ def test_a_man_too_young_for_a_game_is_a_namesake_or_his_birth_date_is_wrong(tmp
     assert G.c.execute("SELECT name, born FROM player ORDER BY pid").fetchall() == [
         ("Hassan El Shazly", "1995-02-02"), ("Young Regular", None), ("No Date", None), ("Hassan El Shazly", None)]
     assert integrity.compute(G)["born_after_playing"] == 0
+
+
+def test_a_referee_or_a_ground_written_twice_is_one(tmp_path):
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    assert [reg.mint("referee", "x", i) for i in "abcdef"] == [1, 2, 3, 4, 5, 6]
+    assert [reg.mint("stadium", "x", i) for i in "abcdef"] == [1, 2, 3, 4, 5, 6]
+    for cid in (1, 2):
+        G.put("competition", {"cid": cid, "name": f"C{cid}", "kind": "league"}, "x")
+        G.put("edition", {"eid": cid, "cid": cid, "season": "2001"}, "x")
+    for rid, name, country in ((1, "Benoit Bastien", None), (2, "Benoît Bastien", "France"), (3, "A Romeo", None), (4, "A. Romeo", None), (5, "B Knight", None), (6, "B. Knight", None)):
+        G.put("referee", {"rid": rid, "name": name, "country": country}, "x")
+    for sid, name, city in ((1, "Parc des Princes", None), (2, "Parc des Princes", "Paris"), (3, "Markaziy Stadion", "Qarshi (Karshi)"), (4, "Markaziy Stadion", "Namangan"),
+                            (5, "Markaziy stadion", "Qarshi"), (6, "Markaziy Stadion", None)):
+        G.put("stadium", {"sid": sid, "name": name, "city": city}, "x")
+    for mid, eid, rid, sid in ((1, 1, 2, 2), (2, 1, 3, 5), (3, 1, 4, 6), (4, 1, 5, 1), (5, 2, 6, 4)):
+        G.put("match", {"mid": mid, "eid": eid, "date": f"2001-03-0{mid}", "home": 1, "away": 2, "hs": 1, "as_": 0, "rid": rid, "sid": sid}, "x")
+    out = tidy.load(G, reg, None)
+    assert (out["referees_joined"], out["grounds_joined"]) == (2, 2)
+    assert G.c.execute("SELECT rid, name, country FROM referee ORDER BY rid").fetchall() == [(1, "Benoit Bastien", "France"), (3, "A Romeo", None), (5, "B Knight", None), (6, "B. Knight", None)]
+    assert G.c.execute("SELECT sid, city FROM stadium ORDER BY sid").fetchall() == [(1, "Paris"), (3, "Qarshi (Karshi)"), (4, "Namangan"), (6, None)]
+    assert G.c.execute("SELECT rid, sid FROM match ORDER BY mid").fetchall() == [(1, 1), (3, 3), (3, 6), (5, 1), (6, 4)]
 
 
 def test_it_is_the_last_pass():
