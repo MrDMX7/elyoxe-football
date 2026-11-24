@@ -1265,7 +1265,7 @@ ${items}
       body:`<h1>بيانات تيفو للمطورين</h1><p class="muted">نفس الملفات اللي يقرأها الموقع، JSON مضغوط بـgzip على <code dir="ltr">https://tifo.elyoxe.com/v1/</code>. بلا مفتاح ولا تسجيل، ومن أي موقع (CORS مفتوح للقراءة).</p>
 <div class="tblwrap"><table class="st"><thead><tr><th>الملف</th><th>وش فيه</th></tr></thead><tbody>${rows}</tbody></table></div>
 <h2>الشروط</h2><ul><li>مجاني للاستخدام الشخصي والمواقع والتطبيقات، بشرط رابط ظاهر إلى <a href="https://tifo.elyoxe.com/">tifo.elyoxe.com</a> قرب الأرقام.</li><li>المباشر يتحدّث كل 20 ثانية؛ لا تستعلم أسرع من كل 10 ثوانٍ لكل ملف. الكاش من <code>Cache-Control</code> في الرد.</li><li>الأرقام من مصادر عامة وتُدقّق يومياً (<a href="/v1/audit/latest.json" dir="ltr">audit/latest.json</a>)؛ لو لقيت غلط راسلنا على <a href="mailto:hello@elyoxe.com">hello@elyoxe.com</a>.</li><li>ما في ضمان توافر، والهيكل قد يتغيّر مع إشعار في هذي الصفحة.</li></ul>
-<h2>مثال</h2><pre dir="ltr"><code>fetch("https://tifo.elyoxe.com/v1/live.json").then(r =&gt; r.json()).then(d =&gt; console.log(d.matches))</code></pre>
+<h2>مثال</h2><pre dir="ltr" style="overflow-x:auto;max-width:100%"><code>fetch("https://tifo.elyoxe.com/v1/live.json").then(r =&gt; r.json()).then(d =&gt; console.log(d.matches))</code></pre>
 <p class="muted">الويدجت الجاهز للتضمين: <a href="/embed/t/">جدول نادٍ</a> و<a href="/embed/m/">مباراة</a>.</p>` })); urls.push("/developers/"); }
 
   // 184 newsletter, 333 watch mode, 230 countdowns
