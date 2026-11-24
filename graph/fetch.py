@@ -224,3 +224,11 @@ def depth(S, max_age_days=7):
             data = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "elyoxe-tifo/0.1"}), timeout=600).read()
             open(p + ".tmp", "wb").write(data)
             os.replace(p + ".tmp", p)
+
+
+def wikidata_facts(S, max_age_days=7):
+    """Wikidata's facts for our clubs, grounds and players (graph/load/wikidata_facts.py: the queries and the files are its own)"""
+    from graph.load import wikidata_facts as W
+    n = W.fetch(S, max_age_days)
+    print(f"wikidata facts: {n}", flush=True)
+    return n

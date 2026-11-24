@@ -25,6 +25,14 @@ test("a club's page: every season's record, its titles, its last games", () => {
   assert.match(h, /<a class="row" href="\/m\/k1\/">[\s\S]*?ليفربول/);
 });
 
+test("a club's page says when it was founded and where it plays, when the graph knows", () => {
+  const h = V.club({ ...C, f: 1889, st: ["بلاو لين", 15876, "London"] }, o);
+  assert.match(h, /تأسّس[\s\S]*?<span class="num">1889<\/span>/);
+  assert.match(h, /الملعب[\s\S]*?بلاو لين/);
+  assert.match(h, /سعة الملعب[\s\S]*?15,876/);
+  assert.doesNotMatch(V.club(C, o), /تأسّس|الملعب/);
+});
+
 test("the search engines get the big records only", () => {
   assert.equal(V.refIndexable(R), true);
   assert.equal(V.refIndexable({ n: "X", ms: [["2003", 1, "x", 5, 0, 0]] }), false);

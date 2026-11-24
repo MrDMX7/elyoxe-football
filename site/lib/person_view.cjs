@@ -12,7 +12,11 @@ const nameOf = p => (p.ar && AR.test(p.ar) ? p.ar : p.n) || "";
 const FOOT = { left: "اليسرى", right: "اليمنى", both: "الاثنتين" };
 const POS = { Goalkeeper: "حارس مرمى", Defender: "مدافع", Midfield: "وسط", Midfielder: "وسط", Attack: "مهاجم", Forward: "مهاجم", attack: "مهاجم",
   "Centre-Back": "قلب دفاع", "Left-Back": "ظهير أيسر", "Right-Back": "ظهير أيمن", "Defensive Midfield": "وسط دفاعي", "Central Midfield": "وسط",
-  "Attacking Midfield": "وسط هجومي", "Left Winger": "جناح أيسر", "Right Winger": "جناح أيمن", "Centre-Forward": "رأس حربة", "Second Striker": "مهاجم ثاني" };
+  "Attacking Midfield": "وسط هجومي", "Left Winger": "جناح أيسر", "Right Winger": "جناح أيمن", "Centre-Forward": "رأس حربة", "Second Striker": "مهاجم ثاني",
+  // FotMob's words, and Wikidata's written in them (graph/load/wikidata_facts)
+  Keeper: "حارس مرمى", "Center Back": "قلب دفاع", "Left Back": "ظهير أيسر", "Right Back": "ظهير أيمن", "Left Wing-Back": "ظهير أيسر", "Right Wing-Back": "ظهير أيمن",
+  "Defensive Midfielder": "وسط دفاعي", "Central Midfielder": "وسط", "Attacking Midfielder": "وسط هجومي", "Left Midfielder": "وسط أيسر",
+  "Right Midfielder": "وسط أيمن", Striker: "رأس حربة" };
 const COMP = { "Premier League": "الدوري الإنجليزي الممتاز", Championship: "دوري البطولة الإنجليزية", LaLiga: "الدوري الإسباني", "Serie A": "الدوري الإيطالي",
   Bundesliga: "الدوري الألماني", "Ligue 1": "الدوري الفرنسي", "UEFA Champions League": "دوري أبطال أوروبا", "Champions League": "دوري أبطال أوروبا",
   "Europa League": "الدوري الأوروبي", "UEFA Cup": "كأس الاتحاد الأوروبي", "FA Cup": "كأس الاتحاد الإنجليزي", "EFL Cup": "كأس الرابطة الإنجليزية",

@@ -37,8 +37,15 @@ function clubHistory(c, o) {
     titles + table + lastGames(c, "آخر مبارياته في الأرشيف");
 }
 
+// what Wikidata says of the club: the year it was founded, its home ground and how many it holds
+const clubFacts = c => {
+  const st = c.st || [], f = [c.f && U.row({ t: "تأسّس", v: num(c.f) }), st[0] && U.row({ t: "الملعب", v: txt(st[0]) }),
+    st[0] && st[1] && U.row({ t: "سعة الملعب", v: num(Number(st[1]).toLocaleString("en-US")) })].filter(Boolean);
+  return f.length ? U.grp("", f.join("")) : "";
+};
+
 function club_(c, o) {
-  return head(c) + clubHistory(c, o);
+  return head(c) + clubFacts(c) + clubHistory(c, o);
 }
 
 // a coach (graph/archive_export.coaches): his record, every bench club by club, his awards, his last games, and his playing

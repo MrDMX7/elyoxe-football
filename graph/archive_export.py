@@ -232,7 +232,7 @@ def referees(G, out, min_matches=5, last=10, nat=lambda v: v):
 
 
 def clubs(G, out, min_matches=30, last=10, nat=lambda v: v):
-    """clubs.json {tid: {n, ar, c, ss: [season, competition FotMob id, competition, p, w, d, l, gf, ga], hon: [kind, competition,
+    """clubs.json {tid: {n, ar, c, f: founding year, st: [home ground, capacity, city] (Wikidata, graph/load/wikidata_facts), ss: [season, competition FotMob id, competition, p, w, d, l, gf, ga], hon: [kind, competition,
     competition FotMob id, season], last: [...], fm: FotMob id}}: every club with 30 games or more in the archive (the
     Wimbledon of 1990, Dubai CSC, Al Khaleej), for /t/k<Tifo id>/; FotMob's too since 24 Nov 2026 (Transfermarkt's Djurgården,
     1,862 games, folds into FotMob's, whose club the site has no page for), the renderer leaving out those the site has"""
@@ -264,10 +264,11 @@ def clubs(G, out, min_matches=30, last=10, nat=lambda v: v):
         if t in want:
             C[t]["hon"].append([kind, cn.get(cid), fm_c.get(cid), season])
     out_d = {}
-    for tid, name, ar, country in q("SELECT tid, name, name_ar, country FROM team"):
+    ground = {s: [a or n, cap, city] for s, n, a, cap, city in q("SELECT sid, name, name_ar, capacity, city FROM stadium") if a or n}
+    for tid, name, ar, country, founded, sid in q("SELECT tid, name, name_ar, country, founded, sid FROM team"):
         if tid in want:
             c = C[tid]
-            out_d[str(tid)] = {k: v for k, v in {"n": name, "ar": ar, "c": nat(country), "ss": sorted(c["ss"], key=lambda x: str(x[0]), reverse=True),
+            out_d[str(tid)] = {k: v for k, v in {"n": name, "ar": ar, "c": nat(country), "f": founded, "st": ground.get(sid), "ss": sorted(c["ss"], key=lambda x: str(x[0]), reverse=True),
                                                  "hon": sorted(c["hon"], key=lambda x: str(x[3]), reverse=True), "last": c["last"],
                                                  "fm": fm_t.get(tid)}.items() if v not in (None, [], "")}
     with open(os.path.join(out, "clubs.json"), "w", encoding="utf-8") as f:

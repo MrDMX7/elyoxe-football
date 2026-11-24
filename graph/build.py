@@ -15,7 +15,7 @@ from graph.ids import Registry  # noqa: E402
 from graph.src import Sources  # noqa: E402
 
 ORDER = ["fotmob_matches", "fotmob_profiles", "names", "s365", "tm", "tm_lineups", "rsssf", "schochastics", "engsoccer", "uaefa", "martj42", "worldcup", "intl_goals", "espn", "fdata", "coaches", "wiki_managers", "transfers",
-         "honours", "fjelstul", "awards", "rsssf_tops", "intl_records", "old_names", "people", "teams", "same_club", "people_again", "shootouts", "twins", "fotmob_ar", "void", "settle", "corrections", "sofascore", "official_motm", "motm", "same_champion", "twins_again", "same_comp", "comp_names", "comp_meta", "same_name", "twins_last", "mens", "seasons", "tidy"]      # an edition honour's first source keeps it: our counts, Fjelstul, then Wikipedia
+         "honours", "fjelstul", "awards", "rsssf_tops", "intl_records", "old_names", "people", "teams", "same_club", "people_again", "shootouts", "twins", "fotmob_ar", "void", "settle", "corrections", "sofascore", "official_motm", "motm", "same_champion", "twins_again", "same_comp", "comp_names", "comp_meta", "same_name", "twins_last", "mens", "wikidata_facts", "seasons", "tidy"]      # an edition honour's first source keeps it: our counts, Fjelstul, then Wikipedia
 REQUIRED = {"fotmob_matches"}
 CACHE = os.path.join(HERE, ".cache")       # the registry and the published mirror: kept between runs (actions/cache)
 OUT = os.path.join(HERE, ".build")         # tifo.db and the report: rebuilt each run, never cached (1-2 GB)
@@ -30,7 +30,7 @@ def run(S, out_dir, reg_path, upload=False, loaders=None, fetch=True):
     db_path = os.path.join(out_dir, "tifo.db")
     G = Graph(db_path)
     if fetch:
-        for f in (fetch_mod().martj42, fetch_mod().fjelstul, fetch_mod().engsoccer, fetch_mod().community_shield, fetch_mod().uaefa, fetch_mod().espn, fetch_mod().rsssf_tops, fetch_mod().football_data, fetch_mod().depth):
+        for f in (fetch_mod().martj42, fetch_mod().fjelstul, fetch_mod().engsoccer, fetch_mod().community_shield, fetch_mod().uaefa, fetch_mod().espn, fetch_mod().rsssf_tops, fetch_mod().football_data, fetch_mod().depth, fetch_mod().wikidata_facts):
             try:
                 f(S)
             except Exception as e:
