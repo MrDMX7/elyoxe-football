@@ -170,6 +170,24 @@ names:
   "s365|9049": {name_ar: "بطولة باهيا – الدرجة الثانية", kind: league}
   "s365|9083": {name_ar: "كأس السوبر (هندوراس)", kind: supercup}
   "s365|9132": {name_ar: "ألعاب أمريكا الجنوبية", kind: tournament}
+  # typed a cup by 365Scores, a league by name (25 Nov 2026: Libya's league skipped the leagues' season rules)
+  "s365|559": {kind: league}        # Libya Premier League
+  "s365|4": {kind: league}        # England National League
+  "s365|18": {kind: league}        # Italy Serie B
+  "s365|555": {kind: league}        # Tunisia Division 2
+  "s365|584": {kind: league}        # Peru Liga 2
+  "s365|5444": {kind: league}        # Belarus Vysshaya Liga
+  "s365|5518": {kind: league}        # Brazil Serie C
+  "s365|5519": {kind: league}        # Serie D
+  "s365|5523": {kind: league}        # Segunda Division
+  "s365|5557": {kind: league}        # K League 2
+  "s365|5602": {kind: league}        # Liga FUTVE 2
+  "s365|5802": {kind: league}        # Algeria Ligue 2
+  "s365|5809": {kind: league}        # Liga Panameña
+  "s365|7306": {kind: league}        # Premier A
+  "s365|70": {kind: league}        # Ireland First Division
+  "s365|26": {kind: league}        # 2. Bundesliga
+  "s365|5663": {kind: league}        # USL Championship
 stages:
   "الدوري الأمريكي لكرة القدم": 130
   "دوري أبطال آسيا": 525
