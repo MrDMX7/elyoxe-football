@@ -405,3 +405,77 @@ def test_the_games_say_calendar_or_split_or_nothing():
     assert seasons.played(months((8, 9, 10, 11, 12, 1, 2, 3, 4, 5)), 1988) == "split"
     assert seasons.played(months((7, 8, 9, 10, 11, 3, 4, 5)), 1988) is None        # a winter break and a summer one
     assert seasons.played({"1988-05": 9}, 1988) is None
+
+
+def bare(tmp_path, kind="league"):
+    """a competition FotMob does not hold"""
+    G, reg = Graph(str(tmp_path / "t.db")), Registry()
+    cid = reg.mint("competition", "s365", 7)
+    G.put("competition", {"cid": cid, "name": "C", "kind": kind}, "s365")
+    for tid in range(1, 9):
+        G.put("team", {"tid": tid, "name": f"T{tid}"}, "s365")
+    return G, reg, cid
+
+
+def split_season(G, eid, y, winner, mid):
+    """September to May, the winner at home every day"""
+    for yy, months in ((y, (9, 10, 11, 12)), (y + 1, (1, 2, 3, 4, 5))):
+        for mo in months:
+            for d in range(1, 9):
+                mid += 1
+                game(G, mid, eid, f"{yy}-{mo:02d}-{d:02d}", winner, 1 + (winner + d) % 8 or 8)
+    return mid
+
+
+def test_a_competition_fotmob_does_not_hold_is_one_edition_a_season_too(tmp_path):
+    # Libya: the champion on 365Scores' «2001/2002», the games on schochastics'
+    G, reg, cid = bare(tmp_path)
+    ed(G, reg, cid, "2001/2002", "s365", champion=3)
+    split_season(G, ed(G, reg, cid, "2001/2002", "sch"), 2001, 3, 0)
+    ed(G, reg, cid, "2002/2003", "s365", champion=4)
+    seasons.load(G, reg, None)
+    assert labels(G, cid) == ["2001/2002", "2002/2003"]
+    assert G.c.execute("SELECT count(*), count(DISTINCT m.eid) FROM match m JOIN honour h ON h.eid=m.eid AND h.tid=3").fetchone() == (72, 1)
+
+
+def test_without_fotmob_the_champions_say_whether_a_lists_year_began_or_ended_the_season(tmp_path):
+    # 365Scores' Jamaica: «2001» is 2001/2002
+    G, reg, cid = bare(tmp_path)
+    mid = 0
+    for y, champ in ((2001, 3), (2002, 4), (2003, 5)):
+        ed(G, reg, cid, str(y), "s365", champion=champ)
+        mid = split_season(G, ed(G, reg, cid, f"{y}/{y + 1}", "sch"), y, champ, mid)
+    seasons.load(G, reg, None)
+    assert labels(G, cid) == ["2001/2002", "2002/2003", "2003/2004"]
+    assert G.c.execute("SELECT e.season, h.tid FROM honour h JOIN edition e ON e.eid=h.eid ORDER BY 1").fetchall() == \
+        [("2001/2002", 3), ("2002/2003", 4), ("2003/2004", 5)]
+
+
+def test_a_title_of_a_season_not_ended_yet_is_none_so_the_last_year_ended_one(tmp_path):
+    # 365Scores' Sudan: «2026» is 2025/2026, there is no 2026/2027 to have won
+    G, reg, cid = bare(tmp_path)
+    ed(G, reg, cid, "2026", "s365", champion=3)
+    ed(G, reg, cid, "2024", "s365", champion=5)                  # no games of 2023/2024: the year stays
+    split_season(G, ed(G, reg, cid, "2025/2026", "sch"), 2025, 3, 0)
+    seasons.load(G, reg, None)
+    assert labels(G, cid) == ["2024", "2025/2026"]
+
+
+def test_without_fotmob_a_year_stays_when_its_champions_do_not_say(tmp_path):
+    G, reg, cid = bare(tmp_path)
+    mid = 0
+    for y in (2001, 2002, 2003):                                 # the same club led every season: either reading fits
+        ed(G, reg, cid, str(y), "s365", champion=3)
+        mid = split_season(G, ed(G, reg, cid, f"{y}/{y + 1}", "sch"), y, 3, mid)
+    seasons.load(G, reg, None)
+    assert labels(G, cid) == ["2001", "2001/2002", "2002", "2002/2003", "2003", "2003/2004"]
+
+
+def test_without_fotmob_a_july_june_title_does_not_take_the_year_of_another_clubs(tmp_path):
+    # Norway's cup: «2025» Lillestrøm beside «2025/2026» Bodø/Glimt
+    G, reg, cid = bare(tmp_path, kind="cup")
+    for s, champ in (("2023", 1), ("2024", 2), ("2025", 3), ("2025/2026", 4)):
+        ed(G, reg, cid, s, "s365", champion=champ)
+    seasons.load(G, reg, None)
+    assert G.c.execute("SELECT e.season, h.tid FROM honour h JOIN edition e ON e.eid=h.eid ORDER BY 1").fetchall() == \
+        [("2023", 1), ("2024", 2), ("2025", 3), ("2026", 4)]

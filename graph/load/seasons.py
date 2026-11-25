@@ -16,6 +16,11 @@ The last pass of the build, after every loader that makes editions:
    same ground, the same score, within a month) is one; other sources' dates are the game's own, so a game on another day
    is another game (Argentina's Copa de la Liga and its league).
 
+A competition FotMob does not hold gets the same pass (25 Nov 2026: Libya, Sudan, Jordan, Yemen, the West Bank — champions
+on one edition of a season and its games on another). There the games say «calendar» or «split» before any list does, a
+season 365Scores or Wikipedia names keeps its games, and a list's year in a league of split seasons is read by its
+champions (year_side): the season that began in it or the one that ended in it, or left as it is.
+
 What leaves a competition is counted under «<name> (aside)», then dropped (23 Nov 2026: it leaked into the head-to-head pages)."""
 import re
 from collections import Counter, defaultdict
@@ -92,15 +97,28 @@ def played(months, year):
     return None
 
 
-def canon(label, dates, era_at):
+def by_games(months, year):
+    """how the league played around this year, where FotMob names none of its seasons: the nearest year within three whose
+    games say (the earlier of two as near)"""
+    for d in range(4):
+        for y in (year - d, year + d):
+            got = played(months, y)
+            if got:
+                return got
+    return None
+
+
+def canon(label, dates, era_at, blind=True):
     """the label in the competition's form for its era; None: a July-June label in a calendar competition with no games
-    (which year it meant is settled against the seasons there are)"""
+    (which year it meant is settled against the seasons there are). blind: a year with no games in a league of split
+    seasons is the season that ended in it — FotMob's lists say so; 365Scores' «2001» of Jamaica began in it, so without
+    FotMob the label stays."""
     if re.fullmatch(r"\d{4}", label):
         y = int(label)
         if era_at(y) != "split":
             return label
         if not dates:
-            return f"{y - 1}/{y}"
+            return f"{y - 1}/{y}" if blind else label
         if sum(f"{y - 1}-07" <= d <= f"{y}-06" for d in dates) >= 0.9 * len(dates):
             return f"{y - 1}/{y}"
         if sum(f"{y}-07" <= d <= f"{y + 1}-06" for d in dates) >= 0.9 * len(dates):
@@ -225,14 +243,22 @@ class Pass:
         auth = [s for e, s in eds if self.x(e, AUTH)]
         months = dict(q("""SELECT substr(m.date,1,7), count(*) FROM match m JOIN edition e ON e.eid=m.eid
                            WHERE e.cid=? AND length(m.date) >= 7 GROUP BY 1""", (cid,))) if kind == "league" else {}
-        era_at = lambda y: era(fm, auth, y) or played(months, y)
+        lead = bool(q("SELECT 1 FROM xref WHERE type='competition' AND tifo_id=? AND source='fotmob' LIMIT 1", (cid,)))
+        if lead:
+            era_at = lambda y: era(fm, auth, y) or played(months, y)
+        else:                      # no FotMob: the games say first, 365Scores' and Wikipedia's lists where they do not
+            seen = {}
+            def era_at(y):
+                if y not in seen:
+                    seen[y] = by_games(months, y) or era((), auth, y)
+                return seen[y]
         # 1. games another source filed July-June: to FotMob's season whose games span their day, else in a calendar era
         #    to their year (Argentina's league until 1990, the Libertadores, the CAF Champions League until 2017)
         span = [(lo, hi, e, s) for e, s in eds if self.x(e, FM) for lo, hi in
                 q("SELECT min(substr(date,1,10)), max(substr(date,1,10)) FROM match WHERE eid=? AND src='fotmob'", (e,)) if lo]
         for eid, season in eds:
-            if not PLAIN_SPLIT.fullmatch(season) or self.x(eid, FM):
-                continue
+            if not PLAIN_SPLIT.fullmatch(season) or self.x(eid, FM) or (not lead and self.x(eid, AUTH)):
+                continue               # without FotMob a season its official list names is that season
             moved = 0
             for mid, d in q("SELECT mid, substr(date,1,10) FROM match WHERE eid=? AND src <> 'fotmob' AND date IS NOT NULL", (eid,)):
                 hit = [(e, s) for lo, hi, e, s in span if lo <= d <= hi]
@@ -254,7 +280,9 @@ class Pass:
         lab = {}
         for eid, season in eds:
             dates = [d for (d,) in q("SELECT substr(date,1,7) FROM match WHERE eid=? AND date IS NOT NULL", (eid,))]
-            lab[eid] = season if self.x(eid, FM) else canon(season, dates, era_at)
+            lab[eid] = season if self.x(eid, FM) else canon(season, dates, era_at, blind=lead)
+        if not lead:
+            self.year_side(eds, lab, era_at)
         # FotMob's own label for a season in the other form wins: LaLiga's «1929» for schochastics' «1928/1929»
         fms = set(fm)
         for eid, v in lab.items():
@@ -288,6 +316,10 @@ class Pass:
         for eid in [e for e, v in lab.items() if v is None]:
             y1, y2 = q("SELECT season FROM edition WHERE eid=?", (eid,))[0][0].split("/")
             lab[eid] = y2 if key(y2) in known or key(y1) not in known else y1
+            if not lead:               # no list says which year: a year whose title is another club's is not it (Norway's cup,
+                mine = self.champion(eid)   # «2025» Lillestrøm beside «2025/2026» Bodø/Glimt)
+                free = [y for y in (y2, y1) if not mine or all(self.champion(e) in (None, mine) for e, v in lab.items() if v == y and e != eid)]
+                lab[eid] = (lab[eid] if lab[eid] in free else free[0]) if free else f"{y1}/{y2}"
         # 4. one label, one edition
         groups = defaultdict(list)
         for eid, v in lab.items():
@@ -305,6 +337,54 @@ class Pass:
                 self.n["relabelled"] += 1
             if kind == "league":
                 self.strays(cid, keep, name)
+
+    def champion(self, eid):
+        got = self.q("SELECT tid FROM honour WHERE eid=? AND kind='champion' ORDER BY rank LIMIT 1", (eid,))
+        return got[0][0] if got else None
+
+    def leader(self, eid):
+        """the club with most points in an edition's games"""
+        pts = Counter()
+        for h, a, hs, as_ in self.q("SELECT home, away, hs, as_ FROM match WHERE eid=? AND hs IS NOT NULL AND as_ IS NOT NULL", (eid,)):
+            pts[h] += 3 if hs > as_ else hs == as_
+            pts[a] += 3 if as_ > hs else hs == as_
+        top = pts.most_common(2)
+        return top[0][0] if top and (len(top) == 1 or top[0][1] > top[1][1]) else None
+
+    def year_side(self, eds, lab, era_at):
+        """without FotMob, a list's year for a July-June season is the one it ended in (365Scores' Sudan) or the one it began
+        in (its Jamaica): the champions say which, each against the club that led the games of either season; a title of a
+        season that has not ended yet is none, so the last year of a list is never a beginning. Two champions and twice the
+        other side's decide for every such year whose season has games and no champion; else the labels stay."""
+        q = self.q
+        if not hasattr(self, "today"):
+            self.today = q("SELECT max(substr(date,1,10)) FROM match WHERE hs IS NOT NULL")[0][0] or ""
+        with_games = {v: e for e, v in lab.items() if v and q("SELECT 1 FROM match WHERE eid=? LIMIT 1", (e,))}
+        titled = {v for e, v in lab.items() if v and q("SELECT 1 FROM honour WHERE eid=? AND kind='champion' LIMIT 1", (e,))}
+        todo, votes = [], Counter()
+        for eid, season in eds:
+            if lab.get(eid) != season or not re.fullmatch(r"\d{4}", season) or era_at(int(season)) != "split" or q("SELECT 1 FROM match WHERE eid=? LIMIT 1", (eid,)):
+                continue
+            y = int(season)
+            todo.append((eid, y))
+            ch = q("SELECT tid FROM honour WHERE eid=? AND kind='champion' ORDER BY rank LIMIT 1", (eid,))
+            if not ch:
+                continue
+            if f"{y + 1}-05" > self.today:
+                votes["never_start"] += 1
+            for side, name in (("end", f"{y - 1}/{y}"), ("start", f"{y}/{y + 1}")):
+                e = with_games.get(name)
+                if e and self.leader(e) == ch[0][0]:
+                    votes[side] += 1
+        if votes["never_start"]:
+            votes["start"] = 0
+            votes["end"] += 1
+        side = next((s for s, o in (("end", "start"), ("start", "end")) if votes[s] >= 2 and votes[s] >= 2 * votes[o]), None)
+        for eid, y in todo if side else ():   # onto a season with games and no champion of its own (Jamaica's «2022» is a title of its own beside «2022/2023»)
+            to = f"{y - 1}/{y}" if side == "end" else f"{y}/{y + 1}"
+            if to in with_games and to not in titled:
+                lab[eid] = to
+                self.n[f"years_{side}"] += 1
 
     def strays(self, cid, eid, season):
         """5. a league season held by two sources: the second one's games of its own clubs only, one game filed twice is one"""
@@ -377,6 +457,12 @@ def load(G, reg, S):
     for cid, fid, kind in G.c.execute("""SELECT c.cid, x.source_id, c.kind FROM competition c JOIN xref x ON x.type='competition'
                                           AND x.source='fotmob' AND x.tifo_id=c.cid ORDER BY c.cid""").fetchall():
         p.competition(cid, fid, kind)
+    # a competition FotMob does not hold is one all the same (25 Nov 2026: Libya's champions sat on 365Scores' «2001/2002»
+    # and its 240 games on schochastics' «2001/2002»; Sudan's on «2014» and «2014/2015»)
+    for cid, kind in G.c.execute("""SELECT c.cid, c.kind FROM competition c WHERE NOT EXISTS(SELECT 1 FROM xref x WHERE x.type='competition'
+                                    AND x.source='fotmob' AND x.tifo_id=c.cid) AND (SELECT count(*) FROM edition e WHERE e.cid=c.cid) > 1
+                                    ORDER BY c.cid""").fetchall():
+        p.competition(cid, f"c{cid}", kind)
     # what went aside leaves: copies of a real game, another division's, a predecessor's (23 Nov 2026: 67 «Pro League
     # (aside)» rows on the head-to-head pages; the profiles, coaches and clubs read every game too)
     for a in p.aside.values():
