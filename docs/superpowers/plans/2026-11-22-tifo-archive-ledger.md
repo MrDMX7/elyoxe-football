@@ -179,3 +179,20 @@ with the commit or the evidence. A new session reads this first and continues at
   * Open: Slavia Mozyr's 2001 qualifiers stand three times (UEFA, schochastics twice under two names); FIFA's «X Olympic»
     sides before 1992 beside «X U23» (73 teams of FIFA's own); FotMob «Club Friendlies» copies of a cup game with the
     shoot-out counted in the score (7 pairs); late merges (same_comp, same_club, same_name) are not kept in the registry.
+- 25 Nov: Japan from the J.League's own record, and champions of seven Arab leagues (database run 45590553146).
+  * J.League (graph/jleague_fetch.py, graph/load/jleague.py; pack state/graph/jleague.json, 25,220 games fetched once on
+    the laptop from data.j-league.or.jp): J1 since 1993, J2 since 1999, J3 since 2014, the League Cup since 1992. 9,706
+    joined to a game we held (9,381 took their attendance, 100 their shoot-out), 15,514 new: J2, J3 and the cup had no
+    game before. Clubs by the votes of their games, else FotMob's id written by hand; FC Ryukyu and the J.League U-22
+    Selection are the record's own. Referees, line-ups, grounds and kick-off times are not read.
+  * schochastics dated three J1 seasons a year late («2001» = 2000 again, «2002» = 2001, half of «2003» = 2002): 242
+    copies dropped, 480 games moved to their true day and season.
+  * The record is written as each competition's own source (a `jleague` xref): the seasons pass had sent J2's 1999-2002
+    (928 games) aside, the list of winners starting in 2003. Fixed in the day's third build.
+  * Champions (graph/load/champions.py): 47 titles by hand for Libya, Jordan, Sudan, Yemen, Mauritania, Djibouti, Somalia;
+    a competition FotMob does not hold is passed through the seasons pass all the same (f1d5ce9); comp_meta for 17 leagues.
+  * fbref: referee 182,571, ground 91,101, attendance 78,340 games.
+  * Open: 145,226 games hold a referee, a ground or an attendance and neither events nor line-ups, so no page of their
+    own (site/lib/match_archive.cjs `indexable`) and the season page does not show the three: collected, not visible.
+    Omiya, JEF and Nagasaki stand as two clubs each (schochastics' record beside FotMob's shell). The 36 features are
+    not built, by the owner's word.
