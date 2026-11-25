@@ -143,6 +143,11 @@ def fbref(S):
     _state_file(S, "fbref.json.gz", "graph/fbref.json")
 
 
+def jleague(S):
+    """the J.League's own record (graph/jleague_fetch.py): db/.cache/jleague.json.gz for graph/load/jleague.py"""
+    _state_file(S, "jleague.json.gz", "graph/jleague.json")
+
+
 def uaefa(S):
     """the UAE FA's record of the top flight 2003/04-2016/17 (graph/uaefa_fetch.py, fetched once on the laptop and kept in
     the bucket's state/graph/uaefa.json): db/.cache/uaefa.json.gz for graph/load/uaefa.py"""
