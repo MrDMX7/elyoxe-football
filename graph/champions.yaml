@@ -1,0 +1,56 @@
+# Champions of leagues whose games name none (25 Nov 2026: Mauritania, Djibouti and Somalia had every game from 2006 or 2010
+# and not one champion). Read by graph/load/champions.py. "source|competition": {season: the club's key in that source}.
+# From RSSSF's champions pages (tablesm/maurchamp, tablesd/djichamp, tabless/somachamp), whose year is the year the season
+# ended; a club is written by the name the games' source gives it: CF Cansado are SNIM, AS Arta/Solar7 were AS CDE/Colas,
+# Banaadir Telecom are Mogadishu City, Ali Sabieh Djibouti Telecom are ASAS.
+"sch|mauritania":
+  "2006/2007": "ASC Nasr De Sebkha (Mauritania)"
+  "2007/2008": "Asec Concorde (Mauritania)"
+  "2008/2009": "SNIM (Mauritania)"
+  "2009/2010": "SNIM (Mauritania)"
+  "2010/2011": "Nouadhibou (Mauritania)"
+  "2011/2012": "Tevragh-Zeïne (Mauritania)"
+  "2012/2013": "Nouadhibou (Mauritania)"
+  "2013/2014": "Nouadhibou (Mauritania)"
+  "2014/2015": "Tevragh-Zeïne (Mauritania)"
+  "2015/2016": "Tevragh-Zeïne (Mauritania)"
+  "2016/2017": "Asec Concorde (Mauritania)"
+  "2017/2018": "Nouadhibou (Mauritania)"
+  "2018/2019": "Nouadhibou (Mauritania)"
+  "2019/2020": "Nouadhibou (Mauritania)"
+  "2020/2021": "Nouadhibou (Mauritania)"
+  "2021/2022": "Nouadhibou (Mauritania)"
+  "2022/2023": "Nouadhibou (Mauritania)"
+  "2023/2024": "Nouadhibou (Mauritania)"
+  "2024/2025": "Nouadhibou (Mauritania)"      # second behind the guests Al-Hilal of Omdurman, and given the title
+"sch|djibouti":
+  "2010/2011": "Association Sportive Port (Djibouti)"
+  "2011/2012": "Association Sportive Port (Djibouti)"
+  "2012/2013": "ASAS (Djibouti)"
+  "2013/2014": "ASAS (Djibouti)"
+  "2014/2015": "ASAS (Djibouti)"
+  "2015/2016": "ASAS (Djibouti)"
+  "2016/2017": "ASAS (Djibouti)"
+  "2017/2018": "ASAS (Djibouti)"
+  "2018/2019": "Association Sportive Port (Djibouti)"
+  "2019/2020": "Guelleh Batal  Garde Republicaine (Djibouti)"
+  "2020/2021": "As Du Chemin De Fer Djibouto Ethiopien  Colas (Djibouti)"
+  "2021/2022": "As Du Chemin De Fer Djibouto Ethiopien  Colas (Djibouti)"
+  "2022/2023": "Guelleh Batal  Garde Republicaine (Djibouti)"
+  "2023/2024": "As Du Chemin De Fer Djibouto Ethiopien  Colas (Djibouti)"
+  "2024/2025": "ASAS (Djibouti)"
+# Somalia's seasons are cut at July by the games' source: the 2012 and 2022 championships lie in «2012/2013» and «2022/2023»
+"sch|somalia":
+  "2010/2011": "Elman (Somalia)"
+  "2012/2013": "Elman (Somalia)"
+  "2013/2014": "Magadishu City (Somalia)"
+  "2014/2015": "Heegan (Somalia)"
+  "2015/2016": "Magadishu City (Somalia)"
+  "2016/2017": "Dekedda (Somalia)"
+  "2017/2018": "Dekedda (Somalia)"
+  "2018/2019": "Dekedda (Somalia)"
+  "2019/2020": "Magadishu City (Somalia)"
+  "2020/2021": "Horseed (Somalia)"
+  "2022/2023": "Gaadiidka (Somalia)"
+  "2023/2024": "Dekedda (Somalia)"
+  "2024/2025": "Magadishu City (Somalia)"
