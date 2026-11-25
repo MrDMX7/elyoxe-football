@@ -135,6 +135,9 @@ def load(G, reg, S):
             G.put("competition", {"cid": cid, "name": name, "name_ar": ar, "kind": kind, "scope": "national", "country": "JP"}, SRC)
         if not G.c.execute("SELECT 1 FROM xref WHERE type='competition' AND source=? AND source_id=?", (src, str(sid))).fetchone():
             G.xref("competition", cid, src, sid, "manual")
+        # the record is the competition's own: its seasons before the first champion we hold stay (J2's 1999-2002 went
+        # aside under a list of winners that starts in 2003, graph/load/seasons.py step 3)
+        G.xref("competition", cid, SRC, frame, f"{SRC}-native")
     n.update(_year_late(G, reg, cids[1], rows))
     seen, eids, idx, mine = set(), {}, MatchIndex(G), {}
     for frame, year, card, d, hn, an, hs, as_, ph, pa, rnd, att in rows:

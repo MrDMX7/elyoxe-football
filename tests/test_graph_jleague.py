@@ -65,6 +65,14 @@ def test_a_game_we_hold_takes_its_attendance_and_shoot_out_and_the_second_divisi
                          JOIN competition c ON c.cid=e.cid WHERE m.mid NOT BETWEEN 10 AND 15""").fetchall()
     assert new == [("J2 League", "2000", mito, t["Kashima"], 0, 2, "7", 2500, "jleague")]
     assert G.c.execute("SELECT count(*) FROM match").fetchone() == (7,) and G.c.execute("SELECT count(*) FROM team").fetchone() == (4,)
+    # a list of winners that starts later does not send the record's own season aside (25 Nov 2026: J2's 1999-2002 had no page)
+    j2 = G.c.execute("SELECT cid FROM competition WHERE name='J2 League'").fetchone()[0]
+    late = reg.mint("edition", "s365", "148|2003")
+    G.put("edition", {"eid": late, "cid": j2, "season": "2003"}, "s365")
+    G.c.execute("INSERT INTO honour(eid, kind, rank, tid, src) VALUES(?, 'champion', 1, ?, 's365')", (late, mito))
+    from graph.load import seasons
+    seasons.load(G, reg, S)
+    assert G.c.execute("SELECT e.season FROM match m JOIN edition e ON e.eid=m.eid WHERE e.cid=?", (j2,)).fetchall() == [("2000",)]
 
 
 def test_a_season_dated_a_year_late_is_dropped_where_we_hold_it_and_moved_where_we_do_not(tmp_path):
